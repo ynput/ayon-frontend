@@ -1,22 +1,30 @@
-import {
-  getLinkColumnId,
-  getLinkLabel,
-  useColumnSettingsContext,
-  useProjectTableContext,
-  checkColumnVisibility,
-} from '@shared/containers/ProjectTreeTable'
+import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
+import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable/context/column-settings'
+import { useProjectTableContext } from '@shared/containers/ProjectTreeTable/context/project-table'
 import { Button, ButtonProps } from '@ynput/ayon-react-components'
-import { FC } from 'react'
+import { FC, useEffect, useState } from 'react'
 import styled from 'styled-components'
-import { SettingHighlightedId, useProjectContext, useSettingsPanel } from '@shared/context'
-import { SettingsPanel, SettingConfig } from '@shared/components/SettingsPanel'
+import { useSettingsPanel, type SettingHighlightedId } from '@shared/context'
+import { SettingsPanel } from '@shared/components/SettingsPanel/SettingsPanel'
+import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 import { ColumnsSettingsWithContext } from './ColumnsSettings'
-import { SizeSlider } from '@shared/components'
+import { SizeSlider } from '../SizeSlider'
 import { useGroupBySettings } from '@shared/containers/ProjectTreeTable/hooks/useGroupBySettings'
 import { useSortBySettings } from '@shared/containers/ProjectTreeTable/hooks/useSortBySettings'
+import { useAddColumnsMenu } from './useAddColumnsMenu'
+import { useProjectTableColumnItems } from './useProjectTableColumnItems'
+import { normalizeColumnId } from '@shared/containers/ProjectTreeTable/utils/columnIds'
+import type { MenuItemType } from '../Menu'
+import type { AddColumnItem } from './addColumnsMenu'
+import type { ParentColumnDefinition } from '@shared/containers'
+import type { ColumnIdAliases } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 
 const StyledCustomizeButton = styled(Button)`
   min-width: 120px;
+`
+
+const HeaderActionButton = styled(Button)`
+  padding: 4px !important;
 `
 
 interface Props extends ButtonProps {
@@ -42,7 +50,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
-  extraColumns?: { value: string; label: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId
@@ -50,21 +58,27 @@ export type ProjectTableSettingsProps = {
   hideSortBy?: boolean
   order?: string[]
   scope?: string
+  // page actions appended to the end of the add-column menu
+  extraMenuItems?: MenuItemType[]
+  parentColumns?: ParentColumnDefinition[]
+  columnIdAliases?: ColumnIdAliases
 }
 
 export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
   settings = [],
-  extraColumns = [],
-  hiddenColumns = [],
+  extraColumns,
+  hiddenColumns,
   hiddenSettings = [],
   highlighted,
   includeLinks = true,
   hideSortBy = false,
   order,
   scope,
+  extraMenuItems,
+  parentColumns,
+  columnIdAliases,
 }) => {
-  const { ...projectInfo } = useProjectContext()
-  const { attribFields, scopes } = useProjectTableContext()
+  const { scopes } = useProjectTableContext()
   const {
     columnVisibility,
     defaultColumnVisibility,
@@ -73,98 +87,45 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
     updateRowHeightWithPersistence,
   } = useColumnSettingsContext()
 
-  const columns: {
-    value: string
-    label: string
-    hidden?: boolean
-  }[] = [
-    {
-      value: 'thumbnail',
-      label: 'Thumbnail',
-    },
-    {
-      value: 'name',
-      label:
-        scopes.map((scope) => scope.charAt(0).toUpperCase() + scope.slice(1)).join('/') + ' Name',
-    },
-    {
-      value: 'folder',
-      label: 'Folder',
-    },
-    {
-      value: 'assignees',
-      label: 'Assignees',
-      hidden: !scopes.includes('task'),
-    },
-    {
-      value: 'product',
-      label: 'Product name',
-      hidden: ['product', 'version'].some((scope) => !scopes.includes(scope)),
-    },
-    {
-      value: 'entityType',
-      label: 'Entity type',
-    },
-    {
-      value: 'status',
-      label: 'Status',
-    },
-    {
-      value: 'subType',
-      label: 'Type',
-    },
-    {
-      value: 'tags',
-      label: 'Tags',
-    },
-    {
-      value: 'createdAt',
-      label: 'Created At',
-    },
-    {
-      value: 'updatedAt',
-      label: 'Updated At',
-    },
-    {
-      value: 'subtasks',
-      label: 'Subtasks',
-      hidden: !scopes.includes('task'),
-    },
-    {
-      value: 'comments',
-      label: 'Latest comments',
-      hidden: !scopes.some((scope) => ['task', 'version', 'product', 'folder'].includes(scope)),
-    },
-    ...attribFields
-      .filter((field) => field.scope?.some((scope) => scopes.includes(scope)))
-      .map((field) => ({
-        value: `attrib_${field.name}`,
-        label: field.data.title || field.name,
-      })),
-    ...(projectInfo?.linkTypes && includeLinks
-      ? projectInfo.linkTypes
-          .filter((link) => [link.inputType, link.outputType].some((type) => scopes.includes(type)))
-          .flatMap((link) => [
-            {
-              value: getLinkColumnId(link, 'in'),
-              label: getLinkLabel(link, 'in'),
-            },
-            {
-              value: getLinkColumnId(link, 'out'),
-              label: getLinkLabel(link, 'out'),
-            },
-          ])
-      : []),
-    ...extraColumns,
-  ]
+  const { isPanelOpen, selectedSetting } = useSettingsPanel()
 
-  const visibleColumns = columns.filter(
-    (column) => !column.hidden && !hiddenColumns.includes(column.value),
-  )
+  const [search, setSearch] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (search === null) return
+    if (!isPanelOpen || selectedSetting !== 'columns') setSearch(null)
+  }, [isPanelOpen, selectedSetting, search])
+
+  // a different entity scope (switching lists) means a different column set
+  const scopeKey = `${scope ?? ''}:${scopes.join()}`
+  useEffect(() => {
+    setSearch(null)
+  }, [scopeKey])
+
+  const { columns, visibleColumns } = useProjectTableColumnItems({
+    extraColumns,
+    hiddenColumns,
+    includeLinks,
+    parentColumns,
+  })
+  const normalizedHighlighted = highlighted
+    ? normalizeColumnId(highlighted, columnIdAliases)
+    : highlighted
 
   const visibleCount = visibleColumns.filter((column) =>
     checkColumnVisibility(columnVisibility, column.value, defaultColumnVisibility),
   ).length
+
+  const {
+    menuItems: addColumnMenuItems,
+    dragOverlay,
+    onColumnDragStart,
+    isColumnDragging,
+  } = useAddColumnsMenu({
+    columns: visibleColumns,
+    scopes,
+    extraItems: extraMenuItems,
+  })
 
   const groupBySettings = useGroupBySettings({ scope })
   const sortBySettings = useSortBySettings(columns)
@@ -175,7 +136,30 @@ export const ProjectTableSettings: FC<ProjectTableSettingsProps> = ({
       title: 'Columns',
       icon: 'view_column',
       preview: `${visibleCount}/${visibleColumns.length}`,
-      component: <ColumnsSettingsWithContext columns={visibleColumns} highlighted={highlighted} />,
+      headerActions: (
+        <HeaderActionButton
+          variant="text"
+          icon="search"
+          data-tooltip="Search columns"
+          selected={typeof search === 'string'}
+          onClick={() => setSearch(typeof search === 'string' ? null : '')}
+        />
+      ),
+      component: (
+        <>
+          <ColumnsSettingsWithContext
+            columns={visibleColumns}
+            highlighted={normalizedHighlighted}
+            scopes={scopes}
+            search={search}
+            onSearchChange={setSearch}
+            addColumnMenuItems={addColumnMenuItems}
+            onColumnDragStart={onColumnDragStart}
+            isColumnDragging={isColumnDragging}
+          />
+          {dragOverlay}
+        </>
+      ),
     },
     hideSortBy ? null : sortBySettings,
     groupBySettings,

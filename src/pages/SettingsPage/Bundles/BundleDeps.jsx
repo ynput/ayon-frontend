@@ -1,4 +1,4 @@
-import { FormLayout, Dialog } from '@ynput/ayon-react-components'
+import { BorderedSection, FormLayout, Dialog } from '@ynput/ayon-react-components'
 import React, { useState } from 'react'
 import BundleDepPackage from './BundleDepPackage'
 import { useUpdateBundleMutation } from '@shared/api'
@@ -46,7 +46,6 @@ const BundleDeps = ({ bundle, onChange }) => {
       handleCloseForm()
       toast.success('Bundle Dependency Package updated')
     } catch (error) {
-      console.error(error)
       toast.error('ERROR: Bundle Dependency Package not updated')
     }
   }
@@ -85,10 +84,9 @@ const BundleDeps = ({ bundle, onChange }) => {
           onCancel={handleCloseForm}
         />
       </Dialog>
-      <section style={{ flex: 1, overflow: 'hidden' }}>
-        <h2>Dependency Packages</h2>
+      <BorderedSection title="Dependency Packages" autoHeight showHeader withPadding>
         {bundle && (
-          <FormLayout style={{ maxWidth: 'max-content', minWidth: 300 }}>
+          <FormLayout>
             {platforms.map((platform) => (
               <BundleDepPackage
                 key={platform.id}
@@ -105,7 +103,7 @@ const BundleDeps = ({ bundle, onChange }) => {
             ))}
           </FormLayout>
         )}
-      </section>
+      </BorderedSection>
     </>
   )
 }

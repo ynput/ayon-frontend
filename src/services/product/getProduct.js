@@ -111,13 +111,7 @@ fragment ProductVersionFragment on VersionNode {
     name
     taskType
   }
-  attrib {
-      fps
-      resolutionWidth
-      resolutionHeight
-      frameStart
-      frameEnd
-  }
+  attrib(names: ["fps", "resolutionWidth", "resolutionHeight", "frameStart", "frameEnd"])
 }
 `
 
@@ -144,13 +138,7 @@ query ProductsList($projectName: String!, $ids: [String!]!) {
                         id
                         name
                         parents
-                        attrib {
-                            fps
-                            resolutionWidth
-                            resolutionHeight
-                            frameStart
-                            frameEnd
-                        }
+                        attrib(names: ["fps", "resolutionWidth", "resolutionHeight", "frameStart", "frameEnd"])
                     }
                 }
             }
@@ -188,7 +176,6 @@ export const getProductApi = api.injectEndpoints({
         },
         validateStatus: (response, result) => response.status === 200 && !result?.errors?.length,
       }),
-      transformErrorResponse: (error) => error?.data?.errors?.[0]?.message,
       transformResponse: (response) => parseProductData(response.data),
       providesTags: (result, _e, { folderIds = [] }) =>
         result

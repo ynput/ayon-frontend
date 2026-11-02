@@ -12,6 +12,7 @@ import { EVERYONE_GROUP_KEY } from '@shared/components/ShareOptionIcon/ShareOpti
 import { FC } from 'react'
 import clsx from 'clsx'
 import { RemoteAddonProjectProps } from '@shared/context'
+import { Button } from '@ynput/ayon-react-components'
 
 interface ListAccessFallbackProps extends EntityListModel {
   currentUser: UserModel // username of the current user
@@ -21,6 +22,7 @@ interface ListAccessFallbackProps extends EntityListModel {
   onUpdateList: (payload: EntityListPatchModel) => Promise<void>
   onSuccess?: () => void
   onError?: (error: string) => void
+  onCopyLink?: () => void
 }
 
 export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
@@ -28,6 +30,7 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
   access = {},
   currentUser,
   isLoading,
+  onCopyLink,
 }) => {
   const { data: ownerUser, isFetching: isLoadingOwner } = useGetUserQuery(
     { userName: owner || '' },
@@ -57,6 +60,7 @@ export const ListAccessFallback: FC<ListAccessFallbackProps> = ({
       >
         <span className="suffix">{ACCESS_LEVEL_LABELS[access[EVERYONE_GROUP_KEY] || 30]}</span>
       </AccessUser>
+      {onCopyLink && <Button variant="text" icon="link" label="Copy link" onClick={onCopyLink} />}
       {!isLoading && (
         <PowerpackButton
           feature="listAccess"

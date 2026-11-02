@@ -3,8 +3,15 @@ import type {
   GetEntitiesChecklistsQuery,
   PageInfo,
 } from '@shared/api/generated'
-import { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
-import { BaseTypes, EntityTooltipQuery, TaskTypes, VersionTypes } from '../activityQueries'
+import type { ChecklistCount, FeedActivity, FeedActivityData } from '../types'
+import {
+  BaseTypes,
+  EntityTooltipQuery,
+  FolderTypes,
+  TaskTypes,
+  VersionTypes,
+  WorkfileTypes,
+} from '../activityQueries'
 
 // Helper function to get a nested property of an object using a string path
 const getNestedProperty = <T extends Record<string, any>, R = any>(
@@ -109,6 +116,8 @@ export type EntityTooltip = {
   thumbnailHash?: string
   updatedAt?: string
   taskType?: string
+  folderType?: string
+  productType?: string
   users?: { name: string; avatarUrl: string }[]
   path?: string
 }
@@ -166,6 +175,49 @@ const transformVersionTooltip: TransformVersionTooltip = (data) => {
   return tooltip
 }
 
+type TransformFolderTooltip = (data: BaseTypes & FolderTypes) => EntityTooltip
+
+const transformFolderTooltip: TransformFolderTooltip = (data) => {
+  const { id, name, label, status, thumbnailId, thumbnailHash, updatedAt, folderType, parents } =
+    data || {}
+
+  return {
+    id,
+    name,
+    title: label || name,
+    type: 'folder',
+    subTitle: parents?.[parents.length - 1] || '',
+    status,
+    thumbnailId,
+    thumbnailHash,
+    updatedAt,
+    folderType,
+    users: [],
+    path: parents?.[parents.length - 2],
+  }
+}
+
+type TransformWorkfileTooltip = (data: BaseTypes & WorkfileTypes) => EntityTooltip
+
+const transformWorkfileTooltip: TransformWorkfileTooltip = (data) => {
+  const { id, name, status, thumbnailId, thumbnailHash, updatedAt, task } = data || {}
+
+  return {
+    id,
+    name,
+    title: name,
+    type: 'workfile',
+    subTitle: task?.label || task?.name || '',
+    status,
+    thumbnailId,
+    thumbnailHash,
+    updatedAt,
+    taskType: task?.taskType,
+    users: [],
+    path: task?.folder?.path?.split('/').pop(),
+  }
+}
+
 // different types have different tooltip data, we need to create a single data model
 export const transformTooltipData = (data: EntityTooltipQuery['data']['project'], type: string) => {
   switch (type) {
@@ -175,6 +227,12 @@ export const transformTooltipData = (data: EntityTooltipQuery['data']['project']
     case 'version':
       // @ts-ignore
       return transformVersionTooltip(data.version)
+    case 'folder':
+      // @ts-ignore
+      return transformFolderTooltip(data.folder)
+    case 'workfile':
+      // @ts-ignore
+      return transformWorkfileTooltip(data.workfile)
     default:
       return {}
   }
@@ -230,6 +288,64 @@ export const filterKey = (filter: any): string => {
   }
 }
 
+/**
+ * Shared helper to generate activity tags for both standard and infinite queries.
+ */
+export const provideSharedActivityTags = (
+  result: { activities?: any[]; pages?: Array<{ activities: any[] }> } | undefined,
+  _error: unknown,
+  // Widened type signatures to allow string[] | string | null | undefined
+  arg: {
+    entityIds?: string | string[] | null
+    activityTypes?: string | string[] | null
+    filter?: any
+  },
+) => {
+  if (!result) {
+    return [{ type: 'activity' as const, id: 'LIST' }]
+  }
+
+  const { entityIds, activityTypes, filter } = arg
+
+  // Helper now safely skips null/undefined values
+  const normalizeIds = (ids: unknown): string[] =>
+    (Array.isArray(ids) ? ids : [ids]).filter(Boolean) as string[]
+
+  const cleanEntityIds = normalizeIds(entityIds)
+  const cleanActivityTypes = normalizeIds(activityTypes)
+
+  const activities = result.pages
+    ? result.pages.flatMap((page) => page.activities)
+    : result.activities || []
+
+  return [
+    // Individual Activity Tags
+    ...activities.map((a) => ({ type: 'activity' as const, id: a.activityId })),
+    { type: 'activity' as const, id: 'LIST' },
+
+    // Base Entity Activity Tags
+    ...cleanEntityIds.map((id) => ({ type: 'entityActivities' as const, id })),
+    { type: 'entityActivities' as const, id: 'LIST' },
+
+    // Activity Type Tags
+    ...cleanActivityTypes.map((type) => ({ type: 'entityActivities' as const, id: type })),
+
+    // Filtered Entity Activity Tags
+    ...cleanEntityIds.map((id) => ({
+      type: 'entityActivities' as const,
+      id: `${id}-${filterKey(filter)}`,
+    })),
+
+    // Published Version Tags
+    ...activities
+      .filter((a) => a.activityType === 'version.publish')
+      .map((a) => ({
+        type: 'entityActivities' as const,
+        id: `version.publish-${a.origin.id}`,
+      })),
+  ]
+}
+
 export const filterActivityTypes: Record<string, string[]> = {
   activity: [
     'comment',
@@ -238,10 +354,20 @@ export const filterActivityTypes: Record<string, string[]> = {
     'assignee.add',
     'assignee.remove',
     'version.review',
+    'attrib.change',
+    'tags.change',
+    'subtype.change',
   ],
   comments: ['comment'],
   versions: ['version.publish'],
-  updates: ['status.change', 'assignee.add', 'assignee.remove'],
+  updates: [
+    'status.change',
+    'assignee.add',
+    'assignee.remove',
+    'attrib.change',
+    'tags.change',
+    'subtype.change',
+  ],
   checklists: ['checklist'],
 }
 

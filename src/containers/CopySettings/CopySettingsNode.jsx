@@ -397,7 +397,7 @@ const CopySettingsNode = ({
   )
 
   // is it a table? it is. So i'm using a table. don't judge me!
-  // i am 41 years old and i can use a table if i want to.
+  // i am 42 years old and i can use a table if i want to.
 
   const body = (
     <NodePanelBody>

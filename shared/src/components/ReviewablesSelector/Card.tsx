@@ -1,22 +1,24 @@
 import clsx from 'clsx'
-import { FileThumbnail } from '@shared/components'
-import { ReviewableModel } from '@shared/api'
-import { ContextMenuItemType, useCreateContextMenu } from '@shared/containers'
+import { FileThumbnail } from '../FileThumbnail'
+import type { ReviewableModel } from '@shared/api'
+import type { ContextMenuItemType } from '@shared/containers/ContextMenu/useCreateContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import * as Styled from './ReviewablesSelector.styled'
 import { KeyboardEvent, MouseEvent } from 'react'
 
 export type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label'> & {
-  tag?: JSX.Element,
-  contextMenuItems?: ContextMenuItemType[],
-  selectionVariant?: 'primary' | 'tertiary',
+  tag?: JSX.Element
+  contextMenuItems?: ContextMenuItemType[]
+  selectionVariant?: 'primary' | 'tertiary'
 }
 
 export type ReviewableCardProps = ReviewableCard & {
-  projectName: string | null,
-  selected: boolean,
-  onChange?: (fileId: string, modifier?: boolean) => void,
-  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void,
-  onMouseOver: (event: MouseEvent<HTMLDivElement>, { label }: { label?: string }) => void,
+  projectName: string | null
+  selected: boolean
+  onChange?: (fileId: string, modifier?: boolean) => void
+  onKeyDown: (event: KeyboardEvent<HTMLDivElement>) => void
+  onMouseOver: (event: MouseEvent<HTMLDivElement>, { label }: { label?: string }) => void
+  shortcut?: string
 }
 
 export default function Card({
@@ -30,6 +32,7 @@ export default function Card({
   tag,
   contextMenuItems,
   selectionVariant = 'primary',
+  shortcut,
 }: ReviewableCardProps) {
   const [contextMenuShow] = useCreateContextMenu()
 
@@ -39,6 +42,9 @@ export default function Card({
       id={'preview-' + fileId}
       onClick={(event) => onChange?.(fileId, event.metaKey || event.ctrlKey)}
       className={clsx('reviewable-card', { selected }, selectionVariant)}
+      data-tooltip={label}
+      data-shortcut={shortcut}
+      data-shortcut-position="before"
       onMouseOver={(e) => onMouseOver(e, { label })}
       onKeyDown={onKeyDown}
       onContextMenu={(event) => {
@@ -50,9 +56,7 @@ export default function Card({
       tabIndex={0}
     >
       <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
-      {
-        tag && <Styled.Tag>{tag}</Styled.Tag>
-      }
+      {tag && <Styled.Tag>{tag}</Styled.Tag>}
     </Styled.ReviewableCard>
   )
 }

@@ -1,8 +1,19 @@
-import { useContext, useMemo, useRef, useState } from 'react'
+import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
+import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
-import { Menu, MenuContainer, DetailsDialog } from '@shared/components'
-import { useMenuContext, ThumbnailUploadContext } from '@shared/context'
+import { Menu } from '@shared/components/Menu/Menu'
+import { MenuContainer } from '@shared/components/Menu/MenuContainer'
+import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
+import {
+  useMenuContext,
+  ThumbnailUploadContext,
+  useDeleteEntitiesContextOptional,
+  isDeletableEntityType,
+  type DeletableEntity,
+} from '@shared/context'
 
 import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
@@ -70,10 +81,13 @@ export const DetailsPanelMoreMenu = ({
   const { triggerThumbnailUpload, canUploadVersion } = useContext(ThumbnailUploadContext)
   const { onOpenVersionUpload } = useContextAccess()
 
+  // useId keeps the id unique per panel instance so the main panel and the slideout
+  // never share it — a global menuOpen would otherwise open both menus at once.
+  const instanceId = useId()
   const menuId = useMemo(() => {
     const seed = entityId || entityIds?.[0] || 'noentity'
-    return `details-more-menu-${seed}-${projectName || 'noproject'}`
-  }, [entityId, entityIds, projectName])
+    return `details-more-menu-${instanceId}-${seed}-${projectName || 'noproject'}`
+  }, [instanceId, entityId, entityIds, projectName])
 
   const isOpen = menuOpen === menuId
 
@@ -89,27 +103,125 @@ export const DetailsPanelMoreMenu = ({
   }
 
   const viewerArgs =
-    entityId && projectName
-      ? buildViewerArgs(entityType, entityId, projectName, productId)
-      : null
+    entityId && projectName ? buildViewerArgs(entityType, entityId, projectName, productId) : null
   const canOpenViewer = !!onOpenViewer && !!viewerArgs
+
+  const deleteContext = useDeleteEntitiesContextOptional()
+
+  // Delete acts only on what this panel currently displays — never an outside selection,
+  // which can diverge from the panel's entity and delete the wrong thing.
+  const deletableEntities = useMemo<DeletableEntity[]>(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+      ? [{ entityId, entityType, projectName }]
+      : []
+    return source
+      .map((e): DeletableEntity | null => {
+        const type = e.entityType || entityType
+        const entityProjectName = e.projectName || projectName
+        if (!isDeletableEntityType(type) || !e.entityId || !entityProjectName) return null
+        return {
+          id: e.entityId,
+          entityType: type,
+          name: e.name,
+          label: e.label,
+          projectName: entityProjectName,
+          folderId: e.folderId,
+          parentId: e.parentId,
+        }
+      })
+      .filter((e): e is DeletableEntity => e !== null)
+  }, [selectedEntities, entityId, entityType, projectName])
+
+  const canDelete = !!deleteContext && deletableEntities.length > 0
+
+  const handleDelete = () => {
+    setMenuOpen(false)
+    deleteContext?.deleteEntities(deletableEntities)
+  }
+
+  // items addons contribute to this menu (detailsPanel.menuItem slot, @ynput/ayon-addon)
+  const { contributions: addonMenuItems } = useContributions('detailsPanel.menuItem')
+  const applicableAddonItems = useMemo(
+    () =>
+      addonMenuItems.filter(
+        (item) => !item.entityTypes?.length || item.entityTypes.includes(entityType),
+      ),
+    [addonMenuItems, entityType],
+  )
+  const addonContext = useMemo(() => {
+    const source: SelectedEntityRef[] = selectedEntities.length
+      ? selectedEntities
+      : entityId
+      ? [{ entityId, entityType, projectName }]
+      : []
+    const entities = source.map((e) => ({
+      id: e.entityId,
+      entityType: e.entityType || entityType,
+      projectName: e.projectName || projectName || '',
+      name: e.name,
+      label: e.label || undefined,
+    }))
+    return { projectName: projectName || '', entityType, entities }
+  }, [selectedEntities, entityId, entityType, projectName])
+  const toMenuItem = useCallback(
+    (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
+      id: item.key,
+      label: item.label,
+      icon: item.icon,
+      'data-addon-item': item.key,
+      onClick: () => runContribution(item, addonContext),
+    }),
+    [addonContext],
+  )
+  // pinned items are buttons next to this one, the rest are in the menu: `top` ones first, the
+  // others (default) above View data and Delete
+  const pinnedAddonItems = useMemo(
+    () => [
+      ...menuItemsAt(applicableAddonItems, 'top'),
+      ...menuItemsAt(applicableAddonItems, 'bottom'),
+    ].filter((item) => item.pinned),
+    [applicableAddonItems],
+  )
+  const menuAddonItems = useMemo(
+    () => applicableAddonItems.filter((item) => !item.pinned),
+    [applicableAddonItems],
+  )
+  const addonTopItems = useMemo(
+    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
+  )
+  const addonItems = useMemo(
+    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
+  )
+  // the items draw from their descriptions; their code loads when the menu opens
+  useEffect(() => {
+    if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
+  }, [isOpen, menuAddonItems])
 
   const { items } = useMenuOptions({
     entityType,
     entityId,
     projectName,
     selectedEntities,
+    deleteEntities: deletableEntities,
     canUploadThumbnail,
     canUploadVersion: canUploadVersionItem,
     canOpenPip: !!onOpenPip,
     canOpenViewer,
+    canDelete,
     entityListsContext,
+    extraTopItems: addonTopItems,
+    extraItems: addonItems,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
     onUploadThumbnail: () => triggerThumbnailUpload?.(),
     onUploadVersion: handleUploadVersion,
     onShare: (link) => setShareDialogLink(link),
     onViewData: () => setShowDataDialog(true),
+    onDelete: handleDelete,
   })
 
   const dialogIds = entityIds?.length ? entityIds : entityId ? [entityId] : []
@@ -117,6 +229,19 @@ export const DetailsPanelMoreMenu = ({
 
   return (
     <>
+      {pinnedAddonItems.map((item) => (
+        <Button
+          key={item.key}
+          // addons name any Material Symbols icon
+          icon={item.icon as never}
+          variant="text"
+          data-tooltip={item.label}
+          aria-label={item.label}
+          data-addon-item={item.key}
+          onMouseEnter={() => prefetchPiece(item.run)}
+          onClick={() => runContribution(item, addonContext)}
+        />
+      ))}
       <Button
         ref={buttonRef}
         icon="more_horiz"

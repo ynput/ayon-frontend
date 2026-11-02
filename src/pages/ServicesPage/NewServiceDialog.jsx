@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { compareBuild } from 'semver'
-import { Dialog, Dropdown } from '@ynput/ayon-react-components'
+import { Dialog, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
 import {
   FormLayout,
   FormRow,
@@ -64,6 +64,24 @@ const sanitizeServiceName = (name) => {
   return sanitized
 }
 
+// Environment variables and ports defined in addon package.py
+// (docker-compose style: environment as a dict or a list of KEY=VALUE)
+const getServiceDefaults = (serviceDef) => {
+  const { environment, ports } = serviceDef || {}
+
+  let envLines = []
+  if (Array.isArray(environment)) {
+    envLines = environment.map((item) => String(item))
+  } else if (environment && typeof environment === 'object') {
+    envLines = Object.entries(environment).map(([key, value]) => `${key}=${value ?? ''}`)
+  }
+
+  return {
+    envVars: envLines.join('\n'),
+    ports: Array.isArray(ports) ? ports.map((p) => String(p)).join('\n') : '',
+  }
+}
+
 const ServiceDialog = ({ onHide, editService = null }) => {
   const isEditMode = !!editService
   const [serviceName, setServiceName] = useState('')
@@ -79,6 +97,10 @@ const ServiceDialog = ({ onHide, editService = null }) => {
   const { data: addonData = [] } = useGetServiceAddonsQuery({})
   const { data: hostsData } = useListHostsQuery()
   const { hosts = [] } = hostsData || {}
+
+  const [useRegistryAuth, setUseRegistryAuth] = useState(false)
+  const [registryUsername, setRegistryUsername] = useState('')
+  const [registryPassword, setRegistryPassword] = useState('')
 
   // Initialize form with existing service data when in edit mode
   useEffect(() => {
@@ -119,6 +141,15 @@ const ServiceDialog = ({ onHide, editService = null }) => {
             .join('\n'),
         )
       }
+
+      const auth = editService.data?.registryAuth
+      if (auth) {
+        setUseRegistryAuth(true)
+        setRegistryUsername(auth.username || '')
+        setRegistryPassword(auth.password || '')
+      }
+
+
     }
   }, [isEditMode, editService, addonData])
 
@@ -179,10 +210,6 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       user: null,
       env: {},
     }
-    if (settingsVariant !== 'production') {
-      serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
-    }
-
     if (storages) {
       serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
     }
@@ -193,21 +220,25 @@ const ServiceDialog = ({ onHide, editService = null }) => {
 
     if (envVars) {
       serviceConfig.env = envVars.split('\n').reduce((acc, line) => {
-        const [key, value] = line.split('=')
-        if (key && value) {
-          acc[key.trim()] = value.trim()
+        const separatorIndex = line.indexOf('=')
+        if (separatorIndex === -1) return acc
+        const key = line.slice(0, separatorIndex).trim()
+        const value = line.slice(separatorIndex + 1).trim()
+        if (key) {
+          acc[key] = value
         }
         return acc
       }, {})
     }
 
-    const serviceData = {
-      addonName: selectedAddon.name,
-      addonVersion: selectedVersion,
-      service: selectedService,
-      hostname: selectedHost,
-      config: serviceConfig,
+    // after parsing env vars so the variant is not overwritten by them
+    if (settingsVariant !== 'production') {
+      serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
     }
+
+    serviceConfig.registryAuth = useRegistryAuth
+      ? { username: registryUsername, password: registryPassword }
+      : null
 
     try {
       if (isEditMode) {
@@ -251,6 +282,13 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         }
       } else {
         // Create new service
+        const serviceData = {
+          addonName: selectedAddon.name,
+          addonVersion: selectedVersion,
+          service: selectedService,
+          hostname: selectedHost,
+          config: serviceConfig,
+        }
         await spawnService({ name: serviceName, spawnServiceRequestModel: serviceData }).unwrap()
         toast.success(`Service spawned`)
         onHide()
@@ -261,13 +299,17 @@ const ServiceDialog = ({ onHide, editService = null }) => {
     }
   }
 
-  const canSubmit = isEditMode
-    ? !!selectedHost
-    : selectedAddon?.name &&
-      selectedVersion &&
-      selectedService &&
-      selectedHost &&
-      serviceName?.length
+  const registryAuthValid =
+    !useRegistryAuth || (registryUsername?.length > 0 && registryPassword?.length > 0)
+
+  const canSubmit =
+    (isEditMode
+      ? !!selectedHost
+      : selectedAddon?.name &&
+        selectedVersion &&
+        selectedService &&
+        selectedHost &&
+        serviceName?.length) && registryAuthValid
 
   const footer = (
     <Toolbar>
@@ -333,6 +375,11 @@ const ServiceDialog = ({ onHide, editService = null }) => {
                 onChange={(e) => {
                   setSelectedService(e[0])
                   setServiceName(sanitizeServiceName(e[0]))
+                  // pre-fill environment and ports defined in addon package.py
+                  const serviceDef = selectedAddon?.versions[selectedVersion]?.services?.[e[0]]
+                  const defaults = getServiceDefaults(serviceDef)
+                  setPorts(defaults.ports)
+                  setEnvVars(defaults.envVars)
                 }}
                 disabled={!selectedVersion}
                 placeholder="Select a service..."
@@ -392,6 +439,27 @@ const ServiceDialog = ({ onHide, editService = null }) => {
           Add multiple environment variables by adding them on a new line.
         </FormRow>
       </FormLayout>
+
+
+      <Divider>Registry settings</Divider>
+      <FormLayout>
+
+        <FormRow label="Registry login">
+          <InputSwitch checked={useRegistryAuth} onChange={() => setUseRegistryAuth(!useRegistryAuth)} />
+        </FormRow>
+
+        {useRegistryAuth && (
+          <>
+            <FormRow label="Registry username">
+              <InputText value={registryUsername} onChange={(e) => setRegistryUsername(e.target.value)} />
+            </FormRow>
+            <FormRow label="Registry password">
+              <InputText value={registryPassword} onChange={(e) => setRegistryPassword(e.target.value)} type="password" />
+            </FormRow>
+          </>
+        )}
+      </FormLayout>
+
     </Dialog>
   )
 }

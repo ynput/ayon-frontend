@@ -3,7 +3,7 @@ import * as Styled from './EntityPath.styled'
 import clsx from 'clsx'
 import SegmentProvider from './SegmentProvider'
 import { Icon } from '@ynput/ayon-react-components'
-import { DetailsPanelEntityType } from '@shared/api'
+import type { DetailsPanelEntityType } from '@shared/api'
 
 const Slash = () => <span className="slash">/</span>
 

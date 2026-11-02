@@ -5,10 +5,11 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { copyToClipboard, groupResult, replaceRoot } from '@shared/util'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { DetailsDialog } from '@shared/components'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
+import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
-import { DetailsPanelEntityData, useGetProjectAnatomyQuery } from '@shared/api'
+import { useGetProjectAnatomyQuery } from '@shared/api'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 const columns = [
   {

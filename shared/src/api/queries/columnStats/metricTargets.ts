@@ -2,6 +2,7 @@ import type { VisibilityState } from '@tanstack/react-table'
 import { StatsOperation } from '@shared/api/generated'
 import { checkColumnVisibility } from '@shared/containers/ProjectTreeTable/utils/checkColumnVisibility'
 import type { SummaryCalc, RowScope } from '@shared/containers/ProjectTreeTable/types/summaryTypes'
+import { hasEnumOptions } from '@shared/util'
 
 export type MetricTarget = {
   field: string // column or dot-path for JSONB, e.g. 'status' / 'attrib.fps'
@@ -120,9 +121,10 @@ type BuildMetricTargetsArgs = {
 }
 
 // Targets for the footer over the columns the user can actually see.
-// Skipped on purpose (backend SQL can't aggregate them safely yet):
-// datetime (numeric cast fails), boolean attribs (text-vs-bool compare on
-// JSONB), and list-type attribs.
+// Skipped on purpose — the backend errors on these, and one bad target fails
+// the whole query, killing every other column's stats too:
+// datetime ("cannot cast type timestamp with time zone to numeric") and
+// boolean attribs ("operator does not exist: text = boolean").
 export const buildMetricTargets = ({
   entity,
   attribs,
@@ -134,7 +136,7 @@ export const buildMetricTargets = ({
 }: BuildMetricTargetsArgs): MetricTarget[] => {
   const isVisible = (columnId: string) =>
     checkColumnVisibility(columnVisibility, columnId, defaultColumnVisibility)
- const isActive = (columnId: string) =>
+  const isActive = (columnId: string) =>
     isVisible(columnId) && isSummaryActive(columnId, columnSummaries, columnSummaryScopes)
 
   const targets: MetricTarget[] = []
@@ -152,8 +154,18 @@ export const buildMetricTargets = ({
     targets.push({ field: 'assignees', aggregations: ENUM })
   }
 
+  // no visibility check: it's opt-in, and a name column missing from both maps would kill this
+  const nameScope = columnSummaryScopes?.['name'] ?? 'all'
+  // group entities sit on the primary scope, row entities on the secondary one
+  const nameScopeCoversEntity = ['folder', 'product'].includes(entity)
+    ? nameScope === 'all' || nameScope === 'primary'
+    : nameScope === 'all' || nameScope === 'secondary'
+  const nameBreakdown =
+    columnSummaries?.['name'] === 'breakdown' &&
+    isSummaryActive('name', columnSummaries, columnSummaryScopes) &&
+    nameScopeCoversEntity
   const subTypeField = SUB_TYPE_FIELD[entity]
-  if (subTypeField && isActive('subType')) {
+  if (subTypeField && (isActive('subType') || nameBreakdown)) {
     targets.push({ field: subTypeField, aggregations: ENUM })
   }
 
@@ -173,7 +185,10 @@ export const buildMetricTargets = ({
     if (type === 'integer' || type === 'float') {
       targets.push({ field, aggregations: NUMERIC })
     } else if (type === 'string') {
-      targets.push({ field, aggregations: attrib.data?.enum?.length ? ENUM : COUNTS })
+      targets.push({ field, aggregations: hasEnumOptions(attrib.data) ? ENUM : COUNTS })
+    } else if (type === 'list_of_strings' || type === 'list_of_integers') {
+      // backend buckets the whole array as one serialized value; normalizeDistribution unnests it
+      targets.push({ field, aggregations: ENUM })
     }
   }
 

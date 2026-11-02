@@ -1,4 +1,4 @@
-import { EnumWidget } from '@shared/containers/ProjectTreeTable'
+import { EnumWidget } from '@shared/containers/ProjectTreeTable/widgets/EnumWidget'
 import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 

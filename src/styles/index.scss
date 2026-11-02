@@ -395,6 +395,23 @@ a {
   }
 }
 
+// keep the right-clicked row looking hovered while its context menu is open
+.p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffffde;
+}
+
+// right-clicked entity card (grid, kanban) while its context menu is open
+.entity-card[data-context-menu-target] {
+  background-color: var(--default-color-hover);
+  box-shadow: inset 0 0 0 2px var(--default-color-hover);
+
+  &.active {
+    background-color: var(--active-color-hover);
+    box-shadow: inset 0 0 0 2px var(--active-border-color);
+  }
+}
+
 // compact table rows
 .p-datatable .p-datatable-tbody > tr,
 .p-treetable .p-treetable-tbody > tr {
@@ -464,26 +481,6 @@ a {
 // project side bar menu
 .p-sidebar-left {
   align-items: flex-start;
-}
-
-.dashboard-tasks {
-  .p-splitter-gutter {
-    z-index: 500;
-    align-items: flex-start;
-    translate: 4px 0;
-    transform-origin: left;
-
-    .p-splitter-gutter-handle {
-      height: 100%;
-      background: transparent;
-      width: 2px;
-
-      &:hover,
-      &:active {
-        background: var(--md-sys-color-outline-variant);
-      }
-    }
-  }
 }
 
 // if the panel after the splitter gutter is hidden then hide the gutter too

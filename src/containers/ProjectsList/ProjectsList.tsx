@@ -2,15 +2,19 @@ import { useGetProjectFoldersQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
-import { MENU_ID } from './ProjectsListTableHeader'
+import {
+  buildProjectFolderRowId,
+  buildProjectsTableData,
+  PROJECTS_LIST_MENU_ID,
+  ProjectsTable,
+} from '@shared/containers/ProjectsTable'
 import useProjectMenuController from './hooks/useProjectMenuController'
-import { useMenuContext } from '@shared/context/MenuContext'
+import type { Hidden } from './hooks/useProjectsListMenuItems'
+import { useMenuContext } from '@shared/context'
 import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import ProjectsTable from './ProjectsTable'
 import ProjectsShortcuts from './ProjectsShortcuts'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
@@ -19,8 +23,10 @@ interface ProjectsListProps {
   selection: string[]
   onSelect: (ids: string[]) => void
   multiSelect?: boolean
+  allowEmptySelection?: boolean
   onNewProject?: () => void
   onNoProjectSelected?: (projectName: string) => void
+  hidden?: Hidden
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -30,8 +36,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
   selection,
   onSelect,
   multiSelect,
+  allowEmptySelection,
   onNewProject,
   onNoProjectSelected,
+  hidden,
   pt,
 }) => {
   // GET USER PREFERENCES (moved to hook)
@@ -78,10 +86,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
       onSelect([selectedProjects[0].name])
     }
     // if there is no project selected, select the first one
-    if (projects.length && !selection.length) {
+    if (!allowEmptySelection && projects.length && !selection.length) {
       onSelect([projects[0].name])
     }
-  }, [multiSelect, selection, selectedProjects, onSelect, projects])
+  }, [multiSelect, selection, selectedProjects, onSelect, projects, allowEmptySelection])
 
   // state
   // search state
@@ -114,7 +122,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
   const { toggleMenuOpen } = useMenuContext()
   const toggleMenu = (open: boolean = true) => {
-    toggleMenuOpen(open ? MENU_ID : false)
+    toggleMenuOpen(open ? PROJECTS_LIST_MENU_ID : false)
   }
 
   const toggleSelectAll = () => {
@@ -196,6 +204,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
     showArchived,
     onSelectAll: toggleSelectAll,
     onShowArchivedToggle,
+    hidden,
     onFolderCreated: handleFolderCreated,
     onFoldersCreated: handleFoldersCreated,
   })
@@ -221,8 +230,9 @@ const ProjectsList: FC<ProjectsListProps> = ({
         selection={selection}
         onSelect={onSelect}
         onOpenProject={onOpenProject}
+        enableClickToDeselect={allowEmptySelection}
         title="Projects"
-        showAddProject={canCreateProject}
+        showAddProject={canCreateProject && !hidden?.['add-project']}
         onNewProject={onNewProject}
         toggleMenu={toggleMenu}
         onSelectAll={toggleSelectAll}
@@ -238,7 +248,10 @@ const ProjectsList: FC<ProjectsListProps> = ({
         pt={pt}
       />
       <ProjectFolderFormDialog {...folderDialogProps} />
-      <ProjectsShortcuts onOpenFolderDialog={handleOpenFolderDialog} disabled={!powerLicense} />
+      <ProjectsShortcuts
+        onOpenFolderDialog={handleOpenFolderDialog}
+        disabled={!powerLicense || !!hidden?.['create-folder']}
+      />
     </>
   )
 }

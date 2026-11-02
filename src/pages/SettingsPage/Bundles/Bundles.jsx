@@ -21,7 +21,7 @@ import { useSearchParams } from 'react-router-dom'
 import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
-import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/AddonSearchContext'
+import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-search'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -258,6 +258,7 @@ const Bundles = () => {
       addons: duplicatedAddons,
       installerVersion: bundle.installerVersion,
       dependencyPackages: bundle.dependencyPackages,
+      description: bundle.description,
       isArchived: false,
       isStaging: false,
       isProduction: false,
@@ -301,7 +302,6 @@ const Bundles = () => {
             patch,
           }).unwrap()
         } catch (error) {
-          console.error(error)
           toast.error(`Error setting bundle ${name} as ${status}`)
         }
       }
@@ -314,7 +314,6 @@ const Bundles = () => {
           patch,
         }).unwrap()
       } catch (error) {
-        console.error(error)
         toast.error(`Error unsetting ${status} on bundle ${name}`)
       }
     }
@@ -340,9 +339,7 @@ const Bundles = () => {
               draft.bundles[bundleIndex] = patchOld
             }),
           )
-        } catch (error) {
-          console.error(error)
-        }
+        } catch (error) {}
       }
 
       await updateBundle({
@@ -351,7 +348,6 @@ const Bundles = () => {
         patch,
       }).unwrap()
     } catch (error) {
-      console.error(error)
       toast.error(`Error setting bundle ${name} as ${copySettingsBundle.env}`)
       patchResult?.undo()
       throw error

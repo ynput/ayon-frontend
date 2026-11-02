@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
-import { EntityListModel, useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
+import { useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
+import type { EntityListModel } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useProjectContext } from '@shared/context'
 
@@ -156,6 +157,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   return (
     <DetailsPanelAttributesEditor
       enableEditing={canEdit}
+      projectName={projectName}
       fields={fields}
       form={form}
       isLoading={isLoading}

@@ -1,4 +1,4 @@
-import ThumbnailSimple from '@shared/components/ThumbnailSimple'
+import { ThumbnailSimple } from '@shared/components/ThumbnailSimple/ThumbnailSimple'
 import styled from 'styled-components'
 
 export const Container = styled.li`

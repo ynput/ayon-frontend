@@ -2,7 +2,6 @@ import TasksProgress from '@containers/TasksProgress'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
-import { useAppSelector } from '@state/store'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
@@ -10,12 +9,12 @@ import { useScopedStatuses } from '@shared/hooks'
 import { Slicer, SLICER_PAGES_CONFIG, useSlicerSplitter } from '@shared/containers/Slicer'
 import { useProjectContext } from '@shared/context'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
+import { useTaskProgressSlicerCountsSource } from '@containers/TasksProgress/hooks'
 
 const TasksProgressPage: FC = () => {
-  const projectName = useAppSelector((state: any) => state.project.name) as string
-
   //   GET PROJECT INFO FOR STATUS
   const { ...projectInfo } = useProjectContext()
+  const { projectName } = projectInfo
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task')
@@ -23,6 +22,8 @@ const TasksProgressPage: FC = () => {
   const folderStatuses = useScopedStatuses([projectName], ['folder'])
 
   const [slicerSize, handleResizeEnd] = useSlicerSplitter()
+
+  const slicerCountsSource = useTaskProgressSlicerCountsSource(projectName)
 
   return (
     <main>
@@ -33,7 +34,11 @@ const TasksProgressPage: FC = () => {
       >
         <SplitterPanel size={slicerSize[0]}>
           <Section wrap>
-            <Slicer sliceFields={SLICER_PAGES_CONFIG.progress.fields} pinnedSliceType="hierarchy" />
+            <Slicer
+              sliceFields={SLICER_PAGES_CONFIG.progress.fields}
+              pinnedSliceType="hierarchy"
+              countsSource={slicerCountsSource}
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]} style={{ overflow: 'hidden' }}>

@@ -2,7 +2,7 @@ import { FC, useState, useCallback, useEffect } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { FolderForm, FolderFormData } from '@shared/components/FolderForm'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 export interface ListFolderFormData extends FolderFormData {
@@ -13,37 +13,37 @@ interface ListFolderFormDialogProps {}
 
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId, parentId },
+    listFolderOpen: { isOpen, initial, folderId, parentId, rowIds },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
     selectedRows,
     selectedList,
     isReview,
-    isStoryboards,
   } = useListsContext()
 
-  const { listFolders } = useListsDataContext()
+  const { listFolders, listsMap } = useListsDataContext()
 
   const mode = folderId ? 'edit' : 'create'
 
   const editingFolder = listFolders?.find((f) => f.id === folderId)
 
-  const reviewScope = isStoryboards ? 'storyboard' : 'review-session'
-
   const initFolderForm: ListFolderFormData = {
     label: '',
-    scope: [isReview ? reviewScope : 'generic'],
+    scope: [isReview ? 'review-session' : 'generic'],
   }
   const [folderForm, setFolderForm] = useState<ListFolderFormData>(initFolderForm)
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // when creating a folder, we need to derive the context from the selection
-  const selectedListIds = selectedRows.filter((id) => !parseListFolderRowId(id))
-  const selectedFolderIds = selectedRows
+  // when creating a folder, we need to derive the context from the selection, or from the rows
+  // of the context menu that opened the dialog
+  const targetRows = rowIds ?? selectedRows
+  const selectedListIds = targetRows.filter((id) => !parseListFolderRowId(id))
+  const selectedFolderIds = targetRows
     .map((id) => parseListFolderRowId(id))
     .filter((id): id is string => !!id)
+  const targetList = rowIds ? listsMap.get(selectedListIds[0]) : selectedList
 
   const listIdsToAdd =
     mode === 'create' && !parentId && selectedFolderIds.length === 0 ? selectedListIds : []
@@ -53,8 +53,8 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
         ? [parentId]
         : selectedFolderIds.length > 0
         ? selectedFolderIds
-        : selectedList?.entityListFolderId
-        ? [selectedList.entityListFolderId]
+        : targetList?.entityListFolderId
+        ? [targetList.entityListFolderId]
         : []
       : []
 
@@ -113,7 +113,6 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
         )
       }
     } catch (error) {
-      console.error(`Failed to ${mode} folder:`, error)
       setError(`Failed to ${mode} folder`)
     } finally {
       handleClose()
@@ -209,11 +208,8 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           options: [
             { value: 'generic', label: 'Lists' },
             { value: 'review-session', label: 'Review Sessions' },
-            { value: 'storyboard', label: 'Storyboard' },
           ],
-          filter: isReview
-            ? isStoryboards ? ['storyboard'] : ['review-session']
-            : ['generic'],
+          filter: isReview ? ['review-session'] : ['generic'],
         }}
       />
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}

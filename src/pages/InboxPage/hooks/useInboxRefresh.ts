@@ -4,6 +4,7 @@ import type { AppDispatch } from '@state/store'
 
 interface UseInboxRefreshProps {
   isFetching: boolean
+  isUninitialized?: boolean
   refetch: () => void
   dispatch: AppDispatch
 }
@@ -14,6 +15,7 @@ interface UseInboxRefreshReturn {
 
 const useInboxRefresh = ({
   isFetching,
+  isUninitialized,
   refetch,
   dispatch,
 }: UseInboxRefreshProps): [() => void, UseInboxRefreshReturn] => {
@@ -26,9 +28,9 @@ const useInboxRefresh = ({
   }, [isFetching, isRefreshing])
 
   const handleRefresh = (): void => {
-    console.log('refetching inbox...')
     setIsRefreshing(true)
-    refetch()
+    // refetch throws when the query was skipped
+    if (!isUninitialized) refetch()
     // also invalidate the unread count
     dispatch(api.util.invalidateTags([{ type: 'inbox', id: 'unreadCount' }]))
   }

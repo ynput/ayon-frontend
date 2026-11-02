@@ -1,10 +1,10 @@
 import { FC } from 'react'
 import * as Styled from '@shared/containers/Views/Views.styled'
-import { useViewsContext } from '@shared/containers'
+import { useViewsContext } from '../context'
 import { confirmDialog } from 'primereact/confirmdialog'
 import { usePowerpack } from '@shared/context'
 import { SectionHeader } from '@shared/containers/Views/ViewsMenu/SectionHeader'
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 

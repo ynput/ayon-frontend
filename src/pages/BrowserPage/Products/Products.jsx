@@ -36,7 +36,6 @@ import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
 import { useDeleteVersionMutation } from '@shared/api'
 import { useDeleteProductMutation } from '@queries/product/updateProduct'
@@ -174,7 +173,6 @@ const Products = () => {
       // return so that the focus can update
       return versions
     } catch (error) {
-      console.error('Error while loading versions:', error)
       toast.error('Error while loading versions')
       setLoadingProducts([])
       return []
@@ -236,8 +234,6 @@ const Products = () => {
       // invalidate 'detail' query (details panel)
       // dispatch(api.util.invalidateTags(ids.map((id) => ({ type: 'detail', id }))))
     } catch (error) {
-      console.error(error)
-
       toast.error(error?.message || 'Failed to update')
       // we also need to undo the patch
     }
@@ -617,26 +613,7 @@ const Products = () => {
     })
   }
 
-  const {
-    buildAddToListMenu,
-    buildListMenuItem,
-    newListMenuItem,
-    versions: versionsLists,
-    reviews: reviewsLists,
-    buildHierarchicalMenuItems,
-  } = useEntityListsContext()
-
   const ctxMenuItems = (id, selectedProducts, selectedVersions) => {
-    // Look up hasReviewables per selected version (productsData rows expose the field for the active version)
-    const versionReviewablesById = new Map(
-      productsData.map((p) => [p.versionId, p.hasReviewables]),
-    )
-    const selectedEntities = selectedVersions.map((vId) => ({
-      entityId: vId,
-      entityType: 'version',
-      hasReviewables: versionReviewablesById.get(vId),
-    }))
-    const hasAnyNonReviewable = selectedEntities.some((v) => v.hasReviewables === false)
     const selectedProductsData = productsData.filter((p) => selectedProducts.includes(p.id))
     const firstProductData = selectedProductsData[0] || {}
 
@@ -653,18 +630,11 @@ const Products = () => {
         icon: 'upload',
         disabled: selectedProducts.length !== 1,
       },
-      buildAddToListMenu(
-        [
-          ...buildHierarchicalMenuItems(
-            [...versionsLists, ...reviewsLists],
-            selectedEntities,
-            (l) => (l.entityListType === 'review-session' ? true : !!reviewsLists.length),
-            (l) => l.entityListType === 'review-session' && hasAnyNonReviewable,
-          ),
-          newListMenuItem('version', selectedEntities),
-        ],
-        { label: 'Add to list (version)' },
-      ),
+      {
+        label: 'Add to list (deprecated)',
+        icon: 'list_alt_add',
+        disabled: true,
+      },
       {
         label: 'Product detail',
         command: () => setShowDetail('product'),

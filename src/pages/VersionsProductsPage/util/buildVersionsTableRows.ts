@@ -18,7 +18,11 @@ export const buildVersionsTableRows = ({
     const product = productsMap.get(productId)
     if (!product) return []
 
-    return product.versions.map((version) => ({
+    const sortedVersions = [...product.versions].sort(
+      (a, b) => (Number(a.version) || 0) - (Number(b.version) || 0),
+    )
+
+    return sortedVersions.map((version) => ({
       id: version.id,
       name: version.name,
       label: `${version.name} ${version.heroVersionId ? HERO_SYMBOL : ''}`,

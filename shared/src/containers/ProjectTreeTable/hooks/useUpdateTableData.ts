@@ -1,14 +1,15 @@
 import { CellId } from '../utils/cellUtils'
 import { CellValue } from '../widgets/CellWidget'
 import { toast } from 'react-toastify'
-import { useProjectTableQueriesContext } from '../context/ProjectTableQueriesContext'
+import { useProjectTableQueriesContext } from '../context/project-table-queries'
 import { useCallback } from 'react'
 import { InheritedDependent } from './useFolderRelationships'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useProjectTableContext } from '../context/project-table'
 import { OperationModel } from '../types/operations'
-import { PatchOperation } from '../types'
+import { EntityData, PatchOperation } from '../types'
 import { HistoryEntityUpdate, UseHistoryReturn } from './useHistory'
 import { useProjectContext } from '@shared/context'
+import { getQueryErrorCodes } from '@shared/api/base/queryError'
 
 const getErrorMessage = (
   errorCode: string | undefined,
@@ -35,6 +36,7 @@ export type EntityUpdate = {
   type: string
   field: string
   value: CellValue | CellValue[] | null
+  entityData?: EntityData
   isAttrib?: boolean
   isLink?: boolean // link updates use different endpoint
   meta?: Record<string, any>
@@ -91,7 +93,7 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Filter out folder type updates for folders with versions
       const filteredUpdates = entityUpdates.filter((entity) => {
         if (entity.field === 'folderType' && entity.type === 'folder') {
-          const entityData = getEntityById(entity.id)
+          const entityData = getEntityById(entity.id) || entity.entityData
           if (entityData?.hasVersions) {
             return false
           }
@@ -119,8 +121,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Record history of previous values before applying update
       if (pushHistory && pushToHistory) {
         const inverseEntities: HistoryEntityUpdate[] = entityUpdates.map(
-          ({ rowId, id, type, field, isAttrib, meta }) => {
-            const entityData = getEntityById(id) as Record<string, any>
+          ({ rowId, id, type, field, isAttrib, meta, entityData: suppliedEntityData }) => {
+            const entityData = (getEntityById(id) || suppliedEntityData) as Record<string, any>
             if (!entityData) {
               throw 'Entity not found: ' + id
             }
@@ -148,8 +150,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
           },
         )
         const historyEntities: HistoryEntityUpdate[] = entityUpdates.flatMap(
-          ({ rowId, id, type, field, value, isAttrib, meta }) => {
-            const entityData = getEntityById(id)
+          ({ rowId, id, type, field, value, isAttrib, meta, entityData: suppliedEntityData }) => {
+            const entityData = getEntityById(id) || suppliedEntityData
             const entityId = entityData?.entityId || entityData?.id || id
 
             if (!entityData) return []
@@ -179,8 +181,8 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
       // Group operations by entity type for bulk processing
       let operations: OperationWithRowId[] = []
       for (const entity of entityUpdates) {
-        let { id, type, field, value, isAttrib, meta } = entity
-        const entityData = getEntityById(id)
+        let { id, type, field, value, isAttrib, meta, entityData: suppliedEntityData } = entity
+        const entityData = getEntityById(id) || suppliedEntityData
         const entityId = entityData?.entityId || entityData?.id || id
         // Skip unsupported entity types
         let entityType = type as OperationModel['entityType']
@@ -267,8 +269,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         }
       } catch (error: any) {
         console.error('Error updating entities:', error)
-        if (operations.length === 1) {
-          error.errorCodes.forEach((errorCode: string) => {
+        const errorCodes = getQueryErrorCodes(error)
+        if (operations.length === 1 && errorCodes.length > 0) {
+          errorCodes.forEach((errorCode: string) => {
             const op = operations[0]
             const entity = getEntityById(op.entityId as string)
             const entityName = entity?.label || entity?.name || op.entityId || ''
@@ -276,7 +279,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             toast.error(message)
           })
         } else {
-          toast.error('Failed to update entities')
+          const op = operations[0]
+          const entity = op && getEntityById(op.entityId as string)
+          const entityName = entity?.label || entity?.name || op?.entityId || ''
+          toast.error(
+            operations.length === 1
+              ? getErrorMessage(undefined, op.entityType, entityName)
+              : 'Failed to update entities',
+          )
         }
         // Remove the failed update from history stack
         if (pushHistory && pushToHistory && removeHistoryEntries) {
@@ -511,8 +521,9 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
         })
       } catch (error: any) {
         // Extract error code from operation result - check multiple paths
-        if (operations.length === 1) {
-          error.errorCodes.forEach((errorCode: string) => {
+        const errorCodes = getQueryErrorCodes(error)
+        if (operations.length === 1 && errorCodes.length > 0) {
+          errorCodes.forEach((errorCode: string) => {
             const op = operations[0]
             const entity = getEntityById(op.entityId as string)
             const entityName = entity?.label || entity?.name || op.entityId || ''
@@ -520,7 +531,14 @@ const useUpdateTableData = (props?: UseUpdateTableDataProps) => {
             toast.error(message)
           })
         } else {
-          toast.error('Failed to update entities')
+          const op = operations[0]
+          const entity = op && getEntityById(op.entityId as string)
+          const entityName = entity?.label || entity?.name || op?.entityId || ''
+          toast.error(
+            operations.length === 1
+              ? getErrorMessage(undefined, op.entityType, entityName)
+              : 'Failed to update entities',
+          )
         }
 
         // Remove the failed update from history stack

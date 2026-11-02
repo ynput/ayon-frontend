@@ -1,4 +1,4 @@
-import { EntityComment } from '@shared/api'
+import type { EntityComment } from '@shared/api'
 import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
 
 const pad = (n: number) => String(n).padStart(2, '0')
@@ -8,9 +8,9 @@ const formatCommentDate = (iso?: string | null): string => {
   if (!iso) return ''
   const d = new Date(iso)
   if (isNaN(d.getTime())) return ''
-  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(
-    d.getMinutes(),
-  )}`
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`
 }
 
 const decodeEntities = (s: string): string =>
@@ -32,7 +32,9 @@ const bodyToPlainText = (body?: string | null): string => {
   t = t.replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images -> nothing (widget renders img as null)
   // links & mentions -> label; mentions (`type:id`) drop the leading @, matching the widget
   t = t.replace(/\[([^\]]*)\]\(([^)]*)\)/g, (_m, label, target) =>
-    allowedRefTypes.includes(String(target).split(':')[0]) ? String(label).replace(/^@/, '') : label,
+    allowedRefTypes.includes(String(target).split(':')[0])
+      ? String(label).replace(/^@/, '')
+      : label,
   )
   t = t.replace(/```([\s\S]*?)```/g, '$1') // fenced code -> its contents
   t = t.replace(/`+/g, '') // inline code ticks
@@ -55,6 +57,8 @@ const bodyToPlainText = (body?: string | null): string => {
 export const commentsToText = (comments: EntityComment[] = []): string =>
   comments
     .map((c) =>
-      [bodyToPlainText(c.body), c.author, formatCommentDate(c.createdAt)].filter(Boolean).join(' - '),
+      [bodyToPlainText(c.body), c.author, formatCommentDate(c.createdAt)]
+        .filter(Boolean)
+        .join(' - '),
     )
     .join('\n')

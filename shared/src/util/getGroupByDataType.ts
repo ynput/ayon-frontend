@@ -1,6 +1,6 @@
-import { ProjectTableAttribute } from '@shared/containers'
+import type { ProjectTableAttribute } from '../containers/ProjectTreeTable/types'
 import type { TableGroupBy } from '../containers/ProjectTreeTable/context'
-import { AttributeModel } from '@shared/api/generated/system'
+import type { AttributeModel } from '@shared/api/generated/system'
 
 type DataType = 'string' | 'list_of_strings' | string
 

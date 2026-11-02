@@ -81,6 +81,7 @@ fragment ListItemFragment on BaseNode {
       }
     }
     task {
+      id
       name
       label
       taskType

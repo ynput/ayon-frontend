@@ -5,10 +5,16 @@ query GetVersionsColumnStats(
   $versionFilter: String
   $productFilter: String
   $taskFilter: String
+  $folderFilter: String
+  $representationFilter: String
   $folderIds: [String!]
   $versionIds: [String!]
   $productIds: [String!]
   $targets: [MetricTargetInput!]
+  $featuredOnly: [String!]
+  $featuredOnlyEntityType: String
+  $latestPerFolder: Boolean
+  $hasReviewables: Boolean
 ) {
   project(name: $projectName) {
     versions(
@@ -18,8 +24,14 @@ query GetVersionsColumnStats(
       filter: $versionFilter
       productFilter: $productFilter
       taskFilter: $taskFilter
+      folderFilter: $folderFilter
+      representationFilter: $representationFilter
       folderIds: $folderIds
       includeFolderChildren: true
+      featuredOnly: $featuredOnly
+      featuredOnlyEntityType: $featuredOnlyEntityType
+      latestPerFolder: $latestPerFolder
+      hasReviewables: $hasReviewables
     ) {
       fieldStats {
         ...ColumnStatsFragment

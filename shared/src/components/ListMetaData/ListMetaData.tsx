@@ -1,6 +1,6 @@
 // displays the meta data for a list
 
-import { EntityListModel } from '@shared/api'
+import type { EntityListModel } from '@shared/api'
 import { format } from 'date-fns'
 import { FC } from 'react'
 import { DetailsSection } from '../DetailsPanelDetails'
@@ -11,18 +11,20 @@ interface ListMetaDataProps {
 }
 
 export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
-  const listData = { ...(list?.data || {}) }
-  // remove category and count from the meta data
-  // @ts-expect-error
-  delete listData.category
-  // @ts-expect-error
-  delete listData.count
+  // data also holds structured entries (list attribute definitions, review session
+  // sections/grouping) which have no meaningful string rendering
+  const listData = Object.fromEntries(
+    Object.entries(list?.data || {}).filter(
+      ([key, value]) =>
+        !['category', 'count'].includes(key) && value !== null && typeof value !== 'object',
+    ),
+  )
 
   const metaData = {
     Id: list?.id,
     'Entity type': list?.entityType,
     'List type': list?.entityListType,
-    'Items count': list?.items?.length,
+    'Items count': list?.data?.count ?? list?.items?.length,
     Owner: list?.owner,
     'Created at': list?.createdAt && format(new Date(list?.createdAt), 'PPpp'),
     'Created by': list?.createdBy,

@@ -1,10 +1,8 @@
-import React from 'react'
 import axios, { AxiosError, AxiosResponse } from 'axios'
 import ReactDOM from 'react-dom/client'
-import store, { useAppDispatch, useAppSelector } from '@state/store'
-import { Provider as ReduxProvider } from 'react-redux'
-import { ToastContainer, Flip } from 'react-toastify'
 import { init } from '@module-federation/enhanced/runtime'
+import { shareHostModules } from './remote/hostSharedModules'
+import { provideAddonHost } from './remote/addonHost'
 
 // Initialize Module Federation runtime
 // Use dynamic origin based on current window.location for production deployments
@@ -12,7 +10,12 @@ init({
   name: 'host',
   remotes: [],
 })
-import App from './app'
+// addons get the host's @shared modules (one store, api cache and set of contexts)
+shareHostModules()
+// what @ynput/ayon-addon gets from the app (user, layout components)
+provideAddonHost()
+// keep this entry free of components so hot updates never re-run it (see AppRoot.tsx)
+import AppRoot from './AppRoot'
 
 // styles
 import 'react-toastify/dist/ReactToastify.css'
@@ -23,8 +26,7 @@ import './styles/loadingShimmer.scss'
 import './styles/index.scss'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
-import short from 'short-uuid'
-import { SocketProvider } from '@shared/context'
+import { v4 as uuid } from 'uuid'
 
 // generate unique session id
 declare global {
@@ -33,7 +35,7 @@ declare global {
   }
 }
 
-window.senderId = short.generate()
+window.senderId = uuid()
 
 axios.interceptors.response.use(
   (response: AxiosResponse) => {
@@ -52,43 +54,9 @@ axios.interceptors.response.use(
   },
 )
 
-// wrap socket provider so we can pass the correct props
-const SocketProviderWrapper = (props: { children: React.ReactNode }) => {
-  const dispatch = useAppDispatch()
-  const projectName = useAppSelector((state) => state.project.name) as unknown as string
-  const userName = useAppSelector((state) => state.user.name)
-  return (
-    <SocketProvider userName={userName} projectName={projectName} dispatch={dispatch}>
-      {props.children}
-    </SocketProvider>
-  )
-}
-
 /**
  * Render Application
  *
  * Rendering the root component of the application inside the element with id 'root'.
- * Wrapping the App component with ReduxProvider and SocketProvider.
- * Including ToastContainer for toast notifications.
  */
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
-  <React.StrictMode>
-    <ReduxProvider store={store}>
-      <SocketProviderWrapper>
-        <div id="root-header" className={import.meta.env.DEV ? 'DEV' : ''} />
-        <App />
-        <ToastContainer
-          position="bottom-right"
-          transition={Flip}
-          theme="dark"
-          pauseOnFocusLoss={false}
-          newestOnTop={false}
-          draggable={false}
-          closeOnClick={true}
-          autoClose={5000}
-          limit={5}
-        />
-      </SocketProviderWrapper>
-    </ReduxProvider>
-  </React.StrictMode>,
-)
+ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(<AppRoot />)

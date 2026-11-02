@@ -1,4 +1,5 @@
-import { accessApi, GetShareOptionsApiResponse } from '@shared/api/generated'
+import { accessApi } from '@shared/api/generated'
+import type { GetShareOptionsApiResponse } from '@shared/api/generated'
 
 const getBaseTags = (projectName?: string) => {
   const tags = [{ type: 'shared', id: 'LIST' }]
@@ -57,7 +58,6 @@ type UpdatedDefinitions = Omit<Definitions, 'getShareOptions'> & {
 const shareApi = accessApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getShareOptions: {
-      transformErrorResponse: (error: any) => error.data?.detail,
       transformResponse: (response: GetShareOptionsApiResponse) => response?.options || [],
       providesTags: (result, _e, { projectName }) =>
         result

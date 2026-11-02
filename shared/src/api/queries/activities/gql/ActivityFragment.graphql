@@ -12,15 +12,14 @@ fragment ActivityFragment on ActivityNode {
     name
     deleted
     active
-    attrib {
-      fullName
-    }
+    attrib(names: ["fullName"])
   }
   files {
     id
     name
     size
     mime
+    mediaInfo
   }
   origin {
     id
@@ -36,8 +35,7 @@ fragment ActivityFragment on ActivityNode {
   }
   version {
     thumbnailHash
-    attrib {
-      comment
-    }
+    status
+    attrib(names: ["comment"])
   }
 }

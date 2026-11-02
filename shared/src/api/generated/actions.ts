@@ -1,4 +1,7 @@
 import { api } from '@shared/api/base'
+// QueryFilter is already generated (identically) from several other tags -
+// reuse events.ts's copy here rather than redeclaring it.
+import type { QueryFilter } from './events'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
     listAvailableActionsForContext: build.mutation<
@@ -26,8 +29,8 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
-          identifier: queryArg.identifier,
           variant: queryArg.variant,
+          identifier: queryArg.identifier,
         },
       }),
     }),
@@ -43,8 +46,8 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
-          identifier: queryArg.identifier,
           variant: queryArg.variant,
+          identifier: queryArg.identifier,
         },
       }),
     }),
@@ -75,16 +78,16 @@ export type ConfigureActionApiResponse = /** status 200 Successful Response */ o
 export type ConfigureActionApiArg = {
   addonName: string
   addonVersion: string
-  identifier: string
   variant?: string
+  identifier: string
   actionConfig: ActionConfig
 }
 export type ExecuteActionApiResponse = /** status 200 Successful Response */ ExecuteResponseModel
 export type ExecuteActionApiArg = {
   addonName: string
   addonVersion: string
-  identifier: string
   variant?: string
+  identifier: string
   'x-sender'?: string
   'x-sender-type'?: string
   actionContext: ActionContext
@@ -107,41 +110,55 @@ export type IconModel = {
   /** The URL of the icon (for type url) */
   url?: string
 }
-export type FormFileData = {
-  filename: string
-  payload: string
-  download?: boolean
-}
-export type FormSelectOption = {
-  value: string
-  label: string
-  icon?: string
+export type FormOptionItem = {
+  value: string | number | boolean
+  label?: string
+  description?: string
+  group?: string
+  icon?: string | IconModel
   color?: string
+  shortName?: string
+  disabled?: boolean
+  disabledMessage?: string
+  hidden?: boolean
   badges?: string[]
 }
+/** @deprecated use FormOptionItem */
+export type FormSelectOption = FormOptionItem
+export type FormFieldPatch = {
+  value?: string | number | number | boolean | string[] | number[] | number[] | null
+  label?: string
+  placeholder?: any
+  options?: FormOptionItem[]
+  readOnly?: boolean
+  disabled?: boolean
+  hidden?: boolean
+  highlight?: 'info' | 'warning' | 'error'
+}
+export type FormFieldRule = {
+  when: QueryFilter
+  set: FormFieldPatch
+}
 export type SimpleFormField = {
-  type:
-    | 'text'
-    | 'boolean'
-    | 'select'
-    | 'multiselect'
-    | 'hidden'
-    | 'integer'
-    | 'float'
-    | 'label'
-    | 'file'
+  type: 'text' | 'boolean' | 'select' | 'multiselect' | 'hidden' | 'integer' | 'float' | 'label' | 'file'
   name: string
   label?: string
   placeholder?: any
-  value?: string | number | number | boolean | string[] | number[] | number[] | FormFileData
+  value?: string | number | number | boolean | string[] | number[] | number[]
   regex?: string
   multiline?: boolean
   syntax?: string
-  options?: FormSelectOption[]
+  options?: FormOptionItem[]
   highlight?: 'info' | 'warning' | 'error'
   min?: number | number
   max?: number | number
-  validExtensions?: string[]
+  valid_extensions?: string[]
+  readOnly?: boolean
+  disabled?: boolean
+  hidden?: boolean
+  enum_resolver?: string
+  enum_resolver_params?: { [key: string]: any }
+  rules?: FormFieldRule[]
 }
 export type BaseActionManifest = {
   /** The identifier of the action */

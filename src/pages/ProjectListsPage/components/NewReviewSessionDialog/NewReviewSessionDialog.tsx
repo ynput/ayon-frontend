@@ -4,15 +4,13 @@ import { FC, useRef, useCallback, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
-import { getEntityTypeIcon } from '@shared/util'
+import { filterBySearchQuery, getEntityTypeIcon } from '@shared/util'
 import { SimpleTableCellTemplate } from '@shared/containers/SimpleTable'
-import { matchSorter } from 'match-sorter'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
   onCreateEmpty?: () => void
   submitLoading?: boolean
-  isStoryboards?: boolean
 }
 
 const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
@@ -20,7 +18,6 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
   onSubmit,
   onCreateEmpty,
   submitLoading,
-  isStoryboards,
   ...props
 }) => {
   const { projectName } = useProjectContext()
@@ -38,10 +35,10 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
     projectName,
   })
 
-  const filteredLists = useMemo(() => {
-    if (!search) return listsData
-    return matchSorter(listsData, search, { keys: ['label', 'name'] })
-  }, [listsData, search])
+  const filteredLists = useMemo(
+    () => filterBySearchQuery(listsData, search, (list) => [list.label, list.entityType].join(' ')),
+    [listsData, search],
+  )
 
   const dialogContentRef = useRef<HTMLDivElement>(null)
 
@@ -58,7 +55,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
     async (list: { id: string }) => {
       try {
         if (!onSubmit) {
-          throw `${isStoryboards ? 'Storyboard' : 'Review'} addon not installed.`
+          throw 'Review addon not installed.'
         }
 
         // create new list in API
@@ -67,7 +64,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
         toast.error(
-          `Failed to create ${isStoryboards ? 'storyboard' : 'review session'}: ` + error ||
+          'Failed to create review session: ' + error ||
             'Unknown error',
         )
       }
@@ -105,7 +102,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         {!search && (
           <SimpleTableCellTemplate
             id="create-empty-review-session"
-            value={`Create empty ${isStoryboards ? 'storyboard' : 'review session'}`}
+            value="Create empty review session"
             icon="add_box"
             style={{
               padding: 6,

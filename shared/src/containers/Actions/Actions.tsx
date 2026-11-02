@@ -11,10 +11,12 @@ import {
 } from '@shared/api'
 import { ActionsDropdown, ActionsDropdownProps } from './ActionsDropdown'
 import ActionIcon from './ActionIcon'
-import { ActionTriggersProps, useActionTriggers } from '@shared/hooks'
+import type { ActionTriggersProps } from '@shared/hooks/useActionTriggers'
+import { useActionTriggers } from '@shared/hooks/useActionTriggers'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
-import { BundleMode } from '@shared/util'
+import { getRequestErrorString } from '@shared/util'
+import type { BundleMode } from '@shared/util/getBundleMode'
 import { useGlobalContext } from '@shared/context'
 
 const placeholder = {
@@ -94,11 +96,11 @@ export const Actions = ({
       entityIds: entities.map((entity) => entity.id),
       entitySubtypes: entitySubTypesToUse,
     }
-  }, [entities, entityType])
+  }, [entities, entityType, entitySubTypes, projectActionsProjectName])
 
   useEffect(() => {
     setInteractiveForm(null)
-  }, [context])
+  }, [JSON.stringify(context)])
 
   // we must get the developers current dev bundle name
   const { data: bundlesData, isFetching: isFetchingBundles } = useListBundlesQuery(
@@ -266,8 +268,7 @@ export const Actions = ({
     try {
       response = await executeAction({ actionContext, ...params }).unwrap()
     } catch (error: any) {
-      console.error('Error executing action', error)
-      toast.error(error?.data?.detail || 'Error executing action')
+      toast.error(getRequestErrorString(error) || 'Error executing action')
       return
     }
 

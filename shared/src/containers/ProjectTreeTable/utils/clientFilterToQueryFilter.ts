@@ -1,5 +1,5 @@
 import { getFilterFromId } from '@ynput/ayon-react-components'
-import { QueryCondition, QueryFilter } from '../types/operations'
+import type { QueryCondition, QueryFilter } from '../types/operations'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { createRelativeValue } from './expandRelativeDates'
 const NO_DATE = 'no-date'
@@ -82,6 +82,24 @@ export const clientFilterToQueryFilter = (filters: FilterForQuery[]): QueryFilte
   }
 }
 
+// Cleared text attribs are stored as "" (not null), so nullness checks on text
+// fields must cover both states. queryFilterToClientFilter reverses these shapes.
+const textEmptyGroup = (key: string): QueryFilter => ({
+  conditions: [
+    { key, operator: 'isnull' },
+    { key, operator: 'eq', value: '' },
+  ],
+  operator: 'or',
+})
+
+const textNotEmptyGroup = (key: string): QueryFilter => ({
+  conditions: [
+    { key, operator: 'notnull' },
+    { key, operator: 'ne', value: '' },
+  ],
+  operator: 'and',
+})
+
 // Helper function to convert a single Filter to a QueryCondition
 const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | QueryFilter => {
   // Extract key from filter ID (split by underscore if needed)
@@ -127,8 +145,13 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
     return { key, operator }
   }
 
+  const isTextField = filter.type === 'string' && !isListField
+
   // Handle different filter types
   if (hasSomeValue) {
+    if (isTextField) {
+      return filter.inverted ? textEmptyGroup(key) : textNotEmptyGroup(key)
+    }
     // we set the value to the empty state and then say it should not be that
     value = isListField ? [] : undefined
     operator = isListField
@@ -139,6 +162,9 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
       ? 'isnull'
       : 'notnull'
   } else if (hasNoValue) {
+    if (isTextField) {
+      return filter.inverted ? textNotEmptyGroup(key) : textEmptyGroup(key)
+    }
     // we set the value to the empty state and then say it should be that
     value = isListField ? [] : undefined
     operator = isListField
@@ -165,6 +191,8 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
     // Handle custom values with partial matching using LIKE operator
     // If we have custom values, we need to use LIKE operator with wildcards for partial matching
     // Note: Version fields and numeric fields use exact matching (eq/in) instead
+    // Excluded custom values use NOT LIKE; they are AND-ed so none of them may match
+    const likeOperator: QueryCondition['operator'] = filter.inverted ? 'notlike' : 'like'
 
     if (!filter.values || filter.values.length === 0) {
       // This shouldn't happen but handle it gracefully
@@ -178,13 +206,13 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
       if (nonCustomValues.length === 0) {
         if (customValues.length === 1) {
           // Single custom value - use simple LIKE operator
-          operator = 'like'
+          operator = likeOperator
           value = `%${customValues[0].id}%`
         } else {
           // Multiple custom values - create OR conditions for each
           const conditions: QueryCondition[] = customValues.map((v) => ({
             key,
-            operator: 'like' as QueryCondition['operator'],
+            operator: likeOperator,
             value: `%${v.id}%`,
           }))
 
@@ -213,7 +241,7 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
         customValues.forEach((v) => {
           conditions.push({
             key,
-            operator: 'like' as QueryCondition['operator'],
+            operator: likeOperator,
             value: `%${v.id}%`,
           })
         })

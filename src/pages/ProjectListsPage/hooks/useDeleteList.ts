@@ -1,6 +1,6 @@
 import { confirmDelete } from '@shared/util'
 import { toast } from 'react-toastify'
-import { useListsDataContext } from '../context/ListsDataContext'
+import { useListsDataContext } from '../context/lists-data'
 import { useCallback } from 'react'
 
 interface UseDeleteListProps {
@@ -48,7 +48,7 @@ const useDeleteList = ({ onDeleteList }: UseDeleteListProps): UseDeleteListRetur
         throw error
       }
     },
-    [listsMap],
+    [listsMap, onDeleteList],
   )
 
   return { deleteLists }

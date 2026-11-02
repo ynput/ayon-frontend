@@ -1,13 +1,12 @@
 import { useManageInboxItemMutation } from '@queries/inbox/updateInbox'
-import { ManageInboxItemRequest } from '@shared/api'
+import { ManageInboxItemFilter, ManageInboxItemRequest } from '@shared/api'
 
 type Config = {
-  last: number
   isActive: boolean
   isImportant: boolean
 }
 
-const useUpdateInboxMessage = ({ last, isActive, isImportant }: Config) => {
+const useUpdateInboxMessage = ({ isActive, isImportant }: Config) => {
   // update inbox message
   const [updateMessages] = useManageInboxItemMutation()
 
@@ -18,15 +17,17 @@ const useUpdateInboxMessage = ({ last, isActive, isImportant }: Config) => {
     isActiveChange = false,
     isRead = false,
     isAll = false,
+    itemFilter?: ManageInboxItemFilter,
   ) => {
     if (ids?.length > 0 || isAll) {
       // cacheKeyArgs are not used in the patch but are used to match the cache key to a query (for optimistic updates)
       const cacheKeyArgs = {
-        last,
         active: isActive,
         important: isImportant,
         isActiveChange,
         isRead,
+        onlyRead: itemFilter?.read === true,
+        isAll,
       }
       // update the messages in the backend to toggle read status
       // we use optimistic updates inside updateMessages query
@@ -35,8 +36,9 @@ const useUpdateInboxMessage = ({ last, isActive, isImportant }: Config) => {
           manageInboxItemRequest: {
             status: status,
             projectName: projectName,
-            ids: ids,
-            all: isAll,
+            // an empty ids array matches nothing on the backend, the all path must omit it
+            ids: isAll ? undefined : ids,
+            itemFilter,
           },
           ...cacheKeyArgs,
         }).unwrap()

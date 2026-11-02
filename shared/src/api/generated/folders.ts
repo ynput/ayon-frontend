@@ -129,7 +129,7 @@ export type GetFolderThumbnailApiArg = {
   original?: boolean
 }
 export type CreateFolderThumbnailApiResponse =
-  /** status 200 Successful Response */ CreateThumbnailResponseModel
+  /** status 201 Successful Response */ CreateThumbnailResponseModel
 export type CreateFolderThumbnailApiArg = {
   projectName: string
   folderId: string
@@ -277,6 +277,7 @@ export type QueryCondition = {
   operator?:
     | 'eq'
     | 'like'
+    | 'notlike'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -329,12 +330,6 @@ export type HierarchyResponseModel = {
   projectName: string
   hierarchy: HierarchyFolderModel[]
 }
-export type AffectedEntity = {
-  entityType: string
-  entityId: string
-  thumbnailHash: string
-}
 export type CreateThumbnailResponseModel = {
   id: string
-  affectedEntities?: AffectedEntity[]
 }

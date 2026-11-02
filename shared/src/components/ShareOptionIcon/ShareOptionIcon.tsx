@@ -35,6 +35,7 @@ export interface ShareOptionIconProps {
   icon?: string // For backwards compatibility (explicit icon override)
   size?: number
   withBackground?: boolean
+  withTooltip?: boolean
 }
 
 export const ShareOptionIcon: FC<ShareOptionIconProps> = ({
@@ -43,6 +44,7 @@ export const ShareOptionIcon: FC<ShareOptionIconProps> = ({
   label,
   size = 24,
   withBackground = false,
+  withTooltip = true,
 }) => {
   // Fallback: infer shareType from name prefix if not provided
   let effectiveShareType = shareType
@@ -68,15 +70,15 @@ export const ShareOptionIcon: FC<ShareOptionIconProps> = ({
     <StyledIcon
       className={clsx({ withBackground })}
       icon={iconName}
-      data-tooltip={tooltip}
-      data-tooltip-delay={0}
+      data-tooltip={withTooltip ? tooltip : undefined}
+      data-tooltip-delay={withTooltip ? 0 : undefined}
       $size={withBackground ? size - 6 : size}
     />
   )
 
   // Use shareType-based logic
   if (effectiveShareType === 'user') {
-    return <UserImage name={strippedName} fullName={label} size={size} />
+    return <UserImage name={strippedName} fullName={withTooltip ? label : undefined} size={size} />
   }
 
   if (effectiveShareType === 'group') return renderIcon('shield_person', 'Access group')

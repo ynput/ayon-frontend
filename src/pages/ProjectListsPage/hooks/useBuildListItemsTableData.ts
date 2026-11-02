@@ -1,99 +1,179 @@
-import { TableRow, useGetEntityTypeData, linksToTableData } from '@shared/containers'
+import {
+  EntityData,
+  EntityType,
+  TableRow,
+  useGetEntityTypeData,
+  linksToTableData,
+} from '@shared/containers'
 import { useMemo } from 'react'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { useProjectContext } from '@shared/context'
 import {
   isEntityRestricted,
+  RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
   RESTRICTED_ENTITY_LABEL,
   RESTRICTED_ENTITY_ICON,
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
+// the values a row shows and the marks on its cells, see listValues/AGENTS.md
+export type ListItemRowValues = Pick<EntityData, 'attrib' | 'ownAttrib'> &
+  Pick<TableRow, 'cellMarks'>
+
 type Props = {
   listItemsData: EntityListItemWithLinks[]
+  getRowValues?: (item: EntityListItemWithLinks) => ListItemRowValues
 }
 
-const useBuildListItemsTableData = ({ listItemsData }: Props) => {
+const useBuildListItemsTableData = ({ listItemsData, getRowValues }: Props) => {
   const project = useProjectContext()
 
   const getEntityTypeData = useGetEntityTypeData({ projectInfo: project })
 
-  const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]) => {
-    const tableData: TableRow[] = []
-    // copy/getEntityById needs display-ready rows keyed by id; keep the raw link arrays
-    const entitiesMap = new Map<string, TableRow>()
-
-    for (const item of listItemsData) {
+  const buildListItemsTableData = (listItemsData: EntityListItemWithLinks[]): TableRow[] => {
+    return listItemsData.map((item) => {
       // Check if this is a restricted access entity
       const isRestricted = isEntityRestricted(item.entityType)
-
-      // Process links if they exist
-      const links = linksToTableData(item.links, item.entityType, {
-        folderTypes: project?.folderTypes || [],
-        productTypes: project.productTypes || [],
-        taskTypes: project?.taskTypes || [],
-      })
 
       const entityTypeData = getEntityTypeData(
         item.entityType,
         extractSubTypes(item, item.entityType).subType,
       )
 
-      const row: TableRow = {
-        id: item.id,
-        name: isRestricted ? RESTRICTED_ENTITY_NAME : item.name,
-        label: isRestricted
-          ? RESTRICTED_ENTITY_LABEL
-          : (item.entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
-            (item.label || item.name),
-        entityId: item.entityId,
-        entityType: item.entityType,
-        assignees: item.assignees || [],
-        ...extractSubTypes(item, item.entityType), // subType, folderType, taskType, productType
-        // version specific fields
-        author: extractAuthor(item, item.entityType),
-        version: extractVersion(item, item.entityType),
-        product: extractProduct(item, item.entityType),
-        productBaseType: extractProductBaseType(item, item.entityType),
-        taskLabel: extractTaskLabel(item, item.entityType),
-        // metadata
-        updatedAt: item.updatedAt,
-        createdAt: item.createdAt,
-        attrib: item.attrib,
-        ownAttrib: item.ownAttrib
-          ? [...item.ownAttrib, ...item.ownItemAttrib]
-          : Object.keys(item.attrib), // not all types use ownAttrib so fallback to attrib keys
+      const { cellMarks, ...rowValues } = (!isRestricted && getRowValues?.(item)) || {}
+      const primary = {
+        ...buildPrimaryEntity(item, isRestricted),
+        ...rowValues,
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
         folderId: extractFolderId(item, item.entityType),
-        // @ts-expect-error - thumbnailHash does exist on products, that's it
-        thumbnailHash: item.thumbnailHash,
+        taskId: item.task?.id,
+        versionEntityId: item.entityType === 'version' ? item.id : undefined,
+        thumbnailHash: 'thumbnailHash' in item ? item.thumbnailHash : undefined,
         folder: extractFolder(item, item.entityType),
         parents: item.parents || [],
         tags: item.tags,
         status: item.status,
-        hasReviewables: 'hasReviewables' in item ? item.hasReviewables : false, // products don't have this field
+        hasReviewables: getHasReviewables(item) ?? false,
         subRows: [],
-        links: links, // Add processed links
+        links: linksToTableData(item.links, item.entityType, project.anatomy),
         subtasks: item.subtasks || [], // Add subtasks if they exist
         latestComments: item.latestComments || [],
       }
+      if (primary.entityType === 'task') primary.subtasks = item.subtasks || []
 
-      tableData.push(row)
-      // copy reads link columns via getLinkEntityIdsByColumnId, which expects the raw EntityLink[] array
-      entitiesMap.set(item.id, { ...row, links: (item.links ?? []) as unknown as TableRow['links'] })
-    }
-
-    return { tableData, entitiesMap }
+      const row: TableRow = {
+        id: item.id,
+        primary,
+        parents: buildParentEntities(item),
+        subRows: [],
+        cellMarks,
+      }
+      return row
+    })
   }
-  const { tableData, entitiesMap } = useMemo(
+  const tableData = useMemo(
     () => buildListItemsTableData(listItemsData),
-    [listItemsData, getEntityTypeData],
+    [listItemsData, getEntityTypeData, getRowValues],
   )
-  return { tableData, entitiesMap }
+  return tableData
 }
 
 export default useBuildListItemsTableData
+
+const buildPrimaryEntity = (item: EntityListItemWithLinks, isRestricted: boolean): EntityData => {
+  const entityType = item.entityType as EntityType
+  const name = isRestricted ? RESTRICTED_ENTITY_NAME : item.name
+  const label = isRestricted
+    ? RESTRICTED_ENTITY_LABEL
+    : (entityType === 'version' ? `${item.parents?.slice(-1)[0]} - ` : '') +
+      (item.label || item.name)
+  const common = {
+    id: item.entityId || item.id,
+    name,
+    label,
+    status: item.status,
+    tags: item.tags || [],
+    createdAt: typeof item.createdAt === 'string' ? item.createdAt : undefined,
+    updatedAt: typeof item.updatedAt === 'string' ? item.updatedAt : undefined,
+    path: item.parents?.join('/'),
+    hasReviewables: getHasReviewables(item),
+    // the shown values come from getRowValues (list values over entity values)
+    attrib: item.entityAttrib || {},
+    ownAttrib: item.ownAttrib
+      ? [...item.ownAttrib, ...item.ownItemAttrib]
+      : Object.keys(item.entityAttrib || {}),
+  }
+
+  if (isRestricted) {
+    return { ...common, entityType: RESTRICTED_ENTITY_TYPE }
+  }
+
+  switch (entityType) {
+    case 'folder':
+      return { ...common, entityType, subType: item.folderType || '' }
+    case 'task':
+      return {
+        ...common,
+        entityType,
+        subType: item.taskType || '',
+        assignees: item.assignees || [],
+      }
+    case 'product':
+      return {
+        ...common,
+        entityType,
+        subType: item.productType || '',
+      }
+    case 'version':
+      return {
+        ...common,
+        entityType,
+        version: Number((item as { version?: number }).version || 0),
+        versionName: item.name,
+        author: extractAuthor(item, entityType),
+      }
+  }
+}
+
+const buildParentEntities = (item: EntityListItemWithLinks) => {
+  const entityType = item.entityType as EntityType
+  const folderId = extractFolderId(item, entityType)
+  const folderName = extractFolder(item, entityType)
+  const subTypes = extractSubTypes(item, entityType)
+  const parents: Partial<Record<EntityType, EntityData>> = {}
+
+  if (folderId) {
+    parents.folder = {
+      id: folderId,
+      entityType: 'folder',
+      name: folderName,
+      label: folderName,
+      subType: subTypes.folderType || '',
+    }
+  }
+  if (entityType === 'version' && hasEntityIdentity(item.product)) {
+    parents.product = {
+      id: item.product.id,
+      entityType: 'product',
+      name: item.product.name,
+      label: item.product.name,
+      subType: item.product.productType || '',
+      productBaseType: item.product.productBaseType || '',
+    }
+  }
+  if (entityType === 'version' && hasEntityIdentity(item.task)) {
+    parents.task = {
+      id: item.task.id,
+      entityType: 'task',
+      name: item.task.name,
+      label: item.task.label || item.task.name,
+      subType: item.task.taskType || '',
+    }
+  }
+
+  return parents
+}
 
 // util functions
 const extractSubTypes = (
@@ -133,8 +213,8 @@ const extractSubTypes = (
 // so it still renders before graphql codegen adds the label/name fields.
 const extractFolder = (item: EntityListItemWithLinks, entityType: string): string => {
   const fromParents = item.parents?.[item.parents.length - 1] || ''
-  const pickName = (folder?: { name?: string; label?: string } | null) =>
-    folder?.label || folder?.name || ''
+  const pickName = (entity: unknown) =>
+    hasEntityIdentity(entity) ? entity.label || entity.name : ''
 
   switch (entityType) {
     case 'task':
@@ -172,41 +252,17 @@ const extractAuthor = (item: EntityListItemWithLinks, entityType: string): strin
   }
 }
 
-const extractVersion = (item: EntityListItemWithLinks, entityType: string): string => {
-  switch (entityType) {
-    case 'version':
-      return item.name || ''
-    default:
-      return ''
-  }
-}
+const hasEntityIdentity = (
+  entity: unknown,
+): entity is { id: string; name: string; label?: string | null } =>
+  !!entity &&
+  typeof entity === 'object' &&
+  'id' in entity &&
+  typeof entity.id === 'string' &&
+  'name' in entity &&
+  typeof entity.name === 'string'
 
-const extractProduct = (item: EntityListItemWithLinks, entityType: string): string => {
-  switch (entityType) {
-    case 'version':
-      // @ts-expect-error = name does exist on product
-      return item.product?.name || ''
-    case 'product':
-      return item.name || ''
-    default:
-      return ''
-  }
-}
-
-const extractProductBaseType = (item: EntityListItemWithLinks, entityType: string): string => {
-  switch (entityType) {
-    case 'version':
-      return item.product?.productBaseType || ''
-    default:
-      return ''
-  }
-}
-
-const extractTaskLabel = (item: EntityListItemWithLinks, entityType: string): string => {
-  switch (entityType) {
-    case 'version':
-      return item.task?.label || item.task?.name || ''
-    default:
-      return ''
-  }
+const getHasReviewables = (entity: unknown): boolean | undefined => {
+  if (!entity || typeof entity !== 'object' || !('hasReviewables' in entity)) return undefined
+  return typeof entity.hasReviewables === 'boolean' ? entity.hasReviewables : undefined
 }

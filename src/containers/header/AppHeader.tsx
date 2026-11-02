@@ -9,16 +9,17 @@ import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext } from '@shared/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import { MenuContainer } from '@shared/components'
 import styled from 'styled-components'
-import { useRestart } from '@context/RestartContext'
+import { useRestart } from '@context'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
+import AddonHeaderItems from './AddonHeaderItems'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -112,6 +113,8 @@ const Header: React.FC = () => {
           />
         </Link>
 
+        {!user.data.isGuest && <AddonHeaderItems placement="left" />}
+
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>
 
@@ -123,6 +126,7 @@ const Header: React.FC = () => {
 
         {!user.data.isGuest && (
           <>
+            <AddonHeaderItems placement="right" />
             <ChatBubbleButton />
 
             {/* help icon and menu vvv */}

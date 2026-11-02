@@ -5,11 +5,13 @@ export * from './summaryTypes'
 
 import type { FieldStats } from '@shared/api'
 import type { MainCountLabels, RowScope, SummaryCalc, SummaryFormat } from './summaryTypes'
-import { AttributeModel, EnumItem } from '@shared/api'
+import type { AttributeModel, EnumItem } from '@shared/api'
 import { OperationModel } from './operations'
 
 export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> {
   readOnly?: boolean
+  enumIsLoading?: boolean
+  enumError?: string
 }
 
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
@@ -29,10 +31,22 @@ interface EnumOption extends EnumItem {
 }
 
 export type TreeTableSubType = 'folderType' | 'taskType' | 'productType'
-type BuiltInFieldOptionKey = TreeTableSubType | 'status' | 'assignee' | 'tag'
+type BuiltInFieldOptionKey =
+  | TreeTableSubType
+  | 'status'
+  | 'folderStatus'
+  | 'taskStatus'
+  | 'assignee'
+  | 'tag'
 
 export type BuiltInFieldOptions = {
   [key in BuiltInFieldOptionKey]: EnumOption[]
+}
+
+// which subType each side of the main count breaks down by; a side with no subType stays unset
+export type MainBreakdownFields = {
+  primary?: TreeTableSubType
+  secondary?: TreeTableSubType
 }
 
 // Props contract for one summary footer cell's content, implemented by the
@@ -57,4 +71,6 @@ export interface SummaryCellContentProps {
   parentScopeApplicable?: boolean
   // unique entity rows in the current selection; addon shows "N selected" in the main count cell
   selectedCount?: number
+  // absent = host fetches no subType distributions, addon hides the Breakdown aggregation
+  mainBreakdownFields?: MainBreakdownFields
 }

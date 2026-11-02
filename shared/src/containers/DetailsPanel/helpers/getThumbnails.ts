@@ -1,4 +1,4 @@
-import { DetailsPanelEntityType } from '@shared/api'
+import type { DetailsPanelEntityType } from '@shared/api'
 import { EntityTypeIcons } from '../components/DetailsPanelHeader/DetailsPanelHeader'
 import { getEntityTypeIcon } from '@shared/util'
 

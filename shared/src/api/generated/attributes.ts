@@ -86,6 +86,8 @@ export type EnumItem = {
   disabled?: boolean
   /** Message to show when the option is disabled */
   disabledMessage?: string
+  /** Enum item is not offered for selection, but resolves when already used */
+  hidden?: boolean
 }
 export type AttributeData = {
   /** Type of attribute value */

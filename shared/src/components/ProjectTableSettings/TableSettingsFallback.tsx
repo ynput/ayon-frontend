@@ -2,7 +2,7 @@ import { Button } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import { Link } from 'react-router-dom'
 import { PowerpackButton, PowerpackButtonProps } from '../Powerpack'
-import { PowerpackFeature, usePowerpack } from '@shared/context'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import { RequiredAddonVersion } from '../Powerpack/RequiredAddonVersion'
 
 export interface TableSettingsFallbackProps {

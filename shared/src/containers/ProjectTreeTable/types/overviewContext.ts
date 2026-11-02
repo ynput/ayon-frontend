@@ -1,17 +1,15 @@
-import { EntityGroup } from '@shared/api'
-import { FolderNodeMap, LoadingTasks, TaskNodeMap, TasksByFolderMap, SoftErrorAction } from '.'
-import { ProjectDataContextProps } from '../context'
+import type { EntityGroup } from '@shared/api'
+import type { FieldStats } from '@shared/api'
+import type { OnSyncDataCallback } from '@shared/context'
+import type { FolderNodeMap, TaskNodeMap, TasksByFolderMap } from './table'
+import type { LoadingTasks, SoftErrorAction } from './index'
+import type { ProjectDataContextProps } from '../context/project-data'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
-import { ContextMenuItemConstructors } from '../hooks'
-import { ProjectTableModulesType } from '@shared/hooks'
-import { QueryFilter } from './operations'
+import type { ContextMenuItemConstructors } from '../hooks/useCellContextMenu'
+import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
+import type { QueryFilter } from './operations'
 import { ReactNode } from 'react'
 import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
-
-interface EntityMoveData {
-  entityId: string
-  entityType: 'folder'
-}
 
 export interface ProjectOverviewProviderProps {
   children: ReactNode
@@ -46,7 +44,13 @@ export interface ProjectOverviewContextType {
   entitiesMap: FolderNodeMap & TaskNodeMap
   tasksByFolderMap: TasksByFolderMap
   fetchNextPage: (value?: string) => void
-  reloadTableData: () => void
+  onSyncData: OnSyncDataCallback
+  folderStats?: FieldStats[]
+  taskStats?: FieldStats[]
+  folderStatsLoading: boolean
+  taskStatsLoading: boolean
+  folderStatsError?: unknown
+  taskStatsError?: unknown
 
   // Grouping data
   taskGroups: EntityGroup[]
@@ -54,6 +58,16 @@ export interface ProjectOverviewContextType {
   // Query Filters - separate filters for tasks and folders
   taskFilters: QueryFilterParams
   folderFilters: QueryFilterParams
+  // per-panel task stats args for slicer value counts — like the filters above but
+  // with the panel's own filter excluded, so counts don't self-zero on selection
+  getSlicerCountsArgs: (sliceType: string) => {
+    projectName: string
+    filter?: string
+    folderFilter?: string
+    search?: string
+    folderIds?: string[]
+    taskIds?: string[]
+  }
   // folder ids selected in the slicer (selection roots, not expanded to subtree)
   selectedFolders: string[]
   // task ids selected via an entity-list slice
@@ -88,12 +102,16 @@ export interface ProjectOverviewContextType {
   updateExpanded: OnChangeFn<ExpandedState>
   setExpanded: (expanded: ExpandedState) => void
 
-  // context menu items
-  contextMenuItems: ContextMenuItemConstructors
-
   // links
   loadingLinksEntityIds: Set<string>
   setLinksVisible: (visible: boolean) => void
+
+  // context menu items
+  contextMenuItems: ContextMenuItemConstructors
+
+  // move dialog
+  movingEntities: import('@shared/containers/MoveEntityDialog').MultiEntityMoveData | null
+  closeMoveDialog: () => void
 
   // entity ids currently rendered in the table's viewport - used to scope task
   // fetching (hierarchy mode) to folders actually on screen
@@ -101,5 +119,4 @@ export interface ProjectOverviewContextType {
   setVisibleEntityIds: (entityIds: string[]) => void
 
   // move dialog
-  openMoveDialog?: (entityData: EntityMoveData) => void
 }

@@ -1,29 +1,48 @@
-import { FC, useState, useMemo, useCallback } from 'react'
+import { FC, ReactNode, useState, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { useProjectContext } from '@shared/context'
 import SimpleTable, {
   Container,
   SimpleTableCellTemplate,
   SimpleTableProvider,
 } from '@shared/containers/SimpleTable'
-import ListsTableHeader from './ListsTableHeader'
+import ListsTableHeader, { ButtonType } from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import useListContextMenu, {
   ListRowContextMenuBuilder,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
+import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 
 interface ListsTableProps {
   isReview?: boolean
-  isStoryboards?: boolean
   rowContextMenuBuilders?: ListRowContextMenuBuilder[]
+  // picker mode: reuse the table inside the add-to-list dialog
+  picker?: boolean
+  // folders-only picker: rows are folders and onRowSubmit receives a folder id
+  foldersOnly?: boolean
+  singleSelect?: boolean
+  hiddenButtons?: ButtonType[]
+  onRowSubmit?: (id: string) => void
+  onCreateList?: () => void
+  scrollToRowId?: string
+  getRowTag?: (listId: string) => ReactNode // shown left of the count
 }
 
 const ListsTable: FC<ListsTableProps> = ({
   isReview,
-  isStoryboards,
   rowContextMenuBuilders = [],
+  picker = false,
+  foldersOnly = false,
+  singleSelect = false,
+  hiddenButtons,
+  onRowSubmit,
+  onCreateList,
+  scrollToRowId,
+  getRowTag,
 }) => {
+  const { projectName } = useProjectContext()
   const {
     rowSelection,
     setRowSelection,
@@ -36,13 +55,12 @@ const ListsTable: FC<ListsTableProps> = ({
     setExpanded,
   } = useListsContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
-  const [clientSearch, setClientSearch] = useState<null | string>(null)
+  // folder picker opens with search ready — the destination list is often long
+  const [clientSearch, setClientSearch] = useState<null | string>(picker && foldersOnly ? '' : null)
+  // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
+  const pickerMenuId = useId()
 
-  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders)
-  const sessionsLabel = useMemo(
-    () => (isStoryboards ? 'Storyboards' : 'Review sessions'),
-    [isStoryboards],
-  )
+  const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, !picker)
 
   const handleRename = useCallback((id: string) => openRenameList(id), [openRenameList])
   const handleSubmitRename = useCallback(
@@ -50,21 +68,60 @@ const ListsTable: FC<ListsTableProps> = ({
     [onRenameList],
   )
   const handleCancelRename = useCallback(() => closeRenameList(), [closeRenameList])
-  const handleRowDoubleClick = useCallback(() => setListDetailsOpen(true), [setListDetailsOpen])
+  const handleRowDoubleClick = useCallback(
+    (id: string) => {
+      if (picker) {
+        const folderId = parseListFolderRowId(id)
+        // folders-only picker submits folder rows, the list picker submits list rows
+        if (foldersOnly) {
+          if (folderId) onRowSubmit?.(folderId)
+          return
+        }
+        // ignore folder rows; double-click a list = instant add + close
+        if (folderId) return
+        onRowSubmit?.(id)
+        return
+      }
+      setListDetailsOpen(true)
+    },
+    [picker, foldersOnly, onRowSubmit, setListDetailsOpen],
+  )
 
-  const renderCell = useCallback((props: any, row: any) => {
-    const listId = row.original.id
+  const renderCell = useCallback(
+    (props: any, row: any) => {
+      const listId = row.original.id
+      const { isDisabled, disabledMessage, inactive, data } = row.original
+      // no lists are fetched in folders-only mode, so every count would read 0
+      const badge = isDisabled
+        ? disabledMessage
+        : inactive
+        ? '(archived)'
+        : foldersOnly
+        ? undefined
+        : data.count
+      const tag = picker ? undefined : getRowTag?.(listId)
 
-    return (
-      <SimpleTableCellTemplate
-        {...props}
-        key={listId}
-        iconColor={row.original.data.color}
-        enableNonFolderIndent={false}
-        badge={row.original.inactive ? '(archived)' : row.original.data.count}
-      />
-    )
-  }, [])
+      return (
+        <SimpleTableCellTemplate
+          {...props}
+          key={listId}
+          iconColor={data.color}
+          enableNonFolderIndent={false}
+          badge={
+            tag ? (
+              <>
+                {tag}
+                {badge !== undefined && <span>{badge}</span>}
+              </>
+            ) : (
+              badge
+            )
+          }
+        />
+      )
+    },
+    [foldersOnly, picker, getRowTag],
+  )
 
   return (
     <>
@@ -73,25 +130,41 @@ const ListsTable: FC<ListsTableProps> = ({
       >
         <Container>
           <ListsTableHeader
-            title={isReview ? sessionsLabel : undefined}
+            title={foldersOnly ? 'Folders' : isReview ? 'Review sessions' : undefined}
             buttonLabels={{
               delete: {
-                tooltip: isReview
-                  ? `Delete selected ${sessionsLabel.toLowerCase()}`
-                  : 'Delete selected lists',
+                tooltip: isReview ? `Delete selected review sessions` : 'Delete selected lists',
               },
               add: {
-                tooltip: isReview ? `Create new ${sessionsLabel.toLowerCase()}` : 'Create new list',
+                tooltip: isReview ? `Create new review sessions` : 'Create new list',
               },
               search: {
-                tooltip: isReview ? `Search ${sessionsLabel.toLowerCase()}` : 'Search lists',
+                tooltip: foldersOnly
+                  ? 'Search folders'
+                  : isReview
+                  ? `Search review sessions`
+                  : 'Search lists',
               },
             }}
-            hiddenButtons={isReview ? ['filter'] : []}
+            hiddenButtons={hiddenButtons ?? (isReview ? ['filter'] : [])}
+            hiddenMenuItemIds={
+              picker
+                ? [
+                    'new-folder',
+                    'import-list',
+                    'delete',
+                    'filter',
+                    ...(onCreateList ? [] : ['new-list']),
+                    ...(foldersOnly ? ['select-all-lists', 'show-archived'] : []),
+                  ]
+                : []
+            }
+            menuId={picker ? pickerMenuId : undefined}
+            onCreateList={onCreateList}
             search={clientSearch}
             onSearch={setClientSearch}
             isReview={isReview}
-            isStoryboards={isStoryboards}
+            filtersBar={!picker && !isReview}
           />
           <SimpleTable
             data={listsTableData}
@@ -100,12 +173,15 @@ const ListsTable: FC<ListsTableProps> = ({
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
+            scrollToRowId={scrollToRowId}
+            isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}
-            renamingId={renamingList}
-            onRename={handleRename}
-            onSubmitRename={handleSubmitRename}
-            onCancelRename={handleCancelRename}
+            addonShortcuts={picker ? undefined : { table: 'listsPanel', projectName }}
+            renamingId={picker ? undefined : renamingList}
+            onRename={picker ? undefined : handleRename}
+            onSubmitRename={picker ? undefined : handleSubmitRename}
+            onCancelRename={picker ? undefined : handleCancelRename}
             onRowDoubleClick={handleRowDoubleClick}
           >
             {renderCell}

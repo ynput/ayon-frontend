@@ -1,5 +1,5 @@
 import { Filter, FilterValue, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { QueryFilter, QueryCondition } from '../types/operations'
+import type { QueryFilter, QueryCondition } from '../types/operations'
 import { format, parseISO, isValid } from 'date-fns'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { isRelativeDateValue, resolveRelativeValue } from './expandRelativeDates'
@@ -48,8 +48,13 @@ export const queryFilterToClientFilter = (
     } else {
       // This is a nested QueryFilter - check if it's a datetime range (gte+lte same key)
       const datetimeFilter = tryMergeDatetimeRange(condition, filterOptions)
+      const textNullnessFilter = datetimeFilter
+        ? null
+        : tryMergeTextNullness(condition, filterOptions)
       if (datetimeFilter) {
         filters.push(datetimeFilter)
+      } else if (textNullnessFilter) {
+        filters.push(textNullnessFilter)
       } else {
         // Recursively process other nested QueryFilters
         const nestedFilters = queryFilterToClientFilter(condition, filterOptions)
@@ -180,6 +185,49 @@ export const tryMergeDatetimeRange = (
   }
 }
 
+/**
+ * Detects the composite nullness groups produced by clientFilterToQueryFilter for
+ * text fields (isnull OR eq '' / notnull AND ne '') and restores the
+ * noValue/hasValue chip instead of recursing into the group's conditions.
+ */
+export const tryMergeTextNullness = (
+  nestedFilter: QueryFilter,
+  filterOptions: Option[],
+): Filter | null => {
+  const conditions = nestedFilter.conditions?.filter((c): c is QueryCondition => 'key' in c) ?? []
+  if (conditions.length !== 2 || conditions.length !== nestedFilter.conditions?.length) return null
+
+  const key = conditions[0].key
+  if (!conditions.every((c) => c.key === key)) return null
+
+  const isNoValue =
+    nestedFilter.operator === 'or' &&
+    conditions.some((c) => c.operator === 'isnull') &&
+    conditions.some((c) => c.operator === 'eq' && c.value === '')
+  const isHasValue =
+    nestedFilter.operator === 'and' &&
+    conditions.some((c) => c.operator === 'notnull') &&
+    conditions.some((c) => c.operator === 'ne' && c.value === '')
+  if (!isNoValue && !isHasValue) return null
+
+  const filterOption = findFilterOption(key, filterOptions)
+  if (!filterOption) return null
+
+  return {
+    id: filterOption.id,
+    type: filterOption.type as Filter['type'],
+    label: filterOption.label,
+    inverted: false,
+    operator: 'OR',
+    icon: filterOption.icon,
+    values: isNoValue
+      ? [{ id: 'noValue', label: 'No Value' }]
+      : [{ id: 'hasValue', label: 'Has Value' }],
+    isCustom: filterOption.allowsCustomValues,
+    singleSelect: filterOption.singleSelect,
+  }
+}
+
 const convertConditionToFilter = (
   condition: QueryCondition,
   filterOptions: Option[],
@@ -297,7 +345,7 @@ const convertConditionValueToFilterValues = (
     let isCustomValue = false
 
     // Handle LIKE operator with wildcards - strip them and mark as custom
-    if (operator === 'like' && typeof val === 'string') {
+    if ((operator === 'like' || operator === 'notlike') && typeof val === 'string') {
       // Remove leading and trailing % wildcards
       stringValue = val.replace(/^%/, '').replace(/%$/, '')
       isCustomValue = true
@@ -337,7 +385,15 @@ const convertConditionValueToFilterValues = (
 }
 
 const isInvertedOperator = (operator: QueryCondition['operator'], type?: string): boolean => {
-  const invertedOperators = ['ne', 'notin', 'excludes', 'excludesall', 'excludesany', 'notnull']
+  const invertedOperators = [
+    'ne',
+    'notin',
+    'notlike',
+    'excludes',
+    'excludesall',
+    'excludesany',
+    'notnull',
+  ]
   return operator ? invertedOperators.includes(operator) : false
 }
 

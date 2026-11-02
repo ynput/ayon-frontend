@@ -1,11 +1,14 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { FC, Fragment, ReactNode } from 'react'
 import styled from 'styled-components'
-import { SettingField, useSettingsPanel } from '@shared/context'
+import { useSettingsPanel, type SettingField } from '@shared/context'
+import { SettingOption } from './SettingsPanel.styled'
 
 // Side panel styled components
 const SidePanel = styled.div<{ open: boolean }>`
   height: 100%;
+  /* fixed floor so the panel doesn't resize as its content changes */
+  min-width: 260px;
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: 4px;
@@ -19,8 +22,9 @@ const PanelHeader = styled.div`
   align-items: center;
   gap: var(--base-gap-small);
   height: 34px;
+  flex: 0 0 auto;
   padding: 0px 4px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  box-shadow: inset 0 -1px 0 var(--md-sys-color-outline-variant);
 
   h3 {
     margin-left: 4px;
@@ -44,32 +48,13 @@ const PanelContent = styled.div`
   overflow-y: auto;
 `
 
-export const SettingOption = styled(Button)`
-  width: 100%;
-  justify-content: flex-start;
-  margin-bottom: 8px;
-  text-align: left;
-  display: flex;
-  gap: var(--base-gap-small);
-  padding-right: var(--padding-s);
-  padding-left: var(--padding-m);
-
-  .title {
-    flex: 1;
-  }
-
-  .preview,
-  .arrow {
-    color: var(--md-sys-color-outline);
-  }
-`
-
 export interface SettingConfig {
   id: SettingField
   title?: string
   component: ReactNode
   icon?: string
   preview?: string | number
+  headerActions?: ReactNode
 }
 
 export interface SettingsPanelProps {
@@ -97,6 +82,8 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
         return aIndex - bIndex
       })
     : settings
+
+  const selectedConfig = settings.find((s) => s.id === selectedSetting)
 
   const renderSettingContent = () => {
     if (!selectedSetting) {
@@ -137,6 +124,7 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
           <ToolButton variant="text" icon="arrow_back" onClick={backToMainMenu} />
         )}
         <PanelTitle>{getPanelTitle()}</PanelTitle>
+        {selectedConfig?.headerActions}
         <ToolButton variant="text" icon="close" onClick={closePanel} />
       </PanelHeader>
       <PanelContent>{renderSettingContent()}</PanelContent>

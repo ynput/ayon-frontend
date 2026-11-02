@@ -1,4 +1,4 @@
-import { AttributeData } from '@shared/api/generated/entityLists'
+import { AttributeData } from '@shared/api'
 import { entityTypesWithIcons, getEntityTypeIcon } from './getEntityTypeIcon'
 
 type GetAttributesIcon = (name: string, type?: AttributeData['type'], hasEnum?: boolean) => string
@@ -32,10 +32,11 @@ export const getAttributeIcon: GetAttributesIcon = (name, type, hasEnum) => {
     comment: 'comment',
     colorSpace: 'palette',
     description: 'description',
+    latest: 'verified',
   }
 
   const typeIcons: {
-    [key in AttributeData['type']]?: string
+    [key in NonNullable<AttributeData['type']>]?: string
   } = {
     integer: 'pin',
     float: 'speed_1_2',

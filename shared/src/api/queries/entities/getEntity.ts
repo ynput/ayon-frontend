@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { GetSearchedTasksQuery, gqlApi } from '@shared/api/generated'
+import { gqlApi } from '@shared/api/generated'
+import type { GetSearchedTasksQuery } from '@shared/api/generated'
 import {
   PRODUCT_TILE_FRAGMENT,
   FOLDER_TILE_FRAGMENT,

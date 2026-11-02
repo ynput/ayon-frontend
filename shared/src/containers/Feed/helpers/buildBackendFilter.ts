@@ -1,6 +1,7 @@
 import type { QueryCondition, QueryFilter } from '@shared/api'
 import { filterActivityTypes } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { searchQueryToFilter } from '@shared/util/searchTerms'
 
 // UI chip keys handled by getFilterActivityTypes → activityTypes arg.
 // Must not leak into the QueryFilter (not in backend whitelist).
@@ -8,6 +9,8 @@ const UI_ONLY_KEYS = new Set(Object.keys(filterActivityTypes).filter((k) => k !=
 
 const UI_KEY_TO_BACKEND_KEY: Record<string, string> = {
   has_attachments: 'activity_data.files',
+  // not `entity_type`: on inbox rows that column is always 'user'
+  origin_type: 'activity_data.origin.type',
 }
 
 const isCondition = (c: QueryCondition | QueryFilter): c is QueryCondition => {
@@ -48,7 +51,7 @@ const translateCondition = (c: QueryCondition): QueryCondition | QueryFilter | n
   }
 
   if (c.key === 'body' && c.operator === 'like' && typeof c.value === 'string') {
-    return { ...c, key: mappedKey, value: `%${c.value}%` }
+    return searchQueryToFilter(c.value, (term) => ({ ...c, key: mappedKey, value: `%${term}%` }))
   }
 
   // "Author" UI filter matches actor OR assignee, so picking a user surfaces
@@ -81,11 +84,18 @@ const translate = (node: QueryCondition | QueryFilter): QueryCondition | QueryFi
   return { operator: node.operator || 'and', conditions: translated }
 }
 
-export const buildBackendFilter = (filter: QueryFilter | undefined): string | undefined => {
-  if (!filter || !filter.conditions?.length) return undefined
+export const buildBackendFilterObject = (filter: QueryFilter | undefined): QueryFilter | null => {
+  if (!filter || !filter.conditions?.length) return null
 
   const expanded = expandRelativeDates(filter as any) as QueryFilter
   const translated = translate(expanded)
+  if (!translated) return null
+
+  return translated as QueryFilter
+}
+
+export const buildBackendFilter = (filter: QueryFilter | undefined): string | undefined => {
+  const translated = buildBackendFilterObject(filter)
   if (!translated) return undefined
 
   return JSON.stringify(translated)

@@ -1,7 +1,7 @@
 // mainly just a wrapper for data fetching
 
 import { useMemo } from 'react'
-import { DetailsPanel, DetailsPanelSlideOut } from '@shared/containers'
+import { DetailsPanel, DetailsPanelSlideOut, type DetailsPanelProps } from '@shared/containers'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -17,6 +17,7 @@ interface InboxDetailsPanelProps {
   selected?: string[]
   projectsInfo?: ProjectsInfo
   onClose: () => void
+  resolveVersionJump?: DetailsPanelProps['resolveVersionJump']
 }
 
 const InboxDetailsPanel = ({
@@ -24,6 +25,7 @@ const InboxDetailsPanel = ({
   selected = [],
   projectsInfo = {},
   onClose,
+  resolveVersionJump,
 }: InboxDetailsPanelProps) => {
   const user = useAppSelector((state) => state.user.name)
   const selectedMessage = useMemo<GroupedMessage | undefined>(() => {
@@ -78,6 +80,7 @@ const InboxDetailsPanel = ({
             }}
             style={{ boxShadow: 'none', borderRadius: 4, overflow: 'hidden' }}
             onOpenViewer={handleOpenViewer}
+            resolveVersionJump={resolveVersionJump}
           />
           <DetailsPanelSlideOut projectsInfo={projectsInfo as Record<string, any>} scope="inbox" />
             <UploadVersionDialog />

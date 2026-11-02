@@ -1,11 +1,11 @@
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { usersApi } from '@shared/api/generated'
+import { USERS_ENUM_TAGS } from '../enums'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const updateUserApi = usersApi.enhanceEndpoints({
   endpoints: {
     deleteUser: {
-      transformErrorResponse: (res) => res.data,
-      invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: () => [{ type: 'user', id: 'LIST' }, ...USERS_ENUM_TAGS],
     },
     deleteAvatar: {
       invalidatesTags: (_result, _error, { userName }) => [
@@ -14,15 +14,12 @@ const updateUserApi = usersApi.enhanceEndpoints({
       ],
     },
     inviteUser: {
-      transformErrorResponse: (res) => res.data,
       invalidatesTags: (_result, _error, { userName }) => [
         { type: 'user', id: userName },
         { type: 'user', id: 'LIST' },
       ],
     },
-    acceptInvite: {
-      transformErrorResponse: (res) => res.data,
-    },
+    acceptInvite: {},
     setFrontendPreferences: {
       // @ts-expect-error - disableInvalidations is not in the api
       invalidatesTags: (_result, _error, { userName, disableInvalidations }) =>
@@ -57,13 +54,13 @@ const updateUser = updateUserApi.injectEndpoints({
         method: 'PATCH',
         body: patch,
       }),
-      transformErrorResponse: (res) => res.data,
       invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
         { type: 'userPool', id: 'LIST' },
         { type: 'feedback', id: 'LIST' },
         'info',
+        ...USERS_ENUM_TAGS,
       ],
     }),
     updateUserName: build.mutation({
@@ -75,8 +72,8 @@ const updateUser = updateUserApi.injectEndpoints({
       invalidatesTags: (_result, _error, { name }) => [
         { type: 'user', id: name },
         { type: 'user', id: 'LIST' },
+        ...USERS_ENUM_TAGS,
       ],
-      transformErrorResponse: (res) => res.data,
     }),
     updateUserPassword: build.mutation({
       query: ({ name, password }) => ({
@@ -85,7 +82,6 @@ const updateUser = updateUserApi.injectEndpoints({
         body: { password },
       }),
       invalidatesTags: () => ['user'],
-      transformErrorResponse: (res) => res.data,
     }),
     addUser: build.mutation({
       query: ({ name, user }) => ({
@@ -93,8 +89,7 @@ const updateUser = updateUserApi.injectEndpoints({
         method: 'PUT',
         body: user,
       }),
-      transformErrorResponse: (res) => res.data,
-      invalidatesTags: [{ type: 'user', id: 'LIST' }],
+      invalidatesTags: [{ type: 'user', id: 'LIST' }, ...USERS_ENUM_TAGS],
     }),
     updateUserAPIKey: build.mutation({
       query: ({ name, apiKey }) => ({
@@ -102,7 +97,6 @@ const updateUser = updateUserApi.injectEndpoints({
         method: 'PATCH',
         body: { apiKey },
       }),
-      transformErrorResponse: (res) => res.data,
       invalidatesTags: () => [{ type: 'user', id: 'LIST' }],
     }),
     invalidateUserSession: build.mutation({
@@ -136,7 +130,7 @@ const updateUser2 = updateUser.injectEndpoints({
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const firstError = results.find((result: any) => result.error)
         if (firstError) {
-          return { error: firstError.error as FetchBaseQueryError }
+          return { error: normalizeQueryError(firstError.error) }
         }
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

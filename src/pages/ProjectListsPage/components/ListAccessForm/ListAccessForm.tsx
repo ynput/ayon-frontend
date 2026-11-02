@@ -1,5 +1,5 @@
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
-import { useListsModuleContext } from '@pages/ProjectListsPage/context/ListsModulesContext'
+import { useListsModuleContext } from '@pages/ProjectListsPage/context/lists-modules'
 import {
   EntityListModel,
   useGetActivityCategoriesQuery,
@@ -8,9 +8,10 @@ import {
 } from '@shared/api'
 import { RequiredAddonVersion } from '@shared/components/Powerpack'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import { FC } from 'react'
+import { FC, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Section } from '../ListDetailsPanel/ListDetailsPanel.styled'
+import { copyToClipboard } from '@shared/util'
 
 export interface ListAccessFormProps {
   list: EntityListModel
@@ -49,7 +50,18 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
     requiredVersion,
     isLoading: isLoadingModule,
     GuestAccess,
+    requestModules,
   } = useListsModuleContext()
+  useEffect(() => {
+    requestModules()
+  }, [requestModules])
+
+  const handleCopyLink = () => {
+    const path = isReview
+      ? `/projects/${projectName}/reviews/${list.id}`
+      : `/projects/${projectName}/lists?list=${list.id}`
+    copyToClipboard(new URL(path, window.location.origin).toString())
+  }
 
   if (!currentUser) return 'Loading user...'
 
@@ -73,6 +85,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
             }).unwrap()
           }
           onError={(error) => toast.error(error)}
+          onCopyLink={handleCopyLink}
         />
       </Section>
       {isReview && (list.accessLevel || 0) >= 30 && (

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { useGetSiteInfoQuery } from '@shared/api'
 import * as Styled from './util/OnBoardingStep.styled'
-import OnBoardingProvider from './util/OnBoardingContext'
+import OnBoardingProvider from './context/on-boarding'
 import * as Step from './Step'
 import { Navigate, useLocation } from 'react-router-dom'
 import StepWrapper from './util/StepWrapper'

@@ -13,7 +13,7 @@ import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { RootState } from '@reduxjs/toolkit/query'
 import { PatchOperation } from './updateOverview'
 import { injectedVersionsPageApi } from '../versions/getVersionsProducts'
-import type { VersionNode } from '../versions/getVersionsProducts'
+import type { ProductNode, VersionNode } from '../versions/getVersionsProducts'
 
 // Helper to get version tags for selectInvalidatedBy and invalidation
 const getVersionTags = (versions: Pick<PatchOperation, 'entityId'>[]) => {
@@ -46,6 +46,133 @@ const updateVersionWithOperation = (version: VersionNode, operationData: any): V
   return updated as VersionNode
 }
 
+const updateNestedEntityWithOperation = (entity: any, operation: PatchOperation) => {
+  if (!operation.data) return
+
+  Object.entries(operation.data).forEach(([key, value]) => {
+    if (key === 'attrib') return
+    entity[key] = value
+  })
+
+  if (operation.data.attrib) {
+    entity.attrib = { ...entity.attrib, ...operation.data.attrib }
+  }
+}
+
+const patchVersionParents = (
+  versions: VersionNode[],
+  operationsByEntityId: Map<string, PatchOperation>,
+) => {
+  versions.forEach((version) => {
+    const parents = [version.task, version.product, version.product?.folder]
+    parents.forEach((parent) => {
+      if (!parent) return
+      const operation = operationsByEntityId.get(parent.id)
+      if (operation) updateNestedEntityWithOperation(parent, operation)
+    })
+  })
+}
+
+const patchProductParents = (
+  products: ProductNode[],
+  operationsByEntityId: Map<string, PatchOperation>,
+) => {
+  products.forEach((product) => {
+    const folder = product.folder
+    if (!folder) return
+    const operation = operationsByEntityId.get(folder.id)
+    if (operation) updateNestedEntityWithOperation(folder, operation)
+  })
+}
+
+/**
+ * Patches updated task, product, and folder data into nested parent data returned by
+ * versions/products queries. Parent entities are not the primary cache entity for these queries,
+ * so they need a separate optimistic patch.
+ */
+export const patchParentEntitiesInVersions = (
+  operations: PatchOperation[],
+  {
+    state,
+    dispatch,
+  }: {
+    state: RootState<any, any, 'restApi'>
+    dispatch: ThunkDispatch<any, any, UnknownAction>
+  },
+  patches?: any[],
+) => {
+  const operationsByEntityId = new Map(
+    operations
+      .filter(
+        (op) =>
+          op.type !== 'delete' &&
+          op.entityId &&
+          op.data &&
+          ['task', 'product', 'folder'].includes(op.entityType),
+      )
+      .map((op) => [op.entityId as string, op]),
+  )
+  if (!operationsByEntityId.size) return
+
+  const entries = injectedVersionsPageApi.util.selectInvalidatedBy(state, [
+    { type: 'version', id: 'LIST' },
+    { type: 'product', id: 'LIST' },
+  ])
+
+  for (const entry of entries) {
+    if (entry.endpointName === 'getVersionsInfinite') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => {
+            for (const page of draft.pages) {
+              patchVersionParents(page.versions, operationsByEntityId)
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (entry.endpointName === 'getProductsInfinite') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => {
+            for (const page of draft.pages) {
+              patchProductParents(page.products, operationsByEntityId)
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (
+      entry.endpointName === 'getVersionsByProducts' ||
+      entry.endpointName === 'getGroupedVersionsList' ||
+      entry.endpointName === 'GetVersions' ||
+      entry.endpointName === 'GetVersionsByProductId'
+    ) {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => patchVersionParents(draft.versions, operationsByEntityId),
+        ),
+      )
+      patches?.push(patch)
+    } else if (entry.endpointName === 'GetProducts') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName,
+          entry.originalArgs,
+          (draft: any) => patchProductParents(draft.products, operationsByEntityId),
+        ),
+      )
+      patches?.push(patch)
+    }
+  }
+}
+
 /**
  * Patches version updates into all relevant caches and invalidates them for refetching:
  * 1. Optimistically update getVersionsInfinite and getVersionsByProducts caches
@@ -71,9 +198,7 @@ export const patchVersions = (
   const versionEntries = injectedVersionsPageApi.util.selectInvalidatedBy(state, tags)
 
   // Get IDs of versions being deleted
-  const deleteIds = new Set(
-    versions.filter((op) => op.type === 'delete').map((op) => op.entityId),
-  )
+  const deleteIds = new Set(versions.filter((op) => op.type === 'delete').map((op) => op.entityId))
 
   // Step 2: Optimistically patch caches - handle both updates and deletes
   for (const entry of versionEntries) {
@@ -194,7 +319,9 @@ export const patchVersions = (
     }
   }
 
-  // Step 3: Invalidate all affected caches to trigger refetching
-  // This will automatically refetch with filters and update calculated attributes
-  dispatch(injectedVersionsPageApi.util.invalidateTags(tags))
+  // Invalidate updated rows only; deletes have nothing to refresh — reconciled by invalidatesTags.
+  const nonDeleteOps = versions.filter((op) => op.type !== 'delete')
+  if (nonDeleteOps.length > 0) {
+    dispatch(injectedVersionsPageApi.util.invalidateTags(getVersionTags(nonDeleteOps)))
+  }
 }

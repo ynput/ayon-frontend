@@ -10,8 +10,8 @@ import {
   InputNumber,
   InputText,
 } from '@ynput/ayon-react-components'
-import { ReviewableUpload } from '@shared/components'
-import { useVersionUploadContext } from '../context/VersionUploadContext'
+import { ReviewableUpload } from '../../ReviewablesList/ReviewablesUpload'
+import { useVersionUploadContext } from '../context/version-upload'
 import { useProjectContext } from '@shared/context'
 import { useGetTaskQuery } from '@shared/api'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
@@ -316,9 +316,11 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                 />
                 {matchedProduct && (
                   <MatchNote>
-                    {matchedProduct.latestVersion
-                      ? <>Matched existing product (latest: {versionString})</>
-                      : 'Matched existing product (no versions)'}
+                    {matchedProduct.latestVersion ? (
+                      <>Matched existing product (latest: {versionString})</>
+                    ) : (
+                      'Matched existing product (no versions)'
+                    )}
                   </MatchNote>
                 )}
                 {!matchedProduct && shouldShowRecommendation() && (

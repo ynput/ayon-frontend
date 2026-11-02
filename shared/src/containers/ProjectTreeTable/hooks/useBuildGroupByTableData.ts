@@ -3,13 +3,13 @@
 // any leftover items that do not match the groupBy field are added as a separate group ("Ungrouped")
 
 import type { GroupCountsMap } from '@shared/api'
-import { EntityGroup } from '@shared/api'
+import type { EntityGroup } from '@shared/api'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
 import { useCallback } from 'react'
-import { linksToTableData } from '../utils'
-import { ProjectModelWithProducts, useProjectContext } from '@shared/context'
+import { buildTaskTableRow, linksToTableData } from '../utils'
+import { useProjectContext, type ProjectModelWithProducts } from '@shared/context'
 
 export type GroupByEntityType = 'task' | 'folder' | 'version' | 'product'
 
@@ -116,40 +116,23 @@ const defaultEntityToGroupRow = (
   task: EditorTaskNode,
   group: string | undefined,
   entityType: string,
-  project: ProjectModelWithProducts,
+  entities: EntitiesMap,
   getEntityTypeData: ReturnType<typeof useGetEntityTypeData>,
 ): TableRow & { subRows: TableRow[] } => {
   const typeData = getEntityTypeData(entityType, task.taskType)
+  const parentFolder = entities.get(task.folderId)
+  const row = buildTaskTableRow(
+    task,
+    parentFolder?.entityType === 'folder' ? parentFolder : undefined,
+  )
+
+  row.primary.icon = typeData?.icon || null
+  row.primary.color = typeData?.color || null
+
   return {
-    id: task.id + ROW_ID_SEPARATOR + group, // unique id for the task in the folder
-    entityId: task.id,
-    entityType: entityType,
-    parentId: task.folderId,
-    folderId: task.folderId,
-    name: task.name || '',
-    label: task.label || task.name || '',
-    icon: typeData?.icon || null,
-    color: typeData?.color || null,
-    status: task.status,
-    assignees: task.assignees,
-    tags: task.tags,
-    img: null,
+    ...row,
+    id: task.id + ROW_ID_SEPARATOR + group,
     subRows: [],
-    subType: task.taskType || null,
-    attrib: task.attrib,
-    ownAttrib: task.ownAttrib,
-    parents: task.parents || [],
-    folder: task.parents?.[task.parents.length - 1] || undefined,
-    createdAt: task.createdAt,
-    updatedAt: task.updatedAt,
-    hasReviewables: task.hasReviewables || false,
-    links: linksToTableData(task.links, entityType, {
-      folderTypes: project?.folderTypes || [],
-      productTypes: Object.values(project.productTypes) || [],
-      taskTypes: project?.taskTypes || [],
-    }),
-    subtasks: task.subtasks || [],
-    latestComments: task.latestComments || [],
   }
 }
 
@@ -171,7 +154,11 @@ const useBuildGroupByTableData = ({
       // Use provided groupRowFunc or fall back to default
       const baseRow = groupRowFunc
         ? groupRowFunc(task)
-        : defaultEntityToGroupRow(task, group, entityType, project, getEntityTypeData)
+        : defaultEntityToGroupRow(task, group, entityType, entities, getEntityTypeData)
+
+      if (entityType === 'task') {
+        baseRow.primary.links = linksToTableData(task.links, 'task', project.anatomy)
+      }
 
       // Ensure group-specific fields are set
       return {
@@ -180,7 +167,7 @@ const useBuildGroupByTableData = ({
         subRows: baseRow.subRows || [],
       }
     },
-    [groupRowFunc, getEntityTypeData, entityType, project],
+    [groupRowFunc, getEntityTypeData, entityType, entities, project],
   )
 
   return useCallback(
@@ -199,37 +186,44 @@ const useBuildGroupByTableData = ({
         )
         groupsMap.set(groupValue, {
           id: groupId,
-          name: groupValue,
-          entityType: 'group',
+          primary: {
+            id: groupId,
+            entityType: 'folder',
+            name: groupValue,
+            label: groupData.label,
+            subType: '',
+          },
           subRows: [],
-          label: groupData.label,
           group: groupData,
-          links: {},
         })
       }
 
       const ungroupedId = buildGroupId(UNGROUPED_VALUE)
       // gets the "Ungrouped" group, creating it if it doesn't exist
-      const getUnGroupedGroup = () => {
+      const getUnGroupedGroup = (): TableRow => {
         let ungroupedGroup = groupsMap.get(UNGROUPED_VALUE)
         if (!ungroupedGroup) {
           const stat = groupCounts?.get(UNGROUPED_VALUE)
-          ungroupedGroup = {
+          const newUngroupedGroup: TableRow = {
             id: ungroupedId,
-            name: 'Ungrouped',
-            entityType: 'group',
+            primary: {
+              id: ungroupedId,
+              entityType: 'folder',
+              name: 'Ungrouped',
+              label: 'Ungrouped',
+              subType: '',
+            },
             subRows: [],
-            label: 'Ungrouped',
             group: {
               value: UNGROUPED_VALUE,
               label: 'Ungrouped',
               count: stat?.count,
               percentage: stat?.percentage,
             },
-            links: {},
           }
           // create ungrouped group if it doesn't exist
-          groupsMap.set(UNGROUPED_VALUE, ungroupedGroup)
+          groupsMap.set(UNGROUPED_VALUE, newUngroupedGroup)
+          ungroupedGroup = newUngroupedGroup
         }
         return ungroupedGroup
       }
@@ -285,12 +279,15 @@ const useBuildGroupByTableData = ({
               if (groupRow) {
                 groupRow.subRows?.push({
                   id: `${group.value}-next-page`,
-                  name: `Load more tasks...`,
-                  entityType: NEXT_PAGE_ID,
+                  primary: {
+                    id: `${group.value}-next-page`,
+                    entityType: 'folder',
+                    name: 'Load more tasks...',
+                    label: `Next page for ${group.value}`,
+                    subType: '',
+                  },
                   subRows: [],
-                  label: `Next page for ${group.value}`,
                   group: { value: group.value, label: group.value },
-                  links: {},
                 })
               }
             }

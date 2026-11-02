@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { Icon } from '@ynput/ayon-react-components'
 
 import * as Styled from './EnumEditor.styled'
-import { AttributeData } from './EnumEditor'
+import type { AttributeData } from './EnumEditor'
 import EnumEditorItem, { EnumEditorItemProps } from './EnumEditorItem'
 import React from 'react'
 

@@ -1,9 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
-import { AttributeField } from '@shared/components'
+import type { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import { copyToClipboard } from '@shared/util'
-import { Button } from '@ynput/ayon-react-components'
-import { BorderedSection } from './BorderedSection'
+import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import { FieldLabel } from './FieldLabel'
 import { format } from 'date-fns'
 

@@ -10,8 +10,11 @@ export interface ConfirmDeleteOptions extends Omit<ConfirmDialogOptions, 'accept
   showToasts?: boolean
   isArchive?: boolean
   onSuccess?: () => void
+  onFinish?: () => void
   onError?: (error: any) => void
 }
+
+export const confirmDeleteDialog = confirmDialog
 
 export const confirmDelete = ({
   label = '',
@@ -22,6 +25,7 @@ export const confirmDelete = ({
   isArchive = false,
   onSuccess,
   onError,
+  onFinish,
   ...props
 }: ConfirmDeleteOptions): ReturnType<typeof confirmDialog> => {
   deleteLabel = deleteLabel || (isArchive ? 'Archive' : 'Delete')
@@ -66,6 +70,8 @@ export const confirmDelete = ({
           })
 
         onError && onError(error)
+      } finally {
+        onFinish && onFinish()
       }
     },
     reject: () => {},

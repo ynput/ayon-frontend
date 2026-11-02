@@ -1,7 +1,7 @@
 // converts the links array to the data shown in the table (object of link keys with list of link entity names)
 // we split the links by direction (in/out) and store them in an object
 
-import { LinkEntity } from '@shared/components'
+import type { LinkEntity } from '@shared/components/LinksManager/LinksManager'
 import { getLinkKey } from '../buildTreeTableColumns'
 import { EntityLink } from '@shared/api'
 import { getEntityColor, getEntityIcon, IconAnatomy } from '@shared/util/iconUtils'

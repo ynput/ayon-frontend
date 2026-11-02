@@ -2,7 +2,7 @@ import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { ListEntityType } from '../NewListDialog/NewListDialog'
 import { buildScopes, FilterFieldType } from '@shared/components'
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import { useProjectContext } from '@shared/context'
 
 // list items endpoint whitelists entity/parent columns; versions have no name
@@ -27,7 +27,7 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
       scopes={buildScopes([entityType], UNSUPPORTED_BY_LIST_ITEMS)}
       projectNames={[projectName]}
       projectInfo={projectInfo}
-      enableGlobalSearch={false}
+      enableGlobalSearch={true}
       data={entityType === 'version' ? { productTypes: projectInfo.productTypes } : {}}
       config={{
         prefixes: {

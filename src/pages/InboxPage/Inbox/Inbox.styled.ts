@@ -1,12 +1,58 @@
 import { Section, Toolbar } from '@ynput/ayon-react-components'
+import { Splitter } from 'primereact/splitter'
 import styled from 'styled-components'
 
 export const Tools = styled(Toolbar)`
-  padding: var(--padding-s) var(--padding-m);
+  padding-bottom: var(--padding-s);
+`
+
+export const MessagesColumn = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  /* doubled to beat InboxSection's ".p-splitter { height: 100% }" */
+  && > .p-splitter {
+    flex: 1;
+    min-height: 0;
+    height: auto;
+  }
+`
+
+export const ProjectsSplitter = styled(Splitter)`
+  /* doubled to beat InboxSection's "& > * { width: unset }" */
+  && {
+    width: 100%;
+    height: 100%;
+    flex: 1;
+  }
+
+  overflow: hidden;
+
+  .p-splitter-gutter {
+    z-index: 50;
+  }
+
+  .projects-list-header {
+    margin-bottom: var(--base-gap-large);
+  }
+
+  &.no-projects {
+    & > .p-splitter-panel:first-child,
+    & > .p-splitter-gutter {
+      display: none;
+    }
+
+    & > .p-splitter-panel:last-child {
+      flex-basis: 100% !important;
+    }
+  }
 `
 
 export const InboxSection = styled(Section)`
-  padding: 0 var(--padding-m);
+  padding: var(--padding-s) var(--padding-m) 0;
 
   overflow: hidden;
   align-items: flex-start;
@@ -54,6 +100,11 @@ export const UnreadCount = styled.div`
   border-radius: var(--border-radius-m);
   margin-right: -8px;
   background-color: var(--md-sys-color-surface-container-high);
+
+  /* the -8px bleeds into the tab padding, which the views icon takes over when it follows */
+  &:not(:last-child) {
+    margin-right: 0;
+  }
 
   &.important {
     background-color: var(--md-sys-color-primary);

@@ -1,11 +1,18 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
+
+// the dialog starts below the app header, so menus positioned above it are clipped and unscrollable
+export const DIALOG_TOP_OFFSET = 42
+export const MENU_EDGE_PADDING = 8
+// highest viewport y a menu may occupy
+export const MENU_TOP_BOUND = DIALOG_TOP_OFFSET + MENU_EDGE_PADDING
 
 // DIALOG (CONTAINER)
 export const Dialog = styled.dialog`
   position: fixed;
   margin: 0;
   inset: 0;
-  top: 42px;
+  top: ${DIALOG_TOP_OFFSET}px;
   width: auto;
   height: auto;
   z-index: 1000;
@@ -40,6 +47,7 @@ export const DialogContent = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--base-gap-large);
+  min-height: 0;
 
   /* position */
   position: absolute;
@@ -80,6 +88,7 @@ export const Section = styled.section`
   position: relative;
   display: flex;
   flex-direction: column;
+  min-height: 0;
 
   padding: 0px;
   border-radius: 8px;
@@ -92,6 +101,13 @@ export const Section = styled.section`
 export const MenuWrapper = styled.div`
   position: relative;
   border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+
+  & > * {
+    min-height: 0;
+  }
 
   /* sub menu */
   &.sub-menu {
@@ -103,7 +119,7 @@ export const MenuWrapper = styled.div`
 
     & > * {
       border-radius: 8px;
-      overflow: hidden;
+      overflow-x: hidden;
     }
   }
 `
@@ -122,6 +138,9 @@ export const Menu = styled.menu`
   flex-direction: column;
   gap: var(--base-gap-large);
   padding: 8px;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 
   /* shrink the padding when compact */
   &.compact {
@@ -160,6 +179,19 @@ export const Item = styled.li`
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
+  }
+
+  .hover-swap {
+    display: none;
+    cursor: grab;
+  }
+  &:hover {
+    .hover-swap-default {
+      display: none;
+    }
+    .hover-swap {
+      display: inline-block;
+    }
   }
 
   .more {
@@ -222,17 +254,11 @@ export const Item = styled.li`
     }
   }
 
-  &.power {
-    &,
-    .icon {
-      color: var(--md-sys-color-tertiary);
-    }
-    [icon='bolt'] {
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-    }
-    .shortcut {
-      color: var(--md-sys-color-on-surface);
-    }
+  /* needs a Power Pack license: a bolt at the end of the row */
+  .power-bolt {
+    margin-left: auto;
+    color: var(--md-sys-color-tertiary);
+    font-variation-settings: 'FILL' 1;
   }
 
   &.disabled {
@@ -243,6 +269,31 @@ export const Item = styled.li`
       color: var(--md-sys-color-outline);
     }
     background-color: unset;
+  }
+`
+
+// floats right; the padding keeps a 24px gap from the label when the row is narrow
+export const EndActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  margin-left: auto;
+  padding-left: 24px;
+`
+
+// the end button is a plain Button; its colours only switch to the primary scheme on the selected row
+export const EndAction = styled(Button)`
+  margin-left: auto;
+  &.hasIcon {
+    padding: 4px;
+  }
+  .icon {
+    font-size: 16px;
+  }
+
+  .selected & {
+    background-color: var(--md-sys-color-on-primary);
+    color: var(--md-sys-color-primary);
   }
 `
 

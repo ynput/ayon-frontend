@@ -1,0 +1,161 @@
+import {
+  buildMetricTargets,
+  isSummaryActive,
+  mergeFieldStats,
+  shouldSkipColumnStats,
+  totalRowsFromStats,
+  useGetProductsColumnStatsQuery,
+  useGetVersionsColumnStatsQuery,
+} from '@shared/api'
+import type { FieldStats } from '@shared/api'
+import {
+  checkColumnVisibility,
+  useColumnSettingsContext,
+  useProjectDataContext,
+  useViewsContext,
+} from '@shared/containers'
+import { usePowerpack, useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { useMemo } from 'react'
+
+type Params = {
+  productFilter?: string
+  versionFilter?: string
+  taskFilter?: string
+  folderFilter?: string
+  representationFilter?: string
+  folderIds?: string[]
+  versionIds?: string[]
+  productIds?: string[]
+  featuredOnly?: string[]
+  featuredOnlyEntityType?: string
+  latestPerFolder?: boolean
+  hasReviewables?: boolean
+  showProducts?: boolean
+}
+
+export const useVPColumnStats = ({
+  productFilter,
+  versionFilter,
+  taskFilter,
+  folderFilter,
+  representationFilter,
+  folderIds,
+  versionIds,
+  productIds,
+  featuredOnly,
+  featuredOnlyEntityType,
+  latestPerFolder,
+  hasReviewables,
+  showProducts,
+}: Params) => {
+  const { projectName } = useProjectContext()
+  const { attribFields } = useProjectDataContext()
+  const { powerLicense } = usePowerpack()
+  const { isLoadingViews } = useViewsContext()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
+  const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
+    useColumnSettingsContext()
+
+  const noSummaries = shouldSkipColumnStats(
+    columnSummaries,
+    columnSummaryScopes,
+    columnVisibility,
+    defaultColumnVisibility,
+  )
+
+  const productTargets = useMemo(
+    () =>
+      buildMetricTargets({
+        entity: 'product',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+        extraFields:
+          checkColumnVisibility(
+            columnVisibility,
+            'product_productBaseType',
+            defaultColumnVisibility,
+          ) && isSummaryActive('product_productBaseType', columnSummaries, columnSummaryScopes)
+            ? ['product_base_type']
+            : [],
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+  )
+  const versionTargets = useMemo(
+    () =>
+      buildMetricTargets({
+        entity: 'version',
+        attribs: attribFields,
+        columnVisibility,
+        defaultColumnVisibility,
+        columnSummaries,
+        columnSummaryScopes,
+      }),
+    [attribFields, columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes],
+  )
+
+  const folderIdsWithoutChildren = useMemo(
+    () => (folderIds ? getFolderIdsWithoutChildren(folderIds) : undefined),
+    [folderIds, getFolderIdsWithoutChildren],
+  )
+
+  const columnStatsBaseArgs = {
+    projectName,
+    productFilter,
+    versionFilter,
+    taskFilter,
+    folderFilter,
+    representationFilter,
+    folderIds: folderIdsWithoutChildren,
+    versionIds,
+    productIds,
+  }
+  // the versions list counts the products of its versions; the products view lists products
+  // regardless of the reviewables filter, which only applies to their versions
+  const productStatsArgs = {
+    ...columnStatsBaseArgs,
+    hasReviewables: showProducts ? undefined : hasReviewables,
+    targets: productTargets,
+  }
+  const versionStatsArgs = {
+    ...columnStatsBaseArgs,
+    featuredOnly,
+    featuredOnlyEntityType,
+    latestPerFolder,
+    hasReviewables,
+    targets: versionTargets,
+  }
+  const skip = !projectName || isLoadingViews || !powerLicense || noSummaries
+
+  const productQuery = useGetProductsColumnStatsQuery(productStatsArgs, { skip })
+  const versionQuery = useGetVersionsColumnStatsQuery(versionStatsArgs, { skip })
+
+  const fieldStats = useMemo(() => {
+    const products = productQuery.data ?? []
+    const versions = versionQuery.data ?? []
+    const mainCount: FieldStats = {
+      columnName: 'name',
+      primaryCount: productQuery.data ? totalRowsFromStats(products) : undefined,
+      secondaryCount: versionQuery.data ? totalRowsFromStats(versions) : undefined,
+    }
+    return mergeFieldStats([...versions, mainCount])
+  }, [productQuery.data, versionQuery.data])
+
+  return {
+    fieldStats,
+    groupFieldStats: productQuery.data ?? [],
+    fieldStatsLoading:
+      isLoadingViews ||
+      productQuery.isLoading ||
+      versionQuery.isLoading ||
+      productQuery.isFetching ||
+      versionQuery.isFetching,
+    fieldStatsError: productQuery.error || versionQuery.error,
+    productStatsArgs,
+    versionStatsArgs,
+    isProductStatsUninitialized: productQuery.isUninitialized,
+    isVersionStatsUninitialized: versionQuery.isUninitialized,
+  }
+}

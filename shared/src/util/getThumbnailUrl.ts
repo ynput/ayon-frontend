@@ -4,6 +4,7 @@ export interface GetEntityThumbnailUrlParams {
   entityId?: string
   thumbnailId?: string // fallback path when no entityId/entityType is available
   thumbnailHash?: string // appended as ?hash= for cache busting; omitted if not provided
+  placeholder?: 'empty' | 'none' // 'none' makes the API 404 instead of serving a blank image
 }
 
 /**
@@ -21,6 +22,7 @@ export const getEntityThumbnailUrl = ({
   entityId,
   thumbnailId,
   thumbnailHash,
+  placeholder,
 }: GetEntityThumbnailUrlParams): string | null => {
   if (!projectName) return null
 
@@ -30,14 +32,17 @@ export const getEntityThumbnailUrl = ({
 
   if (!thumbnailId && (!entityId || !entityType)) return null
 
-  const hashParam = thumbnailHash ? `?hash=${thumbnailHash}` : ''
+  const params = new URLSearchParams()
+  if (thumbnailHash) params.set('hash', thumbnailHash)
+  if (placeholder) params.set('placeholder', placeholder)
+  const query = params.toString() ? `?${params.toString()}` : ''
 
   if (entityId && entityType) {
-    return `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail${hashParam}`
+    return `/api/projects/${projectName}/${entityType}s/${entityId}/thumbnail${query}`
   }
 
   // fallback: look up by thumbnailId
-  return `/api/projects/${projectName}/thumbnails/${thumbnailId}${hashParam}`
+  return `/api/projects/${projectName}/thumbnails/${thumbnailId}${query}`
 }
 
 export const getProjectThumbnailUrl = (projectName: string, thumbnailHash?: string) => {

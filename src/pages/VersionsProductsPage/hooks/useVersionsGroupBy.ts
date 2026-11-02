@@ -12,8 +12,8 @@ import {
 } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
-import { useVPViewsContext } from '../context/VPViewsContext'
-import type { QueryArguments } from '../context/VPDataContext'
+import { useVPViewsContext } from '../context/vp-views'
+import type { QueryArguments } from '../context/vp-data'
 import {
   isGroupId,
   GROUP_BY_ID,
@@ -25,6 +25,7 @@ type Props = {
   projectName: string
   versionFilters: QueryFilter
   taskFilters: QueryFilter
+  folderFilter?: string
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
   expanded: ExpandedState
@@ -34,6 +35,7 @@ const useVersionsGroupBy = ({
   projectName,
   versionFilters,
   taskFilters,
+  folderFilter,
   modules,
   versionArguments,
   expanded,
@@ -108,11 +110,17 @@ const useVersionsGroupBy = ({
     projectName: versionArguments.projectName,
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
+    folderFilter,
+    representationFilter: versionArguments.representationFilter,
     versionFilter: versionArguments.versionFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     folderIds: versionArguments.folderIds,
+    versionIds: versionArguments.versionIds,
+    productIds: versionArguments.productIds,
     featuredOnly: versionArguments.featuredOnly,
+    featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
+    latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
   }
 
@@ -120,6 +128,7 @@ const useVersionsGroupBy = ({
     data: { versions = [] } = {},
     isFetching: isFetchingGroups,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
   } = useGetGroupedVersionsListQuery(queryArgs, {
     skip: !groupBy || !groupFilters.length || isLoadingModules,
   })
@@ -139,6 +148,8 @@ const useVersionsGroupBy = ({
     versions,
     isLoading,
     refetch: refetchGroupedVersions,
+    isUninitialized: isUninitializedGroupedVersions,
+    queryArgs,
     incrementPageCount,
   }
 }

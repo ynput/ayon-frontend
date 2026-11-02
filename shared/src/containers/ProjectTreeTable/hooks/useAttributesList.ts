@@ -1,8 +1,10 @@
-import { AttributeModel, Permissions } from '@shared/api'
+import type { AttributeModel, Permissions } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 
 export interface ProjectTableAttribute extends AttributeModel {
   readOnly?: boolean
+  enumIsLoading?: boolean
+  enumError?: string
 }
 
 interface UseAttributeFieldsParams {
@@ -20,8 +22,9 @@ const useAttributeFields = ({ projectPermissions }: UseAttributeFieldsParams) =>
   const {
     enabled: attribWriteEnabled,
     attributes: attribWriteAttributes,
-    fields: writableFields,
+    fields: attribWriteFields,
   } = attrib_write || {}
+  const writableFields = attribWriteEnabled ? attribWriteFields ?? [] : undefined
 
   //   filter out scopes and filter out attributes that do not have read access
   const attribFields: ProjectTableAttribute[] = attributes

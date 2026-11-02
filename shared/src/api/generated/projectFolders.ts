@@ -106,13 +106,13 @@ export type ProjectFolderPostModel = {
 }
 export type ProjectFolderPatchModel = {
   label?: string
-  parentId?: string
+  parentId?: string | null
   data?: ProjectFolderData
 }
 export type ProjectFolderOrderModel = {
   order: string[]
 }
 export type AssignProjectRequest = {
-  folderId?: string
+  folderId?: string | null
   projectNames: string[]
 }

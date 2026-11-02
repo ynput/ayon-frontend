@@ -3,7 +3,8 @@ import * as Styled from './LinksManager.styled'
 import { getEntityId } from '@shared/util'
 import useUpdateLinks from './hooks/useUpdateLinks'
 import AddNewLinks, { LinkSearchType } from './AddNewLinks'
-import { EntityPickerDialog, PickerEntityType } from '@shared/containers/EntityPickerDialog'
+import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
+import type { PickerEntityType } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { upperFirst } from 'lodash'
 import { LinkManagerItem } from './LinkManagerItem'
 import { Button } from '@ynput/ayon-react-components'
@@ -63,6 +64,7 @@ export const LinksManager: FC<LinksManagerProps> = ({
   })
 
   const [searchType, setSearchType] = useState<LinkSearchType>(null)
+  const [isAddingPicked, setIsAddingPicked] = useState(false)
   // Optimistic counts for immediate UI feedback (creates are not optimistic in the cache)
   const [optimisticCounts, setOptimisticCounts] = useState<Record<string, number>>({})
 
@@ -75,6 +77,17 @@ export const LinksManager: FC<LinksManagerProps> = ({
       return optimistic
     }
     return group.count
+  }
+
+  // add the picked entities as links, closing the picker only once they were created
+  const handlePickerSubmit = async (ids: string[]) => {
+    if (isAddingPicked) return
+    setIsAddingPicked(true)
+    const success = await linksUpdater.add(
+      ids.map((id) => ({ targetEntityId: id, linkId: getEntityId() })),
+    )
+    setIsAddingPicked(false)
+    if (success) setSearchType(null)
   }
 
   const handleRemoveGroup = (e: React.MouseEvent<HTMLButtonElement>, group: GroupedLink) => {
@@ -116,7 +129,10 @@ export const LinksManager: FC<LinksManagerProps> = ({
       <Styled.Container
         onMouseDown={(e) => {
           // Blur active input when clicking anywhere in the dialog (so count input commits)
-          if (e.target !== document.activeElement && document.activeElement instanceof HTMLInputElement) {
+          if (
+            e.target !== document.activeElement &&
+            document.activeElement instanceof HTMLInputElement
+          ) {
             document.activeElement.blur()
           }
         }}
@@ -161,9 +177,8 @@ export const LinksManager: FC<LinksManagerProps> = ({
           projectName={projectName}
           entityType={targetEntityType as PickerEntityType} // the type of entity to pick
           initialSelection={folderId ? { folder: { [folderId]: true } } : undefined} // preselect current folder
-          onSubmit={(s) =>
-            linksUpdater.add(s.map((id) => ({ targetEntityId: id, linkId: getEntityId() })))
-          }
+          onSubmit={handlePickerSubmit}
+          isLoading={isAddingPicked}
           isMultiSelect
         />
       )}

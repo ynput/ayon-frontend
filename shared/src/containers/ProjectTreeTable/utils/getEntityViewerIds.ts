@@ -1,4 +1,4 @@
-import { EntityMap } from '.'
+import type { EntityMap } from '../types/table'
 
 // gets parents id of an entity when using the viewer
 export const getEntityViewierIds = (entity: EntityMap): { [id: string]: string } => {

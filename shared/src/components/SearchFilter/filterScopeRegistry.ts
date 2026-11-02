@@ -1,4 +1,4 @@
-import type { FilterFieldType, ScopeWithFilterTypes } from '@shared/components'
+import type { FilterFieldType, ScopeWithFilterTypes } from './useBuildFilterOptions'
 
 type ScopeType = ScopeWithFilterTypes['scope']
 
@@ -11,15 +11,17 @@ export const FILTER_TYPES_BY_SCOPE: Record<ScopeType, FilterFieldType[]> = {
   task: [...BASE, 'name', 'taskType', 'folderType', 'assignees'],
   version: [
     ...BASE,
+    'version',
+    'productName',
     'productType',
     'productBaseType',
     'author',
-    'version',
     'hasReviewables',
     'taskType',
     'folderType',
   ],
   product: [...BASE, 'productName', 'productBaseType'],
+  representation: [...BASE, 'name', 'extension'],
   user: [...BASE],
 }
 

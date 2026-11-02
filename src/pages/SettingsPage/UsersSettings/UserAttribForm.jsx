@@ -3,20 +3,17 @@ import {
   FormLayout,
   FormRow,
   InputPassword,
-  Divider,
   Dropdown,
   InputSwitch,
 } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
-
-export const DividerSmallStyled = styled(Divider)`
-  margin: 8px 0;
-`
+import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
+import { hasEnumOptions, getSelectableEnumItems } from '@shared/util'
+import { DividerSmallStyled } from './UserAttribForm.styled'
 
 const UserAttribForm = ({
+  attributes: attributeFields,
   formData,
   setFormData,
-  attributes,
   password,
   passwordConfirm,
   setPasswordConfirm,
@@ -25,6 +22,9 @@ const UserAttribForm = ({
   showAvatarUrl = true,
   customFormRow,
 }) => {
+  // attributes carry their resolved dynamic enum options
+  const attributes = useAttributeEnums(attributeFields)
+
   // separate custom attrib
   const [builtin, custom] = attributes.reduce(
     (acc, cur) => {
@@ -45,7 +45,7 @@ const UserAttribForm = ({
     [[], []],
   )
 
-  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow;
+  const CustomFormRow = customFormRow !== undefined ? customFormRow : FormRow
 
   const buildForms = (attribs) =>
     attribs.map(({ name, data, input }) => {
@@ -66,12 +66,13 @@ const UserAttribForm = ({
             autoComplete="new-password"
           />
         )
-      } else if (data.enum) {
+      } else if (hasEnumOptions(data)) {
+        const value = (data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []
         widget = (
           <Dropdown
             widthExpand
-            value={(data.type === 'list_of_strings' ? formData[name] : [formData[name]]) || []}
-            options={data.enum}
+            value={value}
+            options={getSelectableEnumItems(data.enum || [], value)}
             multiSelect={data.type === 'list_of_strings'}
             onChange={(v) =>
               setFormData((fd) => {
@@ -123,17 +124,15 @@ const UserAttribForm = ({
     })
 
   return (
-    <>
-      <FormLayout>
-        {buildForms(builtin)}
-        {!!custom.length && (
-          <>
-            <DividerSmallStyled />
-            {buildForms(custom)}
-          </>
-        )}
-      </FormLayout>
-    </>
+    <FormLayout>
+      {buildForms(builtin)}
+      {!!custom.length && (
+        <>
+          <DividerSmallStyled />
+          {buildForms(custom)}
+        </>
+      )}
+    </FormLayout>
   )
 }
 

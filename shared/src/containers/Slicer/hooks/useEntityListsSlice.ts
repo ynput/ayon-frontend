@@ -1,25 +1,29 @@
 import { useCallback, useMemo } from 'react'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { useGetListsInfiniteInfiniteQuery } from '@shared/api/queries/entityLists/getLists'
 import { useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectContext, usePowerpack } from '@shared/context'
-import {
-  getEntityTypeIcon,
-  buildHierarchicalTableRows,
-  HierarchicalFolderNode,
-} from '@shared/util'
+import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
 import type { EntityList, EntityListFolderModel } from '@shared/api'
 
 const FOLDER_ICON = 'snippet_folder'
 
 const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
-export const buildListFolderRowId = (folderId: string) =>
-  `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
+export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
 
-const getListIcon = (list: Pick<EntityList, 'entityListType' | 'entityType'>) =>
-  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
+const sortLists = (lists: EntityList[]): EntityList[] =>
+  [...lists].sort((a, b) => {
+    if (a.active && !b.active) return -1
+    if (!a.active && b.active) return 1
 
-export const useEntityListsSlice = (entityTypes?: string[]) => {
+    // @ts-ignore
+    const aDate = new Date(a.createdAt || 0)
+    // @ts-ignore
+    const bDate = new Date(b.createdAt || 0)
+    return bDate.getTime() - aDate.getTime()
+  })
+
+export const useEntityListsSlice = (enabled: boolean = true) => {
   const { projectName } = useProjectContext()
   const { powerLicense } = usePowerpack()
 
@@ -31,22 +35,19 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
     { projectName: projectName || '' },
     {
       initialPageParam: { cursor: '' },
-      skip: !projectName,
+      skip: !projectName || !enabled,
     },
   )
 
   const { data: listFolders = [], isLoading: isLoadingFolders } = useGetEntityListFoldersQuery(
     { projectName: projectName || '' },
-    { skip: !projectName || !powerLicense },
+    { skip: !projectName || !powerLicense || !enabled },
   )
 
   const tableData: SimpleTableRow[] = useMemo(() => {
     if (!listsData?.pages) return []
 
-    const allListsRaw = listsData.pages.flatMap((page) => page.lists)
-    const allLists = entityTypes?.length
-      ? allListsRaw.filter((list) => entityTypes.includes(list.entityType))
-      : allListsRaw
+    const allLists = listsData.pages.flatMap((page) => page.lists)
 
     // If we have power license and folders, build hierarchical structure
     if (powerLicense && listFolders.length > 0) {
@@ -107,7 +108,11 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
         }
       }
 
-      const createListRow = (list: EntityList, _parentType?: string, parents: string[] = []): SimpleTableRow => ({
+      const createListRow = (
+        list: EntityList,
+        _parentType?: string,
+        parents: string[] = [],
+      ): SimpleTableRow => ({
         id: list.id,
         name: list.label,
         label: list.label,
@@ -120,6 +125,10 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
           label: list.label,
           entityType: list.entityType,
           listId: list.id,
+          // for sorting
+          active: list.active,
+          createdAt: list.createdAt,
+          updatedAt: list.updatedAt,
         },
       })
 
@@ -150,7 +159,7 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
         buildFolderRowId: buildListFolderRowId,
         createItemRow: createListRow,
         sortFolderNodes,
-        sortItems: (items: EntityList[]) => items,
+        sortItems: sortLists,
         getFolderLabel: (folder) => folder.label,
         getFolderIcon: (folder) => folder.data?.icon || FOLDER_ICON,
         getFolderColor: (folder) => folder.data?.color,
@@ -183,12 +192,12 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
         }
       }
 
-      const rootListRows = rootLists.map((list) => createListRow(list))
+      const rootListRows = sortLists(rootLists).map((list) => createListRow(list))
       return [...folderRows, ...rootListRows]
     }
 
     // Flat list fallback (no power license or no folders)
-    return allLists.map((list) => ({
+    return sortLists(allLists).map((list) => ({
       id: list.id,
       name: list.label,
       label: list.label,
@@ -200,9 +209,12 @@ export const useEntityListsSlice = (entityTypes?: string[]) => {
         label: list.label,
         entityType: list.entityType,
         listId: list.id,
+        active: list.active,
+        createdAt: list.createdAt,
+        updatedAt: list.updatedAt,
       },
     }))
-  }, [listsData, powerLicense, listFolders, entityTypes])
+  }, [listsData, powerLicense, listFolders])
 
   const isExpandable = powerLicense && listFolders.length > 0
 

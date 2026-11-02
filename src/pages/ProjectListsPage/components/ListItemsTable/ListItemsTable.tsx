@@ -1,38 +1,60 @@
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
+import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
 import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
 import {
   BuildTreeTableColumnsProps,
+  EntityType,
+  ParentColumnDefinition,
   ProjectTreeTable,
+  type ProjectTreeTableProps,
   isFilterError,
   getFilterErrorMessage,
-  extractQueryErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
 import { FC, useMemo } from 'react'
-import ListsAttributesShortcutButton from '../ListsTableSettings/ListsAttributesShortcutButton'
+import { AddColumnButton } from '@shared/components'
 import { UniqueIdentifier } from '@dnd-kit/core'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useSettingsPanel } from '@shared/context'
 import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { getRequestErrorString } from '@shared/util'
+import { useCompareLists } from '@pages/ProjectListsPage/hooks/useCompareLists'
+import {
+  COMPARE_TOO_MANY_ITEMS,
+  isTooBigToCompare,
+} from '@pages/ProjectListsPage/listValues/compareLimit'
 
 interface ListItemsTableProps {
   extraColumns: BuildTreeTableColumnsProps['extraColumns']
+  extraColumnsSettings: { value: string; label: string }[]
+  parentColumns: ParentColumnDefinition[]
+  includeParents: EntityType[]
   isLoading?: boolean
   isReview?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
   viewOnly?: boolean
+  columnsConfig?: ProjectTreeTableProps['columnsConfig']
+  scrollToRowId?: string | null
+  onScrolledToRow?: (rowId: string) => void
 }
 
 const ListItemsTable: FC<ListItemsTableProps> = ({
   extraColumns,
+  extraColumnsSettings,
+  parentColumns,
+  includeParents,
   isLoading,
   isReview,
   dndActiveId, // Destructure new prop
   viewOnly,
+  columnsConfig,
+  scrollToRowId,
+  onScrolledToRow,
 }) => {
   const { projectName } = useProjectContext()
+  const { togglePanel } = useSettingsPanel()
   const { selectedLists, selectedList } = useListsContext()
   const {
     isError,
@@ -48,9 +70,26 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
-  const [hiddenColumns, readOnly] = useMemo(
-    () => getColumnConfigFromType(selectedList?.entityType),
-    [selectedList],
+  // with list values, attribute edits go to the list item, so the entities' read-only
+  // attributes (product and version lists) don't apply
+  const { isPowerFeature } = useListValuesContext()
+  const { canCompareLists, compareLists } = useCompareLists()
+  const [hiddenColumns, readOnly] = useMemo(() => {
+    const [hidden, readOnly] = getColumnConfigFromType(selectedList?.entityType)
+    return [hidden, isPowerFeature ? readOnly.filter((id) => id !== 'attrib') : readOnly]
+  }, [selectedList, isPowerFeature])
+
+  const listAttributesMenuItems = useMemo(
+    () => [
+      {
+        id: 'list-attributes',
+        label: 'Create list attribute',
+        icon: 'add',
+        // the button only renders while the panel is closed, so this always opens it
+        onClick: () => togglePanel('list_attributes'),
+      },
+    ],
+    [togglePanel],
   )
 
   if (!selectedList)
@@ -60,19 +99,35 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
       </EmptyPlaceholder>
     )
 
-  if (selectedLists.length > 1)
-    return <EmptyPlaceholder message="Please select one list to view its items." />
+  if (selectedLists.length > 1) {
+    const [shown, compared] = selectedLists
+    const tooBig = isTooBigToCompare(compared)
+    return (
+      <EmptyPlaceholder message="Please select one list to view its items.">
+        {selectedLists.length === 2 && canCompareLists(shown, compared) && (
+          <Button
+            icon="compare_arrows"
+            label="Compare lists"
+            variant="filled"
+            disabled={tooBig}
+            data-tooltip={tooBig ? COMPARE_TOO_MANY_ITEMS : undefined}
+            onClick={() => compareLists(shown, compared)}
+          />
+        )}
+      </EmptyPlaceholder>
+    )
+  }
 
   if (isError) {
     if (isFilterError(error, { filter: listItemsFilters })) {
       return (
         <EmptyPlaceholder message={getFilterErrorMessage('List items')} icon="filter_alt_off">
           <Button label="Reset filters" icon="replay" onClick={resetFilters} />
-          <FilterErrorActions errorMessage={extractQueryErrorMessage(error)} />
+          <FilterErrorActions errorMessage={getRequestErrorString(error)} />
         </EmptyPlaceholder>
       )
     }
-    const errorMessage = extractQueryErrorMessage(error) || 'Error loading list items.'
+    const errorMessage = getRequestErrorString(error) || 'Error loading list items.'
     return (
       <EmptyPlaceholder error={errorMessage} ynputError={false}>
         <Button label="Reset" icon="replay" onClick={resetFilters} />
@@ -83,6 +138,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <ProjectTreeTable
+        addonPage="lists"
         scope={scope}
         sliceId={''}
         // pagination
@@ -90,6 +146,8 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         readOnly={readOnly}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
+        includeParents={includeParents}
+        parentColumns={parentColumns}
         isLoading={isLoading}
         sortableRows={!viewOnly}
         enableSorting={!isReview}
@@ -109,9 +167,17 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         fieldStats={fieldStats}
         fieldStatsLoading={fieldStatsLoading}
         mainCountLabels={mainCountLabels}
+        columnsConfig={columnsConfig}
+        scrollToRowId={scrollToRowId}
+        onScrolledToRow={onScrolledToRow}
       />
       <ListItemsShortcuts />
-      <ListsAttributesShortcutButton />
+      <AddColumnButton
+        extraColumns={extraColumnsSettings}
+        hiddenColumns={hiddenColumns}
+        extraMenuItems={listAttributesMenuItems}
+        parentColumns={parentColumns}
+      />
     </div>
   )
 }

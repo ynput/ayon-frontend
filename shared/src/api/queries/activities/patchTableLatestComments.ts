@@ -1,4 +1,4 @@
-import type { EntityComment } from '@shared/api'
+import type { EntityComment } from '@shared/api/generated/graphql'
 import getOverviewApi from '../overview/getOverview'
 import { entityListsQueriesGql } from '../entityLists/updateLists'
 import { injectedVersionsPageApi } from '../versions/getVersionsProducts'
@@ -88,7 +88,10 @@ export const patchTableLatestComments = (
   if (!entityId || !activityId) return []
 
   // Only top-level comments appear in latestComments; ignore replies and non-comment activities.
-  if (method === 'create' && !(patch?.activityType === 'comment' && patch?.referenceType === 'origin'))
+  if (
+    method === 'create' &&
+    !(patch?.activityType === 'comment' && patch?.referenceType === 'origin')
+  )
     return []
   if (method === 'update' && patch?.activityType && patch.activityType !== 'comment') return []
 

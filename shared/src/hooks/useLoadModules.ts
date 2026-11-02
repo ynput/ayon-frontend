@@ -1,7 +1,7 @@
 import { loadRemote } from '@module-federation/enhanced/runtime'
 import { useEffect, useRef, useState } from 'react'
 import semver from 'semver'
-import { FrontendModuleListItem } from '@shared/api'
+import type { FrontendModuleListItem } from '@shared/api'
 
 export interface ModuleSpec<T> {
   addon: string

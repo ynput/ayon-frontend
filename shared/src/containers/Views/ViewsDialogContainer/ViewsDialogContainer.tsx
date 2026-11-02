@@ -1,6 +1,6 @@
 import { FC } from 'react'
-import { useViewsContext } from '../context/ViewsContext'
-import { useLoadModule } from '@shared/hooks'
+import { useViewsContext } from '../context'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import ViewFormDialogFallback from './ViewFormDialogFallback'
 import { Dialog } from '@ynput/ayon-react-components'
 import { usePowerpack } from '@shared/context'

@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import * as Styled from './CommentInput.styled'
-import { getFuzzyDate, REFRESH_INTERVAL_MS } from '../ActivityDate'
+import { REFRESH_INTERVAL_MS } from '../ActivityDate'
+import { getFuzzyDate } from '../ActivityDateHelpers'
 import { Icon } from '@ynput/ayon-react-components'
 import {
   getIconForFeedback,
   getVerbForFeedback,
-} from '../ActivityVersionReview/ActivityVersionReview'
-import { FeedActivity } from '@shared/api'
+} from '../ActivityVersionReview/ActivityVersionReviewHelpers'
+import type { FeedActivity } from '@shared/api'
 import { clsx } from 'clsx'
 
 type Props = {

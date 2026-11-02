@@ -69,6 +69,7 @@ type ItemNodeData = {
     }
   }
   task?: {
+    id?: string
     folderId?: string
     taskType: string
     name?: string
@@ -78,8 +79,16 @@ type ItemNodeData = {
 
 export type QueryEntityListItemNode = QueryEntityListItemEdge['node'] & ItemNodeData
 
+// listAttrib: values set on the list item, entityAttrib: the entity's values.
+// What a cell shows is resolved from both (see ProjectListsPage/listValues).
+type ListItemValues = {
+  listAttrib: Record<string, unknown>
+  entityAttrib: Record<string, unknown>
+}
+
 export type EntityListItem = NonNullable<QueryEntityListItemNode> &
-  Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> }
+  Omit<QueryEntityListItemEdge, 'node' | 'itemAttrib' | 'entityAttrib'> &
+  ListItemValues
 // Define the result type for items query
 export type GetListItemsResult = {
   pageInfo: {
@@ -89,7 +98,8 @@ export type GetListItemsResult = {
     endCursor?: string | null
   }
   items: (QueryEntityListItemNode &
-    Omit<QueryEntityListItemEdge, 'node'> & { attrib: Record<string, unknown> })[]
+    Omit<QueryEntityListItemEdge, 'node' | 'itemAttrib' | 'entityAttrib'> &
+    ListItemValues)[]
 }
 
 export type ListItemsPageParam = {
@@ -99,6 +109,11 @@ export type ListItemsPageParam = {
 // websocket message summary
 export type ListItemMessage = {
   project: string
+  createdAt: string
+  updatedAt: string
+  id: string
+  status: string
+  topic: 'entity_list.changed' | 'entity_list.created' | 'entity_list.deleted'
   summary: {
     count: EntityList['count']
     entity_list_type: EntityList['entityListType']
@@ -106,6 +121,7 @@ export type ListItemMessage = {
     id?: string
     entityId?: string
     label: EntityList['label']
+    entity_list_folder_id?: EntityList['entityListFolderId']
   }
 }
 

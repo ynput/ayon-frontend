@@ -11,7 +11,8 @@ import {
   RowCells,
 } from './ListTableCell'
 import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
-import { GroupRow, isCustomGroupRowValue } from './ListTableGroupRow'
+import { GroupRow } from './ListTableGroupRow'
+import { isCustomGroupRowValue } from './ListTableGroupRowHelpers'
 
 const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholder: true } =>
   !!value && typeof value === 'object' && '__listTablePlaceholder' in (value as object)

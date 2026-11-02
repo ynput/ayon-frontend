@@ -1,4 +1,5 @@
-import { GetFolderProductsQuery, gqlApi } from '@shared/api/generated'
+import { gqlApi } from '@shared/api/generated'
+import type { GetFolderProductsQuery } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
 export interface FolderProduct {

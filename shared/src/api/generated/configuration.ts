@@ -17,9 +17,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.serverConfigModel,
       }),
     }),
-    updateServerConfig: build.mutation<UpdateServerConfigApiResponse, UpdateServerConfigApiArg>({
-      query: (queryArg) => ({ url: `/api/config`, method: 'PATCH', body: queryArg.payload }),
-    }),
     getServerConfigOverrides: build.query<
       GetServerConfigOverridesApiResponse,
       GetServerConfigOverridesApiArg
@@ -56,10 +53,6 @@ export type GetServerConfigApiArg = void
 export type SetServerConfigApiResponse = /** status 200 Successful Response */ any
 export type SetServerConfigApiArg = {
   serverConfigModel: ServerConfigModel
-}
-export type UpdateServerConfigApiResponse = unknown
-export type UpdateServerConfigApiArg = {
-  payload: object
 }
 export type GetServerConfigOverridesApiResponse = /** status 200 Successful Response */ object
 export type GetServerConfigOverridesApiArg = void
@@ -100,9 +93,6 @@ export type ChangelogSettingsModel = {
   /** If enabled, the changelog will be shown to normal users. */
   show_changelog_to_users?: boolean
 }
-export type CdnSettingsModel = {
-  default_cdn_resolver_url?: string
-}
 export type ServerConfigModel = {
   /** The name of the studio */
   studio_name?: string
@@ -113,8 +103,6 @@ export type ServerConfigModel = {
   project_options?: ProjectOptionsModel
   /** Settings for the changelog feature */
   changelog?: ChangelogSettingsModel
-  /** Settings for the CDN resolver */
-  cdn?: CdnSettingsModel
 }
 export type ValidationError = {
   loc: (string | number)[]

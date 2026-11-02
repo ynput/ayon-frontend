@@ -1,14 +1,25 @@
 import { Dropdown, DropdownProps, DropdownRef } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
-import { forwardRef, useEffect, useRef, useState } from 'react'
+import { forwardRef, useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
-import { AttributeData, EnumItem } from '@shared/api'
+import type { AttributeData, EnumItem } from '@shared/api'
+import { wrapMode } from './wrapMode'
+import { getSelectableEnumItems } from '@shared/util/attributeEnum'
 
-const StyledDropdown = styled(Dropdown)`
+const StyledDropdown = styled(Dropdown)<{ $multiSelect?: boolean }>`
   height: 100%;
   width: 100%;
+
+  /* the value template clips against the button, so it has to grow with the cell */
+  ${({ $multiSelect }) =>
+    $multiSelect &&
+    wrapMode`
+      .button {
+        height: 100%;
+      }
+    `}
 `
 
 export interface EnumWidgetProps
@@ -20,6 +31,7 @@ export interface EnumWidgetProps
   autoOpen?: boolean
   isReadOnly?: boolean
   enableCustomValues?: boolean
+  isLoadingOptions?: boolean
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -37,6 +49,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       autoOpen = true,
       isReadOnly,
       enableCustomValues,
+      isLoadingOptions,
       onOpen,
       onChange,
       onCancelEdit,
@@ -47,7 +60,14 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     _ref,
   ) => {
     // convert value to string array
-    const valueAsStrings = value.map((v) => v?.toString()).filter((v) => !!v)
+    // the dropdown drops its unsaved selection whenever it gets a new value array, and the table
+    // re-renders while it is open, so keep the same array until the values themselves change
+    const valueKey = JSON.stringify(value)
+    const valueAsStrings = useMemo(
+      () => value.map((v) => v?.toString()).filter((v) => !!v),
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [valueKey],
+    )
     let selectedOptions = options.filter((option) =>
       valueAsStrings.includes(option.value.toString()),
     )
@@ -59,10 +79,12 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
         const invalidOption = {
           label: val,
           value: val,
-          color: enableCustomValues
-            ? 'var(--md-sys-color-surface-container)'
-            : 'var(--md-sys-color-error)',
-          icon: enableCustomValues ? undefined : 'warning',
+          // options that are still loading cannot be validated against yet
+          color:
+            enableCustomValues || isLoadingOptions
+              ? 'var(--md-sys-color-surface-container)'
+              : 'var(--md-sys-color-error)',
+          icon: enableCustomValues || isLoadingOptions ? undefined : 'warning',
         }
         selectedOptions = [...selectedOptions, invalidOption]
         invalidOptions.push(invalidOption)
@@ -71,7 +93,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     const hasMultipleValues = selectedOptions.length > 1
 
     // Merge valid options with invalid options for the dropdown
-    const allOptions = [...options, ...invalidOptions]
+    const allOptions = [...getSelectableEnumItems(options, valueAsStrings), ...invalidOptions]
 
     const dropdownRef = useRef<DropdownRef>(null)
 
@@ -141,18 +163,21 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
               isOpen={false}
               isItem
               isMultiSelect={isMultiSelect}
-              isSelected={isSelected}
+              // a list shows its selection with checkboxes
+              isSelected={isSelected && !isMultiSelect}
               {...pt?.template}
               className={clsx('enum-dropdown-item', pt?.template?.className)}
             />
           )}
           widthExpand
           multiSelect={isMultiSelect}
+          checkboxes={isMultiSelect}
           disableOpen={isReadOnly}
           disabled={isReadOnly}
           sortBySelected
           searchOnNumber={10}
           {...dropdownProps}
+          $multiSelect={isMultiSelect}
           onChange={handleChange}
           onClose={onCancelEdit}
           editable={enableCustomValues}

@@ -1,5 +1,6 @@
 import api from '@shared/api'
 import queryUpload from '../queryUpload'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const onBoarding = api.injectEndpoints({
   endpoints: (build) => ({
@@ -73,7 +74,7 @@ const onBoarding = api.injectEndpoints({
           return { data: eventIds }
         } catch (error) {
           console.error(error)
-          return { error: error?.response?.data?.detail || 'Upload error' }
+          return { error: normalizeQueryError(error) }
         }
       },
       invalidatesTags: [

@@ -6,6 +6,8 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/csv/export/${queryArg.entityType}/fields`,
         params: {
           project_name: queryArg.projectName,
+          folder_id: queryArg.folderId,
+          list_entity_type: queryArg.listEntityType,
         },
       }),
     }),
@@ -40,6 +42,12 @@ const injectedRtkApi = api.injectEndpoints({
         params: {
           file_id: queryArg.fileId,
           existing_strategy: queryArg.existingStrategy,
+          missing_strategy: queryArg.missingStrategy,
+          duplicate_strategy: queryArg.duplicateStrategy,
+          entity_type: queryArg.entityType,
+          new_list_label: queryArg.newListLabel,
+          new_list_entity_type: queryArg.newListEntityType,
+          update_listed_entities: queryArg.updateListedEntities,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
           preview: queryArg.preview,
@@ -54,6 +62,8 @@ export type ExportFieldsApiResponse = /** status 200 Successful Response */ Impo
 export type ExportFieldsApiArg = {
   entityType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   projectName?: string
+  folderId?: string
+  listEntityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
 }
 export type PostApiCsvExportByEntityTypeApiResponse = /** status 200 Successful Response */ any
 export type PostApiCsvExportByEntityTypeApiArg = {
@@ -71,6 +81,12 @@ export type ImportDataApiArg = {
   importType: 'user' | 'folder' | 'task' | 'hierarchy' | 'entity_list_item'
   fileId: string
   existingStrategy?: ExistingItemStrategy
+  missingStrategy?: MissingItemStrategy
+  duplicateStrategy?: DuplicateItemStrategy
+  entityType?: 'folder' | 'task'
+  newListLabel?: string
+  newListEntityType?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  updateListedEntities?: boolean
   projectName?: string
   folderId?: string
   preview?: boolean
@@ -99,6 +115,10 @@ export type EnumItem = {
   disabled?: boolean
   /** Message to show when the option is disabled */
   disabledMessage?: string
+  /** Enum item is not visible in the dropdown */
+  hidden?: boolean
+  /** Extra badge labels to display next to the item */
+  badges?: string[]
 }
 export type ImportableColumn = {
   /** The key of the column, such as `name`, `attrib.priority`, etc. */
@@ -151,10 +171,15 @@ export type ImportStatus = {
   skipped?: number
   failed?: number
   failedItems?: object
+  skippedItems?: object
+  comments?: number
+  entityListId?: string
   preview?: boolean
   phase?: 'validating' | 'importing'
 }
 export type ExistingItemStrategy = 'skip' | 'update' | 'fail'
+export type MissingItemStrategy = 'create' | 'skip'
+export type DuplicateItemStrategy = 'skip' | 'all'
 export type ColumnValueMapping = {
   /** The source value from csv */
   source?: string

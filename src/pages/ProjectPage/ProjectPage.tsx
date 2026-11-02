@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
+import { openViewer } from '@state/viewer'
 import { Button, Dialog } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
@@ -12,18 +13,21 @@ import WorkfilesPage from '../WorkfilesPage'
 import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 
-import { selectProject } from '@state/project'
+import { selectProject, setOpenProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { SlicerProvider } from '@shared/containers/Slicer'
+import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
 import { Navigate } from 'react-router-dom'
 import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog/NewListFromContext'
 import {
+  EntityUpdatesProvider,
   ProjectFoldersContextProvider,
   RemoteAddonProject,
+  useDetailsPanelContext,
   useGlobalContext,
   useProjectContext,
 } from '@shared/context'
@@ -35,15 +39,38 @@ import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useContributions } from '@ynput/ayon-addon'
+import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
 import { ProjectPageRemote } from '@shared/components'
-import ProjectStoryboardsPage from '@pages/ProjectListsPage/ProductStoryboardsPage'
+import {
+  DetailsPanelEntityProvider,
+  ProjectDataProvider,
+} from '@shared/containers/ProjectTreeTable'
+import { NewEntityProvider } from '@shared/containers/NewEntity'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
+import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
+
+// modules rendered by this repo, they don't need to wait for addon remote modules to load
+const BUILT_IN_MODULES = [
+  'overview',
+  'tasks',
+  'browser',
+  'products',
+  'lists',
+  'reviews',
+  'workfiles',
+  'reports',
+]
 
 // Addon modules that are always shown in the nav.
 // When the addon remote page is available it is used; otherwise the Splash is shown.
@@ -56,7 +83,7 @@ interface AddonPageConfig {
 
 const ADDON_PAGES: AddonPageConfig[] = [
   {
-    name: 'Scheduler',
+    name: 'Schedule',
     module: 'scheduler',
     viewType: 'scheduler',
     Splash: SchedulerSplashscreen,
@@ -82,6 +109,84 @@ const ProjectContextInfo = () => {
   )
 }
 
+const SlicerWithViews = ({
+  children,
+  page,
+  projectName,
+  onAddToList,
+  onOpenViewer,
+}: {
+  children: React.ReactNode
+  page: string
+  projectName: string
+  onAddToList?: OnAddToList
+  onOpenViewer?: OnOpenViewer
+}) => {
+  const { viewSettings, isLoadingViews } = useViewsContext()
+  const { updateViewSettings } = useViewUpdateHelper()
+
+  return (
+    <SlicerProvider
+      page={page}
+      projectName={projectName}
+      viewSettings={viewSettings}
+      isLoadingViews={isLoadingViews}
+      updateViewSettings={updateViewSettings}
+      onOpenViewer={onOpenViewer}
+      onAddToList={onAddToList}
+    >
+      {children}
+    </SlicerProvider>
+  )
+}
+
+const ProjectSlicerWithViews = ({
+  children,
+  page,
+  projectName,
+}: {
+  children: React.ReactNode
+  page: string
+  projectName: string
+}) => {
+  const { buildReviewContextMenu } = useEntityListsContext()
+  const dispatch = useAppDispatch()
+
+  const onOpenViewer = useCallback<OnOpenViewer>(
+    (row, currentProjectName) => {
+      const isTask = row.data?.entityType === 'task'
+      dispatch(
+        openViewer({
+          projectName: currentProjectName,
+          quickView: true,
+          ...(isTask ? { taskId: row.id } : { folderId: row.id }),
+        }),
+      )
+    },
+    [dispatch],
+  )
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      return buildReviewContextMenu(entityType, selectedEntities)
+    },
+    [buildReviewContextMenu],
+  )
+
+  return (
+    <SlicerWithViews
+      page={page}
+      projectName={projectName}
+      onAddToList={onAddToList}
+      onOpenViewer={onOpenViewer}
+    >
+      {children}
+    </SlicerWithViews>
+  )
+}
+
 const ProjectPageInner = () => {
   /**
    * This component is a wrapper for all project pages
@@ -90,7 +195,13 @@ const ProjectPageInner = () => {
    */
   const { siteInfo } = useGlobalContext()
   const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
-  const { projectName, label: projectLabel, isLoading, error } = useProjectContext()
+  const {
+    projectName,
+    name: loadedProjectName,
+    label: projectLabel,
+    isLoading,
+    error,
+  } = useProjectContext()
   const isManager = useAppSelector((state) => state.user.data.isManager)
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
@@ -109,6 +220,7 @@ const ProjectPageInner = () => {
   }
 
   const dispatch = useAppDispatch()
+  const { onOpenImage, onGoToFrame, onOpenViewer, onUpdateEntity } = useDetailsPanelContext()
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
@@ -122,7 +234,6 @@ const ProjectPageInner = () => {
   // Try checking multiple addons in one go if we wanted, or just call on demand
   const hasReview = !!getProductionAddon('review')
   const hasReports = !!getProductionAddon('reports')
-  const hasStoryboards = !!getProductionAddon('storyboards')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -135,14 +246,29 @@ const ProjectPageInner = () => {
   // permanent addon pages that show a fallback when not loaded
   // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
 
+  // remote modules don't depend on the project, so load them alongside it
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
     // fallbacks: permanentAddons,
     moduleKey: 'Project',
-    skip: !projectName || !addonsData || addonsLoading || isLoading,
+    skip: !projectName,
   }) as {
     remotePages: RemoteAddonProject[]
     isLoading: boolean
   }
+
+  // pages addons contribute to the project.page slot; built-in and legacy pages win on an id clash
+  const { contributions: pageContributions, isLoading: isLoadingContributions } =
+    useContributions('project.page')
+  const addonPages = useAddonPages(
+    pageContributions,
+    [
+      ...BUILT_IN_MODULES,
+      ...ADDON_PAGES.map((p) => p.module),
+      ...remotePages.map((p) => p.module),
+      ...addonsData.map((a) => a.name),
+    ],
+    [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
+  )
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -188,16 +314,6 @@ const ProjectPageInner = () => {
         module: 'reviews',
         viewType: 'reviews',
       },
-      ...(hasStoryboards
-        ? [
-            {
-              name: 'Storyboards',
-              path: `/projects/${projectName}/storyboards`,
-              module: 'storyboards',
-              viewType: 'storyboards',
-            },
-          ]
-        : []),
       ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
         name,
         path: `/projects/${projectName}/${addonModule}`,
@@ -224,6 +340,13 @@ const ProjectPageInner = () => {
           path: `/projects/${projectName}/${remote.module}`,
           viewType: remote.viewType,
         })),
+      ...addonPages.map((page) => ({
+        name: page.title,
+        module: page.id,
+        path: `/projects/${projectName}/${page.id}`,
+        viewType: page.viewType,
+        accessLevels: pageAccessLevels(page.access),
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -251,12 +374,15 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, module, hasStoryboards],
+    [addonsData, projectName, remotePages, addonPages, module],
   )
 
   const activeLink = useMemo(() => {
     return links.find((link) => link.module === module) || null
   }, [links, module])
+
+  // the page's views load with the project instead of after it (the page waits for both)
+  usePrefetchViews({ viewType: activeLink?.viewType, projectName })
 
   const title = useTitle(
     module,
@@ -267,7 +393,7 @@ const ProjectPageInner = () => {
   const tab = !!addonName ? addonsData?.find((item) => item.name === addonName)?.name : module
   const isAddon = !!addonName // Check if we're on an addon page
   useEffect(() => {
-    trackCurrentTab(tab, isAddon)
+    trackCurrentTab(tab ?? '', isAddon)
   }, [tab, isAddon, trackCurrentTab])
 
   const getPageByModuleAndAddonData = (module: string, addonName?: string) => {
@@ -276,6 +402,7 @@ const ProjectPageInner = () => {
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)
     const foundRemotePage = remotePages.find((item) => item.module === module)
+    const foundAddonPage = addonPages.find((page) => page.id === module)
 
     if (module === 'overview') {
       component = <ProjectOverviewPage />
@@ -296,14 +423,6 @@ const ProjectPageInner = () => {
           projectName={projectName}
           isLoadingAccess={addonsListLoading}
           hasReviewAddon={hasReview}
-        />
-      )
-    } else if (module === 'storyboards' && hasStoryboards) {
-      component = (
-        <ProjectStoryboardsPage
-          projectName={projectName}
-          isLoadingAccess={addonsListLoading}
-          hasStoryboardsAddon={hasStoryboards}
         />
       )
     } else if (module === 'workfiles') {
@@ -335,6 +454,23 @@ const ProjectPageInner = () => {
             slicer={foundRemotePage.slicer}
             projectName={projectName}
             key={foundRemotePage.id}
+            dispatch={dispatch}
+            useSelector={useAppSelector}
+            onOpenImage={onOpenImage}
+            onGoToFrame={onGoToFrame}
+            onOpenViewer={onOpenViewer}
+            onUpdateEntity={onUpdateEntity}
+          />
+        </main>
+      )
+    } else if (foundAddonPage) {
+      viewType = foundAddonPage.viewType
+      component = (
+        <main>
+          <AddonProjectPage
+            key={foundAddonPage.key}
+            contribution={foundAddonPage}
+            projectName={projectName}
           />
         </main>
       )
@@ -361,7 +497,16 @@ const ProjectPageInner = () => {
   }
 
   // loading
-  const loadingAll = isLoading || !projectName || addonsLoading || isLoadingModules
+  // only wait for what the current page needs: built in pages don't need the addon remote
+  // modules, and only addon pages need the project addons list.
+  // A refetch of the same project (isLoading includes isFetching) keeps the page mounted.
+  const isBuiltInModule = !addonName && BUILT_IN_MODULES.includes(module)
+  const isLoadingProject = isLoading && loadedProjectName !== projectName
+  const loadingAll =
+    !projectName ||
+    isLoadingProject ||
+    (!!addonName && addonsLoading) ||
+    (!isBuiltInModule && (isLoadingModules || isLoadingContributions))
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {
@@ -375,15 +520,21 @@ const ProjectPageInner = () => {
     return () => clearTimeout(timeoutId)
   }, [loadingAll, page.component, navigate, projectName])
 
+  useEffect(() => {
+    if (loadingAll || !error) return
+    const timeoutId = setTimeout(() => {
+      navigate('/dashboard/tasks', { replace: true })
+    }, 1500)
+
+    return () => clearTimeout(timeoutId)
+  }, [loadingAll, error, navigate])
+
   if (loadingAll) {
     return <LoadingPage />
   }
 
   // error
   if (error) {
-    setTimeout(() => {
-      navigate('/')
-    }, 1500)
     return <div className="page">Project Not Found, Redirecting...</div>
   }
 
@@ -410,11 +561,20 @@ const ProjectPageInner = () => {
         onVersionCreated={handleNewVersionUploaded}
       >
         <EntityListsProvider projectName={projectName}>
-          <WithViews viewType={page.viewType} projectName={projectName}>
-            <SlicerProvider page={module} projectName={projectName}>
-              {page.component}
-            </SlicerProvider>
-          </WithViews>
+          <DetailsPanelEntityProvider>
+            <WithViews viewType={page.viewType} projectName={projectName}>
+              <EntityUpdatesProvider projectNames={[projectName]}>
+                <ProjectSlicerWithViews page={module} projectName={projectName}>
+                  <NewEntityProvider>
+                    {module !== 'overview' && (
+                      <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
+                    )}
+                    {page.component}
+                  </NewEntityProvider>
+                </ProjectSlicerWithViews>
+              </EntityUpdatesProvider>
+            </WithViews>
+          </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>
         <UploadVersionDialog />
@@ -425,6 +585,14 @@ const ProjectPageInner = () => {
 
 const ProjectPage = () => {
   const { projectName } = useParams()
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    dispatch(setOpenProject(projectName))
+    return () => {
+      dispatch(setOpenProject(null))
+    }
+  }, [projectName, dispatch])
 
   // umm... projectName is required
   if (!projectName) return <Navigate to="/" />
@@ -432,7 +600,9 @@ const ProjectPage = () => {
   return (
     <ProjectContextProvider projectName={projectName}>
       <ProjectFoldersContextProvider projectName={projectName}>
-        <ProjectPageInner />
+        <ProjectDataProvider projectName={projectName}>
+          <ProjectPageInner />
+        </ProjectDataProvider>
       </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )

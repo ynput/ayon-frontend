@@ -2,6 +2,7 @@ import { Dialog } from '@ynput/ayon-react-components'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { closeViewer } from '@state/viewer'
 import { useEffect } from 'react'
+import { useRef } from 'react'
 import Viewer from './Viewer'
 import styled from 'styled-components'
 import { isHTMLElement } from '@shared/util'
@@ -38,6 +39,24 @@ const ViewerDialog = () => {
   const folderId = useAppSelector((state) => state.viewer.folderId)
   const projectName = useAppSelector((state) => state.viewer.projectName)
   const fullscreen = useAppSelector((state) => state.viewer.fullscreen)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const isOpen = Boolean((productId || taskId || folderId) && projectName)
+
+  const openerRef = useRef<HTMLElement | null>(null)
+
+  useEffect(() => {
+    if (isOpen) {
+      openerRef.current = document.activeElement as HTMLElement | null
+      dialogRef.current?.focus()
+      return
+    }
+    const opener = openerRef.current
+    openerRef.current = null
+    // only hand focus back when the dialog was still holding it
+    if (opener && document.activeElement === document.body && document.contains(opener)) {
+      opener.focus()
+    }
+  }, [isOpen])
 
   const handleClose = () => {
     // close the dialog
@@ -47,6 +66,9 @@ const ViewerDialog = () => {
   // when pressing escape key, close the dialog
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
+      // check viewer is actually open, if not, do nothing
+      if (!productId && !taskId && !folderId) return
+
       // Check if e.target is an HTMLElement before accessing tagName or isContentEditable
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
@@ -55,6 +77,8 @@ const ViewerDialog = () => {
       }
 
       if (e.key === 'Escape' && !fullscreen) {
+        // prevent the event from propagating to the parent, which would close the details panel
+        e.stopPropagation()
         // first check if slideOut is open
         if (slideOut?.entityId) {
           closeSlideOut()
@@ -67,15 +91,23 @@ const ViewerDialog = () => {
 
     document.addEventListener('keydown', handleEscape)
     return () => document.removeEventListener('keydown', handleEscape)
-  }, [productId, fullscreen, slideOut?.entityId])
+  }, [productId, taskId, folderId, fullscreen, slideOut?.entityId])
 
-  if ((!productId && !taskId && !folderId) || !projectName) {
+  if (!isOpen) {
     return null
   }
 
   return (
     <>
-      <StyledDialog isOpen hideCancelButton size="full" onClose={() => {}} id="viewer-dialog">
+      <StyledDialog
+        ref={dialogRef}
+        isOpen
+        tabIndex={-1}
+        hideCancelButton
+        size="full"
+        onClose={() => {}}
+        id="viewer-dialog"
+      >
         <Viewer onClose={handleClose} />
       </StyledDialog>
     </>

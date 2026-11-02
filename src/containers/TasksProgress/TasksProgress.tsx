@@ -9,17 +9,18 @@ import {
   resolveShiftSelect,
   getPriorityChangeOperations,
   getPlaceholderMessage,
+  resolveSelectedFolders,
 } from './helpers'
 import { useRootFolders } from './hooks'
 // shared
-import { useGetAllProjectUsersAsAssigneeQuery, useUpdateEntitiesMutation } from '@shared/api'
-import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
-import { EmptyPlaceholder, FilterFieldType } from '@shared/components'
 import {
-  createFilterFromSlicer,
-  useTaskProgressViewSettings,
-  type SliceType,
-} from '@shared/containers'
+  refreshActiveAndPurgeOthers,
+  useGetUsersAssigneeQuery,
+  useUpdateEntitiesMutation,
+} from '@shared/api'
+import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
+import { EmptyPlaceholder, FilterFieldType, SyncButton } from '@shared/components'
+import { createFilterFromSlicer, useTaskProgressViewSettings } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
 import { setFocusedTasks } from '@state/context'
@@ -36,9 +37,9 @@ import formatFilterAssigneesData from './helpers/formatFilterAssigneesData'
 import { selectProgress } from '@state/progress'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import formatSearchQueryFilters from './helpers/formatSearchQueryFilters'
-import { RowSelectionState } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { clientFilterToQueryFilter } from '@shared/containers/ProjectTreeTable/utils'
+import { useProjectFoldersContext } from '@shared/context'
 
 // what to search by
 const searchFilterTypes: FilterFieldType[] = [
@@ -122,35 +123,42 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
-  const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
+  const { data: users = [] } = useGetUsersAssigneeQuery(
     { projectName },
     { skip: !projectName },
   )
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
+  const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
 
-  const resolveSelectedFolders = (
-    rowSelection: RowSelectionState,
-    pinnedRowSelection: RowSelectionState | null | undefined,
-    rootFolderIds: string[],
-    sliceType: SliceType,
-  ): string[] => {
-    if (sliceType === 'hierarchy') {
-      return Object.keys(rowSelection)
-    } else if (pinnedRowSelection) {
-      return Object.keys(pinnedRowSelection).filter((id) => pinnedRowSelection[id])
-    } else {
-      return rootFolderIds
-    }
-  }
-
-  const folderIdsToFetch = resolveSelectedFolders(
+  const folderIdsToFetch = useMemo(() => {
+    const selectedFolderIds = resolveSelectedFolders(
+      rowSelection,
+      pinnedSlice?.rowSelection,
+      rootFolderIds,
+      sliceType,
+    )
+    return getFolderIdsWithoutChildren(selectedFolderIds)
+  }, [
     rowSelection,
     pinnedSlice?.rowSelection,
     rootFolderIds,
     sliceType,
-  )
+    getFolderIdsWithoutChildren,
+  ])
+
+  const tasksProgressArgs = {
+    projectName,
+    folderIds: folderIdsToFetch,
+    assignees: queryFiltersForGraphQL.assignees,
+    assigneesAny: queryFiltersForGraphQL.assigneesAny,
+    tags: queryFiltersForGraphQL.tags,
+    tagsAny: queryFiltersForGraphQL.tagsAny,
+    taskTypes: queryFiltersForGraphQL.taskTypes,
+    statuses: queryFiltersForGraphQL.statuses,
+    attributes: queryFiltersForGraphQL.attributes,
+  }
 
   // VVV MAIN QUERY VVV
   //
@@ -160,20 +168,14 @@ const TasksProgress: FC<TasksProgressProps> = ({
     data: foldersTasksData = [],
     isFetching: isFetchingTasks,
     error,
-  } = useGetTasksProgressQuery(
-    {
-      projectName,
-      folderIds: folderIdsToFetch,
-      assignees: queryFiltersForGraphQL.assignees,
-      assigneesAny: queryFiltersForGraphQL.assigneesAny,
-      tags: queryFiltersForGraphQL.tags,
-      tagsAny: queryFiltersForGraphQL.tagsAny,
-      taskTypes: queryFiltersForGraphQL.taskTypes,
-      statuses: queryFiltersForGraphQL.statuses,
-      attributes: queryFiltersForGraphQL.attributes,
-    },
-    { skip: !folderIdsToFetch.length || !projectName },
-  )
+  } = useGetTasksProgressQuery(tasksProgressArgs, {
+    skip: !folderIdsToFetch.length || !projectName,
+  })
+
+  const handleSync = async () => {
+    if (!folderIdsToFetch.length || !projectName) return
+    await dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap()
+  }
   //
   //
   // ^^^ MAIN QUERY ^^^
@@ -398,6 +400,11 @@ const TasksProgress: FC<TasksProgressProps> = ({
             disabledFilters={sliceType ? [sliceType] : []}
           />
           <Spacer />
+          <SyncButton
+            topics={['entity.task', 'entity.folder']}
+            onSync={handleSync}
+            disabled={!folderIdsToFetch.length || !projectName}
+          />
           <Button
             onClick={handleExpandAllToggle}
             icon={expandAll ? 'collapse_all' : 'expand_all'}

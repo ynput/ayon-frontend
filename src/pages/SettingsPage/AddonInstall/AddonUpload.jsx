@@ -13,6 +13,7 @@ import {
 } from '@queries/dependencyPackages/updateDependencyPackages'
 import { onUploadFinished, onUploadProgress } from '@state/context'
 import axios from 'axios'
+import { getRequestErrorString } from '@shared/util'
 import AddonManager from './AddonManager'
 
 const StyledFooter = styled.div`
@@ -118,8 +119,7 @@ const AddonUpload = ({
       return true
     } catch (error) {
       toggleIsUploading(false)
-      setErrorMessage(error?.data?.detail)
-      console.error(error)
+      setErrorMessage(getRequestErrorString(error))
       return false
     }
   }
@@ -155,8 +155,7 @@ const AddonUpload = ({
       console.log('finished: uploaded ' + type)
       return success
     } catch (error) {
-      console.error(error?.detail || error)
-      setErrorMessage(error?.detail || error)
+      setErrorMessage(getRequestErrorString(error))
       return false
     }
   }

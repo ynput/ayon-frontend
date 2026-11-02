@@ -1,18 +1,20 @@
 import { $Any } from '@types'
 import { useState } from 'react'
 import { SelectionStatus } from './types'
-import { useSetFrontendPreferencesMutation } from '@shared/api'
-import { useUpdateAccessGroupsMutation } from '@queries/accessGroups/updateAccessGroups'
-import { useGetProjectsAccessQuery } from '@queries/accessGroups/getAccessGroups'
-import { Filter } from '@ynput/ayon-react-components'
+import {
+  useSetFrontendPreferencesMutation,
+  useSetProjectsAccessMutation,
+  useGetProjectsAccessQuery,
+} from '@shared/api'
 import { useGlobalContext } from '@shared/context'
+import { getRequestErrorString } from '@shared/util'
 
 const useProjectAccessGroupData = (selectedProject: string) => {
   const [selectedProjects, setSelectedProjects] = useState<string[]>(
     selectedProject ? [selectedProject] : [],
   )
 
-  const [updateAccessGroups] = useUpdateAccessGroupsMutation()
+  const [setProjectsAccess] = useSetProjectsAccessMutation()
   const { isLoading, data: usersData } = useGetProjectsAccessQuery({ projects: selectedProjects })
 
   const accessGroupUsers: $Any = {}
@@ -39,10 +41,10 @@ const useProjectAccessGroupData = (selectedProject: string) => {
       }
     }
     try {
-      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
+      setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
-      return error.details
+      return getRequestErrorString(error)
     }
   }
 
@@ -82,10 +84,10 @@ const useProjectAccessGroupData = (selectedProject: string) => {
     }
 
     try {
-      updateAccessGroups({ payload: multiUpdateData, selectedProjects })
+      setProjectsAccess({ payload: multiUpdateData })
     } catch (error: $Any) {
       console.log(error)
-      return error.details
+      return getRequestErrorString(error)
     }
   }
 
@@ -124,4 +126,4 @@ const useUserPreferencesExpandedPanels = (): [
   return [expandedAccessGroups, setExpandedAccessGroups]
 }
 
-export { useProjectAccessGroupData, useUserPageFilters, useUserPreferencesExpandedPanels }
+export { useProjectAccessGroupData, useUserPreferencesExpandedPanels }

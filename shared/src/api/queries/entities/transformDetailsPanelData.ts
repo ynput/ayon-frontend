@@ -9,7 +9,7 @@ import {
   GetDetailsPanelTaskQuery,
   GetDetailsPanelVersionQuery,
 } from '@shared/api/generated'
-import { parseAllAttribs } from '../overview'
+import { parseJSONField } from '../overview'
 
 type DetailsPanelTask = NonNullable<GetDetailsPanelTaskQuery['project']['task']>
 type DetailsPanelRepresentation = NonNullable<
@@ -55,6 +55,7 @@ export type DetailsPanelEntityData = {
   product?: DetailsPanelProductFragmentFragment
   version?: DetailsPanelVersionFragmentFragment
   representations?: DetailsPanelRepresentationFragmentFragment[]
+  data?: Record<string, any>
 }
 
 // takes the data from different entity types and returns a single data model
@@ -75,10 +76,10 @@ export const transformDetailsPanelQueriesData = ({
         label: task.label,
         tags: task.tags,
         status: task.status,
-        updatedAt: task.updatedAt,
-        createdAt: task.createdAt,
+        updatedAt: task.updatedAt as string,
+        createdAt: task.createdAt as string,
         thumbnailHash: task.thumbnailHash,
-        attrib: parseAllAttribs(task.allAttrib),
+        attrib: parseJSONField(task.allAttrib),
         hasReviewables: task.hasReviewables,
         thumbnailId: task.thumbnailId,
         path: (task.folder?.path || '') + '/' + task.name,
@@ -94,6 +95,7 @@ export const transformDetailsPanelQueriesData = ({
         },
         product: undefined,
         version: task.versions?.edges?.[0]?.node,
+        data: parseJSONField(task.data),
       }
     case 'version':
       const version = entity as DetailsPanelVersion
@@ -106,10 +108,10 @@ export const transformDetailsPanelQueriesData = ({
         label: undefined,
         tags: version.tags,
         status: version.status,
-        updatedAt: version.updatedAt,
-        createdAt: version.createdAt,
+        updatedAt: version.updatedAt as string,
+        createdAt: version.createdAt as string,
         thumbnailHash: version.thumbnailHash,
-        attrib: parseAllAttribs(version.allAttrib),
+        attrib: parseJSONField(version.allAttrib),
         hasReviewables: version.hasReviewables,
         thumbnailId: version.thumbnailId,
         path:
@@ -130,6 +132,8 @@ export const transformDetailsPanelQueriesData = ({
           updatedAt: version.updatedAt,
           createdAt: version.createdAt,
           productId: version.product.id,
+          author: version.author,
+          thumbnailId: version.thumbnailId,
         },
         representations: version.representations?.edges?.map((edge) => edge.node) || [],
       }
@@ -144,10 +148,10 @@ export const transformDetailsPanelQueriesData = ({
         label: folder.label,
         tags: folder.tags,
         status: folder.status,
-        updatedAt: folder.updatedAt,
-        createdAt: folder.createdAt,
+        updatedAt: folder.updatedAt as string,
+        createdAt: folder.createdAt as string,
         thumbnailHash: folder.thumbnailHash,
-        attrib: parseAllAttribs(folder.allAttrib),
+        attrib: parseJSONField(folder.allAttrib),
         hasReviewables: folder.hasReviewables,
         thumbnailId: folder.thumbnailId,
         path: folder.path || '',
@@ -157,6 +161,7 @@ export const transformDetailsPanelQueriesData = ({
           name: folder.name,
           label: folder.label,
           folderType: folder.folderType,
+          path: folder.path,
         },
         product: undefined,
         version: undefined,
@@ -173,10 +178,10 @@ export const transformDetailsPanelQueriesData = ({
         label: undefined,
         tags: representation.tags,
         status: representation.status,
-        updatedAt: representation.updatedAt,
-        createdAt: representation.createdAt,
+        updatedAt: representation.updatedAt as string,
+        createdAt: representation.createdAt as string,
         thumbnailHash: 'not_supported',
-        attrib: parseAllAttribs(representation.allAttrib),
+        attrib: parseJSONField(representation.allAttrib),
         hasReviewables: undefined,
         thumbnailId: undefined,
         path:

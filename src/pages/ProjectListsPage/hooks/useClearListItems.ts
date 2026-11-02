@@ -43,7 +43,6 @@ const useClearListItems = ({ projectName }: Props) => {
         toast.warn('List has more than 1000 items, please clear them in batches of 1000')
       }
     } catch (error: any) {
-      console.error('Error clearing list items:', error)
       // update toast with error
       toast.update(toastId, {
         render: `Error clearing list items: ${error}`,

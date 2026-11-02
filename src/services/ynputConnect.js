@@ -9,7 +9,6 @@ const ynputConnect = api.injectEndpoints({
       }),
       providesTags: ['connections'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
     }),
     connectYnput: build.mutation({
       query: ({ key }) => ({
@@ -18,7 +17,6 @@ const ynputConnect = api.injectEndpoints({
         body: { key },
       }),
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       invalidatesTags: ['connections'],
     }),
     discountYnput: build.mutation({
@@ -27,7 +25,6 @@ const ynputConnect = api.injectEndpoints({
         method: 'DELETE',
       }),
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       invalidatesTags: ['connections'],
     }),
   }),

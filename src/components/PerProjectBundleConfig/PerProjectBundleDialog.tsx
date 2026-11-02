@@ -8,6 +8,7 @@ import { useGetProjectBundleInfoQuery } from '@shared/api'
 import { useSetProjectBundleMutation, useUnsetProjectBundleMutation } from '@shared/api'
 import clsx from 'clsx'
 import { InfoMessage } from '@shared/components'
+import { getRequestErrorString } from '@shared/util'
 
 //
 // Styled Components
@@ -98,8 +99,7 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
   const isLoading = queryFetching
   const isUpdating = isSetting || isUnsetting
   const error = queryError || setError || unsetError
-  // @ts-ignore
-  const errorMessage = error?.data?.detail || error?.message || (error ? 'An error occurred' : null)
+  const errorMessage = error ? getRequestErrorString(error) || 'An error occurred' : null
 
   useEffect(() => {
     if (data) {
@@ -117,7 +117,6 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       toast.success(`Project bundle for ${projectName} unset successfully`)
       onClose()
     } catch (error: any) {
-      console.error('Error unsetting project bundle:', error)
       toast.error(`Error unsetting project bundle: ${error.data?.detail || error.message || error}`)
     }
   }
@@ -152,7 +151,6 @@ const PerProjectBundleDialog: FC<PerProjectBundleDialogProps> = ({
       toast.success(`Project bundle for ${projectName} set successfully`)
       onClose()
     } catch (error: any) {
-      console.error('Error setting project bundle:', error)
       toast.error(`Error setting project bundle: ${error.data?.detail || error.message || error}`)
     }
   }

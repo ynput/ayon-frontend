@@ -1,15 +1,22 @@
-import React, { useState, ReactNode } from 'react'
+import React, { useEffect, useState, ReactNode } from 'react'
 import * as Styled from './Menu.styled'
 import { MenuList } from './MenuList'
 import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
-import { PowerpackFeature, useMenuContext, usePowerpack } from '@shared/context'
+import { useMenuContext, usePowerpack, type PowerpackFeature } from '@shared/context'
+
+export interface MenuItemEndAction {
+  icon: string
+  tooltip?: string
+  onClick: (e: React.MouseEvent) => void
+}
 
 export interface MenuItemType {
   id: string
   label?: string | string[]
   icon?: string
+  hoverIcon?: string
   img?: string
   highlighted?: boolean
   notification?: boolean
@@ -22,6 +29,9 @@ export interface MenuItemType {
   disabled?: boolean
   powerFeature?: PowerpackFeature
   active?: boolean
+  reserveActiveSlot?: boolean
+  // small icon buttons at the end of the row, clicking one does not trigger the item or close the menu
+  endActions?: MenuItemEndAction[]
   hidden?: boolean
   node?: ReactNode
   [key: string]: any
@@ -42,6 +52,31 @@ interface MenuProps {
   header?: ReactNode
   footer?: string
 }
+
+const findSubMenuItems = (items: MenuItemType[], id: string): MenuItemType[] | undefined => {
+  for (const item of items) {
+    if (item.id === id) return item.items?.length ? item.items : undefined
+    const nested = item.items?.length ? findSubMenuItems(item.items, id) : undefined
+    if (nested) return nested
+  }
+}
+
+const haveSameEndActions = (a: MenuItemEndAction[] = [], b: MenuItemEndAction[] = []) =>
+  a.length === b.length &&
+  a.every((action, i) => action.icon === b[i].icon && action.tooltip === b[i].tooltip)
+
+// icon/selected/active matter too: toggling a column keeps the same ids but flips its checkmark
+// endActions too: flipping a sort direction keeps the same ids but changes the end button's icon
+const haveSameItems = (a: MenuItemType[], b: MenuItemType[]) =>
+  a.length === b.length &&
+  a.every(
+    (item, i) =>
+      item.id === b[i].id &&
+      item.icon === b[i].icon &&
+      item.selected === b[i].selected &&
+      item.active === b[i].active &&
+      haveSameEndActions(item.endActions, b[i].endActions),
+  )
 
 export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer = '' }) => {
   const { setPowerpackDialog } = usePowerpack()
@@ -105,10 +140,7 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     // Mouse is still inside the menu portal (the DialogContent or any descendant).
     // The user is most likely traveling across a small gap toward an adjacent sub-menu.
     // Don't close anything — the next mouseenter will reconcile state.
-    if (
-      typeof related.closest === 'function' &&
-      related.closest(`#${MENU_PORTAL_CONTENT_ID}`)
-    )
+    if (typeof related.closest === 'function' && related.closest(`#${MENU_PORTAL_CONTENT_ID}`))
       return
 
     // Mouse is targeting a known sub-menu element directly (id match) — keep open.
@@ -126,14 +158,26 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
     else if (e.type === 'mouseleave') onMenuLeave(e, menu)
   }
 
+  useEffect(() => {
+    setSubMenus((prev) => {
+      if (!prev.length) return prev
+      const next = prev.flatMap((subMenu) => {
+        const items = findSubMenuItems(menu, subMenu.id)
+        return items ? [{ ...subMenu, items }] : []
+      })
+      const unchanged =
+        next.length === prev.length &&
+        next.every((subMenu, i) => haveSameItems(subMenu.items, prev[i].items))
+      return unchanged ? prev : next
+    })
+  }, [menu])
+
   const handleSubMenuLayout = (
     id: string,
     style: React.CSSProperties,
     placement: 'left' | 'right',
   ) => {
-    setSubMenus((prev) =>
-      prev.map((m) => (m.id === id ? { ...m, style, placement } : m)),
-    )
+    setSubMenus((prev) => prev.map((m) => (m.id === id ? { ...m, style, placement } : m)))
   }
 
   return (

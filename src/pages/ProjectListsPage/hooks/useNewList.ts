@@ -164,7 +164,6 @@ const useNewList = ({
             autoClose: 5000,
           })
         }
-        console.error(error)
         throw error
       }
     },

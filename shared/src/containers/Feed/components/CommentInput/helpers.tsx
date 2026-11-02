@@ -20,14 +20,7 @@ export const parseImages = (body) => {
   return newBody
 }
 
-export async function typeWithDelay(quill, retain, type, delay = 1) {
-  for (let i = 0; i < type.length; i++) {
-    quill.insertText(retain + i, type[i])
-    await new Promise((resolve) => setTimeout(resolve, delay))
-  }
-}
-
-import { parseFilename } from '@shared/components'
+import { parseFilename } from '@shared/util/parseFilename'
 import axios from 'axios'
 const abortController = new AbortController()
 const cancelToken = axios.CancelToken
@@ -39,7 +32,7 @@ type UploadedFile = {
   data: any
 }
 
-// used to upload files (quill ImageUploader module)
+// upload a file to the project, used by the comment input
 export const uploadFile = (file, projectName, onUploadProgress): Promise<UploadedFile> => {
   return new Promise((resolve, reject) => {
     const formData = new FormData()
@@ -66,7 +59,7 @@ export const uploadFile = (file, projectName, onUploadProgress): Promise<Uploade
   })
 }
 
-export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
+export const handleFileDrop = (e, projectName, onProgress, onSuccess, onError?) => {
   e.preventDefault()
   e.stopPropagation()
 
@@ -78,7 +71,8 @@ export const handleFileDrop = (e, projectName, onProgress, onSuccess) => {
       uploadFile(file, projectName, onProgress).then(
         (data) => onSuccess(data),
         (error) => {
-          toast.error('Upload failed: ' + error.response.data.detail)
+          onError && onError(file)
+          toast.error(error.message)
           console.warn(error)
         },
       )

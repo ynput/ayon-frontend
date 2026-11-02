@@ -16,10 +16,12 @@ import UserAttribForm from '../SettingsPage/UsersSettings/UserAttribForm'
 import SetPasswordDialog from '../SettingsPage/UsersSettings/SetPasswordDialog'
 import ayonClient from '../../ayon'
 import Type from '@/theme/typography.module.css'
+import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
-import { useNotifications } from '@context/NotificationsContext'
+import { useNotifications } from '@context'
 import clsx from 'clsx'
+import { AvatarName } from './ProfilePage.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -37,21 +39,6 @@ const FormsStyled = styled.section`
   .label {
     min-width: 170px;
   }
-`
-
-export const PanelButtonsStyled = styled(Panel)`
-  flex-direction: row;
-
-  & > * {
-    flex: 1;
-  }
-`
-export const AvatarName = styled.span`
-  display: flex;
-  align-content: center;
-  justify-content: center;
-  align-items: center;
-  padding: 16px 16px 8px 16px;
 `
 
 const ProfilePage = ({ user = {}, isLoading }) => {
@@ -113,7 +100,10 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   const onSave = async () => {
     const trimmedFormData = Object.fromEntries(
-      Object.entries(formData).map(([key, value]) => [key, typeof value === 'string' ? value.trim() : value]),
+      Object.entries(formData).map(([key, value]) => [
+        key,
+        typeof value === 'string' ? value.trim() : value,
+      ]),
     )
     const attrib = {
       ...user.attrib,
@@ -138,7 +128,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     } catch (error) {
       console.log(error)
       toast.error('Unable to update profile')
-      toast.error(error.details)
+      toast.error(getRequestErrorString(error))
     }
   }
 
@@ -214,7 +204,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
         }
       }
     } catch (error) {
-      console.error(error)
       toast.error('Unable to update preferences')
     }
   }
@@ -259,14 +248,14 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             />
 
             {!user?.data?.disablePasswordLogin && (
-            <FormRow label="Password" key="Password">
-              <LockedInput
-                label="Password"
-                value={password}
-                type="password"
-                onEdit={() => setShowSetPassword(true)}
-              />
-            </FormRow>
+              <FormRow label="Password" key="Password">
+                <LockedInput
+                  label="Password"
+                  value={password}
+                  type="password"
+                  onEdit={() => setShowSetPassword(true)}
+                />
+              </FormRow>
             )}
 
             <FormRow label="Desktop Notifications" key="notifications">

@@ -1,5 +1,5 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListItemsDataContext } from '@pages/ProjectListsPage/context/ListItemsDataContext'
+import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
 import ProjectOverviewDetailsPanel from '@pages/ProjectOverviewPage/containers/ProjectOverviewDetailsPanel'
 import {
   getCellId,
@@ -13,22 +13,19 @@ import {
 import { useProjectContext } from '@shared/context'
 import { useEffect, useMemo, useState } from 'react'
 import ListDetailsPanel from '../ListDetailsPanel/ListDetailsPanel'
-import useReviewSessionCardsModules from '@pages/ProjectListsPage/hooks/useReviewSessionCardsModules'
-import useStoryboardsCardsModules from '@pages/ProjectListsPage/hooks/useStoryboardsCardsModules'
+import type useReviewSessionCardsModules from '@pages/ProjectListsPage/hooks/useReviewSessionCardsModules'
 import { ReviewsSettings } from '@shared/api'
 
 type Props = {
-  isReview: boolean
-  isStoryboards: boolean
   displayStyle: ReviewsSettings['displayStyle']
   dispatch: any // if we need to provide explicit dispatch context (for review)
+  useReviewSessionCards: ReturnType<typeof useReviewSessionCardsModules>['useReviewSessionCards']
 }
 
 export default function ProjectListsDetailsPanels({
-  isReview,
-  isStoryboards,
   displayStyle,
   dispatch,
+  useReviewSessionCards,
 }: Props) {
   const { projectName, ...projectInfo } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
@@ -74,15 +71,7 @@ export default function ProjectListsDetailsPanels({
     )
   }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
 
-  // Try to get the entity context, but it might not exist
-  let selectedEntity: { entityId: string; entityType: 'folder' | 'task' } | null
-  const entityContext = useDetailsPanelEntityContext()
-  try {
-    selectedEntity = entityContext.selectedEntity
-  } catch {
-    // Context not available, that's fine
-    selectedEntity = null
-  }
+  const { selectedEntity } = useDetailsPanelEntityContext()
 
   // Check if any selected rows are restricted entities
   const hasNonRestrictedSelectedRows = selectedRows.some((rowId) => {
@@ -93,12 +82,8 @@ export default function ProjectListsDetailsPanels({
   // Check if we should show the details panel
   // Don't show entity details panel if only selected entity is restricted
   const shouldShowEntityDetailsPanel =
-    (selectedRows.length > 0 || selectedEntity !== null) && hasNonRestrictedSelectedRows
+    selectedEntity !== null || (selectedRows.length > 0 && hasNonRestrictedSelectedRows)
   const shouldShowListDetailsPanel = listDetailsOpen && !!selectedList
-
-  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
-
-  const { useReviewSessionCards } = useModules({ skip: !isReview })
 
   const { clearHighlighted } = useReviewSessionCards()
 

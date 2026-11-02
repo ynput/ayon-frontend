@@ -1,29 +1,35 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
-import { theme } from '@ynput/ayon-react-components'
-import { FC, useMemo } from 'react'
+import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
+import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
-import ListsSearch from './ListsSearch'
-import { Menu, MenuContainer, MenuItemType } from '@shared/components'
-import { useMenuContext } from '@shared/context/MenuContext'
-import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
+import ListsFiltersBar from './ListsFiltersBar'
+import {
+  buildSortMenuItem,
+  Menu,
+  MenuContainer,
+  MenuItemType,
+  TableSearch,
+} from '@shared/components'
+import { useMenuContext } from '@shared/context'
+import { LISTS_SORT_OPTIONS, parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
 import { usePowerpack, useProjectContext } from '@shared/context'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
   canDeleteAllFolders,
   UserPermissions,
 } from '@pages/ProjectListsPage/util/listAccessControl'
-import { useCreateStoryboardMutation } from '@queries/storyboards'
-import { toast } from 'react-toastify'
-import { useSearchParams } from 'react-router-dom'
 
 export const MENU_ID = 'lists-table-menu'
 
 const HeaderStyled = styled(Header)`
   flex-direction: column;
+  /* rows bring their own padding, the flex gap would double it */
+  gap: 0;
 `
 
 const HeaderTop = styled(Header)`
@@ -33,15 +39,15 @@ const HeaderTop = styled(Header)`
   container-type: inline-size;
 
   /* when this container gets smaller than */
-  /* 188px remove add-list button  */
+  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
   @container (max-width: 188px) {
-    .add-list {
+    .add-folder {
       display: none;
     }
   }
-  /* 155px remove folder button */
+  /* 155px remove add-list button */
   @container (max-width: 155px) {
-    .add-folder {
+    .add-list {
       display: none;
     }
   }
@@ -88,28 +94,7 @@ interface ButtonsCustomization {
   }
 }
 
-type ButtonType = 'delete' | 'add' | 'filter' | 'search'
-
-interface MenuItemDefinition {
-  id: string
-  label?: string
-  icon?: string
-  shortcut?: string
-  onClick?: () => void
-  isPinned?: boolean
-  disabled?: boolean
-  danger?: boolean
-  buttonProps?: {
-    icon?: string
-    tooltip?: string
-    shortcut?: string
-  }
-  className?: string
-  hiddenButtonType?: ButtonType
-  powerFeature?: string
-  selected?: boolean
-  active?: boolean
-}
+export type ButtonType = 'delete' | 'add' | 'filter' | 'search'
 
 interface ListsTableHeaderProps {
   title?: string
@@ -117,8 +102,15 @@ interface ListsTableHeaderProps {
   onSearch: (search: string | null) => void
   buttonLabels?: ButtonsCustomization
   hiddenButtons?: ButtonType[]
+  // menu item ids to omit entirely (dropdown + pinned button), e.g. 'new-folder', 'delete'
+  hiddenMenuItemIds?: string[]
+  // unique DOM/menu id so a second instance (e.g. picker dialog) doesn't collide with the sidepanel
+  menuId?: string
+  // overrides the default create-list flow (picker pre-populates the selected entities)
+  onCreateList?: () => void
   isReview?: boolean
-  isStoryboards?: boolean
+  // main lists mode: inline filter bar under the header, stacked below the search input
+  filtersBar?: boolean
 }
 
 const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -127,28 +119,46 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   onSearch,
   buttonLabels = {},
   hiddenButtons = [],
+  hiddenMenuItemIds = [],
+  menuId = MENU_ID,
+  onCreateList,
   isReview = false,
-  isStoryboards = false,
+  filtersBar = false,
 }) => {
-  const { projectName } = useProjectContext()
   const {
     openNewList,
     onOpenFolderList,
     selectedRows,
     deleteLists,
     onDeleteListFolders,
+    listsFiltersOpen,
     setListsFiltersOpen,
     selectAllLists,
   } = useListsContext()
 
-  const { showArchived, setShowArchived, listsFilters } = useListsDataContext()
+  const { showArchived, setShowArchived, listsFilters, setListsFilters, listsSort, setListsSort } =
+    useListsDataContext()
+
+  const filtersBarRef = useRef<SearchFilterRef>(null)
+  const barVisible = filtersBar && (listsFiltersOpen || listsFilters.length > 0)
+
+  // the bar mounts on the state flip, so the ref is only there next frame
+  const openFiltersBar = () => {
+    setListsFiltersOpen(true)
+    requestAnimationFrame(() => filtersBarRef.current?.open())
+  }
+
+  const closeFiltersBar = () => {
+    if (listsFilters.length) setListsFilters([])
+    setListsFiltersOpen(false)
+  }
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
   const { powerLicense } = usePowerpack()
+  const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { listsData, listFolders } = useListsDataContext()
   const user = useAppSelector((state) => state.user)
-
-  const [searchParams, setSearchParams] = useSearchParams()
 
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = useMemo(
@@ -161,9 +171,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   )
 
   const toggleMenu = (open: boolean = true) => {
-    toggleMenuOpen(open ? MENU_ID : false)
+    toggleMenuOpen(open ? menuId : false)
   }
-  const isOpen = menuOpen === MENU_ID
+  const isOpen = menuOpen === menuId
 
   const selectedListsIds = selectedRows.filter((id) => !parseListFolderRowId(id))
   const selectedFolders = selectedRows
@@ -209,8 +219,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   const handleSelectAllLists = () => selectAllLists()
 
-  const [createList] = useCreateStoryboardMutation()
-
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: MenuItemType[] = [
     {
@@ -238,35 +246,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     { id: 'divider' },
     {
       id: 'new-list',
-      label: isReview
-        ? isStoryboards
-          ? 'Create storyboard'
-          : 'Create review session'
-        : 'Create list',
+      label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
       shortcut: 'N',
       onClick: async () => {
-        if (isStoryboards) {
-          const label =
-            prompt('What would you like to call the storyboard?') ||
-            `Storyboard - ${new Date().toLocaleString()}`
-
-          const { data, error } = await createList({
-            projectName,
-            label,
-          })
-
-          if (error) {
-            return toast.error('Error creating storyboard')
-          }
-
-          setSearchParams({
-            ...searchParams,
-            storyboard: data.id,
-          })
-
-          return
-        }
+        if (onCreateList) return onCreateList()
         openNewList()
       },
       isPinned: true,
@@ -296,6 +280,17 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       className: 'add-folder',
       hiddenButtonType: 'add' as ButtonType,
     },
+    ...(!isReview
+      ? [
+          {
+            id: 'import-list',
+            label: 'Create list from CSV',
+            icon: 'upload_file',
+            onClick: () => openImportDialog('entity_list_item', projectName),
+            isPinned: false,
+          },
+        ]
+      : []),
     { id: 'divider' },
     {
       id: 'show-archived',
@@ -312,14 +307,22 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
             id: 'filter',
             label: 'Filter lists',
             icon: 'filter_list',
-            onClick: () => setListsFiltersOpen(true),
+            onClick: () => {
+              if (!barVisible) return openFiltersBar()
+              closeFiltersBar()
+            },
             isPinned: false,
             selected: listsFilters.length > 0,
             active: listsFilters.length > 0,
           },
         ]
       : []),
-
+    buildSortMenuItem({
+      label: 'Sort lists',
+      options: LISTS_SORT_OPTIONS,
+      sort: listsSort,
+      onChange: setListsSort,
+    }),
     {
       id: 'delete',
       label: 'Delete selection',
@@ -331,8 +334,23 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
   ]
 
+  const filteredMenuItems = hiddenMenuItemIds.length
+    ? menuItems.filter((item) => !item.id || !hiddenMenuItemIds.includes(item.id))
+    : menuItems
+
+  // hiding items can leave dividers doubled up or dangling at either end
+  const isDivider = (item: MenuItemType) => item.id === 'divider'
+  const visibleMenuItems = filteredMenuItems.reduce<MenuItemType[]>((acc, item) => {
+    if (isDivider(item) && (!acc.length || isDivider(acc[acc.length - 1]))) return acc
+    acc.push(item)
+    return acc
+  }, [])
+  while (visibleMenuItems.length && isDivider(visibleMenuItems[visibleMenuItems.length - 1])) {
+    visibleMenuItems.pop()
+  }
+
   // Get pinned items (for buttons)
-  const pinnedItems = menuItems.filter((item) => item.isPinned)
+  const pinnedItems = visibleMenuItems.filter((item) => item.isPinned)
 
   return (
     <HeaderStyled>
@@ -343,11 +361,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           <HeaderButton
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
-            id={MENU_ID}
+            id={menuId}
             className={clsx('list-menu', { active: isOpen })}
           />
-          <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
+          <MenuContainer targetId={menuId} id={menuId} align="left">
+            <Menu menu={visibleMenuItems} onClose={() => toggleMenu?.(false)} />
           </MenuContainer>
 
           {/* Render pinned items as buttons (in reverse order for right-to-left layout) */}
@@ -372,8 +390,9 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
         </StyledButtons>
       </HeaderTop>
       {typeof search === 'string' && (
-        <ListsSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
+        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
       )}
+      {barVisible && <ListsFiltersBar ref={filtersBarRef} onClose={closeFiltersBar} />}
     </HeaderStyled>
   )
 }

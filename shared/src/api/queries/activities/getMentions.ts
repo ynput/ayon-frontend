@@ -1,5 +1,5 @@
 import { activityFeedApi } from '@shared/api/generated'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 import type {
   SuggestEntityMentionApiArg,
   SuggestEntityMentionApiResponse,
@@ -21,7 +21,7 @@ const injectedApi = enhancedMentionsApi.injectEndpoints({
         )
 
         if (res.error) {
-          return { error: res.error as FetchBaseQueryError }
+          return { error: normalizeQueryError(res.error) }
         }
 
         return { data: res.data }

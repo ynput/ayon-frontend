@@ -2,7 +2,8 @@ import React, { useEffect, useLayoutEffect, useRef } from 'react'
 import MenuItem from './MenuItem'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Menu.styled'
-import { PowerpackFeature, usePowerpack } from '@shared/context'
+import { MENU_TOP_BOUND } from './Menu.styled'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import type { MenuItemType } from './Menu'
 
 interface MenuListProps {
@@ -21,6 +22,8 @@ interface MenuListProps {
   level: number
   id?: string
   parentRef?: HTMLElement | null
+  /** consumed here so the spread below doesn't leak it onto the DOM wrapper */
+  parentEl?: HTMLElement | null
   style?: React.CSSProperties
   /** Placement of THIS menu relative to its parent. Inherited by descendants so once
    *  a chain flips to one side it stays there. */
@@ -42,6 +45,7 @@ export const MenuList: React.FC<MenuListProps> = ({
   level,
   id = 'root-menu',
   parentRef,
+  parentEl: _parentEl,
   style,
   placement,
   onClose,
@@ -67,7 +71,8 @@ export const MenuList: React.FC<MenuListProps> = ({
     const itemRect = itemEl.getBoundingClientRect()
     // Use the visible inner <menu> element if present — the wrapper has 16px paddingLeft
     // for sub-menus which would otherwise produce a phantom gap on flip-left chains.
-    const parentVisibleEl = (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
+    const parentVisibleEl =
+      (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
     const parentVisibleRect = parentVisibleEl.getBoundingClientRect()
 
     const viewportWidth = window.innerWidth
@@ -76,7 +81,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     // Use the parent's visible width as the initial estimate — sub-menus tend to be
     // similar size or smaller. Falls back to 240 if parent is unusually narrow.
     const estimatedWidth = Math.max(240, parentVisibleRect.width)
-    const estimatedHeight = Math.min(items.length * 36 + 16, 480)
+    // sub-menus may run all the way to the bottom of the window and scroll from there
+    const estimatedHeight = Math.min(
+      items.length * 36 + 16,
+      viewportHeight - MENU_TOP_BOUND - padding,
+    )
 
     // Choose horizontal placement. If an ancestor sub-menu has already flipped to the
     // left, every descendant sub-menu also goes left — DetailsPanel scenarios put the
@@ -110,8 +119,10 @@ export const MenuList: React.FC<MenuListProps> = ({
     const innerTopOffset = 8
     let viewportTop = itemRect.top - innerTopOffset
     if (viewportTop + estimatedHeight > viewportHeight - padding) {
-      viewportTop = Math.max(padding, viewportHeight - estimatedHeight - padding)
+      viewportTop = viewportHeight - estimatedHeight - padding
     }
+    // above the dialog's own box the menu is clipped and can't be scrolled back into view
+    viewportTop = Math.max(MENU_TOP_BOUND, viewportTop)
 
     // Sub-menu wrappers carry 16px paddingLeft (so their wrapper rect is wider than
     // the visible menu). When we anchor on the LEFT side, the visible menu sits 16px
@@ -125,6 +136,7 @@ export const MenuList: React.FC<MenuListProps> = ({
       style: {
         top: viewportTop - offsetParentRect.top,
         left: wrapperLeft - offsetParentRect.left,
+        maxHeight: viewportHeight - viewportTop - padding,
       },
       items,
       level: level,
@@ -161,7 +173,8 @@ export const MenuList: React.FC<MenuListProps> = ({
     // carry 16px paddingLeft which inflates the rect on the left side and would
     // otherwise produce phantom gaps when flipping left.
     const ownVisibleEl = (wrapperEl.querySelector('menu') as HTMLElement | null) ?? wrapperEl
-    const parentVisibleEl = (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
+    const parentVisibleEl =
+      (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
 
     const offsetParent = (wrapperEl.offsetParent as HTMLElement | null) ?? document.body
     const offsetParentRect = offsetParent.getBoundingClientRect()
@@ -174,7 +187,6 @@ export const MenuList: React.FC<MenuListProps> = ({
     // wrapper such that the visible-menu edge — not the wrapper edge — lines up.
     const subMenuPaddingLeft = ownVisibleRect.left - wrapperRect.left
     const visibleWidth = ownVisibleRect.width
-    const visibleHeight = ownVisibleRect.height
 
     const viewportWidth = window.innerWidth
     const viewportHeight = window.innerHeight
@@ -212,14 +224,17 @@ export const MenuList: React.FC<MenuListProps> = ({
     const desiredFirstItemTop = parentItemRect.top
     const currentFirstItemTop = firstItemRect ? firstItemRect.top : wrapperRect.top + 8
     const deltaY = desiredFirstItemTop - currentFirstItemTop
+    const contentHeight = ownVisibleEl.scrollHeight
     let viewportTop = wrapperRect.top + deltaY
-    if (viewportTop + visibleHeight > viewportHeight - padding) {
-      viewportTop = Math.max(padding, viewportHeight - visibleHeight - padding)
+    if (viewportTop + contentHeight > viewportHeight - padding) {
+      const fittedHeight = Math.min(contentHeight, viewportHeight - MENU_TOP_BOUND - padding)
+      viewportTop = viewportHeight - fittedHeight - padding
     }
+    // above the dialog's own box the menu is clipped and can't be scrolled back into view
+    viewportTop = Math.max(MENU_TOP_BOUND, viewportTop)
 
     // Wrapper origin: visible target minus the wrapper's left padding when on the left.
-    const wrapperLeft =
-      nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft
+    const wrapperLeft = nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft
 
     const targetTop = viewportTop - offsetParentRect.top
     const targetLeft = wrapperLeft - offsetParentRect.left
@@ -233,7 +248,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     // After a successful update, the new style flows back as props, the effect runs
     // once more, current ≈ target, and the guard is a no-op. No infinite loop.
     if (Math.abs(targetTop - currentTop) > 1 || Math.abs(targetLeft - currentLeft) > 1) {
-      onSubMenuLayout(id, { top: targetTop, left: targetLeft }, nextPlacement)
+      onSubMenuLayout(
+        id,
+        { top: targetTop, left: targetLeft, maxHeight: viewportHeight - viewportTop - padding },
+        nextPlacement,
+      )
     }
   }, [subMenu, items, parentRef, id, placement, style?.top, style?.left, onSubMenuLayout])
 
@@ -255,7 +274,7 @@ export const MenuList: React.FC<MenuListProps> = ({
               return item.node
             }
 
-            if (item?.id === 'divider' || item?.separator ) return <hr key={i} />
+            if (item?.id === 'divider' || item?.separator) return <hr key={i} />
 
             const {
               label,
@@ -271,6 +290,8 @@ export const MenuList: React.FC<MenuListProps> = ({
               disabled,
               powerFeature,
               active,
+              reserveActiveSlot,
+              endActions,
               ...props
             } = item
 
@@ -302,6 +323,8 @@ export const MenuList: React.FC<MenuListProps> = ({
                   disabled,
                   powerFeature,
                   active,
+                  reserveActiveSlot,
+                  endActions,
                 }}
                 isLink={link}
                 onClick={(e) =>

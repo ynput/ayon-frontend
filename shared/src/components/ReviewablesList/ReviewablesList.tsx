@@ -1,6 +1,6 @@
 import { FC, MouseEvent, useState } from 'react'
 // queries
-import { useGetReviewablesForVersionQuery, useHasTranscoderQuery } from '@shared/api'
+import { useGetReviewablesForVersionQuery } from '@shared/api'
 import { useDeleteReviewableMutation, useSortVersionReviewablesMutation } from '@shared/api'
 
 // DND
@@ -24,14 +24,15 @@ import {
 } from '@dnd-kit/sortable'
 
 // components
-import { ReviewableCard, ReviewableProgressCard } from '@shared/components'
+import { ReviewableCard } from '../ReviewableCard'
+import { ReviewableProgressCard } from '../ReviewableProgressCard'
 import SortableReviewableCard from './SortableReviewableCard'
 import * as Styled from './ReviewablesList.styled'
 import { toast } from 'react-toastify'
 
 // utils
 import { getGroupedReviewables } from './getGroupedReviewables'
-import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import { confirmDelete } from '@shared/util'
 import EditReviewableDialog from './EditReviewableDialog'
 import ReviewableUpload from './ReviewablesUpload'
@@ -56,13 +57,8 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
   const { onOpenViewer, user, viewer, dispatch } = useDetailsPanelContext()
 
   // check activities permission for reviewable uploads
-  const {
-    data: projectPermissions,
-    isLoading: isLoadingPermissions,
-  } = useGetMyProjectPermissionsQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const { data: projectPermissions, isLoading: isLoadingPermissions } =
+    useGetMyProjectPermissionsQuery({ projectName }, { skip: !projectName })
   const canUploadReviewable =
     user.data?.isManager ||
     user.data?.isAdmin ||
@@ -191,7 +187,7 @@ const ReviewablesList: FC<ReviewablesListProps> = ({
     // Create an invisible anchor element
     const a = document.createElement('a')
     a.href = url
-    a.target = "_blank"
+    a.target = '_blank'
     document.body.appendChild(a)
 
     // Trigger a click event on the anchor element

@@ -1,4 +1,4 @@
-import { AttributeData } from '@shared/api'
+import type { AttributeData } from '@shared/api'
 
 export const getTypeDefaultValue = (type: AttributeData['type']) => {
   switch (type) {

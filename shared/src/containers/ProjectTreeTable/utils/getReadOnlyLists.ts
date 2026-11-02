@@ -1,4 +1,5 @@
 import { ProjectTableAttribute } from '../types'
+import { LIST_COLUMN_IDS } from './listColumns'
 
 // Known built-in fields. We keep both camelCase and snake_case variants since
 // permissions may use either form depending on the backend response.
@@ -30,7 +31,7 @@ export const getReadOnlyLists = (
   const readOnlyFields: string[] = []
   let folderTypeReadOnly = false
   let taskTypeReadOnly = false
-  if (writableFields?.length) {
+  if (writableFields) {
     const writableSet = new Set(writableFields)
     const isWritable = (variants: string[]) => variants.some((v) => writableSet.has(v))
 
@@ -47,9 +48,11 @@ export const getReadOnlyLists = (
 
   if (extra?.includes('attrib' as any)) {
     // If 'attrib' is in the readonly columns, all attributes are read-only
-    readOnlyAttribs = attribFields.filter((a) => a.builtin).map((attrib) => attrib.name) // Mark all attributes as readOnly if they are builtin
+    readOnlyAttribs = attribFields
+      .filter((a) => a.builtin || a.readOnly)
+      .map((attrib) => attrib.name)
     readOnlyColumnsSet = new Set([
-      ...attribFields.filter((a) => a.builtin).map((attrib) => 'attrib_' + attrib.name), // Add all attribute columns to the readOnly set
+      ...readOnlyAttribs.map((name) => 'attrib_' + name), // Add the read-only attribute columns to the set
       ...readOnlyFields, // Also include read-only built-in fields
       ...(extra || []), // Add any other specified readOnly columns
     ])
@@ -83,7 +86,6 @@ export const getReadOnlyLists = (
     readOnlyColumnsSet.add('subType')
     if (!readOnlyAttribs.includes('subType')) readOnlyAttribs.push('subType')
   }
-
   // Also add read-only built-in fields to readOnlyAttribs to expose a combined list
   // (Clipboard paste logic will still only enforce for attrib_ columns.)
   if (readOnlyFields.length) {
@@ -91,6 +93,8 @@ export const getReadOnlyLists = (
       if (!readOnlyAttribs.includes(f)) readOnlyAttribs.push(f)
     }
   }
+
+  readOnlyAttribs.push(...LIST_COLUMN_IDS)
 
   const readOnlyColumns = Array.from(readOnlyColumnsSet) // Convert the set of readOnly columns to an array
 

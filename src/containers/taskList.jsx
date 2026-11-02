@@ -15,7 +15,6 @@ import NoEntityFound from '@components/NoEntityFound'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { CellWithIcon } from '@components/icons'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
@@ -145,19 +144,10 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     handleTableKeyDown(event)
   }
 
-  const {
-    buildAddToListMenu,
-    buildListMenuItem,
-    newListMenuItem,
-    tasks: tasksLists,
-    buildHierarchicalMenuItems,
-  } = useEntityListsContext()
-
   // CONTEXT MENU
   const ctxMenuItems = (selected = []) => {
     const firstSelected = selected[0]
     const firstSelectedData = tasksData.find((task) => task.data.id === firstSelected)
-    const selectedEntities = selected.map((id) => ({ entityId: id, entityType: 'task' }))
 
     return [
       {
@@ -182,14 +172,11 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
         icon: 'filter_list',
         command: () => handleFilterProductsBySelected(selected),
       },
-      buildAddToListMenu([
-        ...buildHierarchicalMenuItems(
-          tasksLists,
-          selectedEntities,
-          () => false, // icons optional - hide for compactness
-        ),
-        newListMenuItem('task', selectedEntities),
-      ]),
+      {
+        label: 'Add to list (deprecated)',
+        icon: 'list_alt_add',
+        disabled: true,
+      },
       {
         label: 'Detail',
         command: () => setShowDetail(true),

@@ -1,13 +1,18 @@
-import { Chips, ChipValue, DoneCheckbox, SubtasksManagerWrapper } from '@shared/components'
+import { Chips } from '@shared/components/Chips/Chips'
+import type { ChipValue } from '@shared/components/Chips/Chips'
+import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
+import { SubtasksManagerWrapper } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC, useState } from 'react'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
 import { Container } from '@shared/components/LinksManager/LinksManager.styled'
-import { type SubTaskNode } from '@shared/api'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import type { SubTaskNode } from '@shared/api'
+import { useProjectTableContext } from '../context/project-table'
 
 export type SubtasksWidgetData = {
   taskId: string
+  taskName: string
+  folderId?: string
   subtasks: SubTaskNode[]
 }
 
@@ -27,7 +32,7 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
   onChange: _onChange,
   onCancelEdit,
 }) => {
-  const { SubtasksManager, useNavigate } = useProjectTableContext()
+  const { SubtasksManager, useNavigate, dispatch } = useProjectTableContext()
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
 
   const subtasks = value?.subtasks || []
@@ -56,12 +61,15 @@ export const SubtasksWidget: FC<SubtasksWidgetProps> = ({
             <SubtasksManagerWrapper
               projectName={projectName}
               taskId={value.taskId}
+              taskName={value.taskName}
+              folderId={value.folderId}
               subtasks={subtasks}
               selectedSubtaskIds={selectedSubtaskIds}
               onSelectSubtasks={setSelectedSubtaskIds}
               onClose={onCancelEdit}
               SubtasksManager={SubtasksManager}
               useNavigate={useNavigate!}
+              dispatch={dispatch}
               style={{
                 padding: 'var(--padding-m)',
                 backgroundColor: 'var(--md-sys-color-surface-container-high)',

@@ -1,6 +1,6 @@
 // libraries
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import styled from 'styled-components'
 
 // state
@@ -9,15 +9,17 @@ import {
   SLICER_PAGES_CONFIG,
   useSlicerContext,
   useSlicerSplitter,
+  type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 
 // arc
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { CustomizeButton, buildScopes } from '@shared/components'
+import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
-import NewEntity from '@components/NewEntity/NewEntity'
+import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
 import { Actions } from '@shared/containers/Actions/Actions'
 import {
   getCellId,
@@ -26,19 +28,24 @@ import {
   useGetGroupedFields,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { useProjectOverviewContext } from './context/ProjectOverviewContext'
+import { useProjectOverviewContext } from './context/project-overview'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
-import { useGlobalContext, useSettingsPanel } from '@shared/context'
-import ReloadButton from './components/ReloadButton'
+import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { DetailsPanelEntityData, OperationResponseModel } from '@shared/api'
-import useExpandAndSelectNewFolders from './hooks/useExpandAndSelectNewFolders'
+import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import OverviewExportSource from './components/OverviewExportSource'
+import { TableExportButton } from '@shared/containers/TableExport'
 import { getBundleModeFromUser } from '@shared/util'
+import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import type { OnAddToList } from '@shared/containers/Slicer'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable'
+import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
+import type { OnMoveComplete } from '@shared/containers/MoveEntityDialog'
 
 // the tasks resolver task filter does not whitelist folder_type — use the
 // folder-scope folderType chip instead (goes through folderFilter)
@@ -71,6 +78,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const bundleMode = getBundleModeFromUser(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
@@ -81,13 +89,47 @@ const ProjectOverviewPage: FC = () => {
     projectInfo,
     setQueryFilters,
     displayFilters,
-    showHierarchy,
     viewGroupBy,
     viewGroupByDesc,
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
+    getSlicerCountsArgs,
+    onSyncData,
+    movingEntities,
+    closeMoveDialog,
   } = useProjectOverviewContext()
+
+  const slicerCountsSource = useCallback<GetSlicerCountsSource>(
+    (sliceType) => ({ entity: 'task', args: getSlicerCountsArgs(sliceType) }),
+    [getSlicerCountsArgs],
+  )
+  const { buildReviewContextMenu } = useEntityListsContext()
+  const { getParentFolderIds } = useProjectFoldersContext()
+  const handleMoveComplete = useCallback<OnMoveComplete>(
+    (folderId) => {
+      const folderIdsToExpand = [folderId, ...getParentFolderIds(folderId)]
+      updateExpanded((previous) => {
+        if (typeof previous === 'boolean') {
+          return previous ? previous : Object.fromEntries(folderIdsToExpand.map((id) => [id, true]))
+        }
+        return {
+          ...previous,
+          ...Object.fromEntries(folderIdsToExpand.map((id) => [id, true])),
+        }
+      })
+    },
+    [getParentFolderIds, updateExpanded],
+  )
+
+  const onAddToList = useMemo<OnAddToList>(
+    () => (row: SimpleTableRow, selectedRows: string[]) => {
+      const entityType = row.data?.entityType === 'task' ? 'task' : 'folder'
+      const selectedEntities = selectedRows.map((entityId) => ({ entityId, entityType }))
+      return buildReviewContextMenu(entityType, selectedEntities)
+    },
+    [buildReviewContextMenu],
+  )
 
   const { sorting, updateSorting } = useColumnSettingsContext()
   const nameSortDesc = sorting?.[0]?.id === 'name' ? sorting[0].desc : false
@@ -154,14 +196,6 @@ const ProjectOverviewPage: FC = () => {
     setQueryFilters(newQueryFilters)
   }
 
-  const expandAndSelectNewFolders = useExpandAndSelectNewFolders()
-
-  // select new entities and expand their parents
-  const handleNewEntities = (ops: OperationResponseModel[], stayOpen: boolean) => {
-    // expands to newly created folders and selects them
-    expandAndSelectNewFolders(ops, { enableSelect: !stayOpen, enableExpand: true })
-  }
-
   const { getGoToEntityData } = useGoToEntity()
 
   // select the entity in the table and expand its parent folders
@@ -207,26 +241,29 @@ const ProjectOverviewPage: FC = () => {
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
-              pinnedSliceType="hierarchy"
+              countsSource={slicerCountsSource}
+              onAddToList={onAddToList}
+              enableSplit
             />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
+            <OverviewExportSource />
             <Toolbar>
-              <NewEntity disabled={!showHierarchy} onNewEntities={handleNewEntities} />
+              <ProjectNewEntityHost showButton />
               <OverviewActions />
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
                 scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
+                // @ts-expect-error: projectInfo is never matching, whatever
                 projectInfo={projectInfo}
                 tasksMap={tasksMap}
-                disabledFilters={sliceType ? [sliceType] : []}
                 data={{}}
               />
-              <ReloadButton />
+              <SyncButton topics={['entity.folder', 'entity.task']} onSync={onSyncData} />
               <GroupByDropdown
                 title="Group by"
                 options={viewGroupByOptions}
@@ -234,7 +271,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
-              <ImportDialogButton importContext="hierarchy" projectName={projectName} />
+              <TableExportButton onImport={() => openImportDialog('hierarchy', projectName)} />
               <Actions
                 entities={[]}
                 entityType={undefined}
@@ -246,6 +283,7 @@ const ProjectOverviewPage: FC = () => {
                 bundleMode={bundleMode}
                 align="right"
               />
+              <AddonToolbarItems page="overview" />
               <CustomizeButton />
             </Toolbar>
             <Splitter
@@ -275,6 +313,8 @@ const ProjectOverviewPage: FC = () => {
                     className="details"
                   >
                     <ProjectOverviewDetailsPanel
+                      // @ts-expect-error: projectInfo is never matching, whatever
+
                       projectInfo={projectInfo}
                       projectName={projectName}
                       onUriOpen={handleUriOpen}
@@ -298,6 +338,12 @@ const ProjectOverviewPage: FC = () => {
           </Section>
         </SplitterPanel>
       </Splitter>
+      <MoveEntityDialog
+        projectName={projectName}
+        movingEntities={movingEntities}
+        onClose={closeMoveDialog}
+        onMoveComplete={handleMoveComplete}
+      />
     </main>
   )
 }

@@ -14,7 +14,7 @@ type Options<T extends ReviewableLike> = {
   enabled?: boolean
 }
 
-const NAV_KEYS = ['w', 's', 'ArrowUp', 'ArrowDown']
+const NAV_KEYS = ['w', 's']
 
 export function useReviewablesKeyboardNavigation<T extends ReviewableLike>({
   reviewables,
@@ -29,16 +29,15 @@ export function useReviewablesKeyboardNavigation<T extends ReviewableLike>({
     const handleKeyDown = (e: KeyboardEvent) => {
       const key = e.key.length === 1 ? e.key.toLowerCase() : e.key
       if (!NAV_KEYS.includes(key)) return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
 
       if (isHTMLElement(e.target)) {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return
         if (e.target.isContentEditable) return
       }
 
-      if (key === 'ArrowUp' || key === 'ArrowDown') e.preventDefault()
-
       const currentIndex = reviewables.findIndex(({ fileId }) => selected.includes(fileId))
-      const delta = key === 'w' || key === 'ArrowUp' ? -1 : 1
+      const delta = key === 'w' ? -1 : 1
       const nextIndex = currentIndex + delta
       const next =
         reviewables[nextIndex < 0 ? reviewables.length - 1 : nextIndex % reviewables.length]

@@ -7,10 +7,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/products/${queryArg.productId}/reviewables`,
-        params: {
-          latest: queryArg.latest,
-          latest_done: queryArg.latestDone,
-        },
       }),
     }),
     getReviewablesForVersion: build.query<
@@ -19,10 +15,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
-        params: {
-          latest: queryArg.latest,
-          latest_done: queryArg.latestDone,
-        },
       }),
     }),
     uploadReviewable: build.mutation<UploadReviewableApiResponse, UploadReviewableApiArg>({
@@ -30,8 +22,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/reviewables`,
         method: 'POST',
         headers: {
-          'x-file-name': queryArg['x-file-name'],
           'content-type': queryArg['content-type'],
+          'x-file-name': queryArg['x-file-name'],
+          'x-sender': queryArg['x-sender'],
+          'x-sender-type': queryArg['x-sender-type'],
         },
         params: {
           label: queryArg.label,
@@ -54,10 +48,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/reviewables`,
-        params: {
-          latest: queryArg.latest,
-          latest_done: queryArg.latestDone,
-        },
       }),
     }),
     getReviewablesForFolder: build.query<
@@ -66,10 +56,6 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/reviewables`,
-        params: {
-          latest: queryArg.latest,
-          latest_done: queryArg.latestDone,
-        },
       }),
     }),
     getReviewablesForEntities: build.mutation<
@@ -102,20 +88,12 @@ export type GetReviewablesForProductApiResponse =
 export type GetReviewablesForProductApiArg = {
   projectName: string
   productId: string
-  /** If True, returns only the latest version */
-  latest?: boolean
-  /** If True, returns only the latest approved versions */
-  latestDone?: boolean
 }
 export type GetReviewablesForVersionApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel
 export type GetReviewablesForVersionApiArg = {
   projectName: string
   versionId: string
-  /** If True, returns only the latest version */
-  latest?: boolean
-  /** If True, returns only the latest approved versions */
-  latestDone?: boolean
 }
 export type UploadReviewableApiResponse = /** status 200 Successful Response */ ReviewableModel
 export type UploadReviewableApiArg = {
@@ -123,8 +101,10 @@ export type UploadReviewableApiArg = {
   versionId: string
   /** Label */
   label?: string
-  'x-file-name': string
   'content-type': string
+  'x-file-name': string
+  'x-sender'?: string
+  'x-sender-type'?: string
 }
 export type SortVersionReviewablesApiResponse = /** status 200 Successful Response */ any
 export type SortVersionReviewablesApiArg = {
@@ -137,20 +117,12 @@ export type GetReviewablesForTaskApiResponse =
 export type GetReviewablesForTaskApiArg = {
   projectName: string
   taskId: string
-  /** If True, returns only the latest version */
-  latest?: boolean
-  /** If True, returns only the latest approved versions */
-  latestDone?: boolean
 }
 export type GetReviewablesForFolderApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel[]
 export type GetReviewablesForFolderApiArg = {
   projectName: string
   folderId: string
-  /** If True, returns only the latest version */
-  latest?: boolean
-  /** If True, returns only the latest approved versions */
-  latestDone?: boolean
 }
 export type GetReviewablesForEntitiesApiResponse =
   /** status 200 Successful Response */ VersionReviewablesModel[]

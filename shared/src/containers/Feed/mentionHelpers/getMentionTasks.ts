@@ -1,6 +1,6 @@
-import { TaskSuggestionItem } from '@shared/api'
+import type { TaskSuggestionItem } from '@shared/api/generated'
 import { getEntityTypeIcon } from '../../../util'
-import { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
+import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
 
 const getMentionTasks = (tasks: TaskSuggestionItem[] = [], taskTypes: TaskType[] = []) =>
   tasks.map((task) => {

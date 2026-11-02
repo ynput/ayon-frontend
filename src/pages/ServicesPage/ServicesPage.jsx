@@ -48,6 +48,15 @@ const formatStatus = (rowData) => {
   if (rowData.lastSeenDelta > 10000)
     return <StatusBadge className="unreachable">Worker unreachable</StatusBadge>
 
+  if (rowData.data?.error) {
+    const errMessage = rowData.data.error
+    return (
+      <StatusBadge className="unreachable" data-tooltip={errMessage}>
+        Error
+      </StatusBadge>
+    )
+  }
+
   if (!rowData.shouldRun)
     return rowData.isRunning ? (
       <StatusBadge className="stopping">Stopping</StatusBadge>

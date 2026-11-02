@@ -9,30 +9,39 @@ import {
   GetTasksListQueryVariables,
 } from '@shared/api/generated'
 import PubSub from '@shared/util/pubsub'
-import { subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
-import { EditorTaskNode } from '@shared/containers/ProjectTreeTable'
+import {
+  createRealtimeBatcher,
+  getSupportedEntityPatch,
+  REALTIME_REST_CALL_LIMIT,
+  REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+  RealtimeBatchProcessor,
+  subscribeToThumbnailUpdates,
+  SupportedTaskField,
+  ThumbnailUpdateMessage,
+  waitForRealtimeJitter,
+} from '@shared/util'
+import type { EditorTaskNode } from '@shared/containers/ProjectTreeTable/types/table'
 import type { FieldStats } from '../columnStats'
-import {
-  normalizeFieldStats,
-  mergeFieldStats,
-  hasNewTargetFields,
-  transformStatsError,
-} from '../columnStats'
-import {
-  DefinitionsFromApi,
-  FetchBaseQueryError,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import { normalizeQueryError } from '@shared/api/base/queryError'
+
+const CACHE_TIME = 10 // seconds
 
 // parse attribs JSON string to object
-export const parseAllAttribs = (allAttrib: string) => {
+export const parseJSONField = (allAttrib: string | null | undefined): Record<string, any> => {
+  if (!allAttrib) return {}
   try {
-    return JSON.parse(allAttrib)
+    const parsed: unknown = JSON.parse(allAttrib)
+    return parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+      ? (parsed as Record<string, any>)
+      : {}
   } catch (e) {
     return {}
   }
 }
+// backwards compatibility for old API
+export const parseAllAttribs = parseJSONField
 
 const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): EditorTaskNode[] => {
   if (!response.project) {
@@ -44,7 +53,8 @@ const transformFilteredEntitiesByParent = (response: GetTasksByParentQuery): Edi
     tasks.push({
       ...taskNode,
       folderId: taskNode.folderId || 'root',
-      attrib: parseAllAttribs(taskNode.allAttrib),
+      attrib: parseJSONField(taskNode.allAttrib),
+      data: parseJSONField(taskNode.data),
       entityId: taskNode.id,
       entityType: 'task',
       links: [],
@@ -93,7 +103,7 @@ export type GetTasksListArgs = {
   folderIds?: string[]
   taskIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   showComments?: boolean
   includeFolderChildren?: boolean
 }
@@ -109,7 +119,7 @@ export type GetGroupedTasksListArgs = {
   folderFilter?: string
   folderIds?: string[]
   desc?: boolean
-  sortBy?: string
+  sortBy?: string | string[]
   groupCount?: number // optional override for all groups
   showComments?: boolean
 }
@@ -142,6 +152,7 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName, parentIds),
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetTasksList: {
       transformResponse: (result: GetTasksListQuery) => ({
@@ -150,26 +161,27 @@ const enhancedApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
       }),
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks || [], projectName),
+      keepUnusedDataFor: CACHE_TIME,
     },
     // footer stats: `targets` excluded from cache key + responses merged,
     // so column toggles reuse cache and only added targets refetch
     GetFolderColumnStats: {
       transformResponse: (res: GetFolderColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.folders?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'folder'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'folderColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetTaskColumnStats: {
       transformResponse: (res: GetTaskColumnStatsQuery) =>
         normalizeFieldStats(res?.project?.tasks?.fieldStats ?? []),
-      transformErrorResponse: (error: any) => transformStatsError(error, 'task'),
       serializeQueryArgs: ({ queryArgs: { targets: _t, ...rest } }) => rest,
       merge: (cache, incoming) => mergeFieldStats(incoming, cache),
       forceRefetch: ({ currentArg, previousArg }) => hasNewTargetFields(currentArg, previousArg),
       providesTags: (_r, _e, { projectName }) => [{ type: 'taskColumnStats', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -227,7 +239,7 @@ const injectedApi = enhancedApi.injectEndpoints({
     >({
       async queryFn(
         { projectName, parentIds, filter, folderFilter, search, showComments },
-        { dispatch, getState },
+        { dispatch, getState, forced },
       ) {
         try {
           const state = getState()
@@ -246,7 +258,10 @@ const injectedApi = enhancedApi.injectEndpoints({
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)
 
           // 3. Diffing: Only request folders that haven't hit the network under these specific filters
-          const newFolderIds = parentIds.filter((id) => !alreadyQueriedFolders.has(id))
+          // If forced, we ignore the registry and fetch all folders again, like a refresh
+          const newFolderIds = forced
+            ? parentIds
+            : parentIds.filter((id) => !alreadyQueriedFolders.has(id))
 
           // Short-circuit if all expanded folders have been evaluated for this filter setup
           if (newFolderIds.length === 0) {
@@ -323,9 +338,7 @@ const injectedApi = enhancedApi.injectEndpoints({
           }
         } catch (e: any) {
           console.error(e)
-          const errorMessage =
-            e.message || e.data?.message || JSON.stringify(e) || 'Unknown Fetch Error'
-          return { error: { status: 'FETCH_ERROR', error: errorMessage } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       // keep one cache per project
@@ -340,37 +353,72 @@ const injectedApi = enhancedApi.injectEndpoints({
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
         { projectName, parentIds, filter, folderFilter, search, showComments },
-        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
-        const pendingTaskIds = new Set<string>()
-        const MAX_BATCH = 100
-        const INTERVAL = 500
-        let scheduled = false
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
+          const queriedFolders = getQueriedFolders(
+            getCacheKey(projectName, filter, folderFilter, search, showComments),
+          )
+          const cachedTaskIds = new Set(
+            (getCacheEntry().data as EditorTaskNode[] | undefined)?.map((task) => task.id) || [],
+          )
+          const batchIds = new Set<string>()
+          const patches: {
+            taskId: string
+            field: SupportedTaskField
+            value: string | string[]
+          }[] = []
 
-        const schedule = () => {
-          if (scheduled) return
-          scheduled = true
-          setTimeout(flush, INTERVAL)
-        }
+          messages
+            .filter((message) => message.project === projectName)
+            .filter((message) => queriedFolders.has(message.summary?.parentId))
+            .forEach((message) => {
+              const taskId = message.summary?.entityId
+              if (!taskId || !cachedTaskIds.has(taskId)) return
 
-        const flush = async () => {
-          scheduled = false
-          if (!pendingTaskIds.size) return
-          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
-          batchIds.forEach((id) => pendingTaskIds.delete(id))
+              const field = message.topic?.split('.')[2]?.replace('_changed', '')
+              const patch = getSupportedEntityPatch(
+                field,
+                message.summary,
+                REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+              )
+              if (patch)
+                patches.push({
+                  taskId,
+                  field: patch.field as SupportedTaskField,
+                  value: patch.value,
+                })
+              else batchIds.add(taskId)
+            })
+
+          if (patches.length) {
+            updateCachedData((draft: EditorTaskNode[]) => {
+              patches.forEach(({ taskId, field, value }) => {
+                const task = draft.find((item) => item.id === taskId)
+                if (!task) return
+                Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
+              })
+            })
+          }
+
+          const idsToFetch = Array.from(batchIds)
+          if (!idsToFetch.length || idsToFetch.length > REALTIME_REST_CALL_LIMIT) return
+
           try {
+            await waitForRealtimeJitter()
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName,
-                  taskIds: batchIds,
+                  taskIds: idsToFetch,
                   showComments: !!showComments,
                 } as any,
                 { forceRefetch: true },
               ),
             ).unwrap()
             const returned = res.tasks || []
+            if (!isActive()) return
             const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
             updateCachedData((draft: EditorTaskNode[]) => {
@@ -381,7 +429,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                 else draft.push(task)
               }
               // remove missing
-              for (const id of batchIds) {
+              for (const id of idsToFetch) {
                 if (!returnedMap.has(id)) {
                   const idx = draft.findIndex((t) => t.id === id)
                   if (idx > -1) draft.splice(idx, 1)
@@ -390,10 +438,13 @@ const injectedApi = enhancedApi.injectEndpoints({
             })
           } catch (err) {
             console.error('Realtime overview batch update failed', err)
-          } finally {
-            if (pendingTaskIds.size) schedule()
           }
         }
+        const batcher = createRealtimeBatcher(
+          batchProcessMessages,
+          (message: any) =>
+            `${message.project ?? projectName}:${message.summary?.entityId}:${message.topic}`,
+        )
         let unsubscribeThumbnails: (() => void) | undefined
         try {
           await cacheDataLoaded
@@ -414,14 +465,11 @@ const injectedApi = enhancedApi.injectEndpoints({
             ['task'],
           )
 
-          const handlePubSub = async (_topic: string, message: any) => {
+          const handlePubSub = (_topic: string, message: any) => {
             const taskId = message?.summary?.entityId
             const parentId = message?.summary?.parentId
             if (!taskId || !parentId) return
-            // Only react if the parent folder is part of the current expanded set
-            if (!parentIds.includes(parentId)) return
-            pendingTaskIds.add(taskId)
-            schedule()
+            batcher.add({ ...message, topic: _topic })
           }
 
           // Subscribe to task entity updates
@@ -433,6 +481,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         }
 
         await cacheEntryRemoved
+        batcher.clear()
 
         // Evict tracking map memory entry completely when this RTK Query cache entry expires
         const deadCacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
@@ -441,6 +490,7 @@ const injectedApi = enhancedApi.injectEndpoints({
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     // searchFolders is a post so it's a bit annoying to consume
     // we wrap it in a queryFn to make it easier to consume as a query hook
@@ -454,16 +504,18 @@ const injectedApi = enhancedApi.injectEndpoints({
             }),
           )
 
+          if (result.error) return { error: normalizeQueryError(result.error) }
+
           const data = result.data?.folderIds || []
 
           return { data }
         } catch (e: any) {
           console.error(e)
-          const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-          return { error }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (_r, _e, { projectName }) => [{ type: 'tasksFolder', id: projectName }],
+      keepUnusedDataFor: CACHE_TIME,
     }),
     // Add new infinite query endpoint for tasks list
     getTasksListInfinite: build.infiniteQuery<
@@ -551,40 +603,75 @@ const injectedApi = enhancedApi.injectEndpoints({
           return {
             data: result.data || fallback,
           }
-        } catch (e: any) {
-          console.error('Error in getTasksListInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+        } catch (error: any) {
+          console.error('ERROR [getOverview]:', error, error.data?.detail)
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.pages.flatMap((p) => p.tasks) || [], projectName),
       async onCacheEntryAdded(
         arg,
-        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch },
+        { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
-        const pendingTaskIds = new Set<string>()
-        const MAX_BATCH = 100
-        const INTERVAL = 500
-        let scheduled = false
+        const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
+          const cachedTaskIds = new Set(
+            (getCacheEntry().data?.pages || []).flatMap((page) =>
+              page.tasks.map((task: EditorTaskNode) => task.id),
+            ),
+          )
+          const batchIds = new Set<string>()
+          const patches: {
+            taskId: string
+            field: SupportedTaskField
+            value: string | string[]
+          }[] = []
 
-        const schedule = () => {
-          if (scheduled) return
-          scheduled = true
-          setTimeout(flush, INTERVAL)
-        }
+          messages
+            .filter((message) => message.project === arg.projectName)
+            .forEach((message) => {
+              const taskId = message.summary?.entityId
+              if (!taskId || !cachedTaskIds.has(taskId)) return
 
-        const flush = async () => {
-          scheduled = false
-          if (!pendingTaskIds.size) return
-          const batchIds = Array.from(pendingTaskIds).slice(0, MAX_BATCH)
-          batchIds.forEach((id) => pendingTaskIds.delete(id))
+              const field = message.topic?.split('.')[2]?.replace('_changed', '')
+              const patch = getSupportedEntityPatch(
+                field,
+                message.summary,
+                REALTIME_TASK_SUPPORTED_VALUE_FIELDS,
+              )
+              if (patch)
+                patches.push({
+                  taskId,
+                  field: patch.field as SupportedTaskField,
+                  value: patch.value,
+                })
+              else batchIds.add(taskId)
+            })
+
+          if (patches.length) {
+            updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
+              patches.forEach(({ taskId, field, value }) => {
+                for (const page of draft.pages) {
+                  const task = page.tasks.find((item) => item.id === taskId)
+                  if (!task) continue
+                  Object.assign(task, { [field === 'type' ? 'taskType' : field]: value })
+                  break
+                }
+              })
+            })
+          }
+
+          const idsToFetch = Array.from(batchIds)
+          if (!idsToFetch.length || idsToFetch.length > REALTIME_REST_CALL_LIMIT) return
+
           try {
+            await waitForRealtimeJitter()
             const res = await dispatch(
               enhancedApi.endpoints.GetTasksList.initiate(
                 {
                   projectName: arg.projectName,
-                  taskIds: batchIds,
+                  taskIds: idsToFetch,
                   folderIds: arg.folderIds,
                   showComments: !!arg.showComments,
                 } as any,
@@ -593,6 +680,7 @@ const injectedApi = enhancedApi.injectEndpoints({
             ).unwrap()
 
             const returned = res.tasks || []
+            if (!isActive()) return
             const returnedMap = new Map(returned.map((t: EditorTaskNode) => [t.id, t]))
 
             updateCachedData((draft: { pages: GetTasksListResult[]; pageParams: any[] }) => {
@@ -622,7 +710,7 @@ const injectedApi = enhancedApi.injectEndpoints({
                 }
               }
               // remove any requested but missing tasks
-              for (const id of batchIds) {
+              for (const id of idsToFetch) {
                 if (returnedMap.has(id)) continue
                 for (const page of draft.pages) {
                   const idx = page.tasks.findIndex((t) => t.id === id)
@@ -635,10 +723,12 @@ const injectedApi = enhancedApi.injectEndpoints({
             })
           } catch (err) {
             console.error('Realtime infinite tasks batch update failed', err)
-          } finally {
-            if (pendingTaskIds.size) schedule()
           }
         }
+        const batcher = createRealtimeBatcher(
+          batchProcessMessages,
+          (message: any) => `${message.project}:${message.summary?.entityId}:${message.topic}`,
+        )
         let unsubscribeThumbnails: (() => void) | undefined
         try {
           await cacheDataLoaded
@@ -662,11 +752,10 @@ const injectedApi = enhancedApi.injectEndpoints({
             ['task'],
           )
 
-          const handlePubSub = async (_topic: string, message: any) => {
+          const handlePubSub = (_topic: string, message: any) => {
             const taskId = message?.summary?.entityId
             if (!taskId) return
-            pendingTaskIds.add(taskId)
-            schedule()
+            batcher.add({ ...message, topic: _topic })
           }
 
           token = PubSub.subscribe('entity.task', handlePubSub)
@@ -674,9 +763,11 @@ const injectedApi = enhancedApi.injectEndpoints({
           // ignore
         }
         await cacheEntryRemoved
+        batcher.clear()
         if (token) PubSub.unsubscribe(token)
         if (unsubscribeThumbnails) unsubscribeThumbnails()
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
       queryFn: async (
@@ -788,12 +879,13 @@ const injectedApi = enhancedApi.injectEndpoints({
             },
           }
         } catch (error: any) {
-          console.error('Error in getGroupedTasksList queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          console.error('ERROR [getGroupedTasksList]:', error, error.data?.detail)
+          return { error: normalizeQueryError(error) }
         }
       },
       providesTags: (result, _e, { projectName }) =>
         getOverviewTaskTags(result?.tasks, projectName),
+      keepUnusedDataFor: CACHE_TIME,
     }),
   }),
 })

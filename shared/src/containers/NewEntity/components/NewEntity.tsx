@@ -1,0 +1,610 @@
+import React, { KeyboardEvent, useMemo, useRef, useState } from 'react'
+import { isEmpty } from 'lodash'
+import {
+  Dialog,
+  Dropdown,
+  DropdownRef,
+  Icon,
+  InputSwitch,
+  SaveButton,
+  ShortcutTag,
+  Spacer,
+  Toolbar,
+} from '@ynput/ayon-react-components'
+import styled from 'styled-components'
+import TypeEditor from './TypeEditor'
+import {
+  checkName,
+  checkLabel,
+  parseAndFormatName,
+  getPlatformShortcutKey,
+  KeyMode,
+} from '@shared/util'
+import type {
+  EditorTaskNode,
+  MatchingFolder,
+} from '@shared/containers/ProjectTreeTable/types/table'
+import { ROW_SELECTION_COLUMN_ID } from '@shared/containers/ProjectTreeTable/constants'
+import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable/context/project-table'
+import { useOptionalSelectionCellsContext } from '@shared/containers/ProjectTreeTable/context/selection-cells'
+import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
+import { type OperationResponseModel } from '@shared/api'
+import FolderSequence from './FolderSequence'
+import { EntityForm, NewEntityType, useNewEntityContext } from '../context/new-entity'
+import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
+import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
+import { NewEntityForm } from './NewEntityForm'
+import { InputLabel, InputsContainer } from './NewEntityForm.styled'
+import { toast } from 'react-toastify'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { newEntityDefinitions } from '../util/entityDefinitions'
+
+const StyledDialog = styled(Dialog)`
+  .body {
+    overflow: visible;
+  }
+`
+
+const ContentStyled = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: var(--base-gap-large);
+  form {
+    input:first-child {
+      margin-right: 8px;
+    }
+  }
+`
+
+const StyledCreateButton = styled(Dropdown)`
+  overflow: visible;
+  min-width: fit-content;
+  .button {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+    padding: 0 8px;
+    background-color: var(--md-sys-color-primary);
+    &,
+    .icon {
+      color: var(--md-sys-color-on-primary);
+    }
+    min-width: 100px;
+    justify-content: center;
+
+    &:hover {
+      background-color: var(--md-sys-color-primary-hover);
+    }
+  }
+`
+
+const RootParentNote = styled.span`
+  display: flex;
+  align-items: center;
+  min-height: 32px;
+  color: var(--md-sys-color-outline);
+`
+
+const StyledCreateItem = styled.span`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  padding: 0 8px;
+  height: 32px;
+  width: 100%;
+
+  .label {
+    flex: 1;
+    margin-right: 24px;
+  }
+
+  &.disabled {
+    opacity: 0.5;
+  }
+`
+
+export interface NewEntityProps {
+  disabled?: boolean
+  /** `parentFolderIds` are the folders the new entities were created in */
+  onNewEntities?: (
+    ops: OperationResponseModel[],
+    stayOpen: boolean,
+    parentFolderIds: string[],
+  ) => void
+  showButton?: boolean
+  showDialog?: boolean
+  enableShortcuts?: boolean
+}
+
+export const NewEntity: React.FC<NewEntityProps> = ({
+  disabled,
+  onNewEntities,
+  showButton = true,
+  showDialog = true,
+  enableShortcuts = true,
+}) => {
+  const { ...projectInfo } = useProjectContext()
+  const {
+    entityType,
+    setEntityType,
+    entityForm,
+    setEntityForm,
+    sequenceForm,
+    setSequenceForm,
+    onCreateNew,
+    onOpenNew,
+    config,
+    parentFolderIds,
+  } = useNewEntityContext()
+
+  const [createMore, setCreateMore] = useState(false)
+  const { selectedCells } = useOptionalSelectionCellsContext() || {}
+  const hierarchySelection = useHierarchySelection()
+  const { getFolderById } = useProjectFoldersContext()
+  const projectTableContext = useOptionalProjectTableContext()
+  const getEntityById = projectTableContext?.getEntityById
+  const showHierarchy = projectTableContext?.showHierarchy ?? true
+
+  const fullChainParentIds = useMemo(() => {
+    if (parentFolderIds !== null) return parentFolderIds
+
+    const selectedCellPositions = selectedCells
+      ? Array.from(selectedCells).map((cellId) => parseCellId(cellId))
+      : []
+    const selectedCellIds = Array.from(
+      new Set(
+        selectedCellPositions
+          .filter((cell) => cell && cell.colId !== ROW_SELECTION_COLUMN_ID)
+          .map((cell) => cell?.rowId)
+          .filter(Boolean) as string[],
+      ),
+    )
+    const selectedRowIds = Array.from(
+      new Set(
+        selectedCellPositions
+          .filter((cell) => cell?.colId === ROW_SELECTION_COLUMN_ID)
+          .map((cell) => cell?.rowId)
+          .filter(Boolean) as string[],
+      ),
+    )
+    const tableSelectedRowIds = selectedCellIds.length > 0 ? selectedCellIds : selectedRowIds
+
+    if (tableSelectedRowIds.length > 0) {
+      const selectedEntities = tableSelectedRowIds.map((id) => getEntityById?.(id))
+      const selectedFolders = selectedEntities.filter(
+        (entity): entity is MatchingFolder => entity?.entityType === 'folder',
+      )
+      const selectedTasks = selectedEntities.filter(
+        (entity): entity is EditorTaskNode => entity?.entityType === 'task',
+      )
+
+      const folderIds = Array.from(
+        new Set([
+          ...selectedFolders.map((folder) => folder.id),
+          ...selectedTasks.map((task) => task.folderId),
+        ]),
+      )
+      // group rows resolve to nothing, so fall through to the slicer
+      if (folderIds.length) return folderIds
+    }
+
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
+      : []
+  }, [parentFolderIds, selectedCells, hierarchySelection, getEntityById])
+
+  // Slicer-only chain: in grouping modes folders skip table selection
+  const slicerParentIds = useMemo(() => {
+    if (parentFolderIds !== null) return parentFolderIds
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
+      : []
+  }, [parentFolderIds, hierarchySelection])
+
+  const resolvedParentFolderIds =
+    entityType === 'folder' && !showHierarchy ? slicerParentIds : fullChainParentIds
+
+  const canCreateTask = fullChainParentIds.length > 0
+
+  const parentTargetOptions = useMemo(
+    () =>
+      resolvedParentFolderIds.map((id) => {
+        const folder = getEntityById?.(id) || getFolderById(id)
+        return { value: id, label: folder?.label || folder?.name || id }
+      }),
+    [resolvedParentFolderIds, getEntityById, getFolderById],
+  )
+
+  const [manuallySelectedParents, setManuallySelectedParents] = useState<string[] | null>(null)
+
+  let selectedFolderIds =
+    manuallySelectedParents !== null ? manuallySelectedParents : resolvedParentFolderIds
+
+  // ensure we don't accidentally create things with invalid parents (e.g. selection changed)
+  selectedFolderIds = selectedFolderIds.filter((id) => resolvedParentFolderIds.includes(id))
+
+  // if the filtering removed everything (e.g. selection completely changed or user deselected all), revert to full selection
+  if (selectedFolderIds.length === 0 && resolvedParentFolderIds.length > 0) {
+    selectedFolderIds = resolvedParentFolderIds
+  }
+
+  const selectedEntitiesLabels = selectedFolderIds
+    .map((id) => parentTargetOptions.find((o) => o.value === id)?.label || '')
+    .filter(Boolean)
+
+  const parentLabel = selectedEntitiesLabels[0] || ''
+
+  const isRoot = isEmpty(resolvedParentFolderIds)
+
+  const [nameFocused, setNameFocused] = useState<boolean>(false)
+  const [nameManuallyEdited, setNameManuallyEdited] = useState<boolean>(false)
+  //   build out form state
+  const initData: EntityForm = { label: '', subType: '', name: '' }
+
+  //   format title
+  const getDialogTitle = () => {
+    let title = 'Add New '
+    if (isRoot && entityType === 'folder') title += 'Root '
+    title += entityType ? newEntityDefinitions[entityType].label : ''
+    if (!isRoot) {
+      if (selectedEntitiesLabels.length > 2) {
+        title +=
+          ' - ' +
+          selectedEntitiesLabels.slice(0, 2).join(', ') +
+          ` +${selectedEntitiesLabels.length - 2} more`
+      } else {
+        title += ' - ' + selectedEntitiesLabels.join(', ')
+      }
+    }
+    return title
+  }
+
+  //   entityType selector
+  const typeOptions =
+    (entityType === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
+
+  // handlers
+  const handleChange = (value: any, id?: keyof EntityForm) => {
+    if (!id) return
+
+    let newState = { ...entityForm }
+    newState[id] = value
+
+    if (value && id === 'subType') {
+      // Find the current/old type option
+      const oldTypeOption = typeOptions.find((option) => option.name === entityForm.subType)
+      const typeOption = typeOptions.find((option) => option.name === value)
+
+      if (typeOption) {
+        const labelMatchesOldType = entityForm.label === oldTypeOption?.name
+
+        if (labelMatchesOldType) {
+          newState.label = typeOption.name
+
+          // Only update name if it matches what the current label would generate
+          const expectedNameFromLabel = parseAndFormatName(entityForm.label, config)
+          if (entityForm.name === expectedNameFromLabel) {
+            newState.name = parseAndFormatName(newState.label, config)
+          }
+        }
+      }
+
+      // Focus the label input after type selection
+      setTimeout(() => {
+        labelRef.current?.focus()
+      }, 100)
+    } else if (id === 'label') {
+      // User is manually editing the label
+      newState.label = value
+
+      // Only auto-generate name if user hasn't manually edited it
+      if (!nameManuallyEdited) {
+        newState.name = parseAndFormatName(value, config)
+      }
+    } else if (id === 'name') {
+      // User is manually editing the name
+      setNameManuallyEdited(true)
+      newState.name = value
+    }
+
+    setEntityForm(newState)
+  }
+
+  const handleSeqChange = (value: any) => {
+    setEntityForm({ ...entityForm, label: value.base, subType: value.type })
+    setSequenceForm({
+      ...sequenceForm,
+      increment: value.increment,
+      length: value.length,
+      prefix: value.prefix,
+      prefixDepth: value.prefixDepth,
+    })
+  }
+
+  //   refs
+  const typeSelectRef = useRef<DropdownRef>(null)
+  const labelRef = useRef<HTMLInputElement>(null)
+
+  const handleClose = () => {
+    // reset state
+    setEntityType(null)
+    setEntityForm(initData)
+    setSequenceForm((prev) => ({ ...prev, active: false }))
+    setNameManuallyEdited(false)
+    setManuallySelectedParents(null)
+  }
+
+  // open dropdown - delay to wait for dialog opening
+  const handleShow = () => setTimeout(() => typeSelectRef.current?.open(), 180)
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const handleSubmit = async (stayOpen: boolean) => {
+    // validate the label
+    const labelCheck = checkLabel(entityForm.label)
+    if (!labelCheck.valid) {
+      toast.error(labelCheck.error || 'Invalid label')
+      return
+    }
+
+    // validate the name
+    const { valid, error } = checkName(entityForm.name)
+    if (!valid) {
+      toast.error(error || 'Invalid name')
+      return
+    }
+
+    setIsSubmitting(true)
+    try {
+      const resOperations = await onCreateNew(selectedFolderIds)
+
+      // callback function
+      onNewEntities?.(resOperations, stayOpen, selectedFolderIds)
+
+      if (stayOpen) {
+        // focus and select the label input
+        if (labelRef.current) {
+          labelRef.current.focus()
+          labelRef.current.select()
+        }
+        setNameManuallyEdited(false)
+      } else {
+        handleClose()
+      }
+    } catch (error) {
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const handleKeyDown = (e: KeyboardEvent, lastInput?: boolean) => {
+    e?.stopPropagation()
+    if (e.key === 'Enter') {
+      if (lastInput && !e.shiftKey) {
+        handleSubmit(false)
+        setCreateMore(false)
+      } else if (e.ctrlKey || e.metaKey) {
+        handleSubmit(false)
+        setCreateMore(false)
+      } else if (e.shiftKey) {
+        handleSubmit(true)
+        setCreateMore(true)
+      }
+    } else if (e.key === 'Escape') {
+      handleClose()
+    }
+  }
+
+  const handleTypeSelectFocus = () => {
+    if (nameFocused) {
+      setNameFocused(false)
+      // super hacky way to fix clicking on entityType select when name is focused
+      setTimeout(() => {
+        typeSelectRef.current?.open()
+      }, 100)
+    }
+  }
+
+  const options: {
+    label: string
+    value: string
+    type: NewEntityType
+    icon: string
+    shortcut?: string
+    isSequence?: boolean
+    disabled?: boolean
+    disabledMessage?: string
+  }[] = useMemo(
+    () => [
+      {
+        ...newEntityDefinitions.folder,
+        value: 'folder',
+        type: 'folder',
+        shortcut: 'N',
+      },
+      {
+        label: 'Folder sequence',
+        value: 'sequence',
+        type: 'folder',
+        icon: 'topic',
+        shortcut: 'M',
+        isSequence: true,
+      },
+      {
+        ...newEntityDefinitions.task,
+        value: 'task',
+        type: 'task',
+        shortcut: 'T',
+        disabled: !canCreateTask,
+        disabledMessage: 'Select a folder to create a task in',
+      },
+    ],
+    [canCreateTask],
+  )
+
+  // Use the keyboard shortcuts hook
+  useCreateEntityShortcuts({ options, onOpenNew, enabled: enableShortcuts })
+
+  const handleOpenFromMenu = (value: string) => {
+    // get the full option object
+    const selectedOption = options.find((option) => option.value === value)
+    if (selectedOption && !selectedOption.disabled) {
+      onOpenNew(selectedOption.type, { isSequence: selectedOption.isSequence })
+    }
+  }
+
+  const missingTaskParent = entityType === 'task' && isEmpty(selectedFolderIds)
+  const addDisabled = !entityForm.label || !entityForm.subType || missingTaskParent
+
+  return (
+    <>
+      {showButton && (
+        <StyledCreateButton
+          options={options}
+          value={[]}
+          onChange={(v: string[]) => handleOpenFromMenu(v[0])}
+          valueTemplate={() => (
+            <>
+              <Icon icon="add" />
+              <span>Create</span>
+            </>
+          )}
+          itemTemplate={(option) => (
+            <StyledCreateItem
+              className={option.disabled ? 'disabled' : undefined}
+              data-tooltip={option.disabled ? option.disabledMessage : undefined}
+            >
+              <Icon icon={option.icon} />
+              <span className="label">{option.label}</span>
+              <ShortcutTag>{option.shortcut}</ShortcutTag>
+            </StyledCreateItem>
+          )}
+          itemStyle={{
+            paddingRight: 16,
+          }}
+          disabled={disabled}
+          data-tooltip="Create new entity"
+        />
+      )}
+      {showDialog && entityType && (
+        <StyledDialog
+          header={getDialogTitle()}
+          isOpen
+          onClose={handleClose}
+          onShow={handleShow}
+          size={sequenceForm.active ? 'lg' : 'md'}
+          style={{ maxWidth: sequenceForm.active ? 'unset' : 430 }}
+          enableBackdropClose={false}
+          footer={
+            <Toolbar onFocus={() => setNameFocused(false)} style={{ width: '100%' }}>
+              {entityType === 'folder' && (
+                <>
+                  <span>Sequence</span>
+                  <InputSwitch
+                    checked={sequenceForm.active}
+                    onChange={(e) =>
+                      setSequenceForm({
+                        ...sequenceForm,
+                        active: (e.target as HTMLInputElement).checked,
+                      })
+                    }
+                  />
+                </>
+              )}
+              <Spacer />
+              <span>Create more</span>
+              <InputSwitch
+                checked={createMore}
+                onChange={(e) => setCreateMore((e.target as HTMLInputElement).checked)}
+              />
+              <SaveButton
+                label={newEntityDefinitions[entityType].createLabel}
+                onClick={() => handleSubmit(createMore)}
+                active={!addDisabled || isSubmitting}
+                disabled={!entityForm.name || !entityForm.label || missingTaskParent}
+                data-tooltip={missingTaskParent ? 'Select a parent folder' : undefined}
+                data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
+                saving={isSubmitting}
+              />
+            </Toolbar>
+          }
+          onKeyDown={(e: React.KeyboardEvent) => handleKeyDown(e as KeyboardEvent)}
+          onClick={(e: React.MouseEvent) => {
+            const target = e.target as HTMLElement
+            target.tagName !== 'INPUT' && setNameFocused(false)
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--base-gap-large)',
+            }}
+          >
+            <InputsContainer>
+              <InputLabel>Parent folder</InputLabel>
+              {resolvedParentFolderIds.length > 0 ? (
+                <Dropdown
+                  value={selectedFolderIds}
+                  options={parentTargetOptions}
+                  onChange={(v) => setManuallySelectedParents(v)}
+                  disabled={parentTargetOptions.length <= 1}
+                  multiSelect
+                  style={{ width: '100%', minHeight: 32 }}
+                />
+              ) : entityType === 'task' ? (
+                <RootParentNote>Select a folder to create a task in</RootParentNote>
+              ) : (
+                <RootParentNote>Creating in the project root</RootParentNote>
+              )}
+            </InputsContainer>
+            {sequenceForm.active ? (
+              // @ts-ignore
+              <FolderSequence
+                base={entityForm.label}
+                type={entityForm.subType}
+                increment={sequenceForm.increment}
+                length={sequenceForm.length}
+                prefix={sequenceForm.prefix}
+                prefixDepth={sequenceForm.prefixDepth}
+                parentLabel={parentLabel}
+                entityType="folder"
+                nesting={false}
+                onChange={handleSeqChange}
+                isRoot={isRoot}
+                // @ts-ignore
+                typeSelectRef={typeSelectRef}
+                // @ts-ignore
+                onLastInputKeydown={(e) => handleKeyDown(e, true)}
+                folders={projectInfo?.folderTypes || []}
+              />
+            ) : (
+              <ContentStyled>
+                <InputsContainer>
+                  <InputLabel>Type</InputLabel>
+                  <TypeEditor
+                    value={[entityForm.subType]}
+                    onChange={(v: string) => handleChange(v, 'subType')}
+                    options={typeOptions}
+                    style={{ width: 160 }}
+                    ref={typeSelectRef}
+                    onFocus={handleTypeSelectFocus}
+                    onClick={() => setNameFocused(false)}
+                  />
+                </InputsContainer>
+                <NewEntityForm
+                  handleChange={handleChange}
+                  entityForm={entityForm}
+                  labelRef={labelRef}
+                  setNameFocused={setNameFocused}
+                  handleKeyDown={handleKeyDown}
+                  nameInfo={`Names are auto generated from the label using the Entity Naming setting on the project anatomy. Capitalization: ${config.capitalization}. Separator: "${config.separator}"`}
+                />
+              </ContentStyled>
+            )}
+          </div>
+        </StyledDialog>
+      )}
+    </>
+  )
+}

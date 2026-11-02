@@ -1,9 +1,13 @@
-import { SubtasksManagerWrapper, SubtasksManagerWrapperProps } from '@shared/components'
+import { SubtasksManagerWrapper } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
+import type { SubtasksManagerWrapperProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { FC, useMemo, useState } from 'react'
 import TabHeaderAndFilters from '../components/TabHeaderAndFilters/TabHeaderAndFilters'
 import SubtasksSearchFilter from '../components/SubtasksSearchFilter/SubtasksSearchFilter'
-import { QueryFilter, useGetUsersAssigneeQuery } from '@shared/api'
+import { useGetUsersAssigneeQuery } from '@shared/api'
+import type { QueryFilter } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { splitSubtasksSearch } from '../helpers/subtasksFilterAdapter'
+import { useDetailsPanelContext } from '@shared/context'
 
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}
 
@@ -11,6 +15,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
   const [subtasksFilters, setSubtasksFilters] = useState<QueryFilter>({})
   const [searchText, setSearchText] = useState('')
   const [selectedSubtaskIds, setSelectedSubtaskIds] = useState<string[]>([])
+  const { dispatch } = useDetailsPanelContext()
 
   const { data: users = [] } = useGetUsersAssigneeQuery({ projectName: props.projectName })
 
@@ -29,7 +34,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
       } as QueryFilter
     }
 
-    return expandRelativeDates(filters as any) as QueryFilter
+    return expandRelativeDates(splitSubtasksSearch(filters) as any) as QueryFilter
   }, [subtasksFilters, searchText])
 
   return (
@@ -56,6 +61,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
         onSelectSubtasks={setSelectedSubtaskIds}
         filters={mergedFilters}
         actionsPortalClassName="panel-header-filters"
+        dispatch={dispatch}
       />
     </>
   )

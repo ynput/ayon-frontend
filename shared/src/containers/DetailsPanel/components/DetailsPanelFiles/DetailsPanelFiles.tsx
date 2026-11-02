@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import styled from 'styled-components'
-import { RepresentationsList } from '@shared/containers/RepresentationsList'
-import { ReviewablesList } from '@shared/components'
-import { DetailsPanelEntityData } from '@shared/api'
+import { RepresentationsList } from '@shared/containers/RepresentationsList/RepresentationsList'
+import ReviewablesList from '@shared/components/ReviewablesList/ReviewablesList'
+import type { DetailsPanelEntityData } from '@shared/api'
 
 const StyledContainer = styled.div`
   display: flex;

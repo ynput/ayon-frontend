@@ -10,12 +10,11 @@ import { ViewItem } from '../ViewItem/ViewItem'
 import { Icon } from '@ynput/ayon-react-components'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
-import { useLoadModule } from '@shared/hooks'
+import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
-import type { CollapsedViewState } from '../context/ViewsContext'
-import { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID } from '../types'
-export { WORKING_VIEW_ID, NEW_VIEW_ID, BASE_VIEW_ID }
+import type { CollapsedViewState } from '../context'
+import { WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'
@@ -73,7 +72,9 @@ const useBuildViewMenuItems = ({
 
   const workingBaseView: ViewItem = {
     id: WORKING_VIEW_ID,
-    label: useWorkingView ? `Personal ${viewAlias.toLowerCase()}` : `Working ${viewAlias.toLowerCase()}`,
+    label: useWorkingView
+      ? `Personal ${viewAlias.toLowerCase()}`
+      : `Working ${viewAlias.toLowerCase()}`,
     startContent: useWorkingView && <Icon icon="person" />,
     isEditable: false,
   }
@@ -137,8 +138,16 @@ const useBuildViewMenuItems = ({
   const sections: Array<{ id: string; title: string; items: ViewItem[] }> = useMemo(() => {
     return [
       { id: 'myViews', title: `My ${viewAlias.toLowerCase()}s`, items: myViews as ViewItem[] },
-      { id: 'sharedViews', title: `Shared ${viewAlias.toLowerCase()}s`, items: sharedViews as ViewItem[] },
-      { id: 'allPrivateViews', title: `All private ${viewAlias.toLowerCase()}s`, items: allPrivateViews as ViewItem[] },
+      {
+        id: 'sharedViews',
+        title: `Shared ${viewAlias.toLowerCase()}s`,
+        items: sharedViews as ViewItem[],
+      },
+      {
+        id: 'allPrivateViews',
+        title: `All private ${viewAlias.toLowerCase()}s`,
+        items: allPrivateViews as ViewItem[],
+      },
     ]
   }, [myViews, sharedViews, allPrivateViews])
 

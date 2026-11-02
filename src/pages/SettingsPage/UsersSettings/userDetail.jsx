@@ -19,6 +19,8 @@ import ServiceDetails from './ServiceDetails'
 import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
+import { getRequestErrorString } from '@shared/util'
+import { PanelButtonsStyled } from './userDetail.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -30,14 +32,6 @@ const FormsStyled = styled.section`
 
   & > *:last-child {
     /* flex: 1; */
-  }
-`
-
-export const PanelButtonsStyled = styled(Panel)`
-  flex-direction: row;
-
-  & > * {
-    flex: 1;
   }
 `
 
@@ -375,7 +369,7 @@ const UserDetail = ({
       })
     } catch (error) {
       toast.update(toastId.current, {
-        render: `Error updating ${usersString}: ${error?.detail}`,
+        render: `Error updating ${usersString}: ${getRequestErrorString(error)}`,
         type: toast.TYPE.ERROR,
       })
     }

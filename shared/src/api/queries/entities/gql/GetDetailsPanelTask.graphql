@@ -18,6 +18,7 @@ query GetDetailsPanelTask($projectName: String!, $entityId: String!) {
       thumbnailId
       hasReviewables
       parents
+      data
       subtasks {
         ...SubTaskFragment
       }

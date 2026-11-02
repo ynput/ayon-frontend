@@ -61,7 +61,6 @@ const EditReviewableDialog: FC<EditReviewableDialogProps> = ({
       // close dialog
       onClose()
     } catch (error) {
-      console.error(error)
       toast.error('Failed to update reviewable')
     }
   }

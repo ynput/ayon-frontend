@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context/ViewerContext'
+import { ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -21,8 +21,13 @@ import {
   type ReviewablesSelectorHandle,
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context/ProjectContext'
-import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import { ProjectContextProvider, useProjectContext } from '@shared/context'
+import {
+  useSessionStorage,
+  useReviewablesKeyboardNavigation,
+  useReviewablesLayout,
+} from '@shared/hooks'
+import clsx from 'clsx'
 
 interface ViewerProps {
   onClose?: () => void
@@ -120,21 +125,23 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
   // check if a specific product is selected
   const versionsAndReviewables: GetReviewablesResponse[] = useMemo(() => {
-    if (!hasMultipleProducts) return allVersionsAndReviewables
+    let filtered: GetReviewablesResponse[]
+    if (!hasMultipleProducts) filtered = allVersionsAndReviewables
     else if (selectedProductId) {
       // filter out the versions for the selected product
-      return allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
+      filtered = allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
     } else {
       // find the version (and therefor product) with the reviewable that was last createdAt
       const latestProductId = sortedVersionsReviewableDates[0].productId
       if (latestProductId) {
-        return allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
+        filtered = allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
       } else {
         // return first product
         const firstProduct = allVersionsAndReviewables[0]
-        return allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
+        filtered = allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
       }
     }
+    return [...filtered].sort((a, b) => parseInt(a.version, 10) - parseInt(b.version, 10))
   }, [allVersionsAndReviewables, selectedProductId])
   // if hasMultipleProducts and no selectedProductId, select the first product
   useEffect(() => {
@@ -339,7 +346,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
 
   // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  const projectStatuses = useAppSelector((state) => state.project.statuses) || {}
+  const projectStatuses = useMemo(
+    () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
+    [project.statuses],
+  )
   const versionSelectorRef = useRef<HTMLDivElement>(null)
   useReviewShortcuts({
     versions: versionsAndReviewables,
@@ -363,6 +373,15 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }),
   })
 
+  // put the annotation tools beside the reviewables when stacking would squash the reviewables
+  const rightToolBarRef = useRef<HTMLDivElement>(null)
+  const annotationToolsRef = useRef<HTMLDivElement>(null)
+  const rightToolBarLayout = useReviewablesLayout({
+    containerRef: rightToolBarRef,
+    toolsRef: annotationToolsRef,
+    reviewablesCount: playable.length,
+  })
+
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
@@ -375,6 +394,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                 ref={versionSelectorRef}
                 versions={versionsAndReviewables}
                 selected={versionIds[0]}
+                statuses={projectStatuses}
                 onChange={handleVersionChange}
               />
               {hasMultipleProducts && (
@@ -418,33 +438,34 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             reviewables={reviewables}
             selectedReviewable={selectedReviewable}
             versionIds={versionIds}
-            versionReviewableIds={versionReviewableIds}
             isFetchingReviewables={isFetchingReviewables}
             noVersions={noVersions}
             quickView={quickView}
             onUpload={handleUploadAction}
           />
         </Styled.FullScreenWrapper>
-        {!theater && (
-          <Styled.RightToolBar style={{ zIndex: 1100 }}>
-            <ReviewablesSelector
-              ref={reviewablesSelectorRef}
-              reviewables={playable}
-              selected={reviewableIds}
-              onChange={handleReviewableChange}
-              projectName={projectName}
-              onUpload={handleUploadAction(true)}
-            />
-            <div id="annotation-tools" style={{ position: 'relative' }}></div>
-          </Styled.RightToolBar>
-        )}
-        {!theater && (
-          <ViewerDetailsPanel
-            versionIds={versionIds}
+
+        <Styled.RightToolBar
+          ref={rightToolBarRef}
+          className={clsx(rightToolBarLayout, { hidden: theater })}
+        >
+          <ReviewablesSelector
+            ref={reviewablesSelectorRef}
+            reviewables={playable}
+            selected={reviewableIds}
+            onChange={handleReviewableChange}
             projectName={projectName}
-            noVersions={noVersions}
+            onUpload={handleUploadAction(true)}
           />
-        )}
+          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
+        </Styled.RightToolBar>
+
+        <ViewerDetailsPanel
+          versionIds={versionIds}
+          projectName={projectName}
+          noVersions={noVersions}
+          hidden={theater}
+        />
       </Styled.Container>
     </ViewerProvider>
   )

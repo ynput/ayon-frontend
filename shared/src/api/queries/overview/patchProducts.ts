@@ -70,7 +70,17 @@ export const patchProducts = (
   // Step 1: Get caches that need updating using selectInvalidatedBy for product tags
   const productEntries = injectedVersionsPageApi.util.selectInvalidatedBy(state, tags)
 
-  // Step 2: Optimistically patch getProductsInfinite cache
+  // Get IDs of products being deleted
+  const deleteIds = new Set(products.filter((op) => op.type === 'delete').map((op) => op.entityId))
+
+  // versions of a deleted product are cascade-deleted on the server
+  const removeCascadedVersions = (versions: any[]) => {
+    for (let i = versions.length - 1; i >= 0; i--) {
+      if (deleteIds.has(versions[i].product?.id)) versions.splice(i, 1)
+    }
+  }
+
+  // Step 2: Optimistically patch caches - handle both updates and deletes
   for (const entry of productEntries) {
     if (entry.endpointName === 'getProductsInfinite') {
       const patch = dispatch(
@@ -78,11 +88,19 @@ export const patchProducts = (
           'getProductsInfinite',
           entry.originalArgs,
           (draft: any) => {
-            // Update products across all pages
             for (const page of draft.pages) {
+              // Remove deleted products (iterate in reverse to avoid index issues)
+              for (let i = page.products.length - 1; i >= 0; i--) {
+                if (deleteIds.has(page.products[i].id)) {
+                  page.products.splice(i, 1)
+                }
+              }
+              // Update remaining products
               for (let i = 0; i < page.products.length; i++) {
                 const product = page.products[i]
-                const operation = products.find((op) => op.entityId === product.id)
+                const operation = products.find(
+                  (op) => op.entityId === product.id && op.type !== 'delete',
+                )
                 if (operation?.data) {
                   page.products[i] = updateProductWithOperation(product, operation.data)
                 }
@@ -92,10 +110,40 @@ export const patchProducts = (
         ),
       )
       patches?.push(patch)
+    } else if (deleteIds.size > 0 && entry.endpointName === 'getVersionsInfinite') {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          'getVersionsInfinite',
+          entry.originalArgs,
+          (draft: any) => {
+            for (const page of draft.pages) {
+              removeCascadedVersions(page.versions)
+            }
+          },
+        ),
+      )
+      patches?.push(patch)
+    } else if (
+      deleteIds.size > 0 &&
+      (entry.endpointName === 'getVersionsByProducts' ||
+        entry.endpointName === 'getGroupedVersionsList')
+    ) {
+      const patch = dispatch(
+        injectedVersionsPageApi.util.updateQueryData(
+          entry.endpointName as 'getVersionsByProducts',
+          entry.originalArgs,
+          (draft: any) => {
+            removeCascadedVersions(draft.versions)
+          },
+        ),
+      )
+      patches?.push(patch)
     }
   }
 
-  // Step 3: Invalidate all affected caches to trigger refetching
-  // This will automatically refetch with filters and update calculated attributes
-  dispatch(injectedVersionsPageApi.util.invalidateTags(tags))
+  // Invalidate updated rows only; deletes have nothing to refresh — reconciled by invalidatesTags.
+  const nonDeleteOps = products.filter((op) => op.type !== 'delete')
+  if (nonDeleteOps.length > 0) {
+    dispatch(injectedVersionsPageApi.util.invalidateTags(getProductTags(nonDeleteOps)))
+  }
 }

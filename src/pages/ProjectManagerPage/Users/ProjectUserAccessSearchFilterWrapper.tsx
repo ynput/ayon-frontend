@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
+import { useGetStudioAccessGroupsQuery } from '@shared/api'
 import { $Any } from '@types'
 import { getProjectAccessSearchFilterBuilder } from './mappers'
 import { Filter, SearchFilter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
@@ -21,9 +21,8 @@ const ProjectUserAccessSearchFilterWrapper = ({
   onChange,
   onSearchChange,
 }: Props) => {
-  const { isLoading: isAccessGroupsLoading, data: accessGroups = [] } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { isLoading: isAccessGroupsLoading, data: accessGroups = [] } =
+    useGetStudioAccessGroupsQuery()
 
   const options = getProjectAccessSearchFilterBuilder({
     projects: projects.map((project: $Any) => ({
@@ -67,7 +66,7 @@ const ProjectUserAccessSearchFilterWrapper = ({
         onSearchChange?.(searchText)
         onChange(v.filter((f: Filter) => !f.id.startsWith(SEARCH_FILTER_ID)))
       }}
-      enableAutosuggestion={true}
+      enableAutosuggestion={false}
       enableGlobalSearch={true}
       onSearchChange={(text, filter) => {
         // only fire for root-level (no active filter panel) searches

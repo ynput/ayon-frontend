@@ -1,10 +1,12 @@
-import { FC } from 'react'
+import { FC, useMemo } from 'react'
 import { ProjectTableSettings, SettingConfig } from '@shared/components'
+import { useAddonTableColumns } from '@shared/containers/ProjectTreeTable'
+import { useAddonCustomizeSections } from '@shared/components/ProjectTableSettings/useAddonCustomizeSections'
+import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSettings'
 import { SizeSlider } from '@shared/components'
-import { useVPViewsContext } from '../../context/VPViewsContext'
-import VPTableSortingSetting from './VPTableSortingSetting'
+import { useVPViewsContext } from '../../context/vp-views'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { useProjectTableContext } from '@shared/containers'
+import { VP_COLUMN_ID_ALIASES, VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from './VPTableSettingsHelpers'
 
 export interface VPTableSettingsProps {}
 
@@ -13,41 +15,18 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     gridHeight,
     onUpdateGridHeight,
     onUpdateGridHeightWithPersistence,
-    sortBy,
-    sortDesc,
-    onUpdateSorting,
+    latestPerFolder,
+    onUpdateLatestPerFolder,
+    showProducts,
     featuredVersionOrder,
     onUpdateFeaturedVersionOrder,
   } = useVPViewsContext()
 
-  const { attribFieldsScoped } = useProjectTableContext()
-
-  const extraColumns = [
-    {
-      value: 'author',
-      label: 'Author',
-    },
-    {
-      value: 'version',
-      label: 'Version',
-    },
-    {
-      value: 'productBaseType',
-      label: 'Product base type',
-    },
-    {
-      value: 'taskType',
-      label: 'Task type',
-    },
-    {
-      value: 'folderType',
-      label: 'Folder type',
-    },
-    {
-      value: 'taskLabel',
-      label: 'Task label',
-    },
-  ]
+  // columns addons contribute (tableColumn slot)
+  const { settingsColumns } = useAddonTableColumns('products')
+  const extraColumns = useMemo(() => [...VP_EXTRA_COLUMNS, ...settingsColumns], [settingsColumns])
+  // sections addons contribute (projectTable.customizeSection slot)
+  const addonSections = useAddonCustomizeSections('products')
 
   const extraSettings: SettingConfig[] = [
     {
@@ -66,22 +45,11 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
       ),
     },
     {
-      id: 'sort-by',
-      component: (
-        <VPTableSortingSetting
-          sortBy={sortBy}
-          sortDesc={sortDesc}
-          attributes={attribFieldsScoped}
-          onUpdateSorting={onUpdateSorting}
-        />
-      ),
-    },
-    {
       id: 'featured-version-order',
       title: 'Featured version',
       icon: 'layers',
       preview:
-        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.short ||
+        FEATURED_VERSION_TYPES.find((option) => option.value === featuredVersionOrder[0])?.label ||
         '',
       component: (
         <FeaturedVersionOrder
@@ -90,19 +58,38 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
         />
       ),
     },
+    {
+      id: 'latest-per-folder',
+      component: (
+        <SettingSwitch
+          icon="folder"
+          label="Latest per folder"
+          disabled={showProducts}
+          data-tooltip={
+            showProducts
+              ? 'Disabled when grouping by product'
+              : 'Show only the latest published version per folder (1 version per folder).'
+          }
+          checked={latestPerFolder === true && !showProducts}
+          onChange={onUpdateLatestPerFolder}
+        />
+      ),
+    },
   ]
 
   return (
     <ProjectTableSettings
       extraColumns={extraColumns}
-      settings={extraSettings}
+      parentColumns={VP_PARENT_COLUMNS}
+      settings={[...extraSettings, ...addonSections]}
       includeLinks={false}
       scope="version"
+      columnIdAliases={VP_COLUMN_ID_ALIASES}
       order={[
         'columns',
+        'sort-by',
         'group-by',
         'featured-version-order',
-        'sort-by',
         'row-height',
         'grid-size',
       ]}

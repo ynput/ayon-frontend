@@ -1,9 +1,10 @@
 import { Button, getFileSizeString, Icon } from '@ynput/ayon-react-components'
 import * as Styled from './FileUploadCard.styled'
 import clsx from 'clsx'
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { isFilePreviewable } from '../FileUploadPreview'
-import { SavedAnnotationMetadata } from '@shared/containers'
+import type { SavedAnnotationMetadata } from '../../index'
+import { useFeedContext } from '../../context/feed'
 import { useDetailsPanelContext } from '@shared/context'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
 
@@ -13,6 +14,7 @@ export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement
   src?: string
   unsavedAnnotation?: AnnotationPreview
   savedAnnotation?: SavedAnnotationMetadata
+  annotationFrameStart?: number | null
   size: number
   progress: number
   onRemove?: () => void
@@ -82,6 +84,7 @@ const FileUploadCard = ({
   src,
   unsavedAnnotation,
   savedAnnotation,
+  annotationFrameStart,
   size,
   progress,
   onRemove,
@@ -96,7 +99,9 @@ const FileUploadCard = ({
   const inProgress = progress && progress < 100
 
   const [imageError, setImageError] = useState(false)
+  const [posterError, setPosterError] = useState(false)
   const { feedAnnotationsEnabled } = useDetailsPanelContext()
+  const { entities } = useFeedContext()
 
   // split name and file extension
   const nameParts = name.split('.')
@@ -105,6 +110,8 @@ const FileUploadCard = ({
 
   const isPreviewable = isFilePreviewable(mime || '.' + extension)
   const isImage = mime?.includes('image/') || Boolean(unsavedAnnotation)
+  const isVideo = Boolean(mime?.includes('video/')) && !unsavedAnnotation
+  const posterSrc = isVideo && src ? `${src}/thumbnail` : undefined
 
   const downloadComponent = (
     <>
@@ -113,7 +120,29 @@ const FileUploadCard = ({
     </>
   )
 
-  const someAnnotation = unsavedAnnotation ?? savedAnnotation
+  const someAnnotation = useMemo(
+    () => unsavedAnnotation ?? savedAnnotation,
+    [unsavedAnnotation, savedAnnotation],
+  )
+
+  const firstEntity = useMemo(() => {
+    return entities.at(0)
+  }, [entities])
+
+  const annotationDisplayRange = useMemo(() => {
+    if (!someAnnotation?.range) {
+      return [1, 1]
+    }
+
+    // undefined = origin version unknown, offset by the feed entity; null = origin has no frameStart
+    const frameStart =
+      annotationFrameStart === undefined ? firstEntity?.attrib?.frameStart : annotationFrameStart
+    if (!Number.isFinite(frameStart)) {
+      return someAnnotation.range
+    }
+
+    return [frameStart - 1 + someAnnotation.range[0], frameStart - 1 + someAnnotation.range[1]]
+  }, [someAnnotation, annotationFrameStart, firstEntity])
 
   return (
     <Styled.File
@@ -148,6 +177,18 @@ const FileUploadCard = ({
             />
           </Styled.ImageWrapper>
         )}
+        {posterSrc && (
+          <Styled.ImageWrapper
+            className={clsx({
+              'image-wrapper': true,
+              isDownloadable: isDownloadable || isPreviewable,
+              posterError,
+            })}
+          >
+            {!posterError && <img src={posterSrc} onError={() => setPosterError(true)} />}
+            <Styled.PlayIcon />
+          </Styled.ImageWrapper>
+        )}
         <Styled.Buttons className="expand-buttons">
           {isPreviewable && !disableExpand && (
             <Styled.ExpandButton
@@ -179,9 +220,9 @@ const FileUploadCard = ({
           {someAnnotation ? (
             <span className="name">
               <Icon icon="draw" />
-              {someAnnotation.range[0]}
-              {someAnnotation.range[1] !== someAnnotation.range[0] &&
-                ` - ${someAnnotation.range[1]}`}
+              {annotationDisplayRange[0]}
+              {annotationDisplayRange[1] !== annotationDisplayRange[0] &&
+                ` - ${annotationDisplayRange[1]}`}
             </span>
           ) : (
             <span className="name">

@@ -111,13 +111,13 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
                   >
                     {startContent && startContent}
                     {name}
-                    {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
                     {deprecated && (
                       <LegacyBadge
                         tooltip={typeof deprecated === 'string' ? deprecated : undefined}
                       />
                     )}
                     {endContent && endContent}
+                    {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
                   </Button>
                 </NavLink>
               </Styled.NavItem>

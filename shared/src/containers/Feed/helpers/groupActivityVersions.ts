@@ -22,6 +22,7 @@ const activityToVersionItem = (activity: any = {}) => {
     updatedAt,
     createdAt,
     comment: version?.attrib?.comment || null,
+    status: version?.status,
     thumbnailHash: version?.thumbnailHash,
   }
 }

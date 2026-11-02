@@ -10,7 +10,7 @@ import {
 import { toast } from 'react-toastify'
 import { getScopeTag } from '@shared/api/queries/views/getViews'
 import { BASE_VIEW_ID } from '../types'
-import type { ViewSettings } from '../context/ViewsContext'
+import type { ViewSettings } from '../context'
 
 type Props = {
   viewType?: string
@@ -66,7 +66,6 @@ export const useBaseViewMutations = ({
         toast.success(`${scope} default view created successfully`)
       } catch (error: any) {
         const scope = isStudioScope ? 'studio' : 'project'
-        console.error(`Failed to create ${scope} base view:`, error)
         toast.error(`Failed to create ${scope} base view: ${error?.message || error}`)
       }
     },
@@ -95,7 +94,6 @@ export const useBaseViewMutations = ({
         toast.success(`${scope} default view updated successfully`)
       } catch (error: any) {
         const scope = isStudioScope ? 'studio' : 'project'
-        console.error(`Failed to update ${scope} base view:`, error)
         toast.error(`Failed to update ${scope} base view: ${error?.message || error}`)
       }
     },
@@ -123,7 +121,6 @@ export const useBaseViewMutations = ({
         toast.success(`${scope} default view removed successfully`)
       } catch (error: any) {
         const scope = isStudioScope ? 'studio' : 'project'
-        console.error(`Failed to remove ${scope} base view:`, error)
         toast.error(`Failed to remove ${scope} base view: ${error?.message || error}`)
       }
     },
@@ -173,18 +170,10 @@ export const useBaseViewMutations = ({
         toast.success(`Loaded ${scope} default view to working view`)
       } catch (error: any) {
         const scope = isStudioScope ? 'studio' : 'project'
-        console.error(`Failed to load ${scope} base view:`, error)
         toast.error(`Failed to load ${scope} base view: ${error?.message || error}`)
       }
     },
-    [
-      workingView,
-      updateViewMutation,
-      setDefaultViewMutation,
-      viewType,
-      projectName,
-      dispatch,
-    ],
+    [workingView, updateViewMutation, setDefaultViewMutation, viewType, projectName, dispatch],
   )
 
   return {

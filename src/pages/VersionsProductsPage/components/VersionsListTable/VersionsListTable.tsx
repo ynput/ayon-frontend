@@ -1,13 +1,13 @@
-import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
-import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
-import { useVPFocusContext } from '@pages/VersionsProductsPage/context/VPFocusContext'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
+import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/vp-selection'
+import { useVPFocusContext } from '@pages/VersionsProductsPage/context/vp-focus'
 import { buildVersionsTableRows } from '@pages/VersionsProductsPage/util'
 import SimpleTable, { SimpleTableProvider } from '@shared/containers/SimpleTable'
 import { RowSelectionState } from '@tanstack/react-table'
 import { FC, useMemo, useEffect } from 'react'
 import * as Styled from './VersionsListTable.styled'
 import { useProjectContext } from '@shared/context'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { guessImgRatio } from '@pages/VersionsProductsPage/util/guessImgRatio'
 
 interface VersionsListTableProps {}
@@ -19,8 +19,6 @@ const VersionsListTable: FC<VersionsListTableProps> = ({}) => {
   const { columns, rowHeight } = useVPViewsContext()
   const { versionsTableRef, focusGrid } = useVPFocusContext()
   const ratio = useMemo(() => guessImgRatio(rowHeight, columns), [rowHeight, columns])
-
-  console.log({ productsMap })
 
   const versionsTableData = useMemo(
     () => buildVersionsTableRows({ projectName, productsMap, productIds: selectedProducts }),
@@ -72,6 +70,7 @@ const VersionsListTable: FC<VersionsListTableProps> = ({}) => {
           data={versionsTableData}
           isLoading={false}
           imgRatio={ratio}
+          addonShortcuts={{ table: 'versionsPanel', projectName }}
           pt={{
             cell: {
               style: {

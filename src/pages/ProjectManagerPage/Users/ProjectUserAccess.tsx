@@ -6,11 +6,10 @@ import { matchSorter } from 'match-sorter'
 import { $Any } from '@types'
 import { Button, Filter, Toolbar } from '@ynput/ayon-react-components'
 import Shortcuts from '@containers/Shortcuts'
-import { useShortcutsContext } from '@context/ShortcutsContext'
+import { useShortcutsContext } from '@context'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
-import { useGetUsersQuery } from '@shared/api'
+import { useGetUsersQuery, useGetStudioAccessGroupsQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
@@ -40,9 +39,9 @@ import SplitterContainerTwoPanes from './SplitterTwoPanes'
 import { ProjectNode, UserNode } from '@shared/api'
 import LoadingPage from '@pages/LoadingPage'
 import { useQueryParam } from 'use-query-params'
-import { uuid } from 'short-uuid'
-import ProjectUserAccesAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
-import {
+import { v4 as uuid } from 'uuid'
+import ProjectUserAccessAccessGroupPanel from './ProjectUserAccessAccessGroupPanel'
+import EmptyPlaceholder, {
   EmptyPlaceholderFlex,
   EmptyPlaceholderFlexWrapper,
 } from '@shared/components/EmptyPlaceholder'
@@ -57,9 +56,7 @@ const StyledButton = styled(Button)`
 `
 
 const ProjectUserAccess = () => {
-  const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
-    projectName: '_',
-  })
+  const { data: accessGroupList = [], error } = useGetStudioAccessGroupsQuery()
 
   const [selectedProject] = useQueryParam('project')
 
@@ -107,12 +104,14 @@ const ProjectUserAccess = () => {
   const { isLoading: permissionsLoading, permissions: userPermissions } =
     useUserProjectPermissions(isUser)
 
-  const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
-  const filteredProjects = getFilteredEntities<ProjectNode>(
-    // @ts-ignore Weird one, the response type seems to be mismatched?
-    Array.from(projects || []),
-    projectFilters,
-  )
+  const filteredProjects = useMemo(() => {
+    const projectFilters = (filters || []).filter((filter: Filter) => filter.label === 'Project')
+    return getFilteredEntities<ProjectNode>(
+      // @ts-ignore Weird one, the response type seems to be mismatched?
+      Array.from(projects || []),
+      projectFilters,
+    )
+  }, [projects, filters])
   const filteredSelectedProjects = getFilteredSelectedProjects(selectedProjects, filteredProjects)
 
   const userFilter = filters?.filter((el: Filter) => el.label === 'User')
@@ -192,18 +191,21 @@ const ProjectUserAccess = () => {
   }
 
   const handleContextMenu = (accessGroup?: string) => (e: $Any) => {
-    const { actionedUsers } = decideActionedUsers({
-      accessGroup,
-      users: [e.data.name],
-      interactionType: InteractionType.button,
-    })
+    // a right-clicked user outside the selection is acted on alone, without selecting it
+    const isSelected =
+      accessGroup === selectedAccessGroupUsers?.accessGroup &&
+      !!selectedAccessGroupUsers?.users.includes(e.data.name)
+    const actionedUsers = isSelected ? selectedAccessGroupUsers!.users : [e.data.name]
 
     let contextMenu = [
       {
         id: 'add',
         icon: 'add',
         label: 'Add access',
-        command: () => handleAdd({ users: actionedUsers }),
+        command: () => {
+          setActionedUsers(actionedUsers)
+          handleAdd({ users: actionedUsers })
+        },
       },
       {
         id: 'remove',
@@ -382,7 +384,7 @@ const ProjectUserAccess = () => {
           .map((item: { name: string }) => item.name)
           .map((accessGroup) => {
             return (
-              <ProjectUserAccesAccessGroupPanel
+              <ProjectUserAccessAccessGroupPanel
                 key={`panel-${accessGroup}`}
                 header={accessGroup}
                 isExpanded={
@@ -413,10 +415,11 @@ const ProjectUserAccess = () => {
                   onRemove={onRemove(accessGroup)}
                   isLoading={isLoadingUsers}
                 />
-              </ProjectUserAccesAccessGroupPanel>
+              </ProjectUserAccessAccessGroupPanel>
             )
           })}
       </AccessGroupsWrapper>
+      {error && <EmptyPlaceholder error={error} />}
     </>
   )
 

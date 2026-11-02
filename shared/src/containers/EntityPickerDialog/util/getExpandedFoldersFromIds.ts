@@ -1,6 +1,6 @@
 // takes folder ids and a folder tree table and returns the expanded folders to show the ids
 
-import { FolderListItem } from '@shared/api'
+import type { FolderListItem } from '@shared/api'
 
 export const getExpandedFoldersFromIds = (
   folderIds: string[],

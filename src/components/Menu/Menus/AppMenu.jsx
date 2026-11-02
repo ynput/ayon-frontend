@@ -3,7 +3,7 @@ import YnputConnector from '@components/YnputCloud/YnputConnector'
 import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
-import { useRestart } from '@context/RestartContext'
+import { useRestart } from '@context'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
@@ -26,7 +26,6 @@ export const AppMenu = ({ user, ...props }) => {
       await restartOnBoarding().unwrap()
       window.location.reload()
     } catch (error) {
-      console.error(error)
       toast.error('Failed to launch bootstrap setup')
     }
   }

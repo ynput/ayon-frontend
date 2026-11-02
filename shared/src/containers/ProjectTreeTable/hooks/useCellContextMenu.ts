@@ -2,12 +2,12 @@ import { ContextMenuItemType, useCreateContextMenu } from '../../ContextMenu/use
 import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
 import { getCellId, parseCellId } from '../utils/cellUtils'
-import { useClipboard } from '../context/ClipboardContext'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useProjectTableContext } from '../context/ProjectTableContext'
+import { useClipboard } from '../context/clipboard-context'
+import { useSelectionCellsContext } from '../context/selection-cells'
+import { useProjectTableContext } from '../context/project-table'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
-import { useProjectDataContext } from '../context/ProjectDataContext'
-import { useCellEditing } from '../context/CellEditingContext'
+import { useProjectDataContext } from '../context/project-data'
+import { useCellEditing } from '../context/cell-editing'
 import { InheritFromParentEntity } from './useUpdateTableData'
 import { ProjectTableAttribute, TableRow } from '../types'
 import { UseHistoryReturn } from './useHistory'
@@ -15,8 +15,15 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { CSV_DELIMITERS } from '../../TableExport/csvFile'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useTableExportContext } from '@shared/context'
+import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
+import {
+  newEntityDefinitions,
+  type NewEntityType,
+} from '@shared/containers/NewEntity/util/entityDefinitions'
+import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/new-entity'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -68,7 +75,7 @@ type CellContextMenuProps = {
   attribs: ProjectTableAttribute[]
   columns?: ColumnDef<TableRow>[]
   headerLabels: HeaderLabel[]
-  onOpenNew?: (type: 'folder' | 'task') => void
+  onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   contextMenuItems?: ContextMenuItemConstructors
 }
 
@@ -96,6 +103,8 @@ const useCellContextMenu = ({
     () => [...contextContextMenuItems, ...(propsContextMenuItems || [])],
     [contextContextMenuItems, propsContextMenuItems],
   )
+  const slicerSelection = useHierarchySelection()
+  const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
   const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
@@ -198,7 +207,7 @@ const useCellContextMenu = ({
       isEntityRestricted(cell.entityType),
   })
 
-  const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+  const openViewerItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Open in viewer',
     icon: 'play_circle',
     shortcut: 'Spacebar',
@@ -256,7 +265,19 @@ const useCellContextMenu = ({
     label: 'Delete',
     icon: 'delete',
     danger: true,
-    command: () => deleteEntities(meta.selectedRows),
+    // prefer the cell selection; fall back to checkbox/row selection only when no body
+    // cells are selected, so row-selected rows still delete on their own but don't get
+    // swept in alongside an unrelated cell selection
+    command: () => {
+      const cellRows = [
+        ...new Set(
+          meta.selectedCells
+            .map((cellId) => parseCellId(cellId)?.rowId)
+            .filter((rowId): rowId is string => !!rowId),
+        ),
+      ]
+      deleteEntities(cellRows.length ? cellRows : meta.selectedRows)
+    },
     hidden: cell.columnId !== 'name' || cell.isGroup,
   })
 
@@ -275,37 +296,86 @@ const useCellContextMenu = ({
     }
   }
 
-  const exportItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Export selection',
-    icon: 'download',
-    command: () => exportCSV(Array.from(selectedCells), projectName),
-    hidden: cell.isGroup,
-  })
+  const tableExport = useTableExportContext()
+  // the Power Pack export when the table registered what it exports, else the cells as shown
+  const exportItem: ContextMenuItemConstructor = (e, cell) =>
+    tableExport?.isAvailable && tableExport.source
+      ? {
+          label: 'Export',
+          icon: 'download',
+          command: () => tableExport.openExport('selection'),
+          hidden: cell.isGroup,
+        }
+      : {
+          label: 'Export selection',
+          icon: 'download',
+          items: CSV_DELIMITERS.map(({ value, label }) => ({
+            label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
+            command: () => exportCSV(Array.from(selectedCells), projectName, value),
+          })),
+          hidden: cell.isGroup,
+        }
 
-  const createFolderItems: ContextMenuItemConstructor = (e, cell) => [
+  // null lets the dialog run its own fallback chain
+  const getSelectedParentFolderIds = (
+    cell: TableCellContextData,
+    selectedRows: string[],
+  ): string[] | null => {
+    const rows = selectedRows.length ? selectedRows : [cell.entityId]
+    const parents = rows.flatMap((rowId) => {
+      const entity = getEntityById(rowId) as (EntityMap & Record<string, any>) | undefined
+      if (!entity) return []
+
+      if (entity.entityType === 'folder' || !('folderId' in entity)) return [entity.id]
+      return entity.folderId ? [entity.folderId] : []
+    })
+    return parents.length ? parents : null
+  }
+
+  const openNewWithParents = (
+    type: NewEntityType,
+    cell: TableCellContextData,
+    selectedRows: string[],
+  ) => {
+    const parents = getSelectedParentFolderIds(cell, selectedRows)
+    onOpenNew?.(type, parents ? { parentFolderIds: parents } : undefined)
+  }
+
+  const createFolderItems: ContextMenuItemConstructor = (e, cell, selected, meta) => [
     {
-      label: 'Create folder',
-      icon: 'create_new_folder',
-      command: () => onOpenNew?.('folder'),
-      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+      label: newEntityDefinitions.folder.createLabel,
+      icon: newEntityDefinitions.folder.icon,
+      command: () => {
+        if (showHierarchy) {
+          openNewWithParents('folder', cell, meta.selectedRows)
+        } else {
+          // grouping modes: let the dialog resolve parents from the slicer
+          onOpenNew?.('folder')
+        }
+      },
+      hidden: cell.columnId !== 'name' || !onOpenNew,
     },
     {
-      label: 'Create root folder',
-      icon: 'create_new_folder',
+      label: `Create root ${newEntityDefinitions.folder.label.toLowerCase()}`,
+      icon: newEntityDefinitions.folder.icon,
       command: () => {
         clearSelection()
-        onOpenNew?.('folder')
+        onOpenNew?.('folder', { parentFolderIds: [] })
       },
-      hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
+      hidden: cell.columnId !== 'name' || !onOpenNew,
     },
   ]
 
-  const createTaskItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Create task',
-    icon: 'add_task',
-    command: () => onOpenNew?.('task'),
-    hidden: cell.columnId !== 'name' || !showHierarchy || !onOpenNew,
-  })
+  const createTaskItem: ContextMenuItemConstructor = (e, cell, selected, meta) => {
+    const hasParent = !!getSelectedParentFolderIds(cell, meta.selectedRows) || hasSlicerFolder
+    return {
+      label: newEntityDefinitions.task.createLabel,
+      icon: newEntityDefinitions.task.icon,
+      command: () => openNewWithParents('task', cell, meta.selectedRows),
+      hidden: cell.columnId !== 'name' || !onOpenNew,
+      disabled: !hasParent,
+    }
+  }
 
   const renameItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Rename',
@@ -367,8 +437,8 @@ const useCellContextMenu = ({
   const handleTableBodyContextMenu = (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
-    // get id of first child of td
-    const cellId = tdEl?.firstElementChild?.id
+    // the cell is the td's first child with an id (a highlight tint comes before it)
+    const cellId = tdEl?.querySelector(':scope > [id]')?.id
 
     if (!cellId) return
 
@@ -377,8 +447,17 @@ const useCellContextMenu = ({
     if (!cellData) return
 
     let currentSelectedCells = Array.from(selectedCells)
+    const selectedRowCellIds = currentSelectedCells.filter(
+      (selectedCellId) => parseCellId(selectedCellId)?.colId === ROW_SELECTION_COLUMN_ID,
+    )
+    const clickedRowIsSelected = selectedRowCellIds.some(
+      (selectedCellId) => parseCellId(selectedCellId)?.rowId === cellData.entityId,
+    )
     // if selecting a cell outside of the current selection
-    if (!currentSelectedCells.includes(cellId) || !currentSelectedCells.length) {
+    if (
+      (!currentSelectedCells.includes(cellId) && !clickedRowIsSelected) ||
+      !currentSelectedCells.length
+    ) {
       currentSelectedCells = [cellId]
       // update selection
       selectCell(cellId, false, false)

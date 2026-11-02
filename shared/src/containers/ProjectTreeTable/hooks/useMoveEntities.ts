@@ -1,52 +1,44 @@
 import { useCallback, useMemo } from 'react'
 import { toast } from 'react-toastify'
-import {
-  OperationModel,
-  OperationResponseModel,
-  useUpdateOverviewEntitiesMutation,
-} from '@shared/api'
-import { useProjectTableContext } from '@shared/containers'
-import {
-  useMoveEntityContext,
+import { useUpdateOverviewEntitiesMutation } from '@shared/api'
+import type { OperationModel, OperationResponseModel } from '@shared/api'
+import { useOptionalProjectTableContext } from '../context/project-table'
+import type {
   EntityMoveData,
   MultiEntityMoveData,
-} from '@shared/context/MoveEntityContext'
+  OnMoveComplete,
+} from '@shared/containers/MoveEntityDialog/types'
 import { useProjectFoldersContext } from '@shared/context'
+import { getRequestErrorString } from '@shared/util'
 
 export type EntityType = 'folder' | 'task'
 
 interface UseMoveEntitiesProps {
   projectName: string
+  movingEntities: MultiEntityMoveData | null
+  onClose: () => void
+  onMoveComplete?: OnMoveComplete
 }
 
-export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
-  const {
-    movingEntities,
-    isEntityPickerOpen,
-    openMoveDialog,
-    closeMoveDialog,
-    setEntityPickerOpen,
-    clearMovingEntities,
-  } = useMoveEntityContext()
+export const useMoveEntities = ({
+  projectName,
+  movingEntities,
+  onClose,
+  onMoveComplete,
+}: UseMoveEntitiesProps) => {
   const [updateOverviewEntities] = useUpdateOverviewEntitiesMutation()
 
   // Get project context for entity data
-  const { tableData, getEntityById } = useProjectTableContext()
+  const projectTableContext = useOptionalProjectTableContext()
 
   // Get folder data to check hasVersions property
   const { folders } = useProjectFoldersContext()
-
-  // Action dispatchers
-  const openMoveDialogHandler = useCallback(
-    (entityData: EntityMoveData | MultiEntityMoveData) => {
-      openMoveDialog(entityData)
-    },
-    [openMoveDialog],
+  const tableData = projectTableContext?.tableData || []
+  const getEntityById = useCallback(
+    (id: string) =>
+      projectTableContext?.getEntityById(id) || folders.find((folder) => folder.id === id),
+    [folders, projectTableContext],
   )
-
-  const closeMoveDialogHandler = useCallback(() => {
-    closeMoveDialog()
-  }, [closeMoveDialog])
 
   // Move submit handler
   const handleMoveSubmit = useCallback(
@@ -54,8 +46,6 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
       if (!movingEntities || selectedFolderIds.length === 0) return
 
       const targetFolderId = selectedFolderIds[0]
-      setEntityPickerOpen(false)
-
       try {
         // Prepare move operations for all entities
         const moveOperations: OperationModel[] = movingEntities.entities.map(
@@ -87,12 +77,10 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
           const errorDetails = failedOperations.map((op) => op.detail).join(', ')
           throw new Error(errorDetails || 'Some move operations failed')
         }
+        onMoveComplete?.(targetFolderId)
       } catch (error: any) {
-        console.error('Failed to move entity:', error)
-
         // Extract and improve error message
-        let errorMessage =
-          error?.data?.detail || error?.error || error?.message || 'Failed to move entities'
+        let errorMessage = getRequestErrorString(error) || 'Failed to move entities'
 
         // Improve specific error messages for better UX
         if (errorMessage.includes('already exists')) {
@@ -117,26 +105,15 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
 
         toast.error(errorMessage)
       } finally {
-        clearMovingEntities()
-        setEntityPickerOpen(false)
+        onClose()
       }
     },
-    [
-      movingEntities,
-      projectName,
-      updateOverviewEntities,
-      openMoveDialog,
-      closeMoveDialog,
-      setEntityPickerOpen,
-      clearMovingEntities,
-    ],
+    [movingEntities, projectName, updateOverviewEntities, onClose, onMoveComplete],
   )
 
   // Move to root handler
   const handleMoveToRoot = useCallback(async () => {
     if (!movingEntities) return
-
-    setEntityPickerOpen(false)
 
     try {
       // Prepare move operations for all entities to move to root (null parentId/folderId)
@@ -167,26 +144,14 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
         throw new Error(errorDetails || 'Some move operations failed')
       }
     } catch (error: any) {
-      console.error('Failed to move entities to root:', error)
-
       // Extract and improve error message
-      let errorMessage =
-        error?.data?.detail || error?.error || error?.message || 'Failed to move entities to root'
+      let errorMessage = getRequestErrorString(error) || 'Failed to move entities to root'
 
       toast.error(errorMessage)
     } finally {
-      clearMovingEntities()
-      setEntityPickerOpen(false)
+      onClose()
     }
-  }, [
-    movingEntities,
-    projectName,
-    updateOverviewEntities,
-    openMoveDialog,
-    closeMoveDialog,
-    setEntityPickerOpen,
-    clearMovingEntities,
-  ])
+  }, [movingEntities, projectName, updateOverviewEntities, onClose])
 
   // Get disabled folder IDs
   const getDisabledFolderIds = useCallback((): string[] => {
@@ -316,14 +281,6 @@ export const useMoveEntities = ({ projectName }: UseMoveEntitiesProps) => {
   }, [movingEntities])
 
   return {
-    // State
-    movingEntities,
-    isEntityPickerOpen,
-
-    // Actions (keeping legacy names for compatibility)
-    isDialogOpen: isEntityPickerOpen,
-    openMoveDialog: openMoveDialogHandler,
-    closeMoveDialog: closeMoveDialogHandler,
     handleMoveSubmit,
     handleMoveToRoot,
     getDisabledFolderIds,

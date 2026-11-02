@@ -24,7 +24,9 @@ const LinkedTaskRow = ({ entity, taskTypes }: LinkedTaskRowProps) => {
     <Styled.Row className="linked-task">
       <span>Task</span>
       <Styled.TaskLink
-        onClick={() => openSlideOut({ entityId: task.id as string, entityType: 'task', projectName })}
+        onClick={() =>
+          openSlideOut({ entityId: task.id as string, entityType: 'task', projectName })
+        }
       >
         <Icon icon={taskType?.icon || 'task_alt'} style={{ color: taskType?.color || undefined }} />
         <span className="label">{task.label || task.name}</span>

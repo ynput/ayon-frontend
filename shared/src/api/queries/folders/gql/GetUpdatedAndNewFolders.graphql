@@ -1,0 +1,27 @@
+query GetUpdatedAndNewFolders($projectName: String!, $folderIds: [String!]!, $first: Int) {
+  project(name: $projectName) {
+    folders(ids: $folderIds, first: $first) {
+      edges {
+        node {
+          id
+          path
+          parentId
+          parents
+          name
+          label
+          folderType
+          hasTasks
+          hasChildren
+          hasReviewables
+          thumbnailHash
+          tags
+          status
+          allAttrib
+          ownAttrib
+          createdAt
+          updatedAt
+        }
+      }
+    }
+  }
+}

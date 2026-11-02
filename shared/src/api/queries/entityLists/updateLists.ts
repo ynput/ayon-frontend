@@ -1,6 +1,7 @@
 import { entityListsApi } from '@shared/api/generated'
 import gqlApi from './getLists'
-import { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
+import type { CreateSessionFromListApiArg, CreateSessionFromListApiResponse } from './types'
+import { patchListItemListValues } from './listItemValues'
 
 const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
   endpoints: {
@@ -69,7 +70,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: (_s, _e, { listId }) => {
         const tags = [{ type: 'entityList', id: listId }]
         return tags
@@ -117,14 +117,16 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                   if (itemIndex !== -1) {
                     const existingItem = page.items[itemIndex]
                     // Merge existing item with patchItem, ensuring attrib is also merged
+                    const { attrib, ...patchFields } = patchItem
                     const updatedItem = {
                       ...existingItem,
-                      ...patchItem, // Apply all top-level fields from patchItem
-                      attrib: {
-                        ...existingItem.attrib,
-                        ...(patchItem.attrib || {}), // Merge attrib safely
+                      ...patchFields, // Apply all top-level fields from patchItem
+                      data: {
+                        ...existingItem.data,
+                        ...(patchItem.data || {}),
                       },
                     }
+                    patchListItemListValues(updatedItem, attrib)
                     Object.assign(page.items[itemIndex], updatedItem)
 
                     if (patchItem.position !== undefined) {
@@ -194,7 +196,6 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         ]
         return tags
       },
-      transformErrorResponse: (error: any) => error.data.detail,
     },
     updateEntityListItem: {
       async onQueryStarted(
@@ -216,13 +217,16 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
                 const listIndex = page.items.findIndex((list) => list.id === listItemId)
                 if (listIndex !== -1) {
                   const list = page.items[listIndex]
+                  const { attrib, ...patchFields } = entityListItemPatchModel
                   const newListItem = {
                     ...list,
-                    attrib: {
-                      ...list.attrib,
-                      ...entityListItemPatchModel.attrib,
+                    ...patchFields,
+                    data: {
+                      ...list.data,
+                      ...entityListItemPatchModel.data,
                     },
                   }
+                  patchListItemListValues(newListItem, attrib)
                   // Update the list with the new data
                   Object.assign(list, newListItem)
                   break
@@ -277,7 +281,6 @@ const updateListsInjectedApi = updateListsEnhancedApi.injectEndpoints({
         method: 'POST',
         body: queryArg.sessionFromListRequest,
       }),
-      transformErrorResponse: (error: any) => error.data.detail,
       invalidatesTags: () => [{ type: 'entityList', id: 'LIST' }],
     }),
   }),

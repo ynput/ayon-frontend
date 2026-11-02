@@ -1,4 +1,5 @@
-import { UserModel, useSetFrontendPreferencesMutation } from '@shared/api'
+import type { UserModel } from '@shared/api/generated/authentication'
+import { useSetFrontendPreferencesMutation } from '@shared/api/queries/users/updateUsers'
 import { toast } from 'react-toastify'
 
 export type BundleMode = 'production' | 'staging' | 'developer'

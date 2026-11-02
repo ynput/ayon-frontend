@@ -1,6 +1,6 @@
 import React from 'react'
 import ActivityComment from './ActivityComment/ActivityComment'
-import ActivityStatusChange from './ActivityStatusChange/ActivityStatusChange'
+import ActivityFieldChange from './ActivityFieldChange/ActivityFieldChange'
 import ActivityAssigneeChange from './ActivityAssigneeChange/ActivityAssigneeChange'
 import ActivityVersions from './ActivityVersions/ActivityVersions'
 import ActivityGroup from './ActivityGroup/ActivityGroup'
@@ -15,6 +15,8 @@ interface ActivityItemProps {
     authorName: string
   }
   fromGroup?: boolean
+  // undefined = origin version frameStart not known
+  annotationFrameStart?: number | null
   projectInfo: Record<string, any>
   createdAts?: string[]
   editProps?: Record<string, any>
@@ -31,12 +33,14 @@ interface ActivityItemProps {
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  onDuplicate?: (activity: any) => void
   isGuest?: boolean
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({
   activity,
   fromGroup,
+  annotationFrameStart,
   projectInfo,
   createdAts,
   editProps,
@@ -52,25 +56,41 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       return (
         // @ts-expect-error
         <ActivityComment
-          {...{ activity, projectInfo, editProps, readOnly, statuses, isSlideOut }}
+          {...{
+            activity,
+            annotationFrameStart,
+            projectInfo,
+            editProps,
+            readOnly,
+            statuses,
+            isSlideOut,
+          }}
           {...props}
         />
       )
     case 'status.change':
-      return <ActivityStatusChange activity={activity} {...props} />
+    case 'attrib.change':
+    case 'tags.change':
+    case 'subtype.change':
+      return <ActivityFieldChange activity={activity} projectInfo={projectInfo} {...props} />
     case 'assignee.add':
       return <ActivityAssigneeChange activity={activity} {...props} isAdding />
     case 'assignee.remove':
       return <ActivityAssigneeChange activity={activity} {...props} />
     case 'version.publish':
-      return <ActivityVersions {...{ activity, projectInfo, filter }} {...props} />
+      return <ActivityVersions {...{ activity, projectInfo, filter, statuses }} {...props} />
     case 'version.review':
       return <ActivityVersionReview activity={activity} isGuest={isGuest} {...props} />
     case 'group':
       // fromGroup prevents infinite recursion
       return (
         !fromGroup && (
-          <ActivityGroup editProps={editProps} activities={activity.items || []} {...props} />
+          <ActivityGroup
+            editProps={editProps}
+            activities={activity.items || []}
+            projectInfo={projectInfo}
+            {...props}
+          />
         )
       )
     default:

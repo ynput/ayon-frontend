@@ -37,14 +37,12 @@ const getWorkfiles = api.injectEndpoints({
       }),
       transformResponse: (response) =>
         response.data.project.workfiles.edges.map((edge) => ({ ...edge.node })),
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: () => [{ type: 'workfile', id: 'LIST' }],
     }),
     getWorkfileById: build.query({
       query: ({ projectName, id }) => ({
         url: `/api/projects/${projectName}/workfiles/${id}`,
       }),
-      transformErrorResponse: (error) => error.data?.detail || `Error ${error.status}`,
       providesTags: (result, error, { id }) => [{ type: 'workfile', id }],
     }),
   }),

@@ -1,12 +1,13 @@
-import {
-  gqlApi,
+import { gqlApi } from '@shared/api/generated'
+import type {
   GetActivitiesByIdQuery,
   GetActivitiesQuery,
   GetActivitiesQueryVariables,
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
+  GetVersionsFrameStartQuery,
 } from '@shared/api/generated'
-import { taskProvideTags } from './util/activitiesHelpers'
+import { provideSharedActivityTags, taskProvideTags } from './util/activitiesHelpers'
 import {
   ActivitiesResult,
   countChecklists,
@@ -16,16 +17,14 @@ import {
 } from './util/activitiesHelpers'
 import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 
-import {
-  DefinitionsFromApi,
-  FetchBaseQueryError,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
-import { ChecklistCount } from './types'
-import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
+import type { ChecklistCount } from './types'
+import { normalizeQueryError } from '@shared/api/base/queryError'
+import type { UserAttrib } from '../users/getUsers'
 
-type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
+type ActivityUserNode = Omit<GetActivityUsersQuery['users']['edges'][0]['node'], 'attrib'> & {
+  attrib: UserAttrib
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -35,6 +34,10 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
   GetActivities: OverrideResultType<Definitions['GetActivities'], ActivitiesResult>
   GetEntitiesChecklists: OverrideResultType<Definitions['GetEntitiesChecklists'], ChecklistCount>
   GetActivityUsers: OverrideResultType<Definitions['GetActivityUsers'], ActivityUserNode[]>
+  GetVersionsFrameStart: OverrideResultType<
+    Definitions['GetVersionsFrameStart'],
+    Record<string, number | null>
+  >
 }
 
 const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -43,32 +46,20 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetActivities: {
       transformResponse: (res: GetActivitiesQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
-      // @ts-expect-error - filter is not an query arg
-      providesTags: (result, _e, { entityIds, activityTypes = [], filter }) =>
-        result
-          ? [
-              ...result.activities.map((a) => ({ type: 'activity', id: a.activityId })),
-              { type: 'activity', id: 'LIST' },
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
-                type: 'entityActivities',
-                id: id,
-              })),
-              { type: 'entityActivities', id: 'LIST' },
-              ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])?.map((type) => ({
-                type: 'entityActivities',
-                id: type as string,
-              })),
-              // filter is used when a comment is made, to refetch the activities of other filters
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).map((id) => ({
-                type: 'entityActivities',
-                id: id + '-' + filterKey(filter),
-              })),
-            ]
-          : [{ type: 'activity', id: 'LIST' }],
+      providesTags: provideSharedActivityTags,
     },
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
+    },
+    GetVersionsFrameStart: {
+      transformResponse: (res: GetVersionsFrameStartQuery) =>
+        Object.fromEntries(
+          res.project.versions.edges.map(({ node }) => [
+            node.id,
+            (node.attrib as { frameStart: number | null }).frameStart,
+          ]),
+        ),
     },
     GetEntitiesChecklists: {
       transformResponse: (res: GetEntitiesChecklistsQuery) => countChecklists(res),
@@ -85,7 +76,8 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
           : [{ type: 'activity', id: 'LIST' }],
     },
     GetActivityUsers: {
-      transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
+      transformResponse: (res: GetActivityUsersQuery) =>
+        res.users.edges.map(({ node }) => ({ ...node, attrib: node.attrib as UserAttrib })),
       providesTags: (res) =>
         res?.length
           ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]
@@ -94,13 +86,18 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
   },
 })
 
+export type GetActivitiesInfiniteQueryArgs = Omit<
+  GetActivitiesQueryVariables,
+  'last' | 'first' | 'cursor'
+> & { filter?: any }
+
 const ACTIVITIES_INFINITE_QUERY_COUNT = 30
 
 const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
   endpoints: (build) => ({
     getActivitiesInfinite: build.infiniteQuery<
       ActivitiesResult,
-      Omit<GetActivitiesQueryVariables, 'last' | 'first' | 'cursor'> & { filter?: any },
+      GetActivitiesInfiniteQueryArgs,
       { cursor: string; first?: number; last?: number }
     >({
       infiniteQueryOptions: {
@@ -152,7 +149,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getActivitiesInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       async onCacheEntryAdded(
@@ -168,31 +165,7 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
           gqlApi: enhanceActivitiesApi,
         })
       },
-      providesTags: (result, _e, { entityIds, activityTypes, filter }) =>
-        result
-          ? [
-              ...result.pages
-                .flatMap((page) => page.activities)
-                .map((a) => ({ type: 'activity', id: a.activityId })),
-              { type: 'activity', id: 'LIST' },
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
-                type: 'entityActivities',
-                id: id as string,
-              })),
-              { type: 'entityActivities', id: 'LIST' },
-              ...(Array.isArray(activityTypes) ? activityTypes : [activityTypes])
-                ?.filter(Boolean)
-                .map((type) => ({
-                  type: 'entityActivities',
-                  id: type as string,
-                })),
-              // filter is used when a comment is made, to refetch the activities of other filters
-              ...(Array.isArray(entityIds) ? entityIds : [entityIds]).filter(Boolean).map((id) => ({
-                type: 'entityActivities',
-                id: `${id}-${filterKey(filter)}`,
-              })),
-            ]
-          : [{ type: 'activity', id: 'LIST' }],
+      providesTags: provideSharedActivityTags,
     }),
     // get data for a reference tooltip based on type,id and projectName
     getEntityTooltip: build.query({
@@ -214,17 +187,20 @@ const getActivitiesGQLApi = enhanceActivitiesApi.injectEndpoints({
 
 export const {
   useGetEntityTooltipQuery,
+  useGetActivitiesByIdQuery,
   useLazyGetActivitiesByIdQuery,
   useGetEntitiesChecklistsQuery,
   useGetActivitiesQuery,
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
+  useGetVersionsFrameStartQuery,
 } = getActivitiesGQLApi
 
 export { getActivitiesGQLApi }
 
 import { filterActivityTypes } from './util/activitiesHelpers'
 import { patchTableLatestComments } from './patchTableLatestComments'
+import { handleActivityRealtimeUpdates } from './util/activityRealtimeHandler'
 
 const updateCache = (activitiesDraft: any, patch: any, isDelete: boolean) => {
   // Handle paginated structure

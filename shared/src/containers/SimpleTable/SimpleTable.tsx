@@ -1,4 +1,12 @@
-import { FC, useMemo, useRef, MouseEvent as ReactMouseEvent, useCallback, useEffect } from 'react'
+import {
+  FC,
+  useMemo,
+  useRef,
+  MouseEvent as ReactMouseEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
+  useEffect,
+} from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -22,10 +30,11 @@ import { useVirtualizer } from '@tanstack/react-virtual'
 import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
-import { rankItem, compareItems, rankings } from '@tanstack/match-sorter-utils'
-import { useSimpleTableContext } from './context/SimpleTableContext'
+import { compareItems } from '@tanstack/match-sorter-utils'
+import { parseSearchQuery, matchSearchQuery } from '@shared/util'
+import { useSimpleTableContext } from './context/simple-table'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
-import { EmptyPlaceholder } from '@shared/components'
+import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
 import { RowPinningState } from '@tanstack/react-table'
 import {
   SimpleTableProps,
@@ -33,14 +42,22 @@ import {
   SimpleTableRowContextMenuBuilder,
 } from './SimpleTable.types'
 import { useCreateContextMenu } from '../ContextMenu'
+import type { TableRowRef } from '@ynput/ayon-addon'
+import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { useAddonTableShortcuts } from '@shared/components/AddonLayout/useAddonTableShortcuts'
 
 const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   if (!items) return []
   return Array.isArray(items) ? items.filter(Boolean) : [items]
 }
 
+const toggleRowAndDescendants = <TData,>(row: Row<TData>, expanded: boolean) => {
+  row.toggleExpanded(expanded)
+  row.subRows.forEach((subRow) => toggleRowAndDescendants(subRow, expanded))
+}
+
 // Define a custom fuzzy filter function that will apply ranking info to rows (using match-sorter utils)
-const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
+const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addMeta) => {
   const cellValue = row.getValue(columnId)
   // convert non-string cell values to string
   let searchString =
@@ -57,18 +74,14 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue, addMeta) => {
     )
   }
 
-  // Rank the item with CONTAINS threshold to avoid overly permissive fuzzy matches
-  // This ensures the search term must be a substring, not just scattered characters
-  const itemRank = rankItem(searchString, searchValue, { threshold: rankings.CONTAINS })
+  // searchValue is already parsed into OR/AND groups by resolveFilterValue
+  const itemRank = matchSearchQuery(searchString, searchValue)
+  addMeta({ itemRank })
 
-  // Store the itemRank info
-  addMeta({
-    itemRank,
-  })
-
-  // Return if the item should be filtered in/out
   return itemRank.passed
 }
+// parse once per filter pass instead of once per row
+fuzzyFilter.resolveFilterValue = parseSearchQuery
 
 // Define a custom fuzzy sort function that will sort by rank if the row has ranking information
 const fuzzySort: SortingFn<any> = (rowA, rowB, columnId) => {
@@ -93,13 +106,6 @@ function getRowRange<TData extends RowData>(
   idA: string,
   idB: string,
 ): Array<Row<TData>> {
-  const range: Array<Row<TData>> = []
-  // If idA and idB are the same, or one is not found, handle appropriately
-  if (idA === idB) {
-    const singleRow = rows.find((row) => row.id === idA)
-    return singleRow ? [singleRow] : []
-  }
-
   let indexA = -1
   let indexB = -1
 
@@ -114,10 +120,7 @@ function getRowRange<TData extends RowData>(
   const start = Math.min(indexA, indexB)
   const end = Math.max(indexA, indexB)
 
-  for (let i = start; i <= end; i++) {
-    range.push(rows[i])
-  }
-  return range
+  return rows.slice(start, end + 1)
 }
 
 const SimpleTable: FC<SimpleTableProps> = ({
@@ -133,16 +136,22 @@ const SimpleTable: FC<SimpleTableProps> = ({
   meta,
   rowHeight,
   imgRatio,
+  imgPosition,
   onScrollBottom,
+  scrollToRowId,
   onRename,
   renamingId,
+  renameInitialValue,
   onSubmitRename,
   onCancelRename,
   onRowDoubleClick,
+  onRowOptionClick,
   rowContextMenuBuilders = [],
+  addonShortcuts,
   children,
   pt,
   fitContent,
+  rowIdPrefix,
   ...props
 }) => {
   const {
@@ -156,6 +165,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
+  // read via ref so the memoized arrow-nav callback sees the current prefix after a dimension change
+  const rowIdPrefixRef = useRef(rowIdPrefix)
+  rowIdPrefixRef.current = rowIdPrefix
+  const toDomId = (id: string) => (rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id)
   const [showRowContextMenu] = useCreateContextMenu()
 
   // Refs for values used inside the columns memo.
@@ -167,6 +180,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClickRef.current = onRowDoubleClick
   const renamingIdRef = useRef(renamingId)
   renamingIdRef.current = renamingId
+  const renameInitialValueRef = useRef(renameInitialValue)
+  renameInitialValueRef.current = renameInitialValue
   const onSubmitRenameRef = useRef(onSubmitRename)
   onSubmitRenameRef.current = onSubmitRename
   const onCancelRenameRef = useRef(onCancelRename)
@@ -199,51 +214,63 @@ const SimpleTable: FC<SimpleTableProps> = ({
       rowId: string,
       isShift: boolean,
       isCtrlOrMeta: boolean,
-    ) => {
+    ): RowSelectionState => {
       const currentId = rowId
-      const allProcessableRows = tableInstance.getFilteredRowModel().flatRows
-      const currentRow = allProcessableRows.find((r) => r.id === currentId)
+      const rowModel = tableInstance.getRowModel()
+      const visibleRows = rowModel.rows
+      const currentRow = rowModel.rowsById[currentId]
+      const currentSelection = tableInstance.getState().rowSelection || {}
 
-      if (!currentRow) return
+      if (!currentRow) return { ...currentSelection }
 
       // Prevent selection of disabled rows
-      if (currentRow.original.isDisabled) return
+      if (currentRow.original.isDisabled) {
+        return { ...currentSelection }
+      }
 
       // If click-to-deselect is enabled and only one row is selected and it's the current row
       if (
         enableClickToDeselect &&
         !isShift &&
         !isCtrlOrMeta &&
-        Object.keys(tableInstance.getState().rowSelection).length === 1 &&
-        tableInstance.getState().rowSelection[currentId]
+        Object.keys(currentSelection).length === 1 &&
+        currentSelection[currentId]
       ) {
         tableInstance.setRowSelection({})
         lastSelectedIdRef.current = null
-        return
+        return {}
       }
 
+      let nextSelection: RowSelectionState
       if (isMultiSelect && isShift && lastSelectedIdRef.current) {
         const lastId = lastSelectedIdRef.current
-        const anchorRow = allProcessableRows.find((r) => r.id === lastId)
+        const rowsToToggle = getRowRange(visibleRows, currentId, lastId)
 
-        if (!anchorRow) {
-          tableInstance.setRowSelection({ [currentId]: true })
+        if (rowsToToggle.length === 0) {
+          nextSelection = { ...currentSelection, [currentId]: true }
         } else {
-          const rowsToToggle = getRowRange(allProcessableRows, currentId, lastId)
-          const newSelection: RowSelectionState = {}
-          rowsToToggle.forEach((r) => (newSelection[r.id] = true))
-          tableInstance.setRowSelection(newSelection)
+          nextSelection = { ...currentSelection }
+          rowsToToggle.forEach((r) => (nextSelection[r.id] = true))
         }
       } else if (isMultiSelect && isCtrlOrMeta) {
-        currentRow.toggleSelected()
+        // write a concrete object from live state; toggleSelected()'s functional updater runs
+        // against a stale rowSelection closure and drops the other selected rows
+        nextSelection = { ...currentSelection }
+        if (nextSelection[currentId]) {
+          delete nextSelection[currentId]
+        } else {
+          nextSelection[currentId] = true
+        }
       } else {
         // If it's already selected and it's the only one, don't update selection to avoid unnecessary re-renders
-        const selection = tableInstance.getState().rowSelection
-        if (!(Object.keys(selection).length === 1 && selection[currentId])) {
-          tableInstance.setRowSelection({ [currentId]: true })
+        nextSelection = { ...currentSelection }
+        if (!(Object.keys(nextSelection).length === 1 && nextSelection[currentId])) {
+          nextSelection = { [currentId]: true }
         }
       }
+      tableInstance.setRowSelection(nextSelection)
       lastSelectedIdRef.current = currentId
+      return nextSelection
     },
     [isMultiSelect, enableClickToDeselect],
   )
@@ -303,9 +330,14 @@ const SimpleTable: FC<SimpleTableProps> = ({
             event.ctrlKey || event.metaKey,
           )
 
-          // Focus the next row's cell
+          // Focus the next row's cell. Scope to this table's container: row ids are
+          // entity ids that can also exist in other SimpleTables on the page (slicer),
+          // so a document-wide getElementById would steal focus to a duplicate.
           requestAnimationFrame(() => {
-            const nextRowElement = document.getElementById(nextRow.id)
+            const container = tableContainerRef.current
+            const nextRowElement = container
+              ? container.querySelector(`#${CSS.escape(toDomId(nextRow.id))}`)
+              : document.getElementById(toDomId(nextRow.id))
             const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
             if (nextCell) {
               nextCell.focus()
@@ -358,12 +390,25 @@ const SimpleTable: FC<SimpleTableProps> = ({
             ) {
               return
             }
-            handleSelectionLogic(
-              cellTableInstance, // Pass the cell's table instance
-              row.id,
-              event.shiftKey,
-              event.ctrlKey || event.metaKey,
-            )
+            // Keep an already-selected row selected for a plain option click.
+            // Modifier clicks still go through the normal range/toggle selection path.
+            const preserveSelection =
+              event.altKey &&
+              row.getIsSelected() &&
+              !event.shiftKey &&
+              !event.ctrlKey &&
+              !event.metaKey
+            const nextSelection: RowSelectionState = !preserveSelection
+              ? handleSelectionLogic(
+                  cellTableInstance, // Pass the cell's table instance
+                  row.id,
+                  event.shiftKey,
+                  event.ctrlKey || event.metaKey,
+                )
+              : cellTableInstance.getState().rowSelection || {}
+            if (event.altKey) {
+              onRowOptionClick?.(row.original, Object.keys(nextSelection))
+            }
           }
 
           const props: SimpleTableCellTemplateProps & {
@@ -391,16 +436,26 @@ const SimpleTable: FC<SimpleTableProps> = ({
             img: row.original.img,
             imgShape: row.original.imgShape,
             imgRatio: imgRatio,
+            imgPosition: imgPosition,
             isRowExpandable: row.getCanExpand(),
             enableNonFolderIndent,
             isRowExpanded: row.getIsExpanded(),
             isTableExpandable: cellMeta?.isExpandable,
-            onExpandClick: row.getToggleExpandedHandler(),
+            onExpandClick: (event?: ReactMouseEvent<HTMLElement, MouseEvent>) => {
+              if (event?.altKey) {
+                toggleRowAndDescendants(row, !row.getIsExpanded())
+              } else {
+                row.toggleExpanded()
+              }
+            },
             startContent: row.original.startContent,
             endContent: row.original.endContent,
+            badge: row.original.badge,
             isDisabled: row.original.isDisabled,
             disabledMessage: row.original.disabledMessage,
             isRenaming: row.id === renamingIdRef.current,
+            renameInitialValue:
+              row.id === renamingIdRef.current ? renameInitialValueRef.current : undefined,
             onSubmitRename: onSubmitRenameRef.current
               ? (v) => onSubmitRenameRef.current!(row.id, v)
               : undefined,
@@ -426,6 +481,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
       enableClickToDeselect,
       enableNonFolderIndent,
       imgRatio,
+      imgPosition,
+      onRowOptionClick,
     ],
   )
 
@@ -510,14 +567,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
       e.stopPropagation()
 
       const selectedIds = Object.keys(rowSelection)
-
-      const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
-
-      if (!selectedIds.includes(rowId)) {
-        // convert array to RowSelectionState object
-        const nextSelection: RowSelectionState = { [rowId]: true }
-        onRowSelectionChange?.(nextSelection)
-      }
+      const isSelected = selectedIds.includes(rowId)
+      const nextSelectedRows = isSelected ? selectedIds : [rowId]
 
       const menuItems = rowContextMenuBuilders.flatMap((builder) =>
         toMenuItems(
@@ -526,7 +577,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
             rowIndex,
             row,
             selectedRows: nextSelectedRows,
-            isSelected: nextSelectedRows.includes(rowId),
+            selectedTableRows: nextSelectedRows
+              .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
+              .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
+            isSelected,
           }),
         ),
       )
@@ -535,7 +589,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+    [rowContextMenuBuilders, rows, rowSelection, showRowContextMenu],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -553,6 +607,27 @@ const SimpleTable: FC<SimpleTableProps> = ({
       : undefined,
     overscan: 5,
   })
+
+  // scroll to a row once and focus it, so the arrow keys move on from there
+  const scrolledToRowIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!scrollToRowId || scrolledToRowIdRef.current === scrollToRowId) return
+    const index = rows.findIndex((row) => row.id === scrollToRowId)
+    if (index < 0) return
+    scrolledToRowIdRef.current = scrollToRowId
+    lastSelectedIdRef.current = scrollToRowId
+    rowVirtualizer.scrollToIndex(index, { align: 'center' })
+    // wait for the virtualizer to render the row
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const rowElement = tableContainerRef.current?.querySelector(
+          `#${CSS.escape(toDomId(scrollToRowId))}`,
+        )
+        const cell = rowElement?.querySelector('[tabindex="0"]') as HTMLElement | null
+        cell?.focus({ preventScroll: true })
+      }),
+    )
+  }, [scrollToRowId, rows, rowVirtualizer])
 
   // Memoize the ref callback to prevent infinite re-renders
   const measureElementRef = useCallback(
@@ -582,6 +657,47 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [onScrollBottom, isLoading],
   )
 
+  // addon shortcuts: the row keys above stop their own keys, so only the others get here
+  const {
+    hasShortcuts,
+    handleShortcut,
+    dialog: addonDialog,
+  } = useAddonTableShortcuts(addonShortcuts?.table)
+  const handleContainerKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    props.onKeyDown?.(e)
+    const target = e.target as HTMLElement
+    if (!hasShortcuts || addonDialog || e.defaultPrevented) return
+    if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable) return
+    const domId = target.closest('tr')?.id
+    if (!domId) return
+    const rowId = rowIdPrefix ? domId.slice(rowIdPrefix.length + 1) : domId
+
+    handleShortcut(e, () => {
+      const { rowsById } = table.getRowModel()
+      const toRow = (id: string): TableRowRef | undefined => {
+        const row = rowsById[id]?.original
+        if (!row) return undefined
+        const { entityType } = row.data
+        return {
+          id: row.id,
+          entityType: typeof entityType === 'string' ? entityType : undefined,
+          name: row.name,
+          label: row.label,
+          data: row.data,
+        }
+      }
+      // the selected rows when the key was pressed in one of them, else its row
+      const selected = Object.keys(rowSelection).filter((id) => rowSelection[id])
+      const rowIds = selected.includes(rowId) ? selected : [rowId]
+      return {
+        projectName: addonShortcuts?.projectName ?? null,
+        rows: rowIds.flatMap((id) => toRow(id) || []),
+        focused: { rowId },
+        cells: [],
+      }
+    })
+  }
+
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // if the click is outside of any row, clear selection
     if (enableClickToDeselect && !(e.target as HTMLElement).closest('tr')) {
@@ -591,50 +707,57 @@ const SimpleTable: FC<SimpleTableProps> = ({
   }
 
   return (
-    <Styled.TableContainer
-      ref={tableContainerRef}
-      onScroll={handleScroll}
-      onClick={handleContainerClick}
-      {...props}
-      className={clsx(props.className, { isLoading, fitContent })}
-    >
-      {!error && (
-        <table>
-          <tbody
-            style={{
-              height: `${rowVirtualizer?.getTotalSize()}px`, //tells scrollbar how big the table is
-            }}
-          >
-            {rowVirtualizer?.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index] as Row<SimpleTableRow>
-              return (
-                <tr
-                  data-index={virtualRow.index} //needed for dynamic row height measurement
-                  ref={measureElementRef} //measure dynamic row height
-                  key={row.id}
-                  id={row.id}
-                  onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
-                  {...pt?.row}
-                  style={{
-                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                    ...pt?.row?.style, // custom styles to be passed
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+    <>
+      <Styled.TableContainer
+        ref={tableContainerRef}
+        onScroll={handleScroll}
+        onClick={handleContainerClick}
+        {...props}
+        onKeyDown={handleContainerKeyDown}
+        className={clsx(props.className, { isLoading, fitContent })}
+      >
+        {!error && (
+          <table>
+            <tbody
+              style={{
+                height: `${rowVirtualizer?.getTotalSize()}px`, //tells scrollbar how big the table is
+              }}
+            >
+              {rowVirtualizer?.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index] as Row<SimpleTableRow>
+                return (
+                  <tr
+                    data-index={virtualRow.index} //needed for dynamic row height measurement
+                    ref={measureElementRef} //measure dynamic row height
+                    key={row.id}
+                    id={toDomId(row.id)}
+                    onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
+                    {...pt?.row}
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      ...pt?.row?.style, // custom styles to be passed
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+        {!!error && <EmptyPlaceholder error={error} />}
+      </Styled.TableContainer>
+      {/* outside the container: the dialog's clicks and keys would bubble into it through the portal */}
+      {addonDialog && (
+        <AddonDialog contribution={addonDialog.contribution} context={addonDialog.context} />
       )}
-      {!!error && <EmptyPlaceholder error={error} />}
-    </Styled.TableContainer>
+    </>
   )
 }
 

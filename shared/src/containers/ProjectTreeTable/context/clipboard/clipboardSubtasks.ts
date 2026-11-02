@@ -1,4 +1,4 @@
-import { SubTaskNode } from '@shared/api'
+import type { SubTaskNode } from '@shared/api'
 
 /**
  * Convert subtasks to TSV format for clipboard

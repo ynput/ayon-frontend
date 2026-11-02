@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-import { DoneCheckbox } from '@shared/components'
+import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
 import { WidgetBaseProps } from './CellWidget'
 
 const StyledCheckbox = styled.input`

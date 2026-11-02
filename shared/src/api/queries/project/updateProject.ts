@@ -20,7 +20,6 @@ const patchProjectFromModel = (
 const enhancedProjectApi = projectApi.enhanceEndpoints({
   endpoints: {
     deployProject: {
-      transformErrorResponse: (error: any) => error.data.detail || `Error ${error.status}`,
       invalidatesTags: () => [
         { type: 'projects', id: 'LIST' },
         { type: 'kanBanTask', id: 'LIST' },
@@ -38,8 +37,19 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
         error ? [] : [{ type: 'project', id: projectName }],
     },
     updateProject: {
-      invalidatesTags: (result, error, { projectName, projectPatchModel }) =>
+      invalidatesTags: (
+        _result,
+        error,
+        {
+          projectName,
+          projectPatchModel,
+          // @ts-expect-error: skipInvalidate is not part of the original type
+          skipInvalidate,
+        },
+      ) =>
         error
+          ? []
+          : skipInvalidate
           ? []
           : 'active' in projectPatchModel
           ? // if active is updated, invalidate all projects
@@ -49,7 +59,6 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
               { type: 'project', id: projectName },
               { type: 'projects', id: 'LIST' },
             ],
-      transformErrorResponse: (error: any) => error.data.detail,
       // Optimistically patch project list caches so table edits update instantly.
       async onQueryStarted({ projectName, projectPatchModel }, { dispatch, queryFulfilled }) {
         const patches = [

@@ -47,7 +47,7 @@ const ProjectsSearchFilterWrapper: FC<ProjectsSearchFilterWrapperProps> = ({
         onFinish={handleFinish}
         enableMultipleSameFilters={false}
         enableGlobalSearch={true}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         pt={{
           searchBar: {
             onClickCapture: (e) => dateRange.handleSearchBarClickCapture(e, localFilters),

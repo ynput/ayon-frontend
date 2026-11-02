@@ -7,7 +7,7 @@ import {
   SearchFilterRef,
 } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { type QueryFilter, UserModel } from '@shared/api'
+import type { QueryFilter, UserModel } from '@shared/api'
 import {
   subtasksFilterToClientFilters,
   clientFiltersToSubtasksFilter,
@@ -142,7 +142,7 @@ const SubtasksSearchFilter: FC<SubtasksSearchFilterProps> = ({
         onFinish={handleFinish}
         enableGlobalSearch
         enableMultipleSameFilters={false}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         onSearchChange={handleLiveSearch}
         quickActions={quickActions}
         placeholder="Search and filter subtasks..."

@@ -1,4 +1,4 @@
-import { ColumnStats } from '@shared/api/generated'
+import type { ColumnStats } from '@shared/api/generated'
 // Shape of the backend GraphQL `ColumnStats` (connection.fieldStats).
 // `sum` and `distribution` are typed ahead of backend support so wiring them is a no-op.
 export interface FieldStats extends ColumnStats {
@@ -31,6 +31,22 @@ export const canonicalColumnId = (name: string): string => {
   return snakeToCamel(name)
 }
 
+// list_of_strings attrs arrive as one bucket keyed by the whole array serialized
+// to text (backend GROUP BY on attrib->>'name'); split it so each element counts.
+const toDistributionValues = (v: unknown): unknown[] => {
+  if (Array.isArray(v)) return v
+  if (typeof v === 'string') {
+    const t = v.trim()
+    if (t.startsWith('[') && t.endsWith(']')) {
+      try {
+        const parsed = JSON.parse(t)
+        if (Array.isArray(parsed)) return parsed
+      } catch {}
+    }
+  }
+  return [v]
+}
+
 const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
   if (raw == null) return undefined
   let value = raw
@@ -46,7 +62,7 @@ const normalizeDistribution = (raw: unknown): FieldStats['distribution'] => {
     const byValue = new Map<string, { value: string; count: number }>()
     for (const d of value) {
       if (!d || d.value == null) continue
-      const vals = Array.isArray(d.value) ? d.value : [d.value]
+      const vals = toDistributionValues(d.value)
       for (const raw of vals) {
         const v = String(raw)
         const prev = byValue.get(v)
@@ -177,10 +193,4 @@ export const combineFieldStats = (
     out.set(id, p ? combineTwo(p, g) : g)
   }
   return [...out.values()]
-}
-
-export const transformStatsError = (error: any, entityType: string): string => {
-  const message = error?.message ?? 'Unknown stats error'
-  console.error(`Error fetching ${entityType} stats:`, error)
-  return message
 }

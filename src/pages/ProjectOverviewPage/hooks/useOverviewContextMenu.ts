@@ -4,22 +4,28 @@ import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
   TableCellContextData,
+  useAddonEntityMenuItems,
   useColumnSettingsContext,
 } from '@shared/containers/ProjectTreeTable'
 import { useCallback } from 'react'
 import { toast } from 'react-toastify'
-import { useMoveEntityContext, useProjectFoldersContext } from '@shared/context'
+import { useProjectFoldersContext } from '@shared/context'
+import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 
-type OverviewContextMenuProps = {}
+type OverviewContextMenuProps = {
+  openMoveDialog: OpenMoveDialog
+}
 
-const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  const { openMoveDialog } = useMoveEntityContext()
   // lists data
   const { menuItems: menuItemsAddToList } = useEntityListsContext()
 
   const { folders } = useProjectFoldersContext()
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonTopItems = useAddonEntityMenuItems('overview', 'top')
+  const addonItems = useAddonEntityMenuItems('overview')
 
   // right click on a group header to un group the tasks
   const unGroupTasksItem: ContextMenuItemConstructor = useCallback(
@@ -123,6 +129,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
 
   // inject in custom add to list context menu items
   const contextMenuItems: ContextMenuItemConstructors = [
+    addonTopItems,
     'copy-paste',
     'show-details',
     'rename',
@@ -136,6 +143,7 @@ const useOverviewContextMenu = ({}: OverviewContextMenuProps) => {
     moveItem,
     'create-folder',
     'create-task',
+    addonItems,
     'delete',
   ]
 

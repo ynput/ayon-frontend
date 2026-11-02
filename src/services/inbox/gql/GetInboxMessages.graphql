@@ -1,8 +1,15 @@
-query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $cursor: String) {
+query GetInboxMessages(
+  $last: Int
+  $active: Boolean
+  $important: Boolean
+  $unread: Boolean
+  $cursor: String
+) {
   inbox(
     last: $last
     showActiveMessages: $active
     showImportantMessages: $important
+    showUnreadMessages: $unread
     before: $cursor
   ) {
     pageInfo {
@@ -33,9 +40,7 @@ fragment MessageFragment on ActivityNode {
   read
   author {
     name
-    attrib {
-      fullName
-    }
+    attrib(names: ["fullName"])
   }
   origin {
     id

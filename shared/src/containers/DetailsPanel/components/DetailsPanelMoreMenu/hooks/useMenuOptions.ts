@@ -1,23 +1,36 @@
 import { useMemo } from 'react'
-import type { MenuItemType } from '@shared/components'
-import type { DetailsPanelEntityListsContext, SelectedEntityRef } from '../types'
+import { entityUrl } from '@ynput/ayon-addon'
+import type { MenuItemType } from '@shared/components/Menu/Menu'
+import type { DeletableEntity } from '@shared/context'
+import { pluralize } from '@shared/util'
+import type { DetailsPanelEntityListsContext, SelectedEntityRef, ListEntityRef } from '../types'
 
 interface UseMenuOptionsParams {
   entityType: string
   entityId?: string
   projectName?: string
   selectedEntities: SelectedEntityRef[]
+  // resolved delete target — drives both the delete gate and its label so they
+  // stay in sync with whatever is actually deleted (cell selection in the tree table)
+  deleteEntities: DeletableEntity[]
   canUploadThumbnail: boolean
   canUploadVersion: boolean
   canOpenPip: boolean
   canOpenViewer: boolean
+  canDelete: boolean
   entityListsContext: DetailsPanelEntityListsContext | undefined
+  // items addons contribute (detailsPanel.menuItem slot), shown before "View data"
+  /** first in the menu (addon items with position `top`) */
+  extraTopItems?: MenuItemType[]
+  /** after the menu's own actions, above View data and Delete */
+  extraItems?: MenuItemType[]
   onPip: () => void
   onOpenViewer: () => void
   onUploadThumbnail: () => void
   onUploadVersion: () => void
   onShare: (link: string) => void
   onViewData: () => void
+  onDelete: () => void
 }
 
 export interface MenuOptionsResult {
@@ -25,88 +38,40 @@ export interface MenuOptionsResult {
   shareLink: string | null
 }
 
-// folder/task open in Overview; product/version/representation open in Products.
 const buildEntityShareLink = (
   entityType: string,
   entityId: string,
   projectName: string,
 ): string | null => {
-  const path =
-    entityType === 'folder' || entityType === 'task'
-      ? 'overview'
-      : entityType === 'product' || entityType === 'version' || entityType === 'representation'
-        ? 'products'
-        : null
-  if (!path) return null
+  const url = entityUrl({ entityType, id: entityId, projectName })
+  if (!url) return null
   const origin = typeof window !== 'undefined' ? window.location.origin : ''
-  return `${origin}/projects/${projectName}/${path}?project=${projectName}&type=${entityType}&id=${entityId}`
+  return `${origin}${url}`
 }
-
-/**
- * Recursively walk the add-to-list tree and disable any leaf whose id matches a
- * review-session list. Folder containers stay enabled but their disabled review
- * leaves render greyed out with an explanatory tooltip (YN-0683 / issue #1947).
- */
-const markReviewLeavesDisabled = (
-  items: MenuItemType[],
-  reviewListIds: Set<string>,
-): MenuItemType[] =>
-  items.map((item) => {
-    const children = Array.isArray(item.items) ? item.items : undefined
-    if (children?.length) {
-      return { ...item, items: markReviewLeavesDisabled(children, reviewListIds) }
-    }
-    if (item.id && reviewListIds.has(item.id)) {
-      return {
-        ...item,
-        disabled: true,
-        ['data-tooltip' as any]: 'No reviewables on selected version',
-      }
-    }
-    return item
-  })
-
-/**
- * The EntityLists context emits PrimeReact-style menu items with a `command` field
- * for click handlers. The shared Menu component calls `onClick`. Translate the field
- * recursively so nested items (folder hierarchies, "+ New list", etc.) actually fire
- * their handlers when clicked.
- */
-const adoptCommandsAsOnClick = (items: MenuItemType[]): MenuItemType[] =>
-  items.map((item) => {
-    const { command, items: children, onClick: existingOnClick, ...rest } = item as any
-    const next: any = { ...rest }
-    if (Array.isArray(children) && children.length) {
-      next.items = adoptCommandsAsOnClick(children)
-    }
-    if (typeof command === 'function' || typeof existingOnClick === 'function') {
-      next.onClick = (e: React.MouseEvent) => {
-        if (item.disabled) return
-        if (typeof command === 'function') command()
-        if (typeof existingOnClick === 'function') existingOnClick(e)
-      }
-    }
-    return next as MenuItemType
-  })
 
 export const useMenuOptions = ({
   entityType,
   entityId,
   projectName,
   selectedEntities,
+  deleteEntities,
   canUploadThumbnail,
   canUploadVersion,
   canOpenPip,
   canOpenViewer,
+  canDelete,
   entityListsContext,
+  extraTopItems = [],
+  extraItems = [],
   onPip,
   onOpenViewer,
   onUploadThumbnail,
   onUploadVersion,
   onShare,
   onViewData,
+  onDelete,
 }: UseMenuOptionsParams): MenuOptionsResult => {
-  const normalizedSelected = useMemo<SelectedEntityRef[]>(() => {
+  const normalizedSelected = useMemo<ListEntityRef[]>(() => {
     if (selectedEntities.length) {
       return selectedEntities
         .filter((e) => !!e?.entityId)
@@ -121,7 +86,7 @@ export const useMenuOptions = ({
   }, [selectedEntities, entityId, entityType])
 
   return useMemo<MenuOptionsResult>(() => {
-    const items: MenuItemType[] = []
+    const items: MenuItemType[] = [...extraTopItems]
 
     if (canOpenViewer) {
       items.push({
@@ -159,63 +124,30 @@ export const useMenuOptions = ({
       })
     }
 
-    if (entityListsContext && projectName && normalizedSelected.length) {
+    if (entityListsContext?.openAddToListDialog && projectName && normalizedSelected.length) {
       const targetEntityType = normalizedSelected[0]?.entityType || entityType
-      const sourceLists =
-        targetEntityType === 'folder'
-          ? entityListsContext.folders
-          : targetEntityType === 'task'
-            ? entityListsContext.tasks
-            : targetEntityType === 'product'
-              ? entityListsContext.products
-              : targetEntityType === 'version' || targetEntityType === 'representation'
-                ? [...(entityListsContext.versions || []), ...(entityListsContext.reviews || [])]
-                : []
+      const openDialog = entityListsContext.openAddToListDialog
 
-      // YN-0683 / issue #1947: review-session lists stay visible but are disabled
-      // when no selected version has reviewables. Mirrors entity-picker behavior.
-      const anyHasReviewables = normalizedSelected.some((e) => e.hasReviewables === true)
-      const reviewListIds = new Set(
-        (entityListsContext.reviews || []).map((l) => l.id).filter(Boolean) as string[],
-      )
-      const disableReviewLeaves = !anyHasReviewables && reviewListIds.size > 0
+      items.push({
+        id: 'add-to-list',
+        label: 'Add to list',
+        icon: 'list_alt_add',
+        onClick: () => openDialog(targetEntityType, normalizedSelected),
+      })
 
-      const treeItems: MenuItemType[] =
-        entityListsContext.buildHierarchicalMenuItems?.(
-          sourceLists,
-          normalizedSelected,
-          () => true,
-        ) ?? []
-
-      const allowNewList =
-        targetEntityType === 'folder' ||
-        targetEntityType === 'task' ||
-        targetEntityType === 'version'
-
-      const newListItem = allowNewList
-        ? entityListsContext.newListMenuItem?.(
-            targetEntityType as 'folder' | 'task' | 'version',
-            normalizedSelected,
-          )
-        : undefined
-
-      const combined = [...treeItems, ...(newListItem ? [newListItem] : [])]
-      const addToList = entityListsContext.buildAddToListMenu?.(combined)
-
-      // Resolve the inner items, then translate `command` -> `onClick` recursively
-      // so leaf clicks (add-to-existing-list, create-new-list) actually fire.
-      const innerItems = addToList?.items?.length ? addToList.items : combined
-      const gatedItems = disableReviewLeaves
-        ? markReviewLeavesDisabled(innerItems, reviewListIds)
-        : innerItems
-      const wiredItems = adoptCommandsAsOnClick(gatedItems)
-
-      if (addToList && wiredItems.length) {
+      // versions/representations can also go to review-session lists; gated on reviewables (YN-0683)
+      const isVersionLike = targetEntityType === 'version' || targetEntityType === 'representation'
+      if (isVersionLike && entityListsContext.hasReviewAddon) {
+        const anyHasReviewables = normalizedSelected.some((e) => e.hasReviewables === true)
         items.push({
-          id: addToList.id || 'add-to-list',
-          label: addToList.label || 'Add to list',
-          icon: addToList.icon || 'playlist_add',
-          items: wiredItems,
+          id: 'add-to-review-list',
+          label: 'Add to session',
+          icon: 'list_alt_add',
+          disabled: !anyHasReviewables,
+          ...(anyHasReviewables
+            ? {}
+            : { ['data-tooltip' as any]: 'No reviewables on selected version' }),
+          onClick: () => openDialog(targetEntityType, normalizedSelected, { isReview: true }),
         })
       }
     }
@@ -238,6 +170,8 @@ export const useMenuOptions = ({
       })
     }
 
+    items.push(...extraItems)
+
     items.push({
       id: 'view-data',
       label: 'View data',
@@ -245,13 +179,34 @@ export const useMenuOptions = ({
       onClick: onViewData,
     })
 
+    // Delete stays at the very bottom, styled as a danger action.
+    if (canDelete && deleteEntities.length > 0) {
+      const types = new Set(deleteEntities.map((e) => e.entityType))
+      const noun = types.size === 1 ? [...types][0] : 'item'
+      const label =
+        deleteEntities.length === 1
+          ? `Delete ${noun}`
+          : `Delete ${pluralize(deleteEntities.length, noun)}`
+      items.push({
+        id: 'delete',
+        label,
+        icon: 'delete',
+        danger: true,
+        onClick: onDelete,
+      })
+    }
+
     return { items, shareLink }
   }, [
     canOpenPip,
     canOpenViewer,
     canUploadThumbnail,
     canUploadVersion,
+    canDelete,
+    deleteEntities,
     entityListsContext,
+    extraTopItems,
+    extraItems,
     projectName,
     normalizedSelected,
     entityType,
@@ -261,5 +216,6 @@ export const useMenuOptions = ({
     onUploadVersion,
     onShare,
     onViewData,
+    onDelete,
   ])
 }

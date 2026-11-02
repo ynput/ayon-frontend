@@ -1,27 +1,25 @@
 import {
   parseCellId,
-  ProjectDataProvider,
   ROW_SELECTION_COLUMN_ID,
   useSelectionCellsContext,
+  useAddonTableColumns,
 } from '@shared/containers/ProjectTreeTable'
-import { FC, useEffect, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo, useRef } from 'react'
 import { ListsProvider, useListsContext } from './context'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { Icon, Section, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { ListsDataProvider } from './context/ListsDataContext'
+import { ListsDataProvider } from './context/lists-data'
 import ListsTable from './components/ListsTable/ListsTable'
-import ListsFiltersDialog from './components/ListsFiltersDialog/ListsFiltersDialog'
-import { ListItemsDataProvider, useListItemsDataContext } from './context/ListItemsDataContext'
-import {
-  ListsAttributesProvider,
-  useListsAttributesContext,
-} from './context/ListsAttributesContext'
+import { ListItemsDataProvider } from './context/list-items-data'
+import { useListItemsDataContext } from './context/list-items-data'
+import { ListsAttributesProvider } from './context/lists-attributes'
+import { useListsAttributesContext } from './context/lists-attributes'
 import ListItemsTable from './components/ListItemsTable/ListItemsTable'
 import ListItemsFilter from './components/ListItemsFilter/ListItemsFilter'
-import { CustomizeButton } from '@shared/components'
+import { CustomizeButton, SyncButton } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import {
-  MoveEntityProvider,
   SettingsPanelProvider,
   useProjectContext,
   useSettingsPanel,
@@ -31,51 +29,68 @@ import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQuer
 import {
   CellEditingProvider,
   ColumnSettingsProvider,
-  DetailsPanelEntityProvider,
   ProjectTableProvider,
   ProjectTableQueriesProvider,
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
+  type ProjectTreeTableProps,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
 import useExtraColumns from './hooks/useExtraColumns'
 import { ListsTableSettings } from './components/ListsTableSettings/index.ts'
 import useUpdateListItems from './hooks/useUpdateListItems'
 import ReplaceListItemsDialog from './components/ReplaceListItemsDialog'
+import ListItemDataDialog from './components/ListItemDataDialog'
 import { Actions } from '@shared/containers/Actions/Actions'
-import { ListsModuleProvider } from './context/ListsModulesContext.tsx'
+import { ListsModuleProvider } from './context/lists-modules'
 import OpenReviewSessionButton from '@pages/ReviewPage/OpenReviewSessionButton.tsx'
 import { useNavigate, useParams, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store.ts'
 import { UniqueIdentifier } from '@dnd-kit/core'
 import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenViewer'
 import ListsShortcuts from './components/ListsShortcuts.tsx'
-import { useViewsContext } from '@shared/containers/index.ts'
+import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
+import { useSlicerContext, useViewsContext, useViewsState } from '@shared/containers/index.ts'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
 import api from '@shared/api/index.ts'
 import useReviewSessionCardsModules from './hooks/useReviewSessionCardsModules.tsx'
 import ReviewCardsSettings from './components/ReviewCardsSettings/ReviewCardsSettings.tsx'
-import {
-  ReviewCardsSettingsProvider,
-  useReviewCardsSettingsContext,
-} from './context/ReviewCardsSettingsContext.tsx'
+import { ReviewCardsSettingsProvider } from './context/review-cards-settings'
+import { useReviewCardsSettingsContext } from './context/review-cards-settings'
 import ProjectListsDetailsPanels from './components/ProjectListsDetailsPanels/ProjectListsDetailsPanels.tsx'
 import { getCellIdForColumn } from './util/cellIds.ts'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton.tsx'
-import useStoryboardsCardsModules from './hooks/useStoryboardsCardsModules.tsx'
-import OpenStoryboardButton from '@pages/ReviewPage/OpenStoryboardButton.tsx'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import { TableExportButton } from '@shared/containers/TableExport'
+import ListExportSource from './components/ListExportSource'
+import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
+import { ListValuesProvider, useListValuesContext } from './context/list-values'
+import { COMPARE_WITH_ENTITIES, type ListRef } from './listValues/types'
+import useCompareColumns from './hooks/useCompareColumns'
+import { CompareListPicker } from './components/ListPicker'
+import { useListsDataContext } from './context/lists-data'
+import type { ListRowContextMenuBuilder } from './hooks/useListContextMenu'
+import { useCompareLists } from './hooks/useCompareLists'
+import { isTooBigToCompare } from './listValues/compareLimit'
+import { ListValuesOutdatedButton } from './listValues/ListValuesOutdatedButton'
+import {
+  COMPARE_ENTITY_COLUMN_PREFIX,
+  COMPARE_LIST_COLUMN_PREFIX,
+  ENTITY_FIELD_COLUMNS,
+} from './listValues/columns'
+import { getEntityTypeIcon } from '@shared/util'
+import useListItemDeepLink from './hooks/useListItemDeepLink'
+import { DEFAULT_LISTS_SORT, ListsSort, resolveListsSort } from './util'
 
 type ProjectListsPageProps = {
   projectName: string
   entityListTypes?: string[]
   isReview?: boolean
-  isStoryboards?: boolean
 }
 
 // The review-addon provider renders a wrapper that doesn't fill the flex column,
@@ -98,38 +113,38 @@ const ProviderFill = styled.div`
 `
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
-  projectName,
   entityListTypes,
   isReview,
-  isStoryboards,
 }) => {
+  const [savedListsSort, setListsSort] = useViewsState<{ listsSort: ListsSort }, 'listsSort'>(
+    'listsSort',
+    DEFAULT_LISTS_SORT,
+  )
+  const { by, desc } = resolveListsSort(savedListsSort)
+  const listsSort = useMemo(() => ({ by, desc }), [by, desc])
+
   // lists page does not support grouping yet
   const modules = undefined
 
   return (
     <ReviewCardsSettingsProvider>
       <ListsModuleProvider>
-        <ProjectDataProvider projectName={projectName}>
-          <ListsDataProvider
-            entityListTypes={entityListTypes}
-            isReview={isReview}
-            isStoryboards={isStoryboards}
-          >
-            <ListsProvider isReview={isReview} isStoryboards={isStoryboards}>
-              <ListItemsDataProvider>
-                <ListsAttributesProvider>
-                  <MoveEntityProvider>
-                    <ProjectListsWithInnerProviders
-                      isReview={isReview}
-                      isStoryboards={isStoryboards}
-                      modules={modules}
-                    />
-                  </MoveEntityProvider>
-                </ListsAttributesProvider>
-              </ListItemsDataProvider>
-            </ListsProvider>
-          </ListsDataProvider>
-        </ProjectDataProvider>
+        <ListsDataProvider
+          entityListTypes={entityListTypes}
+          isReview={isReview}
+          listsSort={listsSort}
+          setListsSort={setListsSort}
+        >
+          <ListsProvider isReview={isReview}>
+            <ListsAttributesProvider>
+              <ListValuesProvider>
+                <ListItemsDataProvider>
+                  <ProjectListsWithInnerProviders isReview={isReview} modules={modules} />
+                </ListItemsDataProvider>
+              </ListValuesProvider>
+            </ListsAttributesProvider>
+          </ListsProvider>
+        </ListsDataProvider>
       </ListsModuleProvider>
     </ReviewCardsSettingsProvider>
   )
@@ -137,15 +152,14 @@ const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
 
 type ProjectListsWithInnerProvidersProps = {
   isReview?: boolean
-  isStoryboards?: boolean
   modules?: any
 }
 
 const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = ({
   isReview,
-  isStoryboards,
   modules,
 }) => {
+  const dispatch = useAppDispatch()
   const { projectName, ...projectInfo } = useProjectContext()
   const {
     selectedListId,
@@ -159,6 +173,11 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   const { selectedList } = useListsContext()
   const { listAttributes } = useListsAttributesContext()
   const { resetWorkingView } = useViewsContext()
+  const { setPinnedSlice } = useSlicerContext()
+  const handleResetView = useCallback(async () => {
+    setPinnedSlice(null)
+    await resetWorkingView()
+  }, [resetWorkingView, setPinnedSlice])
   const { SubtasksManager } = useSubtasksModulesContext()
 
   // merge attribFields with listAttributes
@@ -175,13 +194,70 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
   })
   const { updateListItems } = useUpdateListItems({
     updateEntities,
+    listItemsMap: props.listItemsMap,
   })
   const { reorderListItem } = useListItemsDataContext() // Get reorderListItem
 
-  const { extraColumns, extraColumnsSettings } = useExtraColumns({
+  const listColumnConfig = useExtraColumns({
     // @ts-expect-error - we do not support product right now
     entityType: selectedList?.entityType,
   })
+
+  // list values: column header actions, entity field icons and the compare view columns
+  const { isPowerFeature } = useListValuesContext()
+  const { compareView } = props
+  const { compareColumns, compareColumnIds } = useCompareColumns({
+    attribFields,
+    compareValues: compareView.values,
+    compareLabel:
+      compareView.compareWith === COMPARE_WITH_ENTITIES
+        ? 'Entity'
+        : compareView.comparedList?.label,
+    withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
+    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
+    columnVisibility: columns.columnVisibility || {},
+    defaultColumnVisibility,
+  })
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('lists')
+  const extraColumns = useMemo(
+    () => [...listColumnConfig.extraColumns, ...compareColumns, ...addonColumns],
+    [listColumnConfig.extraColumns, compareColumns, addonColumns],
+  )
+  const extraColumnsSettings = useMemo(
+    () => [...listColumnConfig.extraColumnsSettings, ...addonSettingsColumns],
+    [listColumnConfig.extraColumnsSettings, addonSettingsColumns],
+  )
+  const { getListValueColumnMenuItems } = props
+  const columnsConfig = useMemo(() => {
+    const config: ProjectTreeTableProps['columnsConfig'] = {}
+    // with list values, these columns still show and change the entities' own values
+    if (isPowerFeature && selectedList) {
+      const { entityType } = selectedList
+      for (const id of ENTITY_FIELD_COLUMNS) {
+        config[id] = {
+          headerIcon: {
+            icon: getEntityTypeIcon(entityType),
+            tooltip: `The ${entityType}'s own value: changing it changes the ${entityType} everywhere, not only in this list`,
+          },
+        }
+      }
+    }
+    for (const { name } of attribFields) {
+      const menuItems = getListValueColumnMenuItems(name)
+      if (menuItems.length) config[`attrib_${name}`] = { menuItems }
+    }
+    // bind each compared attribute column and its compare column into one group
+    for (const id of compareColumnIds) {
+      const attrib = id.startsWith(COMPARE_ENTITY_COLUMN_PREFIX)
+        ? id.slice(COMPARE_ENTITY_COLUMN_PREFIX.length)
+        : id.slice(COMPARE_LIST_COLUMN_PREFIX.length)
+      config[`attrib_${attrib}`] = { ...config[`attrib_${attrib}`], groupEdge: 'start' }
+      config[id] = { groupEdge: 'end' }
+    }
+    return config
+  }, [attribFields, getListValueColumnMenuItems, compareColumnIds, isPowerFeature, selectedList])
 
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
@@ -191,12 +267,15 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
     [selectedList],
   )
 
+  const hiddenListIds = useMemo(() => (selectedList ? [selectedList.id] : []), [selectedList])
+
   return (
     <SettingsPanelProvider>
       <ColumnSettingsProvider
         config={columns}
         onChange={onUpdateColumns}
         defaultColumnVisibility={defaultColumnVisibility}
+        columnIdAliases={listColumnConfig.columnIdAliases}
       >
         <DndContextWrapper reorderListItem={reorderListItem}>
           {(dndActiveId) => (
@@ -209,7 +288,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 users={props.users}
                 modules={modules}
                 // @ts-ignore
-                entitiesMap={props.listItemsEntitiesMap}
+                entitiesMap={props.tableEntitiesMap}
                 foldersMap={props.foldersMap}
                 tasksMap={props.tasksMap}
                 tableRows={props.listItemsTableData}
@@ -221,30 +300,35 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
                 scopes={SCOPES}
                 playerOpen={viewerOpen}
                 onOpenPlayer={handleOpenPlayer}
-                onResetView={(selectedList?.count || 0) > 0 ? resetWorkingView : undefined}
+                onResetView={(selectedList?.count || 0) > 0 ? handleResetView : undefined}
+                hiddenListIds={hiddenListIds}
                 SubtasksManager={SubtasksManager}
                 useParams={useParams}
                 useNavigate={useNavigate}
                 useLocation={useLocation}
                 useSearchParams={useSearchParams}
+                dispatch={dispatch}
               >
-                <DetailsPanelEntityProvider>
-                  <SelectionCellsProvider>
-                    <SelectedRowsProvider>
-                      <CellEditingProvider>
-                        <ProjectLists
-                          extraColumns={extraColumns}
-                          extraColumnsSettings={extraColumnsSettings}
-                          isReview={isReview}
-                          isStoryboards={isStoryboards}
-                          dndActiveId={dndActiveId}
-                        />
-                        <ListsShortcuts />
-                        <ReplaceListItemsDialog />
-                      </CellEditingProvider>
-                    </SelectedRowsProvider>
-                  </SelectionCellsProvider>
-                </DetailsPanelEntityProvider>
+                <SelectionCellsProvider>
+                  <SelectedRowsProvider>
+                    <CellEditingProvider>
+                      <ProjectLists
+                        extraColumns={extraColumns}
+                        columnsConfig={columnsConfig}
+                        extraColumnsSettings={extraColumnsSettings}
+                        parentColumns={listColumnConfig.parentColumns}
+                        includeParents={listColumnConfig.includeParents}
+                        columnIdAliases={listColumnConfig.columnIdAliases}
+                        isReview={isReview}
+                        dndActiveId={dndActiveId}
+                      />
+                      <ListsShortcuts />
+                      <ReplaceListItemsDialog />
+                      <ListItemDataDialog />
+                      <MoveToFolderDialogContainer />
+                    </CellEditingProvider>
+                  </SelectedRowsProvider>
+                </SelectionCellsProvider>
               </ProjectTableProvider>
             </ProjectTableQueriesProvider>
           )}
@@ -256,17 +340,23 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
 
 type ProjectListsProps = {
   extraColumns: TreeTableExtraColumn[]
+  columnsConfig?: ProjectTreeTableProps['columnsConfig']
   extraColumnsSettings: any[]
+  parentColumns: ReturnType<typeof useExtraColumns>['parentColumns']
+  includeParents: ReturnType<typeof useExtraColumns>['includeParents']
+  columnIdAliases: ReturnType<typeof useExtraColumns>['columnIdAliases']
   isReview?: boolean
-  isStoryboards?: boolean
   dndActiveId?: UniqueIdentifier | null // Added prop
 }
 
 const ProjectLists: FC<ProjectListsProps> = ({
   extraColumns,
+  columnsConfig,
   extraColumnsSettings,
+  parentColumns,
+  includeParents,
+  columnIdAliases,
   isReview,
-  isStoryboards,
   dndActiveId, // Destructure new prop
 }) => {
   const dispatch = useAppDispatch()
@@ -275,16 +365,86 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { isPanelOpen, selectSetting, highlightedSetting } = useSettingsPanel()
   const { selectedList } = useListsContext()
   const {
     listItemsData,
     deleteListItemAction,
     refetch: refetchListItems,
+    onSyncData,
   } = useListItemsDataContext()
 
   const { selectedCells, setSelectedCells, setFocusedCellId, setAnchorCell, clearSelection } =
     useSelectionCellsContext()
+
+  // list values (powerpack): the compare controls and the lists sidebar's menu items
+  const { module: listValues, isPowerFeature, outdated } = useListValuesContext()
+  const { compareView } = useListItemsDataContext()
+  const { listsMap } = useListsDataContext()
+  const shownList = useMemo<ListRef | undefined>(
+    () =>
+      selectedList && {
+        id: selectedList.id,
+        label: selectedList.label,
+        entityType: selectedList.entityType,
+      },
+    [selectedList?.id, selectedList?.label, selectedList?.entityType],
+  )
+  // the list the shown one is compared with
+  const comparedListId = selectedList ? compareView.comparedList?.id : undefined
+  // compare lists from the sidebar menu
+  const { canCompareLists, compareLists } = useCompareLists()
+  const listMenuBuilders = useMemo<ListRowContextMenuBuilder[]>(
+    () => [
+      (_e, { selectedRows }) => {
+        if (selectedRows.length !== 2) return undefined
+        const [shown, compared] = selectedRows.map((id) => listsMap.get(id))
+        if (!shown || !canCompareLists(shown, compared)) return undefined
+        return {
+          label: 'Compare lists',
+          icon: 'compare_arrows',
+          disabled: isTooBigToCompare(compared),
+          powerFeature: isPowerFeature || outdated ? undefined : 'listValues',
+          command: () => compareLists(shown, compared),
+        }
+      },
+      // compare the shown list with a list right-clicked outside the selection
+      (_e, { rowId, isSelected }) => {
+        if (isSelected || rowId === comparedListId) return undefined
+        const shown = selectedList && listsMap.get(selectedList.id)
+        const compared = listsMap.get(rowId)
+        if (!shown || !canCompareLists(shown, compared)) return undefined
+        return {
+          label: 'Compare with current list',
+          icon: 'compare_arrows',
+          disabled: isTooBigToCompare(compared),
+          powerFeature: isPowerFeature || outdated ? undefined : 'listValues',
+          command: () => compareLists(shown, compared),
+        }
+      },
+    ],
+    [
+      listsMap,
+      canCompareLists,
+      compareLists,
+      isPowerFeature,
+      outdated,
+      selectedList?.id,
+      comparedListId,
+    ],
+  )
+  const getListRowTag = useCallback(
+    (listId: string) =>
+      listId === comparedListId && (
+        <Icon
+          icon="compare_arrows"
+          className="badge-icon"
+          data-tooltip={`Comparing ${selectedList?.label} with this list`}
+        />
+      ),
+    [comparedListId, selectedList?.label],
+  )
 
   const handleGoToCustomAttrib = (attrib: string) => {
     // open settings panel and highlig the attribute
@@ -296,20 +456,24 @@ const ProjectLists: FC<ProjectListsProps> = ({
 
   const pageDisplayStyle = isReview ? displayStyle : 'table' // force table view for non-review pages, as we do not have cards modules for them
 
-  const useModules = isStoryboards ? useStoryboardsCardsModules : useReviewSessionCardsModules
-
   const {
     ReviewSessionCards,
     ReviewSessionCardsProvider,
     ReviewSessionCardsControlsLeft,
     ReviewSessionCardsControlsRight,
+    useReviewSessionCards,
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
-  } = useModules({ skip: !isReview })
+  } = useReviewSessionCardsModules({ skip: !isReview })
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
   const patchListsCaches = usePatchListsCaches({ listId: selectedList?.id || '' })
+
+  // select and scroll to the items named by listItemId url params
+  const { scrollToRowId, onScrolledToRow } = useListItemDeepLink()
+  // last selection reported by the review cards
+  const cardsSelectionRef = useRef<string[]>([])
 
   // if the addon is outdated, make sure we land in table view
   useEffect(() => {
@@ -328,7 +492,11 @@ const ProjectLists: FC<ProjectListsProps> = ({
       >
         <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
-            <ListsTable isReview={isReview} isStoryboards={isStoryboards} />
+            <ListsTable
+              isReview={isReview}
+              rowContextMenuBuilders={listMenuBuilders}
+              getRowTag={getListRowTag}
+            />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={88}>
@@ -347,7 +515,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                 gridSize={gridHeight}
                 playlistView={pageDisplayStyle === 'playlist'}
                 onSelectionChange={(versionIds) => {
-                  if (versionIds.length === 0) return clearSelection()
+                  const cardsHadSelection = cardsSelectionRef.current.length > 0
+                  cardsSelectionRef.current = versionIds
+                  // the cards also report an empty selection while they load,
+                  // only clear a selection they made (keeps e.g. listItemId links selected)
+                  if (versionIds.length === 0) {
+                    if (cardsHadSelection) clearSelection()
+                    return
+                  }
 
                   const areRowsSelected = Array.from(selectedCells).some(
                     (cellId) => parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID,
@@ -404,14 +579,10 @@ const ProjectLists: FC<ProjectListsProps> = ({
               >
                 {selectedList && (
                   <Toolbar>
-                    {isStoryboards ? (
-                      <OpenStoryboardButton projectName={projectName} />
-                    ) : (
-                      <OpenReviewSessionButton
-                        projectName={projectName}
-                        disabled={listItemsData.length === 0}
-                      />
-                    )}
+                    <OpenReviewSessionButton
+                      projectName={projectName}
+                      disabled={listItemsData.length === 0}
+                    />
                     {reviewModulesLoaded && pageDisplayStyle !== 'table' && (
                       <ReviewSessionCardsControlsLeft />
                     )}
@@ -423,8 +594,24 @@ const ProjectLists: FC<ProjectListsProps> = ({
                           entityType={selectedList.entityType}
                           projectName={projectName}
                         />
+                        {!isPowerFeature && outdated ? (
+                          <ListValuesOutdatedButton outdated={outdated} />
+                        ) : (
+                          <listValues.Controls
+                            view={compareView}
+                            shownList={shownList}
+                            ListPicker={CompareListPicker}
+                          />
+                        )}
                       </>
                     )}
+                    {
+                      // sync button for list items
+                      pageDisplayStyle === 'table' && (
+                        // we do automatic patching for list and link changes 'entity_list.changed'
+                        <SyncButton onSync={onSyncData} topics={[]} />
+                      )
+                    }
                     {isReview && reviewModulesLoaded && (
                       <>
                         <Spacer />
@@ -433,11 +620,17 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         />
                       </>
                     )}
-                    <ImportDialogButton
-                      importContext="entity_list_item"
-                      projectName={projectName}
-                      folderId={selectedList?.id}
+                    <TableExportButton
+                      onImport={() =>
+                        openImportDialog(
+                          'entity_list_item',
+                          projectName,
+                          selectedList?.id,
+                          selectedList?.label,
+                        )
+                      }
                     />
+                    <ListExportSource parentColumns={parentColumns} />
                     <Actions
                       entities={[
                         {
@@ -456,7 +649,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       bundleMode={bundleMode}
                       align="right"
                     />
-                    {!reviewSessionCardsOutdated && isReview && !isStoryboards && (
+                    {!reviewSessionCardsOutdated && isReview && (
                       <TableGridPlaylistSwitch
                         value={pageDisplayStyle}
                         onChange={(style) => {
@@ -465,6 +658,14 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         }}
                       />
                     )}
+                    <AddonToolbarItems
+                      page="lists"
+                      list={{
+                        id: selectedList.id,
+                        label: selectedList.label,
+                        entityType: selectedList.entityType,
+                      }}
+                    />
                     <CustomizeButton />
                   </Toolbar>
                 )}
@@ -488,9 +689,15 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         ) : (
                           <ListItemsTable
                             extraColumns={extraColumns}
+                            extraColumnsSettings={extraColumnsSettings}
+                            parentColumns={parentColumns}
+                            includeParents={includeParents}
                             isReview={isReview && !reviewSessionCardsOutdated}
                             dndActiveId={dndActiveId} // Pass prop
                             viewOnly={(selectedList?.accessLevel || 0) < 20}
+                            columnsConfig={columnsConfig}
+                            scrollToRowId={scrollToRowId}
+                            onScrolledToRow={onScrolledToRow}
                           />
                         )}
                       </SplitterPanel>
@@ -503,10 +710,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
                         className="details"
                       >
                         <ProjectListsDetailsPanels
-                          isReview={!!isReview}
-                          isStoryboards={!!isStoryboards}
                           displayStyle={pageDisplayStyle}
                           dispatch={dispatch}
+                          useReviewSessionCards={useReviewSessionCards}
                         />
                       </SplitterPanel>
                     </DetailsPanelSplitter>
@@ -521,6 +727,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                       {pageDisplayStyle === 'table' ? (
                         <ListsTableSettings
                           extraColumns={extraColumnsSettings}
+                          parentColumns={parentColumns}
+                          columnIdAliases={columnIdAliases}
                           highlightedSetting={highlightedSetting}
                           onGoTo={handleGoToCustomAttrib}
                         />
@@ -537,7 +745,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
           </Section>
         </SplitterPanel>
       </Splitter>
-      <ListsFiltersDialog />
     </main>
   )
 }

@@ -1,4 +1,4 @@
-import { PowerpackFeature, usePowerpack } from '@shared/context'
+import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import { Button, ButtonProps, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef, MouseEvent } from 'react'
@@ -76,3 +76,5 @@ export const PowerpackButton = forwardRef<HTMLButtonElement, PowerpackButtonProp
     )
   },
 )
+
+PowerpackButton.displayName = 'PowerpackButton'

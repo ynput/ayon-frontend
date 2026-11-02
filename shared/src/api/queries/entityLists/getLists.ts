@@ -1,62 +1,30 @@
 import { entityListsApi, gqlApi } from '@shared/api/generated'
-import {
-  FetchBaseQueryError,
-  DefinitionsFromApi,
-  OverrideResultType,
-  TagTypesFromApi,
-} from '@reduxjs/toolkit/query'
+import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type {
-  EntityList,
   GetListItemsQuery,
   GetListItemsQueryVariables,
   GetListsItemsForReviewSessionQuery,
-  GetListsItemsForReviewSessionResult,
   GetListsQuery,
   GetListsQueryVariables,
-} from '@shared/api'
-import { parseAllAttribs } from '../overview'
-import { PubSub, subscribeToThumbnailUpdates, ThumbnailUpdateMessage } from '@shared/util'
+} from '@shared/api/generated'
+import { normalizeQueryError } from '@shared/api/base/queryError'
+import {
+  createRealtimeBatcher,
+  PubSub,
+  subscribeToThumbnailUpdates,
+  ThumbnailUpdateMessage,
+} from '@shared/util'
 import {
   GetListItemsResult,
+  GetListsItemsForReviewSessionResult,
   GetListsResult,
   ListItemMessage,
   ListItemsPageParam,
   ListsPageParam,
 } from './types'
+import type { EntityList } from '@shared/containers/DetailsPanel/components/DetailsPanelMoreMenu/types'
 
-// Helper function to batch pub/sub messages to avoid constant cache updates
-export function createBatchedCacheUpdater<TMessage, TDraft>(
-  updateCachedData: (updater: (draft: TDraft) => void) => void,
-  applyBatch: (draft: TDraft, batch: { topic: string; message: TMessage }[]) => void,
-  delay = 5000,
-) {
-  let queue: { topic: string; message: TMessage }[] = []
-  let timeout: ReturnType<typeof setTimeout> | null = null
-
-  const handler = (topic: string, message: TMessage) => {
-    queue.push({ topic, message })
-    if (!timeout) {
-      timeout = setTimeout(() => {
-        const batch = [...queue]
-        queue = []
-        timeout = null
-        if (batch.length > 0) {
-          updateCachedData((draft) => applyBatch(draft, batch))
-        }
-      }, delay)
-    }
-  }
-
-  handler.clear = () => {
-    if (timeout) {
-      clearTimeout(timeout)
-      timeout = null
-    }
-    queue = []
-  }
-
-  return handler
-}
+const CACHE_TIME = 10 // seconds
 
 // Helper function to safely parse entity list data field from JSON string to object
 const parseJSON = (data: string | null | undefined): Record<string, any> => {
@@ -104,6 +72,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetListItems: {
       transformResponse: (response: GetListItemsQuery): GetListItemsResult => {
@@ -113,17 +82,34 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
         }
         return {
           items: response.project.entityLists.edges.flatMap((listEdge) =>
-            listEdge.node.items.edges.map(({ node, ...edge }) => {
+            listEdge.node.items.edges.map(({ node, itemAttrib, entityAttrib, ...edge }) => {
+              // itemAttrib: entity values with the item's over them, ownItemAttrib: the item's
+              const attrib = (itemAttrib || {}) as Record<string, unknown>
+              const listAttrib = Object.fromEntries(
+                edge.ownItemAttrib.filter((key) => key in attrib).map((key) => [key, attrib[key]]),
+              )
               return {
                 ...node,
                 ...edge,
-                attrib: parseAllAttribs(edge.allAttrib),
+                listAttrib,
+                entityAttrib: (entityAttrib || {}) as Record<string, unknown>,
               } as GetListItemsResult['items'][number]
             }),
           ),
           pageInfo: firstEdge.node.items.pageInfo,
         }
       },
+      // like getListItemsInfinite, whose realtime updates invalidate these tags
+      providesTags: (result, _e, { listId, projectName }) => [
+        { type: 'entityListItem', id: 'LIST' },
+        { type: 'entityListItem', id: listId },
+        { type: 'entityListItem', id: projectName },
+        ...(result?.items || []).flatMap((item) => [
+          { type: 'entityListItem' as const, id: item.id },
+          { type: 'entityListItem' as const, id: item.entityId },
+        ]),
+      ],
+      keepUnusedDataFor: CACHE_TIME,
     },
     GetListsItemsForReviewSession: {
       transformResponse: (
@@ -134,6 +120,7 @@ const getListsGqlApiEnhanced = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
           pageInfo: response.project.entityLists.pageInfo,
         }
       },
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -174,7 +161,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 
           if (result.error) {
             // Preserve original error (e.g. 403) so the UI can react accordingly
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -190,7 +177,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => {
@@ -208,15 +195,16 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         { projectName },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData },
       ) {
-        const topics = ['entity_list.changed', 'entity_list.created', 'entity_list.deleted']
-        let handlePubSub: any = null
-        try {
-          // wait for the initial query to resolve before proceeding
-          await cacheDataLoaded
+        const topics = new Set([
+          'entity_list.changed',
+          'entity_list.created',
+          'entity_list.deleted',
+        ])
+        let token: any
 
-          handlePubSub = createBatchedCacheUpdater<ListItemMessage, any>(
-            updateCachedData,
-            (draft, batch) => {
+        const batcher = createRealtimeBatcher(
+          (batch: { topic: string; message: ListItemMessage }[]) => {
+            updateCachedData((draft: any) => {
               batch.forEach(({ topic, message }) => {
                 const summary = message.summary
                 const id = summary.id
@@ -224,56 +212,62 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 
                 const getListFromSummary = (list?: EntityList): EntityList => {
                   return {
-                    // defaults
                     projectName: projectName,
                     tags: [],
                     data: {},
                     allAttrib: '',
                     attrib: {},
                     createdAt: new Date().toISOString(),
-                    updatedAt: '',
                     active: true,
                     access: '',
-                    accessLevel: 30, // default admin
-                    // existing data
+                    accessLevel: 30,
                     ...(list || {}),
-                    // new data
                     id: summary.id as string,
                     label: summary.label,
                     entityType: summary.entity_type,
                     entityListType: summary.entity_list_type,
                     count: summary.count,
+                    entityListFolderId: summary.entity_list_folder_id ?? null,
+                    // the event's own timestamps have no timezone, so the client clock is the closer estimate
+                    updatedAt: new Date().toISOString(),
+                    owner: list?.owner || '', // mainly to shut up typescript
                   }
                 }
 
                 if (topic === 'entity_list.changed') {
-                  // update the data of existing list in cache
                   const list = draft.pages
                     .flatMap((page: any) => page.lists)
-                    .find((l: any) => l.id === id)
+                    .find((item: any) => item.id === id)
                   if (!list) return
-                  const newList = getListFromSummary(list)
-
-                  Object.assign(list, newList)
+                  Object.assign(list, getListFromSummary(list))
                 } else if (topic === 'entity_list.created') {
-                  // Add new list to the cache using basic summary
-                  const newList = getListFromSummary()
-                  // Insert the new list at the beginning of the first page
-                  if (draft.pages.length !== 0) {
-                    draft.pages[0].lists.unshift(newList)
+                  // a refetch may have brought the new list already
+                  const known = draft.pages.some((page: any) =>
+                    page.lists.some((item: any) => item.id === id),
+                  )
+                  if (draft.pages.length !== 0 && !known) {
+                    draft.pages[0].lists.unshift(getListFromSummary())
                   }
                 } else if (topic === 'entity_list.deleted') {
-                  // delete the list from the cache
                   draft.pages.forEach((page: any) => {
-                    page.lists = page.lists.filter((l: any) => l.id !== id)
+                    page.lists = page.lists.filter((item: any) => item.id !== id)
                   })
                 }
               })
-            },
-            10000, // 10 seconds debounce/batch window
-          )
+            })
+          },
+          ({ topic, message }) => `${topic}:${message.summary?.id ?? ''}`,
+        )
+        try {
+          // wait for the initial query to resolve before proceeding
+          await cacheDataLoaded
 
-          topics.forEach((topic) => PubSub.subscribe(topic, handlePubSub))
+          const handlePubSub = (topic: string, message: ListItemMessage) => {
+            if (!topics.has(topic) || !message?.summary?.id) return
+            batcher.add({ topic, message })
+          }
+
+          token = PubSub.subscribe('entity_list', handlePubSub)
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`,
           // in which case `cacheDataLoaded` will throw
@@ -281,9 +275,10 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         // cacheEntryRemoved will resolve when the cache subscription is no longer active
         await cacheEntryRemoved
         // perform cleanup steps once the `cacheEntryRemoved` promise resolves
-        topics.forEach((t) => PubSub.unsubscribe(t))
-        if (handlePubSub && typeof handlePubSub.clear === 'function') handlePubSub.clear()
+        PubSub.unsubscribe(token)
+        batcher.clear()
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getListItemsInfinite: build.infiniteQuery<
       GetListItemsResult,
@@ -338,7 +333,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           )
 
           if (result.error) {
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -354,7 +349,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result, _e, { listId, projectName }) => [
@@ -379,6 +374,14 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         { cacheDataLoaded, cacheEntryRemoved, dispatch, updateCachedData },
       ) {
         let token, token2
+        const batcher = createRealtimeBatcher(
+          (items: { id: string }[]) => {
+            dispatch(
+              gqlApi.util.invalidateTags(items.map(({ id }) => ({ type: 'entityListItem', id }))),
+            )
+          },
+          ({ id }) => id,
+        )
         let unsubscribeThumbnails: (() => void) | undefined
         try {
           // wait for the initial query to resolve before proceeding
@@ -413,16 +416,12 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           const listTopic = `entity_list.changed`
           const entityTypeTopic = `entity.${entityType}`
 
-          const invalidateListItems = (id: string) => {
-            dispatch(gqlApi.util.invalidateTags([{ type: 'entityListItem', id: id }]))
-          }
-
           const handleListMessage = (topic: string, message: ListItemMessage) => {
             if (topic !== listTopic) return
             const summary = message.summary
             const id = summary.id
             if (!id) return
-            invalidateListItems(id)
+            batcher.add({ id })
           }
 
           const handleEntityMessage = (topic: string, message: ListItemMessage) => {
@@ -431,7 +430,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
             const id = summary.entityId
             // check for id
             if (!id) return
-            invalidateListItems(id)
+            batcher.add({ id })
           }
 
           // sub to websocket topic
@@ -449,7 +448,9 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
         if (unsubscribeThumbnails) {
           unsubscribeThumbnails()
         }
+        batcher.clear()
       },
+      keepUnusedDataFor: CACHE_TIME,
     }),
     getListsItemsForReviewSession: build.infiniteQuery<
       GetListsItemsForReviewSessionResult,
@@ -486,7 +487,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           )
 
           if (result.error) {
-            return { error: result.error as FetchBaseQueryError }
+            return { error: normalizeQueryError(result.error) }
           }
 
           return {
@@ -502,7 +503,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           }
         } catch (e: any) {
           console.error('Error in getListsInfinite queryFn:', e)
-          return { error: { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(e) }
         }
       },
       providesTags: (result) => [
@@ -512,6 +513,7 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
           id: list.id,
         })),
       ],
+      keepUnusedDataFor: CACHE_TIME,
     }),
   }),
 })
@@ -532,6 +534,7 @@ export const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
             ]
           : []),
       ],
+      keepUnusedDataFor: CACHE_TIME,
     },
   },
 })
@@ -543,6 +546,7 @@ export const {
   useGetListItemsInfiniteInfiniteQuery,
   useGetListsItemsForReviewSessionInfiniteQuery,
   useLazyGetListsItemsForReviewSessionQuery,
+  useGetListItemsQuery,
   useLazyGetListItemsQuery,
 } = getListsGqlApiInjected
 

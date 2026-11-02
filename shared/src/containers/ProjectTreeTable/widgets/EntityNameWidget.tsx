@@ -1,9 +1,10 @@
 import { Button, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import clsx from 'clsx'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../types/columnConfig'
-import { EntityIcon } from '@shared/components/EntityIcon'
+import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
+import type { EntityData } from '../types/table'
+import { WRAP_MIN_ROW_HEIGHT } from '../constants'
 
 const Expander = styled(Button)`
   &.expander {
@@ -32,11 +33,17 @@ const StyledContentWrapper = styled.div`
   height: 32px;
   overflow: hidden;
   position: relative;
+
+  &.stacked {
+    height: 100%;
+  }
 `
 
 const StyledContentAbsolute = styled.div`
   position: absolute;
   inset: 0;
+  display: flex;
+  align-items: center;
 `
 
 const StyledContent = styled.div`
@@ -50,6 +57,11 @@ const StyledContent = styled.div`
   width: fit-content;
   max-width: 100%;
   height: 100%;
+
+  &.stacked {
+    height: auto;
+    max-height: 100%;
+  }
 
   /* &:hover {
     &,
@@ -99,6 +111,14 @@ const StyledTextContent = styled.div`
     min-width: 0;
   }
 
+  &.stacked .label {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    white-space: normal;
+    word-break: break-word;
+  }
+
   .divider {
     ${theme.bodyMedium}
     font-size: 14px;
@@ -109,12 +129,9 @@ const StyledTextContent = styled.div`
 
 type EntityNameWidgetProps = {
   id: string
-  label: string
-  name: string
+  entity: EntityData
   path?: string | null
   isExpandable?: boolean
-  entityType: string
-  subType?: string | null
   isExpanded: boolean
   toggleExpandAll: (id: string) => void
   toggleExpanded: () => void
@@ -124,12 +141,9 @@ type EntityNameWidgetProps = {
 
 export const EntityNameWidget = ({
   id,
-  label,
-  name,
+  entity,
   path,
   isExpandable,
-  entityType,
-  subType,
   isExpanded,
   toggleExpandAll,
   toggleExpanded,
@@ -137,11 +151,12 @@ export const EntityNameWidget = ({
   columnDisplayConfig,
 }: EntityNameWidgetProps) => {
   // Check if this is a restricted access entity
-  const isRestricted = isEntityRestricted(entityType)
+  const isRestricted = isEntityRestricted(entity.entityType)
 
   // Determine layout based on row height
-  // < 50px = single line (compact), >= 50px = stacked
-  const isCompact = rowHeight < 50
+  // below the wrap threshold = single line (compact), above = stacked
+  const isCompact = rowHeight < WRAP_MIN_ROW_HEIGHT
+  const layout = isCompact ? 'compact' : 'stacked'
 
   // Determine if path should be shown based on display configuration
   // Check layout-specific setting first, then general setting
@@ -150,7 +165,7 @@ export const EntityNameWidget = ({
   const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
   return (
-    <StyledEntityNameWidget>
+    <StyledEntityNameWidget className={layout}>
       {isExpandable ? (
         <Expander
           onClick={(e) => {
@@ -166,18 +181,25 @@ export const EntityNameWidget = ({
           icon={isExpanded ? 'expand_more' : 'chevron_right'}
         />
       ) : null}
-      <StyledContentWrapper>
+      <StyledContentWrapper className={layout}>
         <StyledContentAbsolute>
-          <StyledContent>
-            <EntityIcon entity={{ entityType, subType: subType || undefined }} />
-            <StyledTextContent className={clsx({ compact: isCompact })}>
+          <StyledContent className={layout}>
+            <EntityIcon
+              entity={{
+                entityType: entity.entityType,
+                subType: 'subType' in entity ? entity.subType : undefined,
+              }}
+              icon={entity.icon || undefined}
+              color={entity.color || undefined}
+            />
+            <StyledTextContent className={layout}>
               {shouldShowPath && !isRestricted && (
                 <span className="path">
                   {path}
                   {isCompact && path ? '/' : ''}
                 </span>
               )}
-              <span className="label">{label || name}</span>
+              <span className="label">{entity.label || entity.name}</span>
             </StyledTextContent>
           </StyledContent>
         </StyledContentAbsolute>

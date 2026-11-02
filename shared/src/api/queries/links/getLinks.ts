@@ -8,13 +8,20 @@ import {
   GetSearchedWorkfilesQuery,
   gqlLinksApi,
 } from '@shared/api/generated'
-import PubSub from '@shared/util/pubsub'
+import { createRealtimeBatcher, PubSub } from '@shared/util'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 export const ENTITIES_INFINITE_QUERY_COUNT = 50 // Number of items to fetch per page
 
 // Define page param type for infinite query
 type EntitySearchPageParam = {
   cursor: string
+}
+
+export type EntityLinkThumbnail = {
+  entityType: string
+  entityId: string
+  thumbnailHash?: string
 }
 
 export type SearchEntityLink = {
@@ -26,6 +33,9 @@ export type SearchEntityLink = {
   icon: string | undefined
   subType: string | undefined
   hasReviewables?: boolean
+  taskName?: string
+  // representations have none, products use their featured version's
+  thumbnail?: EntityLinkThumbnail
 }
 
 export type GetSearchedEntitiesLinksResult = {
@@ -39,6 +49,8 @@ export type GetSearchedEntitiesLinksArgs = {
   search?: string
   parentIds?: string[] // Optional parent IDs to filter entities
   sortBy?: string
+  hasReviewables?: boolean // products and versions only
+  includeTask?: boolean // products and versions only
 }
 
 type GetSearchedEntity =
@@ -56,6 +68,17 @@ type SearchedRepresentationNode =
   GetSearchedRepresentationsQuery['project']['representations']['edges'][0]['node']
 type SearchedWorkfileNode = GetSearchedWorkfilesQuery['project']['workfiles']['edges'][0]['node']
 
+type ThumbnailNode = { id: string; thumbnailHash?: string | null }
+
+// thumbnails are inherited (a folder can serve a child's), so we never gate on thumbnailId
+const getNodeThumbnail = (
+  entityType: string,
+  node?: ThumbnailNode | null,
+): EntityLinkThumbnail | undefined =>
+  node
+    ? { entityType, entityId: node.id, thumbnailHash: node.thumbnailHash || undefined }
+    : undefined
+
 const injectedQueries = gqlLinksApi.injectEndpoints({
   endpoints: (build) => ({
     getSearchedEntitiesLinks: build.infiniteQuery<
@@ -72,9 +95,11 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
         },
       },
       providesTags: [{ type: 'linkSearchItem', id: 'LIST' }],
+      keepUnusedDataFor: 5,
       queryFn: async ({ queryArg, pageParam }, api) => {
         try {
-          const { projectName, entityType, search, parentIds } = queryArg
+          const { projectName, entityType, search, parentIds, hasReviewables, includeTask } =
+            queryArg
           const { cursor } = pageParam
 
           // Build query variables
@@ -90,6 +115,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
 
           variables.search = search || ''
           variables.parentIds = parentIds
+          variables.hasReviewables = hasReviewables
+          variables.includeTask = !!includeTask
 
           let result: GetSearchedEntity
           // Use the appropriate generated query based on entity type
@@ -173,6 +200,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: taskNode.label || taskNode.name,
                     parents: taskNode.parents || [],
                     subType: taskNode.subType,
+                    thumbnail: getNodeThumbnail('task', taskNode),
                   }
                 case 'folder':
                   const folderNode = node as SearchedFolderNode
@@ -183,6 +211,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: folderNode.label || folderNode.name,
                     parents: folderNode.parents || [],
                     subType: folderNode.subType,
+                    thumbnail: getNodeThumbnail('folder', folderNode),
                   }
                 case 'product':
                   const productNode = node as SearchedProductNode
@@ -193,6 +222,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: productNode.name,
                     parents: productNode.parents || [],
                     subType: productNode.subType,
+                    taskName: productNode.featuredVersion?.task?.name,
+                    thumbnail: getNodeThumbnail('version', productNode.featuredVersion),
                   }
                 case 'version':
                   const versionNode = node as SearchedVersionNode
@@ -203,6 +234,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     label: versionNode.name,
                     parents: versionNode.parents || [],
                     hasReviewables: versionNode.hasReviewables,
+                    taskName: versionNode.task?.name,
+                    thumbnail: getNodeThumbnail('version', versionNode),
                   }
                 case 'representation':
                   const representationNode = node as SearchedRepresentationNode
@@ -221,6 +254,7 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
                     name: workfileNode.name,
                     label: workfileNode.name,
                     parents: workfileNode.parents || [],
+                    thumbnail: getNodeThumbnail('workfile', workfileNode),
                   }
                 default:
                   return null
@@ -240,41 +274,8 @@ const injectedQueries = gqlLinksApi.injectEndpoints({
           }
         } catch (error: any) {
           console.error('Error in getSearchedEntitiesLinks queryFn:', error)
-          return { error: { status: 'FETCH_ERROR', error: error.message } as FetchBaseQueryError }
+          return { error: normalizeQueryError(error) }
         }
-      },
-      // Subscribe to link.created and link.deleted WebSocket events
-      async onCacheEntryAdded({ projectName }, { cacheDataLoaded, cacheEntryRemoved, dispatch }) {
-        let token: any
-
-        try {
-          await cacheDataLoaded
-
-          const handlePubSub = async (_topic: string, message: any) => {
-            // Only react to link.created and link.deleted events for this project
-            if (!_topic.startsWith('link.created') && !_topic.startsWith('link.deleted')) return
-            if (message?.project !== projectName) return
-
-            // Link events have inputId and outputId in the summary
-            const inputId = message?.summary?.inputId
-            const outputId = message?.summary?.outputId
-            if (!inputId && !outputId) return
-
-            // Invalidate the search query cache when a link is created or deleted
-            // This ensures the search results are fresh and don't show stale data
-            dispatch(gqlLinksApi.util.invalidateTags([{ type: 'linkSearchItem', id: 'LIST' }]))
-          }
-
-          // Subscribe to link events
-          // NOTE: backend emits topics like 'link.created' and 'link.deleted'.
-          // PubSub supports prefix matching when subscribing.
-          token = PubSub.subscribe('link', handlePubSub)
-        } catch (e) {
-          // cache entry removed before loaded - ignore
-        }
-
-        await cacheEntryRemoved
-        if (token) PubSub.unsubscribe(token)
       },
     }),
   }),

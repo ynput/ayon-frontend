@@ -1,9 +1,10 @@
-import { AttributeData } from '@shared/api'
+import type { AttributeData } from '@shared/api'
 import { Cell, Row, RowData } from '@tanstack/react-table'
 import { BooleanWidget } from '../ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '../ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '../ProjectTreeTable/widgets/EnumWidget'
 import { TextWidget, TextWidgetType } from '../ProjectTreeTable/widgets/TextWidget'
+import { hasEnumOptions } from '@shared/util'
 
 export type ListTableAttributeType = NonNullable<AttributeData['type']>
 
@@ -35,7 +36,7 @@ export type ListTableDataTypeWidgets<TData extends RowData> = Partial<
   Record<ListTableAttributeType, ListTableWidgetRenderer<TData>>
 >
 
-const isEnumAttribute = (attributeData?: AttributeData) => !!attributeData?.enum?.length
+const isEnumAttribute = (attributeData?: AttributeData) => hasEnumOptions(attributeData)
 
 const stringifyScalarValue = (value: unknown) => {
   if (value === null || value === undefined) return ''
@@ -68,7 +69,6 @@ const renderEnumWidget = <TData extends RowData>({
   return (
     <EnumWidget
       value={enumValue}
-      //   @ts-expect-error -- just between icon prop
       options={attributeData.enum || []}
       type={attributeData.type}
       isEditing={isEditing}
@@ -121,6 +121,9 @@ const booleanWidgetRenderer = <TData extends RowData>(
 const dateWidgetRenderer = <TData extends RowData>(
   context: ListTableWidgetRenderContext<TData>,
 ) => {
+  const midnightExclusiveFields = (context.row.original as { midnightExclusiveFields?: string[] })
+    .midnightExclusiveFields
+
   return (
     <DateWidget
       value={typeof context.value === 'string' ? context.value : undefined}
@@ -128,6 +131,7 @@ const dateWidgetRenderer = <TData extends RowData>(
       isReadOnly={context.isReadOnly}
       onCancelEdit={context.stopEditing}
       onChange={(nextValue) => context.updateValue(nextValue)}
+      isMidnightExclusive={midnightExclusiveFields?.includes(context.columnId) ?? false}
     />
   )
 }

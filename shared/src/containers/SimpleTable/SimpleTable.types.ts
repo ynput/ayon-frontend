@@ -2,6 +2,7 @@ import { Row, RowData, Table } from '@tanstack/react-table'
 import { ContextMenuItemType } from '../ContextMenu'
 import { SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { RankingInfo } from '@tanstack/match-sorter-utils'
+import type { ShortcutTable } from '@ynput/ayon-addon'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -9,7 +10,7 @@ declare module '@tanstack/react-table' {
     fuzzy: (
       row: Row<any>,
       columnId: string,
-      searchValue: string,
+      searchValue: string[][],
       addMeta: (meta: any) => void,
     ) => boolean
   }
@@ -55,6 +56,7 @@ export type SimpleTableRow = {
   isDisabled?: boolean
   disabledMessage?: string
   inactive?: boolean
+  badge?: string | React.ReactNode
 }
 
 export type SimpleTableRowContextMenuContext = {
@@ -62,6 +64,7 @@ export type SimpleTableRowContextMenuContext = {
   rowIndex: number
   row: Row<SimpleTableRow>
   selectedRows: string[]
+  selectedTableRows: Row<SimpleTableRow>[]
   isSelected: boolean
 }
 
@@ -83,14 +86,21 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   meta?: Record<string, any>
   rowHeight?: number // height of each row, used for virtual scrolling
   imgRatio?: number
+  imgPosition?: 'start' | 'end'
   onScrollBottom?: () => void // callback fired when scrolled to the bottom of the table
+  scrollToRowId?: string // scrolled into view and focused once, when the row first shows
   onRename?: (id: string, row: Row<SimpleTableRow>) => void
   renamingId?: string | null
+  renameInitialValue?: string
   onSubmitRename?: (id: string, value: string) => void
   onCancelRename?: () => void
   onRowDoubleClick?: (id: string, row: Row<SimpleTableRow>) => void
+  onRowOptionClick?: (row: SimpleTableRow, selectedRows: string[]) => void
   fitContent?: boolean
+  rowIdPrefix?: string // namespaces rendered row DOM ids (multiple tables can share row ids)
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
+  // addon keyboard shortcuts on the rows (table.shortcut slot): which table this is
+  addonShortcuts?: { table: ShortcutTable; projectName: string | null }
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,

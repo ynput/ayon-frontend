@@ -9,16 +9,15 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
-import { useGetAccessGroupsQuery } from '@queries/accessGroups/getAccessGroups'
+import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 import { isEqual } from 'lodash'
-import {
-  useGetAccessGroupQuery,
-  useGetAccessGroupSchemaQuery,
-} from '@queries/accessGroups/getAccessGroups'
 import {
   useDeleteAccessGroupMutation,
   useSaveAccessGroupMutation,
-} from '@queries/accessGroups/updateAccessGroups'
+  useGetAccessGroupsQuery,
+  useGetAccessGroupQuery,
+  useGetAccessGroupSchemaQuery,
+} from '@shared/api'
 import { confirmDelete } from '@shared/util'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
@@ -34,9 +33,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
     },
     { skip: !accessGroupName },
   )
-  const { data: schema } = useGetAccessGroupSchemaQuery(
-    projectName ? { projectName } : {},
-  )
+  const { data: schema } = useGetAccessGroupSchemaQuery(projectName ? { projectName } : {})
 
   const { data: accessGroupList = [] } = useGetAccessGroupsQuery({
     projectName: projectName || '_',
@@ -68,11 +65,10 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
       await saveAccessGroup({
         accessGroupName,
         projectName: projectName || '_',
-        data: formData,
+        permissions: formData,
       }).unwrap()
       toast.success('Project access group settings saved')
     } catch (err) {
-      console.error(err)
       toast.error('Unable to save access group')
     }
   }
@@ -91,6 +87,9 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   // This conditions checks if there are any local (NOT global) project settings for user group
   const noLocalSettings = projectName && !isProjectLevel
 
+  // a pasted section with other keys would save a broken access group
+  const onPasteValue = useSettingsPaste(formData, setFormData, { strict: true })
+
   const permissionsEditor = useMemo(() => {
     return (
       <SettingsEditor
@@ -101,10 +100,11 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         level={projectName ? 'project' : 'studio'}
         context={{
           headerProjectName: projectName,
+          onPasteValue,
         }}
       />
     )
-  }, [schema, originalData, formData, projectName, setFormData])
+  }, [schema, originalData, formData, projectName, setFormData, onPasteValue])
 
   return (
     <Section style={{ flex: 2 }}>

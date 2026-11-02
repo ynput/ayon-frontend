@@ -1,10 +1,10 @@
-import { getEntityId } from '@shared/util'
+import { getEntityId, getRequestErrorString } from '@shared/util'
 import { formatISO } from 'date-fns'
 import { toast } from 'react-toastify'
-import { useFeedContext } from '../context/FeedContext'
-import { SavedAnnotationMetadata } from '..'
+import { useFeedContext } from '../context/feed'
+import type { SavedAnnotationMetadata } from '../index'
 import { VersionReviewFeedback } from '../components/CommentInput/types'
-import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReview'
+import { getVerbForFeedbackBody } from '../components/ActivityVersionReview/ActivityVersionReviewHelpers'
 
 // Type definitions
 interface Entity {
@@ -175,8 +175,7 @@ const useCommentMutations = ({
     // check if any of the results have errors and throw an error if so
     const errors = results.filter((result) => result.error)
     if (errors.length > 0) {
-      const errorMessage = errors[0].error?.data?.detail || 'Failed to create comment'
-      console.error(errorMessage, errors)
+      const errorMessage = getRequestErrorString(errors[0].error) || 'Failed to create comment'
       toast.error(errorMessage)
       throw new Error(errorMessage)
     }
@@ -200,6 +199,7 @@ const useCommentMutations = ({
       ...activity,
       ...updatedActivity,
       files,
+      activityData: data,
     }
 
     // we only need these args to update the cache of the original query
@@ -216,8 +216,7 @@ const useCommentMutations = ({
         ...argsForCachingMatching,
       })
     } catch (error: any) {
-      console.error(error)
-      toast.error(error?.data?.detail)
+      toast.error(getRequestErrorString(error))
       // so higher level can detect the error
       throw error
     }

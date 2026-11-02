@@ -1,19 +1,61 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useHierarchyTable } from '@shared/hooks'
+import { useHierarchyTable } from '@shared/hooks/useHierarchyTable'
 import useUsersTable from './useUsersTable'
 import useProjectAnatomySlices from './useProjectAnatomySlices'
-import { Slice, SliceData, SliceTypeField, TableData } from '../types'
-import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { SliceType } from '@shared/containers/Slicer'
-import { useSlicerContext } from '../context/SlicerContext'
+import { Slice, SliceData, SliceSort, SliceTypeField, TableData } from '../types'
+import { sortSliceRows } from '../util/sliceSort'
+import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
+import type { SliceType } from '../types'
+import { useSlicerContext, type OnSliceTypeChange } from '../context/slicer'
 import useSlicerAttributesData from './useSlicerAttributesData'
 import { useEntityListsSlice } from './useEntityListsSlice'
-import { getAttributeIcon, getEntityTypeIcon } from '@shared/util'
+import { getAttributeIcon, getEntityTypeIcon, hasEnumOptions } from '@shared/util'
 import { useProjectContext } from '@shared/context'
+import type { GroupCountsMap } from '@shared/api'
+import { UNGROUPED_VALUE } from '../../ProjectTreeTable/hooks/useBuildGroupByTableData'
 
 interface TableDataBySliceProps {
   sliceFields: SliceTypeField[]
+  usedSliceTypes?: SliceType[] // dimensions held by other panels
   entityTypes?: string[] // entity types
+  counts?: GroupCountsMap
+  filled?: number
+  countsComplete?: boolean
+  // per-panel overrides; defaults keep the single-panel (first slice) behaviour
+  sliceType?: SliceType
+  onSliceTypeChange?: OnSliceTypeChange
+  sort?: SliceSort
+}
+
+const getRowCount = (
+  row: SimpleTableRow,
+  counts: GroupCountsMap,
+  filled: number,
+  complete: boolean,
+): number | undefined => {
+  if (row.id === 'noValue') return counts.get(UNGROUPED_VALUE)?.count ?? (complete ? 0 : undefined)
+  if (row.id === 'hasValue') return complete ? filled : undefined
+  const hit = counts.get(row.id)?.count ?? (row.name ? counts.get(row.name)?.count : undefined)
+  return hit ?? (complete ? 0 : undefined)
+}
+
+const decorateBadges = (
+  rows: SimpleTableRow[],
+  counts: GroupCountsMap | undefined,
+  filled: number,
+  complete: boolean,
+): SimpleTableRow[] => {
+  if (!counts) return rows
+  return rows.map((row) => {
+    const count = getRowCount(row, counts, filled, complete)
+    return {
+      ...row,
+      badge: count != null ? String(count) : row.badge,
+      subRows: row.subRows?.length
+        ? decorateBadges(row.subRows, counts, filled, complete)
+        : row.subRows,
+    }
+  })
 }
 
 const getNoValue = (field: string): SimpleTableRow => ({
@@ -83,9 +125,23 @@ export const defaultSliceOptions: SliceTypeField[] = [
 
 const useTableDataBySlice = ({
   sliceFields,
+  usedSliceTypes = [],
   entityTypes = [],
+  counts,
+  filled = 0,
+  countsComplete = false,
+  sliceType: sliceTypeOverride,
+  onSliceTypeChange: onSliceTypeChangeOverride,
+  sort,
 }: TableDataBySliceProps): TableData => {
-  const { sliceType, onSliceTypeChange, useExtraSlices, isLoadingExtraSlices } = useSlicerContext()
+  const {
+    sliceType: contextSliceType,
+    onSliceTypeChange: contextOnSliceTypeChange,
+    useExtraSlices,
+    isLoadingExtraSlices,
+  } = useSlicerContext()
+  const sliceType = sliceTypeOverride ?? contextSliceType
+  const onSliceTypeChange = onSliceTypeChangeOverride ?? contextOnSliceTypeChange
   const { projectName } = useProjectContext()
   const { formatAttribute } = useExtraSlices()
 
@@ -101,8 +157,16 @@ const useTableDataBySlice = ({
     })
 
   const showAttributes = sliceFields.some((field) => field.value === 'attributes')
+  const slicedAttribName = sliceType?.startsWith('attrib.')
+    ? sliceType.slice('attrib.'.length)
+    : undefined
+  const enumRequest = useMemo(
+    () => (slicedAttribName ? [slicedAttribName] : []),
+    [slicedAttribName],
+  )
   const { attributes: slicerAttribs, isLoading: isLoadingAttribs } = useSlicerAttributesData({
     entityTypes,
+    request: enumRequest,
   })
 
   if (showAttributes && typeof formatAttribute === 'function') {
@@ -110,12 +174,15 @@ const useTableDataBySlice = ({
       sliceOptions.push({
         label: attr.data.title || attr.name,
         value: 'attrib.' + attr.name,
-        icon: getAttributeIcon(attr.name, attr.data.type, !!attr.data.enum?.length),
+        icon: getAttributeIcon(attr.name, attr.data.type, hasEnumOptions(attr.data)),
       }),
     )
   }
 
   const [isLoading, setIsLoading] = useState(false)
+
+  const selectedSliceAttrib = slicerAttribs.find((attr) => attr.name === slicedAttribName)
+  const isSelectedAttribLoading = !!selectedSliceAttrib?.enumIsLoading
 
   // project info
   const {
@@ -129,7 +196,11 @@ const useTableDataBySlice = ({
   } = useProjectAnatomySlices({ scopes: entityTypes, useExtraSlices })
 
   //   Hierarchy
-  const { getData: getHierarchyData, isFetching: isLoadingHierarchy } = useHierarchyTable({
+  const {
+    data: hierarchyData,
+    getData: getHierarchyData,
+    isFetching: isLoadingHierarchy,
+  } = useHierarchyTable({
     projectName: projectName || '',
     folderTypes: project?.folderTypes || [],
     includeColors: true,
@@ -144,13 +215,15 @@ const useTableDataBySlice = ({
     getData: getEntityListsData,
     isLoading: isLoadingLists,
     isExpandable: isEntityListExpandable,
-  } = useEntityListsSlice(entityTypes)
+  } = useEntityListsSlice(sliceType === 'entityList')
   const isLoadingData =
     isLoadingHierarchy ||
     isLoadingProject ||
     isUsersLoading ||
-    isLoadingExtraSlices ||
-    isLoadingAttribs
+    (isLoadingExtraSlices && sliceType !== 'hierarchy') ||
+    (isLoadingLists && sliceType === 'entityList') ||
+    isLoadingAttribs ||
+    isSelectedAttribLoading
 
   const builtInSlices: Record<SliceType, SliceData> = {
     hierarchy: {
@@ -200,7 +273,7 @@ const useTableDataBySlice = ({
   for (const attrib of slicerAttribs) {
     builtInSlices['attrib.' + attrib.name] = {
       getData: () => getAttribute(attrib),
-      isLoading: isLoadingAttribs,
+      isLoading: isLoadingAttribs || !!attrib.enumIsLoading,
       isExpandable: false,
       isAttribute: true,
     }
@@ -209,6 +282,16 @@ const useTableDataBySlice = ({
   const initSlice = { data: [], isExpandable: false }
   const [slice, setSlice] = useState<Slice>(initSlice)
   const sliceConfig = builtInSlices[sliceType]
+
+  // a stored slice type can outlive its source (deleted attribute, page that no longer
+  // offers it); fall back instead of leaving the panel permanently blank
+  const fallbackSliceType = sliceOptions.find(
+    (option) => builtInSlices[option.value] && !usedSliceTypes.includes(option.value),
+  )?.value
+  useEffect(() => {
+    if (isLoadingData || sliceConfig || !fallbackSliceType) return
+    onSliceTypeChange(fallbackSliceType, false)
+  }, [isLoadingData, sliceConfig, fallbackSliceType])
 
   const handleSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => {
     // get slice data object
@@ -240,8 +323,8 @@ const useTableDataBySlice = ({
           window.alert(
             'Slice options failed to load. This likely means the PowerFeatures addon is out of date. Please update to the latest version.',
           )
-          // setSlice type to hierarchy
-          onSliceTypeChange('hierarchy', false)
+          // hierarchy may already be taken by another panel, so use whatever is free
+          onSliceTypeChange(fallbackSliceType ?? 'hierarchy', false)
           throw new Error('Slice data is undefined')
         }
 
@@ -264,12 +347,26 @@ const useTableDataBySlice = ({
     }
 
     fetchData()
-  }, [sliceType, projectName, isLoadingData])
+  }, [sliceType, projectName, isLoadingData, sliceType === 'hierarchy' ? hierarchyData : null])
+
+  // the sort object is rebuilt on every render, so depend on its values
+  const sortBy = sort?.by
+  const sortDesc = !!sort?.desc
+  const sortedData = useMemo(
+    () =>
+      sortBy ? sortSliceRows(slice.data, sliceType, { by: sortBy, desc: sortDesc }) : slice.data,
+    [slice.data, sliceType, sortBy, sortDesc],
+  )
+
+  const dataWithBadges = useMemo(
+    () => decorateBadges(sortedData, counts, filled, countsComplete),
+    [sortedData, counts, filled, countsComplete],
+  )
 
   // from slice data, flatten into a map of ids to rows
   const sliceMap = useMemo(() => {
     const map = new Map<string, SimpleTableRow>()
-    const queue: SimpleTableRow[] = [...slice.data]
+    const queue: SimpleTableRow[] = [...dataWithBadges]
 
     while (queue.length > 0) {
       const row = queue.shift()
@@ -283,11 +380,11 @@ const useTableDataBySlice = ({
       }
     }
     return map
-  }, [slice.data])
+  }, [dataWithBadges])
 
   return {
     sliceOptions,
-    table: slice,
+    table: { ...slice, data: dataWithBadges },
     sliceMap,
     isLoading:
       (builtInSlices[sliceType] && builtInSlices[sliceType].isLoading) ||

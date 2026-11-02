@@ -6,21 +6,31 @@ import * as Styled from './DetailsPanel.styled'
 // shared
 import { useGetEntitiesDetailsPanelQuery, detailsPanelEntityTypes } from '@shared/api'
 import type { Tag, DetailsPanelEntityType, DetailsPanelEntityData } from '@shared/api'
-import { DetailsPanelDetails, EntityPath, Watchers } from '@shared/components'
-import { usePiPWindow } from '@shared/context/pip/PiPProvider'
-import { extractEntityHierarchyFromParents } from '@shared/util'
+import { DetailsPanelDetails } from '@shared/components/DetailsPanelDetails/DetailsPanelDetails'
+import { EntityPath } from '@shared/components/EntityPath/EntityPath'
+import { Watchers } from '@shared/components/Watchers/Watchers'
 import {
+  ACTIVE_ENTITIES_PRIORITY,
+  extractEntityHierarchyFromParents,
+  useRegisterActiveEntities,
+} from '@shared/util'
+import {
+  usePiPWindow,
   ProjectContextProvider,
-  ProjectModelWithProducts,
   ThumbnailUploadProvider,
   useDetailsPanelContext,
   useScopedDetailsPanel,
+  setDetailsPanelTabForScope,
+  isAddonDetailsPanelTab,
   useURIContext,
-  FeedFilter,
+  type ProjectModelWithProducts,
+  type FeedFilter,
 } from '@shared/context'
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
+import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
   DetailsPanelMoreMenu,
   type DetailsPanelEntityListsContext,
@@ -32,8 +42,9 @@ import FeedContextWrapper from './containers/FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
-
-export const entitiesWithoutFeed = ['product', 'representation']
+import { entitiesWithoutFeed } from './DetailsPanelHelpers'
+import { useAddonTabs } from './hooks/useAddonTabs'
+import { ContributionView } from '@ynput/ayon-addon'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 
@@ -46,7 +57,7 @@ export type DetailsPanelProps = {
   disabledStatuses?: string[]
   projectUsers?: User[]
   disabledProjectUsers?: string[]
-  activeProjectUsers?: string[]
+  activeProjectUsers?: User[]
   projectsInfo?: Record<string, ProjectModelWithProducts>
   projectNames?: string[]
   isSlideOut?: boolean
@@ -72,6 +83,7 @@ export type DetailsPanelProps = {
    *  structural type in shared/ so the layering rule (shared cannot import src/pages)
    *  is preserved. */
   entityListsContext?: DetailsPanelEntityListsContext
+  resolveVersionJump?: ResolveVersionJump
   // optional tab state for independent tab management
 }
 
@@ -106,6 +118,7 @@ const DetailsPanelInner = ({
   entityListId,
   guestCategories = {},
   entityListsContext,
+  resolveVersionJump,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -133,6 +146,12 @@ DetailsPanelProps) => {
     ? contextEntities.entities.map((e) => e.projectName)
     : projectNames
 
+  // let global features (e.g. the links dialog) know what is being shown
+  useRegisterActiveEntities(
+    activeEntityType ? activeEntities.map((e) => ({ ...e, entityType: activeEntityType })) : [],
+    isSlideOut ? ACTIVE_ENTITIES_PRIORITY.slideOut : ACTIVE_ENTITIES_PRIORITY.detailsPanel,
+  )
+
   // Fire onOpen callback once when component mounts and renders
   useEffect(() => {
     if (onOpen && !hasCalledOnOpen.current) {
@@ -141,12 +160,23 @@ DetailsPanelProps) => {
     }
   }, [])
 
+  // addon tabs (detailsPanel.tab slot) for this entity type
+  const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = useAddonTabs(activeEntityType)
+  const activeAddonTab = addonTabs.find((tab) => tab.key === currentTab)
+  // a stored addon tab is only known once the manifests have loaded
+  const isPendingAddonTab = isAddonDetailsPanelTab(currentTab) && isLoadingAddonTabs
+
   // Force details tab for specific entity types
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(activeEntityType) && currentTab !== 'details') {
+    if (
+      entitiesWithoutFeed.includes(activeEntityType) &&
+      currentTab !== 'details' &&
+      !activeAddonTab &&
+      !isPendingAddonTab
+    ) {
       setTab('details')
     }
-  }, [activeEntityType, currentTab, setTab])
+  }, [activeEntityType, currentTab, setTab, activeAddonTab, isPendingAddonTab])
 
   // once component is provided with specific entities, remove context entities to avoid conflicts
   useEffect(() => {
@@ -177,7 +207,11 @@ DetailsPanelProps) => {
     if (currentTab === 'subtasks' && activeEntityType !== 'task') {
       setTab('feed')
     }
-  }, [activeEntityType, currentTab, scope])
+    // an addon tab that doesn't apply to this entity type (or whose addon is gone)
+    if (isAddonDetailsPanelTab(currentTab) && !isLoadingAddonTabs && !activeAddonTab) {
+      setTab(entitiesWithoutFeed.includes(activeEntityType) ? 'details' : 'feed')
+    }
+  }, [activeEntityType, currentTab, scope, isLoadingAddonTabs, activeAddonTab])
 
   // now we get the full details data for selected entities
   let entitiesToQuery = activeEntities.length
@@ -206,7 +240,13 @@ DetailsPanelProps) => {
     }
   }, [originalArgs, isSlideOut])
 
-  // if the details panel is opened vair the uri, run callback
+  // fire onUriOpen once per context entity — a details refetch must not re-run the jump/filter reset
+  const uriOpenFiredForId = useRef<string | null>(null)
+  useEffect(() => {
+    if (!contextEntities) uriOpenFiredForId.current = null
+  }, [contextEntities])
+
+  // if the details panel is opened via the uri, run callback
   useEffect(() => {
     if (isFetchingEntitiesDetails) return
 
@@ -215,14 +255,16 @@ DetailsPanelProps) => {
       contextEntities?.entities?.length &&
       !!onUriOpen
     ) {
-      const uriEntity = entityDetailsData.find(
-        (entity) => entity.id === contextEntities.entities[0].id,
-      )
+      const targetId = contextEntities.entities[0].id
+      if (uriOpenFiredForId.current === targetId) return
+
+      const uriEntity = entityDetailsData.find((entity) => entity.id === targetId)
       if (!uriEntity) return
 
+      uriOpenFiredForId.current = targetId
       onUriOpen(uriEntity, contextEntities.source)
     }
-  }, [entityDetailsData, isFetchingEntitiesDetails])
+  }, [entityDetailsData, isFetchingEntitiesDetails, contextEntities, onUriOpen])
 
   // TODO:  merge current entities data with fresh details data
 
@@ -235,6 +277,11 @@ DetailsPanelProps) => {
   // Use the last entity for URI sync
   const lastEntityData = entityDetailsData[entityDetailsData.length - 1]
   const lastProject = activeProjectNames[activeProjectNames.length - 1]
+
+  const newerLatestVersion =
+    scope === 'inbox' && activeEntityType === 'version' && entityDetailsData.length === 1
+      ? getNewerLatestVersion(entityDetailsData[0])
+      : undefined
 
   // build the full entity path for the first entity
   const [entityPathSegments, entityPathVersions] = useGetEntityPath({
@@ -295,6 +342,8 @@ DetailsPanelProps) => {
     onClose?.()
     // also remove any entities in context
     setEntities(null)
+    // drop the uri so an in-flight resolve can't reopen the panel after close
+    setUri('')
     clearSearchUrl()
     closeSlideOut()
   }
@@ -360,6 +409,24 @@ DetailsPanelProps) => {
     requestPipWindow(500, 500)
   }
 
+  const addonTabContext = useMemo(
+    () => ({
+      projectName: firstProject,
+      entityType: activeEntityType,
+      entities: entityDetailsData
+        .filter((entity) => !!entity?.id)
+        .map((entity) => ({
+          id: entity.id,
+          entityType: entity.entityType || activeEntityType,
+          projectName: entity.projectName || firstProject,
+          name: entity.name,
+          label: entity.label || undefined,
+        })),
+      scope,
+    }),
+    [firstProject, activeEntityType, entityDetailsData, scope],
+  )
+
   const isCommentingEnabled = () => {
     // cannot comment on multiple projects
     if (activeProjectNames.length > 1) return false
@@ -405,11 +472,18 @@ DetailsPanelProps) => {
               projectName={firstProject}
               selectedEntities={entityDetailsData
                 .filter((e) => !!e?.id)
-                .map((e) => ({
-                  entityId: e.id,
-                  entityType: e.entityType || activeEntityType,
-                  hasReviewables: !!e.hasReviewables,
-                }))}
+                .map((e) => {
+                  const type = e.entityType || activeEntityType
+                  return {
+                    entityId: e.id,
+                    entityType: type,
+                    hasReviewables: !!e.hasReviewables,
+                    name: e.name,
+                    label: e.label,
+                    projectName: e.projectName || firstProject,
+                    folderId: type === 'task' ? e.folder?.id : undefined,
+                  }
+                })}
               entityListsContext={entityListsContext}
               onOpenPip={handleOpenPip}
               onOpenViewer={onOpenViewer}
@@ -435,6 +509,13 @@ DetailsPanelProps) => {
             )}
           </Styled.RightTools>
         </Styled.Toolbar>
+
+        {newerLatestVersion && (
+          <NewerVersionBanner
+            latestVersion={newerLatestVersion}
+            resolveVersionJump={resolveVersionJump}
+          />
+        )}
 
         <DetailsPanelHeader
           entityType={activeEntityType}
@@ -481,12 +562,23 @@ DetailsPanelProps) => {
               <DetailsPanelSubtasks
                 projectName={firstProject}
                 taskId={firstEntityData.id}
+                taskName={firstEntityData.name}
+                folderId={firstEntityData.folder?.id}
                 subtasks={firstEntityData.task?.subtasks || []}
                 SubtasksManager={SubtasksManager}
                 useNavigate={useNavigate!}
                 onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
               />
             )}
+          {activeAddonTab && (
+            <Styled.AddonTabContent>
+              <ContributionView
+                key={activeAddonTab.key}
+                contribution={activeAddonTab}
+                context={addonTabContext}
+              />
+            </Styled.AddonTabContent>
+          )}
           {currentTab === 'files' && (
             <DetailsPanelFiles
               entities={entityDetailsData}
@@ -535,6 +627,5 @@ export const DetailsPanel = ({
   if (!isOpen && !entities) return null
   if (!entityType && !entities) return null
 
-  // @ts-expect-error - entityType could be undefined but we check for entities above
   return <DetailsPanelInner {...props} entityType={entityType || entities?.entityType} />
 }

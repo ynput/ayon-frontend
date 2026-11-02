@@ -1,14 +1,17 @@
-import { Chips, LinkEntity, LinksManager } from '@shared/components'
+import { Chips } from '@shared/components/Chips/Chips'
+import type { LinkEntity } from '@shared/components/LinksManager/LinksManager'
+import { LinksManager } from '@shared/components/LinksManager/LinksManager'
 import { CellEditingDialog } from '@shared/components/LinksManager/CellEditingDialog'
 import { FC } from 'react'
 import styled from 'styled-components'
 import { EDIT_TRIGGER_CLASS, WidgetBaseProps } from './CellWidget'
-import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
-import { useSelectedRowsContext } from '../context/SelectedRowsContext'
+import { useDetailsPanelEntityContext } from '../context/details-panel-entity'
+import { useSelectedRowsContext } from '../context/selected-rows'
 import { Container, CountBadge } from '@shared/components/LinksManager/LinksManager.styled'
 import { isEntityRestricted } from '../utils/restrictedEntity'
 import { useGlobalContext } from '@shared/context'
 import { groupLinksByEntity } from '@shared/components/LinksManager/utils/groupLinks'
+import { sortEntityLinksByPath } from './LinksWidgetHelpers'
 
 const SHIMMER_WIDTHS = ['40px', '56px', '68px', '52px']
 
@@ -25,29 +28,6 @@ const LoadingChip = styled.span`
   border-radius: var(--border-radius-m);
   flex-shrink: 0;
 `
-
-export const sortEntityLinksByPath = (links: LinkEntity[]) => {
-  return [...links].sort((a, b) => {
-    const aPath = a.parents.join('/') + a.label
-    const bPath = b.parents.join('/') + b.label
-
-    return aPath.localeCompare(bPath)
-  })
-}
-
-export const isLinkEditable = (
-  direction: 'in' | 'out',
-  linkType: string,
-  entityType: string,
-): boolean => {
-  const linkTypeParts = linkType.split('|')
-  const [_name, outType, inType] = linkTypeParts
-  if (direction === 'in') {
-    return entityType === inType
-  } else {
-    return entityType === outType
-  }
-}
 
 export type LinkWidgetData = {
   direction: 'in' | 'out'

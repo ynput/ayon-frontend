@@ -29,6 +29,7 @@ query GetSearchedFolders(
           ...OverviewEntityLinkNodeFragment
           subType: folderType
           label
+          thumbnailHash
         }
       }
     }
@@ -44,12 +45,15 @@ query GetSearchedProducts(
   $first: Int
   $before: String
   $last: Int
+  $hasReviewables: Boolean
+  $includeTask: Boolean = false
 ) {
   project(name: $projectName) {
     name
     products(
       search: $search
       folderIds: $parentIds
+      hasReviewables: $hasReviewables
       after: $after
       first: $first
       before: $before
@@ -67,6 +71,13 @@ query GetSearchedProducts(
         node {
           ...OverviewEntityLinkNodeFragment
           subType: productType
+          featuredVersion {
+            id
+            thumbnailHash
+            task @include(if: $includeTask) {
+              name
+            }
+          }
         }
       }
     }
@@ -142,6 +153,7 @@ query GetSearchedTasks(
           ...OverviewEntityLinkNodeFragment
           label
           subType: taskType
+          thumbnailHash
         }
       }
     }
@@ -157,12 +169,15 @@ query GetSearchedVersions(
   $first: Int
   $before: String
   $last: Int
+  $hasReviewables: Boolean
+  $includeTask: Boolean = false
 ) {
   project(name: $projectName) {
     name
     versions(
       search: $search
       productIds: $parentIds
+      hasReviewables: $hasReviewables
       after: $after
       first: $first
       before: $before
@@ -178,6 +193,10 @@ query GetSearchedVersions(
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
+          task @include(if: $includeTask) {
+            name
+          }
         }
       }
     }
@@ -214,6 +233,7 @@ query GetSearchedWorkfiles(
         cursor
         node {
           ...OverviewEntityLinkNodeFragment
+          thumbnailHash
         }
       }
     }

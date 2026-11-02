@@ -1,6 +1,7 @@
-import { EntityList, EntityListFolderModel, EntityListModel } from '@shared/api'
+import { EntityList, EntityListFolderModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
+import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
+import { DEFAULT_LISTS_SORT, ListsSort, sortLists as sortListsBy } from '@shared/util/sortLists'
 const FOLDER_ICON = 'snippet_folder'
 
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
@@ -19,6 +20,9 @@ export const buildListsTableData = (
   showEmptyFolders: boolean = true,
   powerLicense: boolean = false,
   showArchived: boolean = false,
+  getDisabledMessage?: (list: EntityList) => string | undefined,
+  getFolderDisabledMessage?: (folder: EntityListFolderModel) => string | undefined,
+  sort: ListsSort = DEFAULT_LISTS_SORT,
 ): SimpleTableRow[] => {
   // Create lookup maps
   const foldersMap = new Map<string, EntityListFolderModel>()
@@ -92,42 +96,36 @@ export const buildListsTableData = (
     }
   }
 
-  // Helper function to sort lists
-  const sortLists = (lists: EntityList[]): EntityList[] => {
-    return [...lists].sort((a, b) => {
-      // Active lists come first
-      if (a.active && !b.active) return -1
-      if (!a.active && b.active) return 1
-
-      // Both active or both inactive: sort by createdAt (newest first)
-      const aDate = new Date(a.createdAt || 0)
-      const bDate = new Date(b.createdAt || 0)
-      return bDate.getTime() - aDate.getTime()
-    })
-  }
+  // archived lists go last, lists in a folder are sorted the same way as root lists
+  const sortLists = (lists: EntityList[]): EntityList[] => sortListsBy(lists, sort)
 
   // Helper function to create list table row
   const createListRow = (
     list: EntityList,
     parentType?: string,
     parents: string[] = [],
-  ): SimpleTableRow => ({
-    id: list.id,
-    name: list.label,
-    label: list.label,
-    ...(parents.length > 0 && { parents }),
-    icon: getListIcon(list),
-    inactive: !list.active,
-    subRows: [],
-    data: {
+  ): SimpleTableRow => {
+    const disabledMessage = getDisabledMessage?.(list)
+    return {
       id: list.id,
-      count: list.count,
-      owner: list.owner,
-      entityListType: list.entityListType,
-      createdAt: list.createdAt,
-      ...(parentType && { parentType }),
-    },
-  })
+      name: list.label,
+      label: list.label,
+      ...(parents.length > 0 && { parents }),
+      icon: getListIcon(list),
+      inactive: !list.active,
+      isDisabled: !!disabledMessage,
+      disabledMessage,
+      subRows: [],
+      data: {
+        id: list.id,
+        count: list.count,
+        owner: list.owner,
+        entityListType: list.entityListType,
+        createdAt: list.createdAt,
+        ...(parentType && { parentType }),
+      },
+    }
+  }
 
   // Helper function to sort folder nodes by original folders array order
   const sortFolderNodes = (nodes: FolderNode[]): FolderNode[] => {
@@ -159,16 +157,13 @@ export const buildListsTableData = (
         getItemCount: (node) =>
           node.items.length +
           Array.from(node.children.values()).reduce((acc, child) => acc + child.items.length, 0),
+        getFolderDisabledMessage,
       })
     : []
 
-  // Sort root lists: active first (by createdAt newest first), then inactive (by createdAt newest first)
   const sortedRootLists = sortLists(rootLists)
   const rootListRows = sortedRootLists.map((list) => createListRow(list))
 
   // Combine in the specified order: folder hierarchy first, then root lists
   return [...folderRows, ...rootListRows]
 }
-
-export const getListIcon = (list: Pick<EntityListModel, 'entityListType' | 'entityType'>) =>
-  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)

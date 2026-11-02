@@ -31,9 +31,18 @@ const TASK_FIELDS: Record<string, string> = {
   tags: 'tags',
   taskType: 'task_type',
 }
+// Versions distribute over columns projected into their stats raw_data CTE: native
+// versions.* columns (status, tags, author, own attrib.*) plus the joined subtype
+// columns the backend now projects (product_type/task_type/folder_type).
+// Only ONE subtype field can back version counts at a time: product_type and task_type
+// both canonicalize to the `subType` columnName (COLUMN_ALIASES) and would clobber each
+// other in the merged stats cache. productType is the version slicer's primary
+// dimension, so it wins; taskType stays unmapped.
 const VERSION_FIELDS: Record<string, string> = {
   status: 'status',
   tags: 'tags',
+  author: 'author',
+  productType: 'product_type',
 }
 
 export const groupByToStatsTarget = (
@@ -58,7 +67,7 @@ export const groupByToStatsTarget = (
 // Map a stats target field to the canonical fieldStats columnName. Attribute
 // targets are dot-paths (inherited_attributes.x / attrib.x) that canonicalColumnId
 // (underscore-based) won't normalize, so resolve those to attrib_<name> here.
-const targetToColumnId = (field: string): string => {
+export const targetToColumnId = (field: string): string => {
   const dot = field.indexOf('.')
   if (dot !== -1) return 'attrib_' + field.slice(dot + 1)
   return canonicalColumnId(field)

@@ -1,2 +1,2 @@
-export * from './FeedbackContext'
+export * from './context/feedback'
 export * from './SupportBubble'

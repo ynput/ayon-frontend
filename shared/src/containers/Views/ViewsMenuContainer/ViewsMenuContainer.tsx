@@ -1,6 +1,6 @@
 import { FC, useCallback, useEffect, useRef } from 'react'
 import { createPortal } from 'react-dom'
-import { useViewsContext } from '../context/ViewsContext'
+import { useViewsContext } from '../context'
 import { getViewsPortalContainer } from '../utils/portalUtils'
 import { ViewsMenu } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
@@ -13,7 +13,7 @@ import BaseViewsTagContainer from '@shared/containers/Views/ViewsMenuContainer/B
 
 const PowerIcon = styled(Icon)`
   color: var(--md-sys-color-tertiary);
-  font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
+  font-variation-settings: 'FILL' 1;
 `
 
 import { WORKING_VIEW_ID, NEW_VIEW_ID } from '../types'

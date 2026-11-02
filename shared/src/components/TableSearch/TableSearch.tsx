@@ -1,0 +1,48 @@
+import { HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
+import { InputText } from '@ynput/ayon-react-components'
+import { FC } from 'react'
+import styled from 'styled-components'
+
+const Container = styled.div`
+  position: relative;
+  width: 100%;
+  padding: 4px;
+
+  input {
+    width: 100%;
+    min-width: 0;
+  }
+`
+
+const CloseButton = styled(HeaderButton)`
+  position: absolute;
+  top: 50%;
+  right: 6px;
+  transform: translateY(-50%);
+`
+
+export interface TableSearchProps {
+  value: string
+  onChange: (value: string) => void
+  onClose: () => void
+  className?: string
+}
+
+export const TableSearch: FC<TableSearchProps> = ({ value, onChange, onClose, className }) => {
+  return (
+    <Container className={className}>
+      <InputText
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Search"
+        autoFocus
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') {
+            onClose()
+          }
+        }}
+      />
+      <CloseButton icon="close" variant="text" onClick={onClose} />
+    </Container>
+  )
+}

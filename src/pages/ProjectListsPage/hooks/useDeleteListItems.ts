@@ -6,7 +6,7 @@ import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils
 import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { ConfirmDialogReturn } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
-import type { ListItemsDataContextValue } from '../context/ListItemsDataContext'
+import type { ListItemsDataContextValue } from '../context/list-items-data'
 import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 
 type UseDeleteListItemsProps = {
@@ -91,7 +91,6 @@ const useDeleteListItems = ({
 
       toast.success(`Deleted ${items.length} item${items.length > 1 ? 's' : ''} from list`)
     } catch (error: any) {
-      console.error('Error deleting list items:', error)
       // Handle the error (e.g., show a toast notification)
       toast.error(`Error deleting list items: ${error}`)
     }

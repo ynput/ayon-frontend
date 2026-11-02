@@ -1,12 +1,12 @@
 import { useCallback, useEffect } from 'react'
-import { useSelectionCellsContext } from '../context/SelectionCellsContext'
-import { useCellEditing } from '../context/CellEditingContext' // keep for editingCellId/setEditingCellId
+import { useSelectionCellsContext } from '../context/selection-cells'
+import { useCellEditing } from '../context/cell-editing' // keep for editingCellId/setEditingCellId
 import { parseCellId, getCellId } from '../utils/cellUtils'
-import { useProjectTableContext } from '../context/ProjectTableContext'
-import { useProjectDataContext } from '../context/ProjectDataContext'
-import { useDetailsPanelEntityContext } from '../context/DetailsPanelEntityContext'
+import { useProjectTableContext } from '../context/project-table'
+import { useProjectDataContext } from '../context/project-data'
+import { useDetailsPanelEntityContext } from '../context/details-panel-entity'
 import { getEntityViewierIds } from '../utils'
-import { isEntityRestricted } from '../utils/restrictedEntity'
+import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
@@ -19,22 +19,36 @@ export default function useKeyboardNavigation() {
   const { setEditingCellId, editingCellId } = useCellEditing()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
 
+  const focusCellElement = useCallback(
+    (cellId: string) => {
+      focusCell(cellId)
+      console.log(cellId)
+      requestAnimationFrame(() => document.getElementById(cellId)?.closest('td')?.focus())
+    },
+    [focusCell],
+  )
+
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
       const target = e.target as HTMLElement
-      // is target inside table or not body?
-      // NOTE: we must check for body because there is a bug that means the active element goes to body not the table td
-      if (!target?.closest('table') && !target.closest('body')) {
+      // the open player holds focus, so row nav keys no longer come from a cell
+      const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+      const fromOpenPlayer = playerOpen && isRowNavKey && !!target?.closest('#viewer-dialog')
+      if (!fromOpenPlayer && !target?.closest('tbody td')) {
         return
       }
 
+      // the comment input only lets row nav keys through while it is empty; the caret stays in it
+      const fromEmptyComment = fromOpenPlayer && !!target.closest('.comment-container')
+
       // Skip if event target is an input element or contentEditable
       if (
-        target.tagName === 'INPUT' ||
-        target.tagName === 'TEXTAREA' ||
-        target.isContentEditable ||
-        target.getAttribute('role') === 'textbox' ||
-        target.tagName === 'LI'
+        !fromEmptyComment &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable ||
+          target.getAttribute('role') === 'textbox' ||
+          target.tagName === 'LI')
       ) {
         return
       }
@@ -58,8 +72,9 @@ export default function useKeyboardNavigation() {
       if (rowIndex === undefined || colIndex === undefined) return
 
       const isReadOnly =
-        colId.startsWith('attrib_') &&
-        attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly
+        (colId.startsWith('attrib_') &&
+          attribFields.find((a) => a.name === colId.replace('attrib_', ''))?.readOnly) ||
+        target.closest('td')?.querySelector(`.${READ_ONLY}`) !== null
 
       const openPlayer = (entityId: string) => {
         // try to open the player if onOpenPlayer is defined
@@ -81,7 +96,8 @@ export default function useKeyboardNavigation() {
             if (newRowId) {
               const newCellId = getCellId(newRowId, colId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCell(newCellId)
+              if (fromEmptyComment) focusCell(newCellId)
+              else focusCellElement(newCellId)
 
               // if the player is open, update with new selected cell
               if (playerOpen) {
@@ -97,7 +113,8 @@ export default function useKeyboardNavigation() {
           if (newRowId) {
             const newCellId = getCellId(newRowId, colId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCell(newCellId)
+            if (fromEmptyComment) focusCell(newCellId)
+            else focusCellElement(newCellId)
 
             // if the player is open, update with new selected cell
             if (playerOpen) {
@@ -113,7 +130,7 @@ export default function useKeyboardNavigation() {
             if (newColId) {
               const newCellId = getCellId(rowId, newColId)
               selectCell(newCellId, e.shiftKey, e.shiftKey)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           }
           break
@@ -124,7 +141,7 @@ export default function useKeyboardNavigation() {
           if (newColId) {
             const newCellId = getCellId(rowId, newColId)
             selectCell(newCellId, e.shiftKey, e.shiftKey)
-            focusCell(newCellId)
+            focusCellElement(newCellId)
           }
           break
         }
@@ -148,7 +165,16 @@ export default function useKeyboardNavigation() {
           } else {
             // For all other columns, start editing the cell (if not read-only)
             if (!isReadOnly) {
-              setEditingCellId(focusedCellId)
+              const checkbox = colId.startsWith('attrib_')
+                ? document
+                    .getElementById(focusedCellId)
+                    ?.querySelector<HTMLInputElement>('input[type="checkbox"]')
+                : null
+              if (checkbox && !checkbox.disabled) {
+                checkbox.click()
+              } else {
+                setEditingCellId(focusedCellId)
+              }
             }
           }
           break
@@ -171,7 +197,7 @@ export default function useKeyboardNavigation() {
             // Move to next/prev column in same row
             const newCellId = getCellId(rowId, nextColId)
             selectCell(newCellId, false, false)
-            focusCell(newCellId)
+            focusCellElement(newCellId)
           } else if (!e.shiftKey && rowIndex < gridMap.rowIdToIndex.size - 1) {
             // Move to first column of next row
             const newRowId = gridMap.indexToRowId.get(rowIndex + 1)
@@ -179,7 +205,7 @@ export default function useKeyboardNavigation() {
             if (newRowId && firstColId) {
               const newCellId = getCellId(newRowId, firstColId)
               selectCell(newCellId, false, false)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           } else if (e.shiftKey && rowIndex > 0) {
             // Move to last column of previous row
@@ -188,7 +214,7 @@ export default function useKeyboardNavigation() {
             if (newRowId && lastColId) {
               const newCellId = getCellId(newRowId, lastColId)
               selectCell(newCellId, false, false)
-              focusCell(newCellId)
+              focusCellElement(newCellId)
             }
           }
           break
@@ -199,8 +225,7 @@ export default function useKeyboardNavigation() {
           openPlayer(rowId)
           break
         }
-        case 'r':
-        case 'R': {
+        case 'r': {
           // Don't prevent default if Ctrl/Cmd is held (allow page reload)
           if (e.ctrlKey || e.metaKey) {
             return
@@ -223,6 +248,7 @@ export default function useKeyboardNavigation() {
       gridMap,
       selectCell,
       focusCell,
+      focusCellElement,
       clearSelection,
       setEditingCellId,
       editingCellId,
@@ -246,7 +272,7 @@ export default function useKeyboardNavigation() {
     focusedCellId,
     gridMap,
     selectCell,
-    focusCell,
+    focusCellElement,
     clearSelection,
     setEditingCellId,
     editingCellId,

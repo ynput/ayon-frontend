@@ -1,22 +1,21 @@
-import { FC, useMemo } from 'react'
+import { FC, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
+  ProjectTableQueriesProvider,
   SelectionCellsProvider,
   SelectedRowsProvider,
   CellEditingProvider,
-  DetailsPanelEntityProvider,
   useColumnSettingsContext,
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
-import { NewEntityProvider } from '@context/NewEntityContext'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
-import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
-import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
+import { useSlicerContext } from '@shared/containers'
+import { useProjectOverviewContext } from '../context/project-overview'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'
-import { useAppSelector } from '@state/store'
+import { useAppDispatch, useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
 import { ProjectTableModulesType } from '@shared/hooks'
 
@@ -41,6 +40,12 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   })
 
   const { resetWorkingView, isLoadingViews } = useViewsContext()
+  const { setPinnedSlice } = useSlicerContext()
+
+  const handleResetView = useCallback(async () => {
+    setPinnedSlice(null)
+    await resetWorkingView()
+  }, [resetWorkingView, setPinnedSlice])
 
   // filter-aware per-group counts for the active grouping (community: not license-gated)
   const { groupBy: columnSettingsGroupBy } = useColumnSettingsContext()
@@ -82,6 +87,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
   const powerpack = usePowerpack()
   const { SubtasksManager } = useSubtasksModulesContext()
 
+  const dispatch = useAppDispatch()
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
   const handleOpenPlayer = useTableOpenViewer({ projectName: props.projectName })
 
@@ -101,24 +107,21 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
-        onResetView={resetWorkingView}
+        onResetView={handleResetView}
         SubtasksManager={SubtasksManager}
         useParams={useParams}
         useNavigate={useNavigate}
         useLocation={useLocation}
         useSearchParams={useSearchParams}
+        dispatch={dispatch}
       >
-        <NewEntityProvider>
-          <DetailsPanelEntityProvider>
-            <SelectionCellsProvider>
-              <SelectedRowsProvider>
-                <CellEditingProvider>
-                  <ProjectOverviewPage />
-                </CellEditingProvider>
-              </SelectedRowsProvider>
-            </SelectionCellsProvider>
-          </DetailsPanelEntityProvider>
-        </NewEntityProvider>
+        <SelectionCellsProvider>
+          <SelectedRowsProvider>
+            <CellEditingProvider>
+              <ProjectOverviewPage />
+            </CellEditingProvider>
+          </SelectedRowsProvider>
+        </SelectionCellsProvider>
       </ProjectTableProvider>
     </ProjectTableQueriesProvider>
   )

@@ -1,6 +1,6 @@
 import { FormLayout, FormRow, InputText, SaveButton, Dialog } from '@ynput/ayon-react-components'
 import { useMemo, useState } from 'react'
-import { useSaveAccessGroupMutation } from '@queries/accessGroups/updateAccessGroups'
+import { useSaveAccessGroupMutation } from '@shared/api'
 import { toast } from 'react-toastify'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {
@@ -14,12 +14,10 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
 
   const onSubmit = async (close) => {
     try {
-      await createAccessGroup({ accessGroupName, projectName: '_', data: {} }).unwrap()
+      await createAccessGroup({ accessGroupName, projectName: '_', permissions: {} }).unwrap()
 
       close && onClose(accessGroupName)
     } catch (error) {
-      console.error(error)
-
       toast.error('Unable to create access group')
     }
   }
@@ -27,7 +25,8 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
   let error = null
   if (accessGroupNames.includes(accessGroupName.toLowerCase()))
     error = 'This access group already exists'
-  else if (!accessGroupName.match('^[a-zA-Z0-9_]([a-zA-Z0-9_.\\-]*[a-zA-Z0-9_])?$')) error = 'Invalid access group name'
+  else if (!accessGroupName.match('^[a-zA-Z0-9_]([a-zA-Z0-9_.\\-]*[a-zA-Z0-9_])?$'))
+    error = 'Invalid access group name'
   const handleKeyDown = (e) => {
     e?.stopPropagation()
     const isEnter = e.key === 'Enter'

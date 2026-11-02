@@ -12,7 +12,6 @@ import {
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
 import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
-import { useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   queryFilterToClientFilter,
@@ -21,6 +20,7 @@ import {
 import { useDateRangeFilter, CustomDateRangeDialog } from '@shared/components/SearchFilter'
 import { detectRelativeDatePattern } from '@shared/components/SearchFilter/filterDates'
 import { useSlicerContext } from '@shared/containers'
+import { pastedListToSearch } from '@shared/util'
 import { useProjectFoldersContext } from '@shared/context'
 
 interface SearchFilterWrapperProps
@@ -28,6 +28,7 @@ interface SearchFilterWrapperProps
     Omit<SearchFilterProps, 'options' | 'onFinish' | 'filters' | 'onChange'> {
   projectInfo?: ProjectModelWithProducts
   tasksMap?: TaskNodeMap
+  keepAppliedOptionsVisible?: boolean
   scope?: BuildFilterOptions['scope']
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
@@ -44,13 +45,13 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   disabledFilters,
   projectInfo,
   tasksMap,
+  keepAppliedOptionsVisible = false,
   scope,
   scopes,
   config,
   pt,
   ...props
 }) => {
-  const { columnOrder } = useColumnSettingsContext()
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
   const { getFolderById } = useProjectFoldersContext()
 
@@ -79,13 +80,12 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     return false
   }
 
-  const options = useBuildFilterOptions({
+  const { options, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
     scopes,
     data,
-    columnOrder,
     config: {
       enableExcludes: powerLicense,
       enableOperatorChange: powerLicense,
@@ -99,25 +99,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   // Convert QueryFilter to Filter[] for internal use
   const filters = useMemo(() => {
     const filters = queryFilterToClientFilter(queryFilters, options)
-    const pinned: Filter | null = pinnedSlice
-      ? {
-          id: pinnedSlice.sliceType + '__pinned',
-          label: pinnedSlice.sliceType,
-          type: 'string',
-          inverted: false,
-          operator: 'OR',
-          values: Object.keys(pinnedSlice.rowSelection)
-            .filter((id) => pinnedSlice.rowSelection[id])
-            .map((id) => {
-              const folder = getFolderById(id)
-              return { id, label: folder?.label || folder?.name || id }
-            }),
-        }
-      : null
+    const pinned: Filter | null =
+      pinnedSlice && Object.keys(pinnedSlice.rowSelection).length > 0
+        ? {
+            id: pinnedSlice.sliceType + '__pinned',
+            label: pinnedSlice.sliceType,
+            type: 'string',
+            inverted: false,
+            operator: 'OR',
+            values: Object.keys(pinnedSlice.rowSelection)
+              .filter((id) => pinnedSlice.rowSelection[id])
+              .map((id) => {
+                const folder = getFolderById(id)
+                return { id, label: folder?.label || folder?.name || id }
+              }),
+          }
+        : null
     const filtersWithPinnedSlice = pinned ? [pinned, ...filters] : filters
 
     return filtersWithPinnedSlice
-  }, [queryFilters, options])
+  }, [queryFilters, options, pinnedSlice, getFolderById])
 
   // keeps track of the filters whilst adding/removing filters
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
@@ -126,9 +127,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
 
   // Custom date range
   const dateRange = useDateRangeFilter()
-
-  // Track which datetime filter the user is currently interacting with
-  const lastInteractedFilterRef = useRef<string | null>(null)
 
   // Active search-chip edit: set when user clicks a search chip to edit it.
   // The dropdown opens in edit mode; our Enter interceptor updates/removes the chip.
@@ -143,48 +141,29 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     setLocalFilters(filters)
   }, [JSON.stringify(filters)]) // Update filters when filters change
 
-  // Track the active datetime filter from onChange events
-  const handleFilterChange = (newFilters: Filter[]) => {
-    // Check if a relative date filter is being clicked to edit it
-    // If so, auto-open the edit dialog instead of allowing dropdown
-    const modifiedDatetimeFilter = newFilters.find(
-      (f) => f.type === 'datetime' && f.id !== lastInteractedFilterRef.current,
-    )
-    if (
-      modifiedDatetimeFilter &&
-      modifiedDatetimeFilter.values &&
-      modifiedDatetimeFilter.values.length > 0
-    ) {
-      const rangeValue = modifiedDatetimeFilter.values[0]
-      if (rangeValue.id && rangeValue.id.startsWith('custom-')) {
-        // This is a custom date range — check if it matches a relative pattern
-        const idParts = rangeValue.id.replace('custom-', '')
-        const firstEndIndex = idParts.indexOf('Z')
-        if (firstEndIndex > 0) {
-          const startISO = idParts.substring(0, firstEndIndex + 1)
-          const endISO = idParts.substring(firstEndIndex + 2)
-          const relativePattern = detectRelativeDatePattern(startISO, endISO)
-
-          if (relativePattern) {
-            // It's a relative date — auto-open edit dialog
-            handleOpenCustomRangeForFilter(modifiedDatetimeFilter.id)
-            lastInteractedFilterRef.current = modifiedDatetimeFilter.id
-            return
-          }
-        }
-      }
-    }
-    lastInteractedFilterRef.current = null
-
+  const handleFilterChange = (newFilters: Filter[]) =>
     dateRange.wrapFilterChange(newFilters, localFilters, (cleaned) =>
       validateFilters(cleaned, setLocalFilters),
     )
-  }
 
   const handleCustomRangeApply = () =>
     dateRange.handleCustomRangeApply(localFilters, options, handleFinish, searchFilterRef)
 
   const handleCustomRangeClose = () => dateRange.handleCustomRangeClose()
+
+  const handleAppliedOptionClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!keepAppliedOptionsVisible) return
+
+    const option = (event.target as HTMLElement).closest('li')
+    if (!option || option.dataset.parent) return
+
+    const activeFilter = localFilters.find((filter) => filter.id.split('__')[0] === option.id)
+    if (!activeFilter) return
+
+    event.preventDefault()
+    event.stopPropagation()
+    searchFilterRef.current?.openFilter(activeFilter.id)
+  }
 
   const handleOpenCustomRangeForFilter = (filterId: string) =>
     dateRange.openCustomRangeForFilter(filterId, localFilters)
@@ -235,25 +214,26 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     // Dropdown closed (or filters committed) — search-chip edit session ends
     editingSearchChipRef.current = null
 
-    // Check if pinned slice was removed
+    // The pinned slice is display-only and must never be sent as a query filter.
     const pinnedId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
-    const isPinnedRemoved = !!pinnedId && !filters.some((f) => f.id === pinnedId)
+    const filtersWithoutPinnedSlice = pinnedId ? filters.filter((f) => f.id !== pinnedId) : filters
+    const hadPinnedFilter = !!pinnedId && localFilters.some((f) => f.id === pinnedId)
+    const isPinnedRemoved = hadPinnedFilter && !filters.some((f) => f.id === pinnedId)
 
     if (isPinnedRemoved) {
       setPinnedSlice(null)
 
       // Check if it's the only change
-      const otherFilters = filters.filter((f) => f.id !== pinnedId)
       const originalOtherFilters = localFilters.filter((f) => f.id !== pinnedId)
 
-      if (JSON.stringify(otherFilters) === JSON.stringify(originalOtherFilters)) {
+      if (JSON.stringify(filtersWithoutPinnedSlice) === JSON.stringify(originalOtherFilters)) {
         return
       }
     }
 
     validateFilters(filters, (validFilters) => {
       // Convert Filter[] back to QueryFilter and call onChange
-      const queryFilter = clientFilterToQueryFilter(validFilters)
+      const queryFilter = clientFilterToQueryFilter(validFilters.filter((f) => f.id !== pinnedId))
       onChange?.(queryFilter)
     })
   }
@@ -267,15 +247,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const handleDropdownPaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement
     if (!(target instanceof HTMLInputElement)) return
-    const text = e.clipboardData?.getData('text') ?? ''
-    if (!/[\r\n\t]/.test(text)) return
+    const normalized = pastedListToSearch(e.clipboardData?.getData('text') ?? '')
+    if (normalized === null) return
     e.preventDefault()
     e.stopPropagation()
-
-    const normalized = text
-      .replace(/[\r\n\t]+/g, ',')
-      .replace(/,+/g, ',')
-      .replace(/^,|,$/g, '')
 
     const input = target
     const start = input.selectionStart ?? input.value.length
@@ -393,21 +368,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       return
     }
 
-    // Find the label text from the chip (format: "Created At:")
-    const labelEl = chipEl.querySelector('.label')
-    if (!labelEl) return
-    const chipLabel = labelEl.textContent?.replace(/:$/, '').trim()
-    if (!chipLabel) return
-
-    // Match against datetime filters in localFilters
     const datetimeFilter = localFilters.find(
-      (f) => f.type === 'datetime' && f.label === chipLabel && f.values && f.values.length > 0,
+      (f) => f.id === chipId && f.type === 'datetime' && f.values && f.values.length > 0,
     )
 
     if (!datetimeFilter) return
 
     // Check if it's a relative date (Today, This week, etc.) — let dropdown open normally
     const rangeValue = datetimeFilter.values?.[0]
+    // Nullness chips (No Value / Has Value) have no date range to edit
+    if (rangeValue?.id === 'noValue' || rangeValue?.id === 'hasValue') return
     if (rangeValue?.id) {
       const customIdContent = (rangeValue.id as string).replace('custom-', '')
       const firstZIndex = customIdContent.indexOf('Z')
@@ -431,14 +401,16 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       <SearchFilter
         ref={searchFilterRef}
         options={options}
+        groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
         onFinish={handleFinish} // when changes are applied
-        enableMultipleSameFilters={false}
+        enableMultipleSameFilters={keepAppliedOptionsVisible}
         enableGlobalSearch={true}
         disabledFilters={disabledFilters}
+        onClickCapture={handleAppliedOptionClickCapture}
         onPasteCapture={handleDropdownPaste}
-        enableAutosuggestion={true}
+        enableAutosuggestion={false}
         pt={{
           searchBar: {
             style: {

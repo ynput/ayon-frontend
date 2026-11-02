@@ -5,7 +5,7 @@ import { AccessLevel } from '../AccessUser/AccessUser'
 import * as Styled from './AccessSearchInput.styled'
 import { AccessUser } from '../AccessUser/AccessUser'
 import clsx from 'clsx'
-import { ShareOption } from '@shared/api'
+import type { ShareOption } from '@shared/api'
 
 const MAX_USERS_DISPLAYED = 500
 // Email validation regex

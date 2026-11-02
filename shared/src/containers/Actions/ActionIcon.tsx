@@ -1,4 +1,4 @@
-import { IconModel } from '@shared/api'
+import type { IconModel } from '@shared/api'
 import { Icon } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled, { keyframes } from 'styled-components'

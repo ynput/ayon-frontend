@@ -17,7 +17,6 @@ const customRoots = api.injectEndpoints({
 
       providesTags: ['siteRoots'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     getCustomRoots: build.query({
@@ -28,7 +27,6 @@ const customRoots = api.injectEndpoints({
 
       providesTags: ['customRoots'],
       transformResponse: (response) => response,
-      transformErrorResponse: (error) => error.data.detail || `Error ${error.status}`,
     }),
 
     setCustomRoots: build.mutation({

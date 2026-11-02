@@ -1,4 +1,4 @@
-import { useContext, FC, ReactNode, useState, useMemo, useCallback } from 'react'
+import { FC, ReactNode, useState, useMemo, useCallback } from 'react'
 import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
@@ -20,7 +20,9 @@ import { type UseViewMutations, useViewsMutations } from '../hooks/useViewsMutat
 import { useBaseViewMutations } from '../hooks/useBaseViewMutations'
 import { useSaveViewFromCurrent } from '../hooks/useSaveViewFromCurrent'
 import { useViewSettingsChanged } from '../hooks/useViewSettingsChanged'
-import { useLocalStorage } from '@shared/hooks'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import { isViewStudioScope } from '../utils/isViewStudioScope'
+import { ViewsContext } from './ViewsContextInstance'
 
 export type ViewData = GetDefaultViewApiResponse
 export type ViewSettings = GetDefaultViewApiResponse['settings']
@@ -58,6 +60,7 @@ export interface ViewsContextValue {
   editingViewData?: ViewData
   isLoadingEditingViewData: boolean
   isLoadingViews: boolean
+  isErrorWorkingView: boolean
 
   // Data
   shareOptions?: ShareOption[] // available users to share with (undefined means loading)
@@ -89,12 +92,21 @@ export interface ViewsContextValue {
 
 const DEFAULT_VIEW_ALIAS = 'view'
 
+// Stable empty list, so skipped queries do not hand consumers a new array on every render
+const NO_VIEWS: ViewListItemModel[] = []
+
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
   viewAlias?: string
   projectName?: string
   dispatch?: any
+  // Opt out of loading data the consumer does not use. Both default to true.
+  // The default and working views are always loaded.
+  include?: {
+    viewsList?: boolean // every view of the type, for the views menu
+    baseViews?: boolean // project and studio base views
+  }
   debug?: {
     powerLicense?: boolean
   }
@@ -106,8 +118,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
+  include,
   debug,
 }) => {
+  const includeViewsList = include?.viewsList ?? true
+  const includeBaseViews = include?.baseViews ?? true
+
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)
@@ -155,9 +171,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
+  const { currentData: viewsListRaw = NO_VIEWS, isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeViewsList },
   )
 
   // Filter out base views from the list
@@ -179,7 +195,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   //   always get your working view
-  const { currentData: workingView, isLoading: isLoadingWorkingView } = useGetWorkingViewQuery(
+  const {
+    currentData: workingView,
+    isLoading: isLoadingWorkingView,
+    isError: isErrorWorkingView,
+  } = useGetWorkingViewQuery(
     { projectName: projectName, viewType: viewType as string },
     { skip: !viewType },
   )
@@ -187,11 +207,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // Fetch both project and studio base views
   const { currentData: projectBaseView, isLoading: isLoadingProjectBaseView } = useGetBaseViewQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
   const { currentData: studioBaseView, isLoading: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
 
   // isLoadingViews is true ONLY on the very first fetch (no cached data yet).
@@ -337,6 +357,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     editingViewId,
     viewMenuItems,
     isLoadingViews,
+    isErrorWorkingView,
     // data
     shareOptions,
     setIsMenuOpen,
@@ -356,15 +377,3 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   return <ViewsContext.Provider value={value}>{children}</ViewsContext.Provider>
 }
-
-export const useViewsContext = (): ViewsContextValue => {
-  const context = useContext(ViewsContext)
-  if (!context) {
-    throw new Error('useViewsContext must be used within a ViewsProvider')
-  }
-  return context
-}
-
-import { isViewStudioScope } from '../utils/isViewStudioScope'
-import { ViewsContext } from './ViewsContextInstance'
-export { isViewStudioScope }

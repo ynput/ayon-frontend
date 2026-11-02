@@ -1,4 +1,5 @@
-import { entityListsApi, EntityListFoldersResponseModel } from '@shared/api/generated'
+import { entityListsApi } from '@shared/api/generated'
+import type { EntityListFoldersResponseModel } from '@shared/api/generated'
 
 const LIST_FOLDER_LIST_TAG = { type: 'entityListFolder' as const, id: 'LIST' }
 
@@ -19,13 +20,10 @@ type UpdatedDefinitions = Omit<Definitions, 'getEntityListFolders'> & {
   >
 }
 
-const transformErrorResponse = (error: any) => error.data?.detail || 'Unknown lists folder error'
-
 const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
   endpoints: {
     getEntityListFolders: {
       transformResponse: (response: EntityListFoldersResponseModel) => response.folders || [],
-      transformErrorResponse,
       providesTags: (result) =>
         result
           ? [
@@ -62,7 +60,6 @@ const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, Update
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: [LIST_FOLDER_LIST_TAG],
     },
     deleteEntityListFolder: {
@@ -88,7 +85,6 @@ const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, Update
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [
         LIST_FOLDER_LIST_TAG,
         { type: 'entityListFolder', id: arg.folderId },
@@ -130,7 +126,6 @@ const enhancedListsFoldersApi = entityListsApi.enhanceEndpoints<TagTypes, Update
           patchResult.undo()
         }
       },
-      transformErrorResponse,
       invalidatesTags: (_r, _e, arg) => [{ type: 'entityListFolder', id: arg.folderId }],
     },
   },

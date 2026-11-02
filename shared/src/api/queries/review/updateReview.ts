@@ -3,9 +3,9 @@ import {
   DeleteProjectActivityApiResponse,
   DeleteProjectActivityApiArg,
 } from '@shared/api/generated'
-import { FetchBaseQueryError } from '@reduxjs/toolkit/query'
 import { ReviewableResponse } from './types'
 import { getReviewApi } from './getReview'
+import { normalizeQueryError } from '@shared/api/base/queryError'
 
 const injectedEndpoints = getReviewApi.injectEndpoints({
   endpoints: (build) => ({
@@ -19,13 +19,12 @@ const injectedEndpoints = getReviewApi.injectEndpoints({
             )
 
             if (res.error) {
-              return { error: res.error as FetchBaseQueryError }
+              return { error: normalizeQueryError(res.error) }
             }
 
             return { data: res.data }
           } catch (e: any) {
-            const error = { status: 'FETCH_ERROR', error: e.message } as FetchBaseQueryError
-            return { error }
+            return { error: normalizeQueryError(e) }
           }
         },
         invalidatesTags: (_result, _error, args) => [{ type: 'review', id: args.activityId }],

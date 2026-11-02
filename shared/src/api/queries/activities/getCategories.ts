@@ -1,6 +1,7 @@
-import { ActivityCategoriesResponseModel, activityFeedApi } from '@shared/api/generated'
+import { activityFeedApi } from '@shared/api/generated'
+import type { ActivityCategoriesResponseModel } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import { AccessLevel } from '@shared/components'
+import type { AccessLevel } from '@shared/components/AccessUser/AccessUser'
 
 const listTag = { type: 'category', id: 'LIST' } as const
 const settingsTag = { type: 'addonSettings', id: 'powerpack' } as const
@@ -28,7 +29,6 @@ const categoriesApi = activityFeedApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
     getActivityCategories: {
       transformResponse: (res: ActivityCategoriesResponseModel) =>
         res.categories as ActivityCategory[],
-      transformErrorResponse: (error: any) => error.data?.detail || 'An error occurred.',
       providesTags: (result) =>
         result
           ? [
@@ -41,4 +41,32 @@ const categoriesApi = activityFeedApi.enhanceEndpoints<TagTypes, UpdatedDefiniti
   },
 })
 
+export type ProjectsCategories = { [projectName: string]: ActivityCategory[] }
+
+// one entry per project, so a list of messages resolves its dots without a query per row
+const projectsCategoriesApi = categoriesApi.injectEndpoints({
+  endpoints: (build) => ({
+    getProjectsCategories: build.query<ProjectsCategories, { projects: string[] }>({
+      async queryFn({ projects = [] }, { dispatch }) {
+        const entries = await Promise.all(
+          projects.map(async (projectName) => {
+            try {
+              const categories = await dispatch(
+                categoriesApi.endpoints.getActivityCategories.initiate({ projectName }),
+              ).unwrap()
+              return [projectName, categories] as const
+            } catch {
+              return [projectName, [] as ActivityCategory[]] as const
+            }
+          }),
+        )
+
+        return { data: Object.fromEntries(entries) }
+      },
+      providesTags: [listTag, settingsTag],
+    }),
+  }),
+})
+
 export const { useGetActivityCategoriesQuery } = categoriesApi
+export const { useGetProjectsCategoriesQuery } = projectsCategoriesApi

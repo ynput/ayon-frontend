@@ -5,6 +5,7 @@ query GetListItemsColumnStats(
   $projectName: String!
   $listId: String!
   $filter: String
+  $search: String
   $targets: [MetricTargetInput!]
 ) {
   project(name: $projectName) {
@@ -13,7 +14,7 @@ query GetListItemsColumnStats(
       edges {
         node {
           id
-          items(filter: $filter, calculateSpecificStatistics: $targets) {
+          items(filter: $filter, search: $search, calculateSpecificStatistics: $targets) {
             fieldStats {
               ...ColumnStatsFragment
             }
