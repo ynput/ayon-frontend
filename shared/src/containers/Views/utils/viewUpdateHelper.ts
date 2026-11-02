@@ -196,10 +196,14 @@ export const useViewUpdateHelper = () => {
           viewType: arg.viewType,
           projectName: arg.projectName,
           viewId,
-          payload: patchPayload,
+          genericViewPatchModel: patchPayload,
         }).unwrap()
       } else {
-        return await createView(arg).unwrap()
+        return await createView({
+          viewType: arg.viewType,
+          projectName: arg.projectName,
+          genericViewPostModel: arg.payload,
+        }).unwrap()
       }
     },
     [createView, updateView],
