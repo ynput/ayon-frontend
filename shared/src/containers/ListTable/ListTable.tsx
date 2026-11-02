@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useMemo, useState } from 'react'
+import React, { useCallback, useEffect, useId, useRef, useMemo, useState } from 'react'
 import clsx from 'clsx'
 import {
   flexRender,
@@ -27,6 +27,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { DraggableRow } from './ListTableRow'
+import { getListTableRowId } from './ListTableWidgets'
 import { RowCells } from './ListTableCell'
 import * as Styled from './ListTable.styled'
 import { SortableTHComponent } from './ListTableHeader'
@@ -95,7 +96,9 @@ export function ListTable<TData extends RowData>({
   getRowClassName,
   variant = 'default',
   scrollToSelection = false,
+  ariaLabel,
 }: ListTableProps<TData>) {
+  const tableId = useId()
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
   const [columnSizingLocal, setColumnSizingLocal] = useState<ColumnSizingState>({})
@@ -227,7 +230,7 @@ export function ListTable<TData extends RowData>({
   const virtualRows = rowVirtualizer.getVirtualItems()
 
   // --- Selection & Keyboard ---
-  const { handleRowClick, handleKeyDown } = useTableSelection({
+  const { activeRowIndex, handleRowClick, handleKeyDown } = useTableSelection({
     rows,
     selectedRows,
     onSelectedRowsChange,
@@ -246,6 +249,15 @@ export function ListTable<TData extends RowData>({
     // only when the selection changes: new rows moving the selected one must not move the scroll
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scrollToSelection, selectedRowId, isSelectedRowLoaded])
+
+  // Focus stays on the container, so this tells screen readers which row the arrow keys moved to
+  const lastActiveRow = rows[activeRowIndex]
+  const focusedRowIndex = isSelectedRowLoaded
+    ? selectedRowIndex
+    : lastActiveRow && selectedRows.includes(lastActiveRow.id)
+    ? activeRowIndex
+    : -1
+  const isFocusedRowRendered = virtualRows.some((item) => item.index === focusedRowIndex)
 
   const handleRowDoubleClick = useCallback(
     (rowId: string, rowIndex: number, e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -346,11 +358,18 @@ export function ListTable<TData extends RowData>({
     <Styled.TableContainer
       ref={tableContainerRef}
       className={clsx(isDataVariant && 'data')}
+      role="grid"
+      aria-label={ariaLabel}
+      aria-multiselectable={multiSelection || undefined}
+      aria-rowcount={hasNextPage ? -1 : rows.length + 1}
+      aria-activedescendant={
+        isFocusedRowRendered ? getListTableRowId(tableId, focusedRowIndex) : undefined
+      }
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={isResizingColumn ? { cursor: 'col-resize' } : undefined}
     >
-      <Styled.Table style={columnSizeVars as React.CSSProperties}>
+      <Styled.Table role="presentation" style={columnSizeVars as React.CSSProperties}>
         {/* Column DndContext — isolated so row useSortable hooks are unaffected during column drag */}
         <DndContext
           sensors={sensors}
@@ -360,9 +379,9 @@ export function ListTable<TData extends RowData>({
           onDragCancel={handleColumnDragCancel}
           modifiers={[restrictToHorizontalAxis]}
         >
-          <Styled.THead>
+          <Styled.THead role="rowgroup">
             {table.getHeaderGroups().map((headerGroup) => (
-              <Styled.HeaderTR key={headerGroup.id}>
+              <Styled.HeaderTR key={headerGroup.id} role="row" aria-rowindex={1}>
                 <SortableContext
                   items={headerGroup.headers.map((h) => h.id)}
                   strategy={horizontalListSortingStrategy}
@@ -417,7 +436,7 @@ export function ListTable<TData extends RowData>({
           onDragCancel={handleRowDragCancel}
           modifiers={[restrictToVerticalAxis]}
         >
-          <Styled.TBody style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
+          <Styled.TBody role="rowgroup" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
             <SortableContext
               items={rows.map((row) => row.id)}
               strategy={verticalListSortingStrategy}
@@ -429,9 +448,11 @@ export function ListTable<TData extends RowData>({
                   return (
                     <Styled.LoaderTR
                       key="loader"
+                      role="row"
+                      aria-rowindex={virtualRow.index + 2}
                       style={{ transform: `translateY(${virtualRow.start}px)` }}
                     >
-                      <td>Loading more data...</td>
+                      <td role="gridcell">Loading more data...</td>
                     </Styled.LoaderTR>
                   )
                 }
@@ -440,6 +461,7 @@ export function ListTable<TData extends RowData>({
                 return (
                   <DraggableRow
                     key={row.id}
+                    tableId={tableId}
                     row={row}
                     virtualRow={virtualRow}
                     isSelected={selectedRows.includes(row.id)}

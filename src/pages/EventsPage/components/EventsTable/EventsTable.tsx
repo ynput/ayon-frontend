@@ -148,6 +148,7 @@ export const EventsTable: FC<EventsTableProps> = ({
     <Styled.Wrapper onKeyDown={handleKeyDown}>
       <ListTable
         variant="data"
+        ariaLabel="Events"
         data={events}
         columns={columns}
         defaultColumnVisibility={defaultColumnVisibility}

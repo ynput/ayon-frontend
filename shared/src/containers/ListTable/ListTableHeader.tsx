@@ -105,6 +105,7 @@ export function SortableTHComponent<TData extends RowData>({
         sorted: !!isSorted,
       })}
       {...(enabled ? { ...attributes, ...listeners } : {})}
+      role="columnheader"
     >
       <Styled.THContent>
         {header.isPlaceholder

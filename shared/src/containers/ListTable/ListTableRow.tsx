@@ -10,7 +10,11 @@ import {
   ListTableCellEditingState,
   RowCells,
 } from './ListTableCell'
-import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
+import {
+  getListTableRowId,
+  ListTableColumnAttributeData,
+  ListTableDataTypeWidgets,
+} from './ListTableWidgets'
 import { GroupRow } from './ListTableGroupRow'
 import { isCustomGroupRowValue } from './ListTableGroupRowHelpers'
 
@@ -20,6 +24,7 @@ const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholde
 // --- DraggableRow (regular data row) ---
 
 interface DraggableRowProps<TData extends RowData> {
+  tableId: string
   row: Row<TData>
   virtualRow: any
   isSelected: boolean
@@ -46,6 +51,7 @@ interface DraggableRowProps<TData extends RowData> {
 }
 
 function DraggableRowInner<TData extends RowData>({
+  tableId,
   row,
   virtualRow,
   isSelected,
@@ -91,6 +97,7 @@ function DraggableRowInner<TData extends RowData>({
         isExpanded={row.getIsExpanded()}
         onToggle={row.getToggleExpandedHandler()}
         virtualStart={virtualRow.start}
+        rowIndex={rowIndex}
         onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
       />
     )
@@ -102,6 +109,10 @@ function DraggableRowInner<TData extends RowData>({
   return (
     <Styled.TR
       ref={setNodeRef}
+      id={getListTableRowId(tableId, rowIndex)}
+      role="row"
+      aria-rowindex={rowIndex + 2}
+      aria-selected={isPlaceholderRow ? undefined : isSelected}
       style={{
         transform: `${virtualTransform} ${dndTransform}`,
         transition,

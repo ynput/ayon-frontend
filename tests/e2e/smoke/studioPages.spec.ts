@@ -35,11 +35,7 @@ test.describe('smoke: dashboard', () => {
     {
       name: 'projects',
       path: () => '/dashboard/projects',
-      ready: (page) =>
-        visible(
-          button(page, 'Create new project'),
-          page.getByRole('button', { name: 'Label / Name', exact: true }),
-        ),
+      ready: (page) => visible(button(page, 'Create new project'), column(page, 'Label / Name')),
     },
   ])
 })

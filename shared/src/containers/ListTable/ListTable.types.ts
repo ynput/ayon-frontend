@@ -111,4 +111,6 @@ export interface ListTableProps<TData> {
   variant?: 'default' | 'data'
   // Scroll to the selected row when the selection changes from outside the table
   scrollToSelection?: boolean
+  // Name of the table for screen readers
+  ariaLabel?: string
 }

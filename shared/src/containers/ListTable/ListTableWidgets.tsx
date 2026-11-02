@@ -169,4 +169,6 @@ export const getDefaultListTableDataTypeWidgets = <TData extends RowData>() =>
 export const getListTableCellId = (rowId: string, columnId: string) =>
   `list-table-cell-${rowId}-${columnId}`
 
+export const getListTableRowId = (tableId: string, rowIndex: number) => `${tableId}-row-${rowIndex}`
+
 export const renderListTableFallbackValue = (value: unknown) => stringifyScalarValue(value)
