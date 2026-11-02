@@ -1,4 +1,5 @@
 import { FC, useState, useMemo, useRef, useEffect, Fragment } from 'react'
+import { debounce } from 'lodash'
 import * as Styled from './LinksManager.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { useGetSearchedEntitiesLinksInfiniteQuery } from '@shared/api'
@@ -24,7 +25,15 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   onAdd,
 }) => {
   const [search, setSearch] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  const debouncedSetSearch = useMemo(() => debounce(setDebouncedSearch, 300), [])
+
+  useEffect(() => {
+    debouncedSetSearch(search)
+    return () => debouncedSetSearch.cancel()
+  }, [search, debouncedSetSearch])
 
   const {
     data: searchData,
@@ -37,9 +46,9 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
     {
       projectName,
       entityType: targetEntityType,
-      search,
+      search: debouncedSearch,
     },
-    { skip: !search },
+    { skip: !debouncedSearch },
   )
 
   // Flatten all entities from all pages
