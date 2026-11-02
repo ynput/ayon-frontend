@@ -19,7 +19,7 @@ export type Cluster = {
   hasActive: boolean
 }
 
-const SEVERITY_RANK: Record<Severity, number> = { error: 3, warning: 2, info: 1, debug: 0 }
+const SEVERITY_RANK: Record<Severity, number> = { error: 3, warning: 2, info: 1 }
 
 export const worstSeverity = (events: EventItem[]): Severity | null => {
   let worst: Severity | null = null

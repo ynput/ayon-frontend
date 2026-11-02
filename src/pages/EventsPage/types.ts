@@ -16,7 +16,7 @@ export type EventItem = {
   cursor?: string
 }
 
-export type Severity = 'error' | 'warning' | 'info' | 'debug'
+export type Severity = 'error' | 'warning' | 'info'
 
 export type EventFilters = {
   search?: string

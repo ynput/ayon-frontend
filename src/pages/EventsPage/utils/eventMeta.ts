@@ -39,7 +39,6 @@ export const SEVERITIES: { value: Severity; label: string; icon: string; color: 
   { value: 'error', label: 'Error', icon: 'error', color: 'var(--md-sys-color-error)' },
   { value: 'warning', label: 'Warning', icon: 'warning', color: 'var(--md-sys-color-warning)' },
   { value: 'info', label: 'Info', icon: 'info', color: 'var(--md-sys-color-primary)' },
-  { value: 'debug', label: 'Debug', icon: 'bug_report', color: 'var(--md-sys-color-outline)' },
 ]
 
 /** Visual severity of any event: log level for logs, otherwise derived from the status */

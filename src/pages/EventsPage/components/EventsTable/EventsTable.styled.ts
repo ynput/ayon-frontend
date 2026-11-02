@@ -37,24 +37,6 @@ export const Wrapper = styled.div`
     flex-shrink: 0;
   }
 
-  .status {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-    color: var(--md-sys-color-on-surface-variant);
-    .icon {
-      font-size: 16px;
-    }
-    &.failed {
-      color: var(--md-sys-color-error);
-    }
-    &.pending,
-    &.in_progress {
-      color: var(--md-sys-color-primary);
-    }
-  }
-
   && .table-list-row.severity-error:not(.selected) td .inner-td {
     background-color: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent);
   }

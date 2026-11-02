@@ -1,5 +1,4 @@
 import { FC, useCallback, useMemo } from 'react'
-import clsx from 'clsx'
 import { format, formatDistanceToNowStrict, isToday } from 'date-fns'
 import type { ColumnDef, ColumnSizingState } from '@tanstack/react-table'
 import { Icon } from '@ynput/ayon-react-components'
@@ -16,7 +15,6 @@ import {
 } from '../../utils/eventMeta'
 import * as Styled from './EventsTable.styled'
 
-// The description is last because ListTable gives the free space to the last column
 const columns: ColumnDef<EventItem>[] = [
   {
     id: 'severity',
@@ -24,10 +22,22 @@ const columns: ColumnDef<EventItem>[] = [
     size: 36,
     enableResizing: false,
     cell: ({ row }) => {
+      // status lives here: most events are finished, so only the exceptions show anything
+      const { status } = row.original
       const severity = getSeverityMeta(getSeverity(row.original))
-      if (severity) return <Icon icon={severity.icon} style={{ color: severity.color }} />
-      if (isActiveStatus(row.original.status))
-        return <Icon icon="progress_activity" className="spin" />
+      const label = getStatusMeta(status).label
+      if (severity) {
+        return (
+          <Icon
+            icon={severity.icon}
+            style={{ color: severity.color }}
+            data-tooltip={status === 'finished' ? undefined : label}
+          />
+        )
+      }
+      if (isActiveStatus(status)) {
+        return <Icon icon="progress_activity" className="spin" data-tooltip={label} />
+      }
       return null
     },
   },
@@ -59,6 +69,17 @@ const columns: ColumnDef<EventItem>[] = [
     },
   },
   {
+    id: 'description',
+    header: 'Description',
+    size: 200,
+    meta: { listTableGrow: true },
+    cell: ({ row }) => (
+      <span className="ellipsis" title={row.original.description}>
+        {row.original.description}
+      </span>
+    ),
+  },
+  {
     id: 'project',
     header: 'Project',
     size: 140,
@@ -69,30 +90,6 @@ const columns: ColumnDef<EventItem>[] = [
     header: 'User',
     size: 120,
     cell: ({ row }) => <span className="ellipsis">{row.original.user}</span>,
-  },
-  {
-    id: 'status',
-    header: 'Status',
-    size: 110,
-    cell: ({ row }) => {
-      const status = getStatusMeta(row.original.status)
-      return (
-        <span className={clsx('status', row.original.status)}>
-          <Icon icon={status.icon} />
-          {status.label}
-        </span>
-      )
-    },
-  },
-  {
-    id: 'description',
-    header: 'Description',
-    size: 200,
-    cell: ({ row }) => (
-      <span className="ellipsis" title={row.original.description}>
-        {row.original.description}
-      </span>
-    ),
   },
 ]
 

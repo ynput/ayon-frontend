@@ -60,6 +60,12 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
     if (!filters.topics?.includes(topic)) onChange({ topics: [...(filters.topics ?? []), topic] })
   }
 
+  const applyEntityDraft = () => {
+    const id = entityDraft.trim().replace(/-/g, '')
+    if (id) onChange({ entity: id })
+    setEntityDraft('')
+  }
+
   const activeCount = countActiveFilters(filters)
 
   return (
@@ -266,14 +272,13 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
           <form
             onSubmit={(e) => {
               e.preventDefault()
-              const id = entityDraft.trim().replace(/-/g, '')
-              if (id) onChange({ entity: id })
-              setEntityDraft('')
+              applyEntityDraft()
             }}
           >
             <InputText
               value={entityDraft}
               onChange={(e) => setEntityDraft(e.target.value)}
+              onBlur={applyEntityDraft}
               placeholder="Entity id"
               aria-label="Filter by entity id"
               autoComplete="off"
@@ -283,7 +288,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
         ) : null}
         <Styled.Hint>
           {isAdmin
-            ? 'Or open an event and choose "Entity timeline"'
+            ? 'Paste an entity id, or open an event and choose "Entity timeline"'
             : 'Filtering by entity requires admin access'}
         </Styled.Hint>
       </Styled.Group>

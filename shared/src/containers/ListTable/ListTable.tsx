@@ -386,7 +386,7 @@ export function ListTable<TData extends RowData>({
                   items={headerGroup.headers.map((h) => h.id)}
                   strategy={horizontalListSortingStrategy}
                 >
-                  {headerGroup.headers.map((header, index) => (
+                  {headerGroup.headers.map((header) => (
                     <SortableTHComponent
                       key={header.id}
                       header={header}
@@ -394,7 +394,6 @@ export function ListTable<TData extends RowData>({
                       enableSorting={enableSorting}
                       enableColumnVisibility={enableColumnVisibility}
                       enableColumnResizing={enableColumnResizing}
-                      isLast={index === headerGroup.headers.length - 1}
                     />
                   ))}
                 </SortableContext>

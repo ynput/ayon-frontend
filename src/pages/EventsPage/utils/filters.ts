@@ -34,6 +34,9 @@ export const buildGqlVariables = (filters: EventFilters) => {
   }
 }
 
+// reviewable events name their version in `versionId`, see getEventEntity
+const ENTITY_SUMMARY_KEYS = ['entityId', 'versionId']
+
 type Condition = { key: string; value?: unknown; operator: string }
 type QueryFilter = { conditions: (Condition | QueryFilter)[]; operator?: 'and' | 'or' }
 
@@ -41,7 +44,14 @@ type QueryFilter = { conditions: (Condition | QueryFilter)[]; operator?: 'and' |
 export const buildQueryFilter = (filters: EventFilters): QueryFilter => {
   const conditions: QueryFilter['conditions'] = []
   if (filters.entity) {
-    conditions.push({ key: 'summary/entityId', value: filters.entity, operator: 'eq' })
+    conditions.push({
+      operator: 'or',
+      conditions: ENTITY_SUMMARY_KEYS.map((key) => ({
+        key: `summary/${key}`,
+        value: filters.entity,
+        operator: 'eq',
+      })),
+    })
   }
   const topics = getTopicPatterns(filters)
   if (topics) {
@@ -93,7 +103,8 @@ export const matchesFilters = (event: EventItem, filters: EventFilters): boolean
     if (!topics.some((p) => patternToRegex(p).test(event.topic))) return false
   } else if (filters.hideLogs && getCategory(event.topic) === 'log') return false
 
-  if (filters.entity && event.summary.entityId !== filters.entity) return false
+  if (filters.entity && !ENTITY_SUMMARY_KEYS.some((key) => event.summary[key] === filters.entity))
+    return false
   if (filters.statuses?.length && !filters.statuses.includes(event.status)) return false
   if (filters.projects?.length && !filters.projects.includes(event.project ?? '')) return false
   if (filters.users?.length && !filters.users.includes(event.user ?? '')) return false

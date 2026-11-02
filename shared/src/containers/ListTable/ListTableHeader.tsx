@@ -3,6 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import clsx from 'clsx'
 import * as Styled from './ListTable.styled'
+import { isListTableGrowColumn } from './ListTableWidgets'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 import HeaderActionButton from '@shared/containers/ProjectTreeTable/components/HeaderActionButton'
 import { useMenuContext } from '@shared/context'
@@ -14,7 +15,6 @@ interface SortableTHProps<TData> {
   enableSorting?: boolean
   enableColumnVisibility?: boolean
   enableColumnResizing?: boolean
-  isLast?: boolean
 }
 
 export function SortableTHComponent<TData extends RowData>({
@@ -23,7 +23,6 @@ export function SortableTHComponent<TData extends RowData>({
   enableSorting = false,
   enableColumnVisibility = false,
   enableColumnResizing = false,
-  isLast = false,
 }: SortableTHProps<TData>) {
   const { attributes, listeners, setNodeRef, isDragging, transform, transition } = useSortable({
     id: header.id,
@@ -95,7 +94,9 @@ export function SortableTHComponent<TData extends RowData>({
         width: `calc(var(--header-${header.id}-size) * 1px)`,
         transform: CSS.Transform.toString(transform) ?? undefined,
         transition,
-        flexGrow: isLast ? 1 : undefined,
+        flexGrow: isListTableGrowColumn(header.getContext().table, header.column.id)
+          ? 1
+          : undefined,
       }}
       className={clsx({
         grab: enabled,

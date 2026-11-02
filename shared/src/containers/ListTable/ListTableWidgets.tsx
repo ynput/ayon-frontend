@@ -1,5 +1,5 @@
 import type { AttributeData } from '@shared/api'
-import { Cell, Row, RowData } from '@tanstack/react-table'
+import { Cell, Row, RowData, Table } from '@tanstack/react-table'
 import { BooleanWidget } from '../ProjectTreeTable/widgets/BooleanWidget'
 import { DateWidget } from '../ProjectTreeTable/widgets/DateWidget'
 import { EnumWidget } from '../ProjectTreeTable/widgets/EnumWidget'
@@ -170,5 +170,15 @@ export const getListTableCellId = (rowId: string, columnId: string) =>
   `list-table-cell-${rowId}-${columnId}`
 
 export const getListTableRowId = (tableId: string, rowIndex: number) => `${tableId}-row-${rowIndex}`
+
+export const isListTableGrowColumn = <TData extends RowData>(
+  table: Table<TData>,
+  columnId: string,
+) => {
+  const columns = table.getVisibleLeafColumns()
+  const growColumn =
+    columns.find((c) => c.columnDef.meta?.listTableGrow) ?? columns[columns.length - 1]
+  return growColumn?.id === columnId
+}
 
 export const renderListTableFallbackValue = (value: unknown) => stringifyScalarValue(value)
