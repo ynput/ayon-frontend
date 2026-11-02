@@ -32,7 +32,7 @@ import { debounce } from 'lodash'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
-  refreshOtherActiveQueries,
+  refreshOtherActiveQueriesOf,
 } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
@@ -733,9 +733,7 @@ export const useFetchOverviewData = ({
     ])
 
     // then later on refresh any other caches
-    queriesToRefresh.map(({ endpointName, args }) =>
-      dispatch(refreshOtherActiveQueries(endpointName, args)),
-    )
+    dispatch(refreshOtherActiveQueriesOf(queriesToRefresh))
   }
 
   const error = tasksListError || searchFoldersError || groupedTasksError

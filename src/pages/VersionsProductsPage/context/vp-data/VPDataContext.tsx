@@ -1,11 +1,9 @@
 import {
   EntityGroup,
-  LinkTypeModel,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
 import { useGetProductsInfiniteQuery } from '@shared/api/queries'
-import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
 import { flattenInfiniteVersionsData, flattenInfiniteProductsData } from '@shared/api'
 import { FC, ReactNode, useMemo, useState, useEffect, useRef, useCallback } from 'react'
 import { VersionsDataContext } from './VPDataContextInstance'
@@ -26,10 +24,6 @@ import { useBuildVersionsTableData } from '../../hooks/useBuildVersionsTableData
 import {
   checkColumnVisibility,
   getColumnSortKey,
-  LinksTableData,
-  linksToTableData,
-  useEntityLinks,
-  useLinkColumnsVisibility,
   TableRow,
   useExpandedState,
   useProjectDataContext,
@@ -49,12 +43,12 @@ import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containe
 import { useVPViewsContext } from '../vp-views/VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback, useProjectContext, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
-  refreshOtherActiveQueries,
+  refreshOtherActiveQueriesOf,
 } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
@@ -63,24 +57,11 @@ import {
 import useVersionsGroupBy from '../../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../../hooks/useVPColumnStats'
 import { useAppDispatch } from '@state/store'
+import { useVPLinks } from './useVPLinks'
+import type { LinksTableData } from '@shared/containers'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
-const EMPTY_LINK_TYPES: LinkTypeModel[] = []
-
-// converted per entity type, so one cache changing doesn't re-convert the others
-const useTableLinks = (
-  links: Map<string, EntityLink[]>,
-  entityType: string,
-  anatomy: Parameters<typeof linksToTableData>[2],
-) =>
-  useMemo(
-    () =>
-      new Map<string, LinksTableData>(
-        Array.from(links, ([id, value]) => [id, linksToTableData(value, entityType, anatomy)]),
-      ),
-    [links, entityType, anatomy],
-  )
 
 const SORT_BY_FIELD_MAP: Record<string, string> = {
   name: 'path',
@@ -203,7 +184,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { anatomy, linkTypes = EMPTY_LINK_TYPES } = useProjectContext()
   const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
@@ -221,19 +201,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const showComments = useMemo(
     () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
     [columns.columnVisibility],
-  )
-
-  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
-  // the grid shows no link columns, but the on-screen flags outlive the unmounted table
-  const showLinks = useMemo(
-    () => ({
-      version: !showGrid && isLinkColumnShown('primary', 'version'),
-      product: !showGrid && isLinkColumnShown('primary', 'product'),
-      folder: !showGrid && isLinkColumnShown('folder', 'folder'),
-      task: !showGrid && isLinkColumnShown('task', 'task'),
-      parentProduct: !showGrid && isLinkColumnShown('product', 'product'),
-    }),
-    [isLinkColumnShown, showGrid],
   )
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -740,92 +707,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const rowVersionsMap = isProductsTree ? childVersionsMap : versionsMap
   const rowProductsMap = isProductsTree ? productsMap : undefined
 
-  const linkEntityIds = useMemo(() => {
-    const versionIds = new Set<string>()
-    const productIds = new Set<string>()
-    const folderIds = new Set<string>()
-    const taskIds = new Set<string>()
-    if (isLoadingSlicerData) return { versionIds, productIds, folderIds, taskIds }
-
-    for (const version of rowVersionsMap.values()) {
-      if (showLinks.version) versionIds.add(version.id)
-      if (showLinks.parentProduct) productIds.add(version.product.id)
-      if (showLinks.folder) folderIds.add(version.product.folder.id)
-      if (showLinks.task && version.task) taskIds.add(version.task.id)
-    }
-    for (const product of rowProductsMap?.values() ?? []) {
-      if (showLinks.product) productIds.add(product.id)
-      if (showLinks.folder) folderIds.add(product.folder.id)
-    }
-    return { versionIds, productIds, folderIds, taskIds }
-  }, [isLoadingSlicerData, rowVersionsMap, rowProductsMap, showLinks])
-
-  const versionsLinks = useEntityLinks({
+  const { linksMap, loadingLinksEntityIds, onLinkColumnsVisibleChange, ...links } = useVPLinks({
     projectName,
-    entityType: 'version',
-    entityIds: linkEntityIds.versionIds,
+    showGrid,
+    skip: isLoadingSlicerData,
+    versionsMap: rowVersionsMap,
+    productsMap: rowProductsMap,
+    entitiesMap,
   })
-  const productsLinks = useEntityLinks({
-    projectName,
-    entityType: 'product',
-    entityIds: linkEntityIds.productIds,
-  })
-  const foldersLinks = useEntityLinks({
-    projectName,
-    entityType: 'folder',
-    entityIds: linkEntityIds.folderIds,
-  })
-  const tasksLinks = useEntityLinks({
-    projectName,
-    entityType: 'task',
-    entityIds: linkEntityIds.taskIds,
-  })
-
-  // copy and paste read links from the editor entities, not from the display rows
-  const entitiesMapWithLinks = useMemo(() => {
-    if (!versionsLinks.links.size && !productsLinks.links.size) return entitiesMap
-    const map = new Map(entitiesMap)
-    for (const [id, entity] of entitiesMap) {
-      const links =
-        entity.entityType === 'version'
-          ? versionsLinks.links.get(entity.id)
-          : productsLinks.links.get(entity.id)
-      if (links) map.set(id, { ...entity, links })
-    }
-    return map
-  }, [entitiesMap, versionsLinks.links, productsLinks.links])
-
-  const versionsTableLinks = useTableLinks(versionsLinks.links, 'version', anatomy)
-  const productsTableLinks = useTableLinks(productsLinks.links, 'product', anatomy)
-  const foldersTableLinks = useTableLinks(foldersLinks.links, 'folder', anatomy)
-  const tasksTableLinks = useTableLinks(tasksLinks.links, 'task', anatomy)
-
-  const linksMap = useMemo(
-    () =>
-      new Map([
-        ...versionsTableLinks,
-        ...productsTableLinks,
-        ...foldersTableLinks,
-        ...tasksTableLinks,
-      ]),
-    [versionsTableLinks, productsTableLinks, foldersTableLinks, tasksTableLinks],
-  )
-
-  const loadingLinksEntityIds = useMemo(
-    () =>
-      new Set([
-        ...versionsLinks.loadingIds,
-        ...productsLinks.loadingIds,
-        ...foldersLinks.loadingIds,
-        ...tasksLinks.loadingIds,
-      ]),
-    [
-      versionsLinks.loadingIds,
-      productsLinks.loadingIds,
-      foldersLinks.loadingIds,
-      tasksLinks.loadingIds,
-    ],
-  )
 
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
@@ -922,8 +811,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (!isVersionStatsUninitialized) {
       queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
     }
-    const allLinks = [versionsLinks, productsLinks, foldersLinks, tasksLinks]
-    for (const { isUninitialized, args } of allLinks) {
+    for (const { isUninitialized, args } of links.linkQueries) {
       if (!isUninitialized) queriesToRefresh.push({ endpointName: 'getEntityLinks', args })
     }
 
@@ -939,11 +827,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       dispatch(refreshListsMembership(projectName)),
     ])
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
-        dispatch(refreshOtherActiveQueries(endpointName, args)),
-      ),
-    )
+    await dispatch(refreshOtherActiveQueriesOf(queriesToRefresh))
   }
 
   const value: VersionsDataContextValue = {
@@ -982,7 +866,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     childVersionsMap,
     allVersionsMap,
     productsMap,
-    entitiesMap: entitiesMapWithLinks,
+    entitiesMap: links.entitiesMap,
     hasNextPage,
     fetchNextPage: handleFetchNextPage,
     // grouping

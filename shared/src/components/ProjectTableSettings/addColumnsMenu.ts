@@ -1,4 +1,5 @@
 import type React from 'react'
+import { upperFirst } from 'lodash'
 import type { MenuItemType } from '../Menu'
 import type { SettingsPanelItem } from '../SettingsPanel/SettingsPanelItemTemplate'
 import type { EntityType } from '@shared/containers'
@@ -150,7 +151,7 @@ export const buildAddColumnsMenu = ({
       }
 
       const parentScope = section.id.replace('parent-', '')
-      const scopeLabel = `${parentScope.charAt(0).toUpperCase()}${parentScope.slice(1)}`
+      const scopeLabel = upperFirst(parentScope)
       return {
         id: section.id,
         label: section.label,

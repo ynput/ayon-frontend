@@ -60,7 +60,6 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
   const { containerRef, getItemProps } = useKeyboardNavigation({
     entities,
     onSelect: handleSelectEntity,
-    onClose: handleClose,
     isActive: Boolean(search && entities.length > 0),
     hasNextPage,
     isFetchingNextPage,
