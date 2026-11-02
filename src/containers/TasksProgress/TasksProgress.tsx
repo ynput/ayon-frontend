@@ -173,12 +173,17 @@ const TasksProgress: FC<TasksProgressProps> = ({
   })
 
   const handleSync: OnSyncDataCallback = async (updates = []) => {
-    if (!folderIdsToFetch.length || !projectName) return
-    const hasFolderUpdates = updates.some((update) => update.topic.startsWith('entity.folder.'))
-    await Promise.all([
-      dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap(),
-      hasFolderUpdates && refetchFolders(),
-    ])
+    if (!projectName) return
+
+    const isFullSync = updates.length === 0
+    const hasFolderUpdates =
+      isFullSync || updates.some((update) => update.topic.startsWith('entity.folder.'))
+    const syncTasks = folderIdsToFetch.length
+      ? dispatch(refreshActiveAndPurgeOthers('GetTasksProgress', tasksProgressArgs)).unwrap()
+      : undefined
+    const syncFolders = hasFolderUpdates ? refetchFolders() : undefined
+
+    await Promise.all([syncTasks, syncFolders])
   }
   //
   //
@@ -407,7 +412,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
           <SyncButton
             topics={['entity.task', 'entity.folder']}
             onSync={handleSync}
-            disabled={!folderIdsToFetch.length || !projectName}
+            disabled={!projectName}
           />
           <Button
             onClick={handleExpandAllToggle}

@@ -968,10 +968,40 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 (result.data?.products || []).map((product: ProductNode) => [product.id, product]),
               )
               productIds.forEach((productId) => {
+                let productToCache = productsById.get(productId)
+                let cachedProduct: ProductNode | undefined
+                for (const page of draft.pages) {
+                  cachedProduct = page.products.find((product) => product.id === productId)
+                  if (cachedProduct) break
+                }
+
+                if (productToCache && cachedProduct) {
+                  const cachedVersionIds = new Set(cachedProduct.versions.map(({ id }) => id))
+                  const versions = productToCache.versions.filter(({ id }) =>
+                    cachedVersionIds.has(id),
+                  )
+                  let featuredVersion = cachedProduct.featuredVersion
+                  if (productToCache.featuredVersion === null) {
+                    featuredVersion = null
+                  } else if (
+                    productToCache.featuredVersion &&
+                    cachedVersionIds.has(productToCache.featuredVersion.id)
+                  ) {
+                    featuredVersion = productToCache.featuredVersion
+                  } else if (
+                    !featuredVersion ||
+                    !versions.some(({ id }) => id === featuredVersion?.id)
+                  ) {
+                    featuredVersion = null
+                  }
+
+                  productToCache = { ...productToCache, versions, featuredVersion }
+                }
+
                 updatePagedCache(
                   draft.pages,
                   productId,
-                  productsById.get(productId),
+                  productToCache,
                   'products',
                   (arg.sortBy || 'createdAt') as keyof ProductNode,
                   arg.desc || false,
