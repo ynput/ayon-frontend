@@ -78,6 +78,9 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
     deleteEntityList: {
       invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
     },
+    duplicateEntityList: {
+      invalidatesTags: [{ type: 'entityList', id: 'LIST' }],
+    },
     // LIST ITEM MUTATIONS
     updateEntityListItems: {
       async onQueryStarted(
@@ -291,6 +294,7 @@ export const {
   useCreateEntityListMutation,
   useUpdateEntityListMutation,
   useDeleteEntityListMutation,
+  useDuplicateEntityListMutation,
   // LIST ITEM MUTATIONS
   useUpdateEntityListItemsMutation,
   useUpdateEntityListItemMutation,

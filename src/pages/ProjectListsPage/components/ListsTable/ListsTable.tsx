@@ -152,6 +152,7 @@ const ListsTable: FC<ListsTableProps> = ({
                 ? [
                     'new-folder',
                     'import-list',
+                    'duplicate-list',
                     'delete',
                     'filter',
                     ...(onCreateList ? [] : ['new-list']),
