@@ -88,6 +88,11 @@ const AddNewLinks: FC<AddNewLinksProps> = ({
             ref={searchInputRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key !== 'Escape') return
+              e.stopPropagation()
+              handleClose()
+            }}
             placeholder={`Search ${targetEntityType}s...`}
             id={`search-${targetEntityType}`}
             autoFocus
