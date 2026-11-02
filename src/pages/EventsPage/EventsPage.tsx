@@ -101,7 +101,7 @@ const EventsPageContent = () => {
   const isEmpty = !isLoading && !error && events.length === 0
 
   let content
-  if (error && !events.length) {
+  if (error) {
     content = <EmptyPlaceholder error={error} ynputError={false} />
   } else if (isLoading) {
     content = (
