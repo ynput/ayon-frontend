@@ -9,10 +9,14 @@
 import { Dispatch, SetStateAction, useCallback, useEffect, useRef, useState } from 'react'
 
 // Same-tab change notification. Carries the key so only hooks using that key react to it.
-const LOCAL_STORAGE_CHANGE_EVENT = 'ayon:local-storage-change'
+// Same shape as useSessionStorage's `session-storage` event. Deliberately not `storage`:
+// useSessionStorage and the slicer listen to that and would re-read on every localStorage write.
+const LOCAL_STORAGE_CHANGE_EVENT = 'local-storage'
 
 const notifyLocalStorageChange = (key: string) => {
-  window.dispatchEvent(new CustomEvent<string>(LOCAL_STORAGE_CHANGE_EVENT, { detail: key }))
+  window.dispatchEvent(
+    new CustomEvent<{ key: string }>(LOCAL_STORAGE_CHANGE_EVENT, { detail: { key } }),
+  )
 }
 
 const parseJSONString = (value: string | null, fallback: any = null) => {
@@ -95,7 +99,7 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
 
     // Current tab: keyed change event
     function changeHandler(e: Event) {
-      if ((e as CustomEvent<string>).detail !== key) return
+      if ((e as CustomEvent<{ key?: string }>).detail?.key !== key) return
       syncFromStorage()
     }
 
