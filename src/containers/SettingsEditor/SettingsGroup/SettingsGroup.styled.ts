@@ -97,10 +97,10 @@ export const Header = styled.header`
   }
 `
 
+// A block, so a long title ends in an ellipsis (text-overflow can't cut a flex
+// container's text)
 export const Title = styled.h4`
-  display: flex;
-  align-items: center;
-  gap: var(--base-gap-small);
+  display: block;
   margin: 0;
   padding: 0;
   border: 0;
@@ -112,8 +112,12 @@ export const Title = styled.h4`
   font-size: var(--md-sys-typescale-title-small-font-size);
   color: var(--md-sys-color-on-surface);
 
-  /* addon 22px, card 16px, section 14px (field labels are 14px regular) */
+  /* addon 22px, card 16px, section 14px (field labels are 14px regular). The addon
+     title lines up its project, site and bundle badges */
   .settings-group-sheet > header > & {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
     font-size: var(--md-sys-typescale-title-large-font-size);
   }
 
@@ -180,6 +184,7 @@ export const Body = styled.div`
 // Pushes the group's "enabled" switch to the end of the title row
 export const HeaderToggle = styled.span`
   display: flex;
+  flex: none;
   align-items: center;
   margin-left: auto;
 
@@ -207,9 +212,9 @@ export const FoldButton = styled(Button)`
 `
 
 // A folded item's first values, dimmed at the end of its title row like a classic
-// panel's description; the title keeps its room first
+// panel's description; it gives up its room before the title does
 export const Summary = styled.span`
-  flex: 0 1 auto;
+  flex: 0 1000 auto;
   min-width: 0;
   max-width: 60%;
   margin-left: auto;
@@ -221,6 +226,7 @@ export const Summary = styled.span`
 `
 
 export const ActionsButton = styled(Button)`
+  flex: none;
   opacity: 0.4;
   transition: opacity 0.15s;
 

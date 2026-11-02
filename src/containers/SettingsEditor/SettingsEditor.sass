@@ -902,9 +902,9 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         border-radius: var(--border-radius-m)
         background-color: var(--settings-input-bg)
 
-        // the name keeps its room; a long summary is the one cut short
+        // a long summary is cut short first, then the name ends in an ellipsis, so the
+        // switch keeps its place beside the X
         > .settings-group-title
-          flex-shrink: 0
           max-width: 60%
 
       &:not(.settings-group-folded)
@@ -942,7 +942,6 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         background-color: var(--settings-input-bg)
 
         > .settings-group-title
-          flex-shrink: 0
           max-width: 60%
 
       &:not(.settings-group-folded)
