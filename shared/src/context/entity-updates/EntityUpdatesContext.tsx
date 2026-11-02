@@ -97,7 +97,17 @@ export const EntityUpdatesProvider = ({ children, projectNames }: EntityUpdatesP
       const updateType = getUpdateType(message.topic)
       // check the type of update and whether auto syncing is enabled for that type
       // NOTE: when auto syncing is enabled we DO NOT push to updates because it is streamed in automatically
-      if (!updateType || effectiveAutoSyncSettings[updateType]) return
+      if (
+        !updateType ||
+        effectiveAutoSyncSettings[updateType] ||
+        (updateType === 'created' &&
+          ![
+            'entity.folder.created',
+            'entity.task.created',
+            'entity.product.created',
+            'entity.version.created',
+          ].includes(message.topic))
+      ) return
 
       batcher.add({
         key: ++eventKey,
