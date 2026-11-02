@@ -80,10 +80,10 @@ const EventsPageContent = () => {
   // another entity (from a filter or a view) is a different set of events, refit once it loads
   const timelineEntity = useRef(filters.entity)
   useEffect(() => {
-    if (timelineEntity.current === filters.entity) return
+    if (isStale || error || timelineEntity.current === filters.entity) return
     timelineEntity.current = filters.entity
     setTimelineView((v) => ({ ...v, initialised: false }))
-  }, [filters.entity])
+  }, [filters.entity, isStale, error])
 
   const selectedIndex = useMemo(
     () => (selectedId ? events.findIndex((e) => e.id === selectedId) : -1),
