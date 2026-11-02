@@ -309,13 +309,17 @@ export const EventsTimeline: FC<EventsTimelineProps> = ({
     }
     const first = cluster.events[0].createdAt
     const last = cluster.events[cluster.events.length - 1].createdAt
-    // events too close to split apart: select the newest instead of zooming forever
+    // At minimum scale, select the newest event instead of zooming forever.
     const nextScale = clampScale(((last - first) * 2.5) / plotWidth)
-    if (nextScale >= msPerPx * 0.9 || msPerPx <= MIN_MS_PER_PX) {
+    if (msPerPx <= MIN_MS_PER_PX) {
       onSelect(cluster.events[cluster.events.length - 1].id)
       return
     }
-    focusRange(first, last)
+    if (nextScale >= msPerPx * 0.9) {
+      zoomAt(0.5, timeToX((first + last) / 2))
+    } else {
+      focusRange(first, last)
+    }
     setHover(null)
   }
 
