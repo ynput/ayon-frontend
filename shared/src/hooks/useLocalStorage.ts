@@ -77,9 +77,14 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
     syncFromStorage(true)
 
     if (!rawValueRef.current) {
-      const defaultItem = JSON.stringify(defaultValueRef.current)
-      localStorage.setItem(key, defaultItem)
-      rawValueRef.current = defaultItem
+      try {
+        const defaultItem = JSON.stringify(defaultValueRef.current)
+        localStorage.setItem(key, defaultItem)
+        rawValueRef.current = defaultItem
+      } catch (e) {
+        // storage full or blocked: keep the in-memory default and still listen for changes
+        console.error(e)
+      }
     }
 
     // Other tabs: native storage event (key is null when storage was cleared)
@@ -112,19 +117,22 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
             : valueOrFn
 
         const nextItem = JSON.stringify(nextValue)
-        const currentItem = localStorage.getItem(key)
-        if (currentItem === nextItem) {
-          rawValueRef.current = currentItem
-          return
+
+        // Persist first: if setItem throws (quota, blocked storage), state and refs stay as they were
+        if (localStorage.getItem(key) !== nextItem) {
+          localStorage.setItem(key, nextItem)
+          // notify on next tick to avoid updating other components during render
+          setTimeout(() => notifyLocalStorageChange(key), 0)
         }
 
-        localStorage.setItem(key, nextItem)
+        // This hook already shows this value: skip the re-render, objects and arrays keep their identity.
+        // Compared with what this hook last read, not with storage, which another instance may have
+        // already written before its notification reached us.
+        if (nextItem === rawValueRef.current) return
+
         valueRef.current = nextValue
         rawValueRef.current = nextItem
         setValue(nextValue)
-
-        // notify on next tick to avoid updating other components during render
-        setTimeout(() => notifyLocalStorageChange(key), 0)
       } catch (e) {
         console.error(e)
       }
