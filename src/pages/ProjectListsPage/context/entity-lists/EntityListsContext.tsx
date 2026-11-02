@@ -329,7 +329,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
               try {
                 await updateEntityListMutation({
                   projectName,
-                  listId,
+                  entityListId: listId,
                   entityListPatchModel: { entityListFolderId },
                 }).unwrap()
               } catch (error) {

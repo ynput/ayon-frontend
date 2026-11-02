@@ -3,6 +3,7 @@ import {
   EntityListModel,
   EntityListPatchModel,
   ShareOption,
+  type UpdateEntityListApiArg,
   useGetUserQuery,
   UserModel,
   useUpdateEntityListMutation,
@@ -81,13 +82,19 @@ type ListData = {
   [key: string]: any
 }
 
+type LegacyGuestAccessUpdateArg = Omit<UpdateEntityListApiArg, 'entityListId'> & {
+  listId: string
+}
+
 interface GuestAccessProps {
   sessionId: string
   listData?: ListData
   categories: ActivityCategory[]
   isLoading?: boolean
   // mutations
-  updateList: ReturnType<typeof useUpdateEntityListMutation>[0]
+  updateList: (
+    arg: UpdateEntityListApiArg | LegacyGuestAccessUpdateArg,
+  ) => ReturnType<ReturnType<typeof useUpdateEntityListMutation>[0]>
   // provider props
   provider: RemoteAddonProjectProps
 }
