@@ -1,8 +1,8 @@
 import { FC } from 'react'
 import * as Styled from './TaskTypeCell.styled'
 import clsx from 'clsx'
-import { EntityCard } from '@ynput/ayon-react-components'
-import { getEntityThumbnailUrl } from '@shared/util'
+import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
+import { FilmstripEntityCard } from '@shared/components'
 
 // types
 import type { EntityCardProps } from '@ynput/ayon-react-components'
@@ -47,6 +47,16 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
     thumbnailHash: task.thumbnailHash,
   })
 
+  const filmstripUrl =
+    isExpanded && task.hasReviewables
+      ? getEntityFilmstripUrl({
+          projectName: task.projectName,
+          entityType: 'task',
+          entityId: task.id,
+          thumbnailHash: task.thumbnailHash,
+        })
+      : null
+
   let changeProps: {
     onAssigneeChange: EntityCardProps['onAssigneeChange']
     onStatusChange?: EntityCardProps['onStatusChange']
@@ -73,12 +83,13 @@ export const TaskTypeCell: FC<TaskTypeCellProps> = ({
       data-tooltip={task.label || task.name}
       data-tooltip-delay={250}
     >
-      <EntityCard
+      <FilmstripEntityCard
         variant="status"
         title={task.label || task.name}
         titleIcon={taskIcon}
         imageIcon={taskIcon}
         imageUrl={isExpanded ? thumbnailUrl ?? undefined : undefined}
+        filmstripUrl={filmstripUrl}
         users={task.assignees.map((assignee: string) => ({ name: assignee }))}
         assigneeOptions={assigneeOptions}
         status={status}
