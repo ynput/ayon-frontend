@@ -142,7 +142,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
       // update the list in the database in the background
       try {
         await updateList({
-          listId: list.id,
+          entityListId: list.id,
           projectName,
           entityListPatchModel: updatePayload,
         })

@@ -245,7 +245,11 @@ export const ListsProvider = ({
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
-    await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
+    await updateListMutation({
+      entityListId: listId,
+      entityListPatchModel: list,
+      projectName,
+    }).unwrap()
   const {
     closeRenameList,
     openRenameList,
@@ -298,7 +302,7 @@ export const ListsProvider = ({
   const [deleteListMutation] = useDeleteEntityListMutation()
   const onDeleteList = async (listId: string) => {
     // delete list in the backend
-    await deleteListMutation({ listId, projectName }).unwrap()
+    await deleteListMutation({ entityListId: listId, projectName }).unwrap()
     // a right-clicked list can be deleted without being selected
     if (rowSelection[listId]) setRowSelection({})
   }
