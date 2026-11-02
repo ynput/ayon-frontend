@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures'
-import { AyonApi } from '../support/api'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { InboxPage } from '../pages/InboxPage'
-import { apiAs, signInAs } from '../support/session'
 
 const createArtist = async (
   createUser: AyonApi['createUser'],

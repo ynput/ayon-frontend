@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { signInAs } from '../support/session'
+import { signInAs } from '@ynput/ayon-e2e'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { LIVE_UPDATE, LiveUpdates } from './live'

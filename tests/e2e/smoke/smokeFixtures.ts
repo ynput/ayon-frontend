@@ -1,8 +1,7 @@
 import { Locator, Page } from '@playwright/test'
 import { expect, test as base } from '../fixtures'
-import { AyonApi, Folder, Product, Task, Version } from '../support/api'
-import { adminCredentials } from '../support/env'
-import { uniqueName } from '../support/names'
+import { adminCredentials, Folder, Product, Task, uniqueName, Version } from '@ynput/ayon-e2e'
+import { AyonApi } from '../support/api'
 import { Noise, watchPageHealth } from '../support/pageHealth'
 
 export type SmokeData = {

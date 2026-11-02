@@ -42,6 +42,9 @@ import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { useContributions } from '@ynput/ayon-addon'
+import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
@@ -264,6 +267,20 @@ const ProjectPageInner = () => {
   // built in tabs that render addon remote modules are marked like remote pages
   const { getAddonBundle } = useRemoteBundle()
 
+  // pages addons contribute to the project.page slot; built-in and legacy pages win on an id clash
+  const { contributions: pageContributions, isLoading: isLoadingContributions } =
+    useContributions('project.page')
+  const addonPages = useAddonPages(
+    pageContributions,
+    [
+      ...BUILT_IN_MODULES,
+      ...ADDON_PAGES.map((p) => p.module),
+      ...remotePages.map((p) => p.module),
+      ...addonsData.map((a) => a.name),
+    ],
+    [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
+  )
+
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
@@ -342,6 +359,14 @@ const ProjectPageInner = () => {
           viewType: remote.viewType,
           startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
+      ...addonPages.map((page) => ({
+        name: page.title,
+        module: page.id,
+        path: `/projects/${projectName}/${page.id}`,
+        viewType: page.viewType,
+        accessLevels: pageAccessLevels(page.access),
+        startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
+      })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -369,7 +394,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, module, getAddonBundle],
+    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle],
   )
 
   const activeLink = useMemo(() => {
@@ -397,6 +422,7 @@ const ProjectPageInner = () => {
 
     const foundAddon = addonsData?.find((item) => item.name === addonName)
     const foundRemotePage = remotePages.find((item) => item.module === module)
+    const foundAddonPage = addonPages.find((page) => page.id === module)
 
     if (module === 'overview') {
       component = <ProjectOverviewPage />
@@ -457,6 +483,17 @@ const ProjectPageInner = () => {
           />
         </main>
       )
+    } else if (foundAddonPage) {
+      viewType = foundAddonPage.viewType
+      component = (
+        <main>
+          <AddonProjectPage
+            key={foundAddonPage.key}
+            contribution={foundAddonPage}
+            projectName={projectName}
+          />
+        </main>
+      )
     } else {
       // If this is a known addon page but the remote page isn't loaded, show its splash
       const addonPage = ADDON_PAGES.find((p) => p.module === module)
@@ -489,7 +526,7 @@ const ProjectPageInner = () => {
     !projectName ||
     isLoadingProject ||
     (!!addonName && addonsLoading) ||
-    (!isBuiltInModule && isLoadingModules)
+    (!isBuiltInModule && (isLoadingModules || isLoadingContributions))
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {

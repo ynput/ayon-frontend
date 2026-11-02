@@ -21,6 +21,7 @@ import {
   useDetailsPanelContext,
   useScopedDetailsPanel,
   setDetailsPanelTabForScope,
+  isAddonDetailsPanelTab,
   useURIContext,
   type ProjectModelWithProducts,
   type FeedFilter,
@@ -42,6 +43,8 @@ import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
+import { useAddonTabs } from './hooks/useAddonTabs'
+import { ContributionView } from '@ynput/ayon-addon'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 
@@ -157,12 +160,23 @@ DetailsPanelProps) => {
     }
   }, [])
 
+  // addon tabs (detailsPanel.tab slot) for this entity type
+  const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = useAddonTabs(activeEntityType)
+  const activeAddonTab = addonTabs.find((tab) => tab.key === currentTab)
+  // a stored addon tab is only known once the manifests have loaded
+  const isPendingAddonTab = isAddonDetailsPanelTab(currentTab) && isLoadingAddonTabs
+
   // Force details tab for specific entity types
   useEffect(() => {
-    if (entitiesWithoutFeed.includes(activeEntityType) && currentTab !== 'details') {
+    if (
+      entitiesWithoutFeed.includes(activeEntityType) &&
+      currentTab !== 'details' &&
+      !activeAddonTab &&
+      !isPendingAddonTab
+    ) {
       setTab('details')
     }
-  }, [activeEntityType, currentTab, setTab])
+  }, [activeEntityType, currentTab, setTab, activeAddonTab, isPendingAddonTab])
 
   // once component is provided with specific entities, remove context entities to avoid conflicts
   useEffect(() => {
@@ -193,7 +207,11 @@ DetailsPanelProps) => {
     if (currentTab === 'subtasks' && activeEntityType !== 'task') {
       setTab('feed')
     }
-  }, [activeEntityType, currentTab, scope])
+    // an addon tab that doesn't apply to this entity type (or whose addon is gone)
+    if (isAddonDetailsPanelTab(currentTab) && !isLoadingAddonTabs && !activeAddonTab) {
+      setTab(entitiesWithoutFeed.includes(activeEntityType) ? 'details' : 'feed')
+    }
+  }, [activeEntityType, currentTab, scope, isLoadingAddonTabs, activeAddonTab])
 
   // now we get the full details data for selected entities
   let entitiesToQuery = activeEntities.length
@@ -391,6 +409,24 @@ DetailsPanelProps) => {
     requestPipWindow(500, 500)
   }
 
+  const addonTabContext = useMemo(
+    () => ({
+      projectName: firstProject,
+      entityType: activeEntityType,
+      entities: entityDetailsData
+        .filter((entity) => !!entity?.id)
+        .map((entity) => ({
+          id: entity.id,
+          entityType: entity.entityType || activeEntityType,
+          projectName: entity.projectName || firstProject,
+          name: entity.name,
+          label: entity.label || undefined,
+        })),
+      scope,
+    }),
+    [firstProject, activeEntityType, entityDetailsData, scope],
+  )
+
   const isCommentingEnabled = () => {
     // cannot comment on multiple projects
     if (activeProjectNames.length > 1) return false
@@ -534,6 +570,15 @@ DetailsPanelProps) => {
                 onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
               />
             )}
+          {activeAddonTab && (
+            <Styled.AddonTabContent>
+              <ContributionView
+                key={activeAddonTab.key}
+                contribution={activeAddonTab}
+                context={addonTabContext}
+              />
+            </Styled.AddonTabContent>
+          )}
           {currentTab === 'files' && (
             <DetailsPanelFiles
               entities={entityDetailsData}

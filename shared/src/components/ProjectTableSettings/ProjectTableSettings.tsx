@@ -15,6 +15,7 @@ import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
 import { normalizeColumnId } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 import type { MenuItemType } from '../Menu'
+import type { AddColumnItem } from './addColumnsMenu'
 import type { ParentColumnDefinition } from '@shared/containers'
 import type { ColumnIdAliases } from '@shared/containers/ProjectTreeTable/utils/columnIds'
 
@@ -49,7 +50,7 @@ export type OverviewSettingsChange = (setting: 'columns' | 'group-by', value: an
 
 export type ProjectTableSettingsProps = {
   settings?: SettingConfig[]
-  extraColumns?: { value: string; label: string; icon?: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   hiddenSettings?: ('columns' | 'row-height' | 'group-by' | 'sort-by')[]
   highlighted?: SettingHighlightedId

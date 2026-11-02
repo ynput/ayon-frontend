@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
+import { toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { toast } from '../support/ui'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 import { TasksProgressPage } from '../pages/TasksProgressPage'

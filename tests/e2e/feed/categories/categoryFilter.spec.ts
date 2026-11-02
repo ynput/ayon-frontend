@@ -1,6 +1,6 @@
 import { Page } from '@playwright/test'
+import { signInAs } from '@ynput/ayon-e2e'
 import { AyonApi } from '../../support/api'
-import { signInAs } from '../../support/session'
 import { OverviewPage } from '../../pages/OverviewPage'
 import { CREATOR, EVERYONE, NONE, expect, test } from './categoryFixtures'
 

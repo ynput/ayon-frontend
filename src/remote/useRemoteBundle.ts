@@ -13,17 +13,19 @@ export type RemotePageBundle = {
 // Which bundle an addon's remote modules were loaded from, when it is not production
 export const useRemoteBundle = () => {
   // the registered modules, so the version is the one that runs until a refresh
-  const { modules } = useRemoteModules()
+  const { modules, addonDev } = useRemoteModules()
   const { bundleVariant } = useGetBundleAddon()
 
   const getAddonBundle = useCallback(
     (addonName: string): RemotePageBundle | undefined => {
       if (bundleVariant === 'production') return undefined
+      // an addon from its dev server isn't from any bundle; the dev banner marks it
+      if (addonDev.status === 'active' && addonDev.override.addon === addonName) return undefined
       const addonVersion = modules.find((m) => m.addonName === addonName)?.addonVersion
       if (!addonVersion) return undefined
       return { variant: bundleVariant, addonName, addonVersion }
     },
-    [modules, bundleVariant],
+    [modules, bundleVariant, addonDev],
   )
 
   return { getAddonBundle }

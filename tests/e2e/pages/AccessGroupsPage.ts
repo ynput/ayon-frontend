@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { switchBody, toast } from '../support/ui'
+import { switchBody, toast } from '@ynput/ayon-e2e'
 import { SettingsEditor } from './SettingsEditor'
 
 export class AccessGroupsPage {

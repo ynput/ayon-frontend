@@ -10,6 +10,7 @@ import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import type { ParentColumnDefinition } from '@shared/containers'
 import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
 import { useListItemsDataContext } from '@pages/ProjectListsPage/context/list-items-data'
+import { useAddonCustomizeSections } from '@shared/components/ProjectTableSettings/useAddonCustomizeSections'
 
 export interface ListsTableSettingsProps {
   onGoTo: (name: string) => void
@@ -36,6 +37,8 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
   const { selectSetting } = useSettingsPanel()
   const { module: listValues, isPowerFeature } = useListValuesContext()
   const { listValuesSettings, setListValuesSettings } = useListItemsDataContext()
+  // sections addons contribute (projectTable.customizeSection slot)
+  const addonSections = useAddonCustomizeSections('lists')
 
   // mirror the table's excluded columns so the panel doesn't offer dead toggles
   // (e.g. subType is excluded for version/product lists where productType is the real column)
@@ -103,6 +106,7 @@ export const ListsTableSettings: FC<ListsTableSettingsProps> = ({
             />
           ),
         },
+        ...addonSections,
       ]}
       scope={selectedList?.entityType}
     />

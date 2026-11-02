@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { dialog, menuItem, toast } from '../support/ui'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { DetailsPanel } from './DetailsPanel'
 import { SearchFilterBar } from './SearchFilterBar'
 
