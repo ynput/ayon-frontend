@@ -34,6 +34,7 @@ const injectedRtkApi = api.injectEndpoints({
           entity_type: queryArg.entityType,
           new_list_label: queryArg.newListLabel,
           new_list_entity_type: queryArg.newListEntityType,
+          new_list_folder_id: queryArg.newListFolderId,
           update_listed_entities: queryArg.updateListedEntities,
           project_name: queryArg.projectName,
           folder_id: queryArg.folderId,
@@ -73,6 +74,7 @@ export type ImportDataApiArg = {
   newListEntityType?:
     | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
     | null
+  newListFolderId?: string | null
   updateListedEntities?: boolean
   projectName?: string | null
   folderId?: string | null
