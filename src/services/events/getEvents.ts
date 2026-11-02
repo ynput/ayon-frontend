@@ -126,6 +126,8 @@ export type EventsPage = {
   events: EventItem[]
   hasMore: boolean
   cursor?: string
+  /** rest pages only: how many rows of the server's list this page accounts for */
+  fetched?: number
 }
 
 // graphql pages by cursor, the rest query (used for entity filters) pages by offset
@@ -141,7 +143,11 @@ const eventsApi = api.injectEndpoints({
         getNextPageParam: (lastPage, allPages) => {
           if (!lastPage.hasMore) return undefined
           if (lastPage.cursor) return { cursor: lastPage.cursor }
-          return { offset: allPages.reduce((acc, page) => acc + page.events.length, 0) }
+          // Not page.events: live events get added to those, and an older one that isn't part of
+          // the rows read so far would push the offset past an unread row. A low offset only
+          // reads rows again, which useEventsData drops, a high one loses them.
+          const fetched = allPages.reduce((acc, page) => acc + (page.fetched ?? 0), 0)
+          return { offset: Math.max(0, fetched) }
         },
       },
       queryFn: async ({ queryArg, pageParam }, _api, _extra, baseQuery) => {
@@ -159,7 +165,9 @@ const eventsApi = api.injectEndpoints({
           })
           if (result.error) return { error: result.error }
           const events = (result.data as RawRestEvent[]).map(transformRestEvent)
-          return { data: { events, hasMore: events.length === EVENTS_PAGE_SIZE } }
+          return {
+            data: { events, hasMore: events.length === EVENTS_PAGE_SIZE, fetched: events.length },
+          }
         }
 
         const result = await baseQuery({
@@ -210,7 +218,12 @@ const eventsApi = api.injectEndpoints({
                 first.events.unshift(...added)
               }
               draft.pages.forEach((page) => {
-                page.events = page.events.filter((event) => matchesFilters(event, filters))
+                const matching = page.events.filter((event) => matchesFilters(event, filters))
+                // the server no longer returns these either, so later rows move up
+                if (page.fetched !== undefined) {
+                  page.fetched -= page.events.length - matching.length
+                }
+                page.events = matching
               })
             })
           },
@@ -237,6 +250,7 @@ const eventsApi = api.injectEndpoints({
     getEventGql: build.query<EventItem | null, { id: string }>({
       query: ({ id }) => ({ document: EVENT_BY_ID_QUERY, variables: { ids: [id] } }),
       transformResponse: (res: { events: RawConnection }) => transformEdges(res.events)[0] ?? null,
+      providesTags: (_res, _err, { id }) => [{ type: 'detail', id: `event-${id}` }],
     }),
     getEventNeighbours: build.query<EventNeighbours, { cursor: string; count?: number }>({
       query: ({ cursor, count = 5 }) => ({
@@ -272,7 +286,7 @@ const eventsApi = api.injectEndpoints({
         method: 'PATCH',
         body: { status: 'restarted' },
       }),
-      // the websocket message patches the loaded lists, only the detail needs refreshing
+      // the websocket message patches the loaded lists, only single event queries need refreshing
       invalidatesTags: (_res, _err, { id }) => [{ type: 'detail', id: `event-${id}` }],
     }),
   }),
