@@ -2,6 +2,7 @@ import { parse, type ParseLocalConfig } from "papaparse"
 import { ColumnMappings, ErrorHandlingMode, ValueMappings } from "./steps/common"
 import { parseUniqueValueIfHierarchy } from "./steps/hierarchy"
 import { ColumnMapping as ServerColumnMapping } from "@shared/api/generated/dataImport"
+import type { ExcelSheet } from "./excel"
 
 type ParseAsyncConfig = Omit<ParseLocalConfig, "complete">
 
@@ -18,6 +19,8 @@ export type ImportData = ParsedCSV & {
   fileId: string
   // the sheet of an Excel file the rows come from
   sheetName?: string
+  // every sheet of a multi-sheet Excel file, so another one can be picked later
+  sheets?: ExcelSheet[]
 }
 
 const parseConfig: ParseAsyncConfig = {

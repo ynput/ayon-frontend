@@ -30,3 +30,12 @@ export const SheetList = styled.div`
 export const SheetButton = styled(Button)`
   justify-content: flex-start;
 `
+
+export const ChangeSheetButton = styled(Button)`
+  padding: 2px;
+  min-height: unset;
+
+  .icon {
+    font-size: 18px;
+  }
+`
