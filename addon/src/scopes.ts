@@ -171,3 +171,12 @@ export interface PageMeta {
    */
   viewType?: string
 }
+
+/** Description of a `project.page` contribution: a page, and what the host adds around it. */
+export interface ProjectPageMeta extends PageMeta {
+  /**
+   * Shows AYON's details panel next to the page, for the page to open with `openDetails`. The page
+   * is in a splitter while the panel is there; it only shows when the page opens it.
+   */
+  detailsPanel?: boolean
+}
