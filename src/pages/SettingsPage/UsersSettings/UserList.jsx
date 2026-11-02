@@ -38,9 +38,9 @@ const StyledLicenseRow = styled.div`
 `
 
 export const ProfileRow = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
+  const { name, self, isMissing, missingReason } = rowData
   return (
-    <StyledProfileRow>
+    <StyledProfileRow data-tooltip={missingReason}>
       <UserImage
         name={name}
         size={25}
@@ -82,7 +82,7 @@ const UserList = ({
   setShowInviteUser,
   isLoading,
   onSelectUsers,
-  isSelfSelected,
+  selfName,
   managerDisabled,
 }) => {
   // GET LICENSE USER POOLS
@@ -94,11 +94,7 @@ const UserList = ({
   }, [selectedUsers, selectedProjects, userList])
 
   const onContextMenu = (e) => {
-    let newSelectedUsers = [...selectedUsers]
-    if (!selectedUsers.includes(e.data.name)) {
-      newSelectedUsers = [e.data.name]
-    }
-    onSelectUsers(newSelectedUsers)
+    const newSelectedUsers = selectedUsers.includes(e.data.name) ? selectedUsers : [e.data.name]
     ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
   }
 
@@ -110,8 +106,15 @@ const UserList = ({
   }
 
   // IDEA: Can these go into the details panel as well?
+  // built from the right-clicked selection; the dialogs act on the selected users, so an action
+  // selects a right-clicked user that is not selected yet
   const ctxMenuItems = (newSelectedUsers) => {
+    const withSelection = (open) => () => {
+      if (newSelectedUsers !== selectedUsers) onSelectUsers(newSelectedUsers)
+      open()
+    }
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
+    const ctxSelfSelected = newSelectedUsers.includes(selfName)
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
     const inviteLabel =
       ctxSelection.length === 1 && getInvitationState(ctxSelection[0]) === 'pending'
@@ -121,26 +124,26 @@ const UserList = ({
     return [
       {
         label: 'Set username',
-        disabled: selection.length !== 1,
-        command: () => setShowRenameUser(true),
+        disabled: ctxSelection.length !== 1,
+        command: withSelection(() => setShowRenameUser(true)),
         icon: 'edit',
       },
       {
         label: 'Set password',
-        disabled: selection.length !== 1,
-        command: () => setShowSetPassword(true),
+        disabled: ctxSelection.length !== 1,
+        command: withSelection(() => setShowSetPassword(true)),
         icon: 'key',
       },
       {
         label: inviteLabel,
         disabled: !ctxHasInvitable || managerDisabled,
-        command: () => setShowInviteUser(true),
+        command: withSelection(() => setShowInviteUser(true)),
         icon: 'mail',
       },
       {
         label: 'Delete selected',
-        disabled: !selection.length || isSelfSelected,
-        command: () => setShowDeleteUser(newSelectedUsers),
+        disabled: !ctxSelection.length || ctxSelfSelected,
+        command: withSelection(() => setShowDeleteUser(newSelectedUsers)),
         icon: 'delete',
         danger: true,
       },

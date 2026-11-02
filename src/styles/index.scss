@@ -395,6 +395,23 @@ a {
   }
 }
 
+// keep the right-clicked row looking hovered while its context menu is open
+.p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffffde;
+}
+
+// right-clicked entity card (grid, kanban) while its context menu is open
+.entity-card[data-context-menu-target] {
+  background-color: var(--default-color-hover);
+  box-shadow: inset 0 0 0 2px var(--default-color-hover);
+
+  &.active {
+    background-color: var(--active-color-hover);
+    box-shadow: inset 0 0 0 2px var(--active-border-color);
+  }
+}
+
 // compact table rows
 .p-datatable .p-datatable-tbody > tr,
 .p-treetable .p-treetable-tbody > tr {
@@ -464,97 +481,6 @@ a {
 // project side bar menu
 .p-sidebar-left {
   align-items: flex-start;
-}
-
-// splitter gutter handle: hidden by default, shows a full-length primary pill on hover/drag
-.p-splitter > .p-splitter-gutter {
-  position: relative;
-
-  // widen the grab area without changing the layout gap
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 1;
-  }
-
-  // subtle three dots in the middle to hint the gap is resizable
-  &::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 2px;
-    height: 2px;
-    border-radius: 50%;
-    translate: -50% -50%;
-    background: var(--md-sys-color-outline-variant);
-    pointer-events: none;
-    transition: opacity 0.1s ease-out;
-  }
-
-  .p-splitter-gutter-handle {
-    width: 100%;
-    height: 100%;
-    border-radius: 999px;
-    background: var(--md-sys-color-primary);
-    opacity: 0;
-    transition: opacity 0.1s ease-out;
-  }
-
-  &:hover {
-    // short delay so the handle doesn't flash when the cursor just passes over
-    &::before,
-    .p-splitter-gutter-handle {
-      transition-delay: 0.2s;
-    }
-    &::before {
-      opacity: 0;
-    }
-    .p-splitter-gutter-handle {
-      opacity: 0.75;
-    }
-  }
-
-  &.p-splitter-gutter-resizing {
-    &::before,
-    .p-splitter-gutter-handle {
-      transition-delay: 0s;
-    }
-    &::before {
-      opacity: 0;
-    }
-    .p-splitter-gutter-handle {
-      opacity: 0.75;
-    }
-  }
-
-  // collapsed gutters (gutterSize 0) show no dots and have no grab area
-  &[style*='width: 0px'],
-  &[style*='height: 0px'] {
-    &::before,
-    &::after {
-      display: none;
-    }
-  }
-}
-.p-splitter-horizontal > .p-splitter-gutter {
-  &::before {
-    box-shadow: 0 -5px 0 var(--md-sys-color-outline-variant),
-      0 5px 0 var(--md-sys-color-outline-variant);
-  }
-  &::after {
-    inset: 0 -3px;
-  }
-}
-.p-splitter-vertical > .p-splitter-gutter {
-  &::before {
-    box-shadow: -5px 0 0 var(--md-sys-color-outline-variant),
-      5px 0 0 var(--md-sys-color-outline-variant);
-  }
-  &::after {
-    inset: -3px 0;
-  }
 }
 
 // if the panel after the splitter gutter is hidden then hide the gutter too

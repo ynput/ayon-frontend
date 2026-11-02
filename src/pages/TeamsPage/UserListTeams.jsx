@@ -42,12 +42,6 @@ const UserListTeams = ({
     onUpdateTeams(updatedTeams)
   }
 
-  const onContextSelectionChange = (e) => {
-    const name = e.value.name
-    const index = selectedUsers.indexOf(name)
-    if (index === -1) onSelectUsers([name])
-  }
-
   // two arrays one for adding to teams and one for removing from teams
   // only one user that is not in the team is required to add to the team
   function getAddToList(selectedUsers, teams) {
@@ -115,16 +109,17 @@ const UserListTeams = ({
   // create ref and model
   const [contextMenuShow] = useCreateContextMenu([])
 
+  // rows call this with { originalEvent, data }, the panel around the table (a right-click on its
+  // empty space) with the DOM event
   const handleContext = (e) => {
-    // we all of this to keep users in sync
-    // when right clicking on a new user we need to use the event NOT selectedUsers as it is not updated yet
-    let users = selectedUsers
-    if (selectedUsers.length < 2) users = [e.data.name]
+    // a right-clicked user that is not selected is acted on alone, without selecting it
+    const name = e.data?.name
+    const users = name && !selectedUsers.includes(name) ? [name] : selectedUsers
 
     const addToList = getAddToList(users, teams)
     const removeFromList = getRemoveFromList(users, teams)
     contextMenuShow(
-      e.originalEvent,
+      e.originalEvent || e,
       createListItems(
         showAllUsers,
         onShowAllUsers,
@@ -145,7 +140,6 @@ const UserListTeams = ({
         userList={tableData}
         isLoading={isLoading}
         onSelectionChange={onSelectionChange}
-        onContextSelectionChange={onContextSelectionChange}
         selection={selection}
         className={clsx('user-list-table', { loading: isLoading })}
         rowClassName={() => clsx({ loading: isLoading })}
@@ -169,7 +163,6 @@ const UserListTeams = ({
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
-          onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
           selection={selection}
           resizableColumns

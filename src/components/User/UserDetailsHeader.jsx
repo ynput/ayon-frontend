@@ -5,7 +5,7 @@ import DetailHeader from '../DetailHeader'
 import { Button, Dialog, Icon, UserImagesStacked } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer } from '@shared/components'
 import { useMenuContext } from '@shared/context'
-import CodeEditor from '@uiw/react-textarea-code-editor'
+import { CodeEditor } from '@shared/components/CodeEditor'
 import { copyToClipboard } from '@shared/util'
 import styled from 'styled-components'
 

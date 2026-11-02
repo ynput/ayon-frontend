@@ -14,6 +14,7 @@ export interface LinkManagerItemProps {
   onRemove: (e: React.MouseEvent<HTMLButtonElement>, link: LinkEntity) => void
   onCountChange?: (newCount: number) => void
   isManager?: boolean
+  readOnly?: boolean // hide the count editor and the remove button
 }
 
 export const LinkManagerItem: FC<LinkManagerItemProps> = ({
@@ -24,13 +25,14 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
   onRemove,
   onCountChange,
   isManager = false,
+  readOnly = false,
 }) => {
   const [isEditingCount, setIsEditingCount] = useState(false)
   const [editValue, setEditValue] = useState(count)
 
   const handleBadgeClick = (e: React.MouseEvent) => {
     e.stopPropagation()
-    if (link.isRestricted) return
+    if (link.isRestricted || readOnly) return
     setEditValue(count)
     setIsEditingCount(true)
   }
@@ -116,7 +118,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
             x{count}
           </Styled.CountBadge>
         ))}
-      {(!link.isRestricted || isManager) && (
+      {!readOnly && (!link.isRestricted || isManager) && (
         <Button
           icon={'link_off'}
           variant="text"

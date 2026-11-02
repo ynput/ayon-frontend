@@ -6,6 +6,7 @@ import SubtasksSearchFilter from '../components/SubtasksSearchFilter/SubtasksSea
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { splitSubtasksSearch } from '../helpers/subtasksFilterAdapter'
 import { useDetailsPanelContext } from '@shared/context'
 
 interface DetailsPanelSubtasksProps extends SubtasksManagerWrapperProps {}
@@ -33,7 +34,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
       } as QueryFilter
     }
 
-    return expandRelativeDates(filters as any) as QueryFilter
+    return expandRelativeDates(splitSubtasksSearch(filters) as any) as QueryFilter
   }, [subtasksFilters, searchText])
 
   return (

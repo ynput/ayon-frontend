@@ -10,7 +10,7 @@ query GetTasksList(
   $first: Int
   $before: String
   $last: Int
-  $sortBy: String
+  $sortBy: [String!]
   $showComments: Boolean! = false
   $includeFolderChildren: Boolean! = true
 ) {

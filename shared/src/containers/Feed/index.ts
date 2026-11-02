@@ -8,6 +8,16 @@ export * from './context/feed'
 
 export { ActivityReferenceTooltip, FileUploadPreview }
 
+export {
+  codeTag,
+  inputTag,
+  blockquoteTag,
+} from './components/ActivityComment/ActivityMarkdownComponents'
+export {
+  default as remarkLiteralDirectives,
+  COMMENT_DIRECTIVES,
+} from './components/ActivityComment/remarkLiteralDirectives'
+
 export * from './hooks/useTableKeyboardNavigation'
 
 export type SavedAnnotationMetadata = {

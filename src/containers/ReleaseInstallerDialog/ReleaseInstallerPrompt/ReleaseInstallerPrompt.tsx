@@ -1,4 +1,4 @@
-import { useSessionStorage } from '@shared/hooks'
+import { useAfterStartup, useSessionStorage } from '@shared/hooks'
 import * as Styled from './ReleaseInstallerPrompt.styled'
 import { useNavigate } from 'react-router-dom'
 import { useAppDispatch } from '@state/store'
@@ -15,7 +15,9 @@ const ReleaseInstallerPrompt = ({ isAdmin }: Props) => {
   const dispatch = useAppDispatch()
 
   const [showPrompt, setShowPrompt] = useSessionStorage<boolean>('releaseInstallPrompt', true)
-  const notAdminOrDismissed = !showPrompt || !isAdmin
+  // a prompt, not worth slowing down the page load for
+  const isAfterStartup = useAfterStartup()
+  const notAdminOrDismissed = !showPrompt || !isAdmin || !isAfterStartup
 
   // get installers and dep packages and show if there are no installers or no dep packages
   const { data: { installers } = {}, isSuccess: isInstallersSuccess } = useListInstallersQuery(

@@ -37,8 +37,19 @@ const enhancedProjectApi = projectApi.enhanceEndpoints({
         error ? [] : [{ type: 'project', id: projectName }],
     },
     updateProject: {
-      invalidatesTags: (result, error, { projectName, projectPatchModel }) =>
+      invalidatesTags: (
+        _result,
+        error,
+        {
+          projectName,
+          projectPatchModel,
+          // @ts-expect-error: skipInvalidate is not part of the original type
+          skipInvalidate,
+        },
+      ) =>
         error
+          ? []
+          : skipInvalidate
           ? []
           : 'active' in projectPatchModel
           ? // if active is updated, invalidate all projects

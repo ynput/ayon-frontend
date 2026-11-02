@@ -185,7 +185,7 @@ export default function useBuildProjectDataTable({
             if (loadingTasks[folder.id]) {
               const count = loadingTasks[folder.id]
               if (count > 0) {
-                taskRows.push(...generateLoadingRows(count))
+                taskRows.push(...generateLoadingRows(count, {}, folder.id))
               }
             }
 
@@ -221,7 +221,7 @@ export default function useBuildProjectDataTable({
         // number of tasks we loading with the infinite query
         const count = TASKS_INFINITE_QUERY_COUNT
         if (count > 0) {
-          const loadingTaskRows = generateLoadingRows(count)
+          const loadingTaskRows = generateLoadingRows(count, {}, 'more')
 
           flatRows.push(...loadingTaskRows)
         }
@@ -269,7 +269,7 @@ export default function useBuildProjectDataTable({
           if (loadingTasks[folderId]) {
             const count = loadingTasks[folderId]
             if (count > 0) {
-              const loadingTaskRows = generateLoadingRows(count)
+              const loadingTaskRows = generateLoadingRows(count, {}, folderId)
 
               taskRows.push(...loadingTaskRows)
             }
@@ -301,7 +301,7 @@ export default function useBuildProjectDataTable({
     if (showHierarchy && isLoadingMore) {
       const count = TASKS_INFINITE_QUERY_COUNT
       if (count > 0) {
-        rootRows.push(...generateLoadingRows(count))
+        rootRows.push(...generateLoadingRows(count, {}, 'more'))
       }
     }
 

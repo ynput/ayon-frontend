@@ -1,5 +1,6 @@
 import { systemApi } from '@shared/api/generated'
 import type { GetSiteInfoApiResponse } from '@shared/api/generated'
+import { PubSub } from '@shared/util'
 
 export interface GetSiteInfoResult extends GetSiteInfoApiResponse {
   uiExposureLevel: number
@@ -30,7 +31,23 @@ const getSystemApi = systemApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
           : ['info', 'attribute'],
     },
     listFrontendModules: {
-      providesTags: ['info'],
+      providesTags: ['info', 'frontendModules'],
+      // production addon versions can change without a server restart (bundle edits),
+      // so refetch on bundle events to pick up the new versions
+      async onCacheEntryAdded(_, { dispatch, cacheDataLoaded, cacheEntryRemoved }) {
+        let token
+        try {
+          await cacheDataLoaded
+
+          token = PubSub.subscribe('bundle', () => {
+            dispatch(getSystemApi.util.invalidateTags(['frontendModules']))
+          })
+        } catch {
+          // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`
+        }
+        await cacheEntryRemoved
+        PubSub.unsubscribe(token)
+      },
     },
   },
 })

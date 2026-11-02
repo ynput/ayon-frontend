@@ -20,7 +20,21 @@ const toArray = (value: unknown): unknown[] =>
 const isQueryFilter = (node: QueryCondition | QueryFilter): node is QueryFilter =>
   'conditions' in node
 
-export const evaluateCondition = (condition: QueryCondition, values: FormValues): boolean => {
+// SQL ILIKE wildcards (%, _) - simplified, case-insensitive
+const matchesLike = (fieldValue: unknown, target: unknown): boolean => {
+  if (typeof fieldValue !== 'string' || typeof target !== 'string') return false
+  const pattern = target
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/%/g, '.*')
+    .replace(/_/g, '.')
+  try {
+    return new RegExp(`^${pattern}$`, 'i').test(fieldValue)
+  } catch {
+    return false
+  }
+}
+
+export const evaluateCondition =(condition: QueryCondition, values: FormValues): boolean => {
   const fieldValue = values[condition.key]
   const target = condition.value
   const operator = condition.operator || 'eq'
@@ -42,19 +56,11 @@ export const evaluateCondition = (condition: QueryCondition, values: FormValues)
       return typeof fieldValue === 'number' && typeof target === 'number' && fieldValue <= target
     case 'gte':
       return typeof fieldValue === 'number' && typeof target === 'number' && fieldValue >= target
-    case 'like': {
-      if (typeof fieldValue !== 'string' || typeof target !== 'string') return false
-      // SQL ILIKE wildcards (%, _) - simplified, case-insensitive
-      const pattern = target
-        .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-        .replace(/%/g, '.*')
-        .replace(/_/g, '.')
-      try {
-        return new RegExp(`^${pattern}$`, 'i').test(fieldValue)
-      } catch {
-        return false
-      }
-    }
+    case 'like':
+      return matchesLike(fieldValue, target)
+    case 'notlike':
+      // like the backend, an empty field does not match the pattern, so it passes
+      return typeof target === 'string' && !matchesLike(fieldValue, target)
     case 'in':
       return Array.isArray(target) && target.includes(fieldValue as never)
     case 'notin':

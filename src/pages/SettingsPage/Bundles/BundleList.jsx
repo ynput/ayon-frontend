@@ -64,15 +64,15 @@ const BundleList = ({
           // delete all selected bundles
           await Promise.all(selected.map((name) => deleteBundle({ name }).unwrap()))
 
-          // clear selection on successful delete
-          onBundleSelect([])
+          // drop the deleted bundles from the selection
+          onBundleSelect(selectedBundles.filter((name) => !selected.includes(name)))
         } catch (error) {
           toast.error('Error deleting bundles')
         }
       },
     })
 
-  const getBundleStatusItem = (status, bundle, disabledExtra) => {
+  const getBundleStatusItem = (status, bundle, disabledExtra, multipleSelected) => {
     const key = 'is' + status.charAt(0).toUpperCase() + status.slice(1)
     const setLabel = 'Set ' + status
     const unsetLabel = 'Unset ' + status
@@ -80,22 +80,17 @@ const BundleList = ({
     const label = isStatus ? unsetLabel : setLabel
     const icon = isStatus ? 'remove' : 'add'
     const command = () => toggleBundleStatus(status, bundle.name)
-    const disabled = selectedBundles.length > 1 || disabledExtra
+    const disabled = multipleSelected || disabledExtra
     return { label, icon, command, disabled }
   }
 
   const [ctxMenuShow] = useCreateContextMenu([])
 
   const onContextMenu = (e) => {
-    // get selection and if it's changed or not
-    let newSelection = selectedBundles
-
-    if (e?.data?.name && !selectedBundles?.includes(e.data.name)) {
-      // if the selection does not include the clicked node, new selection is the clicked node
-      newSelection = [e.data.name]
-      // update selection state
-      onBundleSelect(newSelection)
-    }
+    // a right-clicked bundle outside the selection is acted on alone, without selecting it
+    const newSelection =
+      e?.data?.name && !selectedBundles?.includes(e.data.name) ? [e.data.name] : selectedBundles
+    const multipleSelected = newSelection.length > 1
 
     const ctxMenuItems = []
     // active bundle is the bundle that is right clicked on
@@ -115,12 +110,14 @@ const BundleList = ({
     }
     if (!isArchived) {
       // production
-      ctxMenuItems.push(getBundleStatusItem('production', activeBundle, isDev))
+      ctxMenuItems.push(getBundleStatusItem('production', activeBundle, isDev, multipleSelected))
       // staging
-      ctxMenuItems.push(getBundleStatusItem('staging', activeBundle, isDev))
+      ctxMenuItems.push(getBundleStatusItem('staging', activeBundle, isDev, multipleSelected))
       // dev
       if (developerMode)
-        ctxMenuItems.push(getBundleStatusItem('dev', activeBundle, isProduction || isStaging))
+        ctxMenuItems.push(
+          getBundleStatusItem('dev', activeBundle, isProduction || isStaging, multipleSelected),
+        )
     }
 
     // duplicate and edit
@@ -129,7 +126,7 @@ const BundleList = ({
       icon: 'edit_document',
       shortcut: getPlatformShortcutKey('D', [KeyMode.Shift]),
       command: () => onDuplicate(activeBundleName),
-      disabled: selectedBundles.length > 1,
+      disabled: multipleSelected,
     })
 
     const resolveCanCopySettings = () => {
@@ -146,7 +143,7 @@ const BundleList = ({
       // it is both production and staging
       const isBoth = isProduction && isStaging
 
-      return selectedBundles.length > 1 || noProd || noStag || notActive || isBoth
+      return multipleSelected || noProd || noStag || notActive || isBoth
     }
 
     ctxMenuItems.push({
