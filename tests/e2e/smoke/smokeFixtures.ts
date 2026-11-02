@@ -1,8 +1,7 @@
 import { Locator, Page } from '@playwright/test'
 import { expect, test as base } from '../fixtures'
-import { AyonApi, Folder, Product, Task, Version } from '../support/api'
-import { adminCredentials } from '../support/env'
-import { uniqueName } from '../support/names'
+import { adminCredentials, Folder, Product, Task, uniqueName, Version } from '@ynput/ayon-e2e'
+import { AyonApi } from '../support/api'
 import { Noise, watchPageHealth } from '../support/pageHealth'
 
 export type SmokeData = {
@@ -12,7 +11,6 @@ export type SmokeData = {
   product: Product
   version: Version
   list: { id: string; label: string }
-  reviewSession: { id: string; label: string }
 }
 
 export type SmokeRoute = {
@@ -47,12 +45,6 @@ export const test = base.extend<{}, { smoke: SmokeData }>({
         const label = uniqueName('list')
         const listId = await api.createEntityList(projectName, { label, entityType: 'task' })
         await api.addEntityListItem(projectName, listId, task.id)
-        const sessionLabel = uniqueName('review')
-        const sessionId = await api.createEntityList(projectName, {
-          label: sessionLabel,
-          entityType: 'version',
-          entityListType: 'review-session',
-        })
 
         await use({
           projectName,
@@ -61,7 +53,6 @@ export const test = base.extend<{}, { smoke: SmokeData }>({
           product,
           version,
           list: { id: listId, label },
-          reviewSession: { id: sessionId, label: sessionLabel },
         })
       } finally {
         await api.deleteProject(projectName)
@@ -70,17 +61,6 @@ export const test = base.extend<{}, { smoke: SmokeData }>({
     { scope: 'worker', timeout: 120_000 },
   ],
 })
-
-export const productionAddons = async (api: AyonApi): Promise<string[]> => {
-  const {
-    bundles,
-  }: { bundles: { isProduction: boolean; addons: Record<string, string | null> }[] } =
-    await api.get('/api/bundles', { archived: false })
-  const production = bundles.find((b) => b.isProduction)
-  return Object.entries(production?.addons ?? {})
-    .filter(([, version]) => !!version)
-    .map(([name]) => name)
-}
 
 export const heading = (page: Page, name: string | RegExp) => page.getByRole('heading', { name })
 export const column = (page: Page, name: string) =>

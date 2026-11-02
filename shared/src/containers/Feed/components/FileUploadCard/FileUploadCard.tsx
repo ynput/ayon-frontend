@@ -14,6 +14,7 @@ export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement
   src?: string
   unsavedAnnotation?: AnnotationPreview
   savedAnnotation?: SavedAnnotationMetadata
+  annotationFrameStart?: number | null
   size: number
   progress: number
   onRemove?: () => void
@@ -83,6 +84,7 @@ const FileUploadCard = ({
   src,
   unsavedAnnotation,
   savedAnnotation,
+  annotationFrameStart,
   size,
   progress,
   onRemove,
@@ -132,18 +134,15 @@ const FileUploadCard = ({
       return [1, 1]
     }
 
-    if (!firstEntity?.attrib) {
-      return someAnnotation?.range ?? [1, 1]
-    }
-
-    const { frameStart } = firstEntity?.attrib
-    // using isNaN here because Number.isNaN(undefined) returns false
-    if (isNaN(frameStart)) {
-      return someAnnotation?.range ?? [1, 1]
+    // undefined = origin version unknown, offset by the feed entity; null = origin has no frameStart
+    const frameStart =
+      annotationFrameStart === undefined ? firstEntity?.attrib?.frameStart : annotationFrameStart
+    if (!Number.isFinite(frameStart)) {
+      return someAnnotation.range
     }
 
     return [frameStart - 1 + someAnnotation.range[0], frameStart - 1 + someAnnotation.range[1]]
-  }, [someAnnotation])
+  }, [someAnnotation, annotationFrameStart, firstEntity])
 
   return (
     <Styled.File

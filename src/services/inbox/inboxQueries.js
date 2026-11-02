@@ -13,9 +13,7 @@ fragment MessageFragment on ActivityNode {
     read
     author {
       name
-      attrib {
-        fullName
-      }
+      attrib(names: ["fullName"])
     }
     origin {
       id

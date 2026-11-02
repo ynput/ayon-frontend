@@ -12,6 +12,7 @@ import * as Styled from './NewListDialog.styled'
 import { getEntityTypeIcon } from '@shared/util'
 import { Error } from '@containers/ReleaseInstallerDialog/ReleaseInstaller.styled'
 import { entityTypeOptions } from './NewListDialogHelpers'
+import type { ListFolderOption } from '@pages/ProjectListsPage/util/listFolders'
 
 export type { ListEntityType } from './NewListDialogHelpers'
 
@@ -22,11 +23,14 @@ interface NewListDialogProps extends Omit<DialogProps, 'onChange' | 'hidden'> {
   submitLoading?: boolean
   error?: string
   hidden?: ('label' | 'entityType')[]
+  // folders the list can be created in; the folder field shows when there are any
+  folderOptions?: ListFolderOption[]
   // customization props
   dialogTitle?: string
   labels?: {
     listLabel?: string
     entityType?: string
+    folder?: string
     createButton?: string
     cancelButton?: string
   }
@@ -41,11 +45,13 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       submitLoading,
       error,
       hidden,
+      folderOptions,
       // New customization props with defaults
       dialogTitle = 'Create New List',
       labels = {
         listLabel: 'List label',
         entityType: 'Entity type',
+        folder: 'Folder',
         createButton: 'Create list',
         cancelButton: 'Cancel',
       },
@@ -142,6 +148,22 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
                 onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}
                 options={entityTypeOptions}
                 valueIcon={getEntityTypeIcon(form.entityType)}
+              />
+            </Styled.Row>
+          )}
+          {!!folderOptions?.length && (
+            <Styled.Row>
+              <label htmlFor="entityListFolderId">{effectiveLabels.folder || 'Folder'}</label>
+              <Dropdown
+                id="entityListFolderId"
+                value={form.entityListFolderId ? [form.entityListFolderId] : []}
+                onChange={(e) => handleChange(e[0] || undefined, 'entityListFolderId')}
+                onClear={() => handleChange(undefined, 'entityListFolderId')}
+                clearTooltip="No folder"
+                options={folderOptions}
+                placeholder="No folder"
+                search={folderOptions.length > 10}
+                searchFields={['label']}
               />
             </Styled.Row>
           )}

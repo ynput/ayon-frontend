@@ -191,18 +191,21 @@ const ProjectUserAccess = () => {
   }
 
   const handleContextMenu = (accessGroup?: string) => (e: $Any) => {
-    const { actionedUsers } = decideActionedUsers({
-      accessGroup,
-      users: [e.data.name],
-      interactionType: InteractionType.button,
-    })
+    // a right-clicked user outside the selection is acted on alone, without selecting it
+    const isSelected =
+      accessGroup === selectedAccessGroupUsers?.accessGroup &&
+      !!selectedAccessGroupUsers?.users.includes(e.data.name)
+    const actionedUsers = isSelected ? selectedAccessGroupUsers!.users : [e.data.name]
 
     let contextMenu = [
       {
         id: 'add',
         icon: 'add',
         label: 'Add access',
-        command: () => handleAdd({ users: actionedUsers }),
+        command: () => {
+          setActionedUsers(actionedUsers)
+          handleAdd({ users: actionedUsers })
+        },
       },
       {
         id: 'remove',

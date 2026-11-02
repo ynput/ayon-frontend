@@ -24,6 +24,9 @@ interface UseProjectOverviewStatsParams {
   selectedFolders: string[]
   selectedTaskIds: string[]
   showHierarchy: boolean
+  isFlatFolderView?: boolean
+  // hierarchy: selected folders are scope roots, only their descendants are rows
+  excludeSelectedFolders?: boolean
 }
 
 export const useProjectOverviewStats = ({
@@ -34,6 +37,8 @@ export const useProjectOverviewStats = ({
   selectedFolders,
   selectedTaskIds,
   showHierarchy,
+  isFlatFolderView = false,
+  excludeSelectedFolders = true,
 }: UseProjectOverviewStatsParams) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -103,18 +108,27 @@ export const useProjectOverviewStats = ({
     [selectedFolders, getFolderIdsWithoutChildren],
   )
 
+  // Folder rows (hierarchy, flat folders view) come from the REST folder search
+  // (useFetchOverviewData), so send the same filters: the text search matches folders or their
+  // tasks (globalSearch) and the hierarchy also shows the parents of the matches (includeParents).
+  // The task list has no folder rows, there the folders of the filtered tasks are counted.
+  const isHierarchy = showHierarchy && !isFlatFolderView
+  const hasFolderRows = showHierarchy || isFlatFolderView
+  const scopeToDescendants = isHierarchy && excludeSelectedFolders
   const folderStatsArgs: GetFolderColumnStatsQueryVariables = {
     projectName,
     filter: folderFilter || undefined,
-    search: folderSearch || undefined,
     taskFilter: taskFilter || undefined,
-    taskSearch: taskSearch || undefined,
-    [showHierarchy ? 'parentIds' : 'ids']: selectedFolderIdsWithoutChildren.length
+    ...(hasFolderRows
+      ? { globalSearch: taskSearch || undefined }
+      : { search: folderSearch || undefined, taskSearch: taskSearch || undefined }),
+    includeParents: isHierarchy || undefined,
+    [scopeToDescendants ? 'parentIds' : 'ids']: selectedFolderIdsWithoutChildren.length
       ? selectedFolderIdsWithoutChildren
       : undefined,
     targets: folderTargets,
     includeFolderChildren: true,
-    hideEmptyFolders: groupByConfig?.showEmpty === false && !showHierarchy ? true : undefined,
+    hideEmptyFolders: isFlatFolderView && groupByConfig?.showEmpty === false ? true : undefined,
   }
 
   const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, { skip })

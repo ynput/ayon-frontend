@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 import {
   DetailsPanelAttributesEditor,
   DetailsPanelAttributesEditorProps,
@@ -106,6 +107,24 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     updateEntity(key, value)
   }
 
+  // a list field of several entities: each keeps its own values, plus or minus the changed ones
+  const handleMixedChange = (key: string, change: MixedChange) => {
+    const attribName = key.startsWith('attrib.') ? key.replace('attrib.', '') : undefined
+    const getValues = (entity: DetailsPanelEntityData): string[] => {
+      const value = attribName ? entity.attrib?.[attribName] : entity.tags
+      return Array.isArray(value) ? value.map(String) : []
+    }
+    const nextValues = new Map(
+      entities.map((entity) => [entity.id, applyMixedChange(getValues(entity), change)]),
+    )
+
+    updateFormData(key, [...new Set([...nextValues.values()].flat())])
+    updateEntity(attribName ? 'attrib' : key, (entityId: string) => {
+      const value = nextValues.get(entityId) || []
+      return attribName ? { [attribName]: value } : value
+    })
+  }
+
   // mention the same users, tasks and versions as the comments of the (first) entity
   const projectName = formData?.projectName || entities[0]?.projectName
   const entityId = entities[0]?.id
@@ -158,6 +177,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         isLoading={isLoading}
         enableEditing={enableEditing}
         onChange={handleChange}
+        onMixedChange={handleMixedChange}
         entities={entities}
         entityType={entityType}
       />

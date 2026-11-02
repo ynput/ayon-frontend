@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { dialog, toast } from '../support/ui'
+import { dialog, toast } from '@ynput/ayon-e2e'
 
 export class AccountPage {
   constructor(readonly page: Page) {}

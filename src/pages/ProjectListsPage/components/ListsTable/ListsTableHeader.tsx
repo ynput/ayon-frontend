@@ -5,11 +5,18 @@ import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import ListsFiltersBar from './ListsFiltersBar'
-import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
+import {
+  buildSortMenuItem,
+  Menu,
+  MenuContainer,
+  MenuItemType,
+  TableSearch,
+} from '@shared/components'
 import { useMenuContext } from '@shared/context'
-import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
+import { LISTS_SORT_OPTIONS, parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import clsx from 'clsx'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useProjectContext } from '@shared/context'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { useAppSelector } from '@state/store'
 import {
   canDeleteAllLists,
@@ -129,7 +136,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     selectAllLists,
   } = useListsContext()
 
-  const { showArchived, setShowArchived, listsFilters, setListsFilters } = useListsDataContext()
+  const { showArchived, setShowArchived, listsFilters, setListsFilters, listsSort, setListsSort } =
+    useListsDataContext()
 
   const filtersBarRef = useRef<SearchFilterRef>(null)
   const barVisible = filtersBar && (listsFiltersOpen || listsFilters.length > 0)
@@ -147,6 +155,8 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   const { menuOpen, toggleMenuOpen } = useMenuContext()
   const { powerLicense } = usePowerpack()
+  const { projectName } = useProjectContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { listsData, listFolders } = useListsDataContext()
   const user = useAppSelector((state) => state.user)
 
@@ -270,6 +280,17 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       className: 'add-folder',
       hiddenButtonType: 'add' as ButtonType,
     },
+    ...(!isReview
+      ? [
+          {
+            id: 'import-list',
+            label: 'Create list from CSV',
+            icon: 'upload_file',
+            onClick: () => openImportDialog('entity_list_item', projectName),
+            isPinned: false,
+          },
+        ]
+      : []),
     { id: 'divider' },
     {
       id: 'show-archived',
@@ -296,7 +317,12 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
           },
         ]
       : []),
-
+    buildSortMenuItem({
+      label: 'Sort lists',
+      options: LISTS_SORT_OPTIONS,
+      sort: listsSort,
+      onChange: setListsSort,
+    }),
     {
       id: 'delete',
       label: 'Delete selection',

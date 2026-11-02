@@ -6,7 +6,7 @@ export const MessageStatus = styled.div`
   gap: var(--base-gap-large);
   .icon {
     font-size: 18px;
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
   }
 `
 

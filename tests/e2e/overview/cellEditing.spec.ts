@@ -138,6 +138,141 @@ test.describe('overview tag and date cells', () => {
       .toEqual(['hero'])
   })
 
+  test('add a new tag to a task when the project anatomy has no tags', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await api.patch(`/api/projects/${projectName}`, { tags: [] })
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'tags'])
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+
+    await overview.cell('anim', 'tags').dblclick()
+    const search = page.locator('.search').getByRole('textbox')
+    await search.click()
+    await expect(search).toBeFocused()
+    await search.fill('adhoc')
+    await search.press('Enter')
+    await page.keyboard.press('Escape')
+    await expect(page.locator('.options')).toBeHidden()
+
+    await expect(overview.cell('anim', 'tags')).toContainText('adhoc')
+    await expect
+      .poll(async () => (await api.getTask(projectName, tasks[0].id)).tags)
+      .toEqual(['adhoc'])
+  })
+
+  // closing the dropdown by clicking another cell must save to the edited task, wherever the click lands
+  const closeTargets = [
+    { name: 'the name of the same row', label: 'anim', columnId: 'name' },
+    { name: 'an attribute of the same row', label: 'anim', columnId: 'attrib_fps' },
+    { name: 'the name of another row', label: 'comp', columnId: 'name' },
+    { name: 'the tags of another row', label: 'comp', columnId: 'tags' },
+  ]
+  for (const target of closeTargets) {
+    test(`replace the tags of a task, closing by clicking ${target.name}`, async ({
+      page,
+      api,
+      projectName,
+    }) => {
+      await api.patch(`/api/projects/${projectName}`, {
+        tags: [
+          { name: 'hero', color: '#ff2450' },
+          { name: 'rush', color: '#5be1c6' },
+        ],
+      })
+      const { tasks } = await createShot(api, projectName, ['anim', 'comp'])
+      await api.patch(`/api/projects/${projectName}/tasks/${tasks[0].id}`, { tags: ['hero'] })
+      await api.setWorkingViewColumns('overview', projectName, ['name', 'tags', 'attrib_fps'])
+      const overview = new OverviewPage(page)
+      await overview.goto(projectName)
+      await overview.expand('sh010')
+      await expect(overview.cell('anim', 'tags')).toContainText('hero')
+
+      await overview.toggleEnumCellValues(
+        'anim',
+        'tags',
+        ['rush', 'hero'],
+        overview.cell(target.label, target.columnId),
+      )
+
+      await expect(overview.cell('anim', 'tags')).toContainText('rush')
+      await expect(overview.cell('anim', 'tags')).not.toContainText('hero')
+      await expect
+        .poll(async () => (await api.getTask(projectName, tasks[0].id)).tags)
+        .toEqual(['rush'])
+      expect((await api.getTask(projectName, tasks[1].id)).tags).toEqual([])
+    })
+  }
+
+  test('reassign a task', async ({ page, api, projectName, createUser, accessGroup }) => {
+    const accessGroups = { [projectName]: [accessGroup] }
+    const first = await createUser({ licensed: true, accessGroups })
+    const second = await createUser({ licensed: true, accessGroups })
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.patch(`/api/projects/${projectName}/tasks/${tasks[0].id}`, {
+      assignees: [first.name],
+    })
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'assignees'])
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+    await expect(overview.cell('anim', 'assignees')).toContainText(first.name)
+
+    await overview.toggleEnumCellValues('anim', 'assignees', [second.name, first.name])
+
+    await expect(overview.cell('anim', 'assignees')).toContainText(second.name)
+    await expect(overview.cell('anim', 'assignees')).not.toContainText(first.name)
+    await expect
+      .poll(async () => (await api.getTask(projectName, tasks[0].id)).assignees)
+      .toEqual([second.name])
+  })
+
+  test('assignee options are alphabetical, selected first', async ({
+    page,
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const accessGroups = { [projectName]: [accessGroup] }
+    const users: Record<string, string> = {}
+    for (const fullName of ['Delta', 'alpha', 'Émile', 'Charlie', 'Bravo']) {
+      users[fullName] = (await createUser({ licensed: true, accessGroups, fullName })).name
+    }
+    const { tasks } = await createShot(api, projectName, ['anim'])
+    await api.patch(`/api/projects/${projectName}/tasks/${tasks[0].id}`, {
+      assignees: [users.Delta, users.alpha, users.Charlie],
+    })
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'assignees'])
+    // the server may already sort users: reverse them so the table has to sort itself
+    await page.route('**/api/enum/users?*', async (route) => {
+      const response = await route.fetch()
+      await route.fulfill({ response, json: (await response.json()).reverse() })
+    })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+
+    await overview.cell('anim', 'assignees').dblclick()
+    const options = page.locator('.options [data-value]')
+    await expect(options.first()).toBeVisible()
+
+    const ours = new Set(Object.values(users))
+    await expect
+      .poll(async () =>
+        (
+          await options.evaluateAll((els) =>
+            els.map((el) => (el as HTMLElement).dataset.value ?? ''),
+          )
+        ).filter((name) => ours.has(name)),
+      )
+      .toEqual(['alpha', 'Charlie', 'Delta', 'Bravo', 'Émile'].map((fullName) => users[fullName]))
+  })
+
   test('set a date attribute', async ({ page, api, projectName }) => {
     const { tasks } = await createShot(api, projectName, ['anim'])
     await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_startDate'])

@@ -221,6 +221,7 @@ export const DeleteEntitiesProvider = ({ children }: { children: ReactNode }) =>
             message: `Are you really sure you want to delete ${entityLabel} and all of its dependencies? This cannot be undone. (NOT RECOMMENDED)`,
             childrenDetails: [],
             expectedCounts: {},
+            expectedName: 'force delete',
             deleteLabel: 'Force delete',
           })
           if (!confirmed) return 'cancelled'

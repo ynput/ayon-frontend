@@ -1,8 +1,8 @@
 import path from 'path'
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
+import { dialog, menuItem } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { dialog, menuItem } from '../support/ui'
 import { OverviewPage } from '../pages/OverviewPage'
 
 const NOTES = {

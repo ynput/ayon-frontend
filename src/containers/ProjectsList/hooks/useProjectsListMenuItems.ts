@@ -1,4 +1,7 @@
 import { useCallback, useMemo } from 'react'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type { MenuItemPosition } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
 import { usePowerpack } from '@shared/context'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
@@ -7,7 +10,7 @@ import {
   FOLDER_ICON_REMOVE,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData.ts'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
 
 export type Hidden = {
@@ -49,9 +52,12 @@ interface MenuItemProps {
   onCreateFolder?: ({
     folderId,
     projectNames,
+    rowIds,
   }: {
     folderId?: string
     projectNames?: string[]
+    // the rows the menu acts on
+    rowIds?: string[]
   }) => void
   onPutProjectsInFolder?: (projectNames: string[], projectFolderId?: string) => Promise<void>
   onPutFolderInFolder?: (folderId: string, projectFolderId?: string) => Promise<void>
@@ -119,6 +125,8 @@ const useProjectsListMenuItems = ({
   onRenameProject,
 }: MenuItemProps) => {
   const { setPowerpackDialog } = usePowerpack()
+  // items addons contribute (projectList.menuItem slot, @ynput/ayon-addon)
+  const { contributions: addonMenuItems } = useContributions('projectList.menuItem')
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
     if (onPin) {
@@ -155,11 +163,13 @@ const useProjectsListMenuItems = ({
       selectedFolder,
       isSelectedProject,
       newSelectedProjects,
+      rowIds,
     }: {
       isSelectedRowFolder: boolean
       selectedFolder: ProjectFolderModel | null | undefined
       isSelectedProject: boolean
       newSelectedProjects: ListProjectsItemModel[]
+      rowIds: string[]
     }) => {
       if (!powerLicense) {
         setPowerpackDialog('projectFolders')
@@ -167,13 +177,14 @@ const useProjectsListMenuItems = ({
       }
 
       if (isSelectedRowFolder) {
-        onCreateFolder?.({ folderId: selectedFolder?.id })
+        onCreateFolder?.({ folderId: selectedFolder?.id, rowIds })
       } else if (isSelectedProject) {
         onCreateFolder?.({
           projectNames: newSelectedProjects.map((project) => project.name),
+          rowIds,
         })
       } else {
-        onCreateFolder?.({})
+        onCreateFolder?.({ rowIds })
       }
     },
     [powerLicense, setPowerpackDialog, onCreateFolder],
@@ -342,6 +353,29 @@ const useProjectsListMenuItems = ({
         return submenuItems
       }
 
+      // addon items for the selected projects, in the menus their `in` lists; `run` loads when
+      // the right-click menu opens (the dropdown's items are built with the list, so on click)
+      const menu = command ? 'context' : 'dropdown'
+      const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
+      const buildAddonItems = (position: MenuItemPosition): MenuItem[] =>
+        selectedProjectNames.length
+          ? menuItemsAt(addonMenuItems, position)
+              .filter((item) => !item.in?.length || item.in.includes(menu))
+              .map((item) => {
+                if (command) prefetchPiece(item.run)
+                return {
+                  id: item.key,
+                  label: item.label,
+                  icon: item.icon,
+                  [command ? 'command' : 'onClick']: () =>
+                    runContribution(item, { projectNames: selectedProjectNames, menu }),
+                }
+              })
+          : []
+      // `top` items first in the menu, the rest (default) above Archive and Delete
+      const addonTopItems = buildAddonItems('top')
+      const addonItems = buildAddonItems('bottom')
+
       const projectFolderSubmenu = createProjectFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
 
@@ -360,6 +394,8 @@ const useProjectsListMenuItems = ({
         : null
 
       const allItems: MenuItem[] = [
+        ...addonTopItems,
+        ...(addonTopItems.length ? [{ id: 'divider' }] : []),
         {
           id: 'search',
           label: 'Search',
@@ -449,10 +485,13 @@ const useProjectsListMenuItems = ({
               selectedFolder,
               isSelectedProject,
               newSelectedProjects,
+              rowIds: selection,
             }),
         },
 
         ...(moveMenuItem ? [moveMenuItem] : []),
+        { id: 'divider' },
+        ...addonItems,
         { id: 'divider' },
         {
           id: 'archive-project',
@@ -531,6 +570,7 @@ const useProjectsListMenuItems = ({
       wouldCreateCircularDependency,
       hidden,
       isMenuItemEnabled,
+      addonMenuItems,
     ],
   )
 

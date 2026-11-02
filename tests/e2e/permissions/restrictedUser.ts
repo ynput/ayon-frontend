@@ -1,5 +1,5 @@
 import { expect, test as base } from '../fixtures'
-import { uniqueName } from '../support/names'
+import { uniqueName } from '@ynput/ayon-e2e'
 
 export type Permissions = Record<string, Record<string, unknown>>
 

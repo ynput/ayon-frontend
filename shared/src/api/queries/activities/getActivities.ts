@@ -5,6 +5,7 @@ import type {
   GetActivitiesQueryVariables,
   GetActivityUsersQuery,
   GetEntitiesChecklistsQuery,
+  GetVersionsFrameStartQuery,
 } from '@shared/api/generated'
 import { provideSharedActivityTags, taskProvideTags } from './util/activitiesHelpers'
 import {
@@ -19,8 +20,11 @@ import { ENTITY_TOOLTIP, EntityTooltipQuery } from './activityQueries'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import type { ChecklistCount } from './types'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import type { UserAttrib } from '../users/getUsers'
 
-type ActivityUserNode = GetActivityUsersQuery['users']['edges'][0]['node']
+type ActivityUserNode = Omit<GetActivityUsersQuery['users']['edges'][0]['node'], 'attrib'> & {
+  attrib: UserAttrib
+}
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>
@@ -30,6 +34,10 @@ type UpdatedDefinitions = Omit<Definitions, 'GetActivitiesById'> & {
   GetActivities: OverrideResultType<Definitions['GetActivities'], ActivitiesResult>
   GetEntitiesChecklists: OverrideResultType<Definitions['GetEntitiesChecklists'], ChecklistCount>
   GetActivityUsers: OverrideResultType<Definitions['GetActivityUsers'], ActivityUserNode[]>
+  GetVersionsFrameStart: OverrideResultType<
+    Definitions['GetVersionsFrameStart'],
+    Record<string, number | null>
+  >
 }
 
 const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
@@ -43,6 +51,15 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetActivitiesById: {
       transformResponse: (res: GetActivitiesByIdQuery) =>
         transformActivityData(res.project.activities.edges, res.project.activities.pageInfo),
+    },
+    GetVersionsFrameStart: {
+      transformResponse: (res: GetVersionsFrameStartQuery) =>
+        Object.fromEntries(
+          res.project.versions.edges.map(({ node }) => [
+            node.id,
+            (node.attrib as { frameStart: number | null }).frameStart,
+          ]),
+        ),
     },
     GetEntitiesChecklists: {
       transformResponse: (res: GetEntitiesChecklistsQuery) => countChecklists(res),
@@ -59,7 +76,8 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
           : [{ type: 'activity', id: 'LIST' }],
     },
     GetActivityUsers: {
-      transformResponse: (res: GetActivityUsersQuery) => res.users.edges.map((edge) => edge.node),
+      transformResponse: (res: GetActivityUsersQuery) =>
+        res.users.edges.map(({ node }) => ({ ...node, attrib: node.attrib as UserAttrib })),
       providesTags: (res) =>
         res?.length
           ? [{ type: 'user', id: 'LIST' }, ...res.map(({ name }) => ({ type: 'user', id: name }))]
@@ -175,6 +193,7 @@ export const {
   useGetActivitiesQuery,
   useGetActivitiesInfiniteInfiniteQuery,
   useGetActivityUsersQuery,
+  useGetVersionsFrameStartQuery,
 } = getActivitiesGQLApi
 
 export { getActivitiesGQLApi }

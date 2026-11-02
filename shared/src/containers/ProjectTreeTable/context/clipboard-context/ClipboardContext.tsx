@@ -13,16 +13,19 @@ import {
   getLinkEntityIdsByColumnId,
   parseCellId,
 } from '../../utils/cellUtils'
+import { getFolderColumnValue } from '../../utils/folderColumn'
+import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { getAddonColumnText } from '../../addonColumns/addonColumnValues'
 
 // Types
 import { TableRow } from '../../types/table'
 import { EntityUpdate } from '../../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../../hooks/usePasteLinks'
+import { downloadUrl, getCsvFileName } from '../../../TableExport/csvFile'
 import { useUpdateSubtasksMutation } from '@shared/api'
 
 // Import from the new modular files
 import {
-  getEntityPath,
   parseClipboardText,
   clipboardError,
   processFieldValue,
@@ -62,7 +65,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData, isRowReadOnly } = useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -79,8 +82,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const [updateSubtasks] = useUpdateSubtasksMutation()
 
   const getSelectionData = useCallback(
-    async (selected: string[], config?: { headers?: boolean; fullRow?: boolean }) => {
-      const { headers, fullRow } = config || {}
+    async (
+      selected: string[],
+      config?: { headers?: boolean; fullRow?: boolean; delimiter?: string },
+    ) => {
+      const { headers, fullRow, delimiter = '\t' } = config || {}
+      // Wrap values containing the delimiter, a newline or a quote so spreadsheets keep them in one cell
+      const quote = (value: string) =>
+        value.includes(delimiter) || /[\n\r"]/.test(value)
+          ? `"${value.replace(/"/g, '""')}"`
+          : value
       try {
         // Get visible columns in display order, excluding row selection
         const visibleColumnIds = visibleColumns
@@ -155,11 +166,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
           for (const colId of colIds) {
             // Use colId as the column name since we don't have direct access to column names
-            const columnName = colId
-            headerValues.push(`${columnName.replace(/"/g, '""')}`)
+            headerValues.push(quote(colId))
           }
 
-          clipboardText += headerValues.join('\t') + '\n'
+          clipboardText += headerValues.join(delimiter) + '\n'
         }
 
         for (const rowId of sortedRows) {
@@ -191,7 +201,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
             let cellValue = ''
 
             // special handling of link cells
-            if (colId.startsWith('link_')) {
+            if (isAddonColumnId(colId)) {
+              // what the addon column's fetchValues returned for the entity, as text. List items
+              // are keyed by their entity (row.primary.id), not the list item id
+              cellValue = getAddonColumnText(colId, entity.entityId || entity.id)
+            } else if (colId.startsWith('link_')) {
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
             } else if (colId === 'subtasks') {
               // Special handling for subtasks - convert to TSV format
@@ -213,13 +227,19 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
                     (entity as any).task?.name
                   : getCellValue(entity, sourceField)
 
-              // folder is an object on some entities (product/task) or nested under
-              // product (version) - copy the display name the cell shows,
-              // falling back to the last parent (parent folder name on tasks/folders)
-              if (colId === 'folder_entity' && typeof foundValue !== 'string') {
-                const folder = foundValue || (entity as any).product?.folder
-                const parents = 'parents' in entity ? entity.parents : undefined
-                foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+              if (colId === 'folder_entity') {
+                // copy what the cell shows (the same helper the column uses)
+                const shown = displayRow && getFolderColumnValue(displayRow)
+                if (shown) {
+                  foundValue = shown
+                } else if (typeof foundValue !== 'string') {
+                  // folder is an object on some entities (product/task) or nested under
+                  // product (version) - copy its display name, falling back to the
+                  // last parent (parent folder name on tasks/folders)
+                  const folder = foundValue || (entity as any).product?.folder
+                  const parents = 'parents' in entity ? entity.parents : undefined
+                  foundValue = folder?.label || folder?.name || parents?.[parents.length - 1] || ''
+                }
               }
 
               // Raw entity nodes (flat lists) either lack display-computed columns or hold a
@@ -252,14 +272,15 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // convert to string if foundValue is not undefined or null use empty string otherwise
               cellValue = foundValue !== undefined && foundValue !== null ? String(foundValue) : ''
 
-              // Hierarchical tables resolve a full path; flat lists (raw nodes keyed by row id)
-              // can't, so fall back to the built display row label/name the cell shows
+              // Always copy just the entity name, never the full path. Flat lists (raw nodes
+              // keyed by row id) aren't in entitiesMap, so fall back to the built display row
+              // label/name the cell shows
               if (colId === 'name') {
                 cellValue =
                   (displayRow?.primary.entityType === 'version'
                     ? displayRow.primary.label || displayRow.primary.name
                     : undefined) ||
-                  getEntityPath(entity.entityId || entity.id, entitiesMap) ||
+                  entitiesMap.get(entity.entityId || entity.id)?.name ||
                   (displayRow as any)?.label ||
                   displayRow?.primary?.name ||
                   (entity as any).label ||
@@ -283,18 +304,14 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               }
             }
 
-            // Wrap multi-line / tab / quote values in quotes so spreadsheets keep them in one
-            // cell. Subtasks embed tabs+newlines as real grid structure for paste round-trips —
+            // Copied subtasks embed tabs+newlines as real grid structure for paste round-trips —
             // leave them raw so they stay multi-row/column.
-            const escaped = cellValue.replace(/"/g, '""')
-            const needsQuoting =
-              colId !== 'subtasks' &&
-              (cellValue.includes('\n') || cellValue.includes('\t') || cellValue.includes('"'))
-            rowValues.push(needsQuoting ? `"${escaped}"` : escaped)
+            const rawSubtasks = colId === 'subtasks' && delimiter === '\t'
+            rowValues.push(rawSubtasks ? cellValue.replace(/"/g, '""') : quote(cellValue))
           }
 
           // Add row to clipboard text
-          clipboardText += rowValues.join('\t') + '\n'
+          clipboardText += rowValues.join(delimiter) + '\n'
         }
 
         return clipboardText
@@ -349,32 +366,24 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     [selectedCells, entitiesMap, gridMap],
   )
 
+  // without the Power Pack table export, the selected cells are exported as shown
   const exportCSV: ClipboardContextType['exportCSV'] = useCallback(
-    async (selected, projectName, fullRow) => {
+    async (selected, projectName, delimiter) => {
       selected = selected || Array.from(selectedCells)
       if (!selected.length) return
+      const fullRow = selected.some((id) => parseCellId(id)?.colId === ROW_SELECTION_COLUMN_ID)
 
       try {
-        // Get clipboard text with headers included for CSV export
-        const clipboardText = await getSelectionData(selected, { headers: true, fullRow })
-        if (!clipboardText) return
-
-        // create a csv file and download it
-        const blob = new Blob([clipboardText], { type: 'text/csv' })
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        const selectedCount = selected.length
-        a.download = `${projectName}-export-${selectedCount}_cells-${new Date()
-          .toISOString()
-          .slice(0, 10)}.csv`
-        a.click()
-        URL.revokeObjectURL(url)
+        const text = await getSelectionData(selected, { headers: true, fullRow, delimiter })
+        if (!text) return
+        const type = delimiter === '\t' ? 'text/tab-separated-values' : 'text/csv'
+        const url = URL.createObjectURL(new Blob([text], { type }))
+        downloadUrl(url, getCsvFileName(projectName, delimiter))
       } catch (error) {
-        console.error('Failed to copy to clipboard:', error)
+        console.error('Failed to export selection:', error)
       }
     },
-    [selectedCells, entitiesMap, gridMap, getSelectionData],
+    [selectedCells, getSelectionData],
   )
 
   const getClipboardString = async (): Promise<string | void> => {
@@ -471,12 +480,20 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         const { rowId, colId } = position
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
+        // addon columns are read-only, and their ids are no field names (`split('_').pop()`)
+        if (isAddonColumnId(colId)) return
+        // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
+        if (isRowReadOnly(rowId)) return
 
         if (!cellsByRow.has(rowId)) {
           cellsByRow.set(rowId, new Set())
         }
         cellsByRow.get(rowId)?.add(colId)
       })
+      if (!cellsByRow.size) {
+        clipboardError('These rows are read-only. Paste operation cancelled.')
+        return
+      }
 
       // Get sorted row IDs and column IDs
       const sortedRows = Array.from(cellsByRow.keys()).sort((a, b) => {
@@ -1009,6 +1026,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       pasteTableLinks,
       columnEnums,
       getEntityById,
+      isRowReadOnly,
       visibleColumns,
       attribFields,
       projectName,

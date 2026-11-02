@@ -13,7 +13,7 @@ function RestartProvider({ children }: { children: ReactNode }) {
   const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const [restartServer] = useRestartServerMutation()
 
-  const { data: restartData = {} } = useGetRestartQuery({ skip: !isAdmin })
+  const { data: restartData = {} } = useGetRestartQuery(undefined, { skip: !isAdmin })
 
   const [snooze, setSnooze] = useLocalStorage<string | null>('restart-snooze', null)
   // sets a local storage item to snooze the banner for the day

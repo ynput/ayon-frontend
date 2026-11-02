@@ -1,4 +1,8 @@
 import { FC, useCallback, useMemo } from 'react'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
+import type { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable/SimpleTable.types'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import { ExpandedState, Row, RowSelectionState } from '@tanstack/react-table'
@@ -19,7 +23,9 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/simp
 import { OnSliceTypeChange, useSlicerContext } from '../context/slicer'
 import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
-import { useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { useMenuContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shared/components/Menu'
+import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
 
@@ -136,6 +142,10 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     isViewSyncPending,
     onOpenViewer,
     onAddToList: contextOnAddToList,
+    page,
+    getSliceSort,
+    setSliceSort,
+    projectName,
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
@@ -199,6 +209,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     countsComplete: complete,
     sliceType: panel.sliceType,
     onSliceTypeChange: handlePanelSliceTypeChange,
+    sort: getSliceSort(panel.sliceType),
   })
 
   const isHierarchy = sliceType === 'hierarchy'
@@ -217,7 +228,74 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     onOpenViewer,
     openMoveDialog,
   )
-  const rowContextMenuBuilders = isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []
+  // items addons contribute (slicer.menuItem slot, @ynput/ayon-addon), for this slice type
+  const { contributions: addonMenuContributions } = useContributions('slicer.menuItem')
+  const addonMenuItems = useMemo(
+    () =>
+      addonMenuContributions.filter(
+        (item) => !item.sliceTypes?.length || item.sliceTypes.includes(sliceType),
+      ),
+    [addonMenuContributions, sliceType],
+  )
+  const buildAddonItems = (
+    menu: MenuKind,
+    selectedIds: string[],
+    position: MenuItemPosition = 'bottom',
+  ) => {
+    if (!selectedIds.length) return []
+    const isHierarchy = sliceType === 'hierarchy'
+    const selected = selectedIds.map((id) => {
+      const row = sliceMap.get(id)
+      const rowType = (row?.data as { entityType?: string } | undefined)?.entityType
+      return {
+        id,
+        name: row?.name,
+        label: row?.label || row?.name || undefined,
+        // hierarchy rows are folders and tasks, like useHierarchyContextMenuItems reads them
+        entityType: isHierarchy ? (rowType === 'task' ? 'task' : 'folder') : rowType,
+      }
+    })
+    const entities = isHierarchy
+      ? selected.map(({ id, name, entityType }) => ({
+          id,
+          entityType: entityType as string,
+          projectName,
+          name,
+          label: sliceMap.get(id)?.label || undefined,
+        }))
+      : []
+    const context = { projectName, sliceType, selected, entities, menu }
+    return menuItemsAt(addonMenuItems, position)
+      .filter((item) => !item.in?.length || item.in.includes(menu))
+      .map((item) => ({
+        id: item.key,
+        label: item.label,
+        icon: item.icon,
+        [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
+      }))
+  }
+  // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
+  const addonRowContextMenu =
+    (position: MenuItemPosition): SimpleTableRowContextMenuBuilder =>
+    (_e, { rowId, selectedRows }) => {
+      if (position === 'top') addonMenuItems.forEach((item) => prefetchPiece(item.run))
+      return buildAddonItems(
+        'context',
+        selectedRows.includes(rowId) ? selectedRows : [rowId],
+        position,
+      )
+    }
+  // addon items: `top` ones first, the rest after the slice's own items and above Delete
+  const rowContextMenuBuilders = addonMenuItems.length
+    ? [
+        addonRowContextMenu('top'),
+        ...(isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []),
+        addonRowContextMenu('bottom'),
+        ...(isHierarchy ? [hierarchyContextMenu.deleteContextMenuBuilder] : []),
+      ]
+    : isHierarchy
+    ? [...hierarchyContextMenu.rowContextMenuBuilders, hierarchyContextMenu.deleteContextMenuBuilder]
+    : []
 
   const unusedSliceTypes = useMemo(
     () =>
@@ -244,6 +322,51 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     if (!powerLicense) return setPowerpackDialog('slicer')
     addSlicePanel(unusedSliceTypes[0])
   }
+
+  const { menuOpen, toggleMenuOpen } = useMenuContext()
+  // one menu per panel, and the slice type can hold a dot (attrib.x)
+  const menuId = `slicer-menu-${page}-${panel.id}`.replace(/[^\w-]/g, '-')
+  const isMenuOpen = menuOpen === menuId
+
+  // the header buttons stay as quick actions, the menu lists them too
+  const dropdownSelection = Object.keys(rowSelection).filter((id) => rowSelection[id])
+  const menuItems: MenuItemType[] = [
+    ...buildAddonItems('dropdown', dropdownSelection, 'top'),
+    {
+      id: 'search',
+      label: `Search ${searchSubject}`,
+      icon: 'search',
+      onClick: () => onSearchChange(''),
+    },
+    ...(canSplit && isPrimary
+      ? [
+          {
+            id: 'split',
+            label: 'Split slicer',
+            icon: 'splitscreen_add',
+            powerFeature: 'slicer' as const,
+            onClick: handleSplit,
+          },
+        ]
+      : []),
+    ...(!isPrimary
+      ? [
+          {
+            id: 'remove-panel',
+            label: 'Remove panel',
+            icon: 'close',
+            onClick: () => removeSlicePanel(panel.id),
+          },
+        ]
+      : []),
+    buildSortMenuItem({
+      id: 'sort',
+      options: getSliceSortOptions(sliceType),
+      sort: getSliceSort(sliceType),
+      onChange: (sort) => setSliceSort(sliceType, sort),
+    }),
+    ...buildAddonItems('dropdown', dropdownSelection),
+  ]
 
   const handleDropdownChange = (value: (string | number)[]) => {
     const selected = String(value[0]) as SliceType
@@ -296,6 +419,21 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           // the buttons act on the panel, not on the collapsed header they sit in
           onClick={(event) => event.stopPropagation()}
         >
+          {!isCollapsed && !isSearching && (
+            <>
+              <HeaderButton
+                icon="more_horiz"
+                id={menuId}
+                className={clsx('slicer-menu', { active: isMenuOpen })}
+                data-tooltip="More"
+                data-tooltip-delay={0}
+                onClick={() => toggleMenuOpen(menuId)}
+              />
+              <MenuContainer targetId={menuId} id={menuId} align="left">
+                <Menu menu={menuItems} onClose={() => toggleMenuOpen(false)} />
+              </MenuContainer>
+            </>
+          )}
           {!isCollapsed && (
             <SlicerSearch
               open={isSearching}
@@ -363,6 +501,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             onCancelRename={isHierarchy ? hierarchyContextMenu.onCancelRename : undefined}
             onRowOptionClick={isHierarchy ? hierarchyContextMenu.onOptionClick : undefined}
             rowContextMenuBuilders={rowContextMenuBuilders}
+            addonShortcuts={{ table: 'slicer', projectName }}
           />
         </SimpleTableProvider>
       )}

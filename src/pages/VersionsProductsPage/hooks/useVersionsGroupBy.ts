@@ -124,6 +124,7 @@ const useVersionsGroupBy = ({
     productFilter: versionArguments.productFilter,
     taskFilter: versionArguments.taskFilter,
     folderFilter,
+    representationFilter: versionArguments.representationFilter,
     versionFilter: versionArguments.versionFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
