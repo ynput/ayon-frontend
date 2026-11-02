@@ -72,7 +72,7 @@ export const useBuildVersionsTableData = ({
         // Add loading rows for products that are currently loading versions
         else if (loadingProductVersions[product.id]) {
           const loadingCount = loadingProductVersions[product.id]
-          const loadingRows = generateLoadingRows(loadingCount)
+          const loadingRows = generateLoadingRows(loadingCount, {}, product.id)
           subRows = [...subRows, ...loadingRows]
         }
         // Add empty row if product has no versions and has finished loading
@@ -85,7 +85,7 @@ export const useBuildVersionsTableData = ({
 
       // Add next page loading row if there are more pages
       if (isFetchingNextPage && hasNextPage) {
-        result.push(...generateLoadingRows(VP_INFINITE_QUERY_COUNT))
+        result.push(...generateLoadingRows(VP_INFINITE_QUERY_COUNT, {}, 'more'))
       }
 
       return result
@@ -97,7 +97,7 @@ export const useBuildVersionsTableData = ({
 
       // Add next page loading row if there are more pages
       if (isFetchingNextPage && hasNextPage) {
-        result.push(...generateLoadingRows(VP_INFINITE_QUERY_COUNT))
+        result.push(...generateLoadingRows(VP_INFINITE_QUERY_COUNT, {}, 'more'))
       }
 
       return result

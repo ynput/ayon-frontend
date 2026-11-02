@@ -1,5 +1,5 @@
-import { usePowerpack } from '@shared/context/PowerpackContext'
-import { UseExtraSlices } from '../context/SlicerContext'
+import { usePowerpack } from '@shared/context'
+import { UseExtraSlices } from '../context/slicer'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import SlicerDropdownFallback from '../components/SlicerDropdownFallback'
 
@@ -16,7 +16,7 @@ export const useSlicerRemotes = () => {
     }
   }
 
-  const { powerLicense } = usePowerpack()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
 
   // slicer transformers
   const [useExtraSlices, { isLoading: isLoadingExtraSlices }] = useLoadModule({
@@ -35,5 +35,9 @@ export const useSlicerRemotes = () => {
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
 
-  return { useExtraSlices, isLoadingExtraSlices, SlicerDropdown: SlicerDropdown }
+  return {
+    useExtraSlices,
+    isLoadingExtraSlices: isLoadingLicense || isLoadingExtraSlices,
+    SlicerDropdown: SlicerDropdown,
+  }
 }

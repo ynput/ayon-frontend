@@ -10,6 +10,7 @@ import {
   codeTag,
   inputTag,
 } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
+import remarkLiteralDirectives from '@shared/containers/Feed/components/ActivityComment/remarkLiteralDirectives'
 import { renderMediaParagraph, renderYouTubeParagraph } from '@shared/components/MarkdownEditor'
 import { Body as CommentBody } from '@shared/containers/Feed/components/ActivityComment/ActivityComment.styled'
 import * as Styled from './EditorPlaygroundPage.styled'
@@ -32,7 +33,13 @@ const CommentMarkdown = ({
   <Styled.Preview className={clsx(className, { spaced })}>
     <CommentBody>
       <ReactMarkdown
-        remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+        remarkPlugins={[
+          remarkGfm,
+          emoji,
+          remarkDirective,
+          remarkLiteralDirectives,
+          remarkDirectiveRehype,
+        ]}
         urlTransform={(url) => url}
         components={{
           // @ts-ignore

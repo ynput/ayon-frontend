@@ -15,6 +15,7 @@ import FilesGrid, { FilesGridProps } from '../FilesGrid/FilesGrid'
 import { getTextRefs } from './getTextRefs'
 import * as Styled from './ActivityComment.styled'
 import CommentWrapper from './CommentWrapper'
+import remarkLiteralDirectives from './remarkLiteralDirectives'
 import { isFilePreviewable } from '../FileUploadPreview'
 import {
   getProjectFileId,
@@ -27,23 +28,25 @@ import { aTag, blockquoteTag, codeTag, inputTag } from './ActivityMarkdownCompon
 import { mapGraphQLReactions } from './mappers'
 import { Icon } from '@ynput/ayon-react-components'
 import ActivityStatus from '../ActivityStatus/ActivityStatus'
-import { useFeedContext } from '../../context/FeedContext'
+import { useFeedContext } from '../../context/feed'
 import { confirmDelete } from '../../../../util'
 import ActivityHeader, { ActivityHeaderProps } from '../ActivityHeader/ActivityHeader'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
-import { useMenuContext } from '@shared/context/MenuContext'
+import { useMenuContext, useDetailsPanelContext, getActivityFrameLink } from '@shared/context'
 import type { Status } from '../../../ProjectTreeTable/types/project'
 import { SavedAnnotationMetadata } from '../../index'
-import { useDetailsPanelContext, getActivityFrameLink } from '@shared/context/DetailsPanelContext'
 import { useBlendedCategoryColor } from '../CommentInput/hooks/useBlendedCategoryColor'
-import { CategoryTag } from '../ActivityCategorySelect/CategoryTag'
+import CommentFlags from './CommentFlags'
+import { createCommentFlags } from './createCommentFlags'
 import ActivityCommentMenu from './ActivityCommentMenu'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
+import { formatVersionFrame } from '../../helpers/versionFrames'
 import { copyToClipboard } from '@shared/util'
 
 type Props = {
   activity: any
+  annotationFrameStart?: number | null
   onCheckChange?: Function
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
@@ -67,6 +70,7 @@ type Props = {
 
 const ActivityComment = ({
   activity = {},
+  annotationFrameStart,
   onCheckChange,
   onDelete,
   onUpdate,
@@ -235,7 +239,9 @@ const ActivityComment = ({
 
   // the frame (range) this comment is linked to, if any
   const frameLink = useMemo(() => getActivityFrameLink(activity), [activity])
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const formatFrame =
+    commentFrameLink?.formatFrame ??
+    ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
   const onFrameLinkClick = () => {
     if (!frameLink) return
     // hosts without frame link support can still jump to the first frame
@@ -290,28 +296,15 @@ const ActivityComment = ({
             </Styled.Tools>
           )}
 
-          {!isEditing && !isGuest && categoryData && (
-            <CategoryTag
-              value={categoryData.name}
-              color={categoryData.color}
-              style={{
-                top: -4,
-                left: -4,
-              }}
-              isCompact
-              data-tooltip={
-                categoryNotFound ? 'Category not found. It may have been deleted.' : undefined
-              }
-              data-tooltip-delay={0}
-            />
-          )}
-
           {isEditing ? (
             <CommentInput
               initValue={body}
               initFiles={files}
+              annotationFrameStart={annotationFrameStart}
               initCategory={categoryData?.name}
               data={activity.activityData}
+              activityId={activityId}
+              versionReview={false}
               isEditing
               onClose={handleEditCancel}
               onSubmit={handleSave}
@@ -320,26 +313,26 @@ const ActivityComment = ({
             />
           ) : (
             <>
-              {frameLink && (
-                <Styled.FrameLink
-                  onClick={onFrameLinkClick}
-                  disabled={!commentFrameLink && !onGoToFrame}
-                  data-tooltip={
-                    frameLink.endFrame > frameLink.startFrame
-                      ? 'Go to frames and set in/out points'
-                      : 'Go to frame'
-                  }
-                  data-testid="comment-frame-link-chip"
-                >
-                  <Icon icon="timer" />
-                  {frameLink.endFrame > frameLink.startFrame
-                    ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
-                    : formatFrame(frameLink.startFrame)}
-                </Styled.FrameLink>
-              )}
+              <CommentFlags
+                flags={createCommentFlags({
+                  category: categoryData,
+                  categoryNotFound,
+                  frameLink,
+                  formatFrame,
+                  onFrameLinkClick,
+                  canNavigateToFrame: !!commentFrameLink || !!onGoToFrame,
+                  isGuest,
+                })}
+              />
               <CommentWrapper>
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, emoji, remarkDirective, remarkDirectiveRehype]}
+                  remarkPlugins={[
+                    remarkGfm,
+                    emoji,
+                    remarkDirective,
+                    remarkLiteralDirectives,
+                    remarkDirectiveRehype,
+                  ]}
                   urlTransform={(url) => url}
                   components={{
                     // a links
@@ -347,7 +340,8 @@ const ActivityComment = ({
                     a: (props) =>
                       // @ts-ignore
                       aTag(props, {
-                        entityId,
+                        entityId: origin?.id ?? entityId,
+                        entityType: origin?.type ?? entityType,
                         userName,
                         userTeamNames,
                         projectName,
@@ -403,6 +397,7 @@ const ActivityComment = ({
                 isDownloadable
                 onExpand={onFileExpand}
                 onAnnotationClick={onAnnotationClick}
+                pt={{ file: { annotationFrameStart } }}
                 onRemove={undefined}
               />
             </>

@@ -6,11 +6,8 @@ import { useGetShareOptionsQuery } from '@shared/api/queries/share/share'
 import { ShareOption as ShareOptionType } from '@shared/api/generated/access'
 import { AccessSearchInput } from '@shared/components/AccessSearchInput'
 import { AccessLevel, AccessUser } from '@shared/components/AccessUser/AccessUser'
-import {
-  EVERY_GUESTS_KEY,
-  EVERYONE_GROUP_KEY,
-} from '@shared/components/ShareOptionIcon/ShareOptionIcon'
 import { AccessLevelDropdown } from './AccessLevelDropdown'
+import { ACCESS_LEVEL_LABELS, DEFAULT_SHARE_OPTIONS } from './AccessEditorDialogHelpers'
 
 const ShareOptionsContainer = styled.div`
   display: flex;
@@ -27,17 +24,6 @@ const AccessList = styled.div`
   overflow-y: auto;
 `
 
-// Default share options that are always available
-export const DEFAULT_SHARE_OPTIONS: ShareOptionType[] = [
-  {
-    label: 'Everyone',
-    value: EVERYONE_GROUP_KEY,
-    shareType: 'global',
-    name: EVERYONE_GROUP_KEY,
-  },
-  { label: 'All Guests', value: EVERY_GUESTS_KEY, shareType: 'global', name: EVERY_GUESTS_KEY },
-]
-
 export type AccessOption = {
   label: string
   value: number
@@ -46,12 +32,6 @@ export type AccessOption = {
 
 const VIEWER_ACCESS_LEVEL = 10 // Default access level when adding a new user/group
 
-export const ACCESS_LEVEL_LABELS = {
-  0: 'No access',
-  10: 'Viewer',
-  20: 'Editor',
-  30: 'Admin',
-}
 // Create access options for dropdown
 const defaultAccessOptions: AccessOption[] = [
   { label: ACCESS_LEVEL_LABELS[0], value: 0 },

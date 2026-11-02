@@ -8,7 +8,7 @@ import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
 import { UserImage } from '@shared/components/UserImage/UserImage'
 import type { EntityComment } from '@shared/api'
 import { allowedRefTypes } from '@shared/containers/Feed/components/ActivityComment/ActivityMarkdownComponents'
-import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDate'
+import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHelpers'
 import { getEntityTypeIcon } from '@shared/util'
 import { WidgetBaseProps } from './CellWidget'
 

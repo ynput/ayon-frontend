@@ -72,7 +72,7 @@ const ActionButton = styled(Button)`
 
   &.active {
     .icon {
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 10;
+      font-variation-settings: 'FILL' 1;
     }
   }
 

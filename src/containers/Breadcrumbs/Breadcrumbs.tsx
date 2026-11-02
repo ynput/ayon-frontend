@@ -3,8 +3,10 @@ import { Button, InputText } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
-import { copyToClipboard } from '@shared/util'
-import { useURIContext } from '@shared/context'
+import { toast } from 'react-toastify'
+import { copyToClipboard, parseUri } from '@shared/util'
+import { URL_PARAM_ID, useURIContext } from '@shared/context'
+import { Module, ModulePath } from '@pages/ProjectManagerPage/mappers'
 import clsx from 'clsx'
 
 const parseQueryParams = (query: string): Record<string, string> => {
@@ -22,6 +24,42 @@ const parseQueryParams = (query: string): Record<string, string> => {
 
 const getSettingsScopeLabel = (query: string): string => {
   return query?.includes('project') ? 'Projects Manager' : 'Studio Settings'
+}
+
+const getSettingsPathname = ({ project, site }: { project?: string; site?: string }): string => {
+  if (project) return ModulePath[site ? Module.siteSettings : Module.projectSettings]
+  return site ? '/settings/site' : '/settings/studio'
+}
+
+// pages whose details panel opens context entities (DetailsPanelContext) from the uri
+const ENTITY_MODULES = ['overview', 'tasks', 'browser', 'products']
+
+const canShowEntity = (projectName: string, pathname: string): boolean => {
+  if (pathname.startsWith('/dashboard/tasks')) return true
+  const module = pathname.split('/')[3]
+  return pathname.startsWith(`/projects/${projectName}/`) && ENTITY_MODULES.includes(module)
+}
+
+// the uri state is in-memory only, so a full reload must carry it in the url
+const getUriTargetUrl = (uri: string, location: Location): string | null => {
+  const { type, settings, entity } = parseUri(uri)
+
+  if (type === 'settings' && settings) {
+    const params = new URLSearchParams()
+    params.set(URL_PARAM_ID, uri)
+    if (settings.project) params.set('project', settings.project)
+    return `${getSettingsPathname(settings)}?${params}`
+  }
+
+  // the details panel has no product resolution
+  if (type !== 'entity' || !entity?.projectName || entity.entityType === 'product') return null
+
+  const stay = canShowEntity(entity.projectName, location.pathname)
+  const params = new URLSearchParams(stay ? location.search : '')
+  params.set(URL_PARAM_ID, uri)
+  params.set('project', entity.projectName)
+  const pathname = stay ? location.pathname : `/projects/${entity.projectName}/overview`
+  return `${pathname}?${params}`
 }
 
 const getPathnameLabel = (pathname: string): string => {
@@ -72,7 +110,6 @@ const Breadcrumbs = () => {
   const [localUri, setLocalUri] = useState<string>('')
   const [editMode, setEditMode] = useState<boolean>(false)
   const { uri = '' } = useURIContext()
-  const { setUri } = useURIContext()
 
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -102,23 +139,21 @@ const Breadcrumbs = () => {
     }
   }, [editMode])
 
-  const goThere = async (e?: React.SyntheticEvent) => {
+  const goThere = (e?: React.SyntheticEvent) => {
     e?.preventDefault()
     setEditMode(false)
     // blur input
     inputRef.current?.blur()
 
-    try {
-      //  set uri
-      setUri(localUri)
-      // refresh page ensures that states use this new uri
-      location.reload()
-    } catch (error) {
-      console.error(error)
+    const target = getUriTargetUrl(localUri.trim(), location)
+    if (!target) {
+      toast.warning('Unsupported URI')
       setLocalUri(uri)
-    } finally {
-      setEditMode(false)
+      return
     }
+
+    // full load so every page reads the new uri fresh on mount
+    location.assign(target)
   }
 
   const onCopy = () => {

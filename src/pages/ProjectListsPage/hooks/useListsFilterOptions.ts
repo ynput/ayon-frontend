@@ -3,8 +3,8 @@ import { Option } from '@ynput/ayon-react-components'
 import { AttributeData, EnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/ListsDataContext'
-import { entityTypeOptions } from '../components/NewListDialog/NewListDialog'
+import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { entityTypeOptions } from '../components/NewListDialog/NewListDialogHelpers'
 
 // Helper function to aggregate attribute values from lists
 const getAttributeValuesFromLists = (

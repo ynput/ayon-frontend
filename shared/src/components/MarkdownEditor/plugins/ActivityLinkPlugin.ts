@@ -17,7 +17,8 @@ const ActivityLinkPlugin = () => {
           const node = $getNodeByKey(key)
           const dom = editor.getElementByKey(key)
           if (!dom || !$isLinkNode(node)) continue
-          dom.classList.toggle('md-activity-link', !!parseActivityLink(node.getURL()))
+          const link = parseActivityLink(node.getURL())
+          dom.classList.toggle('md-activity-link', !!link)
         }
       })
     }

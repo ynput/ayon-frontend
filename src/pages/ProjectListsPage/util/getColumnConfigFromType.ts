@@ -16,3 +16,7 @@ export const getColumnConfigFromType: FunctionType = (entityType) => {
       return [['subType', ...hiddenDates], []] as StringStringArray
   }
 }
+
+// the entities' attributes can't be changed from these lists (product and version lists)
+export const isEntityAttribReadOnly = (entityType?: string) =>
+  getColumnConfigFromType(entityType)[1].includes('attrib')

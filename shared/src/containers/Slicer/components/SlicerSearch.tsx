@@ -1,5 +1,6 @@
 import { HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import { InputText } from '@ynput/ayon-react-components'
+import { pastedListToSearch } from '@shared/util'
 import clsx from 'clsx'
 import styled from 'styled-components'
 
@@ -35,6 +36,20 @@ const SlicerSearch = ({ open, value, subject, onChange }: Props) => {
     if (e.key === 'Escape') onChange(undefined)
   }
 
+  // Same as the main filter bar: a pasted column or row becomes a comma (OR) list.
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const normalized = pastedListToSearch(e.clipboardData.getData('text'))
+    if (normalized === null) return
+    e.preventDefault()
+
+    const input = e.currentTarget
+    const start = input.selectionStart ?? value.length
+    const end = input.selectionEnd ?? value.length
+    const caret = start + normalized.length
+    onChange(value.slice(0, start) + normalized + value.slice(end))
+    requestAnimationFrame(() => input.setSelectionRange(caret, caret))
+  }
+
   return (
     <StyledContainer className={clsx({ open })}>
       {open && (
@@ -44,6 +59,7 @@ const SlicerSearch = ({ open, value, subject, onChange }: Props) => {
           placeholder="Search"
           autoFocus
           onKeyDown={handleInputKeydown}
+          onPaste={handlePaste}
         />
       )}
       <HeaderButton

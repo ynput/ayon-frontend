@@ -1,6 +1,6 @@
 import { DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
-import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
+import { DialogContainer, DialogHeading, ImportContextWrapper, ImportTarget, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
 import { contextLabelForImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
 import clsx from "clsx";
@@ -8,7 +8,7 @@ import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containe
 import { useDispatch } from "react-redux";
 import ViewsDialogContainer from "@shared/containers/Views/ViewsDialogContainer/ViewsDialogContainer";
 import ImportSteps from "./Steps";
-import { useImportDialogContext } from "./context/ImportDialogProvider";
+import { useImportDialogContext } from "./context/ImportDialogProviderInstance"
 
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.UPLOAD]: "lg",
@@ -26,6 +26,7 @@ export default function ImportDialog() {
   const {
     importing: importContext,
     folderId,
+    folderLabel,
     projectName,
     close,
   } = useImportDialogContext()
@@ -50,6 +51,7 @@ export default function ImportDialog() {
         header={(
           <DialogHeading>
             Import {itemsLabelForImportContext[importContext]}
+            {folderLabel && <>{" into "}<ImportTarget>{folderLabel}</ImportTarget></>}
             <TemplatesSelector
               className={clsx({ shown: step > ImportStep.UPLOAD && step < ImportStep.PREVIEW })}
             >

@@ -6,7 +6,14 @@ const authApiInjected = authenticationApi.enhanceEndpoints({
   endpoints: {
     logout: {
       invalidatesTags: ['info'],
-      onCacheEntryAdded: async (arg, { dispatch }) => {
+      onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
+        // wait for the server to end the session first, the redirect below would cancel the request
+        // and leave the token (and its cookie) valid
+        try {
+          await queryFulfilled
+        } catch {
+          // log out locally anyway
+        }
         dispatch(logout())
         // reset global state
         dispatch(authenticationApi.util.resetApiState())

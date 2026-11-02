@@ -13,6 +13,7 @@ Read this guide before changing anything in this folder, or anything that render
 | Text table cells | `shared/src/containers/ProjectTreeTable/widgets/TextContentWidget.tsx` | `submitOnEnter`. Stops Enter and Escape from bubbling to the table, but the editor handles them first. Mentions come from the `mentionEntity` prop. |
 | Markdown attribute cells | `shared/src/containers/ProjectTreeTable/widgets/MarkdownWidget.tsx` | Dialog editor. |
 | Playground | `src/pages/EditorPlaygroundPage/` at route `/dev/editor` | Available in dev, or for user level 700 and above. Mock mentions, plus the comment renderer side by side. **Use it to check changes.** |
+| Addons (e.g. ayon-reports) | `@ynput/ayon-frontend-shared/components` | Bundle their own shared copy. Need a react-redux store with the shared `api` (emoji tracking). Need `@module-federation/enhanced` installed: `components` and `context` import its runtime (`registerRemotes`) at load time. No `mentions` or `onUploadMedia`. |
 
 Read-only markdown is **not** rendered by the editor. It is rendered by `react-markdown` (see [Rendering outside the editor](#rendering-outside-the-editor)).
 
@@ -74,14 +75,14 @@ Every place that reads the markdown needs to know about it:
 
 ### Variants
 
-`variant="document"` (default) has the toolbar on top, and Enter adds a line. `variant="message"` gets a floating toolbar, `submitOnEnter`, menus at the top and a growing height. Each default can be overridden by its prop (see `VARIANTS`). Toolbar layouts: `DEFAULT_TOOLBAR` and `FLOATING_TOOLBAR` in `types.ts`. Headings, code blocks and inline code are left out on purpose; they live in the `/` menu.
+`variant="document"` (default) has the toolbar on top, and Enter adds a line. `variant="message"` gets a floating toolbar, `submitOnEnter`, menus at the top and a growing height. Each default can be overridden by its prop (see `VARIANTS`). Toolbar layouts: `DEFAULT_TOOLBAR`, `FLOATING_TOOLBAR` and `DESCRIPTION_TOOLBAR` in `types.ts`. The first two leave out headings, code blocks and inline code on purpose; they live in the `/` menu. `DESCRIPTION_TOOLBAR` adds headings and code blocks and has no check list.
 
 ### Plugins (`plugins/`)
 
 | Plugin | Does |
 | --- | --- |
 | `KeyboardPlugin` | Mod+Enter submits. With `submitOnEnter`, Enter submits except in lists and code. Shift+Enter makes a new paragraph line. Escape calls `onEscape`. |
-| `MentionsPlugin` | `@` users and teams, `@@` versions, `@@@` tasks, from a `MentionSource`. `INSERT_MENTION_TRIGGER_COMMAND` is used by the mention buttons. |
+| `MentionsPlugin` | `@` users and teams, `@@` versions, `@@@` tasks, from a `MentionSource`. `INSERT_MENTION_TRIGGER_COMMAND` (in `MentionsPluginHelpers.ts`) is used by the mention buttons. |
 | `MentionEventsPlugin` | `onMentionClick` and `onMentionHover`, delegated from the root. |
 | `SlashCommandPlugin` | The `/` menu: headings, lists, blocks, insert (video, media, attachment), mentions, and custom `commands` (shown first). |
 | `EmojiPlugin` | The `:` picker. Usage is stored in frontend preferences (`emoji/useEmojiUsage.ts`). |
@@ -98,6 +99,8 @@ Every place that reads the markdown needs to know about it:
 | `BlockExitPlugin` | Down or Right at the end of a final code block or quote adds a paragraph after it. |
 | `ChecklistShortcutPlugin` | `- [ ] ` becomes a check list item, because the bullet shortcut fires first. |
 | `EmptyParagraphPlugin` | At most one empty line in a row (paragraph model). |
+
+Plugin files export only their component. Lexical commands (`createCommand`) and helpers live in a sibling `<Plugin>Helpers.ts`. A command re-created by a hot update would no longer match the listeners registered with the old one, and a non-component export stops the file from hot-reloading at all (see "Hot reload" in the root `AGENTS.md`). The same applies to `renderMediaParagraph` (`media/MediaBlockHelpers.tsx`) and `renderYouTubeParagraph` (`youtube/YouTubeEmbedHelpers.tsx`).
 
 ### Command priorities (read before touching keys or paste)
 
@@ -149,10 +152,13 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 
 ### Comment links (`links/activityLinks.ts`)
 
-- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link" or a duplicated comment's "Original comment") is stored as a **plain markdown link**, but shown as a chip like mentions.
+- A link to a comment on this server (`/projects/{project}/...?activity={id}`, from "Copy link") is stored as a **plain markdown link**, but shown as a chip like mentions. Duplicated comments write `[Source](source:<activity-id>?type=<entity-type>&id=<entity-id>)` (`getSourceLink`), with the entity the source comment belongs to: a copy can be posted on another entity. Older `source:<activity-id>` links fall back to the containing comment's entity.
 - The editor: `ActivityLinkPlugin` adds `md-activity-link` to those links, styled like `.mention`. A pasted comment url gets the label "Comment" (`getLinkLabel`).
 - The feed: `aTag` renders them with `ActivityReference` (chat icon). Clicking highlights the comment when it is in the feed, otherwise it opens the link in a new tab.
+- Source links render with the `chat_paste_go` icon and the label "Source". `SourceCommentReference` uses `GetActivitiesById` with the source entity and activity ID; it renders nothing until the backend returns the source activity.
+- Lexical renders links with protocols it doesn't allow (like `source:`) with `href="about:blank"`; `LinkClickPlugin` reads the url from the link node, never from the DOM.
 - Links to other servers stay normal links. `parseActivityLink` is the one place that decides.
+- Any other link starting with `/` is a page on this server. The feed renders it with `RelativeLink`: a plain `<a>` that navigates with the `useNavigate` from the details panel context. Don't use react-router's `<Link>` in the feed: an addon bundles its own react-router with no router above it, so `<Link>` throws there and takes the whole page down.
 
 ### Code blocks
 
@@ -164,9 +170,10 @@ Pass `commands: EditorCommand[]` (`types.ts`: `id`, `label`, `icon`, `keywords`,
 
 | Where | How |
 | --- | --- |
-| Feed comments | `ActivityComment.tsx`: `react-markdown` with `remark-gfm`, `remark-emoji` and `remark-directive`. Components come from `ActivityMarkdownComponents.tsx` (`aTag` renders mentions as references, plus `codeTag`, `inputTag` and `blockquoteTag`). `p` goes through `renderMediaParagraph` and `renderYouTubeParagraph`. |
+| Feed comments | `ActivityComment.tsx`: `react-markdown` with `remark-gfm`, `remark-emoji` and `remark-directive`. Components come from `ActivityMarkdownComponents.tsx` (`aTag` renders mentions as references, plus `codeTag`, `inputTag` and `blockquoteTag`). `p` goes through `renderMediaParagraph` and `renderYouTubeParagraph`. `remarkLiteralDirectives.ts` turns every directive that is not in `COMMENT_DIRECTIVES` back into text, otherwise `:word` (e.g. `Note:fix this`) is dropped; add new directives to that list. |
 | Table cells | `TextWidget.tsx`: `react-markdown`, with `aTag`-like mention rendering through `ActivityReference`. |
 | Feed field changes | `ActivityFieldChange.tsx` calls `markdownToPlainText` for `description` and markdown widgets. Mentions and links show their label, and nothing is linked. |
+| Addons | `react-markdown` with the feed plugins and `codeTag`, `inputTag`, `blockquoteTag`, `remarkLiteralDirectives` and `COMMENT_DIRECTIVES` from `@ynput/ayon-frontend-shared/Feed`. `aTag` is not exported (it needs feed helpers), so addons render links themselves. `inputTag(props, { activity, onCheckChange })`: without `onCheckChange` the checkbox is display only. |
 
 `react-markdown` drops non-http urls by default, which would break mentions (`user:luke`). Every renderer must pass `urlTransform` to keep them.
 

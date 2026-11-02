@@ -15,6 +15,7 @@ export interface CommentDuplicate {
     entityId?: string
     entityType?: string
     origin?: { id: string; type: string }
+    activityData?: { startFrame?: unknown; endFrame?: unknown } | null
     // as shown in the feed: annotation composites carry their annotation, layers are left out
     files?: { id: string; name: string; mime?: string; annotation?: any }[]
   }

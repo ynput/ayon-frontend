@@ -1,18 +1,16 @@
 import { useMemo } from 'react'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 import {
   DetailsPanelAttributesEditor,
   DetailsPanelAttributesEditorProps,
 } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
+import { useGetActivitiesInfiniteInfiniteQuery, useGetUsersAssigneeQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useGlobalContext } from '@shared/context/GlobalContext'
-import { useGetUsersAssigneeQuery } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext, useGlobalContext, useProjectContext } from '@shared/context'
 import type { DetailsPanelEntityType } from '@shared/api'
 import ActivityReferenceTooltip from '@shared/containers/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
 import useReferenceTooltip from '@shared/containers/Feed/hooks/useReferenceTooltip'
@@ -66,6 +64,12 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
 
   const folderHasVersions = Boolean(versionActivitiesData?.pages?.[0]?.activities?.length)
 
+  const entityType = formData?.entityType || 'task'
+  const { enableEditing, attribAccess, updateEntity } = useEntityEditing({
+    entities,
+    entityType,
+  })
+
   const { editableFields, readOnlyFieldsData } = useEntityFields({
     attributes,
     folderTypes,
@@ -74,9 +78,9 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     tags,
     entityType: formData?.entityType,
     folderHasVersions,
+    attribAccess,
   })
 
-  const entityType = formData?.entityType || 'task'
   const authorNames = [formData?.createdBy, formData?.updatedBy].filter(
     (name): name is string => typeof name === 'string' && !!name,
   )
@@ -84,10 +88,10 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     { names: authorNames, projectName: formData?.projectName || '' },
     { skip: !authorNames.length || !formData?.projectName },
   )
-  const { enableEditing, updateEntity } = useEntityEditing({
-    entities,
-    entityType,
-  })
+
+  const { writableAttributes } = attribAccess
+  const enableDescriptionEditing =
+    enableEditing && (!writableAttributes || writableAttributes.includes('description'))
 
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
     if (key === 'tags') {
@@ -109,6 +113,24 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
 
     updateFormData(key, value)
     updateEntity(key, value)
+  }
+
+  // a list field of several entities: each keeps its own values, plus or minus the changed ones
+  const handleMixedChange = (key: string, change: MixedChange) => {
+    const attribName = key.startsWith('attrib.') ? key.replace('attrib.', '') : undefined
+    const getValues = (entity: DetailsPanelEntityData): string[] => {
+      const value = attribName ? entity.attrib?.[attribName] : entity.tags
+      return Array.isArray(value) ? value.map(String) : []
+    }
+    const nextValues = new Map(
+      entities.map((entity) => [entity.id, applyMixedChange(getValues(entity), change)]),
+    )
+
+    updateFormData(key, [...new Set([...nextValues.values()].flat())])
+    updateEntity(attribName ? 'attrib' : key, (entityId: string) => {
+      const value = nextValues.get(entityId) || []
+      return attribName ? { [attribName]: value } : value
+    })
   }
 
   // mention the same users, tasks and versions as the comments of the (first) entity
@@ -147,7 +169,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
       <DescriptionSection
         description={formData?.description || ''}
         isMixed={mixedFields.includes('description')}
-        enableEditing={enableEditing}
+        enableEditing={enableDescriptionEditing}
         onChange={handleDescriptionChange}
         isLoading={isLoading}
         mentionsContext={mentionsContext}
@@ -163,6 +185,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         isLoading={isLoading}
         enableEditing={enableEditing}
         onChange={handleChange}
+        onMixedChange={handleMixedChange}
         entities={entities}
         entityType={entityType}
       />

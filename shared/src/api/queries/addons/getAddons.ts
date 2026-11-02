@@ -1,4 +1,6 @@
+import { useMemo } from 'react'
 import { addonsApi } from '@shared/api/generated'
+import type { ListAddonsApiResponse } from '@shared/api/generated'
 
 const enhancedApi = addonsApi.enhanceEndpoints({
   endpoints: {
@@ -10,87 +12,52 @@ const enhancedApi = addonsApi.enhanceEndpoints({
 
 export const { useListAddonsQuery } = enhancedApi
 
-const getAddonsApi = enhancedApi.injectEndpoints({
-  endpoints: (build) => ({
-    // Return a list of addons which have project-scoped frontend
-    getProjectAddons: build.query({
-      query: () => ({
-        url: `/api/addons`,
-        method: 'GET',
-      }),
-      providesTags: ['projectAddons'],
-      transformResponse: (response: any) => {
-        let result = []
-        for (const definition of response.addons) {
-          const versDef = definition.versions[definition.productionVersion]
-          if (!versDef) continue
-          const projectScope = versDef.frontendScopes['project']
-          if (!projectScope) continue
+type AddonScope = 'project' | 'settings' | 'dashboard'
 
-          result.push({
-            name: definition.name,
-            title: definition.title,
-            version: definition.productionVersion,
-            settings: projectScope,
-          })
-        }
-        return result
-      },
-    }),
-    // Return a list of addons with settings-scoped frontend
-    getSettingsAddons: build.query({
-      query: () => ({
-        url: `/api/addons`,
-        method: 'GET',
-      }),
-      providesTags: ['settingsAddons'],
-      transformResponse: (response: any) => {
-        let result = []
-        for (const definition of response.addons) {
-          const versDef = definition.versions[definition.productionVersion]
-          if (!versDef) continue
-          const settingsScope = versDef.frontendScopes['settings']
-          if (!settingsScope) continue
+export type ScopedAddon = {
+  name: string
+  title: string
+  version: string
+  settings: any
+}
 
-          result.push({
-            name: definition.name,
-            title: definition.title,
-            version: definition.productionVersion,
-            settings: settingsScope,
-          })
-        }
-        return result
-      },
-    }),
-    // Return a list of addons with dashboard-scoped frontend
-    getDashboardAddons: build.query({
-      query: () => ({
-        url: `/api/addons`,
-        method: 'GET',
-      }),
-      providesTags: ['dashboardAddons'],
-      transformResponse: (response: any) => {
-        let result = []
-        for (const definition of response.addons) {
-          const versDef = definition.versions[definition.productionVersion]
-          if (!versDef) continue
-          const settingsScope = versDef.frontendScopes['dashboard']
-          if (!settingsScope) continue
+// addons with a frontend for the scope, in their production version
+const getScopedAddons = (response: ListAddonsApiResponse, scope: AddonScope): ScopedAddon[] => {
+  const result: ScopedAddon[] = []
+  for (const definition of response.addons) {
+    const versDef = definition.versions[definition.productionVersion as string]
+    if (!versDef) continue
+    const scopeSettings = (versDef.frontendScopes as Record<string, any> | undefined)?.[scope]
+    if (!scopeSettings) continue
 
-          result.push({
-            name: definition.name,
-            title: definition.title,
-            version: definition.productionVersion,
-            settings: settingsScope,
-          })
-        }
-        return result
-      },
-    }),
-  }),
-  overrideExisting: true,
-})
+    result.push({
+      name: definition.name,
+      title: definition.title,
+      version: definition.productionVersion as string,
+      settings: scopeSettings,
+    })
+  }
+  return result
+}
 
-export const { useGetProjectAddonsQuery, useGetSettingsAddonsQuery, useGetDashboardAddonsQuery } =
-  getAddonsApi
-export default getAddonsApi
+// The scoped lists are derived from listAddons({}) instead of being separate queries:
+// it's the same GET /api/addons, so pages no longer request it two or three times on load,
+// and the lists refresh when addons change ('addonList' tag).
+const useScopedAddonsQuery =
+  (scope: AddonScope) => (_arg?: unknown, options?: { skip?: boolean }) => {
+    const result = useListAddonsQuery({}, options)
+    const data = useMemo(
+      () => (result.data ? getScopedAddons(result.data, scope) : undefined),
+      [result.data],
+    )
+    return { ...result, data }
+  }
+
+// Return a list of addons which have project-scoped frontend
+export const useGetProjectAddonsQuery = useScopedAddonsQuery('project')
+// Return a list of addons with settings-scoped frontend
+export const useGetSettingsAddonsQuery = useScopedAddonsQuery('settings')
+// Return a list of addons with dashboard-scoped frontend
+export const useGetDashboardAddonsQuery = useScopedAddonsQuery('dashboard')
+
+export default enhancedApi

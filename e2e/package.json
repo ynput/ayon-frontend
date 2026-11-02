@@ -1,0 +1,41 @@
+{
+  "name": "@ynput/ayon-e2e",
+  "version": "0.1.0",
+  "description": "Playwright end-to-end tests for the AYON web UI and addons: config, fixtures, REST client, UI helpers",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ynput/ayon-frontend.git",
+    "directory": "e2e"
+  },
+  "license": "FSL-1.1-ALv2",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./config": {
+      "types": "./dist/config.d.ts",
+      "default": "./dist/config.js"
+    },
+    "./AGENTS.md": "./AGENTS.md",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "AGENTS.md"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1"
+  },
+  "peerDependencies": {
+    "@playwright/test": ">=1.50"
+  }
+}

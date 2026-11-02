@@ -13,8 +13,6 @@ import {
   KEY_ESCAPE_COMMAND,
   KEY_TAB_COMMAND,
   SELECTION_CHANGE_COMMAND,
-  createCommand,
-  type LexicalCommand,
   type NodeKey,
 } from 'lexical'
 import { $createMediaNode, $isMediaNode } from '../nodes/MediaNode'
@@ -23,6 +21,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { BLOCK_DIALOG_CLOSE_CLASS } from '@shared/components/LinksManager/CellEditingDialog'
 import { $insertBlockAtCaret } from './blockInsert'
 import * as Styled from '../MarkdownEditor.styled'
+import { INSERT_MEDIA_FILES_COMMAND, OPEN_MEDIA_PICKER_COMMAND } from './MediaPluginHelpers'
 
 export interface UploadedMedia {
   // where the file is stored, e.g. /api/projects/{project}/files/{id}
@@ -32,16 +31,6 @@ export interface UploadedMedia {
 }
 
 export type UploadMedia = (file: File) => Promise<UploadedMedia>
-
-// insert image / video files as blocks at the caret
-export const INSERT_MEDIA_FILES_COMMAND: LexicalCommand<File[]> = createCommand(
-  'INSERT_MEDIA_FILES_COMMAND',
-)
-
-// pick images / videos to insert (slash menu)
-export const OPEN_MEDIA_PICKER_COMMAND: LexicalCommand<void> = createCommand(
-  'OPEN_MEDIA_PICKER_COMMAND',
-)
 
 interface MediaPluginProps {
   onUploadMedia: UploadMedia

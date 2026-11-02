@@ -13,8 +13,6 @@ import {
   $isTextNode,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_NORMAL,
-  createCommand,
-  type LexicalCommand,
   type TextNode,
 } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
@@ -31,6 +29,7 @@ import type {
 import * as Styled from '../MarkdownEditor.styled'
 import SuggestionMenu from './SuggestionMenu'
 import { $isSelectionInCode } from './selectionHelpers'
+import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
 
 const ALL_TRIGGERS: MentionTrigger[] = ['@', '@@', '@@@']
 
@@ -50,10 +49,6 @@ const DEFAULT_CONFIG: Record<MentionTrigger, MentionTriggerConfig> = {
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
-
-export const INSERT_MENTION_TRIGGER_COMMAND: LexicalCommand<MentionTrigger> = createCommand(
-  'INSERT_MENTION_TRIGGER_COMMAND',
-)
 
 class MentionMenuOption extends MenuOption {
   item: MentionItem

@@ -1,7 +1,7 @@
 // SLICER COMPONENT
 export * from './components/Slicer'
 // SLICER CONTEXT
-export * from './context/SlicerContext'
+export * from './context'
 // SLICER TYPES
 export * from './types'
 // SLICER HOOKS

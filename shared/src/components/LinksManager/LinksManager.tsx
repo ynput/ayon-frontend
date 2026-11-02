@@ -8,7 +8,7 @@ import type { PickerEntityType } from '@shared/containers/EntityPickerDialog/Ent
 import { upperFirst } from 'lodash'
 import { LinkManagerItem } from './LinkManagerItem'
 import { Button } from '@ynput/ayon-react-components'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useGlobalContext } from '@shared/context'
 import { groupLinksByEntity, GroupedLink } from './utils/groupLinks'
 
 export type LinkEntity = {

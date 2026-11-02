@@ -126,7 +126,11 @@ const Attributes = () => {
     {
       label: 'Edit',
       icon: 'edit',
-      command: () => setShowEditor(true),
+      // the editor opens the selected attribute
+      command: () => {
+        setSelectedAttribute(selected)
+        setShowEditor(true)
+      },
     },
     {
       label: 'Delete',
@@ -140,8 +144,6 @@ const Attributes = () => {
   const [ctxMenuTableShow] = useCreateContextMenu([])
 
   const handleContextSelectionChange = (e) => {
-    setSelectedAttribute(e.value)
-    console.log(e.value)
     ctxMenuTableShow(e.originalEvent, getContextMenu(e.value))
   }
 

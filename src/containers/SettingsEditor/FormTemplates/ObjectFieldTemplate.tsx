@@ -99,11 +99,12 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
 
       //@ts-ignore
       if (ppts.conditionalEnum) {
-        hiddenFields = [
-          ...hiddenFields,
-          //@ts-ignore
-          ...(ppts?.enum || []).filter((e: $Any) => e !== props.formData?.[propName]),
-        ]
+        const value = props.formData?.[propName]
+        // multiselect enums keep their options in items.enum and store an array
+        const isMultiselect = Array.isArray(value) || !!ppts?.items?.enum
+        const options: $Any[] = (isMultiselect ? ppts?.items?.enum : ppts?.enum) || []
+        const selected: $Any[] = isMultiselect ? value || [] : [value]
+        hiddenFields = [...hiddenFields, ...options.filter((e: $Any) => !selected.includes(e))]
       }
     }
 

@@ -1,7 +1,7 @@
 import { Icon } from '@ynput/ayon-react-components'
 
 import type { DetailsPanelEntityData, TaskType } from '@shared/api'
-import { useDetailsPanelContext } from '@shared/context/DetailsPanelContext'
+import { useDetailsPanelContext } from '@shared/context'
 
 import * as Styled from './LinkedTaskRow.styled'
 

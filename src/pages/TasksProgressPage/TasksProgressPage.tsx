@@ -2,7 +2,6 @@ import TasksProgress from '@containers/TasksProgress'
 import { Section } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { FC } from 'react'
-import { useAppSelector } from '@state/store'
 import TaskProgressDetailsPanel from './TaskProgressDetailsPanel'
 import { useGetAttributeConfigQuery } from '@shared/api'
 import { getPriorityOptions } from '@shared/util'
@@ -13,10 +12,9 @@ import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import { useTaskProgressSlicerCountsSource } from '@containers/TasksProgress/hooks'
 
 const TasksProgressPage: FC = () => {
-  const projectName = useAppSelector((state: any) => state.project.name) as string
-
   //   GET PROJECT INFO FOR STATUS
   const { ...projectInfo } = useProjectContext()
+  const { projectName } = projectInfo
   // Get attributes so we can use priority
   const { data: priorityAttrib } = useGetAttributeConfigQuery({ attributeName: 'priority' })
   const priorities = getPriorityOptions(priorityAttrib, 'task')

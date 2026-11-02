@@ -35,7 +35,12 @@ export default function useDetailsPanelURLSync({
     if (firstEntityId) searchParams.set('id', firstEntityId)
 
     // update the URL without reloading the page
-    const newUrl = `${url.pathname}?${searchParams.toString()}`
-    window.history.replaceState({}, '', newUrl)
+    const newUrl = `${url.pathname}?${searchParams.toString()}${url.hash}`
+    const currentUrl = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    // this effect can run on every render (e.g. every frame in the player),
+    // browsers throttle replaceState (Safari throws after 100 calls / 10s), so only write on change
+    if (newUrl === currentUrl) return
+    // keep the existing state so the router's history entry isn't wiped
+    window.history.replaceState(window.history.state, '', newUrl)
   }, [entityData, project, activeEntityType, entitiesToQuery])
 }

@@ -24,7 +24,7 @@ const StyledStatus = styled.span<{ $color: string }>`
 
   .icon {
     font-size: 16px;
-    font-variation-settings: 'FILL' 1, 'wght' 300, 'GRAD' 300, 'opsz' 20;
+    font-variation-settings: 'FILL' 1;
   }
 `
 

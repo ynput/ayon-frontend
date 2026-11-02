@@ -63,12 +63,6 @@ const TeamList = ({
     onSelect(result)
   } // onSelectionChange
 
-  const onContextMenuSelectionChange = (event) => {
-    if (!selection.includes(event.value.name)) {
-      onSelect(event.value.name)
-    }
-  }
-
   // GLOBAL CONTEXT MENU
   const globalContextItems = useMemo(
     () => [
@@ -84,30 +78,37 @@ const TeamList = ({
   const [globalContextMenuShow] = useCreateContextMenu(globalContextItems)
 
   // TABLE CONTEXT MENU
-  const tableContextItems = useMemo(
-    () => [
-      {
-        label: 'Create Team',
-        icon: 'group_add',
-        command: onNewTeam,
+  // built from the right-clicked row, which is acted on alone when it is not selected
+  const buildTableContextItems = (ctxSelection) => [
+    {
+      label: 'Create Team',
+      icon: 'group_add',
+      command: onNewTeam,
+    },
+    {
+      label: 'Duplicate Team',
+      icon: 'content_copy',
+      // duplicating copies the selected team
+      command: () => {
+        if (ctxSelection !== selection) onSelect?.(ctxSelection)
+        onDuplicate()
       },
-      {
-        label: 'Duplicate Team',
-        icon: 'content_copy',
-        command: onDuplicate,
-        disabled: selection.length > 1,
-      },
-      {
-        label: `Delete Team${selection.length > 1 ? 's' : ''}`,
-        icon: 'delete',
-        command: onDelete,
-        danger: true,
-      },
-    ],
-    [teams, selection],
-  )
-  // create the ref and model
-  const [tableContextMenuShow] = useCreateContextMenu(tableContextItems)
+      disabled: ctxSelection.length > 1,
+    },
+    {
+      label: `Delete Team${ctxSelection.length > 1 ? 's' : ''}`,
+      icon: 'delete',
+      command: () => onDelete(ctxSelection),
+      danger: true,
+    },
+  ]
+  const [tableContextMenuShow] = useCreateContextMenu()
+
+  const onTableContextMenu = (e) => {
+    const name = e.data?.name
+    const ctxSelection = name && !selection.includes(name) ? [name] : selection
+    tableContextMenuShow(e.originalEvent, buildTableContextItems(ctxSelection))
+  }
 
   const tableData = useTableLoadingData(teamList, isLoading, 10, 'name')
 
@@ -126,8 +127,7 @@ const TeamList = ({
             selection={selectionObj}
             onSelectionChange={onSelect && onSelectionChange}
             onRowClick={onRowClick}
-            onContextMenu={(e) => tableContextMenuShow(e.originalEvent)}
-            onContextMenuSelectionChange={onContextMenuSelectionChange}
+            onContextMenu={onTableContextMenu}
             className={clsx({ loading: isLoading })}
             rowClassName={(rowData) => clsx({ loading: rowData.isLoading })}
             emptyMessage="No teams found"

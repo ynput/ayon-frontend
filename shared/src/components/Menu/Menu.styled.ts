@@ -1,3 +1,4 @@
+import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
 
 // the dialog starts below the app header, so menus positioned above it are clipped and unscrollable
@@ -179,7 +180,7 @@ export const Item = styled.li`
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
   }
-  
+
   .hover-swap {
     display: none;
     cursor: grab;
@@ -253,17 +254,11 @@ export const Item = styled.li`
     }
   }
 
-  &.power {
-    &,
-    .icon {
-      color: var(--md-sys-color-tertiary);
-    }
-    [icon='bolt'] {
-      font-variation-settings: 'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20;
-    }
-    .shortcut {
-      color: var(--md-sys-color-on-surface);
-    }
+  /* needs a Power Pack license: a bolt at the end of the row */
+  .power-bolt {
+    margin-left: auto;
+    color: var(--md-sys-color-tertiary);
+    font-variation-settings: 'FILL' 1;
   }
 
   &.disabled {
@@ -274,6 +269,31 @@ export const Item = styled.li`
       color: var(--md-sys-color-outline);
     }
     background-color: unset;
+  }
+`
+
+// floats right; the padding keeps a 24px gap from the label when the row is narrow
+export const EndActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  margin-left: auto;
+  padding-left: 24px;
+`
+
+// the end button is a plain Button; its colours only switch to the primary scheme on the selected row
+export const EndAction = styled(Button)`
+  margin-left: auto;
+  &.hasIcon {
+    padding: 4px;
+  }
+  .icon {
+    font-size: 16px;
+  }
+
+  .selected & {
+    background-color: var(--md-sys-color-on-primary);
+    color: var(--md-sys-color-primary);
   }
 `
 
