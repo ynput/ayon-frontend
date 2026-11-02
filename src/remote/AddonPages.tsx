@@ -10,10 +10,11 @@ import {
   useStudioPageSlotContext,
 } from '@shared/components/AddonLayout/pageSlotContext'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
+import { useDetailsPanelContext } from '@shared/context'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import { useAppSelector } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { hasPageAccess } from './AddonPagesHelpers'
 import { StudioPageSelectionProvider } from './AddonLayout'
 import { AddonDetailsPanel } from './AddonDetailsPanel'
@@ -38,9 +39,29 @@ const WithDetailsPanel = ({
   children: React.ReactNode
 }) => {
   const [shown, setShown] = useState<ShownEntities | null>(null)
+  const { setEntities, closeSlideOut, useSearchParams } = useDetailsPanelContext()
+  const [, setSearchParams] = useSearchParams()
   const close = useCallback(() => setShown(null), [])
+  // closeDetails: what the panel's own close button clears, since the panel is only unmounted
+  const closeFromAddon = useCallback(() => {
+    setSearchParams(
+      (prev) => {
+        const params = new URLSearchParams(prev)
+        params.delete('project')
+        params.delete('type')
+        params.delete('id')
+        return params
+      },
+      { replace: true },
+    )
+    setEntities(null)
+    closeSlideOut()
+    setShown(null)
+  }, [setSearchParams, setEntities, closeSlideOut])
 
-  useEffect(() => {
+  // a layout effect: a cached addon page can call openDetails in its mount effect, which runs
+  // before a passive effect of this parent would have registered the handler
+  useLayoutEffect(() => {
     provideHost({
       openDetails: (entities) => {
         const { entityType, projectName: entitiesProject } = entities[0] ?? {}
@@ -56,10 +77,10 @@ const WithDetailsPanel = ({
         })
         return true
       },
-      closeDetails: close,
+      closeDetails: closeFromAddon,
     })
     return () => provideHost({ openDetails: undefined, closeDetails: undefined })
-  }, [projectName, close])
+  }, [projectName, closeFromAddon])
 
   return (
     <DetailsPanelSplitter
@@ -92,7 +113,10 @@ export const AddonProjectPage = ({
     <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
   )
   return contribution.detailsPanel ? (
-    <WithDetailsPanel projectName={projectName}>{page}</WithDetailsPanel>
+    // keyed by project: the shown entities belong to one project
+    <WithDetailsPanel key={projectName} projectName={projectName}>
+      {page}
+    </WithDetailsPanel>
   ) : (
     page
   )
