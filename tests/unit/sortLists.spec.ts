@@ -1,9 +1,5 @@
 import { expect, test } from '@playwright/test'
-import {
-  DEFAULT_LISTS_SORT,
-  resolveListsSort,
-  sortLists,
-} from '../../src/pages/ProjectListsPage/util/sortLists'
+import { DEFAULT_LISTS_SORT, resolveListsSort, sortLists } from '../../shared/src/util/sortLists'
 
 const list = (label: string, day: number, { active = true, updated = day } = {}) => ({
   label,

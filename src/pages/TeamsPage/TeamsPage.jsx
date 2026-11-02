@@ -78,22 +78,26 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   if (isErrorTeams) toast.error('Unable to load teams')
 
   let {
-    data: users = [],
+    data: allUsers = [],
     isLoading: isLoadingUsers,
     isError: isErrorUsers,
   } = useGetUsersQuery({}, { skip: !projectName || isUser })
 
-  if (isErrorUsers || !Array.isArray(users)) {
+  if (isErrorUsers || !Array.isArray(allUsers)) {
     toast.error('Unable to load users')
-    users = []
+    allUsers = []
   }
 
   // filter out users that have 0 accessGroups for the selected projects
-  users = users.filter(
-    (user) =>
-      user.isAdmin ||
-      user.isManager ||
-      (user.accessGroups[projectName] && user.accessGroups[projectName].length),
+  const users = useMemo(
+    () =>
+      allUsers.filter(
+        (user) =>
+          user.isAdmin ||
+          user.isManager ||
+          (user.accessGroups[projectName] && user.accessGroups[projectName].length),
+      ),
+    [allUsers, projectName],
   )
 
   // RTK MUTATIONS
@@ -112,8 +116,23 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
     // isUser doesn't have access to users list
     if (!isUser || !users) {
+      // team members that are not listed (deleted users, or no access to the project) so they can be removed
+      const listedUserNames = new Set(users.map((user) => user.name))
+      const allUsersByName = new Map(allUsers.map((user) => [user.name, user]))
+      const missingMembers = [...new Set(teams.flatMap((team) => team.members.map((m) => m.name)))]
+        .filter((name) => !listedUserNames.has(name))
+        .map((name) => {
+          const user = allUsersByName.get(name)
+          return {
+            ...(user || { name, attrib: {} }),
+            isMissing: true,
+            missingReason: user ? 'User has no access to this project' : 'User does not exist',
+          }
+        })
+
       // admins and managers for editing
-      users.forEach((user) => {
+      const editableUsers = [...users, ...missingMembers]
+      editableUsers.forEach((user) => {
         usersObject[user.name] = { teams: {} }
         const teamsList = []
         let rolesList = []
@@ -183,7 +202,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
     }
 
     return [userList, usersObject]
-  }, [users, teams, selectedTeams])
+  }, [users, allUsers, teams, selectedTeams])
 
   // SORTING
   userList = useMemo(() => {

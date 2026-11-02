@@ -1,7 +1,7 @@
-import { EntityList, EntityListFolderModel, EntityListModel } from '@shared/api'
+import { EntityList, EntityListFolderModel } from '@shared/api'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
-import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
-import { DEFAULT_LISTS_SORT, ListsSort, sortLists as sortListsBy } from './sortLists'
+import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
+import { DEFAULT_LISTS_SORT, ListsSort, sortLists as sortListsBy } from '@shared/util/sortLists'
 const FOLDER_ICON = 'snippet_folder'
 
 export const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
@@ -167,6 +167,3 @@ export const buildListsTableData = (
   // Combine in the specified order: folder hierarchy first, then root lists
   return [...folderRows, ...rootListRows]
 }
-
-export const getListIcon = (list: Pick<EntityListModel, 'entityListType' | 'entityType'>) =>
-  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)

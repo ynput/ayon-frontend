@@ -73,6 +73,19 @@ export const buildSortArgs = (keys: SortKey[]): SortArgs => {
   }
 }
 
+/**
+ * The `sortBy` of `buildSortArgs` for a query read forwards (`first`/`after`), where every
+ * key carries its own direction.
+ */
+export const getForwardSortBy = ({ sortBy, desc }: SortArgs): string[] | undefined => {
+  if (!sortBy) return undefined
+  return (Array.isArray(sortBy) ? sortBy : [sortBy]).map((key) => {
+    const flipped = key.startsWith(DESC_PREFIX)
+    const id = flipped ? key.slice(DESC_PREFIX.length) : key
+    return flipped !== desc ? `${DESC_PREFIX}${id}` : id
+  })
+}
+
 /** The first key of a `sortBy` argument, without its direction prefix. */
 export const getPrimarySortKey = (sortBy?: string | string[] | null): string | undefined => {
   const first = Array.isArray(sortBy) ? sortBy[0] : sortBy

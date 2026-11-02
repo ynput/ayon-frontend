@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
-import { toast } from '../support/ui'
+import { toast } from '@ynput/ayon-e2e'
 
 test.describe('list attributes', () => {
   test.beforeEach(async ({ api }) => {

@@ -15,8 +15,9 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { CSV_DELIMITERS } from '../../TableExport/csvFile'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useTableExportContext } from '@shared/context'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import {
   newEntityDefinitions,
@@ -206,7 +207,7 @@ const useCellContextMenu = ({
       isEntityRestricted(cell.entityType),
   })
 
-  const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+  const openViewerItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Open in viewer',
     icon: 'play_circle',
     shortcut: 'Spacebar',
@@ -295,12 +296,25 @@ const useCellContextMenu = ({
     }
   }
 
-  const exportItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Export selection',
-    icon: 'download',
-    command: () => exportCSV(Array.from(selectedCells), projectName),
-    hidden: cell.isGroup,
-  })
+  const tableExport = useTableExportContext()
+  // the Power Pack export when the table registered what it exports, else the cells as shown
+  const exportItem: ContextMenuItemConstructor = (e, cell) =>
+    tableExport?.isAvailable && tableExport.source
+      ? {
+          label: 'Export',
+          icon: 'download',
+          command: () => tableExport.openExport('selection'),
+          hidden: cell.isGroup,
+        }
+      : {
+          label: 'Export selection',
+          icon: 'download',
+          items: CSV_DELIMITERS.map(({ value, label }) => ({
+            label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
+            command: () => exportCSV(Array.from(selectedCells), projectName, value),
+          })),
+          hidden: cell.isGroup,
+        }
 
   // null lets the dialog run its own fallback chain
   const getSelectedParentFolderIds = (
@@ -423,8 +437,8 @@ const useCellContextMenu = ({
   const handleTableBodyContextMenu = (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
-    // get id of first child of td
-    const cellId = tdEl?.firstElementChild?.id
+    // the cell is the td's first child with an id (a highlight tint comes before it)
+    const cellId = tdEl?.querySelector(':scope > [id]')?.id
 
     if (!cellId) return
 

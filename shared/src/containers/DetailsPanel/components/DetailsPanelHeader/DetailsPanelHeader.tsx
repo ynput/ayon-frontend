@@ -1,7 +1,13 @@
 import { RefObject, useMemo, useRef } from 'react'
 import { union, upperFirst } from 'lodash'
 import clsx from 'clsx'
-import { DropdownRef, getTextColor } from '@ynput/ayon-react-components'
+import {
+  applyMixedChange,
+  DropdownRef,
+  getMixedCounts,
+  getTextColor,
+  type MixedChange,
+} from '@ynput/ayon-react-components'
 
 import { EntityPanelUploader } from '@shared/components/EntityPanelUploader/EntityPanelUploader'
 import { StackedThumbnails } from '@shared/components/Thumbnail/StackedThumbnails'
@@ -13,6 +19,8 @@ import type { Status } from '@shared/api'
 import type { DetailsPanelEntityData } from '@shared/api'
 import { getPriorityOptions, getSelectableAssignees } from '@shared/util'
 import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
+import { useEditProjectTags } from '@shared/hooks/useEditProjectTags'
+import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
 import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
 
@@ -145,8 +153,21 @@ const DetailsPanelHeader = ({
       }, {}),
     [tagsOptions],
   )
+  const allTags = useMemo(() => union(...tagsValues), [tagsValues])
 
+  // new tags go to the project anatomy, when the entities are of one project
+  const isSingleProject = entities.every((e) => e.projectName === firstEntity?.projectName)
+  const projectTags = useEditProjectTags(
+    isSingleProject ? firstEntity?.projectName : undefined,
+    tagsOptions,
+  )
   const isMultiple = entities.length > 1
+  // several entities: tags and assignees are added to or removed from each of them
+  const tagsCounts = useMemo(() => getMixedCounts(tagsValues), [tagsValues])
+  const assigneesCounts = useMemo(
+    () => getMixedCounts(entities.map((e) => e.task?.assignees || [])),
+    [entities],
+  )
   const isPlayable = !isMultiple && !!firstEntity?.hasReviewables
   const isThumbnailClickable = thumbnails.length === 1
 
@@ -165,6 +186,14 @@ const DetailsPanelHeader = ({
     if (field === 'assignees' && !canEditAssignees) return
     if (value === null || value === undefined) return console.error('value is null or undefined')
     return updateEntity(field, value)
+  }
+
+  const handleMixedChange = (field: 'tags' | 'assignees', change: MixedChange) => {
+    const values = new Map(
+      entities.map((e) => [e.id, (field === 'tags' ? e.tags : e.task?.assignees) || []]),
+    )
+    if (field === 'tags') projectTags?.addTags(change.add)
+    handleUpdate(field, (entityId: string) => applyMixedChange(values.get(entityId) || [], change))
   }
 
   const handleThumbnailClick = () => {
@@ -233,19 +262,31 @@ const DetailsPanelHeader = ({
               <Styled.Title>
                 <h2>{title}</h2>
                 {canEditTags ? (
-                  <Styled.TagsSelect
-                    ref={tagsSelectRef}
-                    value={union(...tagsValues)}
-                    tags={tagsOptionsObject}
-                    options={[]}
-                    editable
-                    editor
-                    onChange={(value) => handleUpdate('tags', value)}
-                    align="right"
-                    styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
-                    className="tags-select"
-                    itemClassName="details-tag"
-                  />
+                  <>
+                    <Styled.TagsSelect
+                      ref={tagsSelectRef}
+                      value={union(...tagsValues)}
+                      tags={tagsOptionsObject}
+                      options={[]}
+                      editable
+                      editor
+                      onChange={(value) => {
+                        projectTags?.addTags(value.filter((tag) => !allTags.includes(tag)))
+                        handleUpdate('tags', value)
+                      }}
+                      mixedCounts={isMultiple ? tagsCounts : undefined}
+                      mixedTotal={entities.length}
+                      mixedLabel={`${entityType}s`}
+                      onMixedChange={(change) => handleMixedChange('tags', change)}
+                      onEditOption={projectTags?.onEditOption}
+                      editOptionTooltip="Change the colour in the project tags"
+                      align="right"
+                      styleDropdown={{ display: isLoading ? 'none' : 'unset' }}
+                      className="tags-select"
+                      itemClassName="details-tag"
+                    />
+                    {projectTags && <EnumItemDialog {...projectTags.dialog} />}
+                  </>
                 ) : (
                   <Styled.ReadOnlyTags className="tags-select">
                     {union(...tagsValues).length
@@ -305,6 +346,10 @@ const DetailsPanelHeader = ({
                 emptyMessage={canEditAssignees ? 'Assign user' : '-'}
                 align="right"
                 onChange={(value) => handleUpdate('assignees', value)}
+                mixedCounts={isMultiple && entityType === 'task' ? assigneesCounts : undefined}
+                mixedTotal={entities.length}
+                mixedLabel={`${entityType}s`}
+                onMixedChange={(change) => handleMixedChange('assignees', change)}
                 className="assignee-select"
                 data-tooltip={
                   entityUsers.length ? (entityType === 'task' ? 'Assigned users' : 'Author') : ''

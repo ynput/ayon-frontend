@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { dialog, menuItem, toast } from '../support/ui'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { DetailsPanel } from './DetailsPanel'
 import { SearchFilterBar } from './SearchFilterBar'
 
@@ -351,6 +351,12 @@ export class OverviewPage {
     return dialog(this.page, /^Select Folder/)
   }
 
+  async searchMoveDialog(text: string) {
+    const picker = this.moveDialog()
+    await picker.getByRole('button', { name: 'search', exact: true }).click()
+    await picker.getByPlaceholder('Search', { exact: true }).fill(text)
+  }
+
   async moveTo(folderLabel: string) {
     const picker = this.moveDialog()
     await expect(picker).toBeVisible()
@@ -398,7 +404,8 @@ export class OverviewPage {
 
   // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
-    await this.page.getByRole('button', { name: 'Import CSV' }).click()
+    await this.page.getByTestId('table-import-export').click()
+    await this.page.getByTestId('import-csv').click()
     const wizard = this.importDialog()
     await expect(wizard).toBeVisible()
     await wizard.locator('input[type="file"]').setInputFiles(filePath)

@@ -29,11 +29,12 @@ export const Item = styled.li`
   border-top-color: var(--md-sys-color-outline-variant);
 
   /* hide path when not hovering or selected */
-  &:not(:hover):not(.selected) .path {
+  &:not(:hover):not([data-context-menu-target]):not(.selected) .path {
     opacity: 0;
   }
 
-  &:hover {
+  &:hover,
+  &[data-context-menu-target] {
     background-color: var(--md-sys-color-surface-container-low-hover);
   }
 
@@ -52,7 +53,8 @@ export const Item = styled.li`
   &.selected {
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-primary-container);
-    &:hover {
+    &:hover,
+    &[data-context-menu-target] {
       background-color: var(--md-sys-color-primary-container-hover);
     }
     &:active {

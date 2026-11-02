@@ -395,6 +395,23 @@ a {
   }
 }
 
+// keep the right-clicked row looking hovered while its context menu is open
+.p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffffde;
+}
+
+// right-clicked entity card (grid, kanban) while its context menu is open
+.entity-card[data-context-menu-target] {
+  background-color: var(--default-color-hover);
+  box-shadow: inset 0 0 0 2px var(--default-color-hover);
+
+  &.active {
+    background-color: var(--active-color-hover);
+    box-shadow: inset 0 0 0 2px var(--active-border-color);
+  }
+}
+
 // compact table rows
 .p-datatable .p-datatable-tbody > tr,
 .p-treetable .p-treetable-tbody > tr {

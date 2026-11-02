@@ -4,7 +4,7 @@ import { login } from '@state/user'
 import api from '@shared/api'
 import { toast } from 'react-toastify'
 import { useState, useMemo, useEffect } from 'react'
-import * as Styled from '@pages/LoginPage/LoginPage.styled'
+import * as Styled from '@shared/components/LoginPage/LoginPage.styled'
 import { InputText, InputPassword, Button, Panel } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 

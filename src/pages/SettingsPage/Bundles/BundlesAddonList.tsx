@@ -175,11 +175,16 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
 
     // every time readyState changes, refetch selected addons
 
-    const onSetVersion = (addonName: string, version: string | null, isServer: boolean) => {
-      // Normalize selected to always be an array
+    const getTargetAddons = (addonName: string): string[] => {
       const selectedArray = Array.isArray(selected) ? selected : [selected]
-      const versionsToSet: string[] =
-        selectedArray.length > 1 ? selectedArray.map((s: any) => s.name) : [addonName]
+      const selectedNames = selectedArray.map((s: any) => s?.name)
+      return selectedArray.length > 1 && selectedNames.includes(addonName)
+        ? selectedNames
+        : [addonName]
+    }
+
+    const onSetVersion = (addonName: string, version: string | null, isServer: boolean) => {
+      const versionsToSet = getTargetAddons(addonName)
 
       setFormData((prev) => {
         const newFormData: BundleFormData = { ...prev }
@@ -368,12 +373,16 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 if (addon.isFooter) return null
 
                 return (
-                  <FilePath>
+                  // the switch's label isn't "clickable" to PrimeReact, so it would reset the selection
+                  <FilePath onClick={(e) => e.stopPropagation()}>
                     <InputSwitch
-                      checked={addon.dev?.enabled}
+                      checked={!!addon.dev?.enabled}
                       onChange={() =>
                         onDevChange &&
-                        onDevChange([addon.name], { value: !addon.dev?.enabled, key: 'enabled' })
+                        onDevChange(getTargetAddons(addon.name), {
+                          value: !addon.dev?.enabled,
+                          key: 'enabled',
+                        })
                       }
                     />
                     <InputText

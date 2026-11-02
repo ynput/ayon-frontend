@@ -3,16 +3,13 @@ import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.
 import { useGetListsInfiniteInfiniteQuery } from '@shared/api/queries/entityLists/getLists'
 import { useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectContext, usePowerpack } from '@shared/context'
-import { getEntityTypeIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
+import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
 import type { EntityList, EntityListFolderModel } from '@shared/api'
 
 const FOLDER_ICON = 'snippet_folder'
 
 const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
 export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
-
-const getListIcon = (list: Pick<EntityList, 'entityListType' | 'entityType'>) =>
-  list.entityListType === 'review-session' ? 'subscriptions' : getEntityTypeIcon(list.entityType)
 
 const sortLists = (lists: EntityList[]): EntityList[] =>
   [...lists].sort((a, b) => {
@@ -128,6 +125,10 @@ export const useEntityListsSlice = (enabled: boolean = true) => {
           label: list.label,
           entityType: list.entityType,
           listId: list.id,
+          // for sorting
+          active: list.active,
+          createdAt: list.createdAt,
+          updatedAt: list.updatedAt,
         },
       })
 
@@ -208,6 +209,9 @@ export const useEntityListsSlice = (enabled: boolean = true) => {
         label: list.label,
         entityType: list.entityType,
         listId: list.id,
+        active: list.active,
+        createdAt: list.createdAt,
+        updatedAt: list.updatedAt,
       },
     }))
   }, [listsData, powerLicense, listFolders])
