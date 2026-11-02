@@ -1,6 +1,7 @@
 import { ProjectTableAttribute } from '../types'
 import type { AttributeData } from '@shared/api'
 import { EntityUpdate } from '../hooks/useUpdateTableData'
+import { SYSTEM_READ_ONLY_COLUMNS } from './getReadOnlyLists'
 
 const validateUpdateEntities = (
   entities: EntityUpdate[] = [],
@@ -8,6 +9,10 @@ const validateUpdateEntities = (
 ) => {
   // first validate the values are correct
   for (const { isAttrib, value: rawValue, field } of entities) {
+    // every edit path (typing, clear, paste, undo) ends here, so this is the last check
+    if (!isAttrib && SYSTEM_READ_ONLY_COLUMNS.includes(field)) {
+      throw new Error(`“${field}” is read-only`)
+    }
     if (!isAttrib) continue
     const attribute = attribFields.find((attr) => attr.name === field)
     if (!attribute) continue
