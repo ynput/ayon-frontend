@@ -155,6 +155,13 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    duplicateEntityList: build.mutation<DuplicateEntityListApiResponse, DuplicateEntityListApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/duplicate`,
+        method: 'POST',
+        body: queryArg.payload,
+      }),
+    }),
     materializeEntityList: build.mutation<
       MaterializeEntityListApiResponse,
       MaterializeEntityListApiArg
@@ -271,6 +278,12 @@ export type DeleteEntityListApiResponse = /** status 200 Successful Response */ 
 export type DeleteEntityListApiArg = {
   projectName: string
   entityListId: string
+}
+export type DuplicateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
+export type DuplicateEntityListApiArg = {
+  projectName: string
+  entityListId: string
+  payload: EntityListDuplicatePostModel | null
 }
 export type MaterializeEntityListApiResponse =
   /** status 200 Successful Response */ EntityListSummary
@@ -612,4 +625,12 @@ export type EntityListModel = {
   /** Whether the list is active or not */
   active: boolean
   accessLevel?: ListAccessLevel
+}
+export type EntityListDuplicatePostModel = {
+  /** When omitted, a new ID is generated */
+  id?: string | null
+  /** When omitted, a free label is picked, e.g. `My list (copy)`, then `My list (copy 2)` */
+  label?: string | null
+  /** When omitted, the copy is placed in the folder of the source list. Explicit `null` places it outside of any folder. */
+  entityListFolderId?: string | null
 }

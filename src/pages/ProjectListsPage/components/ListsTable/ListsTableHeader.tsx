@@ -130,6 +130,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     onOpenFolderList,
     selectedRows,
     deleteLists,
+    duplicateLists,
     onDeleteListFolders,
     listsFiltersOpen,
     setListsFiltersOpen,
@@ -282,6 +283,15 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     },
     ...(!isReview
       ? [
+          {
+            id: 'duplicate-list',
+            label: 'Duplicate selection',
+            icon: 'content_copy',
+            onClick: () => duplicateLists(selectedListsIds),
+            isPinned: false,
+            // lists only: a selection with folders in it can't be duplicated
+            disabled: !selectedListsIds.length || selectedFolders.length > 0,
+          },
           {
             id: 'import-list',
             label: 'Create list from CSV',
