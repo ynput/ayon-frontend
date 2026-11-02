@@ -134,10 +134,50 @@ test('header and toolbar items have exactly one action and an icon unless they d
   })
   expect(contributions.map((c) => c.id)).toEqual(['goes', 'opens', 'own', 'menu'])
   expect(skipped.map((s) => [s.id, s.reason])).toEqual([
-    ['none', 'set exactly one of to, run, dialog, menu, component (it has none)'],
-    ['two', 'set exactly one of to, run, dialog, menu, component (it has run, menu)'],
+    ['none', 'set exactly one of to, run, dialog, menu, popover, component (it has none)'],
+    ['two', 'set exactly one of to, run, dialog, menu, popover, component (it has run, menu)'],
     ['noIcon', 'missing icon'],
     ['relative', 'invalid to "dashboard"'],
+  ])
+})
+
+test('a popover may have its button drawn by a component, nothing else goes with it', () => {
+  const header = { slot: 'header.item', label: 'Timer', placement: 'right' }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...header, id: 'popover', icon: 'timer', popover: loader },
+      { ...header, id: 'ownButton', component: loader, popover: loader },
+      { ...header, id: 'withDialog', icon: 'timer', popover: loader, dialog: loader },
+      { ...header, id: 'ownButtonAndMenu', component: loader, popover: loader, menu: loader },
+      { ...header, id: 'noIcon', popover: loader },
+      { ...header, id: 'notLoader', icon: 'timer', popover: 'TimerPopover' },
+      { slot: 'projectTable.toolbarItem', id: 'toolbar', icon: 'timer', popover: loader },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['popover', 'ownButton', 'toolbar'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['withDialog', 'set exactly one of to, run, dialog, menu, popover, component (it has dialog, popover)'],
+    [
+      'ownButtonAndMenu',
+      'set exactly one of to, run, dialog, menu, popover, component (it has menu, popover, component)',
+    ],
+    ['noIcon', 'missing icon'],
+    ['notLoader', "popover must be a loader: () => import('./File')"],
+  ])
+})
+
+test('a service has an id and a component', () => {
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { slot: 'app.service', id: 'timer', component: loader },
+      { slot: 'app.service', id: 'noComponent' },
+      { slot: 'app.service', id: 'timer', component: loader },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.timer'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['noComponent', "component must be a loader: () => import('./File')"],
+    ['timer', 'duplicate id in slot "app.service"'],
   ])
 })
 
@@ -218,6 +258,35 @@ test('a table column sits in a named submenu or at the top level', () => {
   expect(skipped.map((s) => [s.id, s.reason])).toEqual([
     ['blank', 'menu must be a name or false'],
     ['yes', 'menu must be a name or false'],
+  ])
+})
+
+test('a table column lists tag types or { type, id } tags, and has values to refresh', () => {
+  const column = { slot: 'tableColumn', label: 'Time logged', cell: loader, fetchValues: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...column, id: 'types', providesTags: ['myaddonLog', 'task'] },
+      {
+        ...column,
+        id: 'ids',
+        providesTags: [
+          { type: 'myaddonLog', id: 'LIST' },
+          { type: 'task', id: 1 },
+        ],
+      },
+      { ...column, id: 'one', providesTags: 'myaddonLog' },
+      { ...column, id: 'blank', providesTags: [''] },
+      { ...column, id: 'noType', providesTags: [{ id: 'LIST' }] },
+      { ...column, id: 'noValues', fetchValues: undefined, providesTags: ['myaddonLog'] },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['types', 'ids'])
+  const badTags = "providesTags must be a list of tag types or { type, id } tags, e.g. ['myaddonItem']"
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['one', badTags],
+    ['blank', badTags],
+    ['noType', badTags],
+    ['noValues', 'providesTags needs fetchValues: the tags refresh its values'],
   ])
 })
 

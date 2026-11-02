@@ -243,15 +243,28 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     position: MenuItemPosition = 'bottom',
   ) => {
     if (!selectedIds.length) return []
+    const isHierarchy = sliceType === 'hierarchy'
     const selected = selectedIds.map((id) => {
       const row = sliceMap.get(id)
+      const rowType = (row?.data as { entityType?: string } | undefined)?.entityType
       return {
         id,
+        name: row?.name,
         label: row?.label || row?.name || undefined,
-        entityType: (row?.data as { entityType?: string } | undefined)?.entityType,
+        // hierarchy rows are folders and tasks, like useHierarchyContextMenuItems reads them
+        entityType: isHierarchy ? (rowType === 'task' ? 'task' : 'folder') : rowType,
       }
     })
-    const context = { projectName, sliceType, selected, menu }
+    const entities = isHierarchy
+      ? selected.map(({ id, name, entityType }) => ({
+          id,
+          entityType: entityType as string,
+          projectName,
+          name,
+          label: sliceMap.get(id)?.label || undefined,
+        }))
+      : []
+    const context = { projectName, sliceType, selected, entities, menu }
     return menuItemsAt(addonMenuItems, position)
       .filter((item) => !item.in?.length || item.in.includes(menu))
       .map((item) => ({

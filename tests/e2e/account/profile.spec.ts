@@ -1,7 +1,8 @@
 import { randomBytes } from 'crypto'
 import { expect, test } from '../fixtures'
 import { AccountPage } from '../pages/AccountPage'
-import { apiAs, signInAs } from '../support/session'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs } from '../support/api'
 
 test.describe('account profile', () => {
   test('change my full name', async ({ api, createUser, browser }) => {

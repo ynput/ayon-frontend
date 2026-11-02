@@ -1,8 +1,7 @@
 import { expect, test } from '../fixtures'
-import { adminCredentials } from '../support/env'
+import { adminCredentials, menuItem } from '@ynput/ayon-e2e'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { DetailsPanel } from '../pages/DetailsPanel'
-import { menuItem } from '../support/ui'
 
 test.describe('dashboard tasks', () => {
   test('tasks assigned to me show up on the board under their status', async ({

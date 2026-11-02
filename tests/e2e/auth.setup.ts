@@ -1,6 +1,7 @@
 import { expect, test as setup } from '@playwright/test'
+import { adminCredentials } from '@ynput/ayon-e2e'
 import { AyonApi } from './support/api'
-import { adminCredentials, AUTH_FILE } from './support/env'
+import { AUTH_FILE } from './support/env'
 
 // Log in once through the API and store the session for every other test.
 // The login form itself is covered by auth/login.spec.ts.

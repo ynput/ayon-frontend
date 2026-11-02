@@ -8,18 +8,14 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Button, Dialog, Dropdown, Icon, InputText } from '@ynput/ayon-react-components'
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
 import { SLOT_DOCS } from '@ynput/ayon-addon/check'
-import type { AnyContribution, EntityRef, SlotName } from '@ynput/ayon-addon'
+import { EntityPicker } from '@ynput/ayon-addon'
+import type { AnyContribution, PickableEntityType, SlotName } from '@ynput/ayon-addon'
 import {
   useGetCurrentUserQuery,
   useGetEntitiesDetailsPanelQuery,
   useListProjectsQuery,
 } from '@ynput/ayon-frontend-shared/api'
 import { JsonViewer } from '@ynput/ayon-frontend-shared/components'
-import { EntityPickerDialog } from '@ynput/ayon-frontend-shared/EntityPickerDialog'
-import {
-  ProjectContextProvider,
-  ProjectFoldersContextProvider,
-} from '@ynput/ayon-frontend-shared/context'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { getUnmatched, onUnmatched } from './network'
 import { SLOT_AREAS } from './slotGroups'
@@ -269,22 +265,18 @@ const EntitiesPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection'
         </div>
       ))}
       {picking && (
-        // the picker reads the project's folders, like on a project page
-        <ProjectContextProvider projectName={projectName}>
-          <ProjectFoldersContextProvider projectName={projectName}>
-            <EntityPickerDialog
-              projectName={projectName}
-              entityType={entityType as never}
-              isMultiSelect
-              onClose={() => setPicking(false)}
-              onSubmit={(ids) => {
-                setPicking(false)
-                const picked: EntityRef[] = ids.map((id) => ({ id, entityType, projectName }))
-                onChange({ ...selection, entityType, entities: picked })
-              }}
-            />
-          </ProjectFoldersContextProvider>
-        </ProjectContextProvider>
+        // the one addons get, as the shell's host provides it
+        <EntityPicker
+          projectName={projectName}
+          entityType={entityType as PickableEntityType}
+          multiSelect
+          initialSelection={entities}
+          onClose={() => setPicking(false)}
+          onSubmit={(picked) => {
+            setPicking(false)
+            onChange({ ...selection, entityType, entities: picked })
+          }}
+        />
       )}
     </Field>
   )

@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures'
 import { hasPowerpack, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
-import { confirmDialog, dialog, menuItem } from '../support/ui'
+import { confirmDialog, dialog, menuItem } from '@ynput/ayon-e2e'
 
 test.describe('list folders', () => {
   test.beforeEach(async ({ api }) => {

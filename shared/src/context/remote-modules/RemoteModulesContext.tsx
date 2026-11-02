@@ -7,11 +7,7 @@ import { useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
 import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
-import {
-  canUseAddonDevOverride,
-  fetchAddonDevInfo,
-  readAddonDevOverride,
-} from './addonDevOverride'
+import { addonDevUserProblem, fetchAddonDevInfo, readAddonDevRequest } from './addonDevOverride'
 import type { AddonDevInfo, AddonDevOverride } from './addonDevOverride'
 import { AddonDevBanner } from './AddonDevBanner'
 
@@ -22,11 +18,14 @@ type Module = {
   modules: string[]
 }
 
-// an addon loaded from its dev server (?addonDev=...)
+// an addon loaded from its dev server (?addonDev=...); every way it can fail is shown in the banner
 export type AddonDevState =
   | { status: 'off' }
+  // the request can't be used: a malformed or non-local URL, or a user without developer mode
+  | { status: 'rejected'; request: string; reason: string }
   | { status: 'loading'; override: AddonDevOverride }
-  | { status: 'active'; override: AddonDevOverride; info: AddonDevInfo }
+  // error: it was registered, but its manifest failed to load
+  | { status: 'active'; override: AddonDevOverride; info: AddonDevInfo; error?: string }
   | { status: 'error'; override: AddonDevOverride; error: string }
 
 export type RemoteModulesContextType = {
@@ -44,7 +43,9 @@ type Props = {
 // Addons that list a `manifest` module declare their contributions to slots in it
 // (@ynput/ayon-addon). It holds descriptions only, so every manifest loads at startup; the
 // contributions' code loads when their slot needs it.
+// Returns the addons whose manifest failed.
 const loadManifests = async (remotes: Module[]) => {
+  const failed: Record<string, string> = {}
   await Promise.all(
     remotes
       .filter((r) => r.modules.includes(MANIFEST_MODULE))
@@ -54,13 +55,19 @@ const loadManifests = async (remotes: Module[]) => {
             `${r.remote}/${MANIFEST_MODULE}`,
             { from: 'runtime' },
           )
+          const definition = manifest?.default as { contributes?: unknown } | undefined
+          if (!Array.isArray(definition?.contributes)) {
+            throw new Error('the manifest has no "contributes" list: export default defineAddon({ contributes })')
+          }
           registerManifest({ name: r.addon, version: r.version, remote: r.remote }, manifest?.default)
         } catch (error) {
           console.error(`[addon ${r.addon}] its manifest failed to load`, error)
+          failed[r.addon] = String(error)
         }
       }),
   )
   setManifestsLoading(false)
+  return failed
 }
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
@@ -80,21 +87,31 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   } = useGlobalContext()
 
   // the dev override, read once: the remotes can only be registered once anyway
-  const [requestedOverride] = useState(readAddonDevOverride)
+  const [request] = useState(readAddonDevRequest)
+  const requestedOverride = request && 'override' in request ? request.override : undefined
   const [addonDev, setAddonDev] = useState<AddonDevState>(
-    requestedOverride ? { status: 'loading', override: requestedOverride } : { status: 'off' },
+    !request
+      ? { status: 'off' }
+      : 'override' in request
+      ? { status: 'loading', override: request.override }
+      : { status: 'rejected', ...request },
   )
   useEffect(() => {
     if (!requestedOverride || isLoadingUser) return
-    if (!canUseAddonDevOverride(user as Parameters<typeof canUseAddonDevOverride>[0])) {
-      console.warn('[addon dev] ignored: only users in developer mode can load addons from a dev server')
-      setAddonDev({ status: 'off' })
+    const userProblem = addonDevUserProblem(user as Parameters<typeof addonDevUserProblem>[0])
+    if (userProblem) {
+      console.warn(`[addon dev] ignored: ${userProblem}`)
+      setAddonDev({
+        status: 'rejected',
+        request: `${requestedOverride.addon}@${requestedOverride.url}`,
+        reason: userProblem,
+      })
       return
     }
     fetchAddonDevInfo(requestedOverride).then(
       (info) => setAddonDev({ status: 'active', override: requestedOverride, info }),
-      (error) =>
-        setAddonDev({ status: 'error', override: requestedOverride, error: String(error) }),
+      (error: Error) =>
+        setAddonDev({ status: 'error', override: requestedOverride, error: error.message }),
     )
   }, [requestedOverride, isLoadingUser, user])
 
@@ -192,7 +209,11 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     )
 
     setRemotesInitialized(true)
-    loadManifests(allRemotes)
+    loadManifests(allRemotes).then((failed) => {
+      const devError = devAddon && failed[devAddon.override.addon]
+      if (devError)
+        setAddonDev({ ...devAddon, error: `its manifest failed to load (${devError})` })
+    })
   }, [effectiveModules, isLoading, isLoadingInfo, remotesInitialized, addonDev])
 
   return (

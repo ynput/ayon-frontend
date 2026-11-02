@@ -7,6 +7,7 @@
     "build": "vite build",
     "build:shared": "yarn --cwd ./shared build",
     "build:addon": "yarn build:shared && yarn --cwd ./addon build && yarn --cwd ./addon-dev build",
+    "build:e2e": "tsc -p e2e/tsconfig.json",
     "preview": "vite preview",
     "lint": "eslint 'src/**/*.{js,jsx,ts,tsx}'",
     "lint:fix": "eslint --fix 'src/**/*.{jsx,ts,tsx}'",
@@ -57,7 +58,7 @@
     "@tanstack/react-virtual": "3.13.23",
     "@uiw/react-textarea-code-editor": "2.1.9",
     "@ynput/ayon-player": "^1.1.0",
-    "@ynput/ayon-react-components": "^1.24.0",
+    "@ynput/ayon-react-components": "^1.25.1",
     "axios": "1.20.0",
     "chart.js": "4.5.1",
     "clsx": "2.1.1",
@@ -153,7 +154,7 @@
     "typescript": "5.9.3",
     "typescript-eslint": "8.58.1",
     "unplugin-dts": "^1.1.1",
-    "vite": "7.3.5",
+    "vite": "7.3.7",
     "vite-plugin-linter": "4.0.0"
   },
   "resolutions": {

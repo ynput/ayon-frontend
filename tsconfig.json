@@ -38,6 +38,8 @@
       "@ynput/ayon-addon": ["../addon/src/index.ts"],
       "@ynput/ayon-addon/manifest": ["../addon/src/manifest.ts"],
       "@ynput/ayon-addon/host": ["../addon/src/host.ts"],
+      "@ynput/ayon-e2e": ["../e2e/src/index.ts"],
+      "@ynput/ayon-e2e/config": ["../e2e/src/config.ts"],
       "@ynput/ayon-frontend-shared/ContextMenu": ["../shared/src/containers/ContextMenu"],
       "@ynput/ayon-frontend-shared/Feed": ["../shared/src/containers/Feed"],
       "@ynput/ayon-frontend-shared/api": ["../shared/src/api"],

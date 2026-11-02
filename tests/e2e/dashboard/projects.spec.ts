@@ -1,6 +1,5 @@
 import { expect, test } from '../fixtures'
-import { adminCredentials } from '../support/env'
-import { menuItem } from '../support/ui'
+import { adminCredentials, menuItem } from '@ynput/ayon-e2e'
 import { DashboardProjectsPage } from '../pages/DashboardProjectsPage'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 

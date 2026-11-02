@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { confirmDialog, menuItem } from '../support/ui'
+import { confirmDialog, menuItem } from '@ynput/ayon-e2e'
 
 /**
  * The entity details panel (header with status/assignees + activity feed).

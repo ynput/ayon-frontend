@@ -2,9 +2,8 @@ import { AccountPage } from '../pages/AccountPage'
 import { AnatomyPresetsPage } from '../pages/AnatomyPresetsPage'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { InboxPage } from '../pages/InboxPage'
-import { adminCredentials } from '../support/env'
+import { adminCredentials, signInAs } from '@ynput/ayon-e2e'
 import { watchPageHealth } from '../support/pageHealth'
-import { signInAs } from '../support/session'
 import { button, column, defineRouteTests, expect, heading, test, visible } from './smokeFixtures'
 
 const manager = (tab: string) => (d: { projectName: string }) =>

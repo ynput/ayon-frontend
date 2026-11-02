@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { confirmDialog, dialog, formRow, menuItem, switchBody, toast } from '../support/ui'
+import { confirmDialog, dialog, formRow, menuItem, switchBody, toast } from '@ynput/ayon-e2e'
 
 export class TeamsPage {
   constructor(readonly page: Page) {}

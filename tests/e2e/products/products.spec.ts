@@ -2,7 +2,7 @@ import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { addToList } from '../pages/ListsPage'
 import { ProductsPage } from '../pages/ProductsPage'
-import { menuItem } from '../support/ui'
+import { menuItem } from '@ynput/ayon-e2e'
 
 test.describe('products', () => {
   test('published versions are listed with their product', async ({ page, api, projectName }) => {

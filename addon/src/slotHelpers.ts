@@ -32,7 +32,7 @@ export const projectListMenuItem = (item: ContributionFields<'projectList.menuIt
 export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
   contribute('slicer.menuItem', item)
 
-/** A button in the project tables' toolbar that opens the addon's dialog or popover. */
+/** A button in the project tables' toolbar: navigates, runs code, or opens a dialog, menu or popover. */
 export const projectTableToolbarItem = (item: ContributionFields<'projectTable.toolbarItem'>) =>
   contribute('projectTable.toolbarItem', item)
 
@@ -41,14 +41,22 @@ export const projectTableCustomizeSection = (
   section: ContributionFields<'projectTable.customizeSection'>,
 ) => contribute('projectTable.customizeSection', section)
 
-/** A read-only column in the project tables. */
+/**
+ * A read-only column in the project tables. Its values come from `fetchValues`; list the cache
+ * tags they depend on in `providesTags` and invalidating one (your mutations' `invalidatesTags`,
+ * or AYON's) fetches them again, with no `refreshTableColumn` call.
+ */
 export const tableColumn = (column: ContributionFields<'tableColumn'>) =>
   contribute('tableColumn', column)
 
-/** A button in the main header that opens the addon's dialog or popover. */
+/** A button in the main header: navigates, runs code, or opens a dialog, menu or popover. */
 export const headerItem = (item: ContributionFields<'header.item'>) =>
   contribute('header.item', item)
 
 /** A keyboard shortcut on the cells of AYON's tables, acting on the selected rows. */
 export const tableShortcut = (shortcut: ContributionFields<'table.shortcut'>) =>
   contribute('table.shortcut', shortcut)
+
+/** Code with no UI that runs while AYON is open: a component mounted once for the whole app. */
+export const appService = (service: ContributionFields<'app.service'>) =>
+  contribute('app.service', service)

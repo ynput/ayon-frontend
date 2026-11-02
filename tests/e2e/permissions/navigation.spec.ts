@@ -3,8 +3,8 @@ import { expect, test } from './restrictedUser'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { ProjectsList } from '../pages/ProjectsList'
 import { UsersSettingsPage } from '../pages/UsersSettingsPage'
-import { apiAs, signInAs } from '../support/session'
-import { menuItem } from '../support/ui'
+import { menuItem, signInAs } from '@ynput/ayon-e2e'
+import { apiAs } from '../support/api'
 
 const openAppMenu = async (page: Page) => {
   await page.getByRole('button', { name: 'apps', exact: true }).click()

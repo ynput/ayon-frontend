@@ -1,10 +1,14 @@
-// Things that are the same in every slot. They are imports, never part of a slot's context.
+// Things that are the same in every slot. They are imports; the user is also in every slot's
+// context (`user`), for code that isn't a component.
 import { getHost } from './hostBridge'
 import type { AddonDispatch, AddonUser } from './hostBridge'
 
 const noUser = (): AddonUser | undefined => undefined
 
-/** The signed-in user. `undefined` only while AYON is still signing in. */
+/**
+ * The signed-in user. `undefined` only while AYON is still signing in. A contribution's code also
+ * gets it as `user` in its context.
+ */
 export const useUser = (): AddonUser | undefined => {
   // the host registers its implementation once at startup, so every render calls the same hook
   const useHostUser = getHost().useUser ?? noUser

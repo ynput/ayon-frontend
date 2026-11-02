@@ -17,6 +17,7 @@ import {
   useAddonColumnEntry,
 } from './addonColumnValues'
 import type { AddonColumnEntry } from './addonColumnValues'
+import { useAddonColumnTagsQuery } from './addonColumnTags'
 
 // a crashed cell: a small mark, the error in its tooltip and the console
 const CellError = ({ error }: { error: Error }) => (
@@ -95,9 +96,9 @@ const BATCH_SIZE = 100
 type VersionedEntity = EntityRef & { version: string }
 
 // Gets one column's values (its fetchValues piece) for the rows on screen that it has none for,
-// or an outdated one (the entity's updatedAt changed, or refreshTableColumn). Results go to the
-// store the cells read; a failed batch shows the error in its cells and asks again when they next
-// come on screen.
+// or an outdated one (the entity's updatedAt changed, one of its providesTags was invalidated,
+// or refreshTableColumn). Results go to the store the cells read; a failed batch shows the error
+// in its cells and asks again when they next come on screen.
 const ColumnValuesFetcher = ({
   meta,
   columnId,
@@ -216,16 +217,35 @@ const ColumnValuesFetcher = ({
     )
   }, [entities, fetchValues, columnId, ask])
 
-  // refreshTableColumn(id) from the addon: everything is out of date, the rows on screen ask now
+  // everything is out of date, the rows on screen ask now
+  const refresh = useCallback(() => {
+    state.current.controller.abort()
+    state.current.controller = new AbortController()
+    markAddonColumnStale(columnId)
+    ask(state.current.onScreen)
+  }, [columnId, ask])
+
+  // refreshTableColumn(id) from the addon
   useEffect(
     () =>
       onTableColumnRefresh((id) => {
-        if (id !== contribution.id) return
-        markAddonColumnStale(columnId)
-        ask(state.current.onScreen)
+        if (id === contribution.id) refresh()
       }),
-    [contribution.id, columnId, ask],
+    [contribution.id, refresh],
   )
+
+  // one of the column's providesTags was invalidated: the query ran again
+  const tags = contribution.providesTags
+  const { data: tagsRun } = useAddonColumnTagsQuery(
+    { columnId, tags: tags || [] },
+    { skip: !fetchValues || !tags?.length },
+  )
+  const lastTagsRun = useRef(tagsRun)
+  useEffect(() => {
+    const previous = lastTagsRun.current
+    lastTagsRun.current = tagsRun
+    if (previous !== undefined && tagsRun !== undefined && tagsRun !== previous) refresh()
+  }, [tagsRun, refresh])
 
   return null
 }

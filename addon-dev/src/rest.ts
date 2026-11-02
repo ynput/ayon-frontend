@@ -9,7 +9,12 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import { createInterface } from 'readline/promises'
-import { findConnection, importFromProject, readAddonProject } from './project.js'
+import {
+  findConnection,
+  importFromProject,
+  readAddonProject,
+  requireApiKey,
+} from './project.js'
 
 /** `rest` in ayonAddon(): where `ayon-addon generate-rest` writes, and what it can't tell itself. */
 export interface RestOptions {
@@ -83,10 +88,21 @@ const posixRelative = (from: string, to: string) => {
 export const hookName = ({ name, type }: { name: string; type: 'query' | 'mutation' }) =>
   `use${capitalize(name)}${type === 'query' ? 'Query' : 'Mutation'}`
 
-const downloadSchema = async (root: string, addon: { name: string; version: string }) => {
-  const { serverUrl, apiKey } = findConnection(root)
+const downloadSchema = async (
+  root: string,
+  addon: { name: string; version: string },
+  interactive: boolean,
+) => {
+  // after the key: the setup may have chosen the server too
+  const apiKey = await requireApiKey(root, findConnection(root).apiKey, interactive)
+  const { serverUrl } = findConnection(root)
   const url = `${serverUrl}/api/addons/${addon.name}/${addon.version}/openapi.json`
-  const response = await fetch(url, { headers: apiKey ? { 'x-api-key': apiKey } : {} })
+  const response = await fetch(url, { headers: { 'x-api-key': apiKey } })
+  if (response.status === 401 || response.status === 403) {
+    throw new Error(
+      `${url} answered ${response.status}: the API key was refused, check AYON_API_KEY in the shell or in the .env files of this folder`,
+    )
+  }
   if (!response.ok) {
     throw new Error(`${url} answered ${response.status}: is ${addon.name} ${addon.version} installed there?`)
   }
@@ -167,7 +183,7 @@ export const generateRest = async (options: GenerateRestOptions): Promise<Genera
   let schema = resolve(options.schemaFile || rest.schema || 'gen/openapi.json')
   let url: string | undefined
   if (!options.schemaFile) {
-    const download = await downloadSchema(root, addon)
+    const download = await downloadSchema(root, addon, options.interactive)
     url = download.url
     mkdirSync(path.dirname(schema), { recursive: true })
     writeFileSync(schema, JSON.stringify(patchSchema(download.schema, addon.name), null, 2))

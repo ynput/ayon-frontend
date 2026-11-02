@@ -2,13 +2,13 @@ import { test } from '@playwright/test'
 import { randomBytes } from 'crypto'
 
 /**
- * Every entity the tests create is prefixed so leftovers are easy to spot and sweep.
+ * Every entity created by the e2e tests starts with `e2e_<runId>_`.
  * The run id keeps parallel runs (e.g. two developers against one server) apart and lets
  * the global teardown only touch entities created by this run.
  */
 export const E2E_PREFIX = 'e2e'
 
-// set in playwright.config.ts so the main process and all workers share it
+// set once per run in the config (ayonConfig), inherited by every worker
 export const RUN_ID = process.env.E2E_RUN_ID || 'local'
 
 let counter = 0
@@ -22,12 +22,12 @@ export const uniqueName = (label: string) => {
   try {
     worker = String(test.info().parallelIndex)
   } catch {
-    // called outside of a test (e.g. global teardown)
+    // outside a test (global setup / teardown)
   }
   counter += 1
   const random = randomBytes(2).toString('hex')
   return `${E2E_PREFIX}_${RUN_ID}_${label}_${worker}${counter}${random}`
 }
 
-/** Prefix that matches everything created by the current run */
+/** prefix shared by everything this run created */
 export const runPrefix = () => `${E2E_PREFIX}_${RUN_ID}_`
