@@ -3,6 +3,7 @@ import type { AddonUser } from '@ynput/ayon-addon'
 import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import store, { useAppSelector } from '@state/store'
+import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
@@ -39,6 +40,9 @@ export const provideAddonHost = () =>
     useUser,
     getUser: () => toAddonUser(store.getState().user),
     dispatch: store.dispatch,
+    openViewer: (target) => {
+      store.dispatch(openViewer(target))
+    },
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
