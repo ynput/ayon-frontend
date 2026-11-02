@@ -208,7 +208,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
                 icon={meta.icon}
                 iconColor={meta.color}
                 label={meta.label}
-                count={counts.byCategory.get(category)}
+                count={counts.byCategory.get(category) ?? 0}
                 selected={!!filters.types?.includes(category)}
                 onClick={() => onChange({ types: toggle(filters.types, category) })}
               />
@@ -264,7 +264,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
               key={status.value}
               icon={status.icon}
               label={status.label}
-              count={counts.byStatus.get(status.value)}
+              count={counts.byStatus.get(status.value) ?? 0}
               selected={!!filters.statuses?.includes(status.value)}
               onClick={() => onChange({ statuses: toggle(filters.statuses, status.value) })}
             />
