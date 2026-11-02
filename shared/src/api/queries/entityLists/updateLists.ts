@@ -11,12 +11,12 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
     },
     updateEntityList: {
       async onQueryStarted(
-        { listId, entityListPatchModel },
+        { entityListId, entityListPatchModel },
         { dispatch, queryFulfilled, getState },
       ) {
         const state = getState()
         // Find all caches that are invalidated by this mutation
-        const tags = [{ type: 'entityList', id: listId }]
+        const tags = [{ type: 'entityList', id: entityListId }]
         const infiniteEntries = gqlApi.util
           .selectInvalidatedBy(state, tags)
           .filter((e) => e.endpointName === 'getListsInfinite')
@@ -28,7 +28,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListsInfinite', entry.originalArgs, (draft) => {
               for (const page of draft.pages) {
-                const listIndex = page.lists.findIndex((list) => list.id === listId)
+                const listIndex = page.lists.findIndex((list) => list.id === entityListId)
                 if (listIndex !== -1) {
                   const list = page.lists[listIndex]
                   // Update the list with the new data
@@ -45,7 +45,10 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
         // Update getEntityList cache (REST API)
         const entityListEntries = entityListsApi.util
           .selectInvalidatedBy(state, tags)
-          .filter((e) => e.endpointName === 'getEntityList' && e.originalArgs.listId === listId)
+          .filter(
+            (e) =>
+              e.endpointName === 'getEntityList' && e.originalArgs.entityListId === entityListId,
+          )
 
         for (const entry of entityListEntries) {
           const patchResult = dispatch(
@@ -70,8 +73,8 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      invalidatesTags: (_s, _e, { listId }) => {
-        const tags = [{ type: 'entityList', id: listId }]
+      invalidatesTags: (_s, _e, { entityListId }) => {
+        const tags = [{ type: 'entityList', id: entityListId }]
         return tags
       },
     },
@@ -199,12 +202,12 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
     },
     updateEntityListItem: {
       async onQueryStarted(
-        { listItemId, entityListItemPatchModel },
+        { entityListItemId, entityListItemPatchModel },
         { dispatch, queryFulfilled, getState },
       ) {
         const state = getState()
         // Find all caches that are invalidated by this mutation
-        const tags = [{ type: 'entityListItem', id: listItemId }]
+        const tags = [{ type: 'entityListItem', id: entityListItemId }]
         const infiniteEntries = gqlApi.util
           .selectInvalidatedBy(state, tags)
           .filter((e) => e.endpointName === 'getListItemsInfinite')
@@ -214,7 +217,7 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           const patchResult = dispatch(
             gqlApi.util.updateQueryData('getListItemsInfinite', entry.originalArgs, (draft) => {
               for (const page of draft.pages) {
-                const listIndex = page.items.findIndex((list) => list.id === listItemId)
+                const listIndex = page.items.findIndex((list) => list.id === entityListItemId)
                 if (listIndex !== -1) {
                   const list = page.items[listIndex]
                   const { attrib, ...patchFields } = entityListItemPatchModel
@@ -246,24 +249,24 @@ const updateListsEnhancedApi = entityListsApi.enhanceEndpoints({
           })
         }
       },
-      invalidatesTags: (_s, _e, { listId, listItemId }) => [
-        { type: 'entityListItem', id: listId },
-        { type: 'entityListItem', id: listItemId },
-        { type: 'entityListItemsColumnStats', id: listId },
+      invalidatesTags: (_s, _e, { entityListId, entityListItemId }) => [
+        { type: 'entityListItem', id: entityListId },
+        { type: 'entityListItem', id: entityListItemId },
+        { type: 'entityListItemsColumnStats', id: entityListId },
       ],
     },
     createEntityListItem: {
-      invalidatesTags: (_s, _e, { listId }) => [
-        { type: 'entityList', id: listId },
-        { type: 'entityListItem', id: listId },
-        { type: 'entityListItemsColumnStats', id: listId },
+      invalidatesTags: (_s, _e, { entityListId }) => [
+        { type: 'entityList', id: entityListId },
+        { type: 'entityListItem', id: entityListId },
+        { type: 'entityListItemsColumnStats', id: entityListId },
       ],
     },
     deleteEntityListItem: {
-      invalidatesTags: (_s, _e, { listId }) => [
-        { type: 'entityList', id: listId },
-        { type: 'entityListItem', id: listId },
-        { type: 'entityListItemsColumnStats', id: listId },
+      invalidatesTags: (_s, _e, { entityListId }) => [
+        { type: 'entityList', id: entityListId },
+        { type: 'entityListItem', id: entityListId },
+        { type: 'entityListItemsColumnStats', id: entityListId },
       ],
     },
   },
