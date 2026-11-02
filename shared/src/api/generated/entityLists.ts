@@ -157,14 +157,7 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     duplicateEntityList: build.mutation<DuplicateEntityListApiResponse, DuplicateEntityListApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/duplicate`,
-        method: 'POST',
-        body: queryArg.payload,
-      }),
-    }),
-    duplicateEntityList: build.mutation<DuplicateEntityListApiResponse, DuplicateEntityListApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.listId}/duplicate`,
+        url: `/api/projects/${queryArg.projectName}/lists/${queryArg.entityListId}/duplicate`,
         method: 'POST',
         body: queryArg.payload,
       }),
@@ -288,15 +281,9 @@ export type DeleteEntityListApiArg = {
 }
 export type DuplicateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
 export type DuplicateEntityListApiArg = {
-  listId: string
   projectName: string
-  payload?: EntityListDuplicatePostModel | null
-}
-export type DuplicateEntityListApiResponse = /** status 201 Successful Response */ EntityListSummary
-export type DuplicateEntityListApiArg = {
-  listId: string
-  projectName: string
-  payload?: EntityListDuplicatePostModel | null
+  entityListId: string
+  payload: EntityListDuplicatePostModel | null
 }
 export type MaterializeEntityListApiResponse =
   /** status 200 Successful Response */ EntityListSummary
@@ -577,14 +564,6 @@ export type EntityListPatchModel = {
   /** Whether the list is active or not */
   active?: boolean | null
 }
-export type EntityListDuplicatePostModel = {
-  /** When omitted, a new ID is generated */
-  id?: string | null
-  /** When omitted, a free label is picked, e.g. `My list (copy)`, then `My list (copy 2)` */
-  label?: string | null
-  /** When omitted, the copy is placed in the folder of the source list. Explicit `null` places it outside of any folder. */
-  entityListFolderId?: string | null
-}
 export type EntityListItemModel = {
   id?: string
   /** ID of the entity in the list */
@@ -646,4 +625,12 @@ export type EntityListModel = {
   /** Whether the list is active or not */
   active: boolean
   accessLevel?: ListAccessLevel
+}
+export type EntityListDuplicatePostModel = {
+  /** When omitted, a new ID is generated */
+  id?: string | null
+  /** When omitted, a free label is picked, e.g. `My list (copy)`, then `My list (copy 2)` */
+  label?: string | null
+  /** When omitted, the copy is placed in the folder of the source list. Explicit `null` places it outside of any folder. */
+  entityListFolderId?: string | null
 }
