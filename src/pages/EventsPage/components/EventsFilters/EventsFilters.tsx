@@ -1,15 +1,15 @@
-import { FC, useMemo, useRef, useState } from 'react'
+import { FC, useEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
 import clsx from 'clsx'
-import { endOfDay, startOfDay } from 'date-fns'
+import { endOfDay, format, parse, startOfDay } from 'date-fns'
 import {
   AssigneeSelect,
   Button,
+  DateField,
   DefaultItemTemplate,
   DefaultValueTemplate,
   Dropdown,
   Icon,
-  InputDate,
   InputSwitch,
   InputText,
   UserImagesStacked,
@@ -22,14 +22,10 @@ import { countActiveFilters } from '../../hooks/useEventsViewState'
 import { useEventFacets } from '../../hooks/useEventFacets'
 import * as Styled from './EventsFilters.styled'
 
-const END_DATE_INPUT_ID = 'events-filter-end-date'
-// the panel scrolls, a calendar rendered inside it would be clipped
-const DATE_PORTAL_ID = 'events-filter-date-portal'
-
-// the ARC props don't line up with the installed datepicker types, CustomDateRangeDialog casts too
-const DateInput = InputDate as FC<any>
-
-const toDate = (iso?: string) => (iso ? new Date(iso) : null)
+const DATE_FORMAT = 'yyyy-MM-dd'
+// the filters hold local day boundaries as ISO strings, the date fields work with YYYY-MM-DD
+const toDateValue = (iso?: string) => (iso ? format(new Date(iso), DATE_FORMAT) : '')
+const fromDateValue = (value: string) => parse(value, DATE_FORMAT, new Date())
 
 const toggle = <T,>(list: T[] | undefined, value: T) =>
   list?.includes(value) ? list.filter((v) => v !== value) : [...(list ?? []), value]
@@ -78,13 +74,35 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
 
   const { counts, categories, topics } = useEventFacets(events, filters.types)
 
-  // the date picker reports every parsed keystroke, so wait for it to close before moving on
-  const startDateChanged = useRef(false)
-  const handleStartDateClose = () => {
-    if (!startDateChanged.current) return
-    startDateChanged.current = false
-    // the picker returns focus to its own input right after closing, go after that
-    setTimeout(() => document.getElementById(END_DATE_INPUT_ID)?.focus(), 50)
+  // the date fields hold a draft and only apply it on Enter or blur, so typing doesn't refetch
+  const [startDraft, setStartDraft] = useState(() => toDateValue(filters.newerThan))
+  const [endDraft, setEndDraft] = useState(() => toDateValue(filters.olderThan))
+  // presets and clear change the filters from outside, so the drafts follow them
+  useEffect(() => {
+    setStartDraft(toDateValue(filters.newerThan))
+  }, [filters.newerThan])
+  useEffect(() => {
+    setEndDraft(toDateValue(filters.olderThan))
+  }, [filters.olderThan])
+  const startInputRef = useRef<HTMLInputElement>(null)
+  const endInputRef = useRef<HTMLInputElement>(null)
+  const todayValue = format(new Date(), DATE_FORMAT)
+
+  const commitStart = (value: string) => {
+    onChange({
+      datePreset: undefined,
+      newerThan: value ? startOfDay(fromDateValue(value)).toISOString() : undefined,
+    })
+    // Enter moves on to the end date. Leaving the field with the mouse must not steal focus.
+    // Only focus, not the native picker: an open picker takes the typed keys and Enter
+    if (value && document.activeElement === startInputRef.current) endInputRef.current?.focus()
+  }
+
+  const commitEnd = (value: string) => {
+    onChange({
+      datePreset: undefined,
+      olderThan: value ? endOfDay(fromDateValue(value)).toISOString() : undefined,
+    })
   }
 
   const projectOptions = useMemo(
@@ -141,39 +159,22 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
           })}
         </Styled.Presets>
         <Styled.DateFields>
-          <DateInput
-            selected={toDate(filters.newerThan)}
-            onChange={(date: Date | null) => {
-              startDateChanged.current = true
-              onChange({
-                datePreset: undefined,
-                newerThan: date ? startOfDay(date).toISOString() : undefined,
-              })
-            }}
-            onCalendarClose={handleStartDateClose}
-            selectsStart
-            startDate={toDate(filters.newerThan)}
-            endDate={toDate(filters.olderThan)}
-            maxDate={toDate(filters.olderThan) ?? new Date()}
-            placeholderText="Start date"
-            portalId={DATE_PORTAL_ID}
+          <DateField
+            ref={startInputRef}
+            aria-label="Start date"
+            value={startDraft}
+            onChange={setStartDraft}
+            onCommit={commitStart}
+            max={endDraft || todayValue}
           />
-          <DateInput
-            id={END_DATE_INPUT_ID}
-            selected={toDate(filters.olderThan)}
-            onChange={(date: Date | null) =>
-              onChange({
-                datePreset: undefined,
-                olderThan: date ? endOfDay(date).toISOString() : undefined,
-              })
-            }
-            selectsEnd
-            startDate={toDate(filters.newerThan)}
-            endDate={toDate(filters.olderThan)}
-            minDate={toDate(filters.newerThan)}
-            maxDate={new Date()}
-            placeholderText="End date"
-            portalId={DATE_PORTAL_ID}
+          <DateField
+            ref={endInputRef}
+            aria-label="End date"
+            value={endDraft}
+            onChange={setEndDraft}
+            onCommit={commitEnd}
+            min={startDraft || undefined}
+            max={todayValue}
           />
         </Styled.DateFields>
       </Styled.Group>

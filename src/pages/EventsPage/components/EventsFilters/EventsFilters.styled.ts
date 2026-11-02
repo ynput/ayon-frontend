@@ -135,10 +135,6 @@ export const DateFields = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--base-gap-small);
-
-  .react-datepicker-wrapper {
-    width: 100%;
-  }
 `
 
 export const TopicCount = styled.span`
