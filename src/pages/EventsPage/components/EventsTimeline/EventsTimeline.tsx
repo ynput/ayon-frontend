@@ -244,7 +244,7 @@ export const EventsTimeline: FC<EventsTimelineProps> = ({
       follow: false,
     }))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selected?.id, plotWidth])
+  }, [selected?.id, plotWidth, view.initialised])
 
   // --- wheel: vertical zooms around the cursor, horizontal pans ---
   useEffect(() => {
