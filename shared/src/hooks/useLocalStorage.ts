@@ -112,11 +112,17 @@ export function useLocalStorage<T>(key: string, defaultValue: T): [T, Dispatch<S
             : valueOrFn
 
         const nextItem = JSON.stringify(nextValue)
+        const currentItem = localStorage.getItem(key)
+        if (currentItem === nextItem) {
+          rawValueRef.current = currentItem
+          return
+        }
+
+        localStorage.setItem(key, nextItem)
         valueRef.current = nextValue
         rawValueRef.current = nextItem
         setValue(nextValue)
 
-        localStorage.setItem(key, nextItem)
         // notify on next tick to avoid updating other components during render
         setTimeout(() => notifyLocalStorageChange(key), 0)
       } catch (e) {
