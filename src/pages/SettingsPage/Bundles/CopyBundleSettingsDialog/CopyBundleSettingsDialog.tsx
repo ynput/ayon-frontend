@@ -68,6 +68,23 @@ const CopyBundleSettingsDialog = ({
 
   const firstDevBundle = useMemo(() => sourceBundles?.find((b) => b?.isDev), [sourceBundles])
 
+  const { copiedAddons, keptAddons } = useMemo(() => {
+    const sourceAddons = sourceBundles.find((b) => b.name === sourceBundle)?.addons ?? {}
+    const targetAddons = Object.entries(bundle?.addons ?? {})
+      .filter(([, version]) => !!version)
+      .sort(([a], [b]) => a.localeCompare(b))
+    return {
+      copiedAddons: targetAddons
+        .filter(([name]) => !!sourceAddons[name])
+        .map(([name, targetVersion]) => ({
+          name,
+          targetVersion,
+          sourceVersion: sourceAddons[name],
+        })),
+      keptAddons: targetAddons.filter(([name]) => !sourceAddons[name]).map(([name]) => name),
+    }
+  }, [bundle, sourceBundles, sourceBundle])
+
   useEffect(() => {
     const determineVariantAndBundle = () => {
       if (
@@ -192,28 +209,30 @@ const CopyBundleSettingsDialog = ({
     }
   }
 
-  let title = `Copy addon settings from another bundle's addons?`
-  if (envTarget && onSetTag) {
-    title = `Set ${bundle?.name} as ${envTarget}?`
-  } else if (envTarget) {
-    title = `Copy addon settings to your new ${envTarget} bundle?`
-  }
+  const title =
+    envTarget && onSetTag
+      ? `Set ${bundle?.name} as ${envTarget}?`
+      : `Copy settings into ${bundle?.name}?`
 
   const header = (
     <>
       <span className="title">{title}</span>
       <span className="message">
-        Addons do not share settings between different versions automatically.
+        Addon settings are not shared between addon versions. Copy them from another bundle:
       </span>
+      <ul className="message">
+        <li>Studio settings</li>
+        <li>Settings of all projects, including their site settings</li>
+      </ul>
       <span className="message">
-        Here you can choose to apply all studio, project and site settings from the source to the
-        target bundle automatically.
+        Only addons in both bundles are copied. Their current settings in {bundle?.name} are
+        replaced.
       </span>
     </>
   )
 
   const confirmActive = !!sourceBundle && !!sourceVariant
-  const cancelLabel = envTarget ? 'Do not copy' : 'Cancel'
+  const cancelLabel = onSetTag ? 'Do not copy' : 'Cancel'
 
   const footer = (
     <>
@@ -235,7 +254,7 @@ const CopyBundleSettingsDialog = ({
       />
       <SaveButton
         onClick={handleConfirm}
-        label="Copy all settings"
+        label="Copy studio + project settings"
         active={confirmActive}
         saving={isSaving || isLoading}
       />
@@ -325,8 +344,26 @@ const CopyBundleSettingsDialog = ({
           </Styled.Row>
         </Styled.BundleCard>
       </div>
+      {!!copiedAddons.length && (
+        <Styled.AddonList>
+          {copiedAddons.map(({ name, sourceVersion, targetVersion }) => (
+            <Styled.AddonRow key={name}>
+              <span>{name}</span>
+              <span>
+                {sourceVersion} → {targetVersion}
+              </span>
+            </Styled.AddonRow>
+          ))}
+        </Styled.AddonList>
+      )}
+      {!!keptAddons.length && (
+        <Styled.KeptAddons data-tooltip={keptAddons.join(', ')} data-tooltip-delay={0}>
+          {keptAddons.length} other{' '}
+          {keptAddons.length === 1 ? 'addon keeps its' : 'addons keep their'} current settings
+        </Styled.KeptAddons>
+      )}
       <span className="overrides">
-        If you skip this step, you can always copy addon settings selectively later on.
+        Skip this to copy settings per addon later in Studio settings or Project settings.
       </span>
     </FriendlyDialog>
   )
