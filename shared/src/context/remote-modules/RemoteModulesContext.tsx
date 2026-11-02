@@ -1,14 +1,16 @@
-import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime'
 import { MANIFEST_MODULE, registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
-import { useListFrontendModulesQuery } from '@shared/api'
+import { useListAddonsQuery, useListBundlesQuery, useListFrontendModulesQuery } from '@shared/api'
 import type { FrontendModuleListItem } from '@shared/api'
 import { getBundleModeFromUser } from '@shared/util'
 import type { BundleMode } from '@shared/util'
 import { useGlobalContext } from '../global/GlobalContextInstance'
 import { RemoteModulesContext } from './RemoteModulesContextInstance'
+import { getAddonChanges, resolveBundleAddons } from './bundleAddons'
+import type { BundleAddons } from './bundleAddons'
 import { addonDevUserProblem, fetchAddonDevInfo, readAddonDevRequest } from './addonDevOverride'
 import type { AddonDevInfo, AddonDevOverride } from './addonDevOverride'
 import { AddonDevBanner } from './AddonDevBanner'
@@ -36,6 +38,8 @@ export type RemoteModulesContextType = {
   remotesInitialized: boolean
   // bundle the registered modules come from, set once the remotes are registered
   variant?: BundleMode
+  // the addons of that bundle, set once they have loaded. Fixed until a refresh, like the modules.
+  bundle?: BundleAddons
   addonDev: AddonDevState
 }
 
@@ -101,6 +105,23 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     },
   )
 
+  // the versions of every addon in the bundle, classic addon pages included
+  const { data: addonsData, isFetching: isFetchingAddons } = useListAddonsQuery(
+    {},
+    { skip: skip || isLoadingUser },
+  )
+  const { data: bundlesData, isFetching: isFetchingBundles } = useListBundlesQuery(
+    { archived: false },
+    { skip: skip || isLoadingUser || variant !== 'developer' },
+  )
+  const addons = useMemo(() => addonsData?.addons ?? [], [addonsData])
+  const bundles = useMemo(() => bundlesData?.bundles ?? [], [bundlesData])
+  const liveBundle = useMemo(
+    () => resolveBundleAddons(addons, bundles, variant, user?.name),
+    [addons, bundles, variant, user?.name],
+  )
+  const isFetchingBundle = isFetchingAddons || isFetchingBundles
+
   // the dev override, read once: the remotes can only be registered once anyway
   const [request] = useState(readAddonDevRequest)
   const requestedOverride = request && 'override' in request ? request.override : undefined
@@ -148,36 +169,39 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
   // what the remotes were registered with. Federation keeps running these until a refresh,
   // so consumers get this snapshot, and the live list is only used to ask for the refresh.
   const [registered, setRegistered] = useState<Registered>()
-  // addon versions and bundle variant the remotes were registered with
-  const registeredVersions = useRef<Record<string, string>>({})
-  const registeredVariant = useRef<string | undefined>(undefined)
+  const [registeredBundle, setRegisteredBundle] = useState<BundleAddons>()
+
+  // Doesn't hold up registering the remotes: only pages that need the versions wait for it
+  useEffect(() => {
+    if (skip || isLoadingUser || registeredBundle || !registered || isFetchingBundle) return
+    setRegisteredBundle(liveBundle)
+  }, [skip, isLoadingUser, registeredBundle, registered, isFetchingBundle, liveBundle])
 
   // Module federation can't swap a remote once registered, so after an addon update
   // (server restart or bundle change) the page would keep running the old addon build
   // against the new server. Ask the user to refresh so the new remotes get registered.
   // Switching bundle (e.g. turning on developer mode) needs the same refresh.
   useEffect(() => {
-    if (!remotesInitialized || isFetching) return
+    if (!remotesInitialized || !registered || isFetching || isFetchingBundle) return
 
-    const updatedAddons = effectiveModules.filter(({ addonName, addonVersion }) => {
-      const registeredVersion = registeredVersions.current[addonName]
-      return registeredVersion !== undefined && registeredVersion !== addonVersion
-    })
+    const changes = getAddonChanges(
+      { modules: registered.modules, bundle: registeredBundle },
+      { modules: effectiveModules, bundle: liveBundle, addons },
+    )
 
-    const variantChanged = variant !== registeredVariant.current
+    const variantChanged = variant !== registered.variant
 
     const toastId = 'addon-versions-changed'
 
     // versions changed back to the loaded ones, the page is current again
-    if (!updatedAddons.length && !variantChanged) {
+    if (!changes.length && !variantChanged) {
       toast.dismiss(toastId)
       return
     }
 
-    const names = updatedAddons.map((a) => `${a.addonName} ${a.addonVersion}`).join(', ')
     const message = variantChanged
       ? 'Bundle changed. Refresh to load its addon modules.'
-      : `Addons updated (${names}). Refresh to load them.`
+      : `Addons updated (${changes.join(', ')}). Refresh to load them.`
     const render = <RefreshToast message={message} />
 
     if (toast.isActive(toastId)) {
@@ -185,7 +209,17 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     } else {
       toast.info(render, { toastId, autoClose: false, closeOnClick: false })
     }
-  }, [effectiveModules, isFetching, remotesInitialized, variant])
+  }, [
+    effectiveModules,
+    isFetching,
+    isFetchingBundle,
+    remotesInitialized,
+    variant,
+    registered,
+    registeredBundle,
+    liveBundle,
+    addons,
+  ])
 
   useEffect(() => {
     // waiting for loading or it has already been initialized
@@ -200,7 +234,6 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
     // no remotes found, nothing to do
     if (!effectiveModules.length) {
-      registeredVariant.current = variant
       setRegistered({ variant, modules: effectiveModules })
       setRemotesInitialized(true)
       setManifestsLoading(false)
@@ -223,8 +256,6 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
       })
     })
 
-    registeredVersions.current = Object.fromEntries(allRemotes.map((r) => [r.addon, r.version]))
-    registeredVariant.current = variant
     setRegistered({ variant, modules: effectiveModules })
 
     const devAddon = addonDev.status === 'active' ? addonDev : undefined
@@ -267,6 +298,7 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
         modules: registered?.modules ?? effectiveModules,
         remotesInitialized,
         variant: registered?.variant,
+        bundle: registeredBundle,
         addonDev,
       }}
     >

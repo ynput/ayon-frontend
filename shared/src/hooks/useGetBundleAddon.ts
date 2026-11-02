@@ -1,9 +1,7 @@
 // a hook that checks if an addon is in the bundle the user's addon modules come from
 import { useCallback } from 'react'
 import semver from 'semver'
-import { useListAddonsQuery, useListBundlesQuery } from '@shared/api'
-import { useGlobalContext, useRemoteModules } from '@shared/context'
-import { getBundleModeFromUser } from '@shared/util'
+import { useRemoteModules } from '@shared/context'
 import type { BundleMode } from '@shared/util'
 
 type VersionOptions = { version?: string; minVersion?: string }
@@ -21,44 +19,25 @@ const matchesVersion = (version: string, { version: exact, minVersion }: Version
 }
 
 export const useGetBundleAddon = () => {
-  const { user } = useGlobalContext()
-  // the bundle the remotes were registered from, or the user's mode before that
-  const { variant: registeredVariant } = useRemoteModules()
-  const mode = registeredVariant ?? getBundleModeFromUser(user)
-
-  const { data: addonsData, isLoading: isLoadingAddons } = useListAddonsQuery({})
-  const { data: { bundles = [] } = {}, isLoading: isLoadingBundles } = useListBundlesQuery(
-    { archived: false },
-    { skip: mode !== 'developer' },
-  )
-
-  // only the user's own dev bundle counts. Without one the server sends production.
-  const devBundle =
-    mode === 'developer'
-      ? bundles.find((bundle) => bundle.isDev && bundle.activeUser === user?.name)
-      : undefined
-  const bundleVariant: BundleMode = mode === 'developer' && !devBundle ? 'production' : mode
+  // the bundle as it was when the remotes were registered: it stays until a refresh, like the
+  // code that runs, and a change to the bundle only asks for that refresh
+  const { bundle } = useRemoteModules()
 
   const getBundleAddonVersion = useCallback(
     (addonName: string, options?: VersionOptions): string | undefined => {
-      const addon = addonsData?.addons?.find((a) => a.name === addonName)
-      const version =
-        bundleVariant === 'developer'
-          ? devBundle?.addons?.[addonName] ?? undefined
-          : bundleVariant === 'staging'
-          ? addon?.stagingVersion
-          : addon?.productionVersion
-
+      const version = bundle?.versions[addonName]
       if (!version || !matchesVersion(version, options)) return undefined
       return version
     },
-    [addonsData, bundleVariant, devBundle],
+    [bundle],
   )
+
+  const bundleVariant: BundleMode = bundle?.variant ?? 'production'
 
   return {
     getBundleAddonVersion,
     bundleVariant,
-    isLoading: isLoadingAddons || (mode === 'developer' && isLoadingBundles),
+    isLoading: !bundle,
   }
 }
 
