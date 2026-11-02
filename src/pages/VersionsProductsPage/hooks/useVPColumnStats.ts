@@ -12,7 +12,6 @@ import {
   checkColumnVisibility,
   useColumnSettingsContext,
   useProjectDataContext,
-  useViewsContext,
 } from '@shared/containers'
 import { usePowerpack, useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { useMemo } from 'react'
@@ -31,6 +30,8 @@ type Params = {
   latestPerFolder?: boolean
   hasReviewables?: boolean
   showProducts?: boolean
+  // the view settings are still loading
+  isLoadingViews: boolean
 }
 
 export const useVPColumnStats = ({
@@ -47,11 +48,11 @@ export const useVPColumnStats = ({
   latestPerFolder,
   hasReviewables,
   showProducts,
+  isLoadingViews,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
   const { powerLicense } = usePowerpack()
-  const { isLoadingViews } = useViewsContext()
   const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
   const { columnVisibility, defaultColumnVisibility, columnSummaries, columnSummaryScopes } =
     useColumnSettingsContext()

@@ -59,7 +59,9 @@ export type {
   EntityRef,
   EntityScope,
   FolderInfo,
+  NavigateScope,
   PageMeta,
+  PageSlicer,
   PageViews,
   ProjectFolders,
   ProjectFoldersScope,
@@ -105,6 +107,15 @@ export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+// AYON's project table (Overview's tasks and folders, Products' versions) for given rows
+export { EntityTable } from './EntityTable'
+export type {
+  EntityTableColumns,
+  EntityTableEntityType,
+  EntityTableFilter,
+  EntityTableFilterCondition,
+  EntityTableProps,
+} from './EntityTable'
 
 // globals: the same in every slot
 export { dispatch, useUser } from './globals'

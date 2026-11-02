@@ -6,15 +6,12 @@ import { ExpandedState } from '@tanstack/react-table'
 import { OverviewSettings } from '@shared/api'
 
 // Shared components and hooks
-import { useSessionStorage, useGetEntityGroups } from '@shared/hooks'
+import { useSessionStorage } from '@shared/hooks'
 
 // Shared ProjectTreeTable
 import {
   useProjectDataContext,
-  useFetchOverviewData,
   useQueryFilters,
-  buildQueryFilters,
-  useEntitiesMap,
   useSelectedFolders,
   scopeIdsToFolders,
   useScopedAttributeFields,
@@ -31,30 +28,20 @@ import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@
 
 // Local context and hooks
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
-import { useProjectOverviewStats } from '../../hooks/useProjectOverviewStats'
+import { useOverviewData, type OverviewDataSource } from '../../hooks/useOverviewData'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
-import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
-import { useAppDispatch } from '@state/store'
 import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
-import { getRequestErrorString } from '@shared/util'
 
 export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
-  const dispatch = useAppDispatch()
-
   // Get project data from the new context
   const { projectName, ...projectInfo } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
 
   const { getChildFolderIds } = useProjectFoldersContext()
 
-  const {
-    sorting,
-    groupBy: panelGroupBy,
-    defaultColumnVisibility,
-    columnVisibility,
-  } = useColumnSettingsContext()
+  const { groupBy: panelGroupBy, defaultColumnVisibility } = useColumnSettingsContext()
 
   const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
 
@@ -130,12 +117,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
 
   const skipLinks = !hasLinkColumn || !linksVisible
 
-  // comments are the heaviest field to resolve, so only fetch them when the column is shown
-  const showComments = useMemo(
-    () => checkColumnVisibility(columnVisibility, 'comments', defaultColumnVisibility),
-    [columnVisibility, defaultColumnVisibility],
-  )
-
   // Derive effective showHierarchy from viewGroupBy.
   // null = explicit hierarchy, undefined = not loaded yet — both default to
   // hierarchy-style fetching to avoid firing a flat-list query against an
@@ -182,69 +163,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     [viewGroupBy, isFlatFolderView, viewGroupByDesc],
   )
 
-  // GET GROUPING — use viewGroupBy for the top-level dropdown grouping
-  // folderType can only be used with entity type 'folder'
-  // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
-  const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
-  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
-    groupBy: viewGroupByObj,
-    projectName,
-    entityType: groupingEntityType,
-  })
-
-  // Stable default filter to prevent unnecessary re-renders
-  const EMPTY_FILTER = useMemo(() => ({ conditions: [] }), [])
-
-  // Separate the combined filters into task and folder filters
-  const { task: taskFilter = EMPTY_FILTER, folder: folderFilter = EMPTY_FILTER } = useMemo(() => {
-    return splitFiltersByScope(
-      queryFilters,
-      ['task', 'folder'],
-      { fallbackScope: 'task' },
-      {
-        // Map filter IDs that don't have scope prefix to their scope
-        taskType: 'task',
-        assignees: 'task',
-        folderType: 'folder',
-      },
-    )
-  }, [queryFilters])
-
-  // Separate slicer filters into different types
-  const validScopes: ('task' | 'folder')[] = ['task', 'folder']
-  const attribScopeMap = useMemo(
-    () =>
-      attribFields.reduce<Record<string, string>>((acc, field) => {
-        const scope = validScopes.find((s) => field.scope?.includes(s))
-        if (scope) acc[`attrib.${field.name}`] = scope
-        return acc
-      }, {}),
-    [attribFields],
-  )
-
-  const { task: slicerTaskFilters, folder: slicerFolderFilters } = useMemo(() => {
-    return splitClientFiltersByScope(sliceFilters, validScopes, {
-      status: 'task', // status defaults to task for overview
-      taskType: 'task',
-      assignees: 'task',
-      folderType: 'folder',
-      ...attribScopeMap,
-    })
-  }, [sliceFilters, attribScopeMap])
-
-  // Combine slicer filters with task/folder filters
-  const combinedTaskFilter = useQueryFilters({
-    queryFilters: taskFilter,
-    sliceFilters: slicerTaskFilters,
-    config: { searchKey: 'name' },
-  })
-  // folder names stay filter conditions: the folder search of the table (REST folder search) and
-  // the task queries (folderFilter) have no folder text search, so a search would be dropped there
-  const combinedFolderFilter = useQueryFilters({
-    queryFilters: folderFilter,
-    sliceFilters: slicerFolderFilters,
-  })
-
   // Use the shared hook to handle filter logic (for backward compatibility)
   const queryFiltersResult = useQueryFilters({
     queryFilters,
@@ -275,81 +193,41 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     [rawEntityIds.taskIds, parentMaps, folderScope],
   )
 
-  // Slicer value counts: each panel's args exclude its OWN filter (so a selected
-  // value keeps its siblings' true counts) but keep every other panel's filter
-  // plus the hierarchy/entity-list ids — facet counts that match the filtered
-  // table. With nothing selected all panels produce identical args, so their
-  // stats queries collapse onto one shared cache entry.
-  const getSlicerCountsArgs = useCallback(
-    (sliceType: string) => {
-      const otherSliceFilters = sliceFilters.filter((f) => f.id !== sliceType)
-      const { task: otherTaskFilters, folder: otherFolderFilters } = splitClientFiltersByScope(
-        otherSliceFilters,
-        ['task', 'folder'],
-        {
-          status: 'task',
-          taskType: 'task',
-          assignees: 'task',
-          folderType: 'folder',
-          ...attribScopeMap,
-        },
-      )
-      const countsTaskFilter = buildQueryFilters({
-        queryFilters: taskFilter,
-        sliceFilters: otherTaskFilters,
-        config: { searchKey: 'name' },
-      })
-      const countsFolderFilter = buildQueryFilters({
-        queryFilters: folderFilter,
-        sliceFilters: otherFolderFilters,
-      })
-      return {
-        projectName,
-        filter: countsTaskFilter.filterString || undefined,
-        folderFilter: countsFolderFilter.filterString || undefined,
-        search: countsTaskFilter.search || undefined,
-        folderIds: selectedFolders.length ? selectedFolders : undefined,
-        taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
-      }
-    },
-    [
+  // the page's input to the overview data: its view and its slicer (EntityTable builds the same
+  // input from its props)
+  const source = useMemo<OverviewDataSource>(
+    () => ({
+      filter: queryFilters,
       sliceFilters,
-      attribScopeMap,
-      taskFilter,
-      folderFilter,
-      projectName,
       selectedFolders,
+      // hierarchy ids are scope roots (excluded from rows); list ids are results
+      excludeSelectedFolders: !listPanelSelected,
+      taskIds: selectedTaskIds,
+      groupBy: viewGroupByObj,
+      showHierarchy,
+      isFlatFolderView,
+      isLoadingViews,
+      isLoadingSlice: isLicensePending || isResolvingListIds,
+    }),
+    [
+      queryFilters,
+      sliceFilters,
+      selectedFolders,
+      listPanelSelected,
       selectedTaskIds,
+      viewGroupByObj,
+      showHierarchy,
+      isFlatFolderView,
+      isLoadingViews,
+      isLicensePending,
+      isResolvingListIds,
     ],
   )
 
   const {
-    folderStats,
-    taskStats,
-    folderStatsLoading,
-    taskStatsLoading,
-    folderStatsError,
-    taskStatsError,
-    folderStatsArgs,
-    taskStatsArgs,
-    isUninitializedFolderStats,
-    isUninitializedTaskStats,
-  } = useProjectOverviewStats({
-    folderFilter: combinedFolderFilter.filterString,
-    taskFilter: combinedTaskFilter.filterString,
-    folderSearch: combinedFolderFilter.search,
-    taskSearch: combinedTaskFilter.search,
-    selectedFolders,
-    selectedTaskIds,
-    showHierarchy,
-    isFlatFolderView,
-    excludeSelectedFolders: !listPanelSelected,
-  })
-
-  // DATA FETCHING
-  const {
     foldersMap,
     tasksMap,
+    entitiesMap,
     tasksByFolderMap,
     fetchNextPage,
     onSyncData,
@@ -357,49 +235,28 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     isLoadingMore,
     loadingTasks,
     loadingLinksEntityIds,
-    error: dataError,
+    error,
     softError,
     softErrorAction,
-  } = useFetchOverviewData({
-    projectName,
-    selectedFolders,
-    // hierarchy ids are scope roots (excluded from rows); list ids are results
-    excludeSelectedFolders: !listPanelSelected,
-    taskIds: selectedTaskIds,
-    taskFilters: {
-      filter: combinedTaskFilter.filter as any,
-      filterString: combinedTaskFilter.filterString,
-      search: combinedTaskFilter.search,
-    },
-    folderFilters: {
-      filter: combinedFolderFilter.filter as any,
-      filterString: combinedFolderFilter.filterString,
-      search: combinedFolderFilter.search,
-    },
-    expanded,
-    sorting: sorting,
-    groupBy: viewGroupByObj,
     taskGroups,
-    showHierarchy,
-    isFlatFolderView,
-    attribFields,
+    taskFilters,
+    folderFilters,
+    getSlicerCountsArgs,
+    folderStats,
+    taskStats,
+    folderStatsLoading,
+    taskStatsLoading,
+    folderStatsError,
+    taskStatsError,
+  } = useOverviewData({
+    projectName,
+    source,
     modules,
+    expanded,
+    setExpanded,
     skipLinks,
-    showComments,
-    isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
-    onCollapseAll: () => setExpanded({}),
     visibleEntityIds,
-    folderStatsArgs,
-    taskStatsArgs,
-    folderStatsUninitialized: isUninitializedFolderStats,
-    taskStatsUninitialized: isUninitializedTaskStats,
-    dispatch,
   })
-
-  // combine foldersMap and tasksMap into a single map
-  const entitiesMap = useEntitiesMap({ foldersMap, tasksMap })
-  const error =
-    getRequestErrorString(groupingError) || getRequestErrorString(dataError) || undefined
 
   return (
     <ProjectOverviewContext.Provider
@@ -430,25 +287,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         taskStatsError,
         taskGroups,
         // Separate task and folder filters
-        taskFilters: {
-          filter: combinedTaskFilter.filter,
-          filterString: combinedTaskFilter.filterString,
-          search: combinedTaskFilter.search,
-        },
-        folderFilters: {
-          filter: combinedFolderFilter.filter,
-          filterString: combinedFolderFilter.filterString,
-          search: combinedFolderFilter.search,
-        },
+        taskFilters,
+        folderFilters,
         getSlicerCountsArgs,
         selectedFolders,
         selectedTaskIds,
         // Backward compatibility for ProjectTableProvider (uses taskFilters)
-        queryFilters: {
-          filter: combinedTaskFilter.filter,
-          filterString: combinedTaskFilter.filterString,
-          search: combinedTaskFilter.search,
-        },
+        queryFilters: taskFilters,
         setQueryFilters,
         // Additional filter contexts for dual filtering system
         combinedFilters: queryFiltersResult.combinedFilters,

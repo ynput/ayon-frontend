@@ -132,6 +132,7 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
 - A component gets its slot's context as props (\`SlotProps<'<slot>'>\`); components below it call
   \`useSlot('<slot>')\` (or a list of slots). It throws when rendered in another slot.
 - Menu items have a \`run\` piece: a function that gets the context (\`SlotContext<'<slot>'>\`) on click.
+  Every \`run\` and \`menu\` piece gets \`navigate(to)\` in it, to open another AYON page.
 - Header and toolbar items set exactly one action: \`to\` (navigate), \`run\`, \`dialog\` (AYON opens
   its dialog around your content, which gets \`close\`), \`menu\` (a function returning the items),
   \`popover\` (AYON opens a popover under the button with your content, which gets \`close\`) or
@@ -188,7 +189,7 @@ Look in the browser console first: every message starts with \`[addon <name>]\`.
 | \`useSlot(…) was called in a component rendered in slot '…'\` or \`… outside any addon slot\` | The component is used in a slot you did not name: \`useSlot(['a', 'b'])\` names every slot it is used in. Outside a slot it has no context at all |
 | \`the file has no default export\` / \`"run" has no default export function\` | A piece's file must \`export default\` its component or function |
 | \`x (addon): <message>\` toast, and \`[addon <name>] … failed\` in the console | A \`run\`, \`menu\` or dialog piece threw. \`… crashed\` is a component that threw while rendering: it stays inside its own area |
-| \`<name> is not available in this AYON frontend\` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
+| \`<name> is not available in this AYON frontend\` | A layout component, picker or table this AYON version does not provide; update AYON or the SDK |
 
 ## Picking entities: \`EntityPicker\`
 
@@ -258,6 +259,43 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
 
+## A project table: \`EntityTable\`
+
+AYON's project table for your rows: Overview's task list (\`task\`), Overview's folder list with
+each folder expandable to its tasks (\`folder\`), or the versions table of Products (\`version\`).
+Same columns, sorting, group by, summaries row (Power Pack) and loading on scroll as those pages,
+with the same requests. It brings its own providers: render it anywhere, in a parent with a height.
+Read-only.
+
+\`\`\`tsx
+import { EntityTable, type EntityTableColumns } from '@ynput/ayon-addon'
+
+const [columns, setColumns] = useState<EntityTableColumns>({})
+
+<div style={{ height: 400 }}>
+  <EntityTable
+    projectName={projectName}
+    entityType="task"
+    filter={{ conditions: [{ key: 'status', operator: 'in', value: ['In progress'] }] }}
+    columns={columns}
+    onColumnsChange={setColumns}
+  />
+</div>
+\`\`\`
+
+- The rows: \`filter\` (the format of the Overview and Products filter bars, as in their saved
+  views), \`ids\` (of \`entityType\`), or both (rows that match both). An empty \`ids\` shows no rows.
+- \`columns\` is the column settings (shown columns, order, pinning, widths, \`sorting\`, \`groupBy\`,
+  the summaries' \`columnSummaries\`), the same shape as AYON's saved views. Keep what
+  \`onColumnsChange\` gives you and pass it back, e.g. in your own saved state; without \`columns\`
+  the table keeps the changes while it is mounted.
+- Group by (a column's menu, or \`groupBy\` in \`columns\`): tasks from a \`filter\` and versions. A
+  folder list, and tasks by \`ids\`, are not grouped: their column menus offer no group by and a
+  \`groupBy\` in \`columns\` is kept but not applied.
+- \`excludedColumns\`: column ids the table never offers, e.g. \`['thumbnail', 'comments']\` to skip
+  their requests. Link columns are not offered.
+- Nothing is editable; the right-click menu has copy and export.
+
 ## Slot contexts: one shape
 
 The same thing has the same name and type in every slot that has it:
@@ -275,6 +313,16 @@ The same thing has the same name and type in every slot that has it:
   one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
   tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
   entity: \`tableColumn\` has \`entity\`.
+- **\`navigate\`** (\`(to: string) => void\`), in the context of every \`run\` and \`menu\` piece (menu
+  items, header and toolbar items, table shortcuts) and of header and toolbar items' other pieces:
+  goes to an AYON URL without reloading the page.
+- **\`slicer\`** (\`PageSlicer\`), on \`project.page\`: \`sliceType\` and \`selection\` (row ids: folder
+  ids for \`hierarchy\`, the values for the others), \`pinned\` (the selection kept when the user
+  switched slice type with pin, \`{ sliceType, selection }\` or \`null\`), \`clearPinned()\`, and
+  \`select(sliceType, ids)\`, which switches the slicer to that slice type and selects the rows
+  (expanding the parents of folders); it waits for the page's view to load.
+- **\`views\`** (\`PageViews\`), on pages with a \`viewType\`: \`settings\`, \`isLoading\`,
+  \`updateSettings(settings)\` and \`selectedView\` (\`{ id, label }\`, \`undefined\` while loading).
 
 ## Slots
 

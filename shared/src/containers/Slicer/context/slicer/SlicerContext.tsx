@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import type { SliceType } from '../../types'
@@ -22,7 +23,7 @@ import { SlicerContext } from './SlicerContextInstance'
 import { useSlicerRemotes } from '../../hooks/useSlicerRemotes'
 import { useSlicerRowSelection } from '../../hooks/useSlicerRowSelection'
 import type { OnAddToList, OnOpenViewer } from '../../hooks/useHierarchyContextMenuItems'
-import { usePowerpack } from '@shared/context'
+import { usePowerpack, useOptionalProjectFoldersContext } from '@shared/context'
 
 export type OnSliceTypeChange = (sliceType: SliceType, pinCurrent?: boolean) => void
 
@@ -72,6 +73,10 @@ export interface SlicerContextValue {
   getSliceSort: (sliceType: SliceType) => SliceSort
   setSliceSort: (sliceType: SliceType, sort: SliceSort) => void
   isViewSyncPending: boolean
+  // selects `ids` in the `sliceType` panel (switching the first panel to it when no panel has it)
+  // once the view, which stores the slice types, has loaded; for hierarchy also once the folders
+  // have, to expand the selected folders' parents
+  selectWhenReady: (sliceType: SliceType, ids: string[]) => void
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
   useExtraSlices: UseExtraSlices
@@ -344,6 +349,37 @@ export const SlicerProvider = ({
     ],
   )
 
+  // a selection requested before the view (or, for hierarchy, the folders) loaded: applied once
+  // they have, so the view's stored slice types don't overwrite it
+  const [pendingSelection, setPendingSelection] = useState<{
+    sliceType: SliceType
+    ids: string[]
+  } | null>(null)
+  const projectFolders = useOptionalProjectFoldersContext()
+  const isLoadingFolders = !!projectFolders?.isLoading
+  const selectWhenReady = useCallback(
+    (type: SliceType, ids: string[]) => setPendingSelection({ sliceType: type, ids }),
+    [],
+  )
+  useEffect(() => {
+    if (!pendingSelection || isLoadingViews) return
+    const { sliceType: type, ids } = pendingSelection
+    if (type === 'hierarchy' && isLoadingFolders) return
+    setPendingSelection(null)
+    // a slice type already in a panel (several panels with the power license) stays there
+    if (!sliceTypes.includes(type)) onSliceTypeChange(type)
+    // the panel id is its slice type; written directly, so it lands while the type change does
+    setPanelSelection(type, Object.fromEntries(ids.map((id) => [id, true])))
+    if (type === 'hierarchy' && projectFolders) {
+      const parentIds = ids.flatMap((id) => projectFolders.getParentFolderIds(id))
+      setPanelExpanded('hierarchy', (current) =>
+        current === true
+          ? current
+          : { ...current, ...Object.fromEntries(parentIds.map((id) => [id, true])) },
+      )
+    }
+  }, [pendingSelection, isLoadingViews, isLoadingFolders])
+
   const clearPanelState = useCallback(
     (newSliceType: SliceType) => {
       if (newSliceType === 'hierarchy') return
@@ -428,6 +464,7 @@ export const SlicerProvider = ({
       onExpandedChange,
       // loading state
       isViewSyncPending: isLoadingViews,
+      selectWhenReady,
       onOpenViewer,
       onAddToList,
     }),
@@ -457,6 +494,7 @@ export const SlicerProvider = ({
       expanded,
       onExpandedChange,
       isLoadingViews,
+      selectWhenReady,
       onOpenViewer,
       onAddToList,
     ],

@@ -8,9 +8,9 @@ import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
 import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
 
-const VP_EXCLUDED_COLUMNS = ['assignees']
+export const VP_EXCLUDED_COLUMNS = ['assignees']
 // module constant: a new array each render rebuilds the table columns, which remounts every cell
-const VP_INCLUDE_PARENTS: EntityType[] = ['folder', 'product', 'task']
+export const VP_INCLUDE_PARENTS: EntityType[] = ['folder', 'product', 'task']
 
 const TableWrapper = styled.div`
   position: relative;

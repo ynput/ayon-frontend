@@ -2,7 +2,8 @@
 // providers around a page: ProjectFoldersContextProvider, SlicerProvider and ViewsProvider. Used by
 // the app's AddonPages and by the standalone dev shell, so both pass the same context.
 import { useCallback, useMemo } from 'react'
-import type { FolderInfo, PageViews, ProjectFolders, SlotMap } from '@ynput/ayon-addon'
+import type { RowSelectionState } from '@tanstack/react-table'
+import type { FolderInfo, PageSlicer, PageViews, ProjectFolders, SlotMap } from '@ynput/ayon-addon'
 import { useGetProjectQuery } from '@shared/api'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { useViewsContext } from '@shared/containers/Views/context/ViewsContextInstance'
@@ -16,7 +17,13 @@ const noLocalState = () => undefined
 const usePageViews = (): PageViews | undefined => {
   const views = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
-  const { viewType, viewSettings, isLoadingViews } = views
+  const { viewType, viewSettings, isLoadingViews, selectedView: view } = views
+  const viewId = view?.id
+  const viewLabel = view?.label
+  const selectedView = useMemo(
+    () => (viewId ? { id: viewId, label: viewLabel ?? '' } : undefined),
+    [viewId, viewLabel],
+  )
 
   const updateSettings = useCallback(
     (settings: Record<string, unknown>) =>
@@ -31,10 +38,11 @@ const usePageViews = (): PageViews | undefined => {
             viewType,
             settings: viewSettings as Record<string, unknown> | undefined,
             isLoading: isLoadingViews,
+            selectedView,
             updateSettings,
           }
         : undefined,
-    [viewType, viewSettings, isLoadingViews, updateSettings],
+    [viewType, viewSettings, isLoadingViews, selectedView, updateSettings],
   )
 }
 
@@ -69,22 +77,50 @@ const useProjectFolders = (): ProjectFolders => {
   )
 }
 
+const selectedIds = (selection: RowSelectionState) =>
+  Object.keys(selection).filter((id) => selection[id])
+
+/**
+ * The page's slicer: its selection, the pinned hierarchy slice (as ReportsPage passes it to the
+ * legacy Reports module) and `select`, which the slicer applies once the page's view has loaded
+ * (`selectWhenReady`): the slice types are stored in it, so a change made before it loads would be
+ * overwritten.
+ */
+const usePageSlicer = (): PageSlicer => {
+  const { rowSelection, sliceType, pinnedSlice, setPinnedSlice, selectWhenReady } =
+    useSlicerContext()
+
+  const clearPinned = useCallback(() => setPinnedSlice(null), [setPinnedSlice])
+
+  const pinned = useMemo(
+    () =>
+      pinnedSlice
+        ? { sliceType: pinnedSlice.sliceType, selection: selectedIds(pinnedSlice.rowSelection) }
+        : null,
+    [pinnedSlice],
+  )
+
+  return useMemo(
+    () => ({
+      sliceType,
+      selection: selectedIds(rowSelection),
+      pinned,
+      clearPinned,
+      select: selectWhenReady,
+    }),
+    [sliceType, rowSelection, pinned, clearPinned, selectWhenReady],
+  )
+}
+
 /** The context of a project.page contribution. */
 export const useProjectPageSlotContext = (
   projectName: string,
 ): SlotMap['project.page']['context'] => {
   // already in the cache: ProjectContextProvider runs the same query
   const { data: project } = useGetProjectQuery({ projectName })
-  // ProjectPage keeps a slicer per page (SlicerProvider page={module}); the page places it
-  const { rowSelection, sliceType } = useSlicerContext()
-  const slicer = useMemo(
-    () => ({
-      sliceType,
-      selection: Object.keys(rowSelection).filter((id) => rowSelection[id]),
-    }),
-    [sliceType, rowSelection],
-  )
   const projectFolders = useProjectFolders()
+  // ProjectPage keeps a slicer per page (SlicerProvider page={module}); the page places it
+  const slicer = usePageSlicer()
   const views = usePageViews()
 
   return useMemo(

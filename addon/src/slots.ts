@@ -2,6 +2,7 @@ import type { ComponentType } from 'react'
 import type {
   EntityRef,
   EntityScope,
+  NavigateScope,
   ProjectTablePage,
   PageMeta,
   ProjectFoldersScope,
@@ -196,10 +197,7 @@ export interface ButtonMeta {
 }
 
 /** Context of a button's code (`run`, `dialog`, `menu`, `component`) besides the slot's own. */
-export interface ButtonScope {
-  /** goes to an AYON URL, e.g. `navigate('/dashboard/comments')` */
-  navigate: (to: string) => void
-}
+export interface ButtonScope extends NavigateScope {}
 
 /** What a `dialog` piece gets besides the slot context. */
 export interface DialogScope {
@@ -311,7 +309,10 @@ export interface DetailsPanelTabContext extends ProjectNameScope, EntityScope {
   scope: string
 }
 
-/** What a menu item's `run` piece exports as default: called on click with the slot context. */
+/**
+ * What a menu item's `run` piece exports as default: called on click with the slot context. Every
+ * `run` gets `navigate` in it, to open another AYON page.
+ */
 export type RunPiece<S extends SlotName> = (context: SlotContext<S>) => void | Promise<void>
 
 /** Where an addon's item goes in a menu. */
@@ -346,7 +347,7 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of a details panel menu item. */
-export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
+export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope, NavigateScope {}
 
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {
@@ -424,7 +425,7 @@ export interface EntityMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of an entity menu item. */
-export interface EntityMenuItemContext extends ProjectNameScope {
+export interface EntityMenuItemContext extends ProjectNameScope, NavigateScope {
   page: ProjectTablePage
   /** the selected entities (not table rows: list items resolve to their entity) */
   entities: EntityRef[]
@@ -476,7 +477,7 @@ export interface TableRowRef {
 }
 
 /** Context of a table shortcut. */
-export interface TableShortcutContext {
+export interface TableShortcutContext extends NavigateScope {
   /** the table the key was pressed in */
   table: ShortcutTable
   /** the open project; `null` in the project list */
@@ -512,7 +513,7 @@ export interface ListMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of a project list menu item. */
-export interface ProjectListMenuItemContext {
+export interface ProjectListMenuItemContext extends NavigateScope {
   /** the selected projects (project folders left out) */
   projectNames: string[]
   menu: MenuKind
@@ -533,7 +534,7 @@ export interface SlicerRowRef {
 }
 
 /** Context of a slicer menu item. */
-export interface SlicerMenuItemContext extends ProjectNameScope {
+export interface SlicerMenuItemContext extends ProjectNameScope, NavigateScope {
   sliceType: string
   /** the rows it acts on: the selected ones, or the right-clicked one */
   selected: SlicerRowRef[]
@@ -599,7 +600,8 @@ export type SlotName = keyof SlotMap & string
 
 /**
  * What the code of a contribution to slot `S` gets: `{ slot: S, user, ...context }`. The host
- * passes the slot's own context; `ContributionView` and `runContribution` add `slot` and `user`.
+ * passes the slot's own context; `ContributionView` and `runContribution` add `slot` and `user`,
+ * and `runContribution` adds `navigate` to every `run` piece's context.
  */
 export type SlotContext<S extends SlotName> = S extends SlotName
   ? { slot: S } & UserScope & SlotMap[S]['context']

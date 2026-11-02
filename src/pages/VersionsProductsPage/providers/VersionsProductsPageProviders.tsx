@@ -10,11 +10,26 @@ import { FC } from 'react'
 import { VPProjectTableProvider } from './VPProjectTableProvider'
 import { VPColumnSettingsProvider } from './VPColumnSettingsProvider'
 import { VersionsDataProvider } from '../context/vp-data'
+import { useVPPageDataSource } from '../context/vp-data/useVPPageDataSource'
 import { VPViewsProvider } from '../context/vp-views'
 import { VersionsSelectionProvider } from '../context/vp-selection'
 import { VPFocusProvider } from '../context/vp-focus'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
+
+// the versions data of the page's own view and slicer
+const VPPageDataProvider: FC<{ projectName: string; modules: any; children: React.ReactNode }> = ({
+  projectName,
+  modules,
+  children,
+}) => {
+  const source = useVPPageDataSource(projectName)
+  return (
+    <VersionsDataProvider projectName={projectName} modules={modules} source={source}>
+      {children}
+    </VersionsDataProvider>
+  )
+}
 
 interface VersionsProductsPageProvidersProps {
   projectName: string
@@ -34,7 +49,7 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
     <VPViewsProvider>
       <VPFocusProvider>
         <VPColumnSettingsProvider>
-          <VersionsDataProvider projectName={projectName} modules={modules}>
+          <VPPageDataProvider projectName={projectName} modules={modules}>
             <SettingsPanelProvider>
               <ProjectTableQueriesProvider {...{ updateEntities, getFoldersTasks }}>
                 <EntityListsProvider projectName={projectName}>
@@ -50,7 +65,7 @@ const VersionsProductsPageProviders: FC<VersionsProductsPageProvidersProps> = ({
                 </EntityListsProvider>
               </ProjectTableQueriesProvider>
             </SettingsPanelProvider>
-          </VersionsDataProvider>
+          </VPPageDataProvider>
         </VPColumnSettingsProvider>
       </VPFocusProvider>
     </VPViewsProvider>

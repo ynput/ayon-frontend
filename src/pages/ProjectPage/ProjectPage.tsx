@@ -40,7 +40,12 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
-import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import {
+  isOwnableBuiltInId,
+  isOwnedBuiltInPage,
+  pageAccessLevels,
+  useAddonPages,
+} from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
@@ -269,6 +274,9 @@ const ProjectPageInner = () => {
     ],
     [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
   )
+  // built-in pages their addon took over (OWNED_BUILT_IN_PAGES): shown in the built-in tab
+  const ownedPages = useMemo(() => addonPages.filter(isOwnedBuiltInPage), [addonPages])
+  const ownedReportsPage = ownedPages.find((page) => page.id === 'reports')
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -325,6 +333,10 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
+        // the Reports addon's own page when it has one (same tab, URL and views)
+        accessLevels: ownedReportsPage?.access
+          ? pageAccessLevels(ownedReportsPage.access)
+          : undefined,
       },
       {
         name: 'Workfiles',
@@ -340,13 +352,15 @@ const ProjectPageInner = () => {
           path: `/projects/${projectName}/${remote.module}`,
           viewType: remote.viewType,
         })),
-      ...addonPages.map((page) => ({
-        name: page.title,
-        module: page.id,
-        path: `/projects/${projectName}/${page.id}`,
-        viewType: page.viewType,
-        accessLevels: pageAccessLevels(page.access),
-      })),
+      ...addonPages
+        .filter((page) => !ownedPages.includes(page))
+        .map((page) => ({
+          name: page.title,
+          module: page.id,
+          path: `/projects/${projectName}/${page.id}`,
+          viewType: page.viewType,
+          accessLevels: pageAccessLevels(page.access),
+        })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
@@ -374,7 +388,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, module],
+    [addonsData, projectName, remotePages, addonPages, ownedPages, ownedReportsPage, module],
   )
 
   const activeLink = useMemo(() => {
@@ -403,8 +417,21 @@ const ProjectPageInner = () => {
     const foundAddon = addonsData?.find((item) => item.name === addonName)
     const foundRemotePage = remotePages.find((item) => item.module === module)
     const foundAddonPage = addonPages.find((page) => page.id === module)
+    const ownedPage = !addonName ? ownedPages.find((page) => page.id === module) : undefined
 
-    if (module === 'overview') {
+    if (ownedPage) {
+      // a built-in page its addon took over: the addon's page in the built-in tab
+      viewType = ownedPage.viewType
+      component = (
+        <main>
+          <AddonProjectPage
+            key={ownedPage.key}
+            contribution={ownedPage}
+            projectName={projectName}
+          />
+        </main>
+      )
+    } else if (module === 'overview') {
       component = <ProjectOverviewPage />
     } else if (module === 'tasks') {
       component = <TasksProgressPage />
@@ -501,12 +528,15 @@ const ProjectPageInner = () => {
   // modules, and only addon pages need the project addons list.
   // A refetch of the same project (isLoading includes isFetching) keeps the page mounted.
   const isBuiltInModule = !addonName && BUILT_IN_MODULES.includes(module)
+  // a built-in page an addon may take over waits for the manifests: they decide which one renders
+  const isOwnableModule = !addonName && isOwnableBuiltInId(module)
   const isLoadingProject = isLoading && loadedProjectName !== projectName
   const loadingAll =
     !projectName ||
     isLoadingProject ||
     (!!addonName && addonsLoading) ||
-    (!isBuiltInModule && (isLoadingModules || isLoadingContributions))
+    (!isBuiltInModule && (isLoadingModules || isLoadingContributions)) ||
+    (isOwnableModule && isLoadingContributions)
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {

@@ -1,6 +1,6 @@
 // Links to an entity in AYON: the project page that shows it, with the entity selected and its
 // details panel open. AYON's own links and addons' come from here, so they follow AYON's routes.
-import { getHost } from './hostBridge'
+import { navigateInHost } from './hostBridge'
 import type { EntityRef } from './scopes'
 
 /** The project page each entity type opens on. Other types (e.g. `workfile`) have no link. */
@@ -48,8 +48,6 @@ export const entityUrl = (
 export const navigateToEntity = (entity: EntityLinkRef, options?: EntityUrlOptions): boolean => {
   const url = entityUrl(entity, options)
   if (!url) return false
-  const navigate = getHost().navigate
-  if (navigate) navigate(url)
-  else window.location.assign(url)
+  navigateInHost(url)
   return true
 }

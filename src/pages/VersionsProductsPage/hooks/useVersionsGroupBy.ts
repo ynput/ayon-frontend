@@ -12,7 +12,6 @@ import {
 } from '@shared/hooks'
 import { getGroupByDataType } from '@shared/util'
 import { useMemo } from 'react'
-import { useVPViewsContext } from '../context/vp-views'
 import type { QueryArguments } from '../context/vp-data'
 import {
   isGroupId,
@@ -29,6 +28,8 @@ type Props = {
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
   expanded: ExpandedState
+  // the field the versions are grouped by, none when not grouped
+  groupBy: TableGroupBy | undefined
 }
 
 const useVersionsGroupBy = ({
@@ -39,22 +40,12 @@ const useVersionsGroupBy = ({
   modules,
   versionArguments,
   expanded,
+  groupBy,
 }: Props) => {
   const { attribFields } = useProjectDataContext()
   const { isLoading: isLoadingModules } = modules
 
-  const { groupBy: groupById, columns } = useVPViewsContext()
-
-  const groupBy: TableGroupBy | undefined = useMemo(
-    () =>
-      groupById
-        ? {
-            id: groupById,
-            desc: columns.groupBy?.desc ?? false,
-          }
-        : undefined,
-    [groupById, columns.groupBy?.desc],
-  )
+  const groupById = groupBy?.id
 
   // GET GROUPING
   const { groups } = useGetEntityGroups({

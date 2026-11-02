@@ -7,6 +7,7 @@ import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayou
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { AddonEntityTable } from './EntityTable/AddonEntityTable'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -46,6 +47,7 @@ export const provideAddonHost = () =>
       ProjectList: ProjectListHost,
       EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
+      EntityTable: AddonEntityTable,
     },
   })
 

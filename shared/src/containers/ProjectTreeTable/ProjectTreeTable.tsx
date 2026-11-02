@@ -1901,8 +1901,13 @@ const TD = ({
         // because the 1st mousedown triggers React state updates that can replace
         // the DOM node, preventing the native dblclick event from firing.
         if (e.detail === 2) {
-          // comments cells are read-only but their double-click opens the details panel, so don't block them here
-          const isReadOnly = isTargetReadOnly(e) && cell.column.id !== 'comments'
+          // comments cells are read-only but their double-click opens the details panel, so don't
+          // block them here; unless the table lists `comments` in `readOnly` (EntityTable, which
+          // has no details panel)
+          const opensComments =
+            cell.column.id === 'comments' &&
+            !cell.getContext().table.options.meta?.readOnly?.includes('comments')
+          const isReadOnly = isTargetReadOnly(e) && !opensComments
           if (
             isReadOnly ||
             isEntityRestricted(cell.row.original.primary.entityType) ||

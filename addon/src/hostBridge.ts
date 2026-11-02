@@ -6,6 +6,7 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
 
@@ -25,7 +26,10 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components, the entity picker and the menu button. */
+/**
+ * The host's implementations of the layout components, the entity picker, the menu button and the
+ * project table.
+ */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
@@ -35,6 +39,8 @@ export interface HostComponents {
   EntityPicker: ComponentType<EntityPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
+  /** AYON's project table, with the providers it needs (`EntityTable`) */
+  EntityTable: ComponentType<EntityTableProps>
 }
 
 export interface HostImplementation {
@@ -60,3 +66,13 @@ export const provideHost = (implementation: HostImplementation) => {
 }
 
 export const getHost = (): Readonly<HostImplementation> => host
+
+/**
+ * Goes to an AYON URL with the host's router, without reloading the page. Without a host router
+ * (tests, a page outside AYON) it loads the URL.
+ */
+export const navigateInHost = (to: string) => {
+  const navigate = host.navigate
+  if (navigate) navigate(to)
+  else window.location.assign(to)
+}

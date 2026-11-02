@@ -80,10 +80,31 @@ export interface SlicerSelection {
   selection: string[]
 }
 
+/**
+ * The page's slicer: what is selected, and the pinned hierarchy slice. A project page's slicer keeps
+ * its state per page; the page places it with `<Slicer>`.
+ */
+export interface PageSlicer extends SlicerSelection {
+  /**
+   * the selection the user kept when switching to another slice type (pinned in the slicer's type
+   * dropdown), usually folders of `hierarchy`: the page filters by it and by `selection`. `null`
+   * when nothing is pinned
+   */
+  pinned: SlicerSelection | null
+  /** removes the pinned slice, e.g. from the page's own filter chip */
+  clearPinned: () => void
+  /**
+   * switches the slicer to `sliceType` and selects the rows `ids` (folder ids for `hierarchy`,
+   * whose parents it also expands; the values for the others). Called before the page's view has
+   * loaded, it waits for it, so a link can open the page with a selection
+   */
+  select: (sliceType: string, ids: string[]) => void
+}
+
 /** Slots on a project page, which always has the host's slicer state (selection, per page). */
 export interface SlicerScope {
-  /** empty until the user selects something in a `<Slicer>` the page places */
-  slicer: SlicerSelection
+  /** `selection` is empty until the user selects something in a `<Slicer>` the page places */
+  slicer: PageSlicer
 }
 
 /** A folder of the project, as slots pass it. AYON passes its folder list item, so more may be there. */
@@ -137,6 +158,8 @@ export interface PageViews {
   settings: Record<string, unknown> | undefined
   /** true until the selected view's settings have loaded: don't save before that */
   isLoading: boolean
+  /** the selected view, e.g. for the page's title or an export; `undefined` while loading */
+  selectedView?: { id: string; label: string }
   /**
    * Saves settings the user changed: they are merged into the selected view's settings and stored
    * in the user's working view, which becomes the selected view (as on the built-in pages).
@@ -150,6 +173,14 @@ export interface ViewsScope {
   views: PageViews | undefined
 }
 
+/**
+ * Code the user runs from a menu, a button or a key (`run`, `menu`): it can open another page.
+ */
+export interface NavigateScope {
+  /** goes to an AYON URL without reloading the page, e.g. `navigate('/dashboard/comments')` */
+  navigate: (to: string) => void
+}
+
 /** Who sees a page: everyone when not set. Admins see manager pages too. */
 export type Access = 'manager' | 'admin'
 
@@ -157,7 +188,9 @@ export type Access = 'manager' | 'admin'
 export interface PageMeta {
   /**
    * The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`.
-   * A built-in page with the same id wins.
+   * A built-in page with the same id wins. Except on the project page, where the `reports` addon may
+   * take over the built-in Reports tab with `projectPage({ id: 'reports', viewType: 'reports' })`:
+   * same tab, URL and views; without it the built-in tab stays.
    */
   id: string
   /** the tab label */

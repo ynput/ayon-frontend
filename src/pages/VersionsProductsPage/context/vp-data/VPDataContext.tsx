@@ -1,5 +1,6 @@
 import {
   EntityGroup,
+  type QueryFilter as ViewQueryFilter,
   useGetVersionsByProductsQuery,
   useGetVersionsInfiniteQuery,
 } from '@shared/api'
@@ -29,21 +30,18 @@ import {
   useProjectDataContext,
   useQueryFilters,
   buildQueryFilters,
-  useSelectedFolders,
-  scopeIdsToFolders,
-  useViewsContext,
 } from '@shared/containers'
-import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
+import type { TableGroupBy } from '@shared/containers'
+import type { SliceFilter } from '@shared/containers/Slicer'
+import { ExpandedState, OnChangeFn, SortingState, VisibilityState } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
-import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
-import { useVPViewsContext } from '../vp-views/VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
+import { OnSyncDataCallback } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import {
   refreshActiveAndPurgeOthers,
@@ -80,7 +78,42 @@ const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
 export type VersionMap = Map<string, VersionNodeExtended>
 export type ProductMap = Map<string, ProductNodeExtended>
 
+/**
+ * What the versions table shows: the Products page's view and slicer (`useVPPageDataSource`), or
+ * the props of the addons' EntityTable.
+ */
+export interface VersionsDataSource {
+  // the filter bar's filter (all entity scopes combined)
+  filters: ViewQueryFilter
+  showProducts: boolean
+  onUpdateShowProducts: (showProducts: boolean) => void
+  // sort keys of the API queries, in order of precedence
+  sorting: SortingState
+  featuredVersionOrder: string[]
+  latestPerFolder: boolean | undefined
+  groupBy: TableGroupBy | undefined
+  columnVisibility: VisibilityState
+  // the view settings are still loading
+  isLoadingViews: boolean
+  // resets the page's view (the table's empty state offers it)
+  onResetView?: () => void
+  // the slicer: its filters and the ids its selection narrows the rows to (empty: no narrowing)
+  sliceFilters: SliceFilter[]
+  folderIds: string[]
+  versionIds: string[]
+  productIds: string[]
+  taskIds: string[]
+  // the licence or the selected lists' ids are still resolving: hold the queries
+  isLoadingSlice: boolean
+}
+
 export interface VersionsDataContextValue {
+  // the input the data comes from
+  showProducts: boolean
+  onUpdateShowProducts: (showProducts: boolean) => void
+  filters: ViewQueryFilter
+  isLoadingViews: boolean
+  onResetView?: () => void
   //   EXPANDED
   expanded: ExpandedState
   setExpanded: (expanded: ExpandedState) => void
@@ -169,31 +202,41 @@ interface VersionsDataProviderProps {
   projectName: string
   children: ReactNode
   modules: any
+  source: VersionsDataSource
 }
 
 export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   projectName,
   children,
   modules,
+  source,
 }) => {
   const dispatch = useAppDispatch()
   const { attribFields } = useProjectDataContext()
-  const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
     showProducts,
+    onUpdateShowProducts,
     sorting,
     featuredVersionOrder,
     latestPerFolder,
-    groupBy,
-    columns,
-  } = useVPViewsContext()
-  const { isLoadingViews: isLoadingViewSettings } = useViewsContext()
+    groupBy: groupByConfig,
+    columnVisibility,
+    isLoadingViews: isLoadingViewSettings,
+    onResetView,
+    sliceFilters,
+    folderIds: slicerFolderIds,
+    versionIds: scopedVersionIds,
+    productIds: scopedProductIds,
+    taskIds: scopedTaskIds,
+    isLoadingSlice,
+  } = source
+  const groupBy = groupByConfig?.id
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility || {}, 'comments'),
-    [columns.columnVisibility],
+    () => checkColumnVisibility(columnVisibility, 'comments'),
+    [columnVisibility],
   )
 
   const [expanded, setExpanded] = useState<ExpandedState>({})
@@ -245,9 +288,6 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
-  const isLoadingViews = isLoadingViewSettings || isLicensePending
-
   // Separate slicer filters into different types
   const vpValidScopes: ('version' | 'product' | 'task' | 'folder')[] = [
     'version',
@@ -281,45 +321,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       ...attribScopeMap,
     })
   }, [sliceFilters, attribScopeMap])
-  // Resolve entity list selections to IDs
-  const {
-    entityIds,
-    rawEntityIds,
-    parentMaps,
-    isLoading: isResolvingListIds,
-  } = useSelectedEntityIds({
-    slices: sliceSelections,
-    projectName,
-  })
-
   // hold the fetch until the list ids resolve, otherwise the table shows the whole
   // project for a beat before narrowing
-  const isLoadingSlicerData = isLoadingViews || isResolvingListIds
-
-  // get selected folders from slicer
-  const { selectedFolders: selectedSlicerFolderIds, folderScope } = useSelectedFolders({
-    slices: sliceSelections,
-    entityListFolderIds: entityIds.folderIds,
-    getChildFolderIds,
-  })
-  const slicerFolderIds = useMemo(
-    () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
-    [selectedSlicerFolderIds, getFolderIdsWithoutChildren],
-  )
-
-  // list entities narrowed to the hierarchy panel's subtree
-  const scopedVersionIds = useMemo(
-    () => scopeIdsToFolders(entityIds.versionIds, parentMaps.versionFolderIds, folderScope),
-    [entityIds.versionIds, parentMaps, folderScope],
-  )
-  const scopedProductIds = useMemo(
-    () => scopeIdsToFolders(entityIds.productIds, parentMaps.productFolderIds, folderScope),
-    [entityIds.productIds, parentMaps, folderScope],
-  )
-  const scopedTaskIds = useMemo(
-    () => scopeIdsToFolders(rawEntityIds.taskIds, parentMaps.taskFolderIds, folderScope),
-    [rawEntityIds.taskIds, parentMaps, folderScope],
-  )
+  const isLoadingSlicerData = isLoadingViewSettings || isLoadingSlice
 
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
@@ -514,6 +518,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder,
     hasReviewables: hasReviewablesFilter,
     showProducts,
+    isLoadingViews: isLoadingViewSettings,
   })
 
   const resolveEntityArguments = useCallback(
@@ -631,6 +636,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     modules,
     versionArguments,
     expanded,
+    groupBy: groupByConfig,
   })
 
   const isLoadingTable = useQueryArgumentChangeLoading(
@@ -810,6 +816,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   }
 
   const value: VersionsDataContextValue = {
+    showProducts,
+    onUpdateShowProducts,
+    filters,
+    isLoadingViews: isLoadingViewSettings,
+    onResetView,
     versionFilter,
     productFilter,
     productArguments,

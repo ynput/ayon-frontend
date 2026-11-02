@@ -4,16 +4,13 @@ import {
   FolderNodeMap,
   ProjectTableProvider,
   useProjectDataContext,
-  useViewsContext,
   useColumnSettingsContext,
   useGroupCounts,
-  useSlicerContext,
 } from '@shared/containers'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../context/vp-data'
 import { buildVersionTableRow } from '../util'
-import { useVPViewsContext } from '../context/vp-views'
 import { useProjectContext, useSubtasksModulesContext } from '@shared/context'
 
 interface VPProjectTableProviderProps {
@@ -37,15 +34,12 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     updateExpanded,
     error,
     columnStatsArgs,
+    showProducts,
+    onUpdateShowProducts,
+    filters,
+    isLoadingViews,
+    onResetView,
   } = useVersionsDataContext()
-
-  const { resetWorkingView, isLoadingViews } = useViewsContext()
-  const { setPinnedSlice } = useSlicerContext()
-
-  const handleResetView = useCallback(async () => {
-    setPinnedSlice(null)
-    await resetWorkingView()
-  }, [resetWorkingView, setPinnedSlice])
 
   // filter-aware per-group counts for the active grouping (community: not license-gated)
   const { groupBy } = useColumnSettingsContext()
@@ -55,8 +49,6 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     skip: isLoadingViews,
     args: columnStatsArgs,
   })
-  const { showProducts, onUpdateShowProducts, filters } = useVPViewsContext()
-
   const { ...projectInfo } = useProjectContext()
   const { attribFields, users } = useProjectDataContext()
   const { SubtasksManager } = useSubtasksModulesContext()
@@ -149,7 +141,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}
-      onResetView={handleResetView}
+      onResetView={onResetView}
       SubtasksManager={SubtasksManager}
       useParams={useParams}
       useNavigate={useNavigate}

@@ -8,7 +8,7 @@ import { isAttribGroupable } from './useGetGroupedFields'
  */
 export const useColumnGroupBy = (columnId: string) => {
   const { updateGroupBy } = useColumnSettingsContext()
-  const { attribFields, scopes } = useProjectTableContext()
+  const { attribFields, scopes, groupByDisabled } = useProjectTableContext()
 
   const isAttribColumn = columnId.startsWith('attrib_')
   const attribName = isAttribColumn ? columnId.replace('attrib_', '') : undefined
@@ -31,10 +31,10 @@ export const useColumnGroupBy = (columnId: string) => {
   }, [columnId])
 
   const canGroupThisColumn = useMemo(() => {
-    if (!targetGroupById) return false
+    if (!targetGroupById || groupByDisabled) return false
     if (!isAttribColumn) return true
     return !!attribField && isAttribGroupable(attribField, 'task')
-  }, [attribField, isAttribColumn, targetGroupById])
+  }, [attribField, isAttribColumn, targetGroupById, groupByDisabled])
 
   const groupLabel = useMemo(() => {
     if (isAttribColumn)

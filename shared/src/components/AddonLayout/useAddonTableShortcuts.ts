@@ -10,7 +10,7 @@ import type {
   TableRowRef,
   TableShortcutContext,
 } from '@ynput/ayon-addon'
-import { matchesShortcut, parseShortcut } from '@ynput/ayon-addon/host'
+import { matchesShortcut, navigateInHost, parseShortcut } from '@ynput/ayon-addon/host'
 
 type ShortcutKeyEvent = Pick<
   KeyboardEvent,
@@ -22,8 +22,8 @@ export interface OpenAddonShortcutDialog {
   context: TableShortcutContext & { close: () => void }
 }
 
-/** The context without `entities`: the hook adds them from the rows. */
-export type TableShortcutRows = Omit<TableShortcutContext, 'entities'>
+/** The context without `entities` and `navigate`: the hook adds them. */
+export type TableShortcutRows = Omit<TableShortcutContext, 'entities' | 'navigate'>
 
 const PROJECT_TABLES: ShortcutTable[] = ['overview', 'products', 'lists']
 
@@ -63,7 +63,8 @@ export const useAddonTableShortcuts = (table: ShortcutTable | undefined) => {
   const runShortcut = useCallback(
     (contribution: Contribution<'table.shortcut'>, rowsContext: TableShortcutRows) => {
       const { table, projectName, rows } = rowsContext
-      const context = { ...rowsContext, entities: shortcutEntities(table, projectName, rows) }
+      const entities = shortcutEntities(table, projectName, rows)
+      const context = { ...rowsContext, entities, navigate: navigateInHost }
       if (contribution.dialog) {
         const close = () => setDialog(null)
         setDialog({ contribution, context: { ...context, close } })

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
 import type { AnyContribution, Contribution } from './contributions'
-import { getHost } from './hostBridge'
+import { getHost, navigateInHost } from './hostBridge'
 import type { AddonUser } from './scopes'
 import type { Loader, SlotMap, SlotName } from './slots'
 
@@ -103,11 +103,12 @@ export const pieceContext = (
 
 /**
  * Runs a contribution's `run` piece (menu items): loads it, calls it with the slot context and
- * reports an error instead of throwing, so a broken item can't break the menu it is in.
+ * reports an error instead of throwing, so a broken item can't break the menu it is in. The
+ * context gets `navigate` (the host's router) unless the surface passes its own.
  */
 export const runContribution = async <S extends SlotName>(
   contribution: Contribution<S>,
-  context: SlotMap[S]['context'],
+  context: Omit<SlotMap[S]['context'], 'navigate'> & { navigate?: (to: string) => void },
   piece = 'run',
 ) => {
   const any = contribution as unknown as AnyContribution
@@ -115,7 +116,7 @@ export const runContribution = async <S extends SlotName>(
     const loader = any[piece] as AnyLoader
     const run = await loadPiece(loader)
     if (typeof run !== 'function') throw new Error(`"${piece}" has no default export function`)
-    await run(pieceContext(any, context as object))
+    await run(pieceContext(any, { navigate: navigateInHost, ...context }))
   } catch (error) {
     reportContributionError(any, error)
   }

@@ -95,6 +95,7 @@ export interface ProjectTableContextType {
   updateShowHierarchy: ProjectTableProviderProps['updateShowHierarchy']
   hierarchyOptions?: ProjectTableProviderProps['hierarchyOptions']
   hierarchyActive?: ProjectTableProviderProps['hierarchyActive']
+  groupByDisabled?: ProjectTableProviderProps['groupByDisabled']
 
   // Flat folder view
   isFlatFolderView?: boolean
@@ -232,6 +233,9 @@ export interface ProjectTableProviderProps {
   // but the panel should still highlight the hierarchy option
   hierarchyActive?: boolean
 
+  // The rows can't be grouped (e.g. a fixed list of task ids): the column menus offer no group by
+  groupByDisabled?: boolean
+
   // SubtasksManager component
   SubtasksManager?: React.ComponentType<SubtasksManagerProps>
 
@@ -297,6 +301,7 @@ export const ProjectTableProvider = ({
   groupByConfig,
   hierarchyOptions,
   hierarchyActive,
+  groupByDisabled,
   isFlatFolderView,
   SubtasksManager,
   // player
@@ -505,6 +510,7 @@ export const ProjectTableProvider = ({
         updateShowHierarchy,
         hierarchyOptions,
         hierarchyActive,
+        groupByDisabled,
         // flat folder view
         isFlatFolderView,
         // expanded state

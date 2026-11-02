@@ -13,7 +13,6 @@ import {
   useProjectDataContext,
   useScopedAttributeFields,
 } from '@shared/containers/ProjectTreeTable'
-import { useViewsContext } from '@shared/containers'
 import { usePowerpack, useProjectContext, useProjectFoldersContext } from '@shared/context'
 
 interface UseProjectOverviewStatsParams {
@@ -27,6 +26,10 @@ interface UseProjectOverviewStatsParams {
   isFlatFolderView?: boolean
   // hierarchy: selected folders are scope roots, only their descendants are rows
   excludeSelectedFolders?: boolean
+  // the view settings are still loading
+  isLoadingViews: boolean
+  // no folder stats: the rows are given tasks, whose folders the folder stats can't narrow to
+  skipFolderStats?: boolean
 }
 
 export const useProjectOverviewStats = ({
@@ -39,11 +42,12 @@ export const useProjectOverviewStats = ({
   showHierarchy,
   isFlatFolderView = false,
   excludeSelectedFolders = true,
+  isLoadingViews,
+  skipFolderStats = false,
 }: UseProjectOverviewStatsParams) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
   const { powerLicense } = usePowerpack()
-  const { isLoadingViews } = useViewsContext()
   const { getFolderIdsWithoutChildren } = useProjectFoldersContext()
   const {
     columnVisibility,
@@ -131,7 +135,9 @@ export const useProjectOverviewStats = ({
     hideEmptyFolders: isFlatFolderView && groupByConfig?.showEmpty === false ? true : undefined,
   }
 
-  const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, { skip })
+  const folderQuery = useGetFolderColumnStatsQuery(folderStatsArgs, {
+    skip: skip || skipFolderStats,
+  })
 
   const taskStatsArgs: GetTaskColumnStatsQueryVariables = {
     projectName,

@@ -363,7 +363,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
   // table.shortcut: the selected rows (else all of them) as AYON's table passes them, from the name
   // column; the keys work once the table has focus
   const shortcuts = useAddonTableShortcuts(slot === 'table.shortcut' ? page : undefined)
-  const shortcutContext = useMemo<TableShortcutContext | undefined>(() => {
+  const shortcutContext = useMemo<Omit<TableShortcutContext, 'navigate'> | undefined>(() => {
     const targets = selected.length ? selected : entities
     if (slot !== 'table.shortcut' || !targets.length) return undefined
     const rows = targets.map(({ id, entityType, name, label }) => ({

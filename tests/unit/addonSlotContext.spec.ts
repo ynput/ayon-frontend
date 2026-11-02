@@ -44,9 +44,24 @@ test('run pieces get the user the host provides', async () => {
     projectName: 'p',
     page: 'overview',
     entities: [],
+    navigate: expect.any(Function),
     slot: 'entityMenuItem',
     user,
   })
+})
+
+test('run pieces get the host router as navigate, unless the surface passes its own', async () => {
+  const visited: string[] = []
+  let received: { navigate: (to: string) => void } | undefined
+  const run = () => Promise.resolve({ default: (context: never) => void (received = context) })
+  provideHost({ getUser: () => user, navigate: (to) => visited.push(`host:${to}`) })
+  await runContribution(contribution('entityMenuItem', { run }), {} as never)
+  received?.navigate('/dashboard/tasks')
+  await runContribution(contribution('header.item', { run }), {
+    navigate: (to: string) => visited.push(`button:${to}`),
+  } as never)
+  received?.navigate('/dashboard/tasks')
+  expect(visited).toEqual(['host:/dashboard/tasks', 'button:/dashboard/tasks'])
 })
 
 test('table shortcuts have entities in the project tables only', () => {
