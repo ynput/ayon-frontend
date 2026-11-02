@@ -92,6 +92,9 @@ export function ListTable<TData extends RowData>({
   expanded: expandedProp,
   onExpandedChange,
   getIsRowInactive,
+  getRowClassName,
+  variant = 'default',
+  scrollToSelection = false,
 }: ListTableProps<TData>) {
   const [sortingLocal, setSortingLocal] = useState<SortingState>([])
   const [columnVisibilityLocal, setColumnVisibilityLocal] = useState<VisibilityState>({})
@@ -211,11 +214,14 @@ export function ListTable<TData extends RowData>({
   const { rows } = table.getRowModel()
 
   // --- Virtualization ---
+  const isDataVariant = variant === 'data'
   const rowVirtualizer = useVirtualizer({
     count: hasNextPage ? rows.length + 1 : rows.length,
     getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 44,
-    overscan: 10,
+    estimateSize: () => (isDataVariant ? Styled.DATA_ROW_HEIGHT : 44),
+    // the sticky header pushes rows down, so a row scrolled in from below needs that much extra
+    scrollPaddingEnd: isDataVariant ? Styled.DATA_HEADER_HEIGHT : 0,
+    overscan: isDataVariant ? 12 : 10,
   })
 
   const virtualRows = rowVirtualizer.getVirtualItems()
@@ -229,6 +235,17 @@ export function ListTable<TData extends RowData>({
     rowVirtualizer,
     tableContainerRef,
   })
+
+  const selectedRowId = selectedRows.length === 1 ? selectedRows[0] : undefined
+  const selectedRowIndex = selectedRowId ? rows.findIndex((row) => row.id === selectedRowId) : -1
+  const isSelectedRowLoaded = selectedRowIndex >= 0
+  useEffect(() => {
+    if (scrollToSelection && isSelectedRowLoaded) {
+      rowVirtualizer.scrollToIndex(selectedRowIndex, { align: 'auto' })
+    }
+    // only when the selection changes: new rows moving the selected one must not move the scroll
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scrollToSelection, selectedRowId, isSelectedRowLoaded])
 
   const handleRowDoubleClick = useCallback(
     (rowId: string, rowIndex: number, e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -328,6 +345,7 @@ export function ListTable<TData extends RowData>({
   return (
     <Styled.TableContainer
       ref={tableContainerRef}
+      className={clsx(isDataVariant && 'data')}
       tabIndex={0}
       onKeyDown={handleKeyDown}
       style={isResizingColumn ? { cursor: 'col-resize' } : undefined}
@@ -438,6 +456,7 @@ export function ListTable<TData extends RowData>({
                     callbacks={callbacks}
                     editable={editable}
                     isInactive={getIsRowInactive?.(row.original)}
+                    rowClassName={getRowClassName?.(row.original)}
                   />
                 )
               })}

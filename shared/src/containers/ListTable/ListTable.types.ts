@@ -105,4 +105,10 @@ export interface ListTableProps<TData> {
   expanded?: ExpandedState
   onExpandedChange?: (expanded: ExpandedState) => void
   getIsRowInactive?: (row: TData) => boolean
+  getRowClassName?: (row: TData) => string | undefined
+  // 'data': compact, flush rows for read only records such as logs. Columns keep their width and
+  // the table scrolls sideways, so make the last column the one that takes the free space.
+  variant?: 'default' | 'data'
+  // Scroll to the selected row when the selection changes from outside the table
+  scrollToSelection?: boolean
 }

@@ -42,6 +42,7 @@ interface DraggableRowProps<TData extends RowData> {
   callbacks: ListTableCellCallbacks<TData>
   editable?: boolean
   isInactive?: boolean
+  rowClassName?: string
 }
 
 function DraggableRowInner<TData extends RowData>({
@@ -59,6 +60,7 @@ function DraggableRowInner<TData extends RowData>({
   callbacks,
   editable,
   isInactive,
+  rowClassName,
 }: DraggableRowProps<TData>) {
   const isGroupRow = isCustomGroupRowValue(row.original)
   const isPlaceholderRow = isPlaceholderRowValue(row.original)
@@ -108,7 +110,7 @@ function DraggableRowInner<TData extends RowData>({
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
       onDoubleClick={onRowDoubleClick ? (e) => onRowDoubleClick(row.id, rowIndex, e) : undefined}
       onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
-      className={clsx('table-list-row', {
+      className={clsx('table-list-row', rowClassName, {
         dragging: isDragging,
         selected: isSelected,
         inactive: isInactive,
