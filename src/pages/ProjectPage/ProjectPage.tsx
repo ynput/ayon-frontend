@@ -18,6 +18,9 @@ import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
+import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
+import { useRemoteBundle } from '@/remote/useRemoteBundle'
+import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
@@ -33,7 +36,7 @@ import {
 } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
 import { productSelected } from '@state/context'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
@@ -194,7 +197,9 @@ const ProjectPageInner = () => {
    * project data to the store, and renders the requested page.
    */
   const { siteInfo } = useGlobalContext()
-  const { uiExposureLevel = 0, frontendFlags = [] } = siteInfo || {}
+  const { uiExposureLevel = 0 } = siteInfo || {}
+  // null in the generated type, a default value only covers undefined
+  const frontendFlags = siteInfo?.frontendFlags ?? []
   const {
     projectName,
     name: loadedProjectName,
@@ -224,16 +229,19 @@ const ProjectPageInner = () => {
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
+
   const {
     data: addonsData = [],
     isLoading: addonsLoading,
     isError: addonsIsError,
-  } = useGetProjectAddonsQuery({}, { skip: !projectName })
-
-  const { getProductionAddon, isLoading: addonsListLoading } = useGetProductionAddon()
-  // Try checking multiple addons in one go if we wanted, or just call on demand
-  const hasReview = !!getProductionAddon('review')
-  const hasReports = !!getProductionAddon('reports')
+  } = useGetProjectAddonsQuery(
+    { getVersion: getBundleAddonVersion },
+    { skip: !projectName || addonsListLoading },
+  )
+  const hasReview = !!getBundleAddonVersion('review')
+  const hasReports = !!getBundleAddonVersion('reports')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -252,9 +260,12 @@ const ProjectPageInner = () => {
     moduleKey: 'Project',
     skip: !projectName,
   }) as {
-    remotePages: RemoteAddonProject[]
+    remotePages: (RemoteAddonProject & { remoteBundle?: RemotePageBundle })[]
     isLoading: boolean
   }
+
+  // built in tabs that render addon remote modules are marked like remote pages
+  const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the project.page slot; built-in and legacy pages win on an id clash
   const { contributions: pageContributions, isLoading: isLoadingContributions } =
@@ -313,18 +324,25 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/reviews`,
         module: 'reviews',
         viewType: 'reviews',
+        startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
       },
       ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
         name,
         path: `/projects/${projectName}/${addonModule}`,
         module: addonModule,
         viewType,
+        startContent: (
+          <RemotePageBundleDot
+            bundle={remotePages.find((remote) => remote.module === addonModule)?.remoteBundle}
+          />
+        ),
       })),
       {
         name: 'Reports',
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
+        startContent: <RemotePageBundleDot bundle={getAddonBundle('reports')} />,
       },
       {
         name: 'Workfiles',
@@ -339,6 +357,7 @@ const ProjectPageInner = () => {
           module: remote.module,
           path: `/projects/${projectName}/${remote.module}`,
           viewType: remote.viewType,
+          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
       ...addonPages.map((page) => ({
         name: page.title,
@@ -346,6 +365,7 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/${page.id}`,
         viewType: page.viewType,
         accessLevels: pageAccessLevels(page.access),
+        startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
       })),
       ...addonsData
         .filter((addon) => {
@@ -374,7 +394,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, module],
+    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle],
   )
 
   const activeLink = useMemo(() => {

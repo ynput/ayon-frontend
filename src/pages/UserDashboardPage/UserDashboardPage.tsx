@@ -22,6 +22,8 @@ import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
+import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
+import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { useContributions } from '@ynput/ayon-addon'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
@@ -32,7 +34,7 @@ import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
 interface DashboardAddon {
@@ -75,11 +77,17 @@ const UserDashboardPage: React.FC = () => {
   const isManager = user?.data?.isManager
   const isGuest = user?.data?.isGuest
 
+  // addons in the bundle the user's addon modules come from (production, staging or dev)
+  const { getBundleAddonVersion, isLoading: isLoadingBundleAddons } = useGetBundleAddon()
+
   const {
     data: addonsData = [],
     //isLoading: addonsLoading,
     //isError: addonsIsError,
-  } = useGetDashboardAddonsQuery({})
+  } = useGetDashboardAddonsQuery(
+    { getVersion: getBundleAddonVersion },
+    { skip: isLoadingBundleAddons },
+  )
 
   // Load remote Studio pages
   const { remotePages, isLoading: isLoadingRemotePages } = useLoadRemotePages({
@@ -87,8 +95,8 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const { getProductionAddon } = useGetProductionAddon()
-  const hasPlanner = !!getProductionAddon('planner')
+  const hasPlanner = !!getBundleAddonVersion('planner')
+  const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
   const { contributions: studioPageContributions, isLoading: isLoadingContributions } =
@@ -234,6 +242,7 @@ const UserDashboardPage: React.FC = () => {
             page
           ),
           viewType: remote.viewType,
+          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
           showProjectList: false,
           isMultiSelect: false,
         }
@@ -251,6 +260,7 @@ const UserDashboardPage: React.FC = () => {
           />
         ),
         viewType: page.viewType as ViewType | undefined,
+        startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
         showProjectList: false,
       })),
       { node: 'spacer' },
@@ -268,6 +278,7 @@ const UserDashboardPage: React.FC = () => {
       addonsData,
       remotePages,
       addonStudioPages,
+      getAddonBundle,
       legacyStudioSelection,
       projectsInfoWithProjects,
       isLoadingInfo,

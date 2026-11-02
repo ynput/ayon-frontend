@@ -13,7 +13,7 @@ import {
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import { useAppDispatch } from '@state/store'
 import { getRequestErrorString } from '@shared/util'
 
@@ -92,13 +92,13 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const dispatch = useAppDispatch()
   const [, setSearchParams] = useSearchParams()
 
-  const { getProductionAddon } = useGetProductionAddon()
+  const { getBundleAddonVersion } = useGetBundleAddon()
 
-  const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
-  const hasReviewActionsVersion = !!getProductionAddon('review', {
+  const hasReviewAddon = !!getBundleAddonVersion('review', { minVersion: MIN_REVIEW_VERSION })
+  const hasReviewActionsVersion = !!getBundleAddonVersion('review', {
     minVersion: MIN_REVIEW_ACTIONS_VERSION,
   })
-  const reviewAddonVersion = getProductionAddon('review')?.productionVersion
+  const reviewAddonVersion = getBundleAddonVersion('review')
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
   const [executeAction] = useExecuteActionMutation()
