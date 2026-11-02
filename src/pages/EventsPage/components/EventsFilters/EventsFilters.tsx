@@ -1,28 +1,16 @@
-import { FC, useEffect, useMemo, useState } from 'react'
+import { FC, useMemo, useState } from 'react'
 import { useSelector } from 'react-redux'
 import { endOfDay, format, startOfDay } from 'date-fns'
 import { Button, Dropdown, Icon, InputSwitch, InputText } from '@ynput/ayon-react-components'
 import { DateRangePicker } from '@shared/components/DateRangePicker'
 import { useListProjectsQuery, useGetUsersQuery } from '@shared/api'
 import type { EventFilters, EventItem, Severity } from '../../types'
-import {
-  getCategory,
-  getCategoryMeta,
-  KNOWN_CATEGORIES,
-  SEVERITIES,
-  STATUSES,
-} from '../../utils/eventMeta'
-import { countActiveFilters } from '../../hooks/useEventsUrlState'
+import { getCategoryMeta, SEVERITIES, STATUSES } from '../../utils/eventMeta'
+import { ROLLING_DATE_PRESETS } from '../../utils/datePresets'
+import { countActiveFilters } from '../../hooks/useEventsViewState'
+import { useEventFacets } from '../../hooks/useEventFacets'
 import { TopicInput } from './TopicInput'
 import * as Styled from './EventsFilters.styled'
-
-const H = 3600_000
-const DATE_PRESETS = [
-  { label: '1h', span: H },
-  { label: '24h', span: 24 * H },
-  { label: '7d', span: 7 * 24 * H },
-  { label: '30d', span: 30 * 24 * H },
-]
 
 // the date picker works with utc midnights, the filters with local day boundaries
 const pickerToLocal = (iso: string) => {
@@ -55,47 +43,12 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
   entityLabel,
 }) => {
   const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
-  const [search, setSearch] = useState(filters.search ?? '')
   const [entityDraft, setEntityDraft] = useState('')
-
-  // debounce the search so typing doesn't refetch on every key
-  useEffect(() => {
-    if ((filters.search ?? '') === search) return
-    const timeout = setTimeout(() => onChange({ search }), 400)
-    return () => clearTimeout(timeout)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search])
-
-  // follow external changes (chips removed, filters cleared)
-  useEffect(() => setSearch(filters.search ?? ''), [filters.search])
 
   const { data: projects = [] } = useListProjectsQuery({})
   const { data: users = [] } = useGetUsersQuery({}) as { data?: { name: string }[] }
 
-  const counts = useMemo(() => {
-    const byCategory = new Map<string, number>()
-    const byStatus = new Map<string, number>()
-    const byTopic = new Map<string, number>()
-    for (const e of events) {
-      const c = getCategory(e.topic)
-      byCategory.set(c, (byCategory.get(c) ?? 0) + 1)
-      byStatus.set(e.status, (byStatus.get(e.status) ?? 0) + 1)
-      byTopic.set(e.topic, (byTopic.get(e.topic) ?? 0) + 1)
-    }
-    return { byCategory, byStatus, byTopic }
-  }, [events])
-
-  const categories = useMemo(() => {
-    const all = new Set([
-      ...KNOWN_CATEGORIES,
-      ...counts.byCategory.keys(),
-      ...(filters.types ?? []),
-    ])
-    return [...all].sort(
-      (a, b) =>
-        (counts.byCategory.get(b) ?? 0) - (counts.byCategory.get(a) ?? 0) || a.localeCompare(b),
-    )
-  }, [counts.byCategory, filters.types])
+  const { counts, categories } = useEventFacets(events, filters.types)
 
   const projectOptions = useMemo(
     () => projects.map((p) => ({ value: p.name, label: p.name })),
@@ -106,13 +59,6 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
   const addTopic = (topic: string) => {
     if (!filters.topics?.includes(topic)) onChange({ topics: [...(filters.topics ?? []), topic] })
   }
-
-  const activePreset = DATE_PRESETS.find(
-    (p) =>
-      filters.newerThan &&
-      !filters.olderThan &&
-      Math.abs(Date.now() - new Date(filters.newerThan).getTime() - p.span) < 60_000 * 5,
-  )
 
   const activeCount = countActiveFilters(filters)
 
@@ -131,38 +77,28 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
       </Styled.PanelHeader>
 
       <Styled.Group>
-        <InputText
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search description, topic, user…"
-          aria-label="Search events"
-          autoComplete="off"
-        />
-        <Styled.Hint>Words shorter than 3 characters are ignored</Styled.Hint>
-      </Styled.Group>
-
-      <Styled.Group>
         <Styled.GroupTitle>Date range</Styled.GroupTitle>
         <Styled.Segmented role="group" aria-label="Quick date range">
-          {DATE_PRESETS.map((preset) => (
-            <button
-              key={preset.label}
-              aria-pressed={activePreset === preset}
-              className={activePreset === preset ? 'active' : ''}
-              onClick={() =>
-                onChange(
-                  activePreset === preset
-                    ? { newerThan: undefined, olderThan: undefined }
-                    : {
-                        newerThan: new Date(Date.now() - preset.span).toISOString(),
-                        olderThan: undefined,
-                      },
-                )
-              }
-            >
-              {preset.label}
-            </button>
-          ))}
+          {ROLLING_DATE_PRESETS.map((preset) => {
+            const active = filters.datePreset === preset.id
+            return (
+              <button
+                key={preset.id}
+                aria-pressed={active}
+                aria-label={preset.label}
+                className={active ? 'active' : ''}
+                onClick={() =>
+                  onChange({
+                    datePreset: active ? undefined : preset.id,
+                    newerThan: undefined,
+                    olderThan: undefined,
+                  })
+                }
+              >
+                {preset.short}
+              </button>
+            )
+          })}
         </Styled.Segmented>
         <Styled.DateRow>
           <DateRangePicker
@@ -172,6 +108,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
             }}
             onChange={({ startDate, endDate }) =>
               onChange({
+                datePreset: undefined,
                 newerThan: startDate
                   ? startOfDay(pickerToLocal(startDate)).toISOString()
                   : undefined,
@@ -255,21 +192,6 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
       <Styled.Group>
         <Styled.GroupTitle>Topic</Styled.GroupTitle>
         <TopicInput topicCounts={counts.byTopic} selected={filters.topics ?? []} onAdd={addTopic} />
-        {!!filters.topics?.length && (
-          <Styled.ChipRow>
-            {filters.topics.map((topic) => (
-              <Styled.ToggleChip
-                key={topic}
-                className="active"
-                onClick={() => onChange({ topics: toggle(filters.topics, topic) })}
-                aria-label={`Remove topic ${topic}`}
-              >
-                {topic}
-                <Icon icon="close" />
-              </Styled.ToggleChip>
-            ))}
-          </Styled.ChipRow>
-        )}
         <Styled.Hint>Pick a suggestion or type a topic, use * as a wildcard</Styled.Hint>
       </Styled.Group>
 

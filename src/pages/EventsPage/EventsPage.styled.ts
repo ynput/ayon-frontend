@@ -79,48 +79,13 @@ export const Badge = styled.span`
   font-weight: 600;
 `
 
-export const ViewSwitch = styled.div`
+export const LayoutSwitch = styled.div`
   display: flex;
   flex-shrink: 0;
-  padding: 2px;
-  border-radius: var(--border-radius-l);
-  background-color: var(--md-sys-color-surface-container-low);
-
-  button {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 30px;
-    padding: 0 12px;
-    border: none;
-    border-radius: var(--border-radius-m);
-    background: transparent;
-    color: var(--md-sys-color-on-surface-variant);
-    cursor: pointer;
-    ${theme.labelLarge}
-
-    .icon {
-      font-size: 18px;
-    }
-
-    &:hover {
-      color: var(--md-sys-color-on-surface);
-      background-color: var(--md-sys-color-surface-container-hover);
-    }
-
-    &.active {
-      background-color: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--md-sys-color-primary);
-    }
-  }
+  gap: var(--base-gap-small);
 `
 
 export const Status = styled.div`
-  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 6px;

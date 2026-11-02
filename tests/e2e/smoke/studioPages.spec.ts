@@ -180,7 +180,7 @@ test.describe('smoke: studio pages', () => {
     {
       name: 'events',
       path: () => '/events',
-      ready: (page) => visible(heading(page, 'Events Overview'), column(page, 'Topic')),
+      ready: (page) => visible(button(page, 'Views'), column(page, 'Topic')),
     },
     {
       name: 'services',

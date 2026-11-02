@@ -1,13 +1,17 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder'
 import { useLocalStorage } from '@shared/hooks'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
-import { useEventsUrlState, countActiveFilters } from './hooks/useEventsUrlState'
+import { ViewsProvider } from '@shared/containers'
+import { useAppDispatch } from '@state/store'
+import { useEventsViewState, countActiveFilters } from './hooks/useEventsViewState'
 import { useEventsData } from './hooks/useEventsData'
 import { EventsFilters } from './components/EventsFilters/EventsFilters'
-import { ActiveFilters } from './components/ActiveFilters'
+import { EventsSearchFilter } from './components/EventsSearchFilter/EventsSearchFilter'
+import { EventsViews } from './components/EventsViews'
+import { EVENTS_VIEW_TYPE } from './constants'
 import {
   EventsTimeline,
   INITIAL_TIMELINE_VIEW,
@@ -15,7 +19,6 @@ import {
 } from './components/EventsTimeline/EventsTimeline'
 import { EventsTable } from './components/EventsTable/EventsTable'
 import { EventDetails } from './components/EventDetails/EventDetails'
-import type { EventFilters } from './types'
 import * as Styled from './EventsPage.styled'
 
 const useMediaQuery = (query: string) => {
@@ -29,11 +32,33 @@ const useMediaQuery = (query: string) => {
   return matches
 }
 
-const EventsPage = () => {
-  const { filters, setFilters, clearFilters, view, setView, selectedId, setSelectedId } =
-    useEventsUrlState()
-  const { events, isLoading, isStale, isFetchingNextPage, hasNextPage, fetchNextPage, error } =
-    useEventsData(filters)
+const LAYOUTS = [
+  { id: 'table', label: 'Table', icon: 'table_rows' },
+  { id: 'timeline', label: 'Timeline', icon: 'timeline' },
+] as const
+
+const EventsPageContent = () => {
+  const {
+    filters,
+    setFilters,
+    clearFilters,
+    layout,
+    setLayout,
+    selectedId,
+    setSelectedId,
+    isLoadingViews,
+  } = useEventsViewState()
+  const {
+    resolvedFilters,
+    events,
+    isLoading: isLoadingEvents,
+    isStale,
+    isFetchingNextPage,
+    hasNextPage,
+    fetchNextPage,
+    error,
+  } = useEventsData(filters, isLoadingViews)
+  const isLoading = isLoadingViews || isLoadingEvents
 
   const isNarrow = useMediaQuery('(max-width: 1100px)')
   const [filtersOpenPref, setFiltersOpen] = useLocalStorage('events-filters-open', true)
@@ -50,14 +75,13 @@ const EventsPage = () => {
     [],
   )
 
-  const handleFilter = useCallback(
-    (patch: Partial<EventFilters>) => {
-      setFilters(patch)
-      // a new filter shows a different set of events, refit the timeline once it loads
-      if ('entity' in patch) setTimelineView((v) => ({ ...v, initialised: false }))
-    },
-    [setFilters],
-  )
+  // another entity (from a filter or a view) is a different set of events, refit once it loads
+  const timelineEntity = useRef(filters.entity)
+  useEffect(() => {
+    if (timelineEntity.current === filters.entity) return
+    timelineEntity.current = filters.entity
+    setTimelineView((v) => ({ ...v, initialised: false }))
+  }, [filters.entity])
 
   const selectedIndex = useMemo(
     () => (selectedId ? events.findIndex((e) => e.id === selectedId) : -1),
@@ -100,7 +124,7 @@ const EventsPage = () => {
         )}
       </EmptyPlaceholder>
     )
-  } else if (view === 'timeline') {
+  } else if (layout === 'timeline') {
     content = (
       <EventsTimeline
         events={events}
@@ -111,8 +135,12 @@ const EventsPage = () => {
         hasNextPage={hasNextPage}
         isFetchingNextPage={isFetchingNextPage}
         fetchNextPage={fetchNextPage}
-        newerThan={filters.newerThan ? new Date(filters.newerThan).getTime() : undefined}
-        olderThan={filters.olderThan ? new Date(filters.olderThan).getTime() : undefined}
+        newerThan={
+          resolvedFilters.newerThan ? new Date(resolvedFilters.newerThan).getTime() : undefined
+        }
+        olderThan={
+          resolvedFilters.olderThan ? new Date(resolvedFilters.olderThan).getTime() : undefined
+        }
       />
     )
   } else {
@@ -136,7 +164,7 @@ const EventsPage = () => {
           <Styled.FiltersColumn>
             <EventsFilters
               filters={filters}
-              onChange={handleFilter}
+              onChange={setFilters}
               onClear={clearFilters}
               events={events}
               entityLabel={entityLabel}
@@ -157,25 +185,13 @@ const EventsPage = () => {
             >
               {!filtersOpen && activeCount > 0 && <Styled.Badge>{activeCount}</Styled.Badge>}
             </Button>
-            <Styled.ViewSwitch role="tablist" aria-label="View">
-              <button
-                role="tab"
-                aria-selected={view === 'timeline'}
-                className={clsx({ active: view === 'timeline' })}
-                onClick={() => setView('timeline')}
-              >
-                <Icon icon="timeline" /> Timeline
-              </button>
-              <button
-                role="tab"
-                aria-selected={view === 'table'}
-                className={clsx({ active: view === 'table' })}
-                onClick={() => setView('table')}
-              >
-                <Icon icon="table_rows" /> Table
-              </button>
-            </Styled.ViewSwitch>
-            <ActiveFilters filters={filters} entityLabel={entityLabel} onChange={handleFilter} />
+            <EventsViews />
+            <EventsSearchFilter
+              filters={filters}
+              onChange={setFilters}
+              events={events}
+              entityLabel={entityLabel}
+            />
             <Styled.Status role="status">
               {(isStale || isFetchingNextPage) && (
                 <Icon icon="progress_activity" className="spin" />
@@ -187,6 +203,19 @@ const EventsPage = () => {
                 </span>
               )}
             </Styled.Status>
+            <Styled.LayoutSwitch role="group" aria-label="Layout">
+              {LAYOUTS.map(({ id, label, icon }) => (
+                <Button
+                  key={id}
+                  icon={icon}
+                  label={label}
+                  variant="text"
+                  selected={layout === id}
+                  aria-pressed={layout === id}
+                  onClick={() => setLayout(id)}
+                />
+              ))}
+            </Styled.LayoutSwitch>
           </Styled.Toolbar>
           <Styled.Content className={clsx({ stale: isStale })}>{content}</Styled.Content>
         </Styled.MainColumn>
@@ -200,12 +229,21 @@ const EventsPage = () => {
               olderId={selectedIndex >= 0 ? events[selectedIndex + 1]?.id : undefined}
               newerId={selectedIndex > 0 ? events[selectedIndex - 1]?.id : undefined}
               onSelect={setSelectedId}
-              onFilter={handleFilter}
+              onFilter={setFilters}
             />
           </Styled.DetailsColumn>
         )}
       </Styled.Page>
     </>
+  )
+}
+
+const EventsPage = () => {
+  const dispatch = useAppDispatch()
+  return (
+    <ViewsProvider viewType={EVENTS_VIEW_TYPE} dispatch={dispatch}>
+      <EventsPageContent />
+    </ViewsProvider>
   )
 }
 

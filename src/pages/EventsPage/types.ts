@@ -31,6 +31,8 @@ export type EventFilters = {
   users?: string[]
   /** entity id stored in the event summary */
   entity?: string
+  /** date preset id, resolved when the events load so a saved view keeps meaning "last 24 hours" */
+  datePreset?: string
   /** ISO timestamp, inclusive lower bound */
   newerThan?: string
   /** ISO timestamp, upper bound */
@@ -38,4 +40,10 @@ export type EventFilters = {
   hideLogs?: boolean
 }
 
-export type EventsView = 'timeline' | 'table'
+export type EventsLayout = 'table' | 'timeline'
+
+/** What a saved view of this page stores */
+export type EventsViewSettings = {
+  filters?: EventFilters
+  layout?: EventsLayout
+}

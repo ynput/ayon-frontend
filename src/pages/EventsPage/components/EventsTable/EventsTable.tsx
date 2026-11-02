@@ -268,7 +268,7 @@ type EventRowProps = {
   onSelect: (id: string) => void
 }
 
-const EventRow = memo(({ row, start, isSelected, onSelect }: EventRowProps) => {
+const EventRow = memo(function EventRow({ row, start, isSelected, onSelect }: EventRowProps) {
   const severity = getSeverity(row.original)
   return (
     <Styled.BodyRow

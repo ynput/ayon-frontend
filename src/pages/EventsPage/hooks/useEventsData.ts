@@ -1,9 +1,19 @@
 import { useMemo } from 'react'
+import { skipToken } from '@reduxjs/toolkit/query'
 import { useGetEventsInfiniteInfiniteQuery } from '@queries/events/getEvents'
 import type { EventFilters, EventItem } from '../types'
+import { resolveEventFilters } from '../utils/datePresets'
 
-export const useEventsData = (filters: EventFilters) => {
-  const query = useGetEventsInfiniteInfiniteQuery(filters, { refetchOnMountOrArgChange: 30 })
+export const useEventsData = (filters: EventFilters, skip: boolean) => {
+  // by content: saving a view hands back an equal object, which must not move a rolling date range
+  const resolvedFilters = useMemo(
+    () => resolveEventFilters(filters),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [JSON.stringify(filters)],
+  )
+  const query = useGetEventsInfiniteInfiniteQuery(skip ? skipToken : resolvedFilters, {
+    refetchOnMountOrArgChange: 30,
+  })
   // `data` keeps the previous filter's result while the new one loads, so views don't flash empty
   const { data, isLoading, isFetching, isFetchingNextPage, hasNextPage, fetchNextPage, error } =
     query
@@ -26,6 +36,7 @@ export const useEventsData = (filters: EventFilters) => {
   const isStale = isFetching && !isFetchingNextPage
 
   return {
+    resolvedFilters,
     events,
     isLoading,
     isStale,
