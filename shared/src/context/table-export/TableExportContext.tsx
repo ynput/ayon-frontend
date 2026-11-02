@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import semver from 'semver'
 import { usePowerpack } from '../powerpack/PowerpackContextInstance'
 import { useRemoteModules } from '../remote-modules/RemoteModulesContextInstance'
 import {
@@ -23,9 +24,10 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { modules } = useRemoteModules()
 
-  const isInstalled = modules.some(
+  const installedVersion = modules.find(
     (addon) => addon.addonName === ADDON && addon.modules[REMOTE]?.includes(MODULE),
-  )
+  )?.addonVersion
+  const isInstalled = !!installedVersion
   const isAvailable = !!powerLicense && isInstalled
 
   const registerSource = useCallback((next: TableExportSource) => {
@@ -36,14 +38,23 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   const openExport = useCallback(
     (scope: TableExportScope) => {
       if (!powerLicense) return setPowerpackDialog('tableExport')
-      if (!isInstalled)
-        return void toast.error('Update to Power Pack ' + PP_VERSION + ' to export tables')
+      // a page can need a newer Power Pack than the first table export
+      const minVersion = source?.minPowerpackVersion
+      const isOutdated =
+        !installedVersion ||
+        (!!minVersion && !semver.gte(semver.coerce(installedVersion) || '0.0.0', minVersion))
+      if (isOutdated)
+        return void toast.error(
+          `Update to Power Pack ${minVersion || PP_VERSION} to export ${
+            minVersion ? 'this table' : 'tables'
+          }`,
+        )
       setSearchParams((params) => {
         params.set(TABLE_EXPORT_SEARCH_PARAM, scope)
         return params
       })
     },
-    [powerLicense, isInstalled, setPowerpackDialog, setSearchParams],
+    [powerLicense, installedVersion, source, setPowerpackDialog, setSearchParams],
   )
 
   const value = useMemo(
