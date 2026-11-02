@@ -15,6 +15,8 @@ interface ActivityItemProps {
     authorName: string
   }
   fromGroup?: boolean
+  // undefined = origin version frameStart not known
+  annotationFrameStart?: number | null
   projectInfo: Record<string, any>
   createdAts?: string[]
   editProps?: Record<string, any>
@@ -31,12 +33,14 @@ interface ActivityItemProps {
   onCheckChange?: (e: React.ChangeEvent<HTMLInputElement>, activity: any) => void
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
   onUpdate?: (value: any, files: any, refs?: any, data?: any) => Promise<void>
+  onDuplicate?: (activity: any) => void
   isGuest?: boolean
 }
 
 const ActivityItem: React.FC<ActivityItemProps> = ({
   activity,
   fromGroup,
+  annotationFrameStart,
   projectInfo,
   createdAts,
   editProps,
@@ -52,7 +56,15 @@ const ActivityItem: React.FC<ActivityItemProps> = ({
       return (
         // @ts-expect-error
         <ActivityComment
-          {...{ activity, projectInfo, editProps, readOnly, statuses, isSlideOut }}
+          {...{
+            activity,
+            annotationFrameStart,
+            projectInfo,
+            editProps,
+            readOnly,
+            statuses,
+            isSlideOut,
+          }}
           {...props}
         />
       )

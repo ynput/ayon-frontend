@@ -127,6 +127,8 @@ export type BundleModel = {
   /** Name of the bundle */
   name: string
   createdAt?: string
+  updatedAt?: string
+  description?: string | null
   addons?: {
     [key: string]: string
   }
@@ -173,6 +175,7 @@ export type BundleActionModel = {
   action: 'promote'
 }
 export type BundlePatchModel = {
+  description?: string | null
   addons?: {
     [key: string]: string
   }

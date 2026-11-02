@@ -6,8 +6,8 @@ import {
   powerpackFeatureOrder,
   powerpackFeatures,
   usePowerpack,
-} from '@shared/context/PowerpackContext'
-import type { PowerpackDialogType } from '@shared/context/PowerpackContext'
+  type PowerpackDialogType,
+} from '@shared/context'
 import { CTAButton } from './CTAButton'
 
 export interface PowerpackDialogProps {

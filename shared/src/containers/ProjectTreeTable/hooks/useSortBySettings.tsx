@@ -1,6 +1,11 @@
 import { useColumnSettingsContext, useProjectTableContext } from '../context'
-import { getSortableColumnOptions, isMultiSelectAttribute } from '../buildTreeTableColumns'
-import { SortCardType, SettingsSortingDropdown } from '@ynput/ayon-react-components'
+import {
+  getColumnIcon,
+  getSortableColumnOptions,
+  isMultiSelectAttribute,
+} from '../buildTreeTableColumns'
+import { SortSettings } from '@shared/components/SettingsPanel/SortSettings'
+import type { SettingsPanelItem } from '@shared/components/SettingsPanel/SettingsPanelItemTemplate'
 
 type SortColumn = { value: string; label: string }
 
@@ -8,53 +13,46 @@ export const useSortBySettings = (columns: SortColumn[] = []) => {
   const { sorting, updateSorting } = useColumnSettingsContext()
   const { attribFields, scopes } = useProjectTableContext()
 
-  const options = [
-    ...getSortableColumnOptions(scopes, columns),
+  const options: SettingsPanelItem[] = [
+    ...getSortableColumnOptions(scopes, columns).map((option) => ({
+      value: option.id,
+      label: option.label,
+    })),
     ...attribFields
       .filter(
-        (field) =>
-          field.scope?.some((s) => scopes.includes(s)) && !isMultiSelectAttribute(field),
+        (field) => field.scope?.some((s) => scopes.includes(s)) && !isMultiSelectAttribute(field),
       )
       .map((field) => ({
-        id: `attrib_${field.name}`,
+        value: `attrib_${field.name}`,
         label: field.data.title || field.name,
       })),
-  ]
-
-  const labelFor = (id: string) =>
-    options.find((o) => o.id === id)?.label ?? columns.find((c) => c.value === id)?.label ?? id
+  ].map((option) => ({ ...option, icon: getColumnIcon(option.value) }))
 
   // Mirror the live sorting state so the panel stays in sync with the header
   // sort icons, even for columns that aren't predefined sort options.
-  const value: SortCardType[] = sorting.map((s) => ({
-    id: s.id,
-    label: labelFor(s.id),
-    sortOrder: !s.desc,
-  }))
-
-  // The dropdown can only render a selected value whose option exists, so add
-  // any active-but-unlisted sort column to the option list.
-  const optionIds = new Set(options.map((option) => option.id))
-  const dropdownOptions = [
+  const optionIds = new Set(options.map((option) => option.value))
+  const allOptions = [
     ...options,
-    ...value.filter((v) => !optionIds.has(v.id)).map((v) => ({ id: v.id, label: v.label })),
+    ...sorting
+      .filter((s) => !optionIds.has(s.id))
+      .map((s) => ({
+        value: s.id,
+        label: columns.find((c) => c.value === s.id)?.label ?? s.id,
+        icon: getColumnIcon(s.id),
+      })),
   ]
 
-  const handleChange = (v: SortCardType[]) => {
-    updateSorting(v.map((item) => ({ id: item.id, desc: !item.sortOrder })))
-  }
+  const labelFor = (id: string) => allOptions.find((o) => o.value === id)?.label ?? id
+
+  const preview = sorting.length
+    ? labelFor(sorting[0].id) + (sorting.length > 1 ? ` +${sorting.length - 1}` : '')
+    : 'None'
 
   return {
     id: 'sort-by',
-    component: (
-      <SettingsSortingDropdown
-        title="Sort by"
-        icon="sort"
-        value={value}
-        options={dropdownOptions}
-        onChange={handleChange}
-        multiSelect={false}
-      />
-    ),
+    title: 'Sort',
+    icon: 'sort',
+    preview,
+    component: <SortSettings sorting={sorting} options={allOptions} onChange={updateSorting} />,
   }
 }

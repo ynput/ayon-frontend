@@ -256,6 +256,7 @@ export type QueryCondition = {
   operator?:
     | 'eq'
     | 'like'
+    | 'notlike'
     | 'lt'
     | 'gt'
     | 'lte'

@@ -9,6 +9,8 @@ interface ActivityReferenceProps extends Omit<React.HTMLAttributes<HTMLElement>,
   type: string
   variant?: 'surface' | 'filled' | 'text'
   isEntity?: boolean
+  // instead of the icon of the type
+  icon?: string
   disabled?: boolean
   onMouseEnter?: (e: React.MouseEvent<HTMLElement>, pos: { left: number; top: number }) => void
   categoryPrimary?: string
@@ -22,6 +24,7 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
   type,
   variant = 'surface',
   isEntity,
+  icon: iconProp,
   disabled,
   onMouseEnter,
   categoryPrimary,
@@ -29,7 +32,13 @@ const ActivityReference: React.FC<ActivityReferenceProps> = ({
   children,
   ...props
 }) => {
-  const icon = type === 'user' ? 'alternate_email' : type === 'team' ? 'group' : getEntityTypeIcon(type, 'link')
+  const icon =
+    iconProp ||
+    (type === 'user'
+      ? 'alternate_email'
+      : type === 'team'
+      ? 'group'
+      : getEntityTypeIcon(type, 'link'))
   const ref = useRef<HTMLDivElement>(null)
 
   const handleMouseEnter = (e: React.MouseEvent<HTMLElement>) => {

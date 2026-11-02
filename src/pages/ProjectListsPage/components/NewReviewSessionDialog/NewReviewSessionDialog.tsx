@@ -4,9 +4,8 @@ import { FC, useRef, useCallback, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
 import NewReviewSessionLoading from './NewReviewSessionLoading'
-import { getEntityTypeIcon } from '@shared/util'
+import { filterBySearchQuery, getEntityTypeIcon } from '@shared/util'
 import { SimpleTableCellTemplate } from '@shared/containers/SimpleTable'
-import { matchSorter } from 'match-sorter'
 
 interface NewReviewSessionDialogProps extends Omit<DialogProps, 'onSubmit'> {
   onSubmit: ((listId: string) => Promise<any> | undefined) | undefined
@@ -36,10 +35,10 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
     projectName,
   })
 
-  const filteredLists = useMemo(() => {
-    if (!search) return listsData
-    return matchSorter(listsData, search, { keys: ['label', 'name'] })
-  }, [listsData, search])
+  const filteredLists = useMemo(
+    () => filterBySearchQuery(listsData, search, (list) => [list.label, list.entityType].join(' ')),
+    [listsData, search],
+  )
 
   const dialogContentRef = useRef<HTMLDivElement>(null)
 

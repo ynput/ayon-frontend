@@ -16,6 +16,8 @@ A modern React application for the AYON project management system. Built with Vi
 yarn install
 ```
 
+This one install also covers `shared/`. Don't run `yarn install` inside `shared/`: a second `node_modules` there gives shared code its own copies of packages such as React and dnd-kit.
+
 ### 2. Environment Setup
 
 Create a `.env.local` file in the root directory with the necessary configuration:

@@ -77,20 +77,13 @@ const matchesAnyField = (term: string): QueryFilter => ({
   })),
 })
 
-// "050_0070 anim" must match folder AND task, so each word is required separately
+// buildBackendFilterObject already split the search into one condition per word
 const expandTextSearch = (node: QueryCondition | QueryFilter): QueryCondition | QueryFilter => {
   if ('key' in node) {
     if (node.key !== 'body' || node.operator !== 'like') return node
 
-    const terms = String(node.value ?? '')
-      .replace(/^%|%$/g, '')
-      .split(/\s+/)
-      .filter(Boolean)
-
-    if (!terms.length) return node
-    if (terms.length === 1) return matchesAnyField(terms[0])
-
-    return { operator: 'and', conditions: terms.map(matchesAnyField) }
+    const term = String(node.value ?? '').replace(/^%|%$/g, '')
+    return term ? matchesAnyField(term) : node
   }
 
   return { ...node, conditions: (node.conditions || []).map(expandTextSearch) }

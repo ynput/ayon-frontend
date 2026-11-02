@@ -1,4 +1,4 @@
-import { OnSliceTypeChange } from './context/SlicerContext'
+import { OnSliceTypeChange } from './context/slicer'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import { RowSelectionState } from '@tanstack/react-table'
 import { ExpandedState } from '@tanstack/react-table'
@@ -23,6 +23,13 @@ export interface SlicerViewSettings {
   sliceType?: SliceType
   sliceTypes?: SliceType[]
   collapsedSliceTypes?: SliceType[]
+  // keyed by slice type, so each dimension keeps its own sort
+  sliceSorts?: Record<SliceType, SliceSort>
+}
+
+export interface SliceSort {
+  by: string
+  desc: boolean
 }
 
 export interface SliceFilter extends Filter {

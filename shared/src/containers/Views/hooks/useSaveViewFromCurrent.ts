@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import type { ViewType } from '../types'
-import type { ViewData, ViewSettings } from '../context/ViewsContext'
+import type { ViewData, ViewSettings } from '../context'
 import { isViewStudioScope } from '../utils/isViewStudioScope'
 import { UseViewMutations } from './useViewsMutations'
 import type { ViewListItemModel } from '@shared/api'
