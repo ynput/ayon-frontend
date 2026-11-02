@@ -58,6 +58,13 @@ export default function UploadStep({
   const [error, setError] = useState<Error | null>(null)
   // an Excel file with several sheets waits for the user to pick one
   const [workbook, setWorkbook] = useState<Workbook | null>(null)
+  // only the latest upload or sheet pick may set the result, earlier ones finish unseen
+  const requestRef = useRef(0)
+  const startRequest = useCallback(() => {
+    requestRef.current += 1
+    const request = requestRef.current
+    return () => request === requestRef.current
+  }, [])
 
   useEffect(() => {
     if (data) onLoaded?.(data)
@@ -78,9 +85,11 @@ export default function UploadStep({
   }, [uploadFile])
 
   const uploadSheet = useCallback((file: File, sheet: ExcelSheet) => {
+    const isCurrent = startRequest()
     setError(null)
     uploadCSV(excelSheetToCSV(sheet))
       .then((csv) => {
+        if (!isCurrent()) return
         setWorkbook(null)
         setData({
           ...csv,
@@ -89,26 +98,31 @@ export default function UploadStep({
           sheetName: sheet.name,
         })
       })
-      .catch((error) => setError(error))
-  }, [uploadCSV])
+      .catch((error) => isCurrent() && setError(error))
+  }, [uploadCSV, startRequest])
 
+  // a new file replaces the loaded one and any sheet picker that is open
   const upload = useCallback((file: File | string) => {
+    const isCurrent = startRequest()
     setError(null)
+    setData(null)
+    setWorkbook(null)
     if (typeof file === "object" && isExcelFile(file)) {
       readExcelSheets(file)
         .then((sheets) => {
+          if (!isCurrent()) return
           if (sheets.length === 0) throw new Error('The file has no sheet with data')
           if (sheets.length === 1) return uploadSheet(file, sheets[0])
           setWorkbook({ file, sheets })
         })
-        .catch((error) => setError(error))
+        .catch((error) => isCurrent() && setError(error))
       return
     }
 
     uploadCSV(file)
-      .then(setData)
-      .catch((error) => setError(error))
-  }, [uploadCSV, uploadSheet])
+      .then((csv) => isCurrent() && setData(csv))
+      .catch((error) => isCurrent() && setError(error))
+  }, [uploadCSV, uploadSheet, startRequest])
 
   const uploadFilesFromComponent = useCallback((files: FileUploadProps["files"]) => {
     if (files.length === 0) return
@@ -155,6 +169,7 @@ export default function UploadStep({
               size={getFileSizeString(workbook.file.size)}
               items={[]}
               onClose={() => {
+                startRequest()
                 setWorkbook(null)
                 setError(null)
               }}
@@ -242,7 +257,10 @@ export default function UploadStep({
                 icon: "table_rows",
               }
             ]}
-            onClose={() => setData(null)}
+            onClose={() => {
+              startRequest()
+              setData(null)
+            }}
           />
         )
       }
