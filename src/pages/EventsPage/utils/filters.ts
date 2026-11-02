@@ -63,6 +63,8 @@ export const buildQueryFilter = (filters: EventFilters): QueryFilter => {
         operator: 'like',
       })),
     })
+  } else if (filters.hideLogs) {
+    conditions.push({ key: 'topic', value: 'log.%', operator: 'notlike' })
   }
   if (filters.statuses?.length)
     conditions.push({ key: 'status', value: filters.statuses, operator: 'in' })
