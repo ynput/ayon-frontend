@@ -220,13 +220,10 @@ const eventsApi = api.injectEndpoints({
 
         try {
           await cacheDataLoaded
-          // live events only make sense when the range includes "now"
-          if (!filters.olderThan || new Date(filters.olderThan).getTime() > Date.now()) {
-            token = PubSub.subscribe('*', (topic: string, message: RawEvent) => {
-              if (topic === 'client.connected' || !message?.id || !message?.topic) return
-              batcher.add(message)
-            })
-          }
+          token = PubSub.subscribe('*', (topic: string, message: RawEvent) => {
+            if (topic === 'client.connected' || !message?.id || !message?.topic) return
+            batcher.add(message)
+          })
         } catch {
           // cacheEntryRemoved resolved before cacheDataLoaded
         }
