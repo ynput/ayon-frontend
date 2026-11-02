@@ -4,6 +4,7 @@ const projectSlice = createSlice({
   name: 'project',
   initialState: {
     name: null,
+    openProject: null,
     folders: {},
     foldersOrder: [],
     tasks: {},
@@ -18,6 +19,9 @@ const projectSlice = createSlice({
     selectProject: (state, action) => {
       window.localStorage.setItem('currentProject', action.name)
       state.name = action.payload
+    },
+    setOpenProject: (state, action) => {
+      state.openProject = action.payload
     },
     setProjectData: (state, action) => {
       state.folders = action.payload.folders || {}
@@ -34,6 +38,6 @@ const projectSlice = createSlice({
   },
 })
 
-export const { selectProject, setProjectData } = projectSlice.actions
+export const { selectProject, setOpenProject, setProjectData } = projectSlice.actions
 
 export default projectSlice.reducer

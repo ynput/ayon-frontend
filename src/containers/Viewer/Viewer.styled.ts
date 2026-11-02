@@ -135,9 +135,25 @@ export const RightToolBar = styled.div`
   display: flex;
   flex-direction: column;
   z-index: 1100;
+
+  /* annotation tools on the left, reviewables in their own full height column on the right */
+  &.row {
+    flex-flow: row-reverse nowrap;
+    align-items: flex-end;
+    gap: var(--base-gap-small);
+    & > :first-child {
+      align-self: stretch;
+    }
+  }
+
   &.hidden {
     display: none;
   }
+`
+
+export const AnnotationTools = styled.div`
+  position: relative;
+  flex-shrink: 0;
 `
 export const RightContainer = styled.div`
   display: flex;

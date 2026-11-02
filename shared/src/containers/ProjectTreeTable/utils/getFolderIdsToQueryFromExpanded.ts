@@ -1,4 +1,4 @@
-import type { ProjectFoldersContextValue } from '@shared/context/ProjectFoldersContext'
+import type { ProjectFoldersContextValue } from '@shared/context'
 import { ExpandedState } from '@tanstack/react-table'
 
 export const getFolderIdsToQueryFromExpanded = (props: {

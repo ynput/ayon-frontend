@@ -1,4 +1,7 @@
+import { matchSearchQuery, parseSearchQuery } from '@shared/util/searchTerms'
+
 export const getFilteredTasks = (tasks = [], filter = '', projects = []) => {
+  const searchGroups = parseSearchQuery(filter)
   return tasks.filter((task) => {
     const project = task.projectName
 
@@ -17,14 +20,7 @@ export const getFilteredTasks = (tasks = [], filter = '', projects = []) => {
     const taskPath = task.folderPath
     const taskAssignees = task.assigneesData.map(assignee => [assignee.name, assignee.attrib.fullName || ''].join(':')).join('::')
     const matchingStrings = [taskName, taskFolder, taskStatus, taskType, taskPath, taskAssignees]
-    // filter by filter string
-    const isFilterMatch = matchingStrings.some((string) => {
-      if (string && string.toLowerCase().includes(filter.toLowerCase())) {
-        return true
-      }
-      return false
-    })
 
-    return isFilterMatch
+    return matchSearchQuery(matchingStrings.filter(Boolean).join(' '), searchGroups).passed
   })
 }

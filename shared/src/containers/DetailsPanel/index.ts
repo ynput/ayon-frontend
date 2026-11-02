@@ -1,4 +1,5 @@
 export * from './DetailsPanel'
+export * from './DetailsPanelHelpers'
 export * from './components/DetailsPanelHeader'
 export * from './components/DetailsPanelSlideOut'
 export * from './components/DetailsPanelFloating'

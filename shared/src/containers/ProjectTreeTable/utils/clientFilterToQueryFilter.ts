@@ -191,6 +191,8 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
     // Handle custom values with partial matching using LIKE operator
     // If we have custom values, we need to use LIKE operator with wildcards for partial matching
     // Note: Version fields and numeric fields use exact matching (eq/in) instead
+    // Excluded custom values use NOT LIKE; they are AND-ed so none of them may match
+    const likeOperator: QueryCondition['operator'] = filter.inverted ? 'notlike' : 'like'
 
     if (!filter.values || filter.values.length === 0) {
       // This shouldn't happen but handle it gracefully
@@ -204,13 +206,13 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
       if (nonCustomValues.length === 0) {
         if (customValues.length === 1) {
           // Single custom value - use simple LIKE operator
-          operator = 'like'
+          operator = likeOperator
           value = `%${customValues[0].id}%`
         } else {
           // Multiple custom values - create OR conditions for each
           const conditions: QueryCondition[] = customValues.map((v) => ({
             key,
-            operator: 'like' as QueryCondition['operator'],
+            operator: likeOperator,
             value: `%${v.id}%`,
           }))
 
@@ -239,7 +241,7 @@ const convertFilterToCondition = (filter: FilterForQuery): QueryCondition | Quer
         customValues.forEach((v) => {
           conditions.push({
             key,
-            operator: 'like' as QueryCondition['operator'],
+            operator: likeOperator,
             value: `%${v.id}%`,
           })
         })

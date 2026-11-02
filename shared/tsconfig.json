@@ -9,13 +9,16 @@
     "outDir": "dist",
     "strict": true,
     "esModuleInterop": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/*"]
+      "@shared/*": ["src/*"],
+      "@ynput/ayon-addon": ["../addon/src/index.ts"],
+      "@ynput/ayon-addon/manifest": ["../addon/src/manifest.ts"],
+      "@ynput/ayon-addon/host": ["../addon/src/host.ts"]
     }
   },
   "include": ["src"],

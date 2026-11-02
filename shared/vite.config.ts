@@ -1,12 +1,28 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import path from 'path'
-import dts from 'vite-plugin-dts'
+import dts from 'unplugin-dts/vite'
 import { resolve } from 'path'
 import { readFileSync } from 'fs'
 
 // Extract peerDependencies from package.json to automatically externalize them
 const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url)).toString())
+
+// Packages the published build imports instead of bundling. Only these are
+// installed alongside it, so devDependencies must not be imported at runtime.
+const runtimePackages = [
+  ...Object.keys(pkg.peerDependencies || {}),
+  ...Object.keys(pkg.dependencies || {}),
+]
+
+const isRuntimePackage = (id: string) =>
+  runtimePackages.some((pkgName) => id === pkgName || id.startsWith(`${pkgName}/`))
+
+// e.g. ".../node_modules/@dnd-kit/utilities/dist/x.js" -> "@dnd-kit/utilities"
+const packageNameFromPath = (id: string) => {
+  const [first, second] = id.split('/node_modules/').pop()!.split('/')
+  return first.startsWith('@') ? `${first}/${second}` : first
+}
 
 export default defineConfig({
   plugins: [
@@ -15,9 +31,13 @@ export default defineConfig({
       insertTypesEntry: true,
       include: ['src/**/*.ts', 'src/**/*.tsx'],
       exclude: ['**/*.test.*', '**/*.stories.*', 'node_modules/**'],
-      outDir: 'dist/types',
+      outDirs: 'dist/types',
       tsconfigPath: './tsconfig.json',
       entryRoot: 'src',
+      bundleTypes: true,
+      clearPureImport: false,
+      // a peer package: its types stay imports of @ynput/ayon-addon, not paths into ../addon
+      aliasesExclude: [/^@ynput\/ayon-addon(\/|$)/],
     }),
   ],
   resolve: {
@@ -44,21 +64,38 @@ export default defineConfig({
         Slicer: resolve(__dirname, 'src/containers/Slicer/index.ts'),
         Views: resolve(__dirname, 'src/containers/Views/index.ts'),
         SimpleTable: resolve(__dirname, 'src/containers/SimpleTable/index.ts'),
+        ProjectsTable: resolve(__dirname, 'src/containers/ProjectsTable/index.ts'),
         EntityPickerDialog: resolve(__dirname, 'src/containers/EntityPickerDialog/index.ts'),
         ListTable: resolve(__dirname, 'src/containers/ListTable/index.ts'),
         NewEntity: resolve(__dirname, 'src/containers/NewEntity/index.ts'),
       },
       name: 'AyonFrontendShared',
-      formats: ['es', 'cjs'],
+      formats: ['es'],
+      // one stylesheet for the whole package (dist/style.css, exported as ./style.css): the
+      // components' own styles, e.g. the context menu's. The AYON app gets them from the source.
+      cssFileName: 'style',
     },
     rollupOptions: {
-      // Automatically externalize all peerDependencies and dependencies
-      external: [
-        ...Object.keys(pkg.peerDependencies || {}),
-        ...Object.keys(pkg.dependencies || {}),
-        // subpath imports (e.g. @ynput/ayon-player/model) are not covered by the exact names above
-        /^@ynput\/ayon-player(\/.*)?$/,
-      ],
+      external: (id) => {
+        // Local relative imports, project aliases and virtual modules are bundled
+        if (id.startsWith('.') || id.startsWith('@shared') || id.startsWith('\0')) return false
+
+        if (path.isAbsolute(id)) {
+          // A resolved file of an installed package. Imports of declared packages are
+          // externalized before they get here, so this package isn't declared: the
+          // published import would point at the builder's own node_modules path.
+          if (id.includes('/node_modules/')) {
+            throw new Error(
+              `"${packageNameFromPath(id)}" is imported but not declared in shared/package.json ` +
+                `(${id}). Add it to "dependencies", or to "peerDependencies" if the host app must provide it.`,
+            )
+          }
+          return false
+        }
+
+        // Imports of declared packages and their subpaths (e.g. "react/jsx-runtime")
+        return isRuntimePackage(id)
+      },
       output: {
         entryFileNames: (chunkInfo) => `${chunkInfo.name}.[format].js`,
         // Preserve directory structure for chunks
@@ -66,7 +103,8 @@ export default defineConfig({
           const name = chunkInfo.name.replace(/^_/, '')
           return `chunks/${name}.[format].js`
         },
-        preserveModules: true,
+        // preserveModules: true,
+        // preserveModulesRoot: 'src',
         globals: {
           react: 'React',
           'react-dom': 'ReactDOM',
@@ -76,9 +114,9 @@ export default defineConfig({
         },
       },
     },
-    sourcemap: true,
+    sourcemap: false,
     emptyOutDir: true,
     minify: true,
-    cssCodeSplit: true,
+    cssCodeSplit: false,
   },
 })

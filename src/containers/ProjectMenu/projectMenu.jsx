@@ -5,16 +5,17 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { InputText, Section } from '@ynput/ayon-react-components'
 import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
-import { useShortcutsContext } from '@context/ShortcutsContext'
+import { useShortcutsContext } from '@context'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import { useLocation, useNavigate } from 'react-router-dom'
-import buildProjectsTableData, {
+import {
+  ProjectsTable,
+  buildProjectsTableData,
   parseProjectFolderRowId,
-} from '@containers/ProjectsList/buildProjectsTableData'
+} from '@shared/containers/ProjectsTable'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import ProjectsTable from '@containers/ProjectsList/ProjectsTable'
 
 const ProjectMenu = ({ isOpen, onHide }) => {
   const navigate = useNavigate()
@@ -59,7 +60,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
     projects: { active: projects },
   } = useGlobalContext()
 
-  const { data: folders = [] } = useGetProjectFoldersQuery({ active: true })
+  const { data: folders = [] } = useGetProjectFoldersQuery()
   const projectTree = useMemo(
     () => buildProjectsTableData(projects, folders, true, powerLicense),
     [projects, folders, powerLicense],

@@ -1,4 +1,12 @@
-import { FC, useMemo, useRef, MouseEvent as ReactMouseEvent, useCallback, useEffect } from 'react'
+import {
+  FC,
+  useMemo,
+  useRef,
+  MouseEvent as ReactMouseEvent,
+  KeyboardEvent as ReactKeyboardEvent,
+  useCallback,
+  useEffect,
+} from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
   useReactTable,
@@ -24,7 +32,7 @@ import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { compareItems } from '@tanstack/match-sorter-utils'
 import { parseSearchQuery, matchSearchQuery } from '@shared/util'
-import { useSimpleTableContext } from './context/SimpleTableContext'
+import { useSimpleTableContext } from './context/simple-table'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
 import { RowPinningState } from '@tanstack/react-table'
@@ -34,6 +42,9 @@ import {
   SimpleTableRowContextMenuBuilder,
 } from './SimpleTable.types'
 import { useCreateContextMenu } from '../ContextMenu'
+import type { TableRowRef } from '@ynput/ayon-addon'
+import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { useAddonTableShortcuts } from '@shared/components/AddonLayout/useAddonTableShortcuts'
 
 const toMenuItems = (items: ReturnType<SimpleTableRowContextMenuBuilder>) => {
   if (!items) return []
@@ -127,6 +138,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
   imgRatio,
   imgPosition,
   onScrollBottom,
+  scrollToRowId,
   onRename,
   renamingId,
   renameInitialValue,
@@ -135,9 +147,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
   onRowDoubleClick,
   onRowOptionClick,
   rowContextMenuBuilders = [],
+  addonShortcuts,
   children,
   pt,
   fitContent,
+  rowIdPrefix,
   ...props
 }) => {
   const {
@@ -151,6 +165,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
   } = useSimpleTableContext()
   const lastSelectedIdRef = useRef<string | null>(null)
   const tableRef = useRef<Table<SimpleTableRow> | null>(null)
+  // read via ref so the memoized arrow-nav callback sees the current prefix after a dimension change
+  const rowIdPrefixRef = useRef(rowIdPrefix)
+  rowIdPrefixRef.current = rowIdPrefix
+  const toDomId = (id: string) => (rowIdPrefixRef.current ? `${rowIdPrefixRef.current}-${id}` : id)
   const [showRowContextMenu] = useCreateContextMenu()
 
   // Refs for values used inside the columns memo.
@@ -318,8 +336,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
           requestAnimationFrame(() => {
             const container = tableContainerRef.current
             const nextRowElement = container
-              ? container.querySelector(`#${CSS.escape(nextRow.id)}`)
-              : document.getElementById(nextRow.id)
+              ? container.querySelector(`#${CSS.escape(toDomId(nextRow.id))}`)
+              : document.getElementById(toDomId(nextRow.id))
             const nextCell = nextRowElement?.querySelector('[tabindex="0"]') as HTMLElement
             if (nextCell) {
               nextCell.focus()
@@ -549,14 +567,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
       e.stopPropagation()
 
       const selectedIds = Object.keys(rowSelection)
-
-      const nextSelectedRows = selectedIds.includes(rowId) ? selectedIds : [rowId]
-
-      if (!selectedIds.includes(rowId)) {
-        // convert array to RowSelectionState object
-        const nextSelection: RowSelectionState = { [rowId]: true }
-        onRowSelectionChange?.(nextSelection)
-      }
+      const isSelected = selectedIds.includes(rowId)
+      const nextSelectedRows = isSelected ? selectedIds : [rowId]
 
       const menuItems = rowContextMenuBuilders.flatMap((builder) =>
         toMenuItems(
@@ -568,7 +580,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             selectedTableRows: nextSelectedRows
               .map((selectedRowId) => table.getRowModel().rowsById[selectedRowId])
               .filter((selectedRow): selectedRow is Row<SimpleTableRow> => !!selectedRow),
-            isSelected: nextSelectedRows.includes(rowId),
+            isSelected,
           }),
         ),
       )
@@ -577,7 +589,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
         showRowContextMenu(e as any, menuItems)
       }
     },
-    [rowContextMenuBuilders, rows, rowSelection, onRowSelectionChange, showRowContextMenu],
+    [rowContextMenuBuilders, rows, rowSelection, showRowContextMenu],
   )
 
   //The virtualizer needs to know the scrollable container element
@@ -595,6 +607,27 @@ const SimpleTable: FC<SimpleTableProps> = ({
       : undefined,
     overscan: 5,
   })
+
+  // scroll to a row once and focus it, so the arrow keys move on from there
+  const scrolledToRowIdRef = useRef<string | undefined>(undefined)
+  useEffect(() => {
+    if (!scrollToRowId || scrolledToRowIdRef.current === scrollToRowId) return
+    const index = rows.findIndex((row) => row.id === scrollToRowId)
+    if (index < 0) return
+    scrolledToRowIdRef.current = scrollToRowId
+    lastSelectedIdRef.current = scrollToRowId
+    rowVirtualizer.scrollToIndex(index, { align: 'center' })
+    // wait for the virtualizer to render the row
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() => {
+        const rowElement = tableContainerRef.current?.querySelector(
+          `#${CSS.escape(toDomId(scrollToRowId))}`,
+        )
+        const cell = rowElement?.querySelector('[tabindex="0"]') as HTMLElement | null
+        cell?.focus({ preventScroll: true })
+      }),
+    )
+  }, [scrollToRowId, rows, rowVirtualizer])
 
   // Memoize the ref callback to prevent infinite re-renders
   const measureElementRef = useCallback(
@@ -624,6 +657,47 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [onScrollBottom, isLoading],
   )
 
+  // addon shortcuts: the row keys above stop their own keys, so only the others get here
+  const {
+    hasShortcuts,
+    handleShortcut,
+    dialog: addonDialog,
+  } = useAddonTableShortcuts(addonShortcuts?.table)
+  const handleContainerKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    props.onKeyDown?.(e)
+    const target = e.target as HTMLElement
+    if (!hasShortcuts || addonDialog || e.defaultPrevented) return
+    if (['INPUT', 'TEXTAREA'].includes(target.tagName) || target.isContentEditable) return
+    const domId = target.closest('tr')?.id
+    if (!domId) return
+    const rowId = rowIdPrefix ? domId.slice(rowIdPrefix.length + 1) : domId
+
+    handleShortcut(e, () => {
+      const { rowsById } = table.getRowModel()
+      const toRow = (id: string): TableRowRef | undefined => {
+        const row = rowsById[id]?.original
+        if (!row) return undefined
+        const { entityType } = row.data
+        return {
+          id: row.id,
+          entityType: typeof entityType === 'string' ? entityType : undefined,
+          name: row.name,
+          label: row.label,
+          data: row.data,
+        }
+      }
+      // the selected rows when the key was pressed in one of them, else its row
+      const selected = Object.keys(rowSelection).filter((id) => rowSelection[id])
+      const rowIds = selected.includes(rowId) ? selected : [rowId]
+      return {
+        projectName: addonShortcuts?.projectName ?? null,
+        rows: rowIds.flatMap((id) => toRow(id) || []),
+        focused: { rowId },
+        cells: [],
+      }
+    })
+  }
+
   const handleContainerClick = (e: React.MouseEvent<HTMLDivElement>) => {
     // if the click is outside of any row, clear selection
     if (enableClickToDeselect && !(e.target as HTMLElement).closest('tr')) {
@@ -633,50 +707,57 @@ const SimpleTable: FC<SimpleTableProps> = ({
   }
 
   return (
-    <Styled.TableContainer
-      ref={tableContainerRef}
-      onScroll={handleScroll}
-      onClick={handleContainerClick}
-      {...props}
-      className={clsx(props.className, { isLoading, fitContent })}
-    >
-      {!error && (
-        <table>
-          <tbody
-            style={{
-              height: `${rowVirtualizer?.getTotalSize()}px`, //tells scrollbar how big the table is
-            }}
-          >
-            {rowVirtualizer?.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index] as Row<SimpleTableRow>
-              return (
-                <tr
-                  data-index={virtualRow.index} //needed for dynamic row height measurement
-                  ref={measureElementRef} //measure dynamic row height
-                  key={row.id}
-                  id={row.id}
-                  onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
-                  {...pt?.row}
-                  style={{
-                    transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
-                    ...pt?.row?.style, // custom styles to be passed
-                  }}
-                >
-                  {row.getVisibleCells().map((cell) => {
-                    return (
-                      <td key={cell.id}>
-                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                      </td>
-                    )
-                  })}
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
+    <>
+      <Styled.TableContainer
+        ref={tableContainerRef}
+        onScroll={handleScroll}
+        onClick={handleContainerClick}
+        {...props}
+        onKeyDown={handleContainerKeyDown}
+        className={clsx(props.className, { isLoading, fitContent })}
+      >
+        {!error && (
+          <table>
+            <tbody
+              style={{
+                height: `${rowVirtualizer?.getTotalSize()}px`, //tells scrollbar how big the table is
+              }}
+            >
+              {rowVirtualizer?.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index] as Row<SimpleTableRow>
+                return (
+                  <tr
+                    data-index={virtualRow.index} //needed for dynamic row height measurement
+                    ref={measureElementRef} //measure dynamic row height
+                    key={row.id}
+                    id={toDomId(row.id)}
+                    onContextMenu={(e) => handleRowContextMenu(row.id, virtualRow.index, e)}
+                    {...pt?.row}
+                    style={{
+                      transform: `translateY(${virtualRow.start}px)`, //this should always be a `style` as it changes on scroll
+                      ...pt?.row?.style, // custom styles to be passed
+                    }}
+                  >
+                    {row.getVisibleCells().map((cell) => {
+                      return (
+                        <td key={cell.id}>
+                          {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                        </td>
+                      )
+                    })}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        )}
+        {!!error && <EmptyPlaceholder error={error} />}
+      </Styled.TableContainer>
+      {/* outside the container: the dialog's clicks and keys would bubble into it through the portal */}
+      {addonDialog && (
+        <AddonDialog contribution={addonDialog.contribution} context={addonDialog.context} />
       )}
-      {!!error && <EmptyPlaceholder error={error} />}
-    </Styled.TableContainer>
+    </>
   )
 }
 

@@ -1,3 +1,5 @@
+import { useMemo } from 'react'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 import {
   DetailsPanelAttributesEditor,
   DetailsPanelAttributesEditorProps,
@@ -8,8 +10,10 @@ import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useGlobalContext } from '@shared/context/GlobalContext'
+import { useDetailsPanelContext, useGlobalContext, useProjectContext } from '@shared/context'
+import type { DetailsPanelEntityType } from '@shared/api'
+import ActivityReferenceTooltip from '@shared/containers/Feed/components/ActivityReferenceTooltip/ActivityReferenceTooltip'
+import useReferenceTooltip from '@shared/containers/Feed/hooks/useReferenceTooltip'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -34,7 +38,15 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   )
 
   const { attributes } = useGlobalContext()
-  const { folderTypes = [], taskTypes = [], statuses = [], tags = [] } = useProjectContext()
+  const {
+    folderTypes = [],
+    taskTypes = [],
+    statuses = [],
+    tags = [],
+    productTypes,
+  } = useProjectContext()
+  const { openSlideOut } = useDetailsPanelContext()
+  const [, setRefTooltip] = useReferenceTooltip()
 
   // Determine if any selected folder has published versions
   const folderEntities = (entities || []).filter((entity) => entity.entityType === 'folder')
@@ -52,6 +64,12 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
 
   const folderHasVersions = Boolean(versionActivitiesData?.pages?.[0]?.activities?.length)
 
+  const entityType = formData?.entityType || 'task'
+  const { enableEditing, attribAccess, updateEntity } = useEntityEditing({
+    entities,
+    entityType,
+  })
+
   const { editableFields, readOnlyFieldsData } = useEntityFields({
     attributes,
     folderTypes,
@@ -60,13 +78,12 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     tags,
     entityType: formData?.entityType,
     folderHasVersions,
+    attribAccess,
   })
 
-  const entityType = formData?.entityType || 'task'
-  const { enableEditing, updateEntity } = useEntityEditing({
-    entities,
-    entityType,
-  })
+  const { writableAttributes } = attribAccess
+  const enableDescriptionEditing =
+    enableEditing && (!writableAttributes || writableAttributes.includes('description'))
 
   const handleChange: DetailsPanelAttributesEditorProps['onChange'] = (key, value) => {
     if (key === 'tags') {
@@ -90,6 +107,49 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     updateEntity(key, value)
   }
 
+  // a list field of several entities: each keeps its own values, plus or minus the changed ones
+  const handleMixedChange = (key: string, change: MixedChange) => {
+    const attribName = key.startsWith('attrib.') ? key.replace('attrib.', '') : undefined
+    const getValues = (entity: DetailsPanelEntityData): string[] => {
+      const value = attribName ? entity.attrib?.[attribName] : entity.tags
+      return Array.isArray(value) ? value.map(String) : []
+    }
+    const nextValues = new Map(
+      entities.map((entity) => [entity.id, applyMixedChange(getValues(entity), change)]),
+    )
+
+    updateFormData(key, [...new Set([...nextValues.values()].flat())])
+    updateEntity(attribName ? 'attrib' : key, (entityId: string) => {
+      const value = nextValues.get(entityId) || []
+      return attribName ? { [attribName]: value } : value
+    })
+  }
+
+  // mention the same users, tasks and versions as the comments of the (first) entity
+  const projectName = formData?.projectName || entities[0]?.projectName
+  const entityId = entities[0]?.id
+  const mentionsContext = useMemo(
+    () =>
+      projectName && entityId
+        ? { projectName, entityType, entityId, productTypes, taskTypes }
+        : undefined,
+    [projectName, entityType, entityId, productTypes, taskTypes],
+  )
+
+  const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
+    if (type === 'user' || type === 'team' || !projectName) return
+    openSlideOut({ entityId: id, entityType: type as DetailsPanelEntityType, projectName })
+  }
+
+  // the same tooltip as mentions in the feed
+  const handleMentionHover = (
+    { type, id, label }: { type: string; id: string; label: string },
+    target: HTMLElement,
+  ) => {
+    const { x, y, width } = target.getBoundingClientRect()
+    setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
+  }
+
   const handleDescriptionChange = (description: string) => {
     updateFormData('description', description)
     clearMixedField('description')
@@ -101,10 +161,14 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
       <DescriptionSection
         description={formData?.description || ''}
         isMixed={mixedFields.includes('description')}
-        enableEditing={enableEditing}
+        enableEditing={enableDescriptionEditing}
         onChange={handleDescriptionChange}
         isLoading={isLoading}
+        mentionsContext={mentionsContext}
+        onMentionClick={handleMentionClick}
+        onMentionHover={handleMentionHover}
       />
+      <ActivityReferenceTooltip />
 
       <DetailsPanelAttributesEditor
         fields={editableFields}
@@ -113,6 +177,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         isLoading={isLoading}
         enableEditing={enableEditing}
         onChange={handleChange}
+        onMixedChange={handleMixedChange}
         entities={entities}
         entityType={entityType}
       />

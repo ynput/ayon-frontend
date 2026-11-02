@@ -13,14 +13,15 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { useAppDispatch } from '@state/store'
 import { openViewer } from '@state/viewer'
-import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/VPSelectionContext'
+import { useVersionsSelectionContext } from '@pages/VersionsProductsPage/context/vp-selection'
 import { useCallback } from 'react'
 import { useProjectContext } from '@shared/context'
 import useGoToEntity from '@hooks/useGoToEntity'
-import { useVPViewsContext } from '@pages/VersionsProductsPage/context/VPViewsContext'
-import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/VPDataContext'
+import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
+import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
 import { useSlicerContext } from '@shared/containers/Slicer'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
+import { useRegisterActiveEntities } from '@shared/util'
 
 type VPDetailsPanelProps = {}
 
@@ -48,6 +49,14 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
         id: versionId,
         projectName,
       }))
+
+  // the selection is known even while the details panel is closed.
+  // selectedVersions outlives the selection, showVersionDetails does not.
+  useRegisterActiveEntities(
+    selectedEntity || showVersionDetails
+      ? entities.map((e) => ({ ...e, entityType: selectedEntity?.entityType || 'version' }))
+      : [],
+  )
 
   const projectsInfo = { [projectName]: projectInfo }
 

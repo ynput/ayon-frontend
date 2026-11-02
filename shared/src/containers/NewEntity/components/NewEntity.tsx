@@ -25,18 +25,18 @@ import type {
   MatchingFolder,
 } from '@shared/containers/ProjectTreeTable/types/table'
 import { ROW_SELECTION_COLUMN_ID } from '@shared/containers/ProjectTreeTable/constants'
-import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable/context/ProjectTableContext'
-import { useOptionalSelectionCellsContext } from '@shared/containers/ProjectTreeTable/context/SelectionCellsContext'
+import { useOptionalProjectTableContext } from '@shared/containers/ProjectTreeTable/context/project-table'
+import { useOptionalSelectionCellsContext } from '@shared/containers/ProjectTreeTable/context/selection-cells'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import { type OperationResponseModel, type ProjectModel } from '@shared/api'
+import { type OperationResponseModel } from '@shared/api'
 import FolderSequence from './FolderSequence'
-import { EntityForm, NewEntityType, useNewEntityContext } from '../context/NewEntityContext'
+import { EntityForm, NewEntityType, useNewEntityContext } from '../context/new-entity'
 import useCreateEntityShortcuts from '../hooks/useCreateEntityShortcuts'
-import { useSlicerContext } from '@shared/containers/Slicer/context/SlicerContext'
-import { NewEntityForm, InputLabel, InputsContainer } from './NewEntityForm'
+import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
+import { NewEntityForm } from './NewEntityForm'
+import { InputLabel, InputsContainer } from './NewEntityForm.styled'
 import { toast } from 'react-toastify'
-import { useProjectContext } from '@shared/context/ProjectContext'
-import { useProjectFoldersContext } from '@shared/context/ProjectFoldersContext'
+import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { newEntityDefinitions } from '../util/entityDefinitions'
 
 const StyledDialog = styled(Dialog)`
@@ -105,7 +105,12 @@ const StyledCreateItem = styled.span`
 
 export interface NewEntityProps {
   disabled?: boolean
-  onNewEntities?: (ops: OperationResponseModel[], stayOpen: boolean) => void
+  /** `parentFolderIds` are the folders the new entities were created in */
+  onNewEntities?: (
+    ops: OperationResponseModel[],
+    stayOpen: boolean,
+    parentFolderIds: string[],
+  ) => void
   showButton?: boolean
   showDialog?: boolean
   enableShortcuts?: boolean
@@ -134,7 +139,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
 
   const [createMore, setCreateMore] = useState(false)
   const { selectedCells } = useOptionalSelectionCellsContext() || {}
-  const { rowSelection, pinnedSlice, sliceType } = useSlicerContext()
+  const hierarchySelection = useHierarchySelection()
   const { getFolderById } = useProjectFoldersContext()
   const projectTableContext = useOptionalProjectTableContext()
   const getEntityById = projectTableContext?.getEntityById
@@ -183,22 +188,18 @@ export const NewEntity: React.FC<NewEntityProps> = ({
       if (folderIds.length) return folderIds
     }
 
-    const activeRowSelection =
-      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-    return activeRowSelection
-      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
       : []
-  }, [parentFolderIds, selectedCells, rowSelection, pinnedSlice, sliceType, getEntityById])
+  }, [parentFolderIds, selectedCells, hierarchySelection, getEntityById])
 
   // Slicer-only chain: in grouping modes folders skip table selection
   const slicerParentIds = useMemo(() => {
     if (parentFolderIds !== null) return parentFolderIds
-    const activeRowSelection =
-      sliceType === 'hierarchy' ? rowSelection : pinnedSlice?.rowSelection || null
-    return activeRowSelection
-      ? Object.keys(activeRowSelection).filter((id) => activeRowSelection[id])
+    return hierarchySelection
+      ? Object.keys(hierarchySelection).filter((id) => hierarchySelection[id])
       : []
-  }, [parentFolderIds, rowSelection, pinnedSlice, sliceType])
+  }, [parentFolderIds, hierarchySelection])
 
   const resolvedParentFolderIds =
     entityType === 'folder' && !showHierarchy ? slicerParentIds : fullChainParentIds
@@ -357,10 +358,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
 
-      console.log(resOperations)
-
       // callback function
-      onNewEntities?.(resOperations, stayOpen)
+      onNewEntities?.(resOperations, stayOpen, selectedFolderIds)
 
       if (stayOpen) {
         // focus and select the label input
@@ -608,21 +607,4 @@ export const NewEntity: React.FC<NewEntityProps> = ({
       )}
     </>
   )
-}
-
-// Helper function to generate label based on entity type and selected subtype
-export const generateLabel = (
-  type: NewEntityType | null,
-  subType: string,
-  projectInfo: ProjectModel | undefined,
-): string => {
-  if (!type || !subType) return ''
-
-  const typeOption = (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes)?.find(
-    (option) => option.name === subType,
-  )
-
-  if (!typeOption) return ''
-
-  return typeOption.name
 }

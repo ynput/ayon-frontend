@@ -2,6 +2,7 @@ import { FC, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
+  ProjectTableQueriesProvider,
   SelectionCellsProvider,
   SelectedRowsProvider,
   CellEditingProvider,
@@ -10,8 +11,7 @@ import {
 } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useSlicerContext } from '@shared/containers'
-import { useProjectOverviewContext } from '../context/ProjectOverviewContext'
-import { ProjectTableQueriesProvider } from '@shared/containers/ProjectTreeTable/context/ProjectTableQueriesContext'
+import { useProjectOverviewContext } from '../context/project-overview'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'

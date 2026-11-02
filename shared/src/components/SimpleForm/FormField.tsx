@@ -12,7 +12,7 @@ import { FormFileUpload, FormFileDownload, type FormFileData } from './FormFile'
 import type { FormOptionItem, SimpleFormField } from '@shared/api'
 import type { SimpleFormValue } from './types'
 
-const DropdownItemTemplate = (option: FormOptionItem) => {
+const DropdownItemTemplate = (option: FormOptionItem, _isActive: boolean, isSelected: boolean) => {
   const endContent = (
     <>
       <div style={{ flex: 1 }} />
@@ -25,6 +25,7 @@ const DropdownItemTemplate = (option: FormOptionItem) => {
       dataKey={'value'}
       labelKey={'label'}
       value={[`${option.value}`]}
+      selected={isSelected ? [`${option.value}`] : []}
       endContent={endContent}
     />
   )

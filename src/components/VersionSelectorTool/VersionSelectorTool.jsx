@@ -2,7 +2,6 @@ import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './VersionSelectorTool.styled'
 import { forwardRef } from 'react'
 import ReviewVersionDropdown from '@components/ReviewVersionDropdown'
-import { useSelector } from 'react-redux'
 import { upperFirst } from 'lodash'
 import { getVersionShortcutTargets } from './hooks/useReviewShortcuts'
 
@@ -33,9 +32,7 @@ const NavButton = ({
   </Styled.NavButton>
 )
 
-const VersionSelectorTool = forwardRef(({ versions, selected, onChange }, ref) => {
-  const statuses = useSelector((state) => state.project.statuses) || {}
-
+const VersionSelectorTool = forwardRef(({ versions, selected, statuses = {}, onChange }, ref) => {
   const selectedIndex = versions.findIndex(({ id }) => id === selected)
   if (selectedIndex === -1) return
 

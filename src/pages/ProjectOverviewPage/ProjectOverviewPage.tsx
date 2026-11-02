@@ -9,7 +9,7 @@ import {
   SLICER_PAGES_CONFIG,
   useSlicerContext,
   useSlicerSplitter,
-  type SlicerCountsSource,
+  type GetSlicerCountsSource,
 } from '@shared/containers/Slicer'
 
 // arc
@@ -17,6 +17,7 @@ import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
 import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
 import { Actions } from '@shared/containers/Actions/Actions'
@@ -27,7 +28,7 @@ import {
   useGetGroupedFields,
   useSelectionCellsContext,
 } from '@shared/containers/ProjectTreeTable'
-import { useProjectOverviewContext } from './context/ProjectOverviewContext'
+import { useProjectOverviewContext } from './context/project-overview'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'
@@ -36,7 +37,9 @@ import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useGoToEntity from '../../hooks/useGoToEntity'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import OverviewExportSource from './components/OverviewExportSource'
+import { TableExportButton } from '@shared/containers/TableExport'
 import { getBundleModeFromUser } from '@shared/util'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import type { OnAddToList } from '@shared/containers/Slicer'
@@ -75,6 +78,7 @@ const GroupByDropdown = styled(SortingDropdown)<{
 
 const ProjectOverviewPage: FC = () => {
   const { user } = useGlobalContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const bundleMode = getBundleModeFromUser(user)
 
   const [searchParams, setSearchParams] = useSearchParams()
@@ -90,15 +94,15 @@ const ProjectOverviewPage: FC = () => {
     updateViewGroupBy,
     tasksMap,
     updateExpanded,
-    slicerCountsArgs,
+    getSlicerCountsArgs,
     onSyncData,
     movingEntities,
     closeMoveDialog,
   } = useProjectOverviewContext()
 
-  const slicerCountsSource = useMemo<SlicerCountsSource>(
-    () => ({ entity: 'task', args: slicerCountsArgs }),
-    [slicerCountsArgs],
+  const slicerCountsSource = useCallback<GetSlicerCountsSource>(
+    (sliceType) => ({ entity: 'task', args: getSlicerCountsArgs(sliceType) }),
+    [getSlicerCountsArgs],
   )
   const { buildReviewContextMenu } = useEntityListsContext()
   const { getParentFolderIds } = useProjectFoldersContext()
@@ -237,14 +241,15 @@ const ProjectOverviewPage: FC = () => {
             <Slicer
               sliceFields={SLICER_PAGES_CONFIG.overview.fields}
               entityTypes={['task', 'folder']}
-              pinnedSliceType="hierarchy"
               countsSource={slicerCountsSource}
               onAddToList={onAddToList}
+              enableSplit
             />
           </Section>
         </SplitterPanel>
         <SplitterPanel size={slicerSize[1]}>
           <Section wrap direction="column" style={{ height: '100%' }}>
+            <OverviewExportSource />
             <Toolbar>
               <ProjectNewEntityHost showButton />
               <OverviewActions />
@@ -266,7 +271,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
-              <ImportDialogButton importContext="hierarchy" projectName={projectName} />
+              <TableExportButton onImport={() => openImportDialog('hierarchy', projectName)} />
               <Actions
                 entities={[]}
                 entityType={undefined}
@@ -278,6 +283,7 @@ const ProjectOverviewPage: FC = () => {
                 bundleMode={bundleMode}
                 align="right"
               />
+              <AddonToolbarItems page="overview" />
               <CustomizeButton />
             </Toolbar>
             <Splitter

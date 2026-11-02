@@ -9,7 +9,6 @@ const UsersListTeamsSmall = ({
   userList,
   isLoading,
   onSelectionChange,
-  onContextSelectionChange,
   selection,
 }) => {
   return (
@@ -24,7 +23,6 @@ const UsersListTeamsSmall = ({
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
-          onContextMenuSelectionChange={onContextSelectionChange}
           onContextMenu={handleContext}
           selection={selection}
           resizableColumns
