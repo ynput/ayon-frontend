@@ -92,7 +92,9 @@ export const AddonProjectPage = ({
     <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
   )
   return contribution.detailsPanel ? (
-    <WithDetailsPanel projectName={projectName}>{page}</WithDetailsPanel>
+    <WithDetailsPanel key={projectName} projectName={projectName}>
+      {page}
+    </WithDetailsPanel>
   ) : (
     page
   )
