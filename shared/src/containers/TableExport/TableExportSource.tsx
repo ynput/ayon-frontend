@@ -18,6 +18,7 @@ import { useProjectTableContext } from '../ProjectTreeTable/context/project-tabl
 import { parseCellId } from '../ProjectTreeTable/utils/cellUtils'
 import { ROW_SELECTION_COLUMN_ID } from '../ProjectTreeTable/constants'
 import { GROUP_BY_ID } from '../ProjectTreeTable/hooks/useBuildGroupByTableData'
+import { isForImport, NOT_IMPORTABLE } from './tableExportHelpers'
 import type { ParentColumnDefinition } from '../ProjectTreeTable/types'
 import {
   getExportColumnKey,
@@ -36,11 +37,6 @@ export type TableExportSourceProps = {
 }
 
 const IMPORT_COLUMNS = ['entity_type', 'path']
-export const NOT_IMPORTABLE = "(Import CSV can't read it)"
-
-// the dialog's importable file: a raw CSV with the import columns
-export const isForImport = ({ includeImportColumns, format, content }: TableExportOptions) =>
-  includeImportColumns && format === 'csv' && content === 'raw'
 
 // Registers what the page's table exports (rows, columns and their labels) for the Power Pack
 // export dialog. Rendered inside the page's table providers.

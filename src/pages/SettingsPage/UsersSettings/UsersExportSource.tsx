@@ -33,12 +33,13 @@ const NO_POOLS: UserPoolModel[] = []
 const POWERPACK_VERSION = '1.7.1'
 
 type UsersExportSourceProps = {
-  users: { name: string }[] // the table's rows: the users matching the search
+  users: { name: string }[] // all users, for selections: they stay selected while filtered out
+  tableUsers: { name: string }[] // the table's rows: the users matching the search
   selectedUsers: string[]
 }
 
 // Registers the users table for the Power Pack export dialog
-const UsersExportSource: FC<UsersExportSourceProps> = ({ users, selectedUsers }) => {
+const UsersExportSource: FC<UsersExportSourceProps> = ({ users, tableUsers, selectedUsers }) => {
   const tableExport = useTableExportContext()
   const registerSource = tableExport?.registerSource
   // Import CSV only imports users for admins
@@ -70,7 +71,8 @@ const UsersExportSource: FC<UsersExportSourceProps> = ({ users, selectedUsers })
 
     const getNames = (scope: TableExportScope) => {
       const selected = new Set(selectedUsers)
-      const rows = scope === 'selection' ? users.filter(({ name }) => selected.has(name)) : users
+      const rows =
+        scope === 'selection' ? users.filter(({ name }) => selected.has(name)) : tableUsers
       return sortUsers(rows, userPools).map(({ name }) => name)
     }
 
@@ -97,7 +99,7 @@ const UsersExportSource: FC<UsersExportSourceProps> = ({ users, selectedUsers })
         return { users: { names: getNames(scope) }, columns, columnLabels }
       },
     }
-  }, [users, selectedUsers, userPools, importFields, isAdmin])
+  }, [users, tableUsers, selectedUsers, userPools, importFields, isAdmin])
 
   useEffect(() => registerSource?.(source), [registerSource, source])
 

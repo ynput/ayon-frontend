@@ -256,7 +256,11 @@ const UsersSettings = () => {
               disabled={!selectedUsers.length}
             />
             <TableExportButton onImport={() => openImportDialog('user')} />
-            <UsersExportSource users={filteredData} selectedUsers={selectedUsers} />
+            <UsersExportSource
+              users={userListWithAccessGroups}
+              tableUsers={filteredData}
+              selectedUsers={selectedUsers}
+            />
             <Button label="Licenses" icon="groups" onClick={() => setShowLicenses(true)} />
           </Toolbar>
           <Splitter
