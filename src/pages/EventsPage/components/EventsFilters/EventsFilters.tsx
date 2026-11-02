@@ -34,15 +34,13 @@ const FilterOption: FC<{
   icon: string
   iconColor?: string
   label: string
-  count?: number
   selected: boolean
   onClick: () => void
-}> = ({ icon, iconColor, label, count, selected, onClick }) => (
+}> = ({ icon, iconColor, label, selected, onClick }) => (
   <li>
     <Styled.Option aria-pressed={selected} className={clsx({ selected })} onClick={onClick}>
       <Icon icon={icon as any} style={{ color: iconColor }} />
       <span className="label">{label}</span>
-      {count !== undefined && <span className="count">{count}</span>}
       <Icon icon="check" className="check" />
     </Styled.Option>
   </li>
@@ -72,7 +70,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
     data?: { name: string; fullName?: string; avatarUrl?: string }[]
   }
 
-  const { counts, categories, topics } = useEventFacets(events, filters.types)
+  const { categories, topics } = useEventFacets(events, filters.types)
 
   // the date fields hold a draft and only apply it on Enter or blur, so typing doesn't refetch
   const [startDraft, setStartDraft] = useState(() => toDateValue(filters.newerThan))
@@ -159,6 +157,8 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
           })}
         </Styled.Presets>
         <Styled.DateFields>
+          <Styled.GroupTitle>Start date</Styled.GroupTitle>
+          <Styled.GroupTitle>End date</Styled.GroupTitle>
           <DateField
             ref={startInputRef}
             aria-label="Start date"
@@ -167,6 +167,7 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
             onCommit={commitStart}
             max={endDraft || todayValue}
           />
+
           <DateField
             ref={endInputRef}
             aria-label="End date"
@@ -209,7 +210,6 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
                 icon={meta.icon}
                 iconColor={meta.color}
                 label={meta.label}
-                count={counts.byCategory.get(category) ?? 0}
                 selected={!!filters.types?.includes(category)}
                 onClick={() => onChange({ types: toggle(filters.types, category) })}
               />
@@ -247,10 +247,6 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
               selected={isSelected ? [option.value] : []}
               value={filters.topics ?? []}
               multiSelect
-              endContent={
-                !isSelected &&
-                option.count !== undefined && <Styled.TopicCount>{option.count}</Styled.TopicCount>
-              }
             />
           )}
         />
@@ -265,7 +261,6 @@ export const EventsFilters: FC<EventsFiltersProps> = ({
               key={status.value}
               icon={status.icon}
               label={status.label}
-              count={counts.byStatus.get(status.value) ?? 0}
               selected={!!filters.statuses?.includes(status.value)}
               onClick={() => onChange({ statuses: toggle(filters.statuses, status.value) })}
             />
