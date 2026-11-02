@@ -218,10 +218,23 @@ export const EventLink = styled.button`
 
 export const Disclosure = styled.details`
   summary {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
     cursor: pointer;
     ${theme.labelLarge}
     color: var(--md-sys-color-on-surface-variant);
     padding: 4px 0;
+    list-style: none;
+  }
+
+  /* hides the native triangle in webkit */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  &[open] .expand {
+    transform: rotate(90deg);
   }
 
   & > div {

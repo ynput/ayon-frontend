@@ -41,6 +41,11 @@ export const Wrapper = styled.div`
     background-color: color-mix(in srgb, var(--md-sys-color-error) 8%, transparent);
   }
 
+  && .table-list-row.severity-error:not(.selected):hover td .inner-td,
+  && .table-list-row.severity-error:not(.selected)[data-context-menu-target] td .inner-td {
+    background-color: color-mix(in srgb, var(--md-sys-color-error) 16%, transparent);
+  }
+
   && .table-list-row.severity-error td:first-child .inner-td {
     box-shadow: inset 2px 0 0 var(--md-sys-color-error);
   }

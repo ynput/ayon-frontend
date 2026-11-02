@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { theme } from '@ynput/ayon-react-components'
+import { Button, theme } from '@ynput/ayon-react-components'
 
 export const Panel = styled.aside`
   display: flex;
@@ -11,24 +11,10 @@ export const Panel = styled.aside`
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-low);
 
-  input[type='checkbox'] {
-    accent-color: var(--md-sys-color-primary);
-    margin: 0;
-    width: 14px;
-    height: 14px;
-  }
-
   button:focus-visible,
-  input:focus-visible,
-  label:focus-within {
+  input:focus-visible {
     outline: 2px solid var(--md-sys-color-primary);
     outline-offset: 1px;
-  }
-
-  .ellipsis {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
   }
 `
 
@@ -71,32 +57,37 @@ export const Hint = styled.span`
   opacity: 0.8;
 `
 
-export const CheckList = styled.ul`
+export const Options = styled.ul`
   list-style: none;
   margin: 0;
   padding: 0;
   display: flex;
   flex-direction: column;
+  gap: var(--base-gap-small);
+`
 
-  label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 4px;
-    border-radius: var(--border-radius-m);
-    cursor: pointer;
+// same look as the SearchFilter dropdown rows
+export const Option = styled.button`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  width: 100%;
+  padding: 6px;
+  border: none;
+  border-radius: var(--border-radius-m);
+  background-color: transparent;
+  color: var(--md-sys-color-on-surface);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
 
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
-    }
-  }
-
-  .icon {
-    font-size: 18px;
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
   }
 
   .label {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -107,102 +98,72 @@ export const CheckList = styled.ul`
     color: var(--md-sys-color-on-surface-variant);
     font-variant-numeric: tabular-nums;
   }
-`
 
-export const ChipRow = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-`
-
-export const ToggleChip = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  max-width: 100%;
-  min-height: 28px;
-  padding: 2px 8px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-l);
-  background-color: transparent;
-  color: var(--md-sys-color-on-surface);
-  cursor: pointer;
-  ${theme.labelMedium}
-
-  .icon {
-    font-size: 16px;
+  /* always takes up its space so the counts line up and don't shift on selection */
+  .check {
+    visibility: hidden;
   }
 
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
-  }
-
-  &.active {
-    border-color: transparent;
-    background-color: var(--md-sys-color-secondary-container);
-    color: var(--md-sys-color-on-secondary-container);
+  &.selected {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
 
     &:hover {
-      background-color: var(--md-sys-color-secondary-container-hover);
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
+
+    .check {
+      visibility: visible;
+    }
+
+    .count {
+      color: inherit;
     }
   }
 `
 
-export const Segmented = styled.div`
+export const Presets = styled.div`
   display: flex;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-m);
-  overflow: hidden;
+  gap: var(--base-gap-small);
 
   button {
     flex: 1;
-    padding: 4px 0;
-    border: none;
-    background: transparent;
-    color: var(--md-sys-color-on-surface);
-    cursor: pointer;
-    ${theme.labelMedium}
-
-    & + button {
-      border-left: 1px solid var(--md-sys-color-outline-variant);
-    }
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
-    }
-
-    &.active {
-      background-color: var(--md-sys-color-secondary-container);
-      color: var(--md-sys-color-on-secondary-container);
-    }
   }
 `
 
-export const DateRow = styled.div`
-  & > div {
-    width: 100%;
-  }
+export const DateFields = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--base-gap-small);
 
-  /* the shared picker trigger is icon sized by default, make it a full width field */
-  && > div > button {
+  .react-datepicker-wrapper {
     width: 100%;
-    height: 32px;
-    padding: 0 8px;
-    justify-content: flex-start;
-    border: 1px solid var(--md-sys-color-outline-variant);
-    border-radius: var(--border-radius-m);
   }
 `
 
-export const DateTrigger = styled.span`
+export const TopicCount = styled.span`
+  ${theme.labelSmall}
+  margin-left: auto;
+  color: var(--md-sys-color-on-surface-variant);
+  font-variant-numeric: tabular-nums;
+`
+
+export const UserValue = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  ${theme.labelMedium}
+  gap: var(--base-gap-small);
 
-  .icon {
-    font-size: 18px;
+  span:last-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
+`
+
+export const EntityButton = styled(Button)`
+  width: 100%;
+  justify-content: flex-start;
+  overflow: hidden;
+  white-space: nowrap;
 `
 
 export const Toggle = styled.label`

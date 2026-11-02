@@ -325,11 +325,17 @@ export const EventDetails: FC<EventDetailsProps> = ({
         </Styled.Section>
 
         <Styled.Disclosure>
-          <summary>Summary &amp; payload</summary>
+          <summary>
+            <Icon icon="chevron_right" className="expand" />
+            Summary &amp; payload
+          </summary>
           <JsonViewer value={{ summary: full?.summary ?? event.summary, payload }} wrap />
         </Styled.Disclosure>
         <Styled.Disclosure>
-          <summary>Raw event</summary>
+          <summary>
+            <Icon icon="chevron_right" className="expand" />
+            Raw event
+          </summary>
           <JsonViewer value={full ?? event} wrap />
         </Styled.Disclosure>
       </Styled.Body>
