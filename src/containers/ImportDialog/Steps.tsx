@@ -20,6 +20,7 @@ import {
 import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
 import { usePowerpack } from '@shared/context'
+import { useUpdateEntityListMutation } from '@shared/api'
 import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
 import Loading from './steps/Loading'
@@ -43,6 +44,8 @@ type Props = {
   importContext: ImportContext
   projectName?: string
   folderId?: string
+  // the list folder a list created by the import goes into
+  listFolderId?: string
   data: ImportData | null
   setData: Dispatch<SetStateAction<ImportData | null>>
   step: ImportStep
@@ -70,6 +73,7 @@ export default function ImportSteps({
   importContext,
   projectName,
   folderId,
+  listFolderId,
   data,
   setData,
   step,
@@ -77,6 +81,7 @@ export default function ImportSteps({
   onClose,
 }: Props) {
   const [importData] = useImportDataMutation()
+  const [updateEntityList] = useUpdateEntityListMutation()
   // without the powerpack, list imports set the values on the listed entities
   const { powerLicense } = usePowerpack()
   const updateListedEntities = importContext === 'entity_list_item' && !powerLicense
@@ -223,8 +228,35 @@ export default function ImportSteps({
       }
       setImportResult(result.data)
       setSuccess(true)
+
+      // the import takes no list folder, so the new list is moved into it afterwards
+      const listId = result.data.entityListId
+      if (creatingList && listFolderId && listId && projectName) {
+        updateEntityList({
+          projectName,
+          entityListId: listId,
+          entityListPatchModel: { entityListFolderId: listFolderId },
+        })
+          .unwrap()
+          .catch((error) =>
+            toast.warn(
+              `List ${newList.label.trim()} was created but not moved to the folder: ${getRequestErrorString(
+                error,
+              )}`,
+            ),
+          )
+      }
     })
-  }, [requestImport, columnMappings, valueMappings])
+  }, [
+    requestImport,
+    columnMappings,
+    valueMappings,
+    creatingList,
+    listFolderId,
+    projectName,
+    newList,
+    updateEntityList,
+  ])
 
   // the mode can change after the columns were mapped, so the mapping may no longer be enough
   // the options can change after the columns were mapped, so the mapping may no longer fit:
