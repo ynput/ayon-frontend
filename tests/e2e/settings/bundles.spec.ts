@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { expectRowSelection, menuItem } from '../support/ui'
+import { expectRowSelection, menuItem } from '@ynput/ayon-e2e'
 
 test.describe('bundles', () => {
   test('duplicate a bundle that is not selected from its context menu', async ({ page, api }) => {

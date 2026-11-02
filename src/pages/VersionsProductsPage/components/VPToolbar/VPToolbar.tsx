@@ -2,6 +2,7 @@ import { SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import { FC, useCallback, useMemo } from 'react'
 import VPSearchFilter from './VPSearchFilter'
 import { CustomizeButton, SyncButton, TableGridSwitch } from '@shared/components'
+import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import { useVersionsDataContext } from '@pages/VersionsProductsPage/context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { useGetGroupedFields, useColumnSettingsContext } from '@shared/containers/ProjectTreeTable'
@@ -141,6 +142,7 @@ const VPToolbar: FC = () => {
       <TableGridSwitch showGrid={showGrid} onChange={(value) => onUpdateShowGrid(value)} />
       <TableExportButton />
       <VPExportSource />
+      <AddonToolbarItems page="products" />
       <CustomizeButton />
     </Toolbar>
   )

@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { TeamsPage } from '../pages/TeamsPage'
-import { confirmDialog, dialog, expectRowSelection, menuItem, toast } from '../support/ui'
+import { confirmDialog, dialog, expectRowSelection, menuItem, toast } from '@ynput/ayon-e2e'
 
 test.describe('project teams', () => {
   test('create a team', async ({ page, api, projectName }) => {

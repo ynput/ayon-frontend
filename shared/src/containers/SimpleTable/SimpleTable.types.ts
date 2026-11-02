@@ -2,6 +2,7 @@ import { Row, RowData, Table } from '@tanstack/react-table'
 import { ContextMenuItemType } from '../ContextMenu'
 import { SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { RankingInfo } from '@tanstack/match-sorter-utils'
+import type { ShortcutTable } from '@ynput/ayon-addon'
 
 declare module '@tanstack/react-table' {
   //add fuzzy filter to the filterFns
@@ -98,6 +99,8 @@ export interface SimpleTableProps extends Omit<React.HTMLAttributes<HTMLDivEleme
   fitContent?: boolean
   rowIdPrefix?: string // namespaces rendered row DOM ids (multiple tables can share row ids)
   rowContextMenuBuilders?: SimpleTableRowContextMenuBuilder[]
+  // addon keyboard shortcuts on the rows (table.shortcut slot): which table this is
+  addonShortcuts?: { table: ShortcutTable; projectName: string | null }
   children?: (
     props: SimpleTableCellTemplateProps,
     row: Row<SimpleTableRow>,

@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises'
 import { expect, Locator, Page } from '@playwright/test'
-import { menuItem } from '../support/ui'
+import { menuItem } from '@ynput/ayon-e2e'
 import { readCsv, readXlsx } from '../support/spreadsheet'
 
 export type ExportedFile = {

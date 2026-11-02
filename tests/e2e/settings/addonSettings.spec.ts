@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { dialog, expectRowSelection, menuItem } from '../support/ui'
+import { dialog, expectRowSelection, menuItem } from '@ynput/ayon-e2e'
 
 test.describe('addon settings', () => {
   test('the addon list menu opens its dialogs for the right-clicked addon', async ({
