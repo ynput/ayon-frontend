@@ -405,7 +405,7 @@ export class OverviewPage {
   // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
     await this.page.getByTestId('table-import-export').click()
-    await this.page.getByTestId('import-csv').click()
+    await this.page.getByTestId('import-file').click()
     const wizard = this.importDialog()
     await expect(wizard).toBeVisible()
     await wizard.locator('input[type="file"]').setInputFiles(filePath)
