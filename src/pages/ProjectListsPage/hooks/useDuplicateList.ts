@@ -30,7 +30,9 @@ const useDuplicateList = ({
       // one at a time: the server picks each copy's free label, parallel requests could pick the same one
       for (const entityListId of listIds) {
         try {
-          created.push(await duplicateEntityList({ projectName, entityListId }).unwrap())
+          created.push(
+            await duplicateEntityList({ projectName, entityListId, payload: null }).unwrap(),
+          )
         } catch (error) {
           failed.push(getRequestErrorString(error))
         }
