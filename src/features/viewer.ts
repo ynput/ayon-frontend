@@ -113,6 +113,7 @@ const viewerSlice = createSlice({
       state.reviewableIds = []
       state.isOpen = false
       state.selectedProductId = null
+      state.goToFrame = null
       state.goToPosition = null
     },
     toggleUpload: (state: ViewerState, { payload }: PayloadAction<boolean>) => {
