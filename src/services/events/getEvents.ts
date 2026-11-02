@@ -209,6 +209,9 @@ const eventsApi = api.injectEndpoints({
                 added.sort((a, b) => b.createdAt - a.createdAt)
                 first.events.unshift(...added)
               }
+              draft.pages.forEach((page) => {
+                page.events = page.events.filter((event) => matchesFilters(event, filters))
+              })
             })
           },
           (message: RawEvent) => `${message.id}:${message.updatedAt}`,
