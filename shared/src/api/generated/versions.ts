@@ -1,15 +1,6 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    getVersionThumbnail: build.query<GetVersionThumbnailApiResponse, GetVersionThumbnailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
-        params: {
-          placeholder: queryArg.placeholder,
-          original: queryArg.original,
-        },
-      }),
-    }),
     createVersionThumbnail: build.mutation<
       CreateVersionThumbnailApiResponse,
       CreateVersionThumbnailApiArg
@@ -22,19 +13,26 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getVersionThumbnail: build.query<GetVersionThumbnailApiResponse, GetVersionThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
+    getVersionFilmstrip: build.query<GetVersionFilmstripApiResponse, GetVersionFilmstripApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
+        },
+      }),
+    }),
     getVersion: build.query<GetVersionApiResponse, GetVersionApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
-      }),
-    }),
-    deleteVersion: build.mutation<DeleteVersionApiResponse, DeleteVersionApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateVersion: build.mutation<UpdateVersionApiResponse, UpdateVersionApiArg>({
@@ -42,10 +40,12 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
         method: 'PATCH',
         body: queryArg.versionPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
+      }),
+    }),
+    deleteVersion: build.mutation<DeleteVersionApiResponse, DeleteVersionApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}`,
+        method: 'DELETE',
       }),
     }),
     createVersion: build.mutation<CreateVersionApiResponse, CreateVersionApiArg>({
@@ -53,16 +53,19 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/versions`,
         method: 'POST',
         body: queryArg.versionPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type CreateVersionThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateVersionThumbnailApiArg = {
+  projectName: string
+  versionId: string
+  'content-type'?: string | null
+}
 export type GetVersionThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetVersionThumbnailApiArg = {
   projectName: string
@@ -70,99 +73,92 @@ export type GetVersionThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateVersionThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateVersionThumbnailApiArg = {
+export type GetVersionFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetVersionFilmstripApiArg = {
   projectName: string
   versionId: string
-  'content-type'?: string
+  placeholder?: 'empty' | 'none'
 }
 export type GetVersionApiResponse = /** status 200 Successful Response */ VersionModel
 export type GetVersionApiArg = {
   projectName: string
   versionId: string
 }
-export type DeleteVersionApiResponse = unknown
-export type DeleteVersionApiArg = {
-  projectName: string
-  versionId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-}
 export type UpdateVersionApiResponse = unknown
 export type UpdateVersionApiArg = {
   projectName: string
   versionId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   versionPatchModel: VersionPatchModel
+}
+export type DeleteVersionApiResponse = unknown
+export type DeleteVersionApiArg = {
+  projectName: string
+  versionId: string
 }
 export type CreateVersionApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateVersionApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   versionPostModel: VersionPostModel
+}
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
+}
+export type CreateThumbnailResponseModel = {
+  id: string
+  affectedEntities?: AffectedEntity[] | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
-export type CreateThumbnailResponseModel = {
-  id: string
-}
-export type VersionAttribModel = {
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  intent?: string
-  machine?: string
-  source?: string
-  comment?: string
-  site?: string
-  families?: string[]
-  colorSpace?: string
-  /** Textual description of the entity */
-  description?: string
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }
 export type VersionModel = {
-  /** Unique identifier of the {entity_name} */
+  /** Unique identifier of the entity */
   id?: string
   /** Version number */
   version: number
   /** ID of the parent product */
   productId: string
-  taskId?: string
-  thumbnailId?: string
-  author?: string
-  path?: string
-  attrib?: VersionAttribModel
-  data?: Record<string, any>
-  /** Whether the version is active */
+  /** ID of the parent task */
+  taskId?: string | null
+  thumbnailId?: string | null
+  author?: string | null
+  path?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
-  /** Status of the version */
-  status?: string
-  /** Tags assigned to the the version */
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the version */
-  createdBy?: string
-  /** Who last updated the version */
-  updatedBy?: string
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -170,49 +166,61 @@ export type VersionModel = {
 }
 export type VersionPatchModel = {
   /** Version number */
-  version?: number
+  version?: number | null
   /** ID of the parent product */
-  productId?: string
-  taskId?: string
-  thumbnailId?: string
-  author?: string
-  /** Status of the version */
-  status?: string
-  /** Tags assigned to the the version */
-  tags?: string[]
-  /** Who created the version */
-  createdBy?: string
-  /** Who last updated the version */
-  updatedBy?: string
-  attrib?: VersionAttribModel
-  data?: Record<string, any>
-  /** Whether the version is active */
-  active?: boolean
+  productId?: string | null
+  /** ID of the parent task */
+  taskId?: string | null
+  thumbnailId?: string | null
+  author?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
+  tags?: string[] | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type EntityIdResponse = {
   /** Entity ID */
   id: string
 }
 export type VersionPostModel = {
-  /** Explicitly set the ID of the entity */
+  /** Unique identifier of the entity */
   id?: string
   /** Version number */
   version: number
   /** ID of the parent product */
   productId: string
-  taskId?: string
-  thumbnailId?: string
-  author?: string
-  /** Status of the version */
-  status?: string
-  /** Tags assigned to the the version */
+  /** ID of the parent task */
+  taskId?: string | null
+  thumbnailId?: string | null
+  author?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the version */
-  createdBy?: string
-  /** Who last updated the version */
-  updatedBy?: string
-  attrib?: VersionAttribModel
-  data?: Record<string, any>
-  /** Whether the version is active */
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
 }

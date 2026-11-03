@@ -91,7 +91,7 @@ export type TeamListItemModel = {
   /** Number of members in the team */
   memberCount: number
   /** Team members */
-  members?: TeamMemberModel[]
+  members?: TeamMemberModel[] | null
   /** Team leaders */
   leaders?: TeamMemberModel[]
 }
@@ -99,6 +99,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]

@@ -1,5 +1,5 @@
 import {
-  CreateViewApiArg,
+  GenericViewPostModel,
   useCreateViewMutation,
   useDeleteViewMutation,
   useUpdateViewMutation,
@@ -24,7 +24,7 @@ type Props = {
 }
 
 export type UseViewMutations = {
-  onCreateView: (payload: CreateViewApiArg['payload'], isStudioScope: boolean) => Promise<void>
+  onCreateView: (payload: GenericViewPostModel, isStudioScope: boolean) => Promise<void>
   onDeleteView: (viewId: string, isStudioScope: boolean) => Promise<void>
   onUpdateView: (
     viewId: string,
@@ -66,7 +66,7 @@ export const useViewsMutations = ({
         await createView({
           viewType: viewType,
           projectName: isStudioScope ? undefined : projectName,
-          payload,
+          genericViewPostModel: payload,
         }).unwrap()
 
         if (onCreate) {
@@ -90,7 +90,7 @@ export const useViewsMutations = ({
           viewId,
           viewType,
           projectName: isStudioScope ? undefined : projectName,
-          payload,
+          genericViewPatchModel: payload,
         }).unwrap()
 
         if (onUpdate) {
@@ -206,13 +206,13 @@ export const useViewsMutations = ({
             viewId: existingWorkingViewId,
             viewType,
             projectName,
-            payload: { settings: templateSettings },
+            genericViewPatchModel: { settings: templateSettings },
           }).unwrap()
         } else {
           await createView({
             viewType,
             projectName,
-            payload: workingViewPayload,
+            genericViewPostModel: workingViewPayload,
           }).unwrap()
         }
 

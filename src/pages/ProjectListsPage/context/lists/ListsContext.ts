@@ -3,6 +3,7 @@ import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import type { UseNewListReturn } from '../../hooks/useNewList'
 import type { UseDeleteListReturn } from '../../hooks/useDeleteList'
 import type { UseUpdateListReturn } from '../../hooks/useUpdateList'
+import type { UseDuplicateListReturn } from '../../hooks/useDuplicateList'
 import { EntityList } from '@shared/api'
 import { ListFolderFormData } from '../../components/ListFolderFormDialog'
 
@@ -58,6 +59,8 @@ export interface ListsContextType {
   onRemoveFoldersFromFolder: UseUpdateListReturn['onRemoveFoldersFromFolder']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
+  // Duplicating lists (copies metadata and items)
+  duplicateLists: UseDuplicateListReturn['duplicateLists']
   // Info dialog
   listDetailsOpen: boolean
   setListDetailsOpen: (open: boolean) => void

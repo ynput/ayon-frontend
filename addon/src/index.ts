@@ -61,6 +61,7 @@ export type {
   FolderInfo,
   PageMeta,
   PageViews,
+  ProjectPageMeta,
   ProjectFolders,
   ProjectFoldersScope,
   ProjectInfo,
@@ -89,6 +90,9 @@ export { prefetchPiece, runContribution } from './pieces'
 export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
 export { entityUrl, navigateToEntity } from './entityLinks'
 export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
+// AYON's details panel and viewer, opened from addon code
+export { closeDetails, openDetails, openViewer } from './openInHost'
+export type { ViewerTarget } from './openInHost'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'

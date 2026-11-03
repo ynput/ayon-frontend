@@ -160,6 +160,18 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
   navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
   \`\`\`
+- To show an entity without leaving the page, \`openDetails(entities)\` opens AYON's details panel
+  and \`openViewer(target)\` its viewer (the player), also from \`run\` pieces. Both return
+  \`false\` when they can't. The panel shows next to a \`project.page\` that sets
+  \`detailsPanel: true\`, for entities of that page's project; on any other page \`openDetails\`
+  falls back to \`navigateToEntity\`. Call it again to follow a selection, \`closeDetails()\` closes
+  it. Import neither panel nor viewer from \`@ynput/ayon-frontend-shared\`:
+
+  \`\`\`tsx
+  import { openDetails, openViewer } from '@ynput/ayon-addon'
+  openDetails(selected) // EntityRef[] of one type: folders, tasks, versions or representations
+  openViewer({ projectName, versionIds: [version.id], productId: version.productId })
+  \`\`\`
 - Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
   one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
   \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`

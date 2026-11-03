@@ -47,20 +47,20 @@ export type CreateSessionApiArg = {
 }
 export type GetUserPoolsApiResponse = /** status 200 Successful Response */ UserPoolModel[]
 export type GetUserPoolsApiArg = void
-export type UserAttribModel = {
-  fullName?: string
-  email?: string
-  avatarUrl?: string
-  developerMode?: boolean
-}
 export type UserModel = {
-  /** Name is an unique id of the {entity_name} */
+  /** Unique name of the user */
   name: string
-  uiExposureLevel?: number
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
+  uiExposureLevel?: number | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
   /** Time of creation */
   createdAt?: string
@@ -69,17 +69,19 @@ export type UserModel = {
 }
 export type LoginResponseModel = {
   /** Text message, which may be displayed to the user */
-  detail?: string
-  error?: string
-  token?: string
-  user?: UserModel
+  detail?: string | null
+  error?: string | null
+  token?: string | null
+  user?: UserModel | null
   /** URL to redirect the user after login */
-  redirectUrl?: string
+  redirectUrl?: string | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -95,21 +97,21 @@ export type LogoutResponseModel = {
   detail?: string
 }
 export type LocationInfo = {
-  country?: string
-  subdivision?: string
-  city?: string
+  country?: string | null
+  subdivision?: string | null
+  city?: string | null
 }
 export type AgentInfo = {
-  platform?: string
-  client?: string
-  device?: string
+  platform?: string | null
+  client?: string | null
+  device?: string | null
 }
 export type ClientInfo = {
   ip: string
   languages?: string[]
-  location?: LocationInfo
-  agent?: AgentInfo
-  site_id?: string
+  location?: LocationInfo | null
+  agent?: AgentInfo | null
+  site_id?: string | null
 }
 export type SessionModel = {
   user: UserModel
@@ -118,13 +120,13 @@ export type SessionModel = {
   lastUsed?: number
   isService?: boolean
   isApiKey?: boolean
-  clientInfo?: ClientInfo
+  clientInfo?: ClientInfo | null
 }
 export type CreateSessionRequest = {
   /** User name to create session for */
-  userName?: string
+  userName?: string | null
   /** Message to log in event stream */
-  message?: string
+  message?: string | null
 }
 export type UserPoolModel = {
   id: string
@@ -135,5 +137,7 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
-  meta?: object
+  meta?: {
+    [key: string]: any
+  } | null
 }

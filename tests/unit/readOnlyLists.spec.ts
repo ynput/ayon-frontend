@@ -1,6 +1,6 @@
 import { expect, test } from '@playwright/test'
 import { getReadOnlyLists } from '../../shared/src/containers/ProjectTreeTable/utils/getReadOnlyLists'
-import { LIST_COLUMN_IDS } from '../../shared/src/containers/ProjectTreeTable/utils/listColumns'
+import validateUpdateEntities from '../../shared/src/containers/ProjectTreeTable/utils/validateUpdateEntities'
 
 type Attribute = Parameters<typeof getReadOnlyLists>[0][number]
 
@@ -23,10 +23,15 @@ const BUILT_IN_FIELDS = [
 
 const sorted = (values: string[]) => [...values].sort()
 
-test('nothing is read-only without restrictions', () => {
-  expect(
-    getReadOnlyLists([attrib('fps'), attrib('custom', { builtin: false })], undefined),
-  ).toEqual({ readOnlyColumns: [], readOnlyAttribs: LIST_COLUMN_IDS })
+// set by the server, never writable from a table
+const SYSTEM_COLUMNS = ['createdAt', 'createdBy', 'updatedAt', 'updatedBy']
+// list membership columns, always read-only for paste
+const LIST_COLUMNS = ['lists', 'reviewSessions']
+
+test('nothing is read-only without restrictions, except the system and list columns', () => {
+  const lists = getReadOnlyLists([attrib('fps'), attrib('custom', { builtin: false })], undefined)
+  expect(sorted(lists.readOnlyColumns)).toEqual(sorted(SYSTEM_COLUMNS))
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted([...LIST_COLUMNS, ...SYSTEM_COLUMNS]))
 })
 
 test('attributes the user may not write are read-only', () => {
@@ -38,15 +43,49 @@ test('attributes the user may not write are read-only', () => {
     ],
     undefined,
   )
-  expect(sorted(lists.readOnlyColumns)).toEqual(['attrib_custom', 'attrib_fps'])
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['custom', 'fps', ...LIST_COLUMN_IDS]))
+  expect(sorted(lists.readOnlyColumns)).toEqual(
+    sorted(['attrib_custom', 'attrib_fps', ...SYSTEM_COLUMNS]),
+  )
+  expect(sorted(lists.readOnlyAttribs)).toEqual(
+    sorted(['custom', 'fps', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]),
+  )
 })
 
 test('built-in fields missing from the writable fields are read-only', () => {
   const lists = getReadOnlyLists([], ['name', 'status'])
   const locked = BUILT_IN_FIELDS.filter((field) => !['name', 'status'].includes(field))
-  expect(sorted(lists.readOnlyColumns)).toEqual(sorted([...locked, 'subType']))
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted([...locked, 'subType', ...LIST_COLUMN_IDS]))
+  expect(sorted(lists.readOnlyColumns)).toEqual(sorted([...locked, 'subType', ...SYSTEM_COLUMNS]))
+  expect(sorted(lists.readOnlyAttribs)).toEqual(
+    sorted([...locked, 'subType', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]),
+  )
+})
+
+test('dates and creators are read-only even when the server lists them as writable', () => {
+  const lists = getReadOnlyLists([], ['name', 'createdAt', 'updatedBy'])
+  for (const column of SYSTEM_COLUMNS) {
+    expect(lists.readOnlyColumns, column).toContain(column)
+    expect(lists.readOnlyAttribs, column).toContain(column)
+  }
+})
+
+test('an update to a date or creator column is refused before it is sent', () => {
+  for (const field of SYSTEM_COLUMNS) {
+    expect(() =>
+      validateUpdateEntities(
+        [
+          {
+            rowId: 'row',
+            id: 'entity',
+            type: 'folder',
+            field,
+            value: '2026-11-02',
+            isAttrib: false,
+          },
+        ],
+        [],
+      ),
+    ).toThrow(`“${field}” is read-only`)
+  }
 })
 
 test('writable fields can use snake_case names', () => {
@@ -69,8 +108,10 @@ test('extra read-only columns are added, and known attribute columns are reporte
     'attrib_fps',
     'attrib_unknown',
   ])
-  expect(sorted(lists.readOnlyColumns)).toEqual(['attrib_fps', 'attrib_unknown', 'status'])
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', ...LIST_COLUMN_IDS]))
+  expect(sorted(lists.readOnlyColumns)).toEqual(
+    sorted(['attrib_fps', 'attrib_unknown', 'status', ...SYSTEM_COLUMNS]),
+  )
+  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]))
 })
 
 test("'attrib' in the extra columns locks every built-in attribute", () => {
@@ -79,8 +120,12 @@ test("'attrib' in the extra columns locks every built-in attribute", () => {
     undefined,
     ['attrib'],
   )
-  expect(sorted(lists.readOnlyColumns)).toEqual(['attrib', 'attrib_fps', 'attrib_frameStart'])
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', 'frameStart', ...LIST_COLUMN_IDS]))
+  expect(sorted(lists.readOnlyColumns)).toEqual(
+    sorted(['attrib', 'attrib_fps', 'attrib_frameStart', ...SYSTEM_COLUMNS]),
+  )
+  expect(sorted(lists.readOnlyAttribs)).toEqual(
+    sorted(['fps', 'frameStart', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]),
+  )
 })
 
 // FLAG: with 'attrib' in the extra read-only columns, read-only custom attributes lose their lock
@@ -99,5 +144,7 @@ test.fixme("a custom attribute the user may not write stays read-only with 'attr
 // fixed in ynput/ayon-frontend#2404, switch back to test() once it is merged
 test.fixme('an empty writable fields list makes every built-in field read-only', () => {
   const lists = getReadOnlyLists([], [])
-  expect(sorted(lists.readOnlyColumns)).toEqual(sorted([...BUILT_IN_FIELDS, 'subType']))
+  expect(sorted(lists.readOnlyColumns)).toEqual(
+    sorted([...BUILT_IN_FIELDS, 'subType', ...SYSTEM_COLUMNS]),
+  )
 })

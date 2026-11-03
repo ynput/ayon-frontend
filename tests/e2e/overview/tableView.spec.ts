@@ -5,6 +5,9 @@ import { OverviewPage } from '../pages/OverviewPage'
 const workingView = (api: AyonApi, projectName: string) => () =>
   api.getWorkingViewSettings('overview', projectName)
 
+const columnWidth = (api: AyonApi, projectName: string, column: string) => async () =>
+  (await workingView(api, projectName)())?.columns?.find((c: any) => c.name === column)?.width
+
 const columnVisibility = (api: AyonApi, projectName: string, column: string) => async () =>
   (await workingView(api, projectName)())?.columns?.find((c: any) => c.name === column)?.visible
 
@@ -34,6 +37,26 @@ test.describe('overview table view', () => {
     await expect(overview.columnHeader('attrib_priority')).toBeHidden()
     await expect(overview.columnHeader('status')).toBeVisible()
     await expect.poll(columnVisibility(api, projectName, 'attrib_priority')).toBe(false)
+  })
+
+  test('resize a column and keep its width after a reload', async ({ page, api, projectName }) => {
+    await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    const header = overview.columnHeader('status')
+    const widthOf = async () => (await header.boundingBox())!.width
+    const before = await widthOf()
+
+    await overview.resizeColumn('status', 100)
+
+    await expect.poll(widthOf).toBeGreaterThan(before + 90)
+    await expect
+      .poll(async () => (await columnWidth(api, projectName, 'status')()) ?? 0)
+      .toBeGreaterThan(before + 90)
+    const saved = (await columnWidth(api, projectName, 'status')()) as number
+
+    await overview.goto(projectName)
+    await expect.poll(async () => Math.abs((await widthOf()) - saved)).toBeLessThan(2)
   })
 
   // FLAG (app bug): the first column change saves the columns in definition order, not the displayed order

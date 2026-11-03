@@ -521,8 +521,8 @@ const getListsGqlApiInjected = getListsGqlApiEnhanced.injectEndpoints({
 export const getListsApiEnhanced = entityListsApi.enhanceEndpoints({
   endpoints: {
     getEntityList: {
-      providesTags: (result, _e, { listId, projectName }) => [
-        { type: 'entityList', id: listId },
+      providesTags: (result, _e, { entityListId, projectName }) => [
+        { type: 'entityList', id: entityListId },
         { type: 'entityList', id: projectName },
         ...(result
           ? [
