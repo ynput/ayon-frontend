@@ -4,6 +4,7 @@ import React, { ReactNode, FC, useCallback, useEffect, useState } from 'react'
 import type { ListsAttributesContextValue } from '../lists-attributes/ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
+import { Button } from '@ynput/ayon-react-components'
 import { GuestAccessFallback, ListAccessFallback } from '../../components/ListAccessForm'
 import { ListsModuleContext } from './ListsModulesContextInstance'
 
@@ -30,6 +31,12 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
       label: 'Add attribute',
     }}
   />
+)
+
+// Until the module has loaded. The fallback's button opens the Power Pack dialog, also for users
+// with a license, whose module just hasn't arrived yet.
+const ListsAttributeSettingsLoading: FC<ListsAttributeSettingsFallbackProps> = () => (
+  <Button icon="add" label="Add attribute" variant="filled" disabled style={{ width: '100%' }} />
 )
 
 export interface ListsModuleContextType {
@@ -64,7 +71,10 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
   }, [shouldLoad, requestModules])
   const defer = !shouldLoad
 
-  const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
+  const [
+    ListsAttributesSettings,
+    { outdated: attributeSettingsOutdated, isLoading: isLoadingAttributeSettings },
+  ] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
@@ -93,7 +103,9 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     })
 
   const value = {
-    ListsAttributesSettings,
+    ListsAttributesSettings: isLoadingAttributeSettings
+      ? ListsAttributeSettingsLoading
+      : ListsAttributesSettings,
     ListAccess,
     GuestAccess,
     requiredVersion: {
