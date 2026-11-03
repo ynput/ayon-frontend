@@ -509,6 +509,12 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         return indexA - indexB
       })
 
+      // subtasks are saved directly and come in their own format, so the per-value check can miss them
+      if (selectedColIds.includes('subtasks') && columnReadOnly.includes('subtasks')) {
+        clipboardError('This column is read-only: "subtasks". Paste operation cancelled.')
+        return
+      }
+
       // First pass: validate all values
       for (let rowIndex = 0; rowIndex < sortedRows.length; rowIndex++) {
         const rowId = sortedRows[rowIndex]

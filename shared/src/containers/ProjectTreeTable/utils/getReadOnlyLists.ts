@@ -99,6 +99,12 @@ export const getReadOnlyLists = (
 
   readOnlyAttribs.push(...LIST_COLUMN_IDS)
 
+  // read-only built-in columns refuse paste too (subtasks and links don't go through updateEntities)
+  for (const column of extra) {
+    if (column === 'attrib' || column.startsWith('attrib_')) continue
+    if (!readOnlyAttribs.includes(column)) readOnlyAttribs.push(column)
+  }
+
   // paste checks readOnlyAttribs, so the system columns go there too
   for (const column of SYSTEM_READ_ONLY_COLUMNS) {
     readOnlyColumnsSet.add(column)

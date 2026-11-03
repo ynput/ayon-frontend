@@ -105,13 +105,17 @@ test('the type column is only read-only when both folder and task types are', ()
 test('extra read-only columns are added, and known attribute columns are reported as attributes', () => {
   const lists = getReadOnlyLists([attrib('fps')], undefined, [
     'status',
+    'subtasks',
     'attrib_fps',
     'attrib_unknown',
   ])
   expect(sorted(lists.readOnlyColumns)).toEqual(
-    sorted(['attrib_fps', 'attrib_unknown', 'status', ...SYSTEM_COLUMNS]),
+    sorted(['attrib_fps', 'attrib_unknown', 'status', 'subtasks', ...SYSTEM_COLUMNS]),
   )
-  expect(sorted(lists.readOnlyAttribs)).toEqual(sorted(['fps', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]))
+  // paste checks this list, so the extra built-in columns refuse paste as well
+  expect(sorted(lists.readOnlyAttribs)).toEqual(
+    sorted(['fps', 'status', 'subtasks', ...LIST_COLUMNS, ...SYSTEM_COLUMNS]),
+  )
 })
 
 test("'attrib' in the extra columns locks every built-in attribute", () => {

@@ -366,8 +366,9 @@ export const SlicerProvider = ({
     const { sliceType: type, ids } = pendingSelection
     if (type === 'hierarchy' && isLoadingFolders) return
     setPendingSelection(null)
-    // a slice type already in a panel (several panels with the power license) stays there
-    if (!sliceTypes.includes(type)) onSliceTypeChange(type)
+    // a slice type already in a panel stays there; without the power license only the first panel counts
+    const activeSliceTypes = powerLicense ? sliceTypes : sliceTypes.slice(0, 1)
+    if (!activeSliceTypes.includes(type)) onSliceTypeChange(type)
     // the panel id is its slice type; written directly, so it lands while the type change does
     setPanelSelection(type, Object.fromEntries(ids.map((id) => [id, true])))
     if (type === 'hierarchy' && projectFolders) {
