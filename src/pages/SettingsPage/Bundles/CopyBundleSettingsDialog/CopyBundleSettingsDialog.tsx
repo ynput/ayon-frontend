@@ -265,7 +265,7 @@ const CopyBundleSettingsDialog = ({
       />
       <SaveButton
         onClick={handleConfirm}
-        label="Copy studio + project settings"
+        label="Copy settings"
         active={confirmActive}
         saving={isSaving || isLoading}
       />
