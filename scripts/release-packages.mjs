@@ -533,9 +533,16 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force }) => {
   }
   // reads the working tree, so only when it is the release commit
   if (!problems.some((p) => p.startsWith('HEAD'))) problems.push(...check(repo))
-  if (!npmLoggedIn()) problems.push('not logged in to npm: `npm login`')
   if (problems.length && !force)
     die(`not publishing:\n  ${problems.join('\n  ')}\n(--force to ignore)`)
+
+  // npm login is a browser flow: run it here, in the terminal, once the other checks have passed
+  if (!npmLoggedIn()) {
+    if (!process.stdin.isTTY) die('not logged in to npm: run `npm login` first, then rerun')
+    console.log('not logged in to npm: starting npm login (approve it in the browser)\n')
+    spawnSync('npm', ['login'], { stdio: 'inherit' })
+    if (!npmLoggedIn()) die('npm login did not finish: nothing was published')
+  }
 
   const keys = packages.length ? packages : PUBLISH_ORDER
   const todo = []
