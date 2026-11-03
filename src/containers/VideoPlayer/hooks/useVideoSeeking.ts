@@ -19,7 +19,7 @@ const useVideoSeeking = (
     if (newTime === videoElement.currentTime) return false
     // HAVE_METADATA: a seek still in progress also drops the state to this, and
     // 'loadedmetadata' won't fire again, so waiting for it would lose the seek
-    if (videoElement.readyState >= HTMLMediaElement.HAVE_METADATA) {
+if (videoElement.readyState >= videoElement.HAVE_METADATA) {
       videoElement.currentTime = newTime
     } else {
       const onLoadedMetadata = () => {
