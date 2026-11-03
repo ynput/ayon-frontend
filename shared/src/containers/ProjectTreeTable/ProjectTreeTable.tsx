@@ -34,6 +34,7 @@ import buildTreeTableColumns, {
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
+import { useStableCellRenderers } from './hooks/useStableCellRenderers'
 import type { FieldStats } from '@shared/api'
 import { getCommonPinningStyles, getColumnWidth } from './utils/pinningUtils'
 import EmptyPlaceholder from '../../components/EmptyPlaceholder'
@@ -587,9 +588,11 @@ export const ProjectTreeTable = ({
     )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
+  const tableColumns = useStableCellRenderers(columns)
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
-    columns,
+    columns: tableColumns,
     defaultColumn: {
       minSize: 50,
       size: 150,
