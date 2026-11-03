@@ -27,6 +27,7 @@ type Props = {
   taskFilters: QueryFilter
   folderFilters: QueryFilter
   folderFilter?: string
+  folderIds?: string[]
   modules: ProjectTableModulesType
   versionArguments: QueryArguments
   expanded: ExpandedState
@@ -38,6 +39,7 @@ const useVersionsGroupBy = ({
   taskFilters,
   folderFilters,
   folderFilter,
+  folderIds,
   modules,
   versionArguments,
   expanded,
@@ -63,6 +65,7 @@ const useVersionsGroupBy = ({
     groupBy,
     projectName,
     entityType: 'version',
+    folderIds,
   })
 
   const { pageCounts: groupPageCounts, incrementPageCount } = useGroupedPagination({

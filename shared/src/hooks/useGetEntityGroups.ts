@@ -6,16 +6,23 @@ type GetEntityGroupsProps = {
   groupBy?: TableGroupBy
   projectName: string
   entityType: string
+  // hierarchy slicer selection, narrows folder groups to those subtrees
+  folderIds?: string[]
 }
 
-export const useGetEntityGroups = ({ groupBy, projectName, entityType }: GetEntityGroupsProps) => {
+export const useGetEntityGroups = ({
+  groupBy,
+  projectName,
+  entityType,
+  folderIds,
+}: GetEntityGroupsProps) => {
   // if groupBy is taskType always use entityType 'task'
   if (groupBy?.id === 'taskType') {
     entityType = 'task'
   }
   // 'folder' is taken by the overview flat folder view, so versions group by 'folderId'
   const isFolderGrouping = groupBy?.id === 'folderId'
-  const folderGroups = useFolderGroups(entityType, isFolderGrouping)
+  const folderGroups = useFolderGroups(entityType, isFolderGrouping, folderIds)
 
   // GROUPING
   // 1. get groups data

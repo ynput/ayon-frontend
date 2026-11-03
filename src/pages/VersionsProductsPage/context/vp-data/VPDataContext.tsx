@@ -632,6 +632,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     taskFilters: combinedTaskFilter.combinedFilters,
     folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
+    folderIds: slicerFolderIds,
     modules,
     versionArguments,
     expanded,

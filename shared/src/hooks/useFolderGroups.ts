@@ -12,23 +12,34 @@ const holdsEntity: Record<string, (folder: FolderWithFlags) => boolean> = {
   product: (folder) => folder.hasProducts ?? !!folder.hasVersions,
 }
 
-export const useFolderGroups = (entityType: string, enabled: boolean) => {
-  const { folders, isLoading } = useProjectFoldersContext()
+// scopeFolderIds: hierarchy slicer selection, groups stay inside its subtrees
+export const useFolderGroups = (
+  entityType: string,
+  enabled: boolean,
+  scopeFolderIds?: string[],
+) => {
+  const { folders, isLoading, getChildFolderIds } = useProjectFoldersContext()
   const { getFolderType } = useProjectContext()
+
+  const scope = useMemo(
+    () =>
+      enabled && scopeFolderIds?.length ? new Set(getChildFolderIds(scopeFolderIds, true)) : null,
+    [enabled, scopeFolderIds, getChildFolderIds],
+  )
 
   const groups = useMemo<EntityGroup[]>(() => {
     const predicate = holdsEntity[entityType]
     if (!enabled || !predicate) return []
 
     return (folders as FolderWithFlags[])
-      .filter(predicate)
+      .filter((folder) => predicate(folder) && (!scope || scope.has(folder.id)))
       .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
       .map((folder) => ({
         value: folder.id,
         label: folder.path,
         icon: getFolderType(folder.folderType)?.icon,
       }))
-  }, [enabled, entityType, folders, getFolderType])
+  }, [enabled, entityType, folders, getFolderType, scope])
 
   return { groups, isLoading: enabled && isLoading }
 }
