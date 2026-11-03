@@ -15,6 +15,9 @@ export const FriendlyDialog = styled(Dialog)`
     }
     .message {
       ${theme.bodyMedium}
+      a {
+        margin-right: 0;
+      }
     }
     ul.message {
       margin: 0;

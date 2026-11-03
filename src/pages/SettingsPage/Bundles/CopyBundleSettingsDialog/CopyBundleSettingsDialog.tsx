@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react'
 // Component imports
 import { Button, Icon, SaveButton } from '@ynput/ayon-react-components'
 import { BundleBadges } from '@containers/BundleDropdown'
+import { StyledLink } from '@shared/components'
 import { FriendlyDialog } from './CopyBundleSettingsDialog.styled'
 
 // Query imports
@@ -41,6 +42,7 @@ const CopyBundleSettingsDialog = ({
   const [sourceBundle, setSourceBundle] = useState<string | null>(null)
   const [sourceVariant, setSourceVariant] = useState('production')
   const [isSaving, setIsSaving] = useState(false)
+  const [showAddons, setShowAddons] = useState(false)
 
   const { data: { bundles = [] } = {} } = useListBundlesQuery({})
 
@@ -225,14 +227,23 @@ const CopyBundleSettingsDialog = ({
         <li>Settings of all projects, including their site settings</li>
       </ul>
       <span className="message">
-        Only addons in both bundles are copied. Their current settings in {bundle?.name} are
-        replaced.
+        Only addons in both bundles are copied
+        {!!copiedAddons.length && (
+          <>
+            {' ('}
+            <StyledLink onClick={() => setShowAddons(!showAddons)}>
+              {showAddons ? 'hide' : `show ${copiedAddons.length}`}
+            </StyledLink>
+            {')'}
+          </>
+        )}
+        . Their current settings in {bundle?.name} are replaced.
       </span>
     </>
   )
 
   const confirmActive = !!sourceBundle && !!sourceVariant
-  const cancelLabel = onSetTag ? 'Do not copy' : 'Cancel'
+  const cancelLabel = envTarget ? 'Do not copy' : 'Cancel'
 
   const footer = (
     <>
@@ -344,7 +355,7 @@ const CopyBundleSettingsDialog = ({
           </Styled.Row>
         </Styled.BundleCard>
       </div>
-      {!!copiedAddons.length && (
+      {showAddons && !!copiedAddons.length && (
         <Styled.AddonList>
           {copiedAddons.map(({ name, sourceVersion, targetVersion }) => (
             <Styled.AddonRow key={name}>
@@ -356,7 +367,7 @@ const CopyBundleSettingsDialog = ({
           ))}
         </Styled.AddonList>
       )}
-      {!!keptAddons.length && (
+      {showAddons && !!keptAddons.length && (
         <Styled.KeptAddons data-tooltip={keptAddons.join(', ')} data-tooltip-delay={0}>
           {keptAddons.length} other{' '}
           {keptAddons.length === 1 ? 'addon keeps its' : 'addons keep their'} current settings
