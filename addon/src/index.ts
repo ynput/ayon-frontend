@@ -116,3 +116,31 @@ export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 export { toast } from 'react-toastify'
+// query params in the URL, through the QueryParamProvider AYON renders around every slot: no
+// provider or router adapter in the addon
+export {
+  useQueryParam,
+  useQueryParams,
+  withDefault,
+  StringParam,
+  NumberParam,
+  BooleanParam,
+  ArrayParam,
+  NumericArrayParam,
+  DelimitedArrayParam,
+  DelimitedNumericArrayParam,
+  ObjectParam,
+  NumericObjectParam,
+  JsonParam,
+  DateParam,
+  DateTimeParam,
+  createEnumParam,
+  createEnumArrayParam,
+  createEnumDelimitedArrayParam,
+} from 'use-query-params'
+export type {
+  QueryParamConfig,
+  QueryParamConfigMap,
+  QueryParamOptions,
+  UrlUpdateType,
+} from 'use-query-params'
