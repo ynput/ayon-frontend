@@ -179,7 +179,7 @@ export class PageHealth {
       page
         .getByRole('heading', { name: /^Something went wrong/ })
         .or(page.getByRole('heading', { name: /^AYON has been updated/ }))
-        .or(page.getByRole('heading', { name: /^ERROR\b/ }))
+        .or(page.getByRole('heading', { name: /^Page not found$/ }))
         .or(page.getByText(/^(Project Not Found, Redirecting|Module Not Found)/))
         // FLAG: react-toastify marks the type only with a class
         .or(page.locator('.Toastify__toast--error'))

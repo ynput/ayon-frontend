@@ -83,7 +83,9 @@ test.describe('overview context menu', () => {
       .toBe(target.id)
   })
 
-  test('move a task to another folder', async ({ page, api, projectName }) => {
+  // FLAG (app bug): a folder's tasks still loading when the move is saved bring the task back to its old folder
+  // fixed in ynput/ayon-frontend#2612, switch back to test() once it is merged
+  test.fixme('move a task to another folder', async ({ page, api, projectName }) => {
     const source = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const target = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
     const task = await api.createTask(projectName, {

@@ -59,54 +59,55 @@ test.describe('dashboard live updates', () => {
     }
   })
 
-  // FLAG (app bug): state.project.name is never cleared, so the websocket stays filtered to that project
-  // fixed in ynput/ayon-frontend#2414, switch back to test() once it is merged
-  test.fixme(
-    'my open board still updates after I come from another project',
-    async ({ api, projectName, createUser, accessGroup, browser }) => {
-      test.setTimeout(120_000)
-      const otherProject = await api.createProject()
+  test('my open board still updates after I come from another project', async ({
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+    browser,
+  }) => {
+    test.setTimeout(120_000)
+    const otherProject = await api.createProject()
+    try {
+      const artist = await createUser({
+        licensed: true,
+        accessGroups: { [projectName]: [accessGroup], [otherProject]: [accessGroup] },
+      })
+      const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+      const anim = await api.createTask(projectName, {
+        folderId: folder.id,
+        name: 'anim',
+        taskType: 'Animation',
+        assignees: [artist.name],
+      })
+      const comp = await api.createTask(projectName, {
+        folderId: folder.id,
+        name: 'comp',
+        taskType: 'Compositing',
+      })
+
+      const { context, page } = await signInAs(browser, artist.name, artist.password)
       try {
-        const artist = await createUser({
-          licensed: true,
-          accessGroups: { [projectName]: [accessGroup], [otherProject]: [accessGroup] },
-        })
-        const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-        const anim = await api.createTask(projectName, {
-          folderId: folder.id,
-          name: 'anim',
-          taskType: 'Animation',
-          assignees: [artist.name],
-        })
-        const comp = await api.createTask(projectName, {
-          folderId: folder.id,
-          name: 'comp',
-          taskType: 'Compositing',
-        })
+        const live = new LiveUpdates(page)
+        await new OverviewPage(page).goto(otherProject)
+        // back home through the header, without reloading the app
+        await page.getByRole('link', { name: 'home Home' }).click()
+        const dashboard = new DashboardTasksPage(page)
+        await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
+        await dashboard.selectProject(projectName)
+        await expect(dashboard.card(anim.id)).toBeVisible()
+        await live.expectSubscribed('entity.task.assignees_changed', projectName)
 
-        const { context, page } = await signInAs(browser, artist.name, artist.password)
-        try {
-          const live = new LiveUpdates(page)
-          await new OverviewPage(page).goto(otherProject)
-          // back home through the header, without reloading the app
-          await page.getByRole('link', { name: 'home Home' }).click()
-          const dashboard = new DashboardTasksPage(page)
-          await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
-          await dashboard.selectProject(projectName)
-          await expect(dashboard.card(anim.id)).toBeVisible()
-          await live.expectSubscribed('entity.task.assignees_changed', projectName)
+        await api.updateTask(projectName, comp.id, { assignees: [artist.name] })
 
-          await api.updateTask(projectName, comp.id, { assignees: [artist.name] })
-
-          await expect(dashboard.card(comp.id)).toContainText('comp', LIVE_UPDATE)
-        } finally {
-          await context.close()
-        }
+        await expect(dashboard.card(comp.id)).toContainText('comp', LIVE_UPDATE)
       } finally {
-        await api.deleteProject(otherProject)
+        await context.close()
       }
-    },
-  )
+    } finally {
+      await api.deleteProject(otherProject)
+    }
+  })
 
   test('a task created for me is not streamed onto my open board, and shows after a reload', async ({
     api,

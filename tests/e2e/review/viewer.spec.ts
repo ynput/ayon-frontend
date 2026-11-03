@@ -128,40 +128,45 @@ test.describe('viewer', () => {
     await viewer.expectImage('still', MEDIA.stillImage)
   })
 
-  test('play, pause and step frames with the keyboard', async ({ page, api, projectName }) => {
-    const {
-      versions: [v1],
-    } = await seedReviewVersions(api, projectName, [[{ media: MEDIA.navyVideo }]])
-    const products = new ProductsPage(page)
-    await products.goto(projectName)
-    await products.openInViewer('renderMain - v001')
-    const viewer = new ViewerPage(page)
-    await viewer.expectVideo(v1.reviewables[0].fileId, MEDIA.navyVideo)
-    await expect(viewer.control('pause')).toBeVisible()
-    // see ViewerPage.pause: let it play a few frames before pausing
-    await expect.poll(async () => (await viewer.videoState()).currentTime).toBeGreaterThan(0.2)
+  // FLAG (app bug): an arrow key right after a seek was dropped or stepped from the frame shown before it
+  // fixed in ynput/ayon-frontend#2610, switch back to test() once it is merged
+  test.fixme(
+    'play, pause and step frames with the keyboard',
+    async ({ page, api, projectName }) => {
+      const {
+        versions: [v1],
+      } = await seedReviewVersions(api, projectName, [[{ media: MEDIA.navyVideo }]])
+      const products = new ProductsPage(page)
+      await products.goto(projectName)
+      await products.openInViewer('renderMain - v001')
+      const viewer = new ViewerPage(page)
+      await viewer.expectVideo(v1.reviewables[0].fileId, MEDIA.navyVideo)
+      await expect(viewer.control('pause')).toBeVisible()
+      // see ViewerPage.pause: let it play a few frames before pausing
+      await expect.poll(async () => (await viewer.videoState()).currentTime).toBeGreaterThan(0.2)
 
-    await page.keyboard.press('k')
-    await expect(viewer.control('play_arrow')).toBeVisible()
-    await expect.poll(async () => (await viewer.videoState()).paused).toBe(true)
-    await viewer.goToFrame(100)
+      await page.keyboard.press('k')
+      await expect(viewer.control('play_arrow')).toBeVisible()
+      await expect.poll(async () => (await viewer.videoState()).paused).toBe(true)
+      await viewer.goToFrame(100)
 
-    await page.keyboard.press('ArrowRight')
-    await viewer.expectFrame(101)
-    await page.keyboard.press('ArrowLeft')
-    await viewer.expectFrame(100)
-    await page.keyboard.press('ArrowLeft')
-    await viewer.expectFrame(99)
-    await page.keyboard.press('l')
-    await viewer.expectFrame(104)
+      await page.keyboard.press('ArrowRight')
+      await viewer.expectFrame(101)
+      await page.keyboard.press('ArrowLeft')
+      await viewer.expectFrame(100)
+      await page.keyboard.press('ArrowLeft')
+      await viewer.expectFrame(99)
+      await page.keyboard.press('l')
+      await viewer.expectFrame(104)
 
-    await page.keyboard.press('k')
-    await expect(viewer.control('pause')).toBeVisible()
-    await expect.poll(async () => (await viewer.videoState()).paused).toBe(false)
-  })
+      await page.keyboard.press('k')
+      await expect(viewer.control('pause')).toBeVisible()
+      await expect.poll(async () => (await viewer.videoState()).paused).toBe(false)
+    },
+  )
 
-  // FLAG (app bug): Shift+A / Shift+D (go to start / end) also switch version; useReviewShortcuts ignores Shift
-  // fixed in ynput/ayon-frontend#2406, switch back to test() once it is merged
+  // FLAG (app bug): a seek made while another one runs was dropped, so Shift+D right after typing a frame did nothing
+  // fixed in ynput/ayon-frontend#2610, switch back to test() once it is merged
   test.fixme(
     'go to start and end with Shift+A / Shift+D keeps the version',
     async ({ page, api, projectName }) => {

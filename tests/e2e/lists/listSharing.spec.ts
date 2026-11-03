@@ -188,35 +188,34 @@ test.describe('list sharing', () => {
       .toEqual([anim.id])
   })
 
-  // FLAG (backend bug): editors via a shared access group or team get 403 on every list change
-  // fixed in ynput/ayon-backend#1172, switch back to test() once it is merged
-  test.fixme(
-    'members of an access group a list is shared with as editors can remove its items',
-    async ({ browser, api, projectName, createUser, accessGroup }) => {
-      const user = await createUser({ accessGroups: { [projectName]: [accessGroup] } })
-      const { listId, anim } = await seedList(api, projectName)
-      await api.updateEntityList(projectName, listId, {
-        access: { __everyone__: 0, [`group:${accessGroup}`]: 20 },
-      })
+  test('members of an access group a list is shared with as editors can remove its items', async ({
+    browser,
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+  }) => {
+    const user = await createUser({ accessGroups: { [projectName]: [accessGroup] } })
+    const { listId, anim } = await seedList(api, projectName)
+    await api.updateEntityList(projectName, listId, {
+      access: { __everyone__: 0, [`group:${accessGroup}`]: 20 },
+    })
 
-      const { context, page } = await signInAs(browser, user.name, user.password)
-      try {
-        const lists = new ListsPage(page)
-        await lists.goto(projectName)
-        await lists.openList('Client picks')
-        await expect(lists.itemNameCell('comp')).toBeVisible()
+    const { context, page } = await signInAs(browser, user.name, user.password)
+    try {
+      const lists = new ListsPage(page)
+      await lists.goto(projectName)
+      await lists.openList('Client picks')
+      await expect(lists.itemNameCell('comp')).toBeVisible()
 
-        await lists.removeItem('comp')
+      await lists.removeItem('comp')
 
-        await expect(lists.itemNameCell('comp')).toBeHidden()
-      } finally {
-        await context.close()
-      }
-      await expect
-        .poll(async () =>
-          (await api.getEntityList(projectName, listId)).items.map((i) => i.entityId),
-        )
-        .toEqual([anim.id])
-    },
-  )
+      await expect(lists.itemNameCell('comp')).toBeHidden()
+    } finally {
+      await context.close()
+    }
+    await expect
+      .poll(async () => (await api.getEntityList(projectName, listId)).items.map((i) => i.entityId))
+      .toEqual([anim.id])
+  })
 })

@@ -5,9 +5,20 @@ export class DashboardProjectsPage {
   constructor(readonly page: Page) {}
 
   async goto() {
+    await this.useEmptyView()
     await this.page.goto('/dashboard/projects')
     await expect(this.page.getByRole('button', { name: /Create new project$/ })).toBeVisible({
       timeout: 30_000,
+    })
+  }
+
+  /** The user's own projects view outlives runs (e.g. hiding archived projects): the page gets it empty */
+  private async useEmptyView() {
+    await this.page.route(/\/api\/views\/projects-overview\/(working|default)\b/, async (route) => {
+      if (route.request().method() !== 'GET') return route.continue()
+      const response = await route.fetch()
+      if (!response.ok()) return route.fulfill({ response })
+      await route.fulfill({ response, json: { ...(await response.json()), settings: {} } })
     })
   }
 

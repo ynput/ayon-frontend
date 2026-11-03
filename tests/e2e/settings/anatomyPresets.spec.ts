@@ -47,9 +47,7 @@ test.describe('anatomy presets', () => {
     }
   })
 
-  // FLAG (app bug): PresetNameDialog stays mounted with useState(initialValue), so it misses the current name
-  // fixed in ynput/ayon-frontend#2397, switch back to test() once it is merged
-  test.fixme('the rename dialog starts with the current preset name', async ({ page, api }) => {
+  test('the rename dialog starts with the current preset name', async ({ page, api }) => {
     const name = uniqueName('preset')
     await api.createAnatomyPreset(name)
     try {
@@ -64,9 +62,7 @@ test.describe('anatomy presets', () => {
     }
   })
 
-  // FLAG (app bug): "Set as primary" stayed enabled for the primary built-in default ('_' is never listed)
-  // fixed in ynput/ayon-frontend#2401, switch back to test() once it is merged
-  test.fixme('"Set as primary" is disabled for the primary preset', async ({ page, api }) => {
+  test('"Set as primary" is disabled for the primary preset', async ({ page, api }) => {
     const name = uniqueName('preset')
     await api.createAnatomyPreset(name)
     try {

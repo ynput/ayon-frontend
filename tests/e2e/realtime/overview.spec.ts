@@ -80,32 +80,31 @@ test.describe('overview live updates', () => {
     await expect(overview.nameCell('sh020')).toBeVisible()
   })
 
-  // FLAG (app bug): folders created elsewhere are streamed in and the sync button never highlights for them
-  // fixed in ynput/ayon-frontend#2423, switch back to test() once it is merged
-  test.fixme(
-    'a folder created elsewhere is not streamed in: the sync button highlights and syncing shows it',
-    async ({ page, api, projectName }) => {
-      const { folder } = await seed(api, projectName)
-      const overview = new OverviewPage(page)
-      const live = new LiveUpdates(page)
-      await openOverview(overview, live, projectName, 'entity.folder.created')
-      await expect(overview.nameCell('sh020')).toBeHidden()
+  test('a folder created elsewhere is not streamed in: the sync button highlights and syncing shows it', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { folder } = await seed(api, projectName)
+    const overview = new OverviewPage(page)
+    const live = new LiveUpdates(page)
+    await openOverview(overview, live, projectName, 'entity.folder.created')
+    await expect(overview.nameCell('sh020')).toBeHidden()
 
-      await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
-      // a later rename is fetched together with, or after, a streamed creation
-      await api.updateFolder(projectName, folder.id, { label: 'Opening' })
+    await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
+    // a later rename is fetched together with, or after, a streamed creation
+    await api.updateFolder(projectName, folder.id, { label: 'Opening' })
 
-      await expect(overview.nameCell('Opening')).toBeVisible(LIVE_UPDATE)
-      await expect(overview.nameCell('sh020')).toBeHidden()
-      const sync = syncButton(overview.table)
-      await expectSyncHighlighted(sync, /new folder/)
+    await expect(overview.nameCell('Opening')).toBeVisible(LIVE_UPDATE)
+    await expect(overview.nameCell('sh020')).toBeHidden()
+    const sync = syncButton(overview.table)
+    await expectSyncHighlighted(sync, /new folder/)
 
-      await sync.click()
+    await sync.click()
 
-      await expect(overview.nameCell('sh020')).toBeVisible()
-      await expect(sync).not.toHaveClass(/has-updates/)
-    },
-  )
+    await expect(overview.nameCell('sh020')).toBeVisible()
+    await expect(sync).not.toHaveClass(/has-updates/)
+  })
 
   test('a task deleted elsewhere disappears from the open overview', async ({
     page,
@@ -125,50 +124,49 @@ test.describe('overview live updates', () => {
     await expect(overview.nameCell('anim')).toBeVisible()
   })
 
-  // FLAG (app bug): the sync button never highlights for tasks created elsewhere, so they only show after a reload
-  // fixed in ynput/ayon-frontend#2423, switch back to test() once it is merged
-  test.fixme(
-    'a task created elsewhere is not streamed in: the sync button highlights and syncing shows it',
-    async ({ page, api, projectName }) => {
-      const { folder, task } = await seed(api, projectName)
-      const overview = new OverviewPage(page)
-      const live = new LiveUpdates(page)
-      await openOverview(overview, live, projectName, 'entity.task.created')
+  test('a task created elsewhere is not streamed in: the sync button highlights and syncing shows it', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { folder, task } = await seed(api, projectName)
+    const overview = new OverviewPage(page)
+    const live = new LiveUpdates(page)
+    await openOverview(overview, live, projectName, 'entity.task.created')
 
-      await api.createTask(projectName, { folderId: folder.id, name: 'paint', taskType: 'Paint' })
-      // a later rename is fetched together with, or after, a streamed creation
-      await api.updateTask(projectName, task.id, { label: 'Final grade' })
+    await api.createTask(projectName, { folderId: folder.id, name: 'paint', taskType: 'Paint' })
+    // a later rename is fetched together with, or after, a streamed creation
+    await api.updateTask(projectName, task.id, { label: 'Final grade' })
 
-      await expect(overview.nameCell('Final grade')).toBeVisible(LIVE_UPDATE)
-      await expect(overview.nameCell('paint')).toBeHidden()
-      const sync = syncButton(overview.table)
-      await expectSyncHighlighted(sync, /new task/)
+    await expect(overview.nameCell('Final grade')).toBeVisible(LIVE_UPDATE)
+    await expect(overview.nameCell('paint')).toBeHidden()
+    const sync = syncButton(overview.table)
+    await expectSyncHighlighted(sync, /new task/)
 
-      await sync.click()
+    await sync.click()
 
-      await expect(overview.nameCell('paint')).toBeVisible()
-      await expect(sync).not.toHaveClass(/has-updates/)
-    },
-  )
+    await expect(overview.nameCell('paint')).toBeVisible()
+    await expect(sync).not.toHaveClass(/has-updates/)
+  })
 
-  // FLAG (backend bug): a multi-field update sends events that all carry the last field's value
-  // fixed in ynput/ayon-backend#1167, switch back to test() once it is merged
-  test.fixme(
-    'a status and assignee change made in one update shows the new status',
-    async ({ page, api, projectName, createUser }) => {
-      const artist = await createUser({ licensed: true })
-      const { task } = await seed(api, projectName)
-      const overview = new OverviewPage(page)
-      const live = new LiveUpdates(page)
-      await openOverview(overview, live, projectName, 'entity.task.status_changed')
+  test('a status and assignee change made in one update shows the new status', async ({
+    page,
+    api,
+    projectName,
+    createUser,
+  }) => {
+    const artist = await createUser({ licensed: true })
+    const { task } = await seed(api, projectName)
+    const overview = new OverviewPage(page)
+    const live = new LiveUpdates(page)
+    await openOverview(overview, live, projectName, 'entity.task.status_changed')
 
-      await api.updateTask(projectName, task.id, {
-        status: 'In progress',
-        assignees: [artist.name],
-      })
+    await api.updateTask(projectName, task.id, {
+      status: 'In progress',
+      assignees: [artist.name],
+    })
 
-      await expect(overview.cell('comp', 'status')).toContainText('In progress', LIVE_UPDATE)
-      await expect(overview.cell('comp', 'status')).not.toContainText(artist.name)
-    },
-  )
+    await expect(overview.cell('comp', 'status')).toContainText('In progress', LIVE_UPDATE)
+    await expect(overview.cell('comp', 'status')).not.toContainText(artist.name)
+  })
 })

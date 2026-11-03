@@ -56,9 +56,7 @@ test.describe('secrets', () => {
     }
   })
 
-  // FLAG (app bug): Secrets.jsx rendered `{data?.length && ...}`, a literal "0" when no secrets were left
-  // fixed in ynput/ayon-frontend#2400, switch back to test() once it is merged
-  test.fixme('deleting the last secret leaves an empty list', async ({ page, api }) => {
+  test('deleting the last secret leaves an empty list', async ({ page, api }) => {
     const name = uniqueName('secret')
     await api.setSecret(name, 'last-value')
     try {

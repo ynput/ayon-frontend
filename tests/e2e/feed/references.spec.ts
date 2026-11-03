@@ -147,28 +147,22 @@ test.describe('references in comments', () => {
       .toEqual([{ body: `${body} first`, referenceType: 'mention', origin: 'lighting' }])
   })
 
-  // FLAG (backend bug): editing a comment never removes a mention, update_activity re-inserts it
-  // fixed in ynput/ayon-backend#1168, switch back to test() once it is merged
-  test.fixme(
-    'removing a reference while editing takes the comment out of that feed',
-    async ({ page, api, projectName }) => {
-      const { lighting, comp } = await setup(api, projectName)
-      await api.createComment(
-        projectName,
-        'task',
-        lighting.id,
-        `Match [comp](task:${comp.id}) edges`,
-      )
-      const panel = await openTask(page, projectName, 'lighting')
-      await expect(panel.reference('Match', 'comp')).toBeVisible()
+  test('removing a reference while editing takes the comment out of that feed', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { lighting, comp } = await setup(api, projectName)
+    await api.createComment(projectName, 'task', lighting.id, `Match [comp](task:${comp.id}) edges`)
+    const panel = await openTask(page, projectName, 'lighting')
+    await expect(panel.reference('Match', 'comp')).toBeVisible()
 
-      await panel.editComment('Match', 'Edges are fine now')
+    await panel.editComment('Match', 'Edges are fine now')
 
-      await expect(panel.reference('Edges are fine now', 'comp')).toHaveCount(0)
-      await expect
-        .poll(async () => (await api.listActivities(projectName, 'task', lighting.id))[0]?.body)
-        .toBe('Edges are fine now')
-      await expect.poll(mentionsOf(api, projectName, comp.id)).toEqual([])
-    },
-  )
+    await expect(panel.reference('Edges are fine now', 'comp')).toHaveCount(0)
+    await expect
+      .poll(async () => (await api.listActivities(projectName, 'task', lighting.id))[0]?.body)
+      .toBe('Edges are fine now')
+    await expect.poll(mentionsOf(api, projectName, comp.id)).toEqual([])
+  })
 })

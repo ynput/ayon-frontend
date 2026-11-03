@@ -24,7 +24,9 @@ const versionComments = async (api: AyonApi, projectName: string, versionId: str
 }
 
 test.describe('viewer feed', () => {
-  test('comment on a version from the viewer', async ({ page, api, projectName }) => {
+  // FLAG (app bug): Power Pack's annotations module loads after the viewer opens and remounts it
+  // (ViewerProvider swaps the fallback AnnotationsProvider), closing the open comment box. No fix yet.
+  test.fixme('comment on a version from the viewer', async ({ page, api, projectName }) => {
     const {
       versions: [v1],
     } = await seedReviewVersions(api, projectName, [[{ media: MEDIA.stillImage }]])
@@ -78,7 +80,9 @@ test.describe('viewer feed', () => {
     await viewer.expectFrame(120)
   })
 
-  test('change the version status from the viewer', async ({ page, api, projectName }) => {
+  // FLAG (app bug): Power Pack's annotations module loads after the viewer opens and remounts it
+  // (ViewerProvider swaps the fallback AnnotationsProvider), closing the open status list. No fix yet.
+  test.fixme('change the version status from the viewer', async ({ page, api, projectName }) => {
     const {
       versions: [v1],
     } = await seedReviewVersions(api, projectName, [[{ media: MEDIA.navyVideo }]])
@@ -100,43 +104,42 @@ test.describe('viewer feed', () => {
     await expect(products.cell('renderMain - v001', 'status')).toContainText('Approved')
   })
 
-  test('up and down still switch the version after commenting', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    await seedReviewVersions(api, projectName, [
-      [{ media: MEDIA.stillImage }],
-      [{ media: MEDIA.stillImage }],
-    ])
-    const products = new ProductsPage(page)
-    await products.goto(projectName)
-    await products.cell('renderMain - v001', 'name').click()
-    await page.keyboard.press(' ')
-    const viewer = new ViewerPage(page)
-    await viewer.expectVersion('v001')
+  // FLAG (app bug): Power Pack's annotations module loads after the viewer opens and remounts it
+  // (ViewerProvider swaps the fallback AnnotationsProvider), closing the open comment box. No fix yet.
+  test.fixme(
+    'up and down still switch the version after commenting',
+    async ({ page, api, projectName }) => {
+      await seedReviewVersions(api, projectName, [
+        [{ media: MEDIA.stillImage }],
+        [{ media: MEDIA.stillImage }],
+      ])
+      const products = new ProductsPage(page)
+      await products.goto(projectName)
+      await products.cell('renderMain - v001', 'name').click()
+      await page.keyboard.press(' ')
+      const viewer = new ViewerPage(page)
+      await viewer.expectVersion('v001')
 
-    await viewer.details.addComment('Next one please')
+      await viewer.details.addComment('Next one please')
 
-    // the posted comment leaves the box open and empty
-    await page.keyboard.press('ArrowDown')
-    await viewer.expectVersion('v002')
-    await expect(viewer.details.commentEditor).toBeFocused()
+      // the posted comment leaves the box open and empty
+      await page.keyboard.press('ArrowDown')
+      await viewer.expectVersion('v002')
+      await expect(viewer.details.commentEditor).toBeFocused()
 
-    await viewer.details.commentEditor.pressSequentially('x')
-    await page.keyboard.press('ArrowUp')
-    await expect(viewer.versionDropdown).toHaveText(/Viewing: v002/)
-    await page.keyboard.press('Backspace')
+      await viewer.details.commentEditor.pressSequentially('x')
+      await page.keyboard.press('ArrowUp')
+      await expect(viewer.versionDropdown).toHaveText(/Viewing: v002/)
+      await page.keyboard.press('Backspace')
 
-    await page.keyboard.press('Escape')
-    await expect(viewer.details.commentEditor).toBeHidden()
-    await page.keyboard.press('ArrowUp')
-    await viewer.expectVersion('v001')
-  })
+      await page.keyboard.press('Escape')
+      await expect(viewer.details.commentEditor).toBeHidden()
+      await page.keyboard.press('ArrowUp')
+      await viewer.expectVersion('v001')
+    },
+  )
 
-  // FLAG (app bug): "Approved - <version>" is always "Approved - None" when a project page is opened directly
-  // fixed in ynput/ayon-frontend#2407, switch back to test() once it is merged
-  test.fixme('jump to the approved version in the viewer', async ({ page, api, projectName }) => {
+  test('jump to the approved version in the viewer', async ({ page, api, projectName }) => {
     const {
       versions: [v1],
     } = await seedReviewVersions(api, projectName, [

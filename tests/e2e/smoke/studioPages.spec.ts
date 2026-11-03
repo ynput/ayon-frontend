@@ -232,9 +232,7 @@ test.describe('smoke: studio pages', () => {
   ])
 })
 
-// FLAG (app bug): the catch-all 404 route in AppRoutes.tsx has no path="*"; unknown URLs render empty
-// fixed in ynput/ayon-frontend#2417, switch back to test() once it is merged
-test.fixme('smoke: an unknown URL shows the 404 page', async ({ page }) => {
+test('smoke: an unknown URL shows the 404 page', async ({ page }) => {
   await page.goto('/e2e-no-such-page')
-  await expect(heading(page, 'ERROR 404')).toBeVisible({ timeout: 30_000 })
+  await expect(heading(page, 'Page not found')).toBeVisible({ timeout: 30_000 })
 })

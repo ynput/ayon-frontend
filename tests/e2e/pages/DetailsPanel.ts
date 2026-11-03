@@ -141,8 +141,11 @@ export class DetailsPanel {
     await this.root.getByText(/^(Leave a comment|Comment, or type)/).click()
     await expect(this.commentEditor).toBeVisible()
     await this.commentEditor.pressSequentially(text)
-    await this.root.getByRole('button', { name: 'Comment', exact: true }).click()
+    const submit = this.root.getByRole('button', { name: 'Comment', exact: true })
+    await submit.click()
     await expect(this.comment(text)).toBeVisible()
+    // the comment shows before it is saved, the box takes keys again once the button is enabled
+    await expect(submit).toBeEnabled()
   }
 
   /** Type a comment that mentions a user, picking them by full name from the @ suggestions */
@@ -393,7 +396,7 @@ export class DetailsPanel {
     // FLAG: both entries are plain divs without a role, found by their title
     await this.page.getByText(watch ? 'Watch' : 'Unwatch', { exact: true }).click()
     await expect(this.watchersButton).toHaveText(watch ? 'notifications_active' : 'notifications')
-    await this.closeDropdown()
+    await this.closeWatchers()
   }
 
   async toggleWatchers(...userNames: string[]) {
@@ -401,12 +404,13 @@ export class DetailsPanel {
     for (const name of userNames) {
       await this.page.locator(`.options [data-value="${name}"]`).first().click()
     }
-    await this.closeDropdown()
+    await this.closeWatchers()
   }
 
-  private async closeDropdown() {
-    // click outside to close: Escape also reaches the overview table, which clears the selection and the panel
-    await this.root.getByRole('heading', { level: 2 }).click()
+  private async closeWatchers() {
+    // click outside to close: Escape also reaches the overview table, which clears the selection and the
+    // panel. The open list covers most of the title, so the click goes to its left edge.
+    await this.root.getByRole('heading', { level: 2 }).click({ position: { x: 2, y: 2 } })
     await expect(this.page.locator('.options')).toBeHidden()
   }
 }

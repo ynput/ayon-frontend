@@ -55,36 +55,35 @@ test.describe('task progress live updates', () => {
     await expect(progress.taskCell('sh020', 'anim')).toBeHidden(LIVE_UPDATE)
   })
 
-  // FLAG (app bug): tasks created elsewhere are streamed in and the sync button never highlights for them
-  // fixed in ynput/ayon-frontend#2423, switch back to test() once it is merged
-  test.fixme(
-    'a task created elsewhere is not streamed in: the sync button highlights and syncing shows it',
-    async ({ page, api, projectName }) => {
-      const { sh020, comp } = await seed(api, projectName)
-      const progress = new TasksProgressPage(page)
-      const live = new LiveUpdates(page)
-      await openProgress(progress, projectName)
-      await live.expectSubscribed('entity.task.created', projectName)
+  test('a task created elsewhere is not streamed in: the sync button highlights and syncing shows it', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { sh020, comp } = await seed(api, projectName)
+    const progress = new TasksProgressPage(page)
+    const live = new LiveUpdates(page)
+    await openProgress(progress, projectName)
+    await live.expectSubscribed('entity.task.created', projectName)
 
-      await api.createTask(projectName, {
-        folderId: sh020.id,
-        name: 'comp',
-        taskType: 'Compositing',
-      })
-      // a later rename is fetched together with, or after, a streamed creation
-      await api.updateTask(projectName, comp.id, { label: 'Final comp' })
+    await api.createTask(projectName, {
+      folderId: sh020.id,
+      name: 'comp',
+      taskType: 'Compositing',
+    })
+    // a later rename is fetched together with, or after, a streamed creation
+    await api.updateTask(projectName, comp.id, { label: 'Final comp' })
 
-      await expect(progress.taskCell('sh010', 'Final comp')).toBeVisible(LIVE_UPDATE)
-      await expect(progress.taskCell('sh020', 'comp')).toBeHidden()
-      const sync = syncButton(page.locator('.tasks-progress-table'))
-      await expectSyncHighlighted(sync, /new task/)
-      // FLAG (app bug): Shift+R on a focused slicer row renames the folder instead of syncing, so focus the grid
-      await progress.taskCell('sh010', 'Final comp').click()
+    await expect(progress.taskCell('sh010', 'Final comp')).toBeVisible(LIVE_UPDATE)
+    await expect(progress.taskCell('sh020', 'comp')).toBeHidden()
+    const sync = syncButton(page.locator('.tasks-progress-table'))
+    await expectSyncHighlighted(sync, /new task/)
+    // FLAG (app bug): Shift+R on a focused slicer row renames the folder instead of syncing, so focus the grid
+    await progress.taskCell('sh010', 'Final comp').click()
 
-      await page.keyboard.press('Shift+R')
+    await page.keyboard.press('Shift+R')
 
-      await expect(progress.taskCell('sh020', 'comp')).toContainText('Not ready')
-      await expect(sync).not.toHaveClass(/has-updates/)
-    },
-  )
+    await expect(progress.taskCell('sh020', 'comp')).toContainText('Not ready')
+    await expect(sync).not.toHaveClass(/has-updates/)
+  })
 })

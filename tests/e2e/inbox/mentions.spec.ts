@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures'
 import { OverviewPage } from '../pages/OverviewPage'
 import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs } from '../support/api'
 
 test.describe('mentions and inbox', () => {
   test('mention a user in a comment', async ({ page, api, projectName, createUser }) => {
@@ -31,7 +32,7 @@ test.describe('mentions and inbox', () => {
     createUser,
     accessGroup,
     browser,
-  }) => {
+  }, testInfo) => {
     const artist = await createUser({
       fullName: 'Inbox Artist',
       accessGroups: { [projectName]: [accessGroup] },
@@ -50,6 +51,7 @@ test.describe('mentions and inbox', () => {
     )
 
     const { context, page } = await signInAs(browser, artist.name, artist.password)
+    const artistApi = await apiAs(testInfo, artist.name, artist.password)
     try {
       await page.goto('/inbox/important')
       const message = page.locator('.inbox-message').filter({ hasText: 'notes for you' })
@@ -60,6 +62,10 @@ test.describe('mentions and inbox', () => {
       await message.locator('.clear').click()
 
       await expect(message).toBeHidden()
+      // the message hides before the server has it, leaving the page now would cancel the request
+      await expect
+        .poll(async () => (await artistApi.listInboxMessages({ active: false })).map((m) => m.body))
+        .toEqual([expect.stringContaining('notes for you')])
       await page.goto('/inbox/cleared')
       await expect(page.locator('.inbox-message').filter({ hasText: 'notes for you' })).toBeVisible(
         {

@@ -22,12 +22,9 @@ test.describe('smoke: project pages', () => {
         await visible(new OverviewPage(page).row(d.folder.name))
       },
     },
-    // FLAG (app bug, intermittent): TasksProgressPage can query project "null" before redux has the name
     {
       name: 'task progress',
       path: project('tasks'),
-      fixme:
-        'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: (page, d) =>
         visible(
           page.getByRole('button', { name: 'Expand all rows' }),
@@ -49,12 +46,9 @@ test.describe('smoke: project pages', () => {
         await visible(new ListsPage(page).listRow(d.list.label))
       },
     },
-    // FLAG (app bug, intermittent): the same race as "task progress", in WorkfileDetail
     {
       name: 'workfiles',
       path: project('workfiles'),
-      fixme:
-        'workfiles queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: async (page, d) => {
         await visible(
           page.getByPlaceholder('Filter folders...'),
@@ -100,11 +94,8 @@ test.describe('smoke: deep links', () => {
         await new DetailsPanel(page).expectOpenFor(d.task.name)
       },
     },
-    // FLAG (app bug, intermittent): see "task progress" above
     {
       name: 'task progress with the details of a task',
-      fixme:
-        'task progress queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       path: project(
         'tasks',
         details('task', (d) => d.task.id),

@@ -81,24 +81,23 @@ test.describe('permissions: folder access', () => {
     }
   })
 
-  // FLAG (backend): "Show sibling tasks" off only applies to GraphQL; GET tasks/{id} still returns them
-  // fixed in ynput/ayon-backend#1166, switch back to test() once it is merged
-  test.fixme(
-    'a hidden sibling task cannot be read by its id either',
-    async ({ api, projectName, restrictedUser }, testInfo) => {
-      const user = await restrictedUser(
-        { read: onlyFolders(assigned()), advanced: { show_sibling_tasks: false } },
-        { licensed: true },
-      )
-      const { roto } = await createShots(api, projectName, [user.name])
-      const userApi = await apiAs(testInfo, user.name, user.password)
-      try {
-        await expect(userApi.getTask(projectName, roto.id)).rejects.toThrow(/failed with 403/)
-      } finally {
-        await userApi.dispose()
-      }
-    },
-  )
+  test('a hidden sibling task cannot be read by its id either', async ({
+    api,
+    projectName,
+    restrictedUser,
+  }, testInfo) => {
+    const user = await restrictedUser(
+      { read: onlyFolders(assigned()), advanced: { show_sibling_tasks: false } },
+      { licensed: true },
+    )
+    const { roto } = await createShots(api, projectName, [user.name])
+    const userApi = await apiAs(testInfo, user.name, user.password)
+    try {
+      await expect(userApi.getTask(projectName, roto.id)).rejects.toThrow(/failed with 403/)
+    } finally {
+      await userApi.dispose()
+    }
+  })
 
   test('creating outside the allowed folders is rejected', async ({
     api,

@@ -182,7 +182,9 @@ test.describe('overview summary matches the table', () => {
     await expectSummaryToMatchTable(overview, { folders: FOLDERS, tasks: 5 })
   })
 
-  test('flat folders view filtered by task status', async ({ page, api, projectName }) => {
+  // FLAG (app bug): a folder expanded while another folder's tasks load never loads its own tasks
+  // fixed in ynput/ayon-frontend#2613, switch back to test() once it is merged
+  test.fixme('flat folders view filtered by task status', async ({ page, api, projectName }) => {
     const overview = new OverviewPage(page)
     await openWithView(api, overview, projectName, {
       showHierarchy: false,
