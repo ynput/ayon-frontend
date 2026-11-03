@@ -28,7 +28,8 @@ import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
-import { debounce } from 'lodash'
+import { debounce, isEqual } from 'lodash'
+import overviewApi from '@shared/api/queries/overview/getOverview'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
@@ -201,15 +202,34 @@ export const useFetchOverviewData = ({
   }
 
   // QUERY
+  const skipExpandedFoldersTasks =
+    isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView)
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
+    originalArgs: fetchedExpandedFoldersTasksArgs,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip:
-      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip: skipExpandedFoldersTasks,
   })
+
+  // All expanded folders share one cache entry, and RTK Query starts no request for an entry while
+  // one runs: folders expanded during a fetch were never loaded. Once it is done, fetch them.
+  const hasMissedFolders =
+    !skipExpandedFoldersTasks &&
+    !isUninitializedExpandedFoldersTasks &&
+    !isFetchingExpandedFoldersTasks &&
+    !isEqual(fetchedExpandedFoldersTasksArgs?.parentIds, visibleFolderIdsToQuery)
+  useEffect(() => {
+    if (!hasMissedFolders) return
+    dispatch(
+      overviewApi.endpoints.getOverviewTasksByFolders.initiate(expandedFoldersTasksArgs, {
+        subscribe: false,
+      }),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasMissedFolders])
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
