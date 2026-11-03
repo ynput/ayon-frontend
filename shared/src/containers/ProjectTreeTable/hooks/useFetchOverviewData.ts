@@ -792,12 +792,10 @@ export const useFetchOverviewData = ({
     // @ts-expect-error: softError is a string
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     softErrorAction,
-    isLoadingAll:
-      isLoadingViews ||
-      isLoadingFolders ||
-      isLoadingTasksList ||
-      isLoadingTasksFolders ||
-      isLoadingModules, // these all show a full loading state
+    // these all show a full loading state. Not the Power Pack group settings module: it only loads
+    // once the license check is done, and a full loading state then would drop the shown rows and
+    // any open cell editor
+    isLoadingAll: isLoadingViews || isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders,
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
