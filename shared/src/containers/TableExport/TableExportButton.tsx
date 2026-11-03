@@ -1,6 +1,6 @@
 import { FC, useId } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import { useMenuContext, useTableExportContext } from '@shared/context'
+import { useMenuContext, usePowerpack, useTableExportContext } from '@shared/context'
 import { Menu, MenuContainer } from '@shared/components/Menu'
 
 type TableExportButtonProps = {
@@ -10,6 +10,7 @@ type TableExportButtonProps = {
 
 export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
   const tableExport = useTableExportContext()
+  const { isLoading: isCheckingLicense } = usePowerpack()
   const { toggleMenuOpen, setMenuOpen } = useMenuContext()
   const menuId = useId()
   const openExport = () => tableExport?.openExport('table')
@@ -48,7 +49,9 @@ export const TableExportButton: FC<TableExportButtonProps> = ({ onImport }) => {
               id: 'export',
               label: 'Export',
               icon: 'download',
-              powerFeature: 'tableExport',
+              // while the license is checked, openExport waits for it instead of the menu
+              // showing the Power Pack dialog
+              powerFeature: isCheckingLicense ? undefined : 'tableExport',
               onClick: openExport,
             },
           ]}
