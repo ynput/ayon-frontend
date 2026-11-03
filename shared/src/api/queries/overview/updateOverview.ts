@@ -657,10 +657,12 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const updatedTaskIds = getUpdatedEntityIds(taskOperations)
           const updatedFolderIds = getUpdatedEntityIds(folderOperations)
 
-          // Get all active task list cache entries
+          // Get all active task list cache entries. From the state now, not from before the
+          // change: a fetch that was running meanwhile may have brought back the old data.
+          const stateNow = getState()
           const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
           const tasksListInfiniteEntries = getOverviewApi.util
-            .selectInvalidatedBy(state, overviewTaskTags)
+            .selectInvalidatedBy(stateNow, overviewTaskTags)
             .filter((entry) => entry.endpointName === 'getTasksListInfinite')
 
           // Requirement: "refetch the full data for the specific entity/entities"
@@ -679,7 +681,7 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
             // Process getOverviewTasksByFolders caches
             // Use selectInvalidatedBy to get only caches that contain the updated tasks
             const overviewTasksEntries = getOverviewApi.util
-              .selectInvalidatedBy(state, overviewTaskTags)
+              .selectInvalidatedBy(stateNow, overviewTaskTags)
               .filter((entry) => entry.endpointName === 'getOverviewTasksByFolders')
 
             for (const entry of overviewTasksEntries) {
