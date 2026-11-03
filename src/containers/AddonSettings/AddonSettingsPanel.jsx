@@ -103,6 +103,12 @@ const AddonSettingsPanel = ({
     [addon, onSelect, overrides, siteId],
   )
 
+  // several addons (and sites) share the page: their group ids must differ
+  const anchorScope = [addon.name, siteId]
+    .filter(Boolean)
+    .join('-')
+    .replace(/[^\w-]/g, '-')
+
   const handleSettingsChange = useCallback(
     (data) => onChange(addon, siteId || '_', data),
     [addon, onChange, siteId],
@@ -121,6 +127,9 @@ const AddonSettingsPanel = ({
       breadcrumbs={breadcrumbs}
       level={settingsLevel}
       context={context}
+      // AddonSettings draws one outline for every selected addon
+      outline={false}
+      anchorScope={anchorScope}
     />
   )
 

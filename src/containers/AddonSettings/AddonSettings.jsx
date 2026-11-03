@@ -18,6 +18,7 @@ import { Splitter, SplitterPanel } from 'primereact/splitter'
 import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import SiteList from '@containers/SiteList'
 import AddonSettingsPanel from './AddonSettingsPanel'
+import { AddonSettingsSheets } from './AddonSettingsSheets'
 import SettingsChangesTable from './SettingsChangesTable'
 import CopyBundleSettingsButton from './CopyBundleSettingsButton'
 import VariantSelector from './VariantSelector'
@@ -94,6 +95,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const user = useSelector((state) => state.user)
   const developerMode = user?.attrib?.developerMode
   const userName = useSelector((state) => state.user.name)
+  // per-user choice between the classic nested panels and the flat card layout
+  const flatLayout = useSelector(
+    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
+  )
 
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -836,69 +841,71 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               style={{ flexGrow: 1 }}
               id="settings-scroll-panel"
             >
-              {selectedAddons
-                .filter((addon) => !addon.isBroken)
-                .reverse()
-                .map((addon) => {
-                  const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
+              <AddonSettingsSheets flat={flatLayout}>
+                {selectedAddons
+                  .filter((addon) => !addon.isBroken)
+                  .reverse()
+                  .map((addon) => {
+                    const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
-                  if (filterKeys.length === 0 && searchText !== '') {
-                    return (
-                      <StyledEmptyPlaceholder
-                        key={addon.name}
-                        icon="filter_list"
-                        message="No settings found for the current search"
-                      />
-                    )
-                  }
-                  return sites.map((siteId) => {
-                    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
-
-                    return (
-                      <Panel
-                        key={key}
-                        style={{ flexGrow: 0 }}
-                        className="transparent nopad"
-                        size={1}
-                      >
-                        {addon.isProjectBundle && (
-                          <InfoMessage
-                            message="The addon settings for this project are frozen to the project bundle.
-                            Studio settings are also displayed alongside project-scoped settings."
-                            icon={FROZEN_BUNDLE_ICON}
-                          />
-                        )}
-                        <AddonSettingsPanel
-                          addon={addon}
-                          updateAddonSchema={onUpdateAddonSchema}
-                          onChange={onSettingsChange}
-                          onLoad={onSettingsLoad}
-                          onSetChangedKeys={updateChangedKeys}
-                          localData={localData[key]}
-                          changedKeys={changedKeys[key]}
-                          currentSelection={currentSelection}
-                          onSelect={setCurrentSelection}
-                          projectName={projectName}
-                          includeStudioScope={addon.isProjectBundle}
-                          siteId={siteId === '_' ? null : siteId}
-                          context={{
-                            headerProjectName: projectName,
-                            headerSiteId: siteId === '_' ? null : siteId,
-                            headerVariant: addon.variant,
-                            addonName: addon.name,
-                            searchText,
-                            filterKeys,
-                            onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
-                            onPinOverride: (path) => onPinOverride(addon, siteId, path),
-                            onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
-                            onPasteValue: (path) => onPasteValue(addon, siteId, path),
-                            includeStudioScope: !!addon.isProjectBundle,
-                          }}
+                    if (filterKeys.length === 0 && searchText !== '') {
+                      return (
+                        <StyledEmptyPlaceholder
+                          key={addon.name}
+                          icon="filter_list"
+                          message="No settings found for the current search"
                         />
-                      </Panel>
-                    )
-                  })
-                })}
+                      )
+                    }
+                    return sites.map((siteId) => {
+                      const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+
+                      return (
+                        <Panel
+                          key={key}
+                          style={{ flexGrow: 0 }}
+                          className="transparent nopad"
+                          size={1}
+                        >
+                          {addon.isProjectBundle && (
+                            <InfoMessage
+                              message="The addon settings for this project are frozen to the project bundle.
+                            Studio settings are also displayed alongside project-scoped settings."
+                              icon={FROZEN_BUNDLE_ICON}
+                            />
+                          )}
+                          <AddonSettingsPanel
+                            addon={addon}
+                            updateAddonSchema={onUpdateAddonSchema}
+                            onChange={onSettingsChange}
+                            onLoad={onSettingsLoad}
+                            onSetChangedKeys={updateChangedKeys}
+                            localData={localData[key]}
+                            changedKeys={changedKeys[key]}
+                            currentSelection={currentSelection}
+                            onSelect={setCurrentSelection}
+                            projectName={projectName}
+                            includeStudioScope={addon.isProjectBundle}
+                            siteId={siteId === '_' ? null : siteId}
+                            context={{
+                              headerProjectName: projectName,
+                              headerSiteId: siteId === '_' ? null : siteId,
+                              headerVariant: addon.variant,
+                              addonName: addon.name,
+                              searchText,
+                              filterKeys,
+                              onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
+                              onPinOverride: (path) => onPinOverride(addon, siteId, path),
+                              onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
+                              onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                              includeStudioScope: !!addon.isProjectBundle,
+                            }}
+                          />
+                        </Panel>
+                      )
+                    })
+                  })}
+              </AddonSettingsSheets>
 
               <Spacer />
             </StyledScrollPanel>

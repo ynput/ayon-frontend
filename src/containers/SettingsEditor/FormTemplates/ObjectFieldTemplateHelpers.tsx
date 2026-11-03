@@ -95,7 +95,8 @@ export const buildObjectTitle = ({
     titleComponent = (
       <>
         {stringTitle}
-        <BadgeWrapper>
+        {/* the outline names the sheet without these (readSettingsOutline) */}
+        <BadgeWrapper className="settings-title-badges">
           {headerProjectName && <Badge color="project" label={headerProjectName} />}
           {headerSiteId && <Badge color="site" label={headerSiteId} />}
           {headerVariant && <Badge color={envColor} label={headerVariant} />}

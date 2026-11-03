@@ -1,24 +1,44 @@
 export type SettingsOutlineItem = {
+  /** The group's element id, which its link points to */
   id: string
   title: string
-  /** 1 for a card, 2 for a sub-group straight inside a card */
+  /** 0 for a sheet, 1 for a card, 2 for a sub-group straight inside a card */
   depth: number
 }
 
-// What the outline lists: cards, and the sub-groups straight inside them
-const OUTLINE_GROUPS = '.settings-group-card, .settings-group-subgroup[data-settings-depth="2"]'
+// What the outline lists: cards and the sub-groups straight inside them. Sheets have an id
+// only on a page stacking several (SettingsAnchorScopeContext), and then head their cards
+const OUTLINE_GROUPS = [
+  '.settings-group-sheet[id]',
+  '.settings-group-card',
+  '.settings-group-subgroup[data-settings-depth="2"]',
+].join(', ')
 // a group's title row, above its content or leading its first panel
 const GROUP_TITLE = [
   ':scope > .settings-group-header .settings-group-title',
   ':scope > div > .form-object-field > .settings-panel-lead > .settings-group-header .settings-group-title',
 ].join(', ')
 
-/** Reads the outline from the rendered sheet, so it follows scope, search and list edits */
-export const readSettingsOutline = (sheet: HTMLElement): SettingsOutlineItem[] => {
+// a sheet's title also holds its bundle, project and site badges (buildObjectTitle)
+const TITLE_BADGES = '.settings-title-badges'
+
+const readTitle = (title: Element) =>
+  Array.from(title.childNodes)
+    .filter((node) => !(node instanceof Element && node.matches(TITLE_BADGES)))
+    .map((node) => node.textContent)
+    .join('')
+    .trim()
+
+/**
+ * Reads the outline from the rendered sheet, or every sheet inside `root`, so it follows
+ * scope, search and list edits
+ */
+export const readSettingsOutline = (root: HTMLElement): SettingsOutlineItem[] => {
   const items: SettingsOutlineItem[] = []
-  sheet.querySelectorAll<HTMLElement>(OUTLINE_GROUPS).forEach((group) => {
-    const id = group.dataset.fieldid
-    const title = group.querySelector(GROUP_TITLE)?.textContent?.trim()
+  root.querySelectorAll<HTMLElement>(OUTLINE_GROUPS).forEach((group) => {
+    const id = group.id
+    const titleElement = group.querySelector(GROUP_TITLE)
+    const title = titleElement && readTitle(titleElement)
     if (!id || !title || group.closest('[data-hidden="true"]')) return
     items.push({ id, title, depth: Number(group.dataset.settingsDepth) })
   })
@@ -31,8 +51,9 @@ export const isSameOutline = (a: SettingsOutlineItem[], b: SettingsOutlineItem[]
     (item, i) => item.id === b[i].id && item.title === b[i].title && item.depth === b[i].depth,
   )
 
-export const findSettingsGroup = (sheet: HTMLElement, id: string) =>
-  sheet.querySelector<HTMLElement>(`.settings-group[data-fieldid="${CSS.escape(id)}"]`)
+/** The group an outline item links to, by its element id */
+export const findSettingsGroup = (root: HTMLElement, id: string) =>
+  root.querySelector<HTMLElement>(`#${CSS.escape(id)}`)
 
 /** The element the sheet scrolls in, or null when that is the page itself */
 export const getScrollParent = (node: HTMLElement | null): HTMLElement | null => {

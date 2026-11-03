@@ -8,3 +8,11 @@ import { createContext, useContext } from 'react'
 export const SettingsGroupDepthContext = createContext(0)
 
 export const useSettingsGroupDepth = () => useContext(SettingsGroupDepthContext)
+
+/**
+ * Prefixes the element ids of an editor's groups (getSettingsGroupAnchor). Set where
+ * several editors share a page, which would otherwise repeat ids like settings-root_publish
+ */
+export const SettingsAnchorScopeContext = createContext<string | undefined>(undefined)
+
+export const useSettingsAnchorScope = () => useContext(SettingsAnchorScopeContext)

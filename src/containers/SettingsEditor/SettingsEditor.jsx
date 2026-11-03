@@ -15,6 +15,7 @@ import { FormWrapper } from './SettingsEditor.styled'
 import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
 import { SettingsOutline } from './SettingsOutline'
+import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContextInstance'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -100,8 +101,11 @@ const SettingsEditor = ({
   level,
   changedKeys,
   context,
-  // pages that don't want the flat layout's table of contents (Global settings) turn it off
+  // pages that don't want the flat layout's table of contents (Global settings) turn it off,
+  // and pages stacking several editors draw one for all of them (AddonSettings)
   outline = true,
+  // tells apart the group ids of editors sharing a page (getSettingsGroupAnchor)
+  anchorScope,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
   const formWrapperRef = useRef()
@@ -190,23 +194,25 @@ const SettingsEditor = ({
   // console.log('schema? ', schema)
 
   const form = (
-    <Form
-      schema={schema}
-      uiSchema={uiSchema}
-      formData={formData}
-      formContext={fullContext}
-      widgets={widgets}
-      onChange={(evt) => onChange(evt.formData)}
-      templates={{
-        FieldTemplate,
-        ArrayFieldTemplate,
-        ObjectFieldTemplate,
-      }}
-      onError={(evt) => console.log('Form contains errors:', evt)}
-      validator={validator}
-    >
-      <div />
-    </Form>
+    <SettingsAnchorScopeContext.Provider value={anchorScope}>
+      <Form
+        schema={schema}
+        uiSchema={uiSchema}
+        formData={formData}
+        formContext={fullContext}
+        widgets={widgets}
+        onChange={(evt) => onChange(evt.formData)}
+        templates={{
+          FieldTemplate,
+          ArrayFieldTemplate,
+          ObjectFieldTemplate,
+        }}
+        onError={(evt) => console.log('Form contains errors:', evt)}
+        validator={validator}
+      >
+        <div />
+      </Form>
+    </SettingsAnchorScopeContext.Provider>
   )
 
   return (

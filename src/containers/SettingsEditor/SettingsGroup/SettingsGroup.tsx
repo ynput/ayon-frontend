@@ -1,6 +1,10 @@
 import { MouseEvent, ReactNode } from 'react'
 import clsx from 'clsx'
-import { SettingsGroupDepthContext, useSettingsGroupDepth } from './SettingsGroupContextInstance'
+import {
+  SettingsGroupDepthContext,
+  useSettingsAnchorScope,
+  useSettingsGroupDepth,
+} from './SettingsGroupContextInstance'
 import {
   SettingsListItemContext,
   SettingsListItemState,
@@ -151,6 +155,7 @@ export const SettingsGroup = ({
   children,
 }: SettingsGroupProps) => {
   const listItem = useSettingsListItem()
+  const anchorScope = useSettingsAnchorScope()
   const { depth, variant, folded, isSection, leadsPanel, hasHeader, body } = getSettingsGroupLayout(
     {
       parentDepth: useSettingsGroupDepth(),
@@ -178,7 +183,10 @@ export const SettingsGroup = ({
   const headerInPanel = leadsPanel && typeof children === 'function'
   const inner = typeof children === 'function' ? children(headerInPanel ? header : null) : children
 
-  const anchor = objId && !isRoot ? getSettingsGroupAnchor(objId) : undefined
+  // the root is linked only from a rail shared by several sheets, where it is the sheet's
+  // own link; it needs a scope, or two sheets would share its id
+  const anchor =
+    objId && (!isRoot || anchorScope) ? getSettingsGroupAnchor(objId, anchorScope) : undefined
 
   return (
     <SettingsGroupDepthContext.Provider value={depth}>

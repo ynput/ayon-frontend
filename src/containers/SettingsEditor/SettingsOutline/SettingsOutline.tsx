@@ -8,24 +8,30 @@ import {
   readSettingsOutline,
   scrollToSettingsGroup,
 } from './SettingsOutlineHelpers'
-import { getSettingsGroupAnchor } from '../SettingsGroup/SettingsGroupHelpers'
 import { useSettingsOutlineCurrent } from './useSettingsOutlineCurrent'
 import { useSettingsOutlineCollapsed } from './useSettingsOutlineCollapsed'
 import { announceOutline } from './outlineAvailability'
 import * as Styled from './SettingsOutline.styled'
 
 export type SettingsOutlineProps = {
-  /** The element the settings form renders into */
+  /** The element the settings form renders into, or one holding several forms */
   sheetRef: RefObject<HTMLElement>
 }
 
 // Re-reading the sheet waits for a burst of DOM changes (typing, a search) to settle
 const UPDATE_DELAY = 150
 
+// by item depth: a sheet, a card, a sub-group
+const OUTLINE_LINK_CLASSES = [
+  'settings-outline-sheet',
+  'settings-outline-card',
+  'settings-outline-subgroup',
+]
+
 /**
  * The flat layout's table of contents: every card and the sub-groups inside it,
  * each a link that scrolls its group into view. The link of the group being read is
- * highlighted as the sheet scrolls.
+ * highlighted as the sheet scrolls. Given several sheets, each one heads its cards.
  */
 export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   const [items, setItems] = useState<SettingsOutlineItem[]>([])
@@ -60,6 +66,23 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     }
   }, [sheetRef])
 
+  // the rail scrolls on its own, so it keeps the current link in view: over several addons
+  // it is many times taller than the view. Only the rail scrolls, never the sheet
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav || !currentId) return
+    const link = nav.querySelector<HTMLElement>(`[data-outline-id="${CSS.escape(currentId)}"]`)
+    if (!link) return
+    const navBox = nav.getBoundingClientRect()
+    const linkBox = link.getBoundingClientRect()
+    if (linkBox.top >= navBox.top && linkBox.bottom <= navBox.bottom) return
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    nav.scrollBy({
+      top: linkBox.top - navBox.top - navBox.height / 3,
+      behavior: reduceMotion ? 'auto' : 'smooth',
+    })
+  }, [currentId])
+
   const onNavigate = (e: MouseEvent, id: string) => {
     e.preventDefault()
     const sheet = sheetRef.current
@@ -85,9 +108,9 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
         {items.map((item) => (
           <li key={item.id}>
             <Styled.Link
-              href={`#${getSettingsGroupAnchor(item.id)}`}
+              href={`#${item.id}`}
               className={clsx(
-                item.depth === 1 ? 'settings-outline-card' : 'settings-outline-subgroup',
+                OUTLINE_LINK_CLASSES[item.depth] ?? 'settings-outline-subgroup',
                 (!native || pinned) && item.id === currentId && 'is-current',
               )}
               data-outline-id={item.id}

@@ -73,6 +73,23 @@ export const Link = styled.a`
     margin-top: 0;
   }
 
+  /* a rail over several sheets (AddonSettings): each sheet heads its cards, so it takes
+     the weight and the cards read as plain links under it */
+  &.settings-outline-sheet {
+    margin-top: 16px;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+
+  li:first-child > &.settings-outline-sheet,
+  li:has(> .settings-outline-sheet) + li > &.settings-outline-card {
+    margin-top: 0;
+  }
+
+  ul:has(.settings-outline-sheet) &.settings-outline-card {
+    font-weight: normal;
+  }
+
   /* the rail is navigation, so it may show the hierarchy the sheet keeps flat */
   &.settings-outline-subgroup {
     padding-left: 20px;

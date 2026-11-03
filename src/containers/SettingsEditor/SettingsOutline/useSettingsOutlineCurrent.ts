@@ -73,7 +73,7 @@ export const useSettingsOutlineCurrent = (
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
-          const id = (entry.target as HTMLElement).dataset.fieldid
+          const id = (entry.target as HTMLElement).id
           if (!id) continue
           if (entry.isIntersecting) crossing.add(id)
           else crossing.delete(id)

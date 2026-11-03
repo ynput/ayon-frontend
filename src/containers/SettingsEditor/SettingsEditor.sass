@@ -238,6 +238,11 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     grid-template-columns: 0px minmax(0, 1040px)
     gap: 0
 
+// editors stacked beside one shared rail (AddonSettings) take that layout's margins
+.settings-flat-layout .settings-flat:not(.rjsf)
+  max-width: none
+  padding-inline: 0
+
 @container (max-width: 720px)
   .settings-flat-layout:has(> .settings-outline),
   .settings-flat-layout:has(> .settings-outline.is-collapsed)

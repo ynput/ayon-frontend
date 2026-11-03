@@ -253,6 +253,8 @@ export const toTitleCase = (text: string) =>
 
 /**
  * The element id of a group, the target of its outline link. Prefixed: field ids start
- * with "root", which is also the id of the app's mount element
+ * with "root", which is also the id of the app's mount element. The scope tells apart
+ * editors sharing a page (SettingsAnchorScopeContext)
  */
-export const getSettingsGroupAnchor = (fieldId: string) => `settings-${fieldId}`
+export const getSettingsGroupAnchor = (fieldId: string, scope?: string) =>
+  scope ? `settings-${scope}-${fieldId}` : `settings-${fieldId}`
