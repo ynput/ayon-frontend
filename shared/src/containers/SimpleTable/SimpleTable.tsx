@@ -515,7 +515,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
     data: tableData,
     columns,
     state: {
-      expanded,
+      // while searching, every folder is open so matches inside collapsed ones show
+      expanded: globalFilter ? true : expanded,
       rowSelection,
       globalFilter,
       rowPinning,
