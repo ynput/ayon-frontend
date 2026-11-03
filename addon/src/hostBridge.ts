@@ -9,6 +9,8 @@ import type { EntityPickerProps } from './EntityPicker'
 import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
+import type { EntityLinkRef } from './entityLinks'
+import type { ViewerTarget } from './openInHost'
 
 export type { AddonUser }
 
@@ -51,6 +53,15 @@ export interface HostImplementation {
   dispatch?: AddonDispatch
   /** goes to an AYON URL without reloading the page (`navigateToEntity`) */
   navigate?: (to: string) => void
+  /** opens AYON's viewer (`openViewer`) */
+  openViewer?: (target: ViewerTarget) => void
+  /**
+   * shows the details panel of the page that is open, if it has one (`openDetails`). Returns
+   * `false` when there is none, or it can't show these entities.
+   */
+  openDetails?: (entities: readonly EntityLinkRef[]) => boolean
+  /** closes that panel (`closeDetails`) */
+  closeDetails?: () => void
   components?: Partial<HostComponents>
 }
 

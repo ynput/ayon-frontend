@@ -1,19 +1,19 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
+    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
+      query: (queryArg) => ({
+        url: `/api/addons`,
+        method: 'POST',
+        body: queryArg.addonConfigRequest,
+      }),
+    }),
     listAddons: build.query<ListAddonsApiResponse, ListAddonsApiArg>({
       query: (queryArg) => ({
         url: `/api/addons`,
         params: {
           details: queryArg.details,
         },
-      }),
-    }),
-    configureAddons: build.mutation<ConfigureAddonsApiResponse, ConfigureAddonsApiArg>({
-      query: (queryArg) => ({
-        url: `/api/addons`,
-        method: 'POST',
-        body: queryArg.addonConfigRequest,
       }),
     }),
     deleteAddon: build.mutation<DeleteAddonApiResponse, DeleteAddonApiArg>({
@@ -34,12 +34,6 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getInstalledAddonsList: build.query<
-      GetInstalledAddonsListApiResponse,
-      GetInstalledAddonsListApiArg
-    >({
-      query: () => ({ url: `/api/addons/install` }),
-    }),
     uploadAddonZipFile: build.mutation<UploadAddonZipFileApiResponse, UploadAddonZipFileApiArg>({
       query: (queryArg) => ({
         url: `/api/addons/install`,
@@ -49,6 +43,22 @@ const injectedRtkApi = api.injectEndpoints({
           addonName: queryArg.addonName,
           addonVersion: queryArg.addonVersion,
         },
+      }),
+    }),
+    getInstalledAddonsList: build.query<
+      GetInstalledAddonsListApiResponse,
+      GetInstalledAddonsListApiArg
+    >({
+      query: () => ({ url: `/api/addons/install` }),
+    }),
+    migrateAddonSettingsEndpoint: build.mutation<
+      MigrateAddonSettingsEndpointApiResponse,
+      MigrateAddonSettingsEndpointApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/${queryArg.addonName}/migrate`,
+        method: 'POST',
+        body: queryArg.migrateAddonSettingsRequestModel,
       }),
     }),
     getAddonProjectSettingsSchema: build.query<
@@ -103,6 +113,19 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteAddonProjectOverrides: build.mutation<
+      DeleteAddonProjectOverridesApiResponse,
+      DeleteAddonProjectOverridesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
+        method: 'DELETE',
+        params: {
+          variant: queryArg.variant,
+          site_id: queryArg.siteId,
+        },
+      }),
+    }),
     modifyProjectOverrides: build.mutation<
       ModifyProjectOverridesApiResponse,
       ModifyProjectOverridesApiArg
@@ -111,19 +134,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
         method: 'POST',
         body: queryArg.modifyOverridesRequestModel,
-        params: {
-          variant: queryArg.variant,
-          site_id: queryArg.siteId,
-        },
-      }),
-    }),
-    deleteAddonProjectOverrides: build.mutation<
-      DeleteAddonProjectOverridesApiResponse,
-      DeleteAddonProjectOverridesApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/${queryArg.addonName}/${queryArg.version}/overrides/${queryArg.projectName}`,
-        method: 'DELETE',
         params: {
           variant: queryArg.variant,
           site_id: queryArg.siteId,
@@ -233,6 +243,18 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    deleteAddonStudioOverrides: build.mutation<
+      DeleteAddonStudioOverridesApiResponse,
+      DeleteAddonStudioOverridesApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
+        method: 'DELETE',
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
     modifyStudioOverrides: build.mutation<
       ModifyStudioOverridesApiResponse,
       ModifyStudioOverridesApiArg
@@ -241,18 +263,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
         method: 'POST',
         body: queryArg.modifyOverridesRequestModel,
-        params: {
-          variant: queryArg.variant,
-        },
-      }),
-    }),
-    deleteAddonStudioOverrides: build.mutation<
-      DeleteAddonStudioOverridesApiResponse,
-      DeleteAddonStudioOverridesApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/addons/${queryArg.addonName}/${queryArg.addonVersion}/overrides`,
-        method: 'DELETE',
         params: {
           variant: queryArg.variant,
         },
@@ -319,13 +329,13 @@ const injectedRtkApi = api.injectEndpoints({
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
-export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
-export type ListAddonsApiArg = {
-  details?: boolean
-}
 export type ConfigureAddonsApiResponse = /** status 200 Successful Response */ any
 export type ConfigureAddonsApiArg = {
   addonConfigRequest: AddonConfigRequest
+}
+export type ListAddonsApiResponse = /** status 200 Successful Response */ AddonList
+export type ListAddonsApiArg = {
+  details?: boolean
 }
 export type DeleteAddonApiResponse = /** status 200 Successful Response */ any
 export type DeleteAddonApiArg = {
@@ -338,34 +348,44 @@ export type DeleteAddonVersionApiArg = {
   addonVersion: string
   purge?: boolean
 }
-export type GetInstalledAddonsListApiResponse =
-  /** status 200 Successful Response */ AddonInstallListResponseModel
-export type GetInstalledAddonsListApiArg = void
 export type UploadAddonZipFileApiResponse =
   /** status 200 Successful Response */ InstallAddonResponseModel
 export type UploadAddonZipFileApiArg = {
-  url?: string
-  addonName?: string
-  addonVersion?: string
+  url?: string | null
+  addonName?: string | null
+  addonVersion?: string | null
 }
-export type GetAddonProjectSettingsSchemaApiResponse = /** status 200 Successful Response */ object
+export type GetInstalledAddonsListApiResponse =
+  /** status 200 Successful Response */ AddonInstallListResponseModel
+export type GetInstalledAddonsListApiArg = void
+export type MigrateAddonSettingsEndpointApiResponse =
+  /** status 200 Successful Response */ MigrateAddonSettingsResponseModel
+export type MigrateAddonSettingsEndpointApiArg = {
+  addonName: string
+  migrateAddonSettingsRequestModel: MigrateAddonSettingsRequestModel
+}
+export type GetAddonProjectSettingsSchemaApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonProjectSettingsSchemaApiArg = {
   addonName: string
   version: string
   projectName: string
   variant?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
 }
-export type GetAddonProjectSettingsApiResponse = /** status 200 Successful Response */ object
+export type GetAddonProjectSettingsApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonProjectSettingsApiArg = {
   addonName: string
   version: string
   projectName: string
   variant?: string
-  as?: string
+  as?: string | null
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
 }
 export type SetAddonProjectSettingsApiResponse = unknown
 export type SetAddonProjectSettingsApiArg = {
@@ -374,8 +394,10 @@ export type SetAddonProjectSettingsApiArg = {
   projectName: string
   variant?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
-  payload: object
+  siteId?: string | null
+  payload: {
+    [key: string]: any
+  }
 }
 export type GetAddonProjectOverridesApiResponse = /** status 200 Successful Response */ any
 export type GetAddonProjectOverridesApiArg = {
@@ -383,19 +405,9 @@ export type GetAddonProjectOverridesApiArg = {
   version: string
   projectName: string
   variant?: string
-  as?: string
+  as?: string | null
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
-}
-export type ModifyProjectOverridesApiResponse = unknown
-export type ModifyProjectOverridesApiArg = {
-  addonName: string
-  version: string
-  projectName: string
-  variant?: string
-  /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
-  modifyOverridesRequestModel: ModifyOverridesRequestModel
+  siteId?: string | null
 }
 export type DeleteAddonProjectOverridesApiResponse = unknown
 export type DeleteAddonProjectOverridesApiArg = {
@@ -404,16 +416,28 @@ export type DeleteAddonProjectOverridesApiArg = {
   projectName: string
   variant?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
 }
-export type GetRawAddonProjectOverridesApiResponse = /** status 200 Successful Response */ object
+export type ModifyProjectOverridesApiResponse = unknown
+export type ModifyProjectOverridesApiArg = {
+  addonName: string
+  version: string
+  projectName: string
+  variant?: string
+  /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
+  siteId?: string | null
+  modifyOverridesRequestModel: ModifyOverridesRequestModel
+}
+export type GetRawAddonProjectOverridesApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetRawAddonProjectOverridesApiArg = {
   addonName: string
   addonVersion: string
   projectName: string
   variant?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
 }
 export type SetRawAddonProjectOverridesApiResponse = unknown
 export type SetRawAddonProjectOverridesApiArg = {
@@ -422,55 +446,75 @@ export type SetRawAddonProjectOverridesApiArg = {
   projectName: string
   variant?: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
-  payload: object
+  siteId?: string | null
+  payload: {
+    [key: string]: any
+  }
 }
-export type GetAddonSiteSettingsSchemaApiResponse = /** status 200 Successful Response */ object
+export type GetAddonSiteSettingsSchemaApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonSiteSettingsSchemaApiArg = {
   addonName: string
   version: string
 }
-export type GetAddonSiteSettingsApiResponse = /** status 200 Successful Response */ object
+export type GetAddonSiteSettingsApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonSiteSettingsApiArg = {
   addonName: string
   version: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
 }
 export type SetAddonSiteSettingsApiResponse = unknown
 export type SetAddonSiteSettingsApiArg = {
   addonName: string
   version: string
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
-  payload: object
+  siteId?: string | null
+  payload: {
+    [key: string]: any
+  }
 }
-export type GetAddonSettingsSchemaApiResponse = /** status 200 Successful Response */ object
+export type GetAddonSettingsSchemaApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonSettingsSchemaApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
 }
-export type GetAddonStudioSettingsApiResponse = /** status 200 Successful Response */ object
+export type GetAddonStudioSettingsApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetAddonStudioSettingsApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  as?: string
+  as?: string | null
 }
 export type SetAddonStudioSettingsApiResponse = unknown
 export type SetAddonStudioSettingsApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  payload: object
+  payload: {
+    [key: string]: any
+  }
 }
 export type GetAddonStudioOverridesApiResponse = /** status 200 Successful Response */ any
 export type GetAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  as?: string
+  as?: string | null
+}
+export type DeleteAddonStudioOverridesApiResponse = unknown
+export type DeleteAddonStudioOverridesApiArg = {
+  addonName: string
+  addonVersion: string
+  variant?: string
 }
 export type ModifyStudioOverridesApiResponse = unknown
 export type ModifyStudioOverridesApiArg = {
@@ -479,13 +523,9 @@ export type ModifyStudioOverridesApiArg = {
   variant?: string
   modifyOverridesRequestModel: ModifyOverridesRequestModel
 }
-export type DeleteAddonStudioOverridesApiResponse = unknown
-export type DeleteAddonStudioOverridesApiArg = {
-  addonName: string
-  addonVersion: string
-  variant?: string
+export type GetRawAddonStudioOverridesApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
 }
-export type GetRawAddonStudioOverridesApiResponse = /** status 200 Successful Response */ object
 export type GetRawAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
@@ -496,37 +536,60 @@ export type SetRawAddonStudioOverridesApiArg = {
   addonName: string
   addonVersion: string
   variant?: string
-  payload: object
+  payload: {
+    [key: string]: any
+  }
 }
 export type GetAllAddonsSettingsApiResponse =
   /** status 200 Successful Response */ AddonSettingsResponse
 export type GetAllAddonsSettingsApiArg = {
   variant?: 'production' | 'staging'
-  project?: string
-  site?: string
+  project?: string | null
+  site?: string | null
 }
 export type GetAllSiteSettingsApiResponse =
   /** status 200 Successful Response */ AddonSettingsResponse
 export type GetAllSiteSettingsApiArg = {
   variant?: 'production' | 'staging'
-  site?: string
+  site?: string | null
 }
 export type GetAllSettingsApiResponse =
   /** status 200 Successful Response */ AllSettingsResponseModel
 export type GetAllSettingsApiArg = {
   /** Use explicit bundle name to get the addon list. Current production (or staging) will be used if not set */
-  bundleName?: string
+  bundleName?: string | null
   /** Return project settings for the given project name. Studio settings will be returned if not set */
-  projectName?: string
+  projectName?: string | null
   /** Use explicit project bundle instead of the default one to resolve the project addons. */
-  projectBundleName?: string
+  projectBundleName?: string | null
   /** Variant of the settings to return. This field is also used to determine which bundle to useif bundle_name or project_bundle_name is not set */
   variant?: string
   /** Summary mode. When selected, do not return actual settings instead only return the basic information about the addons in the specified bundles */
   summary?: boolean
   /** Site ID may be specified a query parameter. Both `site_id` and its's alias `site` are supported. */
-  siteId?: string
+  siteId?: string | null
   limit?: number
+}
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+  input?: any
+  ctx?: object
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
+export type VariantCopyRequest = {
+  /** Addon name */
+  addonName: string
+  /** Source variant */
+  copyFrom: 'production' | 'staging'
+  /** Destination variant */
+  copyTo: 'production' | 'staging'
+}
+export type AddonConfigRequest = {
+  copyVariant?: VariantCopyRequest | null
 }
 export type FrontendScopeSettings = {
   admin?: boolean
@@ -544,16 +607,16 @@ export type FilesystemSourceInfo = {
 }
 export type ServerSourceInfo = {
   type?: 'server'
-  filename?: string
-  path?: string
+  filename?: string | null
+  path?: string | null
 }
 export type HttpSourceInfo = {
   type?: 'http'
   url: string
-  filename?: string
+  filename?: string | null
   headers?: {
     [key: string]: string
-  }
+  } | null
 }
 export type VersionInfo = {
   hasSettings?: boolean
@@ -561,13 +624,17 @@ export type VersionInfo = {
   frontendScopes?: {
     [key: string]: FrontendScopeSettings
   }
-  clientPyproject?: object
-  clientSourceInfo?: (FilesystemSourceInfo | ServerSourceInfo | HttpSourceInfo)[]
-  services?: object
+  clientPyproject?: {
+    [key: string]: any
+  } | null
+  clientSourceInfo?: (FilesystemSourceInfo | ServerSourceInfo | HttpSourceInfo)[] | null
+  services?: {
+    [key: string]: any
+  } | null
   isBroken?: boolean
   reason?: {
     [key: string]: string
-  }
+  } | null
   projectCanOverrideAddonVersion?: boolean
 }
 export type AddonListItem = {
@@ -582,9 +649,9 @@ export type AddonListItem = {
   /** Addon description */
   description: string
   /** Production version of the addon */
-  productionVersion?: string
+  productionVersion?: string | null
   /** Staging version of the addon */
-  stagingVersion?: string
+  stagingVersion?: string | null
   /** Type of the addon */
   addonType: 'server' | 'pipeline'
   /** Is the addon a system addon? */
@@ -596,42 +663,35 @@ export type AddonList = {
   /** List of available addons */
   addons: AddonListItem[]
 }
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
-}
-export type VariantCopyRequest = {
-  /** Addon name */
-  addonName: string
-  /** Source variant */
-  copyFrom: 'production' | 'staging'
-  /** Destination variant */
-  copyTo: 'production' | 'staging'
-}
-export type AddonConfigRequest = {
-  copyVariant?: VariantCopyRequest
+export type InstallAddonResponseModel = {
+  eventId: string
 }
 export type AddonInstallListItemModel = {
   id: string
   topic: 'addon.install' | 'addon.install_from_url'
   description: string
-  addonName?: string
-  addonVersion?: string
-  user?: string
+  addonName?: string | null
+  addonVersion?: string | null
+  user?: string | null
   status: string
   createdAt: string
-  updatedAt?: string
+  updatedAt?: string | null
 }
 export type AddonInstallListResponseModel = {
   items: AddonInstallListItemModel[]
   restartRequired: boolean
 }
-export type InstallAddonResponseModel = {
-  eventId: string
+export type MigrateAddonSettingsResponseModel = {
+  events: {
+    [key: string]: any
+  }[]
+}
+export type MigrateAddonSettingsRequestModel = {
+  sourceVersion: string
+  targetVersion: string
+  sourceVariant?: string
+  targetVariant?: string
+  withProjects?: boolean
 }
 export type ModifyOverridesRequestModel = {
   action: 'delete' | 'pin'
@@ -640,7 +700,9 @@ export type ModifyOverridesRequestModel = {
 export type AddonSettingsResponse = {
   /** Addon settings for each active addon */
   settings: {
-    [key: string]: object
+    [key: string]: {
+      [key: string]: any
+    }
   }
   /** Active versions of the addon for the given variant */
   versions: {
@@ -659,25 +721,29 @@ export type AddonSettingsItemModel = {
   hasProjectSiteSettings?: boolean
   /** Indicates if the addon has editable site settings */
   hasSiteSettings?: boolean
-  hasStudioOverrides?: boolean
-  hasProjectOverrides?: boolean
-  hasProjectSiteOverrides?: boolean
+  hasStudioOverrides?: boolean | null
+  hasProjectOverrides?: boolean | null
+  hasProjectSiteOverrides?: boolean | null
   /** Final settings for the addon depending of the studio/project/site branch */
-  settings?: object
+  settings?: {
+    [key: string]: any
+  }
   /** Site settings for the addon depending of the site branch */
-  siteSettings?: object
+  siteSettings?: {
+    [key: string]: any
+  } | null
   /** Indicates if the addon is not properly initialized */
   isBroken?: boolean
   /** Reason for addon being broken */
   reason?: {
     [key: string]: string
-  }
+  } | null
   /** Indicates if the addon is part of the project bundle */
   isProjectBundle?: boolean
 }
 export type AllSettingsResponseModel = {
   /** If specified, indicates that the settings are for a project */
-  projectName?: string
+  projectName?: string | null
   bundleName: string
   addons?: AddonSettingsItemModel[]
   /** If a project bundle is used, this field contains alist of addons that are inherited from the studio bundle */

@@ -16,19 +16,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
       }),
     }),
-    deleteRepresentation: build.mutation<
-      DeleteRepresentationApiResponse,
-      DeleteRepresentationApiArg
-    >({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-      }),
-    }),
     updateRepresentation: build.mutation<
       UpdateRepresentationApiResponse,
       UpdateRepresentationApiArg
@@ -37,10 +24,15 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
         method: 'PATCH',
         body: queryArg.representationPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
+      }),
+    }),
+    deleteRepresentation: build.mutation<
+      DeleteRepresentationApiResponse,
+      DeleteRepresentationApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/representations/${queryArg.representationId}`,
+        method: 'DELETE',
       }),
     }),
     createRepresentation: build.mutation<
@@ -51,10 +43,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/representations`,
         method: 'POST',
         body: queryArg.representationPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -72,26 +60,20 @@ export type GetRepresentationApiArg = {
   projectName: string
   representationId: string
 }
-export type DeleteRepresentationApiResponse = unknown
-export type DeleteRepresentationApiArg = {
-  projectName: string
-  representationId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-}
 export type UpdateRepresentationApiResponse = unknown
 export type UpdateRepresentationApiArg = {
   projectName: string
   representationId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   representationPatchModel: RepresentationPatchModel
+}
+export type DeleteRepresentationApiResponse = unknown
+export type DeleteRepresentationApiArg = {
+  projectName: string
+  representationId: string
 }
 export type CreateRepresentationApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateRepresentationApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   representationPostModel: RepresentationPostModel
 }
 export type LookupResponseModel = {
@@ -102,6 +84,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -120,36 +104,17 @@ export type RepresentationFileModel = {
   /** Unique (within the representation) ID of the file */
   id: string
   /** File name */
-  name?: string
+  name?: string | null
   /** Path to the file */
   path: string
   /** Size of the file in bytes */
   size?: number
-  hash?: string
+  hash?: string | null
+  /** 'op3' is the default for OpenPype 3 imports */
   hashType?: 'md5' | 'sha1' | 'sha256' | 'op3'
 }
-export type RepresentationAttribModel = {
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  path?: string
-  template?: string
-  extension?: string
-  /** Textual description of the entity */
-  description?: string
-}
 export type RepresentationModel = {
-  /** Unique identifier of the {entity_name} */
+  /** Unique identifier of the entity */
   id?: string
   /** The name of the representation */
   name: string
@@ -158,21 +123,30 @@ export type RepresentationModel = {
   /** List of files */
   files?: RepresentationFileModel[]
   /** Dict of traits */
-  traits?: object
-  path?: string
-  attrib?: RepresentationAttribModel
-  data?: Record<string, any>
-  /** Whether the representation is active */
+  traits?: {
+    [key: string]: any
+  } | null
+  path?: string | null
+  belongsToHero?: boolean | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
-  /** Status of the representation */
-  status?: string
-  /** Tags assigned to the the representation */
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the representation */
-  createdBy?: string
-  /** Who last updated the representation */
-  updatedBy?: string
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -180,32 +154,39 @@ export type RepresentationModel = {
 }
 export type RepresentationPatchModel = {
   /** The name of the representation */
-  name?: string
+  name?: string | null
   /** ID of the parent version */
-  versionId?: string
+  versionId?: string | null
   /** List of files */
-  files?: RepresentationFileModel[]
+  files?: RepresentationFileModel[] | null
   /** Dict of traits */
-  traits?: object
-  /** Status of the representation */
-  status?: string
-  /** Tags assigned to the the representation */
-  tags?: string[]
-  /** Who created the representation */
-  createdBy?: string
-  /** Who last updated the representation */
-  updatedBy?: string
-  attrib?: RepresentationAttribModel
-  data?: Record<string, any>
-  /** Whether the representation is active */
-  active?: boolean
+  traits?: {
+    [key: string]: any
+  } | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
+  tags?: string[] | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type EntityIdResponse = {
   /** Entity ID */
   id: string
 }
 export type RepresentationPostModel = {
-  /** Explicitly set the ID of the entity */
+  /** Unique identifier of the entity */
   id?: string
   /** The name of the representation */
   name: string
@@ -214,17 +195,24 @@ export type RepresentationPostModel = {
   /** List of files */
   files?: RepresentationFileModel[]
   /** Dict of traits */
-  traits?: object
-  /** Status of the representation */
-  status?: string
-  /** Tags assigned to the the representation */
+  traits?: {
+    [key: string]: any
+  } | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the representation */
-  createdBy?: string
-  /** Who last updated the representation */
-  updatedBy?: string
-  attrib?: RepresentationAttribModel
-  data?: Record<string, any>
-  /** Whether the representation is active */
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
 }

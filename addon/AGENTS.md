@@ -48,6 +48,18 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   <Link to={entityUrl(entity) ?? ''}>{entity.label}</Link>
   navigateToEntity({ projectName, entityType: 'task', id: log.taskId })
   ```
+- To show an entity without leaving the page, `openDetails(entities)` opens AYON's details panel
+  and `openViewer(target)` its viewer (the player), also from `run` pieces. Both return
+  `false` when they can't. The panel shows next to a `project.page` that sets
+  `detailsPanel: true`, for entities of that page's project; on any other page `openDetails`
+  falls back to `navigateToEntity`. Call it again to follow a selection, `closeDetails()` closes
+  it. Import neither panel nor viewer from `@ynput/ayon-frontend-shared`:
+
+  ```tsx
+  import { openDetails, openViewer } from '@ynput/ayon-addon'
+  openDetails(selected) // EntityRef[] of one type: folders, tasks, versions or representations
+  openViewer({ projectName, versionIds: [version.id], productId: version.productId })
+  ```
 - Endpoints you inject and tag types you add (`enhanceEndpoints({ addTagTypes })`) go into AYON's
   one api, where names are global: prefix them with your addon name (`myaddonGetLogs`,
   `myaddonLog`). A `tableColumn` lists the tags its values depend on in `providesTags`
@@ -219,6 +231,7 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 
 | Description field | Type | |
 |---|---|---|
+| `detailsPanel` | `boolean \| undefined` | Shows AYON's details panel next to the page, for the page to open with `openDetails`. The page is in a splitter while the panel is there; it only shows when the page opens it. |
 | `id` (required) | `string` | The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`. A built-in page with the same id wins. Except on the project page, where the `reports` addon may take over the built-in Reports tab with `projectPage({ id: 'reports', viewType: 'reports' })`: same tab, URL and views; without it the built-in tab stays. |
 | `title` (required) | `string` | the tab label |
 | `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them |

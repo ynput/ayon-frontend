@@ -10,6 +10,8 @@ query GetDetailsPanelFolder($projectName: String!, $entityId: String!) {
       tags
       updatedAt
       createdAt
+      createdBy
+      updatedBy
       thumbnailHash
       thumbnailId
       folderType

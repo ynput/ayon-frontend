@@ -5,6 +5,7 @@ import type {
   NavigateScope,
   ProjectTablePage,
   PageMeta,
+  ProjectPageMeta,
   ProjectFoldersScope,
   ProjectNameScope,
   ProjectScope,
@@ -37,7 +38,7 @@ export interface SlotMap {
    */
   'project.page': {
     version: 1
-    meta: PageMeta
+    meta: ProjectPageMeta
     context: ProjectScope & SlicerScope & ProjectFoldersScope & ViewsScope
     pieces: { component: Loader<ComponentType<SlotProps<'project.page'>>> }
   }
@@ -672,7 +673,16 @@ const checkTableColumn = (item: Readonly<Record<string, unknown>>) => {
 
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
-  'project.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
+  'project.page': {
+    version: 1,
+    required: ['title'],
+    pieces: ['component'],
+    optional: pageFields,
+    check: (item) =>
+      item.detailsPanel !== undefined && typeof item.detailsPanel !== 'boolean'
+        ? 'detailsPanel must be true or false'
+        : undefined,
+  },
   'studio.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
   'header.item': {
     version: 1,

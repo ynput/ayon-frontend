@@ -9,6 +9,8 @@ fragment TaskPropsFragment on TaskNode {
   taskType
   updatedAt
   createdAt
+  createdBy
+  updatedBy
   thumbnailHash
   active
   assignees

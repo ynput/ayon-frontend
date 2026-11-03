@@ -1,8 +1,9 @@
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser } from '@ynput/ayon-addon'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
-import store, { useAppSelector } from '@state/store'
+import store from '@state/store'
+import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
@@ -29,8 +30,10 @@ const toAddonUser = (user: UserState): AddonUser | undefined =>
       }
     : undefined
 
+// Reads the host's store, not the nearest redux Provider's: addons render host components inside
+// their own store (e.g. the review addon's session cards), which has no user.
 const useUser = (): AddonUser | undefined => {
-  const user = useAppSelector((state) => state.user)
+  const user = useSyncExternalStore(store.subscribe, () => store.getState().user)
   return useMemo(() => toAddonUser(user), [user])
 }
 
@@ -40,6 +43,9 @@ export const provideAddonHost = () =>
     useUser,
     getUser: () => toAddonUser(store.getState().user),
     dispatch: store.dispatch,
+    openViewer: (target) => {
+      store.dispatch(openViewer(target))
+    },
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,

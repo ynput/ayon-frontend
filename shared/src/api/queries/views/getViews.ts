@@ -2,7 +2,7 @@ import { viewsApi } from '@shared/api/generated'
 import type { ListViewsApiResponse } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 
-export const getScopeTag = (viewType: string, projectName?: string) => {
+export const getScopeTag = (viewType: string, projectName?: string | null) => {
   return {
     type: 'view',
     id: `${viewType.toUpperCase()}${projectName ? `:${projectName.toUpperCase()}` : ''}`,

@@ -8,6 +8,7 @@ import {
 } from '@shared/api'
 import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } from '@shared/api'
 import useDeleteList from '../../hooks/useDeleteList'
+import useDuplicateList from '../../hooks/useDuplicateList'
 import useUpdateList from '../../hooks/useUpdateList'
 import { useListsDataContext } from '../lists-data/ListsDataContextInstance'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
@@ -16,7 +17,7 @@ import ListsContext, {
   MoveToFolderState,
   OnOpenFolderListParams,
 } from './ListsContext'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../../util/buildListsTableData'
 import useInitialListsExpanded from '../../hooks/useInitialListsExpanded'
@@ -78,8 +79,8 @@ export const ListsProvider = ({
   )
 
   // find out if and what version of the review addon is installed
-  const { getProductionAddon } = useGetProductionAddon()
-  const reviewVersion = getProductionAddon('review')?.productionVersion
+  const { getBundleAddonVersion } = useGetBundleAddon()
+  const reviewVersion = getBundleAddonVersion('review')
 
   // picker mode: selection lives in local state, never touches the URL
   const [pickerSelection, setPickerSelection] = useState<RowSelectionState>(() =>
@@ -244,7 +245,11 @@ export const ListsProvider = ({
   // UPDATE/EDIT LIST
   const [updateListMutation] = useUpdateEntityListMutation()
   const onUpdateList = async (listId: string, list: EntityListPatchModel) =>
-    await updateListMutation({ listId, entityListPatchModel: list, projectName }).unwrap()
+    await updateListMutation({
+      entityListId: listId,
+      entityListPatchModel: list,
+      projectName,
+    }).unwrap()
   const {
     closeRenameList,
     openRenameList,
@@ -297,11 +302,17 @@ export const ListsProvider = ({
   const [deleteListMutation] = useDeleteEntityListMutation()
   const onDeleteList = async (listId: string) => {
     // delete list in the backend
-    await deleteListMutation({ listId, projectName }).unwrap()
+    await deleteListMutation({ entityListId: listId, projectName }).unwrap()
     // a right-clicked list can be deleted without being selected
     if (rowSelection[listId]) setRowSelection({})
   }
   const { deleteLists } = useDeleteList({ onDeleteList })
+
+  // DUPLICATE LIST
+  const { duplicateLists } = useDuplicateList({
+    projectName,
+    onCreated: handleCreatedList,
+  })
 
   // Helper to select all lists within selected folders (including descendants) or root lists
   const selectAllLists = useCallback(
@@ -406,6 +417,7 @@ export const ListsProvider = ({
         onPutFoldersInFolder,
         onRemoveFoldersFromFolder,
         deleteLists,
+        duplicateLists,
         // info dialog
         listDetailsOpen,
         setListDetailsOpen,

@@ -99,6 +99,8 @@ export default ({ mode }) => {
         remotes: {},
         exposes: {},
         filename: 'remoteEntry.js',
+        // the host has no remotes at build time, and addon servers don't publish types to download
+        dts: false,
         shared: {
           react: {
             singleton: true,
@@ -110,6 +112,10 @@ export default ({ mode }) => {
           },
           '@ynput/ayon-react-components': {
             singleton: true,
+            // @module-federation/vite 1.23 resolves a file path for packages without a `require`
+            // export condition, and vite then serves that dist unbundled, so its CJS deps break.
+            // The bare name keeps it pre-bundled.
+            import: '@ynput/ayon-react-components',
           },
           // @reduxjs/toolkit, react-redux and @ynput/ayon-frontend-shared are provided to addons
           // at runtime instead, see src/remote/hostSharedModules.ts
@@ -118,9 +124,10 @@ export default ({ mode }) => {
       react(),
     ],
     optimizeDeps: {
-      // federation's shared-module wrappers make vite misdetect these as ESM during the scan,
-      // which forces an extra full reload once the real optimization finishes
-      needsInterop: ['react', 'react-dom', '@ynput/ayon-react-components'],
+      // react and react-dom are CJS: federation's shared-module wrappers make vite misdetect them
+      // as ESM during the scan, which forces an extra full reload once the real optimization finishes.
+      // @ynput/ayon-react-components is ESM with no default export, so it must not be listed here.
+      needsInterop: ['react', 'react-dom'],
     },
     build: {
       target: 'chrome89',

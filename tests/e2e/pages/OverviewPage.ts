@@ -232,6 +232,21 @@ export class OverviewPage {
     return ids.filter((id) => id !== '__row_selection__')
   }
 
+  /** Drags the column's resize handle (shown while the header is hovered) by `delta` pixels */
+  async resizeColumn(columnId: string, delta: number) {
+    const header = this.columnHeader(columnId)
+    await header.hover()
+    const handle = header.locator('.resize-handle')
+    const box = await handle.boundingBox()
+    if (!box) throw new Error(`column ${columnId} has no resize handle`)
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x + delta, y, { steps: 10 })
+    await this.page.mouse.up()
+  }
+
   async columnMenu(columnId: string, item: string) {
     const header = this.columnHeader(columnId)
     await header.hover()
@@ -405,7 +420,7 @@ export class OverviewPage {
   // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
     await this.page.getByTestId('table-import-export').click()
-    await this.page.getByTestId('import-csv').click()
+    await this.page.getByTestId('import-file').click()
     const wizard = this.importDialog()
     await expect(wizard).toBeVisible()
     await wizard.locator('input[type="file"]').setInputFiles(filePath)
