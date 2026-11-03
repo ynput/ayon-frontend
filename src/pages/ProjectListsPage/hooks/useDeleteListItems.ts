@@ -17,6 +17,7 @@ type UseDeleteListItemsProps = {
 }
 
 export type DeleteListItem = { id: string; entityId: string }
+type RestoreListItem = DeleteListItem & { position?: number }
 
 type OnDeleteListItems = (items: DeleteListItem[], history?: UseHistoryReturn) => Promise<void>
 type DeleteListItems = (
@@ -49,8 +50,24 @@ const useDeleteListItems = ({
 }: UseDeleteListItemsProps): UseDeleteListItemsReturn => {
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
 
+  // Where undo puts the items back. The server inserts each added item at its position, then sorts
+  // all items by position: so each gets the number of kept items before it, and they are sent last
+  // first, because an item inserted at a taken position goes before the item already there.
+  const getRestoreItems = (items: DeleteListItem[]): RestoreListItem[] => {
+    const positioned = items.map((item) => ({
+      ...item,
+      position: listItemsMap.get(item.id)?.position,
+    }))
+    // without every position they go back at the end
+    if (positioned.some((item) => item.position === undefined)) return items
+    return positioned
+      .sort((a, b) => a.position! - b.position!)
+      .map((item, removedBefore) => ({ ...item, position: item.position! - removedBefore }))
+      .reverse()
+  }
+
   // This is used to undo the delete action
-  const addItemsBackToList = async (items: DeleteListItem[], history?: UseHistoryReturn) => {
+  const addItemsBackToList = async (items: RestoreListItem[], history?: UseHistoryReturn) => {
     try {
       if (!listId) throw { data: { detail: 'No listId provided' } }
 
@@ -74,6 +91,7 @@ const useDeleteListItems = ({
   const onDeleteListItems: OnDeleteListItems = async (items, history) => {
     try {
       if (!listId) throw { data: { detail: 'No listId provided' } }
+      const restoreItems = getRestoreItems(items)
 
       await updateEntityListItems({
         projectName,
@@ -86,7 +104,10 @@ const useDeleteListItems = ({
 
       // if there is a history, push it
       if (history) {
-        history.pushHistory([() => addItemsBackToList(items)], [() => onDeleteListItems(items)])
+        history.pushHistory(
+          [() => addItemsBackToList(restoreItems)],
+          [() => onDeleteListItems(items)],
+        )
       }
 
       toast.success(`Deleted ${items.length} item${items.length > 1 ? 's' : ''} from list`)
