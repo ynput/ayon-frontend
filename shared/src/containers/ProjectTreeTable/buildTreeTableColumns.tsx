@@ -1568,6 +1568,10 @@ const buildTreeTableColumns = ({
 
   const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] => {
     const linkScopes: string[] = scope === 'primary' ? scopes : [scope]
+    // a parent column on a row of that type (product links on a product row) is the row itself
+    const isOwnEntity = (row: TableRow) => scope !== 'primary' && row.primary.entityType === scope
+    const getLinkEntity = (row: TableRow) =>
+      isOwnEntity(row) ? row.primary : getScopedEntity(row, scope)
     return links
       .filter((link) => {
         // Check if the link type is excluded
@@ -1585,13 +1589,13 @@ const buildTreeTableColumns = ({
           return {
             id: columnId,
             accessorFn: (row) =>
-              row.group
-                ? undefined
-                : getScopedEntity(row, scope)?.links?.[getLinkKey(link, direction)],
+              row.group ? undefined : getLinkEntity(row)?.links?.[getLinkKey(link, direction)],
             header: () => (
               <LinkColumnHeader>
-                {scope === 'primary' ? '' : `${upperFirst(scope)} `}
-                {getLinkLabel(link, direction)}{' '}
+                <span className="label">
+                  {scope === 'primary' ? '' : `${upperFirst(scope)} `}
+                  {getLinkLabel(link, direction)}
+                </span>
                 <Icon
                   icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
                 />
@@ -1606,7 +1610,7 @@ const buildTreeTableColumns = ({
               if (row.original.group || row.original.metaType) return null
               const { id, value } = getValueIdType(row, column.id, 'links')
               const cellValue = value?.map((v: any) => v.label)
-              const entity = getScopedEntity(row.original, scope)
+              const entity = getLinkEntity(row.original)
               if (!entity) return null
               const isLinksLoading = !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
               const valueData: LinkWidgetData = {
@@ -1631,7 +1635,7 @@ const buildTreeTableColumns = ({
                   folderId={row.original.parents?.folder?.id}
                   attributeData={{ type: 'links' }}
                   isLinksLoading={isLinksLoading}
-                  isReadOnly={scope !== 'primary'}
+                  isReadOnly={scope !== 'primary' && !isOwnEntity(row.original)}
                 />
               )
             },

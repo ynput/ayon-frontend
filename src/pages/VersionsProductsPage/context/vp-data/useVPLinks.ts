@@ -70,7 +70,8 @@ export const useVPLinks = ({
       if (showLinks.task && version.task) taskIds.add(version.task.id)
     }
     for (const product of productsMap?.values() ?? []) {
-      if (showLinks.product) productIds.add(product.id)
+      // a product row is its own entity in the "Product" parent link columns
+      if (showLinks.product || showLinks.parentProduct) productIds.add(product.id)
       if (showLinks.folder) folderIds.add(product.folder.id)
     }
     return { versionIds, productIds, folderIds, taskIds }
