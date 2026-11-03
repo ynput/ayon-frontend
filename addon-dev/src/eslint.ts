@@ -18,6 +18,7 @@ export const ayonAddonLint = [
             viaAddonApi('react-router-dom', 'the router hooks and Link'),
             viaAddonApi('react-router', 'the router hooks and Link'),
             viaAddonApi('react-toastify', 'toast'),
+            viaAddonApi('use-query-params', 'useQueryParam, useQueryParams and the params'),
             {
               name: '@ynput/ayon-addon/host',
               message: '@ynput/ayon-addon/host is for AYON itself, not for addons.',

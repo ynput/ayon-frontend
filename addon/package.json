@@ -45,6 +45,7 @@
   "peerDependencies": {
     "react": ">=18",
     "react-router-dom": ">=6.4",
-    "react-toastify": ">=9"
+    "react-toastify": ">=9",
+    "use-query-params": ">=2"
   }
 }

@@ -51,6 +51,7 @@
     "react-redux": ">=9",
     "react-router-dom": ">=7",
     "react-toastify": ">=9",
+    "use-query-params": ">=2",
     "playwright": ">=1.40",
     "@rtk-query/codegen-openapi": ">=2"
   },

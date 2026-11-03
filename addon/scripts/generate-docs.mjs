@@ -149,6 +149,15 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
   (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
   \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
+- URL query params: \`useQueryParam\` / \`useQueryParams\` and the params (\`StringParam\`,
+  \`withDefault\`, ...) from this package. They read the \`QueryParamProvider\` AYON renders around
+  every slot: no provider or router adapter in the addon. A change replaces only that param in the
+  URL (\`replaceIn\`) unless the call passes another update type.
+
+  \`\`\`tsx
+  import { StringParam, useQueryParam, withDefault } from '@ynput/ayon-addon'
+  const [mode, setMode] = useQueryParam('mode', withDefault(StringParam, 'list'))
+  \`\`\`
 - Links to an entity come from \`entityUrl(entity, { activity? })\`, never a hand-built URL: the page
   that opens it with its details panel (folders and tasks on Overview; products, versions and
   representations on Products), \`undefined\` for types without a page (e.g. \`workfile\`).
