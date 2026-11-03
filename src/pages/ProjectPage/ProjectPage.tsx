@@ -77,10 +77,13 @@ const BUILT_IN_MODULES = [
 
 // Addon modules that are always shown in the nav.
 // When the addon remote page is available it is used; otherwise the Splash is shown.
+// Tabs AYON always shows for an addon: its project.page with this id (or its legacy remote) fills
+// the tab, and without the addon the tab shows the splash
 interface AddonPageConfig {
   name: string
   module: string
   viewType?: string
+  addon: string
   Splash: React.ComponentType
 }
 
@@ -89,9 +92,16 @@ const ADDON_PAGES: AddonPageConfig[] = [
     name: 'Schedule',
     module: 'scheduler',
     viewType: 'scheduler',
+    addon: 'planner',
     Splash: SchedulerSplashscreen,
   },
 ]
+
+const OWNED_PAGES = ADDON_PAGES.map(({ module, viewType, addon }) => ({
+  id: module,
+  viewType,
+  addon,
+}))
 
 const ProjectContextInfo = () => {
   /**
@@ -279,6 +289,7 @@ const ProjectPageInner = () => {
       ...addonsData.map((a) => a.name),
     ],
     [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
+    OWNED_PAGES,
   )
 
   // get remote project module pages
@@ -326,14 +337,19 @@ const ProjectPageInner = () => {
         viewType: 'reviews',
         startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
       },
-      ...ADDON_PAGES.map(({ name, module: addonModule, viewType }) => ({
+      ...ADDON_PAGES.map(({ name, module: addonModule, viewType, addon }) => ({
         name,
         path: `/projects/${projectName}/${addonModule}`,
         module: addonModule,
         viewType,
         startContent: (
           <RemotePageBundleDot
-            bundle={remotePages.find((remote) => remote.module === addonModule)?.remoteBundle}
+            bundle={
+              remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
+              (addonPages.some((page) => page.id === addonModule)
+                ? getAddonBundle(addon)
+                : undefined)
+            }
           />
         ),
       })),
@@ -359,14 +375,16 @@ const ProjectPageInner = () => {
           viewType: remote.viewType,
           startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
-      ...addonPages.map((page) => ({
-        name: page.title,
-        module: page.id,
-        path: `/projects/${projectName}/${page.id}`,
-        viewType: page.viewType,
-        accessLevels: pageAccessLevels(page.access),
-        startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
-      })),
+      ...addonPages
+        .filter((page) => !ADDON_PAGES.some((p) => p.module === page.id))
+        .map((page) => ({
+          name: page.title,
+          module: page.id,
+          path: `/projects/${projectName}/${page.id}`,
+          viewType: page.viewType,
+          accessLevels: pageAccessLevels(page.access),
+          startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
+        })),
       ...addonsData
         .filter((addon) => {
           if (addon.settings.admin && !isAdmin) return false
