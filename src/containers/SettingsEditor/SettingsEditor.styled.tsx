@@ -3,7 +3,7 @@ import styled from 'styled-components'
 const FormWrapper = styled.div<{ $currentSelection: string }>`
   [data-fieldid='${(props) => props.$currentSelection}'] {
     border-radius: 4px;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: light-dark(var(--md-sys-color-surface-container-high), rgba(0, 0, 0, 0.2));
   }
 
   .rjsf {

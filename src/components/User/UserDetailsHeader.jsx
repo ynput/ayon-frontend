@@ -102,15 +102,15 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {}, men
         >
           <style>{`
             .details-dialog__code { position: relative; }
-            .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+            .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: light-dark(var(--md-sys-color-surface-container-lowest), rgba(0,0,0,0.5)); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
             .details-dialog__code:hover .details-dialog__copy, .details-dialog__code:focus-within .details-dialog__copy { display: flex; }
-            .w-tc-editor .token.property { color: #c9a5f7 !important; }
-            .w-tc-editor .token.string { color: #6bc985 !important; }
-            .w-tc-editor .token.number { color: #e5a66b !important; }
-            .w-tc-editor .token.boolean { color: #e5a66b !important; }
-            .w-tc-editor .token.null { color: #7a8a99 !important; }
-            .w-tc-editor .token.punctuation { color: #b0bec5 !important; }
-            .w-tc-editor .token.operator { color: #b0bec5 !important; }
+            .w-tc-editor .token.property { color: light-dark(#a626a4, #c9a5f7) !important; }
+            .w-tc-editor .token.string { color: light-dark(#50a14f, #6bc985) !important; }
+            .w-tc-editor .token.number { color: light-dark(#986801, #e5a66b) !important; }
+            .w-tc-editor .token.boolean { color: light-dark(#986801, #e5a66b) !important; }
+            .w-tc-editor .token.null { color: light-dark(#a0a1a7, #7a8a99) !important; }
+            .w-tc-editor .token.punctuation { color: light-dark(#383a42, #b0bec5) !important; }
+            .w-tc-editor .token.operator { color: light-dark(#383a42, #b0bec5) !important; }
             .details-dialog__code .w-tc-editor textarea { display: none !important; }
           `}</style>
           <div className="details-dialog__code">
@@ -128,7 +128,6 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {}, men
               language="json"
               placeholder="Please enter JS code."
               readOnly
-              data-color-mode="dark"
             />
           </div>
         </Dialog>

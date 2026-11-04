@@ -13,15 +13,15 @@ const ButtonContainer = styled.div`
 const VARIANT_STYLES = {
   production: {
     backgroundColor: 'var(--color-hl-production)',
-    color: 'black',
+    color: 'var(--color-on-hl)',
   },
   staging: {
     backgroundColor: 'var(--color-hl-staging)',
-    color: 'black',
+    color: 'var(--color-on-hl)',
   },
   dev: {
     backgroundColor: 'var(--color-hl-developer)',
-    color: 'black',
+    color: 'var(--color-on-hl)',
   },
 } as const
 

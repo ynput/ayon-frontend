@@ -43,7 +43,7 @@ const ThumbnailStyled = styled.div`
     justify-content: center;
     align-items: center;
     inset: 0;
-    background-color: hsl(220 20% 8%);
+    background-color: light-dark(var(--md-sys-color-surface-container), hsl(220 20% 8%));
     color: var(--md-sys-color-outline);
   }
 

@@ -5,7 +5,7 @@ export const DropdownBadge = styled.span`
   padding: 2px 4px;
   font-size: 0.7rem;
   font-weight: 600;
-  color: black;
+  color: var(--color-on-hl);
   background-color: var(--color-hl-developer);
   margin-left: 8px;
   height: 18px;
@@ -24,5 +24,6 @@ export const DropdownBadge = styled.span`
 
   &.project {
     background-color: var(--color-hl-project);
+    color: black;
   }
 `

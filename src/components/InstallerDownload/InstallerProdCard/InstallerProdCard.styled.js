@@ -15,7 +15,7 @@ export const Card = styled.div`
 
   &.featured {
     background-color: var(--md-sys-color-secondary-container);
-    border-color: var(--primary-color);
+    border-color: light-dark(var(--md-sys-color-primary), var(--primary-color));
   }
 
   svg {

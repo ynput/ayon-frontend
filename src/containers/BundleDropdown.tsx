@@ -19,7 +19,7 @@ const DropdownBadge = styled.span`
   padding: 2px 4px;
   font-size: 0.7rem;
   font-weight: 600;
-  color: black;
+  color: var(--color-on-hl);
 
   &.disabled {
     /* strikethrough text */

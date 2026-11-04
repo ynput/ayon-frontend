@@ -9,7 +9,7 @@ export const LoginForm = styled.div`
   align-items: center;
   gap: 32px;
   position: relative;
-  background-color: rgba(28, 32, 38, 0.95);
+  background-color: rgb(from var(--md-sys-color-surface-container-low) r g b / 0.95);
   padding: 32px;
   border-radius: var(--border-radius-xxl);
   box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.25);

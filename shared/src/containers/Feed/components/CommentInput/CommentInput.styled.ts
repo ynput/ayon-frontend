@@ -268,7 +268,7 @@ export const Dropzone = styled.div`
     opacity: 1;
   }
 
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: light-dark(rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.5));
 
   z-index: 300;
 

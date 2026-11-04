@@ -15,7 +15,7 @@ const Container = styled.div`
     right: 12px;
     top: 12px;
     z-index: 10;
-    background: rgba(0, 0, 0, 0.5);
+    background: light-dark(var(--md-sys-color-surface-container-lowest), rgba(0, 0, 0, 0.5));
     border-radius: var(--border-radius-m);
     padding: 6px;
     cursor: pointer;
@@ -34,21 +34,21 @@ const Container = styled.div`
   }
 
   .w-tc-editor .token.property {
-    color: #c9a5f7 !important;
+    color: light-dark(#a626a4, #c9a5f7) !important;
   }
   .w-tc-editor .token.string {
-    color: #6bc985 !important;
+    color: light-dark(#50a14f, #6bc985) !important;
   }
   .w-tc-editor .token.number,
   .w-tc-editor .token.boolean {
-    color: #e5a66b !important;
+    color: light-dark(#986801, #e5a66b) !important;
   }
   .w-tc-editor .token.null {
-    color: #7a8a99 !important;
+    color: light-dark(#a0a1a7, #7a8a99) !important;
   }
   .w-tc-editor .token.punctuation,
   .w-tc-editor .token.operator {
-    color: #b0bec5 !important;
+    color: light-dark(#383a42, #b0bec5) !important;
   }
 
   /* read only: the textarea only steals focus and shows a caret */
@@ -87,7 +87,6 @@ export const JsonViewer: FC<JsonViewerProps> = ({ value, wrap, className }) => {
         value={json}
         language="json"
         readOnly
-        data-color-mode="dark"
         style={{ fontSize: 12 }}
       />
     </Container>

@@ -25,7 +25,7 @@ const DetailRow = styled.div`
 const Label = styled.div`
   font-weight: 600;
   min-width: 140px;
-  color: var(--text-color-secondary);
+  color: light-dark(var(--md-sys-color-outline), var(--text-color-secondary));
 `
 
 const Value = styled.div`
@@ -39,11 +39,11 @@ const JsonWrapper = styled.div`
 `
 
 const JsonDisplay = styled.pre`
-  background-color: var(--surface-ground);
+  background-color: light-dark(var(--md-sys-color-surface-container-lowest), var(--surface-ground));
   padding: 12px;
   border-radius: 4px;
   overflow-x: auto;
-  color: var(--text-color);
+  color: light-dark(var(--md-sys-color-on-surface), var(--text-color));
   font-family: monospace;
   font-size: 0.9rem;
   overflow-y: auto;
