@@ -9,7 +9,7 @@ import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
 // the colour TagsSelect gives tags that have none (surface-container-high of each theme),
-// as values so getTextColor can work out the chip text colour
+// as values so getTagColors can work out the chip colours
 const NO_COLOR_TAG = 'light-dark(#E4E8ED, #353B46)'
 
 const StyledTagsSelect = styled(TagsSelect)`

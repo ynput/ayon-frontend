@@ -1,7 +1,7 @@
 import type { EnumItem } from '@shared/api'
 import {
   getReadableColor,
-  getTextColor,
+  getTagColors,
   Icon,
   IconProps,
   MIN_CONTRAST_ICON,
@@ -253,15 +253,7 @@ export const EnumCellValue = ({
             {(showLabels || !option.icon) && (
               <StyledValue
                 style={{
-                  color:
-                    backgroundColor && option.color
-                      ? getTextColor(option.color)
-                      : iconOnlyColor && option.icon
-                      ? undefined
-                      : getReadableColor(option.color ?? undefined),
-                  backgroundColor: backgroundColor
-                    ? option.color || 'var(--md-sys-color-surface-container)'
-                    : 'transparent',
+                  ...getValueColors(option, !!backgroundColor, iconOnlyColor),
                   ...valueStyle,
                 }}
                 className={clsx({ placeholder: isPlaceholder }, valueClassName)}
@@ -297,6 +289,27 @@ export const EnumCellValue = ({
       )}
     </StyledWidget>
   )
+}
+
+// a value shown as a chip takes the tag colours, otherwise its colour is the text colour
+const getValueColors = (
+  option: EnumItem,
+  isChip: boolean,
+  iconOnlyColor: boolean,
+): React.CSSProperties => {
+  if (isChip && option.color) {
+    const colors = getTagColors(option.color)
+    return {
+      color: colors.text,
+      backgroundColor: colors.background,
+      boxShadow: `inset 0 0 0 1px ${colors.border}`,
+    }
+  }
+  if (isChip) return { backgroundColor: 'var(--md-sys-color-surface-container)' }
+  return {
+    color: iconOnlyColor && option.icon ? undefined : getReadableColor(option.color ?? undefined),
+    backgroundColor: 'transparent',
+  }
 }
 
 // Helper functions to check if the icon is a valid image source
