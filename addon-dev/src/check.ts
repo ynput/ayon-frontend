@@ -5,6 +5,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { createRequire } from 'module'
 import path from 'path'
 import { pathToFileURL } from 'url'
+import { readContractSlots } from './contractSlots.js'
 import { importFromProject, installedVersion, readAddonProject } from './project.js'
 
 export interface CheckResult {
@@ -12,17 +13,34 @@ export interface CheckResult {
   addon: { name: string; version: string }
   manifest: string
   sdkVersion?: string
+  /** slots this addon declares */
+  declares: { name: string; version: number }[]
+  /** slots it can contribute to from its contract packages */
+  contractSlots: { name: string; version: number; package: string }[]
   contributions: { slot: string; id: string; key: string; pieces: Record<string, string | null> }[]
   problems: { slot?: string; id?: string; reason: string }[]
   types?: { ok: boolean; errors: string[] }
 }
 
 // the part of @ynput/ayon-addon/check used here (the addon's installed version is the one that counts)
+interface SlotPieces {
+  pieces: readonly string[]
+  optionalPieces?: readonly string[]
+}
 interface CheckModule {
-  SLOTS: Record<string, { pieces: readonly string[]; optionalPieces?: readonly string[] }>
+  SLOTS: Record<string, SlotPieces>
+  // older versions of the package have no declarations
+  checkSlotDeclarations?: (
+    addon: { name: string; version: string; remote: string },
+    manifest: unknown,
+  ) => {
+    slots: ({ name: string; version: number } & SlotPieces)[]
+    skipped: { slot?: string; reason: string }[]
+  }
   checkManifest: (
     addon: { name: string; version: string; remote: string },
     manifest: unknown,
+    slots?: Record<string, SlotPieces>,
   ) => {
     contributions: ({ slot: string; id: string; key: string } & Record<string, unknown>)[]
     skipped: { slot?: string; id?: string; reason: string }[]
@@ -95,6 +113,8 @@ export const checkAddon = async ({
     ok: true,
     addon: { name: project.name, version: project.version },
     manifest,
+    declares: [],
+    contractSlots: [],
     contributions: [],
     problems: [],
   }
@@ -107,14 +127,27 @@ export const checkAddon = async ({
   } catch (error) {
     result.problems.push({ reason: `the manifest failed to load: ${(error as Error).message}` })
   }
+  const contract = await readContractSlots(root)
+  result.problems.push(...contract.problems)
+  result.contractSlots = contract.slots.map(({ name, version, package: from }) => ({
+    name,
+    version,
+    package: from,
+  }))
   if (loaded !== undefined) {
-    const { contributions, skipped } = sdk.checkManifest(
-      { name: project.name, version: project.version, remote: 'check' },
-      loaded,
-    )
+    const info = { name: project.name, version: project.version, remote: 'check' }
+    const own = sdk.checkSlotDeclarations?.(info, loaded)
+    result.declares = (own?.slots || []).map(({ name, version }) => ({ name, version }))
+    result.problems.push(...(own?.skipped || []).map(({ slot, reason }) => ({ slot, reason })))
+    const slots: Record<string, SlotPieces> = {
+      ...sdk.SLOTS,
+      ...Object.fromEntries(contract.slots.map((slot) => [slot.name, slot])),
+      ...Object.fromEntries((own?.slots || []).map((slot) => [slot.name, slot])),
+    }
+    const { contributions, skipped } = sdk.checkManifest(info, loaded, slots)
     result.problems.push(...skipped.map(({ slot, id, reason }) => ({ slot, id, reason })))
     for (const contribution of contributions) {
-      const definition = sdk.SLOTS[contribution.slot]
+      const definition = slots[contribution.slot]
       const pieceNames = [...definition.pieces, ...(definition.optionalPieces || [])]
       const pieces: Record<string, string | null> = {}
       for (const name of pieceNames) {
@@ -136,6 +169,7 @@ export const checkAddon = async ({
 export const formatCheck = (result: CheckResult) => {
   const lines = [
     `${result.addon.name} ${result.addon.version}, ${result.manifest} (@ynput/ayon-addon ${result.sdkVersion})`,
+    ...result.declares.map((s) => `  ok  ${s.name.padEnd(30)} declares this slot, version ${s.version}`),
     ...result.contributions.map(
       (c) => `  ok  ${c.slot.padEnd(30)} ${c.id.padEnd(24)} ${Object.values(c.pieces).filter(Boolean).join(', ')}`,
     ),

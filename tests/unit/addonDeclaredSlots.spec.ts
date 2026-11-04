@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test'
 import { spawnSync } from 'child_process'
-import { existsSync } from 'fs'
+import { existsSync, mkdirSync, mkdtempSync, writeFileSync } from 'fs'
+import { tmpdir } from 'os'
 import path from 'path'
 import { checkManifest, checkSlotDeclarations } from '../../addon/src/validate'
 import {
@@ -12,6 +13,7 @@ import {
 } from '../../addon/src/registry'
 import { provideHost } from '../../addon/src/hostBridge'
 import { runContribution } from '../../addon/src/pieces'
+import { readContractSlots } from '../../addon-dev/src/contractSlots'
 import { loadManifests } from '../../shared/src/context/remote-modules/loadManifests'
 
 const planner = { name: 'planner', version: '2.0.0', remote: 'planner' }
@@ -226,4 +228,31 @@ test('contract packages type contributions in both entries', () => {
   )
   expect(`${result.stdout}${result.stderr}`).toBe('')
   expect(result.status).toBe(0)
+})
+
+test('the CLI finds the slots of the contract packages among the dependencies', async () => {
+  const root = mkdtempSync(path.join(tmpdir(), 'addon-contract-'))
+  const install = (name: string, pkg: object, files: Record<string, string> = {}) => {
+    const dir = path.join(root, 'node_modules', name)
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name, type: 'module', ...pkg }))
+    Object.entries(files).forEach(([file, text]) => writeFileSync(path.join(dir, file), text))
+  }
+  writeFileSync(
+    path.join(root, 'package.json'),
+    JSON.stringify({
+      dependencies: { contract: '1', plain: '1', missing: '1' },
+      devDependencies: { broken: '1', notlisted: '1' },
+    }),
+  )
+  const slotsJs = `export const slots = [{ name: '${SLOT}', version: 1, required: [], pieces: ['run'] }]`
+  install('contract', { ayonAddon: { slots: './slots.js' } }, { 'slots.js': slotsJs })
+  install('plain', {})
+  install('broken', { ayonAddon: { slots: './slots.js' } }, { 'slots.js': 'export const other = 1' })
+
+  const { slots, problems } = await readContractSlots(root)
+  expect(slots.map((s) => [s.name, s.package])).toEqual([[SLOT, 'contract']])
+  expect(problems).toEqual([
+    { reason: 'broken: its slots failed to load: ./slots.js does not export a "slots" list' },
+  ])
 })
