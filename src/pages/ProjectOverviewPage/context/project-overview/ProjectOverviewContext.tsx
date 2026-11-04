@@ -40,7 +40,7 @@ import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { getRequestErrorString } from '@shared/util'
 
-export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
+export const ProjectOverviewProvider = ({ children }: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
 
   // Get project data from the new context
@@ -186,7 +186,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // folderType can only be used with entity type 'folder'
   // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
   const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
-  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
+  const {
+    groups: taskGroups,
+    error: groupingError,
+    isLoading: isLoadingGroups,
+  } = useGetEntityGroups({
     groupBy: viewGroupByObj,
     projectName,
     entityType: groupingEntityType,
@@ -383,7 +387,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     showHierarchy,
     isFlatFolderView,
     attribFields,
-    modules,
     skipLinks,
     showComments,
     isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
@@ -405,7 +408,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     <ProjectOverviewContext.Provider
       value={{
         isInitialized: isInitialized,
-        isLoading: isLoadingAll || isLoadingData,
+        isLoading: isLoadingAll || isLoadingData || isLoadingGroups,
         isLoadingMore,
         loadingTasks,
         error,
