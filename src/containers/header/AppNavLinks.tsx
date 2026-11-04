@@ -125,12 +125,12 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
             className={Typography.titleSmall}
             tabIndex={-1}
           >
-            {startContent && startContent}
+            {startContent}
             {name}
             {deprecated && (
               <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
             )}
-            {endContent && endContent}
+            {endContent}
             {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
           </Button>
         </NavLink>
