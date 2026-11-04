@@ -78,7 +78,8 @@ type Params = {
   showHierarchy: boolean
   isFlatFolderView?: boolean
   attribFields: ProjectTableAttribute[]
-  modules?: ProjectTableModulesType // unused, kept so addon callers (production planner) still compile
+  /** @deprecated unused, the table no longer waits for the GroupSettings remote */
+  modules?: ProjectTableModulesType
   skipLinks?: boolean
   showComments?: boolean // only fetch latestComments when the comments column is visible
   isLoadingViews?: boolean
@@ -432,7 +433,7 @@ export const useFetchOverviewData = ({
   // request per folder via getOverviewTasksByFolders.
   const {
     source: taskSource,
-    tasksUnderSelectedFolders: getTasksDirectlyUnderFolder,
+    tasksUnderSelectedFolders,
     skipTasksList,
   } = getOverviewTaskSource({
     showHierarchy,
@@ -466,7 +467,7 @@ export const useFetchOverviewData = ({
     sortBy: tasksSortBy,
     desc: tasksSortDesc,
     showComments,
-    includeFolderChildren: !getTasksDirectlyUnderFolder,
+    includeFolderChildren: !tasksUnderSelectedFolders,
   }
 
   // Use the new infinite query hook for tasks list with correct name

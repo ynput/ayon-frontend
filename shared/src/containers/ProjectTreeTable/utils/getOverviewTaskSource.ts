@@ -1,4 +1,3 @@
-// where the overview table gets its task rows from
 export type OverviewTaskSource =
   | 'tasksList' // paginated GetTasksList
   | 'expandedFolders' // GetTasksByParent for expanded folders

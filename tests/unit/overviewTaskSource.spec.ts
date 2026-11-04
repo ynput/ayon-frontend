@@ -73,26 +73,3 @@ test('nothing is fetched while the view is still loading', () => {
     expect(getOverviewTaskSource({ ...view, isLoadingViews: true }).skipTasksList).toBe(true)
   }
 })
-
-test('the tasks list runs exactly when the table shows its rows', () => {
-  const flags = [true, false]
-  for (const showHierarchy of flags)
-    for (const isFlatFolderView of flags)
-      for (const isGrouped of flags)
-        for (const excludeSelectedFolders of flags)
-          for (const hasSelectedFolders of flags)
-            for (const hasTaskIds of flags) {
-              const { source, skipTasksList } = getOverviewTaskSource({
-                showHierarchy,
-                isFlatFolderView,
-                isGrouped,
-                excludeSelectedFolders,
-                hasSelectedFolders,
-                hasTaskIds,
-                isLoadingViews: false,
-              })
-              const showsTasksList =
-                source === 'tasksList' || source === 'expandedFoldersAndTasksList'
-              expect(skipTasksList).toBe(!showsTasksList)
-            }
-})

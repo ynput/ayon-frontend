@@ -32,7 +32,7 @@ const ProjectOverviewDataProvider: FC = () => {
       defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
     >
       <ColumnDndProvider>
-        <ProjectOverviewProvider modules={modules}>
+        <ProjectOverviewProvider>
           <SettingsPanelProvider>
             <ProjectOverviewTableProvider modules={modules} />
           </SettingsPanelProvider>
