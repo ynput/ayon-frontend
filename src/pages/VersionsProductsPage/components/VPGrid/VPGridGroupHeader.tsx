@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { Button, Icon } from '@ynput/ayon-react-components'
+import { Button, Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './VPGridGroupHeader.styled'
 
@@ -30,7 +30,12 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
       <Styled.GroupHeader onClick={handleOnClick} className={clsx({ collapsed: !isExpanded })}>
         <Styled.Content>
           <Button icon="expand_more" className="expand-icon" variant="text" />
-          {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
+          {icon && (
+            <Icon
+              icon={icon}
+              style={{ color: getReadableColor(color || undefined, MIN_CONTRAST_ICON) }}
+            />
+          )}
           <Styled.Label>{label}</Styled.Label>
           {/* {count !== undefined && <Styled.Count>{count < 1 ? 'Empty' : count}</Styled.Count>} */}
         </Styled.Content>

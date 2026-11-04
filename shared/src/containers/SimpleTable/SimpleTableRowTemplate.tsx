@@ -1,6 +1,13 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './SimpleTable.styled'
-import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
+import {
+  Icon,
+  IconProps,
+  InputText,
+  Spacer,
+  getReadableColor,
+  MIN_CONTRAST_ICON,
+} from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 
 export interface TableRowAction extends IconProps {
@@ -175,7 +182,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             icon={icon}
             className={clsx({ filled: iconFilled }, pt?.icon?.className)}
             style={{
-              color: iconColor,
+              color: getReadableColor(iconColor, MIN_CONTRAST_ICON),
               ...pt?.icon?.style,
             }}
             {...pt?.icon}

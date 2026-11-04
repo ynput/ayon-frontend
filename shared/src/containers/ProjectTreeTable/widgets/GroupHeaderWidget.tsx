@@ -1,4 +1,10 @@
-import { Button, Icon, theme } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Icon,
+  theme,
+  getReadableColor,
+  MIN_CONTRAST_ICON,
+} from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const Expander = styled(Button)`
@@ -120,8 +126,13 @@ export const GroupHeaderWidget = ({
         <StyledContentAbsolute>
           <StyledContent>
             {img && <StyledImg src={img} alt={name} className="img" />}
-            {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
-            <StyledTextContent style={{ color: color || undefined }}>
+            {icon && (
+              <Icon
+                icon={icon}
+                style={{ color: getReadableColor(color || undefined, MIN_CONTRAST_ICON) }}
+              />
+            )}
+            <StyledTextContent style={{ color: getReadableColor(color || undefined) }}>
               <span className="label">{label || name}</span>
             </StyledTextContent>
             {count !== undefined && count > 0 ? (

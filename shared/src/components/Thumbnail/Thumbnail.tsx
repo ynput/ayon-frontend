@@ -1,5 +1,5 @@
 import { HTMLAttributes, useEffect, useState } from 'react'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
 import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
@@ -79,7 +79,11 @@ export const Thumbnail = ({
       {...props}
     >
       {(!isLoading || !loaded) && !disabled && (
-        <Icon style={{ color: color || undefined }} icon={icon || 'image'} className="type-icon" />
+        <Icon
+          style={{ color: getReadableColor(color || undefined, MIN_CONTRAST_ICON) }}
+          icon={icon || 'image'}
+          className="type-icon"
+        />
       )}
       {entityType && projectName && !isWrongEntity && hasIdentity && (
         <Styled.Image

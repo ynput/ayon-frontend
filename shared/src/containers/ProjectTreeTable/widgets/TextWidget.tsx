@@ -6,7 +6,7 @@ import { WidgetBaseProps } from './CellWidget'
 import styled from 'styled-components'
 import type { AttributeData } from '@shared/api/generated/entityLists'
 import type { EnumItem } from '@shared/api/generated/projects'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { parseHtmlToPlainTextWithLinks } from '@shared/util'
 import { TextContentWidget } from './TextContentWidget'
@@ -415,7 +415,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       <>
         <StyledBaseTextWidget
           className={combinedClassName}
-          style={{ color: option?.color, ...style }}
+          style={{ color: getReadableColor(option?.color ?? undefined), ...style }}
           {...props}
           ref={(node) => {
             // Merge external ref with internal ref
@@ -428,7 +428,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
             <Icon
               icon={option.icon as string}
               style={{
-                color: option.color,
+                color: getReadableColor(option.color ?? undefined, MIN_CONTRAST_ICON),
               }}
             />
           )}

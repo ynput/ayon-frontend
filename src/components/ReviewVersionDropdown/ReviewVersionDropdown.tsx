@@ -1,4 +1,4 @@
-import { Dropdown, Icon } from '@ynput/ayon-react-components'
+import { Dropdown, Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
 import * as Styled from './ReviewVersionDropdown.styled'
 
 type ReviewVersionDropdownProps = {
@@ -43,7 +43,7 @@ const ReviewVersionDropdown = ({
             {...valueProps}
           >
             {prefix}
-            {valueIcon && <Icon icon={valueIcon} style={valueColor ? {color: valueColor} : {}}/>}
+            {valueIcon && <Icon icon={valueIcon} style={valueColor ? {color: getReadableColor(valueColor, MIN_CONTRAST_ICON)} : {}}/>}
             {options.find((option) => option.value === (selected || value)[0])?.label}
           </Styled.VersionValueTemplate>
         </div>

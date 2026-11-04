@@ -1,21 +1,21 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor, getTextColor } from '@ynput/ayon-react-components'
 
 const hoverStyle = css`
   background-color: var(--md-sys-color-surface-container-low-hover);
-  color: ${({ $color }) => $color};
+  color: ${({ $color }) => getReadableColor($color)};
 `
 
 const invertHoverStyle = css`
   /* flips the bg color for text color */
   background-color: ${({ $color }) => $color};
-  color: black;
+  color: ${({ $color }) => getTextColor($color)};
 `
 const defaultStyle = css`
   /* default text color */
-  color: ${({ $color }) => $color};
+  color: ${({ $color }) => getReadableColor($color)};
   background-color: transparent;
 `
 

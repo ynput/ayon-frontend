@@ -1,5 +1,11 @@
 import type { EnumItem } from '@shared/api'
-import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
+import {
+  getReadableColor,
+  getTextColor,
+  Icon,
+  IconProps,
+  MIN_CONTRAST_ICON,
+} from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
@@ -235,7 +241,10 @@ export const EnumCellValue = ({
             ) : option.icon ? (
               <Icon
                 icon={option.icon}
-                style={{ color: option.color, ...iconStyle }}
+                style={{
+                  color: getReadableColor(option.color ?? undefined, MIN_CONTRAST_ICON),
+                  ...iconStyle,
+                }}
                 className={iconClassName}
                 {...iconRest}
               />
@@ -249,7 +258,7 @@ export const EnumCellValue = ({
                       ? getTextColor(option.color)
                       : iconOnlyColor && option.icon
                       ? undefined
-                      : option.color,
+                      : getReadableColor(option.color ?? undefined),
                   backgroundColor: backgroundColor
                     ? option.color || 'var(--md-sys-color-surface-container)'
                     : 'transparent',

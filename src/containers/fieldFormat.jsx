@@ -1,7 +1,7 @@
 // Various components for formatting fields in the UI
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
-import { OverflowField } from '@ynput/ayon-react-components'
+import { OverflowField, getReadableColor } from '@ynput/ayon-react-components'
 import { copyToClipboard } from '@shared/util'
 
 // Attributes
@@ -44,7 +44,7 @@ const TagsField = ({ value }) => {
       {value.map(
         (tag) =>
           typeof tag === 'string' && (
-            <span key={tag} style={{ color: tags[tag]?.color }}>
+            <span key={tag} style={{ color: getReadableColor(tags[tag]?.color) }}>
               {tag}
             </span>
           ),

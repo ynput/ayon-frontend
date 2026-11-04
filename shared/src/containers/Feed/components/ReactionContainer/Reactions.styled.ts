@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components'
+import { getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
 
 type CategoryProps = {
   $categoryPrimary?: string
@@ -142,7 +143,7 @@ const ReactionPanelOpener = styled.div<CategoryProps>`
     css`
       --opener-bg: ${$categorySecondary};
       --opener-hover-bg: ${$categorySecondary};
-      --opener-color: ${$categoryPrimary};
+      --opener-color: ${getReadableColor($categoryPrimary, MIN_CONTRAST_ICON)};
     `}
 
   user-select: none;
