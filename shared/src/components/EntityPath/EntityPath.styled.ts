@@ -101,7 +101,7 @@ export const MoreList = styled.ul`
   flex-direction: column;
   gap: var(--base-gap-small);
 
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   border-radius: var(--border-radius-m);
   box-shadow: var(--md-sys-shadow-elevation-4);
   padding: var(--padding-s);

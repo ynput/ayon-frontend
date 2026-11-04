@@ -107,7 +107,7 @@ const Overlay = styled.div`
 `
 const ReactionsPanel = styled.div<CategoryProps>`
   /* VARS */
-  --panel-bg: var(--md-sys-color-surface-container-high);
+  --panel-bg: var(--md-sys-color-surface-overlay);
 
   /* CATEGORY */
   ${({ $categoryPrimary, $categorySecondary }) =>

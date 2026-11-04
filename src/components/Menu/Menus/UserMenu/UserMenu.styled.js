@@ -9,8 +9,7 @@ export const UserMenu = styled.section`
   border-radius: 8px;
   overflow: hidden;
 
-  /* FIX: when new theme comes in we will use PANEL */
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
 `
 
 // header
