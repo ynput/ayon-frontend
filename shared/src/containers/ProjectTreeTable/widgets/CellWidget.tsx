@@ -55,6 +55,11 @@ const Cell = styled.div`
   &.inherited {
     opacity: 0.6;
     font-style: italic;
+
+    /* light fades less: at 0.6, coloured values drop below readable contrast there */
+    [data-theme='light'] & {
+      opacity: 0.8;
+    }
   }
 
   &.loading {
