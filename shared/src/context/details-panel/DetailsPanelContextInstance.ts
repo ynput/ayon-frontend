@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext } from 'react'
 import type {
+  AddonDetailsPanelTab,
   CommentFrameLink,
   DetailsPanelContextType,
   DetailsPanelTab,
@@ -12,9 +13,16 @@ import { readLocalStorage, writeLocalStorage } from '@shared/hooks/useLocalStora
 export const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
 
 const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+// an addon tab: the contribution key, <addon>.<id>
+const ADDON_TAB = /^[^.\s]+\.[A-Za-z][A-Za-z0-9_]*$/
 
+export const isAddonDetailsPanelTab = (tab: unknown): tab is AddonDetailsPanelTab =>
+  typeof tab === 'string' && ADDON_TAB.test(tab)
+
+// a stored addon tab whose addon is gone falls back in DetailsPanel, once manifests have loaded
 export const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
-  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
+  typeof tab === 'string' &&
+  (DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab) || isAddonDetailsPanelTab(tab))
 
 // the frame link stored on a comment's data, if it has one
 export const getActivityFrameLink = (activity: {

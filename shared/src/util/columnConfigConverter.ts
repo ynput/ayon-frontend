@@ -5,7 +5,7 @@ import {
   ColumnSizingState,
   SortingState,
 } from '@tanstack/react-table'
-import type { ColumnItemModel, OverviewSettings } from '@shared/api/generated/views'
+import type { ColumnItemModel, OverviewSettings } from '@shared/api'
 import type {
   ColumnsConfig,
   TableGroupBy,

@@ -29,8 +29,11 @@ export const StatsHeading = styled.h2`
   align-items: center;
   min-width: 300px;
 `
-export const StatsSubtitle = styled.p`
+export const StatsSubtitle = styled.div`
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
 `
 export const StatsFileSize = styled.span`
   color: var(--md-sys-color-outline);

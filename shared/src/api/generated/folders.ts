@@ -6,6 +6,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
       }),
     }),
+    updateFolder: build.mutation<UpdateFolderApiResponse, UpdateFolderApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
+        method: 'PATCH',
+        body: queryArg.folderPatchModel,
+      }),
+    }),
     deleteFolder: build.mutation<DeleteFolderApiResponse, DeleteFolderApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
@@ -15,11 +22,11 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    updateFolder: build.mutation<UpdateFolderApiResponse, UpdateFolderApiArg>({
+    createFolder: build.mutation<CreateFolderApiResponse, CreateFolderApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}`,
-        method: 'PATCH',
-        body: queryArg.folderPatchModel,
+        url: `/api/projects/${queryArg.projectName}/folders`,
+        method: 'POST',
+        body: queryArg.folderPostModel,
       }),
     }),
     getFolderList: build.query<GetFolderListApiResponse, GetFolderListApiArg>({
@@ -27,14 +34,8 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/folders`,
         params: {
           attrib: queryArg.attrib,
+          visibility: queryArg.visibility,
         },
-      }),
-    }),
-    createFolder: build.mutation<CreateFolderApiResponse, CreateFolderApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/folders`,
-        method: 'POST',
-        body: queryArg.folderPostModel,
       }),
     }),
     searchFolders: build.mutation<SearchFoldersApiResponse, SearchFoldersApiArg>({
@@ -53,15 +54,6 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getFolderThumbnail: build.query<GetFolderThumbnailApiResponse, GetFolderThumbnailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
-        params: {
-          placeholder: queryArg.placeholder,
-          original: queryArg.original,
-        },
-      }),
-    }),
     createFolderThumbnail: build.mutation<
       CreateFolderThumbnailApiResponse,
       CreateFolderThumbnailApiArg
@@ -74,6 +66,23 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getFolderThumbnail: build.query<GetFolderThumbnailApiResponse, GetFolderThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
+    getFolderFilmstrip: build.query<GetFolderFilmstripApiResponse, GetFolderFilmstripApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -83,6 +92,12 @@ export type GetFolderApiArg = {
   projectName: string
   folderId: string
 }
+export type UpdateFolderApiResponse = unknown
+export type UpdateFolderApiArg = {
+  projectName: string
+  folderId: string
+  folderPatchModel: FolderPatchModel
+}
 export type DeleteFolderApiResponse = unknown
 export type DeleteFolderApiArg = {
   projectName: string
@@ -90,22 +105,18 @@ export type DeleteFolderApiArg = {
   /** Allow recursive deletion */
   force?: boolean
 }
-export type UpdateFolderApiResponse = unknown
-export type UpdateFolderApiArg = {
+export type CreateFolderApiResponse = /** status 201 Successful Response */ EntityIdResponse
+export type CreateFolderApiArg = {
   projectName: string
-  folderId: string
-  folderPatchModel: FolderPatchModel
+  folderPostModel: FolderPostModel
 }
 export type GetFolderListApiResponse = /** status 200 Successful Response */ FolderListModel
 export type GetFolderListApiArg = {
   projectName: string
   /** Include folder attributes */
   attrib?: boolean
-}
-export type CreateFolderApiResponse = /** status 201 Successful Response */ EntityIdResponse
-export type CreateFolderApiArg = {
-  projectName: string
-  folderPostModel: FolderPostModel
+  /** Filter folders by visibility, including ancestor folders. 'visible' returns only visible folders; 'hidden' returns folders that are inactive themselves or have an inactive ancestor. 'all' (default) returns both. */
+  visibility?: 'all' | 'visible' | 'hidden'
 }
 export type SearchFoldersApiResponse = /** status 200 Successful Response */ FolderSearchResponse
 export type SearchFoldersApiArg = {
@@ -121,6 +132,13 @@ export type GetFolderHierarchyApiArg = {
   /** Comma separated list of folder_types to show */
   types?: string
 }
+export type CreateFolderThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateFolderThumbnailApiArg = {
+  projectName: string
+  folderId: string
+  'content-type'?: string | null
+}
 export type GetFolderThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetFolderThumbnailApiArg = {
   projectName: string
@@ -128,59 +146,43 @@ export type GetFolderThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateFolderThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateFolderThumbnailApiArg = {
+export type GetFolderFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetFolderFilmstripApiArg = {
   projectName: string
   folderId: string
-  'content-type'?: string
-}
-export type FolderAttribModel = {
-  priority?: 'urgent' | 'high' | 'normal' | 'low'
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  /** Date and time when the project or task or asset was started */
-  startDate?: string
-  /** Deadline date and time */
-  endDate?: string
-  /** Textual description of the entity */
-  description?: string
+  placeholder?: 'empty' | 'none'
 }
 export type FolderModel = {
-  /** Unique identifier of the {entity_name} */
+  /** Unique identifier of the entity */
   id?: string
   name: string
-  label?: string
-  folderType?: string
+  label?: string | null
+  folderType?: string | null
   /** Parent folder ID in the hierarchy */
-  parentId?: string
-  thumbnailId?: string
-  path?: string
-  hasVersions?: boolean
-  attrib?: FolderAttribModel
-  data?: object
-  /** Whether the folder is active */
+  parentId?: string | null
+  thumbnailId?: string | null
+  /** Resolved folder path in the project hierarchy */
+  path?: string | null
+  hasVersions?: boolean | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
-  /** Status of the folder */
-  status?: string
-  /** Tags assigned to the the folder */
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the folder */
-  createdBy?: string
-  /** Who last updated the folder */
-  updatedBy?: string
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -190,79 +192,97 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type FolderPatchModel = {
-  name?: string
-  label?: string
-  folderType?: string
+  name?: string | null
+  label?: string | null
+  folderType?: string | null
   /** Parent folder ID in the hierarchy */
-  parentId?: string
-  thumbnailId?: string
-  /** Status of the folder */
-  status?: string
-  /** Tags assigned to the the folder */
-  tags?: string[]
-  /** Who created the folder */
-  createdBy?: string
-  /** Who last updated the folder */
-  updatedBy?: string
-  attrib?: FolderAttribModel
-  data?: object
-  /** Whether the folder is active */
-  active?: boolean
-}
-export type FolderListItem = {
-  id: string
-  path: string
-  parentId?: string
-  parents: string[]
-  name: string
-  label?: string
-  folderType: string
-  hasTasks?: boolean
-  hasChildren?: boolean
-  hasReviewables?: boolean
-  thumbnailHash: string
-  taskNames?: string[]
-  tags?: string[]
-  status: string
-  attrib?: object
-  ownAttrib?: string[]
-  createdAt: string
-  updatedAt: string
-}
-export type FolderListModel = {
-  detail: string
-  folders: FolderListItem[]
+  parentId?: string | null
+  thumbnailId?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
+  tags?: string[] | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type EntityIdResponse = {
   /** Entity ID */
   id: string
 }
 export type FolderPostModel = {
-  /** Explicitly set the ID of the entity */
+  /** Unique identifier of the entity */
   id?: string
   name: string
-  label?: string
-  folderType?: string
+  label?: string | null
+  folderType?: string | null
   /** Parent folder ID in the hierarchy */
-  parentId?: string
-  thumbnailId?: string
-  /** Status of the folder */
-  status?: string
-  /** Tags assigned to the the folder */
+  parentId?: string | null
+  thumbnailId?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the folder */
-  createdBy?: string
-  /** Who last updated the folder */
-  updatedBy?: string
-  attrib?: FolderAttribModel
-  data?: object
-  /** Whether the folder is active */
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+}
+export type FolderListItem = {
+  id: string
+  path: string
+  parentId?: string | null
+  parents: string[]
+  name: string
+  label?: string | null
+  folderType: string
+  hasTasks?: boolean
+  hasChildren?: boolean
+  hasReviewables?: boolean
+  thumbnailHash: string
+  taskNames?: string[] | null
+  tags?: string[] | null
+  status: string
+  attrib?: {
+    [key: string]: any
+  } | null
+  active?: boolean
+  visible?: boolean
+  ownAttrib?: string[] | null
+  createdAt: string
+  updatedAt: string
+  createdBy?: string | null
+  updatedBy?: string | null
+}
+export type FolderListModel = {
+  detail: string
+  folders: FolderListItem[]
 }
 export type FolderSearchResponse = {
   /** List of folder ids containing tasks matching the query */
@@ -272,12 +292,13 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | boolean | string[] | number[] | number[]
-  /** Comparison operator */
+  value?: string | number | number | boolean | string[] | number[] | number[] | null
+  /** Comparison operator. like and notlike perform case-insensitive substring matching. One surrounding pair of % is treated as a substring wrapper; %, _ and backslashes within it are literal. */
   operator?:
     | 'eq'
     | 'like'
     | 'notlike'
+    | 're'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -302,15 +323,15 @@ export type QueryFilter = {
 }
 export type FolderSearchRequest = {
   /** Filter object used to resolve the tasks */
-  taskFilter?: QueryFilter
+  taskFilter?: QueryFilter | null
   /** 'fulltext' search used to resolve the tasks */
-  taskSearch?: string
+  taskSearch?: string | null
   /** Filter object used to resolve the folders */
-  folderFilter?: QueryFilter
+  folderFilter?: QueryFilter | null
   /** 'fulltext' search used to resolve the folders */
-  folderSearch?: string
+  folderSearch?: string | null
   /** Unified 'fulltext' search applied to both tasks and folders */
-  search?: string
+  search?: string | null
 }
 export type HierarchyFolderModel = {
   /** Folder ID */
@@ -318,11 +339,11 @@ export type HierarchyFolderModel = {
   name: string
   label: string
   status: string
-  folderType?: string
+  folderType?: string | null
   hasTasks: boolean
   taskNames: string[]
   parents: string[]
-  parentId?: string
+  parentId?: string | null
   children?: HierarchyFolderModel[]
 }
 export type HierarchyResponseModel = {
@@ -330,6 +351,21 @@ export type HierarchyResponseModel = {
   projectName: string
   hierarchy: HierarchyFolderModel[]
 }
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
+}
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[] | null
+}
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }

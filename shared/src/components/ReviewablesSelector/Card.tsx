@@ -5,6 +5,7 @@ import type { ContextMenuItemType } from '@shared/containers/ContextMenu/useCrea
 import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import * as Styled from './ReviewablesSelector.styled'
 import { KeyboardEvent, MouseEvent } from 'react'
+import { getFileFilmstripUrl } from '@shared/util'
 
 export type ReviewableCard = Pick<ReviewableModel, 'fileId' | 'label'> & {
   tag?: JSX.Element
@@ -55,7 +56,10 @@ export default function Card({
       }}
       tabIndex={0}
     >
-      <FileThumbnail src={`/api/projects/${projectName}/files/${fileId}/thumbnail`} />
+      <FileThumbnail
+        src={`/api/projects/${projectName}/files/${fileId}/thumbnail`}
+        filmstripSrc={getFileFilmstripUrl(projectName ?? undefined, fileId)}
+      />
       {tag && <Styled.Tag>{tag}</Styled.Tag>}
     </Styled.ReviewableCard>
   )

@@ -5,6 +5,7 @@ import { copyToClipboard } from '@shared/util'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import { FieldLabel } from './FieldLabel'
 import { format } from 'date-fns'
+import { UserImage } from '../UserImage/UserImage'
 
 const StyledRow = styled.div`
   display: grid;
@@ -40,6 +41,12 @@ const StyledValue = styled.div`
   justify-self: end;
   font-size: 14px;
   width: 100%;
+
+  &:has(img) {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 `
 
 const StyledShimmer = styled.div`
@@ -68,6 +75,7 @@ interface DetailsSectionProps {
   form: Record<string, any>
   mixedFields?: string[]
   isLoading: boolean
+  users?: { name: string; fullName?: string | null }[]
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -75,6 +83,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   form,
   mixedFields = [],
   isLoading,
+  users = [],
 }) => {
   const formatValue = (value: any, fieldName: string): string => {
     if (value === null || value === undefined) {
@@ -114,6 +123,9 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
           const fieldValue = form[field.name]
           const isMixed = mixedFields.includes(field.name)
           const displayValue = isMixed ? 'Multiple values' : formatValue(fieldValue, field.name)
+          const isAuthor = ['createdBy', 'updatedBy'].includes(field.name)
+          const author =
+            isAuthor && !isMixed ? users.find((user) => user.name === fieldValue) : undefined
 
           return (
             <StyledRow key={field.name}>
@@ -126,7 +138,10 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
                   fontStyle: isMixed ? 'italic' : 'normal',
                 }}
               >
-                {displayValue}
+                {author && (
+                  <UserImage name={author.name} fullName={author.fullName || undefined} size={20} />
+                )}
+                {author ? author.fullName || author.name : displayValue}
               </StyledValue>
               <Button
                 className="copy-icon"

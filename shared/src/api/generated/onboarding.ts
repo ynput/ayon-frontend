@@ -26,20 +26,20 @@ export type AbortOnboardingApiResponse = /** status 200 Successful Response */ a
 export type AbortOnboardingApiArg = void
 export type RestartOnboardingApiResponse = /** status 200 Successful Response */ any
 export type RestartOnboardingApiArg = void
-export type UserAttribModel = {
-  fullName?: string
-  email?: string
-  avatarUrl?: string
-  developerMode?: boolean
-}
 export type UserModel = {
-  /** Name is an unique id of the {entity_name} */
+  /** Unique name of the user */
   name: string
-  uiExposureLevel?: number
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
+  uiExposureLevel?: number | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
   /** Time of creation */
   createdAt?: string
@@ -48,17 +48,19 @@ export type UserModel = {
 }
 export type LoginResponseModel = {
   /** Text message, which may be displayed to the user */
-  detail?: string
-  error?: string
-  token?: string
-  user?: UserModel
+  detail?: string | null
+  error?: string | null
+  token?: string | null
+  user?: UserModel | null
   /** URL to redirect the user after login */
-  redirectUrl?: string
+  redirectUrl?: string | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]

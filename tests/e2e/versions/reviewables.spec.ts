@@ -5,7 +5,7 @@ import { ProductsPage } from '../pages/ProductsPage'
 import { ReviewablesTab } from '../pages/ReviewablesTab'
 import { ViewerPage } from '../pages/ViewerPage'
 import { seedReviewVersions } from '../review/seed'
-import { confirmDialog, menuItem } from '../support/ui'
+import { confirmDialog, menuItem } from '@ynput/ayon-e2e'
 
 test.describe('version reviewables', () => {
   test('upload a video to a version from the viewer', async ({ page, api, projectName }) => {

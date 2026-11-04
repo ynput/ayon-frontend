@@ -90,6 +90,14 @@ export const Card = styled.div`
     border: none;
     border-color: transparent;
   }
+
+  /* the hover-scrub filmstrip replaces the static image */
+  &[data-filmstrip-active] {
+    img,
+    .icon {
+      visibility: hidden;
+    }
+  }
 `
 
 export const Image = styled.img`

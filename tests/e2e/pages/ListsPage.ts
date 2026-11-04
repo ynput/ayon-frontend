@@ -1,6 +1,6 @@
 import { expect, Page } from '@playwright/test'
+import { confirmDialog, dialog, formRow, menuItem, toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { confirmDialog, dialog, formRow, menuItem, toast } from '../support/ui'
 
 /** /projects/:project/lists, and /projects/:project/reviews for review sessions */
 export class ListsPage {

@@ -4,7 +4,11 @@ import { useCallback, useMemo } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 
 // Components
-import { useProjectTableContext, ProjectTreeTable } from '@shared/containers/ProjectTreeTable'
+import {
+  useProjectTableContext,
+  ProjectTreeTable,
+  useAddonTableColumns,
+} from '@shared/containers/ProjectTreeTable'
 import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { useNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
@@ -41,6 +45,9 @@ const ProjectOverviewTable = ({}: Props) => {
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage } = useProjectTableContext()
   const { onOpenNew } = useNewEntityContext()
+  // columns addons contribute (tableColumn slot)
+  const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
+    useAddonTableColumns('overview')
 
   const scope = `overview-${projectName}`
 
@@ -72,6 +79,7 @@ const ProjectOverviewTable = ({}: Props) => {
     <Section style={{ height: '100%' }}>
       <TableWrapper>
         <ProjectTreeTable
+          addonPage="overview"
           scope={scope}
           sliceId={''}
           // pagination
@@ -95,8 +103,9 @@ const ProjectOverviewTable = ({}: Props) => {
           fieldStatsError={folderStatsError || taskStatsError}
           mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
           onVisibleRowsChange={setVisibleEntityIds}
+          extraColumns={addonColumns}
         />
-        <AddColumnButton />
+        <AddColumnButton extraColumns={addonSettingsColumns} />
       </TableWrapper>
     </Section>
   )

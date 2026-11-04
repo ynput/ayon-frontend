@@ -9,7 +9,7 @@ import { filterProjectStatuses } from '@shared/hooks'
 import { getPriorityOptions } from '@shared/util'
 import { useScopedDetailsPanel } from '@shared/context'
 import { EmptyPlaceholder } from '@shared/components'
-import { parseProjectFolderRowId } from '@containers/ProjectsList/buildProjectsTableData'
+import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 
 import UserDashboardKanBan from './UserDashboardKanBan'
 import { useEffect, useMemo } from 'react'

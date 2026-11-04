@@ -1,5 +1,5 @@
 import { QueryFilter } from '@shared/api'
-import { VersionsSettings } from '@shared/api/generated/views'
+import { VersionsSettings } from '@shared/api'
 import { ColumnsConfig, useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {
