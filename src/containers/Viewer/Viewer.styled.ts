@@ -94,6 +94,12 @@ export const PlayerToolbar = styled.div`
   }
 `
 
+// with data-theme="dark": the media, player controls and annotation tools stay dark in the light theme
+export const DarkTheme = styled.div`
+  display: contents;
+  color: var(--md-sys-color-on-surface);
+`
+
 export const FullScreenWrapper = styled(FullScreen)`
   position: relative;
   width: 100%;

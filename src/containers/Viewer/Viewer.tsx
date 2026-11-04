@@ -431,19 +431,21 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           </Styled.ButtonGroup>
         </Styled.MinimizedToolbar>
 
-        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-          <ViewerComponent
-            projectName={projectName}
-            productId={productId}
-            reviewables={reviewables}
-            selectedReviewable={selectedReviewable}
-            versionIds={versionIds}
-            isFetchingReviewables={isFetchingReviewables}
-            noVersions={noVersions}
-            quickView={quickView}
-            onUpload={handleUploadAction}
-          />
-        </Styled.FullScreenWrapper>
+        <Styled.DarkTheme data-theme="dark">
+          <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
+            <ViewerComponent
+              projectName={projectName}
+              productId={productId}
+              reviewables={reviewables}
+              selectedReviewable={selectedReviewable}
+              versionIds={versionIds}
+              isFetchingReviewables={isFetchingReviewables}
+              noVersions={noVersions}
+              quickView={quickView}
+              onUpload={handleUploadAction}
+            />
+          </Styled.FullScreenWrapper>
+        </Styled.DarkTheme>
 
         <Styled.RightToolBar
           ref={rightToolBarRef}
@@ -457,7 +459,9 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             projectName={projectName}
             onUpload={handleUploadAction(true)}
           />
-          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
+          <Styled.DarkTheme data-theme="dark">
+            <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
+          </Styled.DarkTheme>
         </Styled.RightToolBar>
 
         <ViewerDetailsPanel
