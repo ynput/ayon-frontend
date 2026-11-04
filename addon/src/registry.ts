@@ -3,19 +3,44 @@
 // useSyncExternalStore.
 import { useSyncExternalStore } from 'react'
 import type { AddonInfo, AnyContribution, Contribution } from './contributions'
+import { SLOTS } from './slots'
 import type { SlotName } from './slots'
-import { checkManifest, formatSkipped } from './validate'
-import type { SkippedContribution } from './validate'
+import {
+  checkManifest,
+  checkSlotDeclarations,
+  formatSkipped,
+  formatSkippedDeclaration,
+} from './validate'
+import type { DeclaredSlot, SkippedContribution, SkippedDeclaration } from './validate'
+
+/** An addon and the default export of its manifest module. */
+export interface ManifestEntry {
+  addon: AddonInfo
+  manifest: unknown
+}
 
 interface RegistryState {
   contributions: AnyContribution[]
   skipped: SkippedContribution[]
   addons: AddonInfo[]
+  /** the slots addons declared, each with its owner */
+  slots: DeclaredSlot[]
+  skippedSlots: SkippedDeclaration[]
   /** true until the host has loaded every manifest it knows of */
   isLoading: boolean
 }
 
-let state: RegistryState = { contributions: [], skipped: [], addons: [], isLoading: true }
+let state: RegistryState = {
+  contributions: [],
+  skipped: [],
+  addons: [],
+  slots: [],
+  skippedSlots: [],
+  isLoading: true,
+}
+// every manifest registered so far: the registry is computed from all of them, because a change to
+// one addon's declarations changes which contributions of the others apply
+let manifests: ManifestEntry[] = []
 const listeners = new Set<() => void>()
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
 let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
@@ -33,32 +58,63 @@ const subscribe = (listener: () => void) => {
   }
 }
 
-/**
- * Registers the contributions of one addon's manifest, replacing what that addon registered
- * before. Contributions the host can't use are skipped with a console warning naming them.
- */
-export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
-  const result = checkManifest(addon, manifest)
-  result.skipped.forEach((skipped) => console.warn(formatSkipped(skipped)))
-
-  setState({
-    contributions: [
-      ...state.contributions.filter((c) => c.addon.name !== addon.name),
-      ...result.contributions,
-    ],
-    skipped: [...state.skipped.filter((s) => s.addon !== addon.name), ...result.skipped],
-    addons: [...state.addons.filter((a) => a.name !== addon.name), addon],
+const warnNew = <T>(previous: readonly T[], next: readonly T[], format: (item: T) => string) => {
+  const known = new Set(previous.map(format))
+  next.forEach((item) => {
+    const line = format(item)
+    if (!known.has(line)) console.warn(line)
   })
-  return result
+}
+
+// Two phases, so the result doesn't depend on the order the manifests came in: every declaration
+// first, then every contribution against AYON's slots plus the declared ones.
+const applyManifests = (next: ManifestEntry[]) => {
+  manifests = next
+  const slots: DeclaredSlot[] = []
+  const skippedSlots: SkippedDeclaration[] = []
+  for (const { addon, manifest } of next) {
+    const result = checkSlotDeclarations(addon, manifest, slots)
+    slots.push(...result.slots)
+    skippedSlots.push(...result.skipped)
+  }
+
+  const available = { ...SLOTS, ...Object.fromEntries(slots.map((slot) => [slot.name, slot])) }
+  const contributions: AnyContribution[] = []
+  const skipped: SkippedContribution[] = []
+  for (const { addon, manifest } of next) {
+    const result = checkManifest(addon, manifest, available)
+    contributions.push(...result.contributions)
+    skipped.push(...result.skipped)
+  }
+
+  warnNew(state.skippedSlots, skippedSlots, formatSkippedDeclaration)
+  warnNew(state.skipped, skipped, formatSkipped)
+  const addons = new Map(next.map(({ addon }) => [addon.name, addon]))
+  setState({ contributions, skipped, slots, skippedSlots, addons: [...addons.values()] })
+}
+
+/**
+ * Registers the manifests of several addons at once, replacing what those addons registered
+ * before. What the host can't use is skipped with a console warning naming it. The host calls this
+ * with every manifest of the bundle, in a fixed order, once they have all loaded.
+ */
+export const registerManifests = (entries: readonly ManifestEntry[]) => {
+  const names = new Set(entries.map(({ addon }) => addon.name))
+  applyManifests([...manifests.filter(({ addon }) => !names.has(addon.name)), ...entries])
+}
+
+/** Registers one addon's manifest, replacing what that addon registered before. */
+export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
+  registerManifests([{ addon, manifest }])
+  return {
+    contributions: state.contributions.filter((c) => c.addon.name === addon.name),
+    skipped: state.skipped.filter((s) => s.addon === addon.name),
+  }
 }
 
 /** Removes everything an addon registered. */
 export const unregisterAddon = (addonName: string) =>
-  setState({
-    contributions: state.contributions.filter((c) => c.addon.name !== addonName),
-    skipped: state.skipped.filter((s) => s.addon !== addonName),
-    addons: state.addons.filter((a) => a.name !== addonName),
-  })
+  applyManifests(manifests.filter(({ addon }) => addon.name !== addonName))
 
 /** The host calls this once every manifest it knows of has loaded (or failed). */
 export const setManifestsLoading = (isLoading: boolean) => {

@@ -624,6 +624,18 @@ export interface SlotDefinition {
   check?: (contribution: Readonly<Record<string, unknown>>) => string | undefined
 }
 
+/**
+ * A slot an addon declares for other addons to contribute to: what the host checks, under a name
+ * that starts with the addon's own (`<addon>.<name>`). Its types reach contributors through the
+ * addon's contract package, which augments `SlotMap`; this is the run-time half.
+ */
+export interface SlotDeclaration extends SlotDefinition {
+  /** `<addon>.<name>`, e.g. `planner.eventMenuItem` */
+  name: string
+  /** where it shows, one line for `ayon-addon slots` */
+  description?: string
+}
+
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
 const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }

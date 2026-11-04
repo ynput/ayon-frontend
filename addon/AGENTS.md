@@ -89,6 +89,7 @@ Look in the browser console first: every message starts with `[addon <name>]`.
 |---|---|
 | nothing at all, the contribution is missing | The addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's `frontend_modules`. With `?addonDev=`, see "Developing inside AYON" in `@ynput/ayon-addon-dev`'s `AGENTS.md` |
 | `skipped contribution "x": this AYON version has no such slot` | The slot is newer than the AYON you run (`ayon-addon slots` lists the installed package's). The rest of the addon works |
+| `...and no addon in the bundle declares it (it would be addon "y")` | The slot is addon `y`'s, and `y` isn't in the bundle or is too old to have it. The rest of the addon works |
 | `skipped contribution "x" (slot): invalid id …` / `missing …` / `invalid <field> …` | The description breaks the slot's rules. `ayon-addon check` prints the same reasons without AYON |
 | `… must be a loader: () => import('./File')` | A piece is a component or a static import. Pieces are dynamic imports of local files |
 | `duplicate id in slot "…"` | Ids are unique within a slot, across the whole addon |
@@ -165,6 +166,53 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are `listitem`s (`getByRole('listitem', { name: 'Delete' })`), not `menuitem`s.
+
+## Slots of other addons
+
+An addon can declare its own slots, and other addons contribute to them the way they contribute to
+AYON's. Module federation doesn't change: every addon is still its own remote, and nothing of the
+declaring addon's code reaches the contributor.
+
+**Declaring.** List the slots in the manifest, and render them with `SlotOutlet` (components) or
+`useSlotMenuItems` (menu items) from this package:
+
+```ts
+// src/manifest.ts of the addon "planner"
+export default defineAddon({ slots, contributes: [...] }) // slots: from its contract package
+```
+
+```ts
+const buildSlotItems = useSlotMenuItems('planner.eventMenuItem')
+// when the menu opens: a broken item is a toast, never a broken menu
+const { top, bottom } = buildSlotItems({ projectName, entities })
+```
+
+A declaration has `name`, `version`, `required`, `pieces` and optionally `optionalPieces`,
+`optional`, `check` and `description`: what AYON checks for its own slots.
+
+**Ownership.** The name is `<addon>.<name>`, the addon's name from `package.py`. Only that addon can
+declare it. A declaration with another prefix, a name AYON already has, or a name already declared is
+skipped with a console warning naming the addons.
+
+**Contract package.** The types and declarations reach contributors through a small npm package,
+`@ynput/ayon-addon-<addon>`, with no code of the addon in it:
+
+- `declare module '@ynput/ayon-addon' { interface SlotMap { 'planner.eventMenuItem': { ... } } }`:
+  `SlotName`, `SlotProps`, `useSlot` and `contribute` then cover the slots of the contract
+  packages an addon has installed, in `@ynput/ayon-addon` and `@ynput/ayon-addon/manifest` alike.
+- the declarations as data, in a plain JS module that imports without React, marked in its
+  `package.json`: `"ayonAddon": { "slots": "./slots.js" }`. The module exports `slots`.
+- one helper per slot, which stamps `slotVersion`.
+
+**Contributing.** Install the contract package and use its helper in the manifest:
+`plannerEventMenuItem({ id, label, icon, run: () => import('./startTimer') })`. AYON loads all
+manifests first, then registers every declaration, then the contributions, so the order they load in
+doesn't matter. When no addon in the bundle declares the slot (the addon isn't installed, or is older),
+the contribution is skipped with a console warning and the rest of the addon works.
+
+**Versioning.** The declaration has `version`, and a contribution the `slotVersion` it was built
+against. A contribution newer than the declared version is skipped with a warning. Additive context
+fields are a minor release of the contract package; a breaking change is a new slot version.
 
 ## Slot contexts: one shape
 

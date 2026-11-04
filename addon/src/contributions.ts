@@ -1,11 +1,11 @@
-import type { SlotMap, SlotName } from './slots'
+import type { SlotDeclaration, SlotMap, SlotName } from './slots'
 
 /** The fields of a contribution to slot `S`: its description and its pieces. */
 export type ContributionFields<S extends SlotName> = SlotMap[S]['meta'] & SlotMap[S]['pieces']
 
 /** What an addon writes for a contribution to slot `S`: the slot, its description and pieces. */
 export type ContributionInput<S extends SlotName = SlotName> = S extends SlotName
-  ? { slot: S } & SlotMap[S]['meta'] & SlotMap[S]['pieces']
+  ? { slot: S; slotVersion?: number } & SlotMap[S]['meta'] & SlotMap[S]['pieces']
   : never
 
 /** The addon a contribution came from. */
@@ -36,6 +36,8 @@ export interface AnyContribution {
 /** The default export of an addon's `manifest` module. */
 export interface AddonManifest {
   contributes: ContributionInput[]
+  /** slots of this addon that other addons can contribute to */
+  slots?: readonly SlotDeclaration[]
 }
 
 /**
