@@ -14,9 +14,11 @@ const NO_OVERFLOW: HorizontalOverflow = {
 
 const measure = (el: HTMLElement): HorizontalOverflow => {
   const maxScroll = el.scrollWidth - el.clientWidth
+  // compare against the parent: scroll buttons shrink the list itself
+  const available = el.parentElement?.clientWidth ?? el.clientWidth
   // 1px tolerance for fractional widths
   return {
-    overflowing: maxScroll > 1,
+    overflowing: el.scrollWidth - available > 1,
     canScrollStart: el.scrollLeft > 1,
     canScrollEnd: el.scrollLeft < maxScroll - 1,
   }
@@ -42,9 +44,10 @@ export const useHorizontalOverflow = (ref: RefObject<HTMLElement | null>) => {
     update()
     const resizeObserver = new ResizeObserver(update)
     resizeObserver.observe(el)
-    // tabs added or removed change scrollWidth without resizing the list
+    if (el.parentElement) resizeObserver.observe(el.parentElement)
+    // tabs or their text (e.g. unread counts) can change scrollWidth without resizing the list
     const mutationObserver = new MutationObserver(update)
-    mutationObserver.observe(el, { childList: true, subtree: true })
+    mutationObserver.observe(el, { childList: true, characterData: true, subtree: true })
     el.addEventListener('scroll', update, { passive: true })
 
     return () => {
