@@ -26,6 +26,7 @@ export interface CheckResult {
 interface SlotPieces {
   pieces: readonly string[]
   optionalPieces?: readonly string[]
+  owner?: { name: string }
 }
 interface CheckModule {
   SLOTS: Record<string, SlotPieces>
@@ -141,7 +142,10 @@ export const checkAddon = async ({
     result.problems.push(...(own?.skipped || []).map(({ slot, reason }) => ({ slot, reason })))
     const slots: Record<string, SlotPieces> = {
       ...sdk.SLOTS,
-      ...Object.fromEntries(contract.slots.map((slot) => [slot.name, slot])),
+      // the owner names the addon to update in a slot version problem
+      ...Object.fromEntries(
+        contract.slots.map((slot) => [slot.name, { ...slot, owner: { name: slot.name.split('.')[0] } }]),
+      ),
       ...Object.fromEntries((own?.slots || []).map((slot) => [slot.name, slot])),
     }
     const { contributions, skipped } = sdk.checkManifest(info, loaded, slots)
