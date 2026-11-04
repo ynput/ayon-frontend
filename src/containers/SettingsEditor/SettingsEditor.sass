@@ -143,12 +143,13 @@ $field-gap: 8px
       user-select: none
       align-self: flex-start
 
+      // the accents are too light for text on the light theme: getReadableColor's values for them
       &.studio
-        color: var(--color-hl-studio)
+        color: light-dark(#007f33, var(--color-hl-studio))
       &.project
-        color: var(--color-hl-project)
+        color: light-dark(#a45c00, var(--color-hl-project))
       &.site
-        color: var(--color-hl-site)
+        color: light-dark(#ad5063, var(--color-hl-site))
       &.edit
         color: var(--color-changed)
 

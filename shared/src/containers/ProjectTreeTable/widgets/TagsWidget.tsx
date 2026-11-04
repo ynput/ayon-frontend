@@ -8,8 +8,9 @@ import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
-// the colour TagsSelect gives tags that have none, a hex so the chip text colour can be worked out
-const NO_COLOR_TAG = '#353B46'
+// the colour TagsSelect gives tags that have none (surface-container-high of each theme),
+// as values so getTextColor can work out the chip text colour
+const NO_COLOR_TAG = 'light-dark(#E4E8ED, #353B46)'
 
 const StyledTagsSelect = styled(TagsSelect)`
   width: 100%;
