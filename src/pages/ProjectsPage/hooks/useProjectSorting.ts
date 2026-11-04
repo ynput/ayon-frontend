@@ -1,7 +1,7 @@
 import { useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import { convertColumnConfigToTanstackStates, serializeViewSorting } from '@shared/util'
-import type { OverviewSettings } from '@shared/api/generated/views'
+import type { OverviewSettings } from '@shared/api'
 import { SortingState } from '@tanstack/react-table'
 import { useCallback, useMemo, useState } from 'react'
 

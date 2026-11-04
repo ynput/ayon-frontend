@@ -1,5 +1,6 @@
 import { Icon, IconProps } from "@ynput/ayon-react-components"
 import clsx from "clsx"
+import { ReactNode } from "react"
 import {
   StatsWrapper,
   StatsPanel,
@@ -20,7 +21,7 @@ export type StatsItem = {
 
 type Props = {
   heading: string
-  subtitle?: string
+  subtitle?: ReactNode
   size: string,
   items: StatsItem[]
   onClose?: () => void

@@ -107,7 +107,6 @@ export type {
   DeliveryTemplate,
   HeroTemplate,
   LinkType,
-  ProjectAttribModel,
   PublishTemplate,
   Root,
   StagingDirectory,
@@ -119,6 +118,7 @@ export type {
   TaskType,
   ProductBaseType,
 } from './anatomy'
+export type ProjectAttribModel = NonNullable<import('./anatomy').Anatomy['attributes']>
 
 // attributes
 export * from './attributes'
@@ -130,7 +130,6 @@ export * from './authentication'
 export { api as authenticationApi } from './authentication'
 export type {
   LoginResponseModel,
-  UserAttribModel,
   UserModel,
   AgentInfo,
   ClientInfo,
@@ -139,6 +138,7 @@ export type {
   LocationInfo,
   UserPoolModel,
 } from './authentication'
+export type UserAttribModel = NonNullable<import('./authentication').UserModel['attrib']>
 
 // bundles
 export * from './bundles'
@@ -190,8 +190,13 @@ export { api as filesApi } from './files'
 export type {
   DeleteProjectFileApiArg,
   DeleteProjectFileApiResponse,
+  FilmstripModel,
   GetProjectFileApiArg,
   GetProjectFileApiResponse,
+  GetProjectFileFilmstripApiArg,
+  GetProjectFileFilmstripApiResponse,
+  GetProjectFileFilmstripPayloadApiArg,
+  GetProjectFileFilmstripPayloadApiResponse,
   GetProjectFileHeadApiArg,
   GetProjectFileHeadApiResponse,
   GetProjectFilePayloadApiArg,
@@ -206,10 +211,13 @@ export type {
 export * from './folders'
 export { api as foldersApi } from './folders'
 export type {
+  AffectedEntity,
   EntityIdResponse,
   CreateThumbnailResponseModel,
   CreateFolderThumbnailApiArg,
   CreateFolderThumbnailApiResponse,
+  GetFolderFilmstripApiArg,
+  GetFolderFilmstripApiResponse,
   GetFolderThumbnailApiArg,
   GetFolderThumbnailApiResponse,
 } from './folders'
@@ -279,8 +287,12 @@ export type {
 export * from './projects'
 export { api as projectsApi } from './projects'
 export type {
+  CreateProjectThumbnailApiArg,
+  CreateProjectThumbnailApiResponse,
   GetProjectEntityUrisApiArg,
   GetProjectEntityUrisApiResponse,
+  GetProjectThumbnailApiArg,
+  GetProjectThumbnailApiResponse,
   GetUrisRequest,
   GetUrisResponse,
   UriResponseItem,
@@ -336,6 +348,8 @@ export { api as tasksApi } from './tasks'
 export type {
   CreateTaskThumbnailApiArg,
   CreateTaskThumbnailApiResponse,
+  GetTaskFilmstripApiArg,
+  GetTaskFilmstripApiResponse,
   GetTaskThumbnailApiArg,
   GetTaskThumbnailApiResponse,
 } from './tasks'
@@ -380,6 +394,7 @@ export type {
 // versions
 export * from './versions'
 export { api as versionsApi } from './versions'
+export type { GetVersionFilmstripApiArg, GetVersionFilmstripApiResponse } from './versions'
 
 // workfiles
 export * from './workfiles'

@@ -17,6 +17,7 @@ import { LabelWithNameField } from '@components/LabelWithNameField'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useDeployProjectMutation } from '@shared/api'
 import { useGetConfigValueQuery } from '@shared/api'
+import { getRequestErrorString } from '@shared/util'
 import { camelCase } from 'lodash'
 
 // allow only alphanumeric and underscorer,
@@ -165,8 +166,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         onHide(redirect ? name : undefined)
       })
       .catch((error) => {
-        // log
-        toast.error(`Unable to create project ${error}`)
+        toast.error(`Unable to create project: ${getRequestErrorString(error)}`)
       })
   }
 

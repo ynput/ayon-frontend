@@ -1,10 +1,11 @@
 import { useMemo } from 'react'
+import { applyMixedChange, type MixedChange } from '@ynput/ayon-react-components'
 import {
   DetailsPanelAttributesEditor,
   DetailsPanelAttributesEditorProps,
 } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
+import { useGetActivitiesInfiniteInfiniteQuery, useGetUsersAssigneeQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
@@ -80,6 +81,14 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     attribAccess,
   })
 
+  const authorNames = [formData?.createdBy, formData?.updatedBy].filter(
+    (name): name is string => typeof name === 'string' && !!name,
+  )
+  const { data: authors = [] } = useGetUsersAssigneeQuery(
+    { names: authorNames, projectName: formData?.projectName || '' },
+    { skip: !authorNames.length || !formData?.projectName },
+  )
+
   const { writableAttributes } = attribAccess
   const enableDescriptionEditing =
     enableEditing && (!writableAttributes || writableAttributes.includes('description'))
@@ -104,6 +113,24 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
 
     updateFormData(key, value)
     updateEntity(key, value)
+  }
+
+  // a list field of several entities: each keeps its own values, plus or minus the changed ones
+  const handleMixedChange = (key: string, change: MixedChange) => {
+    const attribName = key.startsWith('attrib.') ? key.replace('attrib.', '') : undefined
+    const getValues = (entity: DetailsPanelEntityData): string[] => {
+      const value = attribName ? entity.attrib?.[attribName] : entity.tags
+      return Array.isArray(value) ? value.map(String) : []
+    }
+    const nextValues = new Map(
+      entities.map((entity) => [entity.id, applyMixedChange(getValues(entity), change)]),
+    )
+
+    updateFormData(key, [...new Set([...nextValues.values()].flat())])
+    updateEntity(attribName ? 'attrib' : key, (entityId: string) => {
+      const value = nextValues.get(entityId) || []
+      return attribName ? { [attribName]: value } : value
+    })
   }
 
   // mention the same users, tasks and versions as the comments of the (first) entity
@@ -158,6 +185,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         isLoading={isLoading}
         enableEditing={enableEditing}
         onChange={handleChange}
+        onMixedChange={handleMixedChange}
         entities={entities}
         entityType={entityType}
       />
@@ -167,6 +195,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         form={formData || {}}
         mixedFields={mixedFields}
         isLoading={isLoading}
+        users={authors}
       />
     </StyledContainer>
   )

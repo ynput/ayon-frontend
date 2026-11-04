@@ -48,7 +48,12 @@ import {
   useSubtasksModulesContext,
 } from '@shared/context'
 import { PowerpackProvider } from '@shared/context'
-import { MenuProvider, URIProvider, DeleteEntitiesProvider } from '@shared/context'
+import {
+  MenuProvider,
+  URIProvider,
+  DeleteEntitiesProvider,
+  TableExportProvider,
+} from '@shared/context'
 import { consumeUriHandoff } from '@shared/util'
 
 // containers
@@ -65,6 +70,7 @@ import { useLazyGetSiteInfoQuery, useGetYnputCloudInfoQuery } from '@shared/api'
 import { usersApi } from '@shared/api/generated'
 import { systemQueries } from '@shared/api'
 import { takeEarlySiteInfo } from '@helpers/earlySiteInfo'
+import { withServiceUserAccess } from '@helpers/serviceUser'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -75,6 +81,8 @@ import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import { DetailsPanelFloating } from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
+import AppAddonServices from './remote/AppAddonServices'
+import { AddonHostNavigation } from './remote/addonHost'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
@@ -157,12 +165,13 @@ const App = () => {
         }
 
         if (response.user) {
+          const user = withServiceUserAccess(response.user)
           // /api/info already returns the current user: seed it so /api/users/me isn't
           // requested again before the routes can render
-          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, response.user))
+          dispatch(usersApi.util.upsertQueryData('getCurrentUser', undefined, user))
           dispatch(
             login({
-              user: response.user,
+              user,
               accessToken: storedAccessToken,
             }),
           )
@@ -250,20 +259,24 @@ const App = () => {
                                         <PiPProvider>
                                           <ImportDialogProvider>
                                             <DeleteEntitiesProvider>
-                                              <Header />
-                                              <ShareDialog />
-                                              <ViewerDialog />
-                                              <ConfirmDialog />
-                                              <ImportDialog />
-                                              <FileUploadPreviewContainer />
-                                              <ReleaseInstallerDialog />
-                                              <CompleteProfilePrompt />
-                                              <AppRoutes />
-                                              <DetailsPanelFloating />
-                                              <EntityLinksSlot />
-                                              <PowerpackDialog />
-                                              <AppRemoteLoader />
-                                              <TrialBanner />
+                                              <TableExportProvider>
+                                                <Header />
+                                                <ShareDialog />
+                                                <ViewerDialog />
+                                                <ConfirmDialog />
+                                                <ImportDialog />
+                                                <FileUploadPreviewContainer />
+                                                <ReleaseInstallerDialog />
+                                                <CompleteProfilePrompt />
+                                                <AppRoutes />
+                                                <DetailsPanelFloating />
+                                                <EntityLinksSlot />
+                                                <PowerpackDialog />
+                                                <AppRemoteLoader />
+                                                <AppAddonServices />
+                                                <AddonHostNavigation />
+                                                <TrialBanner />
+                                              </TableExportProvider>
                                             </DeleteEntitiesProvider>
                                           </ImportDialogProvider>
                                         </PiPProvider>

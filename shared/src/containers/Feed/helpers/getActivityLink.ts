@@ -1,3 +1,5 @@
+import { entityUrl } from '@ynput/ayon-addon'
+
 // A link that opens the project page with the activity highlighted in the feed of its entity
 // (the entity open in the details panel when no entity is given)
 export const getActivityLink = (
@@ -6,14 +8,15 @@ export const getActivityLink = (
   entity?: { id: string; type: string },
 ) => {
   const searchParams = new URLSearchParams(window.location.search)
-  if (entity) {
-    searchParams.set('project', projectName)
-    searchParams.set('type', entity.type)
-    searchParams.set('id', entity.id)
-  }
-  const tab = searchParams.get('type') === 'version' ? 'products' : 'overview'
+  const entityType = entity?.type ?? searchParams.get('type')
+  const id = entity?.id ?? searchParams.get('id')
+  const url =
+    entityType && id && entityUrl({ projectName, entityType, id }, { activity: activityId })
+  if (url) return `${window.location.origin}${url}`
+
+  // no entity with a page of its own: the project's overview, with the activity
   searchParams.set('activity', activityId)
-  const url = new URL(`${window.location.origin}/projects/${projectName}/${tab}`)
-  url.search = searchParams.toString()
-  return url.toString()
+  const fallback = new URL(`${window.location.origin}/projects/${projectName}/overview`)
+  fallback.search = searchParams.toString()
+  return fallback.toString()
 }

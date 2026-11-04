@@ -76,3 +76,5 @@ export const PowerpackButton = forwardRef<HTMLButtonElement, PowerpackButtonProp
     )
   },
 )
+
+PowerpackButton.displayName = 'PowerpackButton'

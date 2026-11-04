@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { toast } from '../support/ui'
+import { toast } from '@ynput/ayon-e2e'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'
 
 test.describe('project anatomy: copy and paste', () => {

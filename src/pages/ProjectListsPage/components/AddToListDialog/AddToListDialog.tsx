@@ -9,6 +9,9 @@ import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
 import { type ListEntityType } from '../NewListDialog/NewListDialog'
 import { listEntityTypes } from '../NewListDialog/NewListDialogHelpers'
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
+import { getNewListFolderId } from '../../util/listFolders'
+import { parseListFolderRowId } from '../../util/buildListsTableData'
+import type { NewListOptions } from '../../context/entity-lists/EntityListsContext'
 import type { EntityList } from '@shared/api'
 
 // why a list can't be added to (shown but disabled); undefined = addable
@@ -66,6 +69,7 @@ export interface AddToListDialogProps {
     entityType: ListEntityType,
     selectedEntities: ListEntityInput[],
     entityListType?: string,
+    options?: NewListOptions,
   ) => void
   onClose: () => void
 }
@@ -78,7 +82,7 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   openCreateNewList,
   onClose,
 }) => {
-  const { selectedLists } = useListsContext()
+  const { selectedLists, selectedRows } = useListsContext()
   const { listsMap } = useListsDataContext()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -107,10 +111,17 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   const canCreateList = listEntityTypes.includes(entityType as ListEntityType)
   const handleCreateList = () => {
     onClose()
+    // the new list starts in the folder the user is looking at (they can change it in the dialog)
     openCreateNewList(
       entityType as ListEntityType,
       entities,
       isReview ? 'review-session' : undefined,
+      {
+        entityListFolderId: getNewListFolderId(
+          selectedRows.map(parseListFolderRowId).filter((id): id is string => !!id),
+          selectedLists,
+        ),
+      },
     )
   }
 

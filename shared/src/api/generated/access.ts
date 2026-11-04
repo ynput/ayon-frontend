@@ -53,7 +53,7 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type GetAccessGroupSchemaApiResponse = /** status 200 Successful Response */ any
 export type GetAccessGroupSchemaApiArg = {
-  projectName?: string
+  projectName?: string | null
 }
 export type GetStudioAccessGroupsApiResponse =
   /** status 200 Successful Response */ AccessGroupObject[]
@@ -88,12 +88,14 @@ export type SetProjectsAccessApiArg = {
 }
 export type GetShareOptionsApiResponse = /** status 200 Successful Response */ ShareOptions
 export type GetShareOptionsApiArg = {
-  projectName?: string
+  projectName?: string | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -121,7 +123,7 @@ export type ProjectManagementPermissions = {
 export type FolderAccess = {
   access_type?: string
   /** The path of the folder to allow access to. Required for access_type 'hierarchy and 'children' */
-  path?: string
+  path?: string | null
 }
 export type FolderAccessList = {
   enabled?: boolean
@@ -188,7 +190,7 @@ export type ShareOption = {
   value: string
   name: string
   label: string
-  attribute?: string
+  attribute?: string | null
 }
 export type ShareOptions = {
   options: ShareOption[]

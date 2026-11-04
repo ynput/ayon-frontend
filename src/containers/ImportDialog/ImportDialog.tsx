@@ -61,7 +61,7 @@ export default function ImportDialog() {
               {contextLabelForImportContext[importContext]}
               {
                 data
-                  ? ` - ${data.fileName}`
+                  ? ` - ${data.fileName}${data.sheetName ? `, ${data.sheetName}` : ''}`
                   : ''
               }
             </ImportContextWrapper>

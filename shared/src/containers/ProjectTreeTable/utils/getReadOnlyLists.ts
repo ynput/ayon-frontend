@@ -1,4 +1,8 @@
 import { ProjectTableAttribute } from '../types'
+import { LIST_COLUMN_IDS } from './listColumns'
+
+// Set by the server when an entity is created or changed. Never writable from a table, whatever the permissions
+export const SYSTEM_READ_ONLY_COLUMNS = ['createdAt', 'updatedAt', 'createdBy', 'updatedBy']
 
 // Known built-in fields. We keep both camelCase and snake_case variants since
 // permissions may use either form depending on the backend response.
@@ -91,6 +95,14 @@ export const getReadOnlyLists = (
     for (const f of readOnlyFields) {
       if (!readOnlyAttribs.includes(f)) readOnlyAttribs.push(f)
     }
+  }
+
+  readOnlyAttribs.push(...LIST_COLUMN_IDS)
+
+  // paste checks readOnlyAttribs, so the system columns go there too
+  for (const column of SYSTEM_READ_ONLY_COLUMNS) {
+    readOnlyColumnsSet.add(column)
+    readOnlyAttribs.push(column)
   }
 
   const readOnlyColumns = Array.from(readOnlyColumnsSet) // Convert the set of readOnly columns to an array

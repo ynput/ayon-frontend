@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { uniqueName } from '../support/names'
+import { uniqueName } from '@ynput/ayon-e2e'
 import { AnatomyPresetsPage } from '../pages/AnatomyPresetsPage'
 
 test.describe('anatomy presets', () => {

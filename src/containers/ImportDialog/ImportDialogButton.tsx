@@ -1,6 +1,6 @@
-import { Button } from "@ynput/ayon-react-components";
-import { useImportDialogContext } from "./context/ImportDialogProviderInstance"
-import { ImportContext } from "./steps/common";
+import { Button } from '@ynput/ayon-react-components'
+import { useImportDialogContext } from './context/ImportDialogProviderInstance'
+import { ImportContext } from './steps/common'
 
 type Props = {
   importContext: ImportContext
@@ -9,13 +9,19 @@ type Props = {
   folderLabel?: string
 }
 
-export default function ImportDialogButton({ importContext, projectName, folderId, folderLabel }: Props) {
+export default function ImportDialogButton({
+  importContext,
+  projectName,
+  folderId,
+  folderLabel,
+}: Props) {
   const { openForContext } = useImportDialogContext()
 
   return (
     <Button
       icon="upload_file"
-      label="Import CSV"
+      label="Import"
+      data-testid="import-file"
       onClick={() => openForContext(importContext, projectName, folderId, folderLabel)}
     />
   )

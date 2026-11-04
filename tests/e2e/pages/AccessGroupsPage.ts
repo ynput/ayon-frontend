@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { switchBody, toast } from '../support/ui'
+import { switchBody, toast } from '@ynput/ayon-e2e'
 import { SettingsEditor } from './SettingsEditor'
 
 export class AccessGroupsPage {
@@ -18,8 +18,15 @@ export class AccessGroupsPage {
     return this.page.getByRole('row', { name, exact: true })
   }
 
+  // FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
+  async expectSelected(name: string, selected = true) {
+    if (selected) await expect(this.row(name)).toHaveClass(/\bp-highlight\b/)
+    else await expect(this.row(name)).not.toHaveClass(/\bp-highlight\b/)
+  }
+
   async select(name: string) {
     await this.row(name).click()
+    await this.expectSelected(name)
     await expect(this.editor.sectionHeader('Studio permissions')).toBeVisible()
   }
 

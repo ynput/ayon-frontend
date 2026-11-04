@@ -2,8 +2,12 @@ import { useGetProjectFoldersQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import { FC, useCallback, useEffect, useMemo, useState } from 'react'
-import buildProjectsTableData, { buildProjectFolderRowId } from './buildProjectsTableData'
-import { MENU_ID } from './ProjectsListTableHeader'
+import {
+  buildProjectFolderRowId,
+  buildProjectsTableData,
+  PROJECTS_LIST_MENU_ID,
+  ProjectsTable,
+} from '@shared/containers/ProjectsTable'
 import useProjectMenuController from './hooks/useProjectMenuController'
 import type { Hidden } from './hooks/useProjectsListMenuItems'
 import { useMenuContext } from '@shared/context'
@@ -11,7 +15,6 @@ import { useQueryParam } from 'use-query-params'
 import { useLocalStorage } from '@shared/hooks'
 import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import ProjectsTable from './ProjectsTable'
 import ProjectsShortcuts from './ProjectsShortcuts'
 
 export const PROJECTS_LIST_WIDTH_KEY = 'projects-list-splitter'
@@ -119,7 +122,7 @@ const ProjectsList: FC<ProjectsListProps> = ({
   )
   const { toggleMenuOpen } = useMenuContext()
   const toggleMenu = (open: boolean = true) => {
-    toggleMenuOpen(open ? MENU_ID : false)
+    toggleMenuOpen(open ? PROJECTS_LIST_MENU_ID : false)
   }
 
   const toggleSelectAll = () => {

@@ -119,8 +119,12 @@ export type BaseNode = {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -138,6 +142,17 @@ export type BaseNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type BaseNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type BaseNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -183,16 +198,28 @@ export type EntityListEdge = {
   node: EntityListNode;
 };
 
+export type EntityListInfo = {
+  __typename?: 'EntityListInfo';
+  active: Scalars['Boolean']['output'];
+  entityListType: Scalars['String']['output'];
+  entityType: Scalars['String']['output'];
+  id: Scalars['String']['output'];
+  /** List items of the entity in this list, in list order */
+  itemIds: Array<Scalars['String']['output']>;
+  label: Scalars['String']['output'];
+};
+
 export type EntityListItemEdge = {
   __typename?: 'EntityListItemEdge';
   Entity?: Maybe<BaseNode>;
   Forbidden: Scalars['Boolean']['output'];
   allAttrib: Scalars['String']['output'];
-  attrib: Scalars['String']['output'];
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   cursor?: Maybe<Scalars['String']['output']>;
   data: Scalars['String']['output'];
+  entityAttrib: Scalars['JSON']['output'];
   entityId: Scalars['String']['output'];
   entityType: Scalars['String']['output'];
   folderPath: Scalars['String']['output'];
@@ -311,30 +338,6 @@ export type FileNode = {
   size: Scalars['String']['output'];
 };
 
-export type FolderAttribType = {
-  __typename?: 'FolderAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
-  /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
-  /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
-  /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
-
 export type FolderEdge = {
   __typename?: 'FolderEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -346,11 +349,14 @@ export type FolderNode = BaseNode & {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: FolderAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   childCount: Scalars['Int']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   folderType: Scalars['String']['output'];
   hasChildren: Scalars['Boolean']['output'];
   hasProducts: Scalars['Boolean']['output'];
@@ -396,6 +402,17 @@ export type FolderNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type FolderNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type FolderNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -584,13 +601,6 @@ export type PageInfo = {
   startCursor?: Maybe<Scalars['String']['output']>;
 };
 
-export type ProductAttribType = {
-  __typename?: 'ProductAttribType';
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  productGroup?: Maybe<Scalars['String']['output']>;
-};
-
 export type ProductBaseType = {
   __typename?: 'ProductBaseType';
   color: Scalars['String']['output'];
@@ -609,10 +619,13 @@ export type ProductNode = BaseNode & {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: ProductAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersion?: Maybe<VersionNode>;
   /** Parent folder of the product */
   folder: FolderNode;
@@ -646,6 +659,17 @@ export type ProductNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProductNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type ProductNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -716,30 +740,6 @@ export type ProductsConnection = {
   pageInfo: PageInfo;
 };
 
-export type ProjectAttribType = {
-  __typename?: 'ProjectAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
-  /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
-  /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
-  /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
-
 export type ProjectBundleType = {
   __typename?: 'ProjectBundleType';
   production?: Maybe<Scalars['String']['output']>;
@@ -784,7 +784,8 @@ export type ProjectNode = {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: ProjectAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   bundle: ProjectBundleType;
   code: Scalars['String']['output'];
   color?: Maybe<Scalars['String']['output']>;
@@ -867,6 +868,11 @@ export type ProjectNodeActivitiesArgs = {
 };
 
 
+export type ProjectNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type ProjectNodeEntityListArgs = {
   id: Scalars['String']['input'];
 };
@@ -904,6 +910,7 @@ export type ProjectNodeFoldersArgs = {
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   folderTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  globalSearch?: InputMaybe<Scalars['String']['input']>;
   hasChildren?: InputMaybe<Scalars['Boolean']['input']>;
   hasLinks?: InputMaybe<HasLinksFilter>;
   hasProducts?: InputMaybe<Scalars['Boolean']['input']>;
@@ -911,6 +918,7 @@ export type ProjectNodeFoldersArgs = {
   ids?: InputMaybe<Array<Scalars['String']['input']>>;
   includeFolderChildren?: Scalars['Boolean']['input'];
   includeInternalFolder?: Scalars['Boolean']['input'];
+  includeParents?: Scalars['Boolean']['input'];
   last?: InputMaybe<Scalars['Int']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
   names?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -1217,28 +1225,6 @@ export type QueryUsersArgs = {
   projects?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
-export type RepresentationAttribType = {
-  __typename?: 'RepresentationAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  extension?: Maybe<Scalars['String']['output']>;
-  /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  path?: Maybe<Scalars['String']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
-  /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  template?: Maybe<Scalars['String']['output']>;
-};
-
 export type RepresentationEdge = {
   __typename?: 'RepresentationEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -1250,12 +1236,15 @@ export type RepresentationNode = BaseNode & {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: RepresentationAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   /** JSON serialized context data */
   context?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Number of files of the representation */
   fileCount: Scalars['Int']['output'];
   /** Files in the representation */
@@ -1284,6 +1273,17 @@ export type RepresentationNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type RepresentationNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type RepresentationNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1349,30 +1349,6 @@ export type Tag = {
   name: Scalars['String']['output'];
 };
 
-export type TaskAttribType = {
-  __typename?: 'TaskAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  /** Deadline date and time */
-  endDate?: Maybe<Scalars['DateTime']['output']>;
-  /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  priority?: Maybe<Scalars['String']['output']>;
-  /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
-  /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  /** Date and time when the project or task or asset was started */
-  startDate?: Maybe<Scalars['DateTime']['output']>;
-};
-
 export type TaskEdge = {
   __typename?: 'TaskEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -1385,10 +1361,13 @@ export type TaskNode = BaseNode & {
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
   assignees: Array<Scalars['String']['output']>;
-  attrib: TaskAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   /** Parent folder of the task */
   folder: FolderNode;
   folderId: Scalars['String']['output'];
@@ -1426,6 +1405,17 @@ export type TaskNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type TaskNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type TaskNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 
@@ -1519,14 +1509,6 @@ export type ThumbnailInfo = {
   sourceEntityType?: Maybe<Scalars['String']['output']>;
 };
 
-export type UserAttribType = {
-  __typename?: 'UserAttribType';
-  avatarUrl?: Maybe<Scalars['String']['output']>;
-  developerMode?: Maybe<Scalars['Boolean']['output']>;
-  email?: Maybe<Scalars['String']['output']>;
-  fullName?: Maybe<Scalars['String']['output']>;
-};
-
 export type UserEdge = {
   __typename?: 'UserEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -1539,7 +1521,8 @@ export type UserNode = {
   active: Scalars['Boolean']['output'];
   allAttrib: Scalars['String']['output'];
   apiKeyPreview?: Maybe<Scalars['String']['output']>;
-  attrib: UserAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   defaultAccessGroups: Array<Scalars['String']['output']>;
   deleted: Scalars['Boolean']['output'];
@@ -1560,6 +1543,11 @@ export type UserNode = {
 };
 
 
+export type UserNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
 export type UserNodeTasksArgs = {
   projectName: Scalars['String']['input'];
 };
@@ -1570,32 +1558,6 @@ export type UsersConnection = {
   fieldStats: Array<ColumnStats>;
   /** Pagination information */
   pageInfo: PageInfo;
-};
-
-export type VersionAttribType = {
-  __typename?: 'VersionAttribType';
-  clipIn?: Maybe<Scalars['Int']['output']>;
-  clipOut?: Maybe<Scalars['Int']['output']>;
-  colorSpace?: Maybe<Scalars['String']['output']>;
-  comment?: Maybe<Scalars['String']['output']>;
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  families?: Maybe<Array<Scalars['String']['output']>>;
-  /** Frame rate */
-  fps?: Maybe<Scalars['Float']['output']>;
-  frameEnd?: Maybe<Scalars['Int']['output']>;
-  frameStart?: Maybe<Scalars['Int']['output']>;
-  handleEnd?: Maybe<Scalars['Int']['output']>;
-  handleStart?: Maybe<Scalars['Int']['output']>;
-  intent?: Maybe<Scalars['String']['output']>;
-  machine?: Maybe<Scalars['String']['output']>;
-  pixelAspect?: Maybe<Scalars['Float']['output']>;
-  /** Vertical resolution */
-  resolutionHeight?: Maybe<Scalars['Int']['output']>;
-  /** Horizontal resolution */
-  resolutionWidth?: Maybe<Scalars['Int']['output']>;
-  site?: Maybe<Scalars['String']['output']>;
-  source?: Maybe<Scalars['String']['output']>;
 };
 
 export type VersionEdge = {
@@ -1617,11 +1579,14 @@ export type VersionNode = BaseNode & {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: VersionAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   author?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   featuredVersionType?: Maybe<Scalars['String']['output']>;
   hasReviewables: Scalars['Boolean']['output'];
   heroVersionId?: Maybe<Scalars['String']['output']>;
@@ -1663,6 +1628,17 @@ export type VersionNodeActivitiesArgs = {
 };
 
 
+export type VersionNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type VersionNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
+};
+
+
 export type VersionNodeLinksArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   direction?: InputMaybe<Scalars['String']['input']>;
@@ -1698,13 +1674,6 @@ export type VersionsConnection = {
   pageInfo: PageInfo;
 };
 
-export type WorkfileAttribType = {
-  __typename?: 'WorkfileAttribType';
-  /** Textual description of the entity */
-  description?: Maybe<Scalars['String']['output']>;
-  extension?: Maybe<Scalars['String']['output']>;
-};
-
 export type WorkfileEdge = {
   __typename?: 'WorkfileEdge';
   cursor?: Maybe<Scalars['String']['output']>;
@@ -1717,10 +1686,13 @@ export type WorkfileNode = BaseNode & {
   active: Scalars['Boolean']['output'];
   activities: ActivitiesConnection;
   allAttrib: Scalars['String']['output'];
-  attrib: WorkfileAttribType;
+  /** Attribute values (JSON object). Use the attributes endpoint to get the attribute definitions. */
+  attrib: Scalars['JSON']['output'];
   createdAt: Scalars['DateTime']['output'];
   createdBy?: Maybe<Scalars['String']['output']>;
   data?: Maybe<Scalars['String']['output']>;
+  /** Entity lists containing this entity */
+  entityLists: Array<EntityListInfo>;
   id: Scalars['String']['output'];
   links: LinksConnection;
   name: Scalars['String']['output'];
@@ -1747,6 +1719,17 @@ export type WorkfileNodeActivitiesArgs = {
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type WorkfileNodeAttribArgs = {
+  names?: InputMaybe<Array<Scalars['String']['input']>>;
+};
+
+
+export type WorkfileNodeEntityListsArgs = {
+  entityListTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  visibility?: EntityVisibility;
 };
 
 

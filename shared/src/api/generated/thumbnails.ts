@@ -10,15 +10,6 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getThumbnail: build.query<GetThumbnailApiResponse, GetThumbnailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/thumbnails/${queryArg.thumbnailId}`,
-        params: {
-          placeholder: queryArg.placeholder,
-          original: queryArg.original,
-        },
-      }),
-    }),
     updateThumbnail: build.mutation<UpdateThumbnailApiResponse, UpdateThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/thumbnails/${queryArg.thumbnailId}`,
@@ -28,9 +19,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getFolderThumbnail: build.query<GetFolderThumbnailApiResponse, GetFolderThumbnailApiArg>({
+    getThumbnail: build.query<GetThumbnailApiResponse, GetThumbnailApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
+        url: `/api/projects/${queryArg.projectName}/thumbnails/${queryArg.thumbnailId}`,
         params: {
           placeholder: queryArg.placeholder,
           original: queryArg.original,
@@ -49,12 +40,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getVersionThumbnail: build.query<GetVersionThumbnailApiResponse, GetVersionThumbnailApiArg>({
+    getFolderThumbnail: build.query<GetFolderThumbnailApiResponse, GetFolderThumbnailApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/thumbnail`,
         params: {
           placeholder: queryArg.placeholder,
           original: queryArg.original,
+        },
+      }),
+    }),
+    getFolderFilmstrip: build.query<GetFolderFilmstripApiResponse, GetFolderFilmstripApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/folders/${queryArg.folderId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
         },
       }),
     }),
@@ -70,12 +69,20 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getWorkfileThumbnail: build.query<GetWorkfileThumbnailApiResponse, GetWorkfileThumbnailApiArg>({
+    getVersionThumbnail: build.query<GetVersionThumbnailApiResponse, GetVersionThumbnailApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/thumbnail`,
         params: {
           placeholder: queryArg.placeholder,
           original: queryArg.original,
+        },
+      }),
+    }),
+    getVersionFilmstrip: build.query<GetVersionFilmstripApiResponse, GetVersionFilmstripApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/versions/${queryArg.versionId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
         },
       }),
     }),
@@ -91,9 +98,9 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    getTaskThumbnail: build.query<GetTaskThumbnailApiResponse, GetTaskThumbnailApiArg>({
+    getWorkfileThumbnail: build.query<GetWorkfileThumbnailApiResponse, GetWorkfileThumbnailApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
+        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
         params: {
           placeholder: queryArg.placeholder,
           original: queryArg.original,
@@ -109,6 +116,44 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getTaskThumbnail: build.query<GetTaskThumbnailApiResponse, GetTaskThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
+    getTaskFilmstrip: build.query<GetTaskFilmstripApiResponse, GetTaskFilmstripApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
+        },
+      }),
+    }),
+    createProjectThumbnail: build.mutation<
+      CreateProjectThumbnailApiResponse,
+      CreateProjectThumbnailApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
+    getProjectThumbnail: build.query<GetProjectThumbnailApiResponse, GetProjectThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 })
@@ -117,7 +162,14 @@ export type CreateThumbnailApiResponse =
   /** status 200 Successful Response */ CreateThumbnailResponseModel
 export type CreateThumbnailApiArg = {
   projectName: string
-  'content-type'?: string
+  'content-type'?: string | null
+}
+export type UpdateThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type UpdateThumbnailApiArg = {
+  projectName: string
+  thumbnailId: string
+  'content-type'?: string | null
 }
 export type GetThumbnailApiResponse = unknown
 export type GetThumbnailApiArg = {
@@ -126,11 +178,12 @@ export type GetThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type UpdateThumbnailApiResponse = unknown
-export type UpdateThumbnailApiArg = {
+export type CreateFolderThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateFolderThumbnailApiArg = {
   projectName: string
-  thumbnailId: string
-  'content-type'?: string
+  folderId: string
+  'content-type'?: string | null
 }
 export type GetFolderThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetFolderThumbnailApiArg = {
@@ -139,12 +192,18 @@ export type GetFolderThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateFolderThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateFolderThumbnailApiArg = {
+export type GetFolderFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetFolderFilmstripApiArg = {
   projectName: string
   folderId: string
-  'content-type'?: string
+  placeholder?: 'empty' | 'none'
+}
+export type CreateVersionThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateVersionThumbnailApiArg = {
+  projectName: string
+  versionId: string
+  'content-type'?: string | null
 }
 export type GetVersionThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetVersionThumbnailApiArg = {
@@ -153,12 +212,18 @@ export type GetVersionThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateVersionThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateVersionThumbnailApiArg = {
+export type GetVersionFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetVersionFilmstripApiArg = {
   projectName: string
   versionId: string
-  'content-type'?: string
+  placeholder?: 'empty' | 'none'
+}
+export type CreateWorkfileThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateWorkfileThumbnailApiArg = {
+  projectName: string
+  workfileId: string
+  'content-type'?: string | null
 }
 export type GetWorkfileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetWorkfileThumbnailApiArg = {
@@ -167,12 +232,12 @@ export type GetWorkfileThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateWorkfileThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateWorkfileThumbnailApiArg = {
+export type CreateTaskThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateTaskThumbnailApiArg = {
   projectName: string
-  workfileId: string
-  'content-type'?: string
+  taskId: string
+  'content-type'?: string | null
 }
 export type GetTaskThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetTaskThumbnailApiArg = {
@@ -181,21 +246,49 @@ export type GetTaskThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateTaskThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateTaskThumbnailApiArg = {
+export type GetTaskFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetTaskFilmstripApiArg = {
   projectName: string
   taskId: string
-  'content-type'?: string
+  placeholder?: 'empty' | 'none'
+}
+export type CreateProjectThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateProjectThumbnailApiArg = {
+  projectName: string
+  'content-type'?: string | null
+}
+export type GetProjectThumbnailApiResponse = /** status 200 Successful Response */ any
+export type GetProjectThumbnailApiArg = {
+  projectName: string
+  placeholder?: 'empty' | 'none'
+  original?: boolean
+}
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
 }
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[] | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
+}
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }

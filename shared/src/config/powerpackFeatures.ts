@@ -15,6 +15,7 @@ export type PowerpackFeature =
   | 'columnSummaries'
   | 'listValues'
   | 'entityLinks'
+  | 'tableExport'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -31,6 +32,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'columnSummaries',
   'listValues',
   'entityLinks',
+  'tableExport',
 ]
 
 export const powerpackFeatures: {
@@ -108,5 +110,11 @@ export const powerpackFeatures: {
     description:
       'Press G on any entity for a graph of everything linked to it, or L to see and edit its links in columns, including the links of everything below a folder.',
     bullet: 'See and edit links of any entity',
+  },
+  tableExport: {
+    label: 'Table Export',
+    description:
+      'Export a table or the selected rows to Excel or CSV, with every row and inherited attribute, ready to import back.',
+    bullet: 'Export tables to Excel and CSV',
   },
 }

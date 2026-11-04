@@ -2,7 +2,7 @@ import { FC } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
-import { getListIcon } from '@pages/ProjectListsPage/util'
+import { getListIcon } from '@shared/util'
 import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
@@ -23,7 +23,10 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     isFetching,
     isLoading,
     error,
-  } = useGetEntityListQuery({ listId, projectName, metadataOnly: true }, { skip: !listId })
+  } = useGetEntityListQuery(
+    { entityListId: listId, projectName, metadataOnly: true },
+    { skip: !listId },
+  )
 
   const { setListDetailsOpen, isReview } = useListsContext()
 

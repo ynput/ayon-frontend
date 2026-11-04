@@ -6,6 +6,7 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks/useQueryArgumentCha
 import { ProjectFoldersContext } from './ProjectFoldersContextInstance'
 
 export interface ProjectFoldersContextValue {
+  projectName: string // the project these folders belong to
   folders: FolderListItem[]
   getFolderById: (id: string) => FolderListItem | undefined
   findNonInheritedValues: (
@@ -180,6 +181,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
 
   const value = useMemo(
     () => ({
+      projectName,
       folders: folders,
       getFolderById,
       findNonInheritedValues,
@@ -194,6 +196,7 @@ export const ProjectFoldersContextProvider: React.FC<ProjectFoldersProviderProps
       refetch: onRefetch,
     }),
     [
+      projectName,
       folders,
       getFolderById,
       findNonInheritedValues,
