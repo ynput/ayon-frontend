@@ -16,6 +16,21 @@
     <meta name="msapplication-TileColor" content="#00aba9">
     <!-- FALLBACK FAVICON -->
     <script>
+      // apply the theme picked in the user menu before the first paint (see src/helpers/theme.ts)
+      ;(function () {
+        try {
+          var theme = localStorage.getItem('theme')
+          if (theme === 'system') {
+            theme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+          }
+          if (theme === 'light') {
+            document.documentElement.dataset.theme = 'light'
+            document.documentElement.dataset.colorMode = 'light'
+          }
+        } catch (e) {}
+      })()
+    </script>
+    <script>
       // start the first API request while the app bundle loads (see src/helpers/earlySiteInfo.ts)
       ;(function () {
         try {

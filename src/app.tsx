@@ -74,6 +74,7 @@ import { withServiceUserAccess } from '@helpers/serviceUser'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
+import { useAppTheme } from '@hooks/useAppTheme'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
@@ -111,6 +112,8 @@ const App = () => {
   const [serverError, setServerError] = useState(false)
   const [isOnboarding, setIsOnboarding] = useState(false)
   const [noAdminUser, setNoAdminUser] = useState(false)
+
+  useAppTheme()
 
   //   handlers for details panel
   const onOpenImage = (args: any) => {
