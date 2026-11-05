@@ -140,7 +140,9 @@ export const Left = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-medium);
-  min-width: clamp(350px, 30vw, 500px);
+  /* a fixed width, unless the row is too narrow for the status change and the date: then the title gives way */
+  flex: 0 1 clamp(350px, 30vw, 500px);
+  min-width: 200px;
   max-width: clamp(350px, 30vw, 500px);
 
   .title {
@@ -169,13 +171,19 @@ export const Middle = styled.div`
   display: flex;
   gap: var(--base-gap-large);
   overflow: hidden;
-  flex-grow: 1;
+  flex: 1 1 0;
   align-items: center;
 
   .icon.type {
     font-size: 18px;
 
     font-variation-settings: 'FILL' 1;
+  }
+
+  /* a status change keeps room for its icon-only form (two status squares and the arrow between them),
+     after the unread count's place */
+  &.status-change {
+    min-width: calc(18px + var(--base-gap-large) + 2 * 20px + 18px + 2 * 4px);
   }
 `
 

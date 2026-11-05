@@ -1,23 +1,20 @@
-import { Icon } from '@ynput/ayon-react-components'
-import { ValuePill } from '@shared/components'
+import { StatusLabel } from '@shared/components'
 import * as Styled from './InboxMessageStatus.styled'
-import { Fragment } from 'react'
 import type { InboxStatusChange } from '../../types'
 
 interface InboxMessageStatusProps {
   statuses?: InboxStatusChange[]
 }
 
-// a status change: each status filled with its colour, like in the tables
+// a status change: each status as its icon in a square of its colour and its name, shortened when narrow
 const InboxMessageStatus = ({ statuses = [] }: InboxMessageStatusProps) => {
   return (
     <Styled.MessageStatus>
-      {statuses.map(({ icon = 'fiber_manual_record', color, colorLight, name = '' }, index) => (
-        <Fragment key={index}>
-          <ValuePill variant="filled" label={name} {...{ icon, color, colorLight }} />
-          {index < statuses.length - 1 && <Icon icon="arrow_right_alt" className="type" />}
-        </Fragment>
-      ))}
+      <StatusLabel
+        statuses={statuses.map(({ name = '', ...status }) => ({ name, ...status }))}
+        arrowIcon="arrow_right_alt"
+        arrowClassName="type"
+      />
     </Styled.MessageStatus>
   )
 }

@@ -272,6 +272,7 @@ const InboxMessage = ({
     if (projectInfo) {
       const statuses = (projectInfo.statuses || []) as Array<{
         name: string
+        shortName?: string
         icon?: string
         color?: string
         colorLight?: string
@@ -311,7 +312,9 @@ const InboxMessage = ({
         />
         <span className={clsx('title', { loading: isPlaceholder })}>{path.join(' - ')}</span>
       </Styled.Left>
-      <Styled.Middle className={clsx('middle', { loading: isPlaceholder })}>
+      <Styled.Middle
+        className={clsx('middle', { loading: isPlaceholder, 'status-change': isStatusChange })}
+      >
         <Styled.Unread className={clsx(Typography.bodySmall, { hide: (unReadCount ?? 0) < 2 })}>
           {unReadCount}
         </Styled.Unread>
