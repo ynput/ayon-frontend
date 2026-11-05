@@ -3,7 +3,11 @@ import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
-import { EmptyPlaceholder, EmptyPlaceholderFlexWrapper, FilterErrorActions } from '@shared/components'
+import {
+  EmptyPlaceholder,
+  EmptyPlaceholderFlexWrapper,
+  FilterErrorActions,
+} from '@shared/components'
 import {
   BuildTreeTableColumnsProps,
   EntityType,
