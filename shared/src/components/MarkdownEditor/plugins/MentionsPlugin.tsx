@@ -16,7 +16,7 @@ import {
   type TextNode,
 } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
-import { Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import UserImage from '../../UserImage'
 import { $createMentionNode } from '../nodes/MentionNode'
 import type {
@@ -243,7 +243,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                     <Icon
                       icon={item.icon}
                       className="image"
-                      style={{ color: getReadableColor(item.color, MIN_CONTRAST_ICON) }}
+                      style={{ color: getReadableColor(item) }}
                     />
                   )
                 )}

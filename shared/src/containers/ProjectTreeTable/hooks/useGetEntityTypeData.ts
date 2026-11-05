@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import type { TaskType, FolderType } from '../types/project'
 import type { ProjectModelWithProducts } from '@shared/context'
 import type { ProductType } from '@shared/api'
+import type { UserColor } from '@ynput/ayon-react-components'
 
 type Props = {
   projectInfo?: ProjectModelWithProducts
@@ -30,7 +31,7 @@ export const useGetEntityTypeData = ({ projectInfo }: Props) => {
 
   //   convert object to map for product types
   const productTypesByName = useMemo(() => {
-    const map: Map<string, ProductType> = new Map()
+    const map: Map<string, ProductType & UserColor> = new Map()
     for (const productType of productTypes) {
       map.set(productType.name, productType)
     }

@@ -17,6 +17,7 @@ export type ListTableGroupDisplay = {
   label?: string
   icon?: string
   color?: string
+  colorLight?: string | null
   sortValue?: string | number
   sortIndex?: number
 }

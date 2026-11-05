@@ -6,7 +6,6 @@ import {
   Icon,
   InputSwitch,
   InputText,
-  MIN_CONTRAST_ICON,
 } from "@ynput/ayon-react-components"
 import { useMemo, CSSProperties } from "react"
 import {
@@ -145,7 +144,7 @@ export default function ColumnMapper({
                       displayIcon={dropdownValueIcon && selectedTargetOption?.icon}
                       style={dropdownValueIcon
                         ? {
-                            "--icon-color": getReadableColor(selectedTargetOption?.color, MIN_CONTRAST_ICON),
+                            "--icon-color": getReadableColor(selectedTargetOption),
                           } as unknown as CSSProperties
                         : {}
                       }

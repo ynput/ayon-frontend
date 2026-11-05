@@ -1,6 +1,6 @@
 import { FC, useLayoutEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import type { RowSelectionState } from '@tanstack/react-table'
 import type { SliceMap } from '../types'
 
@@ -114,7 +114,12 @@ export const SlicerPanelSummary: FC<SlicerPanelSummaryProps> = ({ rowSelection, 
               row.icon && (
                 <Icon
                   icon={row.icon}
-                  style={{ color: getReadableColor(row.iconColor, MIN_CONTRAST_ICON) }}
+                  style={{
+                    color: getReadableColor({
+                      color: row.iconColor,
+                      colorLight: row.iconColorLight,
+                    }),
+                  }}
                 />
               )
             ))}

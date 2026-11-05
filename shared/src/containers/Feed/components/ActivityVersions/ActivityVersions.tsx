@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, type UserColor } from '@ynput/ayon-react-components'
 import ActivityHeader from '../ActivityHeader/ActivityHeader'
 import * as Styled from './ActivityVersions.styled'
 import { More } from '../ActivityGroup/ActivityGroup.styled'
@@ -32,7 +32,7 @@ interface ActivityVersionsProps {
   entityType?: string
   onReferenceClick?: (ref: any) => void
   filter?: any
-  statuses: Status[]
+  statuses: (Status & UserColor)[]
 }
 
 const ActivityVersions: React.FC<ActivityVersionsProps> = ({
@@ -97,6 +97,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                     <FieldValue
                       icon={status?.icon}
                       color={status?.color}
+                      colorLight={status?.colorLight}
                       name={status?.name || ''}
                     />
                   </Styled.Title>

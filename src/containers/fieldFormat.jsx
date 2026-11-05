@@ -44,7 +44,7 @@ const TagsField = ({ value }) => {
       {value.map(
         (tag) =>
           typeof tag === 'string' && (
-            <span key={tag} style={{ color: getReadableColor(tags[tag]?.color) }}>
+            <span key={tag} style={{ color: getReadableColor(tags[tag]) }}>
               {tag}
             </span>
           ),

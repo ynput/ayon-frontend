@@ -1,7 +1,8 @@
 import { FC, useCallback, useEffect, useState, useMemo } from 'react'
 import { AttributeField, DetailsPanelAttributesEditor } from '../DetailsPanelAttributes'
 import { useUpdateEntityListMutation, useGetAttributeListQuery } from '@shared/api'
-import type { EntityListModel } from '@shared/api'
+import type { EntityListModel, Tag } from '@shared/api'
+import type { UserColor } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import { useProjectContext } from '@shared/context'
 
@@ -60,7 +61,12 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
         data: {
           type: 'list_of_strings',
           title: 'Tags',
-          enum: tags?.map((t) => ({ value: t.name, label: t.name, color: t.color })),
+          enum: tags?.map((t: Tag & UserColor) => ({
+            value: t.name,
+            label: t.name,
+            color: t.color,
+            colorLight: t.colorLight,
+          })),
           enableCustomValues: true,
           enableSearch: true,
         },

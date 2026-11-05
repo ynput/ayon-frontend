@@ -78,6 +78,8 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           label: product?.productName || 'Unknown product',
           icon: product?.productType && project.getProductType(product.productType).icon,
           color: product?.productType && project.getProductType(product.productType).color,
+          colorLight:
+            product?.productType && project.getProductType(product.productType).colorLight,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -407,7 +409,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                   valueProps={{ className: 'product-dropdown' }}
                   tooltip="Select a product to view its versions reviewables"
                   valueIcon={selectedProduct?.icon || ''}
-                  valueColor={selectedProduct?.color}
+                  valueColor={selectedProduct}
                 />
               )}
             </>

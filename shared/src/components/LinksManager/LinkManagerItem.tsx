@@ -80,7 +80,7 @@ export const LinkManagerItem: FC<LinkManagerItemProps> = ({
         unknown: link.isRestricted && isManager,
       })}
     >
-      <EntityIcon entity={{ entityType: link.entityType }} icon={link?.icon} color={link.color} />
+      <EntityIcon entity={{ entityType: link.entityType }} icon={link?.icon} color={link} />
       <span className="title">
         {link.isRestricted ? (
           <span className="label">{isManager ? 'Unknown' : 'Access Restricted'}</span>

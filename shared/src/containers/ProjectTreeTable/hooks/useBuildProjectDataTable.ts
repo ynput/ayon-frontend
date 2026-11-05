@@ -129,6 +129,7 @@ export default function useBuildProjectDataTable({
       const row = buildTaskTableRow(task, foldersMap.get(parentId || task.folderId))
       row.primary.icon = typeData?.icon || null
       row.primary.color = typeData?.color || null
+      row.primary.colorLight = typeData?.colorLight || null
       row.primary.links = linksToTableData(task.links, 'task', project.anatomy)
       row.subRows = []
       return row
@@ -141,6 +142,7 @@ export default function useBuildProjectDataTable({
       const row = buildFolderTableRow(folder)
       row.primary.icon = typeData?.icon || null
       row.primary.color = typeData?.color || null
+      row.primary.colorLight = typeData?.colorLight || null
       row.primary.links = linksToTableData(folder.links, 'folder', project.anatomy)
       row.subRows = []
       return row

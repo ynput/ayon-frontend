@@ -1,9 +1,4 @@
-import {
-  getReadableColor,
-  getTextColor,
-  Icon,
-  MIN_CONTRAST_ICON,
-} from '@ynput/ayon-react-components'
+import { getReadableColor, getTextColor, Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
@@ -71,7 +66,7 @@ export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdown
         {
           <Icon
             icon={icon ? icon : isClear ? 'clear' : 'crop_square'}
-            style={{ color: getReadableColor(color || '', MIN_CONTRAST_ICON) }}
+            style={{ color: getReadableColor(color || '') }}
           />
         }
         {label}

@@ -1,4 +1,4 @@
-import { Icon, getReadableColor, MIN_CONTRAST_ICON } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import { Fragment, forwardRef } from 'react'
 import styled from 'styled-components'
 
@@ -28,20 +28,21 @@ const ValueText = styled.span`
 interface FieldValueProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: string
   color?: string
+  colorLight?: string | null
   name: string
-  items?: { label: string; color?: string }[]
+  items?: { label: string; color?: string; colorLight?: string | null }[]
 }
 
 export const FieldValue = forwardRef<HTMLDivElement, FieldValueProps>(
-  ({ icon, color, name, items, ...props }, ref) => {
+  ({ icon, color, colorLight, name, items, ...props }, ref) => {
     return (
       <Value {...props} ref={ref}>
-        {icon && <Icon icon={icon} style={{ color: getReadableColor(color, MIN_CONTRAST_ICON) }} />}
+        {icon && <Icon icon={icon} style={{ color: getReadableColor({ color, colorLight }) }} />}
         <ValueText title={name}>
           {items
             ? items.map((item, index) => (
                 <Fragment key={index}>
-                  <span style={{ color: getReadableColor(item.color) }}>{item.label}</span>
+                  <span style={{ color: getReadableColor(item) }}>{item.label}</span>
                   {index < items.length - 1 && ', '}
                 </Fragment>
               ))

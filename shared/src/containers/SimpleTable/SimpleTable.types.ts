@@ -46,6 +46,7 @@ export type SimpleTableRow = {
   parents?: string[]
   icon?: string | null
   iconColor?: string
+  iconColorLight?: string | null
   iconFilled?: boolean
   img?: string | null
   imgShape?: 'square' | 'circle'

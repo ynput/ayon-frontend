@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
-import { getMixedCounts, type MixedChange } from '@ynput/ayon-react-components'
+import { getMixedCounts, type MixedChange, type UserColor } from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -194,11 +194,12 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       }
 
       // Use scoped statuses/types based on field name
-      let enumOptions: EnumItem[] = attributeEnumOptions.map((item) => ({
+      let enumOptions: EnumItem[] = attributeEnumOptions.map((item: EnumItem & UserColor) => ({
         value: item.value,
         label: item.label,
         icon: getEnumItemIcon(item.icon),
         color: item.color,
+        colorLight: item.colorLight,
         group: item.group,
         hidden: item.hidden,
       }))
@@ -213,6 +214,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           label: status.name,
           icon: status.icon,
           color: status.color,
+          colorLight: status.colorLight,
         }))
       }
       if (
@@ -226,6 +228,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           label: t.name,
           icon: t.icon,
           color: t.color,
+          colorLight: t.colorLight,
         }))
       }
 

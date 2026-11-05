@@ -337,12 +337,12 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const color = project.getProductType(node.data.productType).color || '#cccccc'
+          const { color, colorLight } = project.getProductType(node.data.productType)
 
           return (
             <CellWithIcon
               text={node.data.productType}
-              textStyle={{ color: getReadableColor(color) }}
+              textStyle={{ color: getReadableColor({ color: color || '#cccccc', colorLight }) }}
             />
           )
         },

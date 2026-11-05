@@ -4,6 +4,7 @@
 
 import type { GroupCountsMap } from '@shared/api'
 import type { EntityGroup } from '@shared/api'
+import type { UserColor } from '@ynput/ayon-react-components'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
@@ -17,6 +18,7 @@ export type GroupData = {
   value: string
   label: string
   color?: string
+  colorLight?: string | null
   icon?: string
   img?: string
   count?: number
@@ -39,7 +41,7 @@ const valueToStringArray = (value?: any): string[] =>
 const getGroupData = (
   groupById: string,
   groupValue: string,
-  groups?: EntityGroup[],
+  groups?: (EntityGroup & UserColor)[],
   groupCounts?: GroupCountsMap,
   groupCountsComplete?: boolean,
 ): GroupData => {
@@ -51,6 +53,7 @@ const getGroupData = (
         value: group.value,
         label: group.label || group.value,
         color: group.color,
+        colorLight: group.colorLight,
         icon: group.icon,
         count: group.count,
         img: groupById === 'assignees' ? `/api/users/${group.value}/avatar` : undefined,
@@ -128,6 +131,7 @@ const defaultEntityToGroupRow = (
 
   row.primary.icon = typeData?.icon || null
   row.primary.color = typeData?.color || null
+  row.primary.colorLight = typeData?.colorLight || null
 
   return {
     ...row,

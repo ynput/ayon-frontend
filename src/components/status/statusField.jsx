@@ -5,7 +5,8 @@ import { Icon, getReadableColor, getTextColor } from '@ynput/ayon-react-componen
 
 const hoverStyle = css`
   background-color: var(--md-sys-color-surface-container-low-hover);
-  color: ${({ $color }) => getReadableColor($color)};
+  color: ${({ $color, $colorLight }) =>
+    getReadableColor({ color: $color, colorLight: $colorLight })};
 `
 
 const invertHoverStyle = css`
@@ -15,7 +16,8 @@ const invertHoverStyle = css`
 `
 const defaultStyle = css`
   /* default text color */
-  color: ${({ $color }) => getReadableColor($color)};
+  color: ${({ $color, $colorLight }) =>
+    getReadableColor({ color: $color, colorLight: $colorLight })};
   background-color: transparent;
 `
 
@@ -158,6 +160,7 @@ const StatusField = ({
   const {
     shortName,
     color = 'var(--md-sys-color-surface-container-highest)',
+    colorLight,
     icon = 'help_center',
   } = statuses[value] || {}
 
@@ -169,6 +172,7 @@ const StatusField = ({
       style={{ ...style, height }}
       id={shownValue}
       $color={color}
+      $colorLight={colorLight}
       $isActive={isActive}
       $isSelecting={isSelecting}
       $isChanging={isChanging}
