@@ -11,8 +11,22 @@ const SelectionHeaderCell = styled.div`
   justify-content: center;
   cursor: pointer;
 
+  .icon {
+    color: var(--md-sys-color-outline);
+    /* the header cell is 18px wide and clips anything larger */
+    font-size: 16px;
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-high);
+
+    .icon {
+      color: var(--md-sys-color-on-surface);
+    }
+  }
+
+  &[data-selected='true'] .icon {
+    color: var(--md-sys-color-on-surface);
   }
 `
 
@@ -34,15 +48,13 @@ const RowSelectionHeader: React.FC = () => {
   }
 
   return (
-    <SelectionHeaderCell onClick={handleClick}>
-      {allSelected ? (
-        // Show double check mark when all rows are selected
-        <Icon icon="done_all" />
-      ) : someSelected ? (
-        // Show minimize icon when some (but not all) rows are selected
-        <Icon icon="remove" />
-      ) : // Show nothing when no rows are selected
-      null}
+    <SelectionHeaderCell
+      onClick={handleClick}
+      data-selected={allSelected || someSelected}
+      title={allSelected || someSelected ? 'Clear selection' : 'Select all rows'}
+    >
+      {/* Always visible so users can find it: dimmed when nothing is selected */}
+      <Icon icon={someSelected && !allSelected ? 'remove' : 'done_all'} />
     </SelectionHeaderCell>
   )
 }
