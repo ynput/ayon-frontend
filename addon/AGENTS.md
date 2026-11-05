@@ -205,9 +205,10 @@ skipped with a console warning naming the addons.
 - one helper per slot, which stamps `slotVersion`.
 
 **Contributing.** Install the contract package and use its helper in the manifest:
-`plannerEventMenuItem({ id, label, icon, run: () => import('./startTimer') })`. AYON loads all
-manifests first, then registers every declaration, then the contributions, so the order they load in
-doesn't matter. When no addon in the bundle declares the slot (the addon isn't installed, or is older),
+`plannerEventMenuItem({ id, label, icon, run: () => import('./startTimer') })`. AYON registers each
+manifest as it arrives and works out declarations and contributions again from all of them, so the
+order they load in doesn't matter: a contribution appears once its slot's addon has loaded. When all
+manifests are in and no addon in the bundle declares the slot (the addon isn't installed, or is older),
 the contribution is skipped with a console warning and the rest of the addon works.
 
 **Versioning.** The declaration has `version`, and a contribution the `slotVersion` it was built

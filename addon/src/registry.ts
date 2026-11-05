@@ -41,6 +41,8 @@ let state: RegistryState = {
 // every manifest registered so far: the registry is computed from all of them, because a change to
 // one addon's declarations changes which contributions of the others apply
 let manifests: ManifestEntry[] = []
+// the skipped contributions already in the console
+let warnedSkipped: SkippedContribution[] = []
 const listeners = new Set<() => void>()
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
 let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
@@ -66,6 +68,19 @@ const warnNew = <T>(previous: readonly T[], next: readonly T[], format: (item: T
   })
 }
 
+const isKnownSlot = (slot: string) =>
+  Object.prototype.hasOwnProperty.call(SLOTS, slot) || state.slots.some((s) => s.name === slot)
+
+// While manifests load, a contribution to an addon's slot nobody has declared may just have arrived
+// first: its warning waits until every manifest is in.
+const warnSkipped = () => {
+  const definite = state.skipped.filter(
+    ({ slot }) => !state.isLoading || !slot?.includes('.') || isKnownSlot(slot),
+  )
+  warnNew(warnedSkipped, definite, formatSkipped)
+  warnedSkipped = definite
+}
+
 // Two phases, so the result doesn't depend on the order the manifests came in: every declaration
 // first, then every contribution against AYON's slots plus the declared ones.
 const applyManifests = (next: ManifestEntry[]) => {
@@ -88,15 +103,15 @@ const applyManifests = (next: ManifestEntry[]) => {
   }
 
   warnNew(state.skippedSlots, skippedSlots, formatSkippedDeclaration)
-  warnNew(state.skipped, skipped, formatSkipped)
   const addons = new Map(next.map(({ addon }) => [addon.name, addon]))
   setState({ contributions, skipped, slots, skippedSlots, addons: [...addons.values()] })
+  warnSkipped()
 }
 
 /**
  * Registers the manifests of several addons at once, replacing what those addons registered
  * before. What the host can't use is skipped with a console warning naming it. The host calls this
- * with every manifest of the bundle, in a fixed order, once they have all loaded.
+ * each time a manifest arrives, with everything loaded so far in a fixed order.
  */
 export const registerManifests = (entries: readonly ManifestEntry[]) => {
   const names = new Set(entries.map(({ addon }) => addon.name))
@@ -118,7 +133,9 @@ export const unregisterAddon = (addonName: string) =>
 
 /** The host calls this once every manifest it knows of has loaded (or failed). */
 export const setManifestsLoading = (isLoading: boolean) => {
-  if (state.isLoading !== isLoading) setState({ isLoading })
+  if (state.isLoading === isLoading) return
+  setState({ isLoading })
+  warnSkipped()
 }
 
 /** Everything registered, for tooling (developer panel, `ayon-addon check`). */
