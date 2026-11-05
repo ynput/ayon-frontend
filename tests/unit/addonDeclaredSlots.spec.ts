@@ -16,6 +16,8 @@ import { provideHost } from '../../addon/src/hostBridge'
 import { runContribution } from '../../addon/src/pieces'
 import { readContractSlots } from '../../addon-dev/src/contractSlots'
 import { loadManifests } from '../../shared/src/context/remote-modules/loadManifests'
+import { useSlotMenuItems } from '../../addon/src/SlotOutlet'
+import { renderToHtml } from './support/render'
 
 const planner = { name: 'planner', version: '2.0.0', remote: 'planner' }
 const tracker = { name: 'timetracker', version: '1.0.0', remote: 'timetracker' }
@@ -240,6 +242,36 @@ test('fields and pieces of a declared slot are checked like a built-in slot', ()
     'missing label',
     "run must be a loader: () => import('./File')",
   ])
+})
+
+test('useSlotMenuItems leaves out what the surface says does not apply', () => {
+  registerManifests([
+    { addon: planner, manifest: plannerManifest },
+    {
+      addon: tracker,
+      manifest: trackerManifest(
+        item({ eventTypes: ['allocation'] }),
+        item({ id: 'everywhere', label: 'Everywhere' }),
+      ),
+    },
+  ])
+  const labelsFor = (eventType: string) => {
+    let labels: string[] = []
+    const Menu = () => {
+      const build = useSlotMenuItems(SLOT as never) as unknown as (
+        context: object,
+        applies: (item: { eventTypes?: string[] }) => boolean,
+      ) => { bottom: { label: string }[] }
+      labels = build({}, ({ eventTypes }) => !eventTypes || eventTypes.includes(eventType)).bottom.map(
+        (entry) => entry.label,
+      )
+      return null
+    }
+    renderToHtml(Menu)
+    return labels
+  }
+  expect(labelsFor('allocation')).toEqual(['Start timer', 'Everywhere'])
+  expect(labelsFor('milestone')).toEqual(['Everywhere'])
 })
 
 test('a failing or missing piece is reported, not thrown', async () => {

@@ -630,7 +630,7 @@ export interface SlotDefinition {
  * addon's contract package, which augments `SlotMap`; this is the run-time half.
  */
 export interface SlotDeclaration extends SlotDefinition {
-  /** `<addon>.<name>`, e.g. `planner.eventMenuItem` */
+  /** `<addon>.<name>`, e.g. `planner.taskEventMenuItem` */
   name: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
