@@ -56,7 +56,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const { sliceSelections, sliceFilters, searchFolderIds, isLicensePending } =
+    useSlicerPanelSelections(attribFields)
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -267,6 +268,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
 
   // list tasks narrowed to the hierarchy panel's subtree

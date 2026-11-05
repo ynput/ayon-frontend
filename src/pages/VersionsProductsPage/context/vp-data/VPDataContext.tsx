@@ -245,7 +245,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const { sliceSelections, sliceFilters, searchFolderIds, isLicensePending } =
+    useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -301,6 +302,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
   const slicerFolderIds = useMemo(
     () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
