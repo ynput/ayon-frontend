@@ -452,6 +452,44 @@ a {
   }
 }
 
+// legacy PrimeReact tables: match the header of the new project tables
+.p-datatable .p-datatable-thead > tr > th,
+.p-treetable .p-treetable-thead > tr > th {
+  height: var(--size-header);
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .p-column-header-content {
+    min-width: 0;
+  }
+
+  .p-column-title {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  // sort icons only on hover/focus and on the sorted column; hidden, not removed, so titles don't shift
+  &.p-sortable-column:not(.p-highlight):not(:hover):not(:focus-visible) .p-sortable-column-icon {
+    visibility: hidden;
+  }
+
+  .p-sortable-column-icon {
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+}
+
+// navigation trees (folder hierarchy, task list) read as one list, without row dividers
+.p-treetable.no-row-dividers .p-treetable-tbody > tr > td {
+  box-shadow: none;
+}
+
 // project list styles for collapsed
 .project-list-section {
   .collapse-button {
@@ -564,8 +602,7 @@ a {
 }
 
 .broken-addon-row {
-  color: red !important;
-  font-style: italic;
+  color: var(--md-sys-color-error) !important;
 }
 
 .p-sidebar-left .p-sidebar {
@@ -581,4 +618,19 @@ a {
 .sort-desc-icon .icon,
 .sort-desc-icon svg {
   transform: none !important;
+}
+
+// disabled filled buttons looked more clickable than enabled secondary ones
+button.filled:disabled,
+button.tonal:disabled,
+button.tertiary:disabled {
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.5;
+  cursor: default;
+
+  .shortcut {
+    background-color: var(--md-sys-color-on-surface);
+    color: var(--md-sys-color-surface-container-highest);
+  }
 }
