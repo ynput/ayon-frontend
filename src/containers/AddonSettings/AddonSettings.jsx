@@ -833,7 +833,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           />
           <Section>
             <StyledScrollPanel
-              className="transparent nopad"
+              className="nopad"
               style={{ flexGrow: 1 }}
               id="settings-scroll-panel"
             >
