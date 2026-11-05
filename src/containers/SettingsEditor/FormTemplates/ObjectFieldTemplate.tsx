@@ -10,6 +10,7 @@ import { copyToClipboard } from '@shared/util'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { matchesFilterKeys } from './searchMatcher'
+import { ParentSchemaContext } from './ParentSchemaContextInstance'
 
 const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
   // return true, if first array starts with second array
@@ -149,28 +150,34 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       >
         {longDescription}
         <div className={className} data-test="test-aa" data-fieldid={props.id}>
-          {props.properties
-            .filter(
-              (element) =>
-                (element.name !== 'enabled' || ['compact', 'root'].includes(props.schema.layout)) &&
-                !hiddenFields.includes(element.name),
-            )
-            .map((element, index) => {
-              let widget = element.content.props?.schema?.widget
-              widget = widget || (element.content.props?.name === 'shortName' ? 'short' : null)
-              return (
-                <div
-                  key={index}
-                  className={clsx('form-object-field-item', widget && `widget-${widget}`)}
-                >
-                  {element.content}
-                </div>
+          <ParentSchemaContext.Provider value={props.schema}>
+            {props.properties
+              .filter(
+                (element) =>
+                  (element.name !== 'enabled' || ['compact', 'root'].includes(props.schema.layout)) &&
+                  !hiddenFields.includes(element.name),
               )
-            })}
+              .map((element, index) => {
+                let widget = element.content.props?.schema?.widget
+                widget = widget || (element.content.props?.name === 'shortName' ? 'short' : null)
+                // a colour with a light theme colour next to it shows samples on both themes
+                if (widget === 'color' && element.name === 'colorLight') widget = 'color-light'
+                const hasLight = !!props.schema.properties?.colorLight
+                if (widget === 'color' && element.name === 'color' && hasLight) widget = 'color-dark'
+                return (
+                  <div
+                    key={index}
+                    className={clsx('form-object-field-item', widget && `widget-${widget}`)}
+                  >
+                    {element.content}
+                  </div>
+                )
+              })}
+          </ParentSchemaContext.Provider>
         </div>
       </div>
     )
-  }, [props.properties, className])
+  }, [props.properties, props.schema, className])
 
   // aaand... render
 

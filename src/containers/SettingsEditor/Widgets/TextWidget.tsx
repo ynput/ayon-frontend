@@ -11,6 +11,8 @@ import {
   InputText,
   InputTextarea,
 } from '@ynput/ayon-react-components'
+import { DarkColorInput, LightColorInput } from './ThemeColorInput'
+import { useParentSchema } from '../FormTemplates/ParentSchemaContextInstance'
 
 import {CodeEditorWrapper} from '../SettingsEditor.styled'
 
@@ -55,6 +57,7 @@ const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) 
 
 export const TextWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
+  const parentSchema = useParentSchema()
   const [value, setValue] = useState(null)
   const [valueInitialized, setValueInitialized] = useState(false)
 
@@ -141,11 +144,24 @@ export const TextWidget = (props: $Any) => {
         onChange(e.target.value)
       }
     }
+  } else if (props.schema.widget === 'color' && props.id.endsWith('_colorLight')) {
+    //
+    // Light theme colour of an anatomy item or enum option, next to its `color`
+    //
+    const color = props.formContext?.overrides?.[props.id.replace(/Light$/, '')]?.value
+    Input = LightColorInput
+    opts.value = value
+    opts.baseColor = typeof color === 'string' ? color : undefined
+    opts.onChange = (newValue?: string) => {
+      updateChangedKeys(props, newValue !== originalValue, path)
+      props.onChange(newValue)
+    }
   } else if (props.schema.widget === 'color') {
     //
     // Color picker
     //
-    Input = InputColor
+    // with a sample on the dark theme when the item has a light theme colour too
+    Input = props.name === 'color' && parentSchema?.properties?.colorLight ? DarkColorInput : InputColor
     opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
