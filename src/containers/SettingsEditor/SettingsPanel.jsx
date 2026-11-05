@@ -52,7 +52,8 @@ const PanelHeader = styled.div`
 
   small {
     margin-left: 20px;
-    opacity: 0.4;
+    /* supporting text: readable, but quieter than the section title and the fields */
+    opacity: 0.65;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
