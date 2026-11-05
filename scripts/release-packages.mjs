@@ -8,15 +8,17 @@
 //   yarn release:status                     local origin/develop version vs npm, per package
 //   yarn release:changes [--json]           what merged since each package's last npm release, and the
 //                                           signals that decide patch / minor / major
-//   yarn release:bump <pkg>=<level> ...     set versions and cross-package pins; <level> is patch, minor,
-//                                           major or x.y.z. Run on a release branch, never on develop.
+//   yarn release:bump                     suggest bumps from commits, prompt for overrides, then confirm
+//   yarn release:bump <pkg>=<level> ...     set explicit versions without prompts; <level> is patch,
+//                                           minor, major or x.y.z. Run on a release branch, never develop.
 //   yarn release:check                      are versions and cross-package pins consistent?
 //   yarn release:build                      yarn build:addon (shared, addon, addon-dev)
 //   yarn release:publish [pkg ...] [--dry-run] [--yes] [--otp <code>] [--force]
 //                                           build, then npm publish what npm does not have yet, in order
 //
 // --repo <dir> runs a command against another checkout or worktree (default: this repo).
-// status, changes and publish fetch origin; publish needs HEAD at origin/develop, a clean tree and npm login.
+// status, changes, interactive bump and publish fetch origin.
+// publish needs HEAD at origin/develop, a clean tree and npm login.
 //
 // The skill that runs the whole release (PR, versions, hand-over) lives in the AYON dev workbench:
 // .claude/skills/release-packages/SKILL.md.
@@ -142,7 +144,8 @@ const baseline = (repo, key) => {
   ]
 }
 
-// ----------------------------------------------------------------------------- status
+// `release:status` fetches origin and compares each package version on origin/develop with
+// the version currently published to npm. It does not inspect the working-tree versions.
 const cmdStatus = (repo) => {
   git(repo, 'fetch', '-q', 'origin')
   console.log(`local = ${BASE}`)
@@ -156,7 +159,10 @@ const cmdStatus = (repo) => {
   }
 }
 
-// ----------------------------------------------------------------------------- changes
+// `release:changes` starts at each package's last npm release commit (or, if that commit is
+// not in origin/develop, its most recent version-changing commit). It lists first-parent
+// merges that touched the package and reports hand-written exports, generated REST API
+// changes, package.json edits, and available PR titles/labels to inform a manual bump choice.
 // exported names declared on a diff line; prefix is '-' or '\\+' (the diff sign)
 const exportedNames = (lines, prefix) => {
   const out = new Set()
@@ -375,11 +381,10 @@ const cmdChanges = (repo, asJson) => {
       'release of both. addon-dev has no dependency on shared code, only a peer range.',
   )
   console.log(
-    'Next: decide patch/minor/major per package (SKILL.md), then yarn release:bump addon=minor ... in a release branch.',
+    'Next: run yarn release:bump in a release branch to review suggested bumps, or pass explicit addon=minor ... overrides.',
   )
 }
 
-// ----------------------------------------------------------------------------- bump / check
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 
 // Replace the value of "key": "..." (inside `section` when given), keeping the formatting
@@ -449,17 +454,134 @@ const check = (repo) => {
   return problems
 }
 
+// `release:check` verifies that shared and addon-dev pin the current addon version, that
+// addon-dev's shared peer range starts at the current shared version, and that ARC pins
+// match the root package. It also checks the addon/AGENTS.md version header when present.
+// It reports all inconsistencies and exits non-zero if any are found.
 const cmdCheck = (repo) => {
   const problems = check(repo)
   console.log(problems.length ? problems.join('\n') : 'consistent')
   process.exitCode = problems.length ? 1 : 0
 }
 
-const cmdBump = (repo, items) => {
+// Read non-merge commits, not just merge subjects: conventional prefixes often live on
+// commits inside a PR. Each package uses its own release baseline and highest bump level.
+const suggestedBumps = (repo) => {
+  git(repo, 'fetch', '-q', 'origin')
+  const suggestions = {}
+  for (const key of PUBLISH_ORDER) {
+    const [base] = baseline(repo, key)
+    if (!base) die(`cannot find a release baseline for ${PACKAGES[key].name}`)
+    const commits = git(
+      repo,
+      'log',
+      '--no-merges',
+      '--format=%B%x00',
+      `${base}..${BASE}`,
+      '--',
+      PACKAGES[key].dir,
+    )
+      .split('\0')
+      .map((message) => message.trim())
+      .filter(Boolean)
+    let level = 'none'
+    let reason = 'no commits since the last release'
+    for (const message of commits) {
+      const subject = message.split('\n')[0]
+      if (/^[a-z]+(?:\([^)]+\))?!: /i.test(subject) || /^BREAKING[ -]CHANGE:\s/m.test(message)) {
+        level = 'major'
+        reason = 'breaking-change commit'
+        break
+      }
+      if (/^feat(?:\([^)]+\))?: /i.test(subject)) {
+        level = 'minor'
+        reason = 'feat commit'
+      } else if (level === 'none') {
+        level = 'patch'
+        reason = /^fix(?:\([^)]+\))?: /i.test(subject) ? 'fix commit' : 'other package changes'
+      }
+    }
+    suggestions[key] = { level, reason }
+  }
+  return suggestions
+}
+
+const promptBumps = async (repo) => {
+  if (!process.stdin.isTTY) {
+    die('interactive bump needs a terminal; pass explicit <pkg>=<patch|minor|major|x.y.z> instead')
+  }
+  const suggestions = suggestedBumps(repo)
+  const versions = versionsOf(repo)
+  const levels = {}
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
+  try {
+    console.log(
+      'Suggestions: fix = patch, feat = minor, breaking change = major, other changes = patch.',
+    )
+    for (const key of PUBLISH_ORDER) {
+      let { level, reason } = suggestions[key]
+      const pins = expected(repo, versions)[key] ?? []
+      const pj = pkgJson(repo, key)
+      const changedPins = pins.filter(([section, dep, value]) => pj[section]?.[dep] !== value)
+      if (changedPins.length) {
+        if (level === 'none') level = 'patch'
+        reason += `; updated pins: ${changedPins.map(([, dep]) => dep).join(', ')}`
+      }
+      const current = versions[key]
+      const target = level === 'none' ? current : bumped(current, level)
+      console.log(`\n${PACKAGES[key].name}: ${current} -> ${target} (${level}; ${reason})`)
+      while (true) {
+        const answer = (
+          await rl.question(`Bump [${level}] (Enter to accept, patch/minor/major/x.y.z/none): `)
+        ).trim()
+        const choice = answer || level
+        if (choice !== 'none' && !/^(?:patch|minor|major|\d+\.\d+\.\d+)$/.test(choice)) {
+          console.error('Choose patch, minor, major, x.y.z or none.')
+          continue
+        }
+        if (choice !== 'none') {
+          const next = bumped(current, choice)
+          if (cmpSemver(next, current) <= 0) {
+            console.error(`Choose a version newer than ${current}, or none to skip.`)
+            continue
+          }
+          levels[key] = choice
+          versions[key] = next
+        }
+        break
+      }
+    }
+    const items = Object.entries(levels).map(([key, level]) => `${key}=${level}`)
+    if (!items.length) {
+      console.log('No bumps selected; nothing changed.')
+      return []
+    }
+    console.log('\nSelected versions:')
+    for (const key of Object.keys(levels)) console.log(`  ${PACKAGES[key].name}: ${versions[key]}`)
+    const answer = await rl.question('Apply these bumps and update dependency pins? [y/N] ')
+    if (answer.trim().toLowerCase() !== 'y') {
+      console.log('Aborted; nothing changed.')
+      return []
+    }
+    return items
+  } finally {
+    rl.close()
+  }
+}
+
+// With no arguments, `release:bump` suggests versions from commits on origin/develop
+// since each package's release baseline, then prompts for overrides and confirmation.
+// Explicit pkg=level arguments retain the non-interactive workflow. Both modes update
+// cross-package pins and the addon guide header, then check consistency without committing.
+const cmdBump = async (repo, items) => {
   if (git(repo, 'branch', '--show-current') === 'develop') {
     die(
       'bump changes files: run it on a release branch, not develop (git switch -c chore/release-packages-<date>, or a worktree)',
     )
+  }
+  if (!items.length) {
+    items = await promptBumps(repo)
+    if (!items.length) return
   }
   const levels = {}
   for (const item of items) {
@@ -511,7 +633,8 @@ const cmdBump = (repo, items) => {
   process.exitCode = problems.length ? 1 : 0
 }
 
-// ----------------------------------------------------------------------------- build / publish
+// `release:build` requires installed root dependencies and runs `yarn build:addon`, which
+// builds shared, addon, and addon-dev. A failed build stops the release before publishing.
 const cmdBuild = (repo) => {
   if (!existsSync(path.join(repo, 'node_modules'))) {
     die(`no node_modules in ${repo}: run yarn install --frozen-lockfile there`)
@@ -520,6 +643,11 @@ const cmdBuild = (repo) => {
   if (r.status !== 0) die('yarn build:addon failed: nothing was published')
 }
 
+// `release:publish` requires a clean checkout at exactly origin/develop and consistent
+// package pins unless --force is supplied. It publishes only requested packages (or all
+// packages) whose origin/develop version is newer than npm's, in dependency order, after
+// one build and a confirmation unless --yes is used. --dry-run forwards npm's dry-run
+// option; --otp forwards a one-time password to each npm publish.
 const cmdPublish = async (repo, { packages, dryRun, yes, otp, force }) => {
   git(repo, 'fetch', '-q', 'origin')
   const problems = []
@@ -587,7 +715,9 @@ const USAGE = `usage: yarn release:<command> [options]
 
   status                        local origin/develop version vs npm, per package
   changes [--json]              what merged since each package's last release, and the signals for the bump
-  bump <pkg>=<level> ...        set versions and pins (patch|minor|major|x.y.z), on a release branch
+  bump                          suggest bumps from commits; override each suggestion, then confirm
+  bump <pkg>=<level> ...        set explicit versions and pins without prompts (patch|minor|major|x.y.z)
+                                both modes require a branch other than develop
   check                         versions and pins consistent?
   build                         yarn build:addon
   publish [pkg ...]             build, then npm publish what npm does not have yet (pkg: ${Object.keys(
@@ -632,8 +762,7 @@ switch (cmd) {
     cmdChanges(opts.repo, opts.json)
     break
   case 'bump':
-    if (!opts.positional.length) die('bump needs at least one <pkg>=<level>')
-    cmdBump(opts.repo, opts.positional)
+    await cmdBump(opts.repo, opts.positional)
     break
   case 'check':
     cmdCheck(opts.repo)
