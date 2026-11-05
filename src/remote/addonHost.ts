@@ -7,6 +7,7 @@ import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
+import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
@@ -45,6 +46,7 @@ export const provideAddonHost = () =>
     openViewer: (target) => {
       store.dispatch(openViewer(target))
     },
+    useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,

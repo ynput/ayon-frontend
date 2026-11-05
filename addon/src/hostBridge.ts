@@ -10,6 +10,7 @@ import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
+import type { HostOpenContextMenu } from './useContextMenu'
 
 export type { AddonUser }
 
@@ -56,6 +57,8 @@ export interface HostImplementation {
   openDetails?: (entities: readonly EntityLinkRef[]) => boolean
   /** closes that panel (`closeDetails`) */
   closeDetails?: () => void
+  /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
+  useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
 }
 
