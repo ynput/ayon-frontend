@@ -55,13 +55,14 @@ export type SlotMenuItems = Record<MenuItemPosition, SlotMenuItem[]>
  * For a slot of menu items (with the `MenuItemMeta` fields and a `run` piece): returns a function
  * that builds the entries when a menu opens, for the context it opens with. It starts loading their
  * code, and a broken item is a toast, never a broken menu. `top` goes first in the menu, `bottom`
- * after its own items and above the destructive ones.
+ * after its own items and above the destructive ones. `applies` leaves out the contributions that
+ * don't apply to this context, for a slot whose description lets a contribution narrow its scope.
  */
 export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
   const { contributions } = useContributions(slot)
   return useCallback(
-    (context: SlotMap[S]['context']): SlotMenuItems => {
-      const items = contributions as unknown as (AnyContribution & {
+    (context: SlotMap[S]['context'], applies?: (item: Contribution<S>) => boolean): SlotMenuItems => {
+      const items = (applies ? contributions.filter(applies) : contributions) as unknown as (AnyContribution & {
         label: string
         icon: string
         position?: MenuItemPosition
