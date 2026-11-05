@@ -1872,6 +1872,7 @@ const TD = ({
             !isGroup &&
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
+          'group-header': isGroup,
           'multiple-selected': isMultipleSelected,
         },
         className,

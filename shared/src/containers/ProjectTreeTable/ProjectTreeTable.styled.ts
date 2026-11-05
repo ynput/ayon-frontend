@@ -285,8 +285,10 @@ export const TD = styled.td<TableCellProps>`
     }
   }
 
-  /* Lighter background for expandable rows */
-  &.expandable {
+  /* rows that group others are a step off the rows: hierarchy parents, products with versions and group-by
+     headers alike */
+  &.expandable,
+  &.group-header {
     background-color: var(--color-table-row-high);
   }
 
