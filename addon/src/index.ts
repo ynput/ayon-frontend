@@ -52,6 +52,10 @@ export type {
   TableShortcutPieces,
   AppServiceContext,
   AppServiceMeta,
+  UserDetailsContext,
+  UserDetailsMenuItemMeta,
+  UserDetailsSectionMeta,
+  UserSelection,
 } from './slots'
 export type {
   Access,
@@ -70,7 +74,9 @@ export type {
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  UserRef,
   UserScope,
+  UsersScope,
   ViewsScope,
 } from './scopes'
 export type {

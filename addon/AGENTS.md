@@ -183,6 +183,10 @@ The same thing has the same name and type in every slot that has it:
   one type), `entityMenuItem`, `table.shortcut` (the project tables' rows; empty in the panels'
   tables) and `slicer.menuItem` (hierarchy rows; empty for other slice types). A table cell is one
   entity: `tableColumn` has `entity`.
+- **`users`** (`UserRef[]`: `name`, `fullName?`, `email?`, `active` and the flags of
+  `user` without `isDeveloper`), in slots about other users: `userDetails.section` and
+  `userDetails.menuItem` (the users selected in Settings → Users). Not the signed-in user: that is
+  `user`.
 
 ## Slots
 
@@ -471,6 +475,49 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 | `cells` (required) | `{ rowId: string; columnId: string; }[]` | project tables: the selected cells, by row (entity) and column id; empty elsewhere |
 
 Pieces: `run` (optional), `dialog` (optional).
+
+### `userDetails.section`: `userDetailsSection`
+
+A section in the user details panel (Settings → Users), below AYON's own forms, for the selected users. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's Save button doesn't see it. Loads: first shown.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's sections |
+| `title` (required) | `string` | the section's title, above its content |
+| `order` | `number \| undefined` | order among addon sections, lowest first |
+| `selection` | `UserSelection \| undefined` | `single`: only when one user is selected; `multi` (default): for one or more |
+| `serviceUsers` | `boolean \| undefined` | also shown for service users, whose panel has no forms; `false` by default |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'userDetails.section'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `readOnly` (required) | `boolean` | the signed-in user can't change these users (a manager and an admin among them): show, don't edit |
+| `users` (required) | `UserRef[]` | the users the slot is about, e.g. the ones selected in Settings → Users |
+
+Pieces: `component`.
+
+### `userDetails.menuItem`: `userDetailsMenuItem`
+
+An item in the user details panel's "more" menu (Settings → Users), for the selected users. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
+
+| Description field | Type | |
+|---|---|---|
+| `selection` | `UserSelection \| undefined` | `single`: only when one user is selected; `multi` (default): for one or more |
+| `id` (required) | `string` | unique among the addon's items of the slot |
+| `label` (required) | `string` | the menu entry |
+| `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'userDetails.menuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `readOnly` (required) | `boolean` | the signed-in user can't change these users (a manager and an admin among them): show, don't edit |
+| `users` (required) | `UserRef[]` | the users the slot is about, e.g. the ones selected in Settings → Users |
+
+Pieces: `run`.
 
 ### `app.service`: `appService`
 

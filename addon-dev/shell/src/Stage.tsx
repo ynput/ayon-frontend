@@ -4,8 +4,8 @@
 // list, the table around the columns). Pages render alone, without AYON's page tabs.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Button } from '@ynput/ayon-react-components'
-import { ContributionView, runContribution, useContributions } from '@ynput/ayon-addon'
+import { Button, Dropdown } from '@ynput/ayon-react-components'
+import { ContributionView, runContribution, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
   Contribution,
@@ -13,7 +13,11 @@ import type {
   TableShortcutContext,
 } from '@ynput/ayon-addon'
 import { getHost, getRegistry } from '@ynput/ayon-addon/host'
-import { useGetProjectQuery, useGetUsersAssigneeQuery } from '@ynput/ayon-frontend-shared/api'
+import {
+  useGetProjectQuery,
+  useGetUsersAssigneeQuery,
+  useGetUsersQuery,
+} from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
   useScopedDetailsPanel,
@@ -30,10 +34,14 @@ import {
   SlicerHost,
   useAddonCustomizeSections,
   useAddonTableShortcuts,
+  useAddonUserMenuItems,
+  useUserDetailsSlotContext,
+  AddonUserDetailsSections,
   shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
+import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
 import { ButtonItem, ServiceNote } from './parts'
@@ -197,6 +205,62 @@ const ServiceStage = ({ contribution, selection }: StageProps) => {
   const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
   useReport(contribution, context, true)
   return <ServiceNote />
+}
+
+// userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
+// Settings → Users (it lives in the ayon-frontend app). The target user is picked here, apart from
+// the signed-in one: with an API key that is a service user, which most sections don't show for.
+const UserDetailsStage = ({ contribution }: StageProps) => {
+  const signedIn = useUser()
+  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
+  const [picked, setPicked] = useState<string>()
+  // the signed-in user unless it is a service user, else the first active user
+  const fallback = useMemo(
+    () =>
+      (users as UserDetailsSource[]).find((u) => u.name === signedIn?.name && !u.isService) ??
+      (users as UserDetailsSource[]).find((u) => !u.isService && u.active !== false),
+    [users, signedIn?.name],
+  )
+  const target = (users as UserDetailsSource[]).find((u) => u.name === picked) ?? fallback
+  const selected = useMemo(() => (target ? [target] : []), [target])
+  const context = useUserDetailsSlotContext(selected, false)
+  const isMenuItem = contribution.slot === 'userDetails.menuItem'
+  useReport(contribution, context, !!target, isMenuItem)
+  const { topItems, items } = useAddonUserMenuItems(context)
+  if (isLoading) return <Hint>Loading users…</Hint>
+  if (!target) return <Hint>No users to show.</Hint>
+  return (
+    <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
+      <div
+        style={{ width: 'min(420px, 100%)', display: 'flex', flexDirection: 'column', gap: 4 }}
+        data-shell-surface="user-details"
+      >
+        <div className="ayon-shell-bar">
+          <Dropdown
+            value={[target.name]}
+            options={(users as UserDetailsSource[]).map((u) => ({
+              value: u.name,
+              label: u.isService ? `${u.name} (service)` : u.attrib?.fullName || u.name,
+            }))}
+            search
+            onChange={(names) => setPicked(names[0])}
+            style={{ minWidth: 200 }}
+          />
+          <span className="spacer" />
+          {[...topItems, ...items].map((item) => (
+            <Button
+              key={item.id}
+              icon={item.icon as never}
+              label={item.label as string}
+              variant="text"
+              onClick={() => (item.onClick as () => void)?.()}
+            />
+          ))}
+        </div>
+        <AddonUserDetailsSections context={context} />
+      </div>
+    </div>
+  )
 }
 
 // header.item: left after the dashboard button, right before chat and inbox
@@ -528,6 +592,9 @@ export const Stage = ({
         return <TableStage {...props} />
       case 'app.service':
         return <ServiceStage {...props} />
+      case 'userDetails.section':
+      case 'userDetails.menuItem':
+        return <UserDetailsStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }

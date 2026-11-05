@@ -10,6 +10,7 @@ import type {
   ProjectScope,
   SlicerScope,
   UserScope,
+  UsersScope,
   ViewsScope,
 } from './scopes'
 import { isReservedShortcut, parseShortcut } from './shortcuts'
@@ -166,6 +167,27 @@ export interface SlotMap {
     meta: TableShortcutMeta
     context: TableShortcutContext
     pieces: TableShortcutPieces
+  }
+  /**
+   * A section in the user details panel (Settings → Users), below AYON's own forms, for the
+   * selected users. The section shows from the description, titled like AYON's; `component`
+   * loads when it is first shown. Saving is the section's own: AYON's Save button doesn't see it.
+   */
+  'userDetails.section': {
+    version: 1
+    meta: UserDetailsSectionMeta
+    context: UserDetailsContext
+    pieces: { component: Loader<ComponentType<SlotProps<'userDetails.section'>>> }
+  }
+  /**
+   * An item in the user details panel's "more" menu (Settings → Users), for the selected users.
+   * It shows from the description; `run` loads when the menu opens and is called on click.
+   */
+  'userDetails.menuItem': {
+    version: 1
+    meta: UserDetailsMenuItemMeta
+    context: UserDetailsContext
+    pieces: { run: Loader<RunPiece<'userDetails.menuItem'>> }
   }
   /**
    * Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to
@@ -560,6 +582,38 @@ export interface ProjectTableToolbarItemContext extends ProjectNameScope, Button
   list?: { id: string; label: string; entityType: string }
 }
 
+/** Which selections a user details contribution shows for. */
+export type UserSelection = 'single' | 'multi'
+
+/** Description of a `userDetails.section` contribution. */
+export interface UserDetailsSectionMeta {
+  /** unique among the addon's sections */
+  id: string
+  /** the section's title, above its content */
+  title: string
+  /** order among addon sections, lowest first */
+  order?: number
+  /** `single`: only when one user is selected; `multi` (default): for one or more */
+  selection?: UserSelection
+  /** also shown for service users, whose panel has no forms; `false` by default */
+  serviceUsers?: boolean
+}
+
+/** Description of a `userDetails.menuItem` contribution. */
+export interface UserDetailsMenuItemMeta extends MenuItemMeta {
+  /** `single`: only when one user is selected; `multi` (default): for one or more */
+  selection?: UserSelection
+}
+
+/** Context of a user details section or menu item. */
+export interface UserDetailsContext extends UsersScope {
+  /**
+   * the signed-in user can't change these users (a manager and an admin among them): show,
+   * don't edit
+   */
+  readOnly: boolean
+}
+
 /** Description of an `app.service` contribution. */
 export interface AppServiceMeta {
   /** unique among the addon's services */
@@ -628,6 +682,7 @@ export interface SlotDefinition {
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
 const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
 const menuItemFields = { position: /^(top|bottom)$/ }
+const selectionField = /^(single|multi)$/
 
 // header and toolbar items: exactly one action (a `component` may be a popover's button), and an
 // icon unless the addon draws the item
@@ -731,6 +786,22 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkShortcut,
   },
   'app.service': { version: 1, required: [], pieces: ['component'] },
+  'userDetails.section': {
+    version: 1,
+    required: ['title'],
+    pieces: ['component'],
+    optional: { selection: selectionField },
+    check: (item) =>
+      item.serviceUsers !== undefined && typeof item.serviceUsers !== 'boolean'
+        ? 'serviceUsers must be true or false'
+        : undefined,
+  },
+  'userDetails.menuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: { ...menuItemFields, selection: selectionField },
+  },
 }
 
 export const isKnownSlot = (slot: unknown): slot is SlotName =>
