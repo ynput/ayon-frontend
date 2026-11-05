@@ -36,7 +36,8 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   `ProjectList`), `MoreMenu` (below). Data comes from `@ynput/ayon-frontend-shared/api`
   (AYON's api and cache): components use its hooks, `run` and `menu` pieces
   `dispatch(api.endpoints.x.initiate(args))` with `dispatch` from this package (AYON's store).
-  They open another AYON page with `navigate(to)` from this package.
+  Menu items (their context has no `navigate`, unlike buttons) open another AYON page with
+  `navigate(to)` from this package; it is the same as a button's `context.navigate`.
 - URL query params: `useQueryParam` / `useQueryParams` and the params (`StringParam`,
   `withDefault`, ...) from this package. They read the `QueryParamProvider` AYON renders around
   every slot: no provider or router adapter in the addon. A change replaces only that param in the
