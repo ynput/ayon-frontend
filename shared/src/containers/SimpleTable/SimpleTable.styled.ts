@@ -61,7 +61,8 @@ export const TableContainer = styled.div`
 
 export const Cell = styled.div`
   width: 100%;
-  min-height: 32px;
+  /* a row of the shared size, less the row's 1px padding */
+  min-height: calc(var(--size-row) - 2px);
   user-select: none;
   padding: 0px 4px;
 

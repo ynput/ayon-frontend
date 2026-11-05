@@ -489,7 +489,7 @@ export const TableHeader = styled.thead`
   display: grid !important;
   position: sticky;
   top: 0;
-  min-height: 34px;
+  min-height: var(--size-header);
   z-index: 10;
   background-color: var(--color-table-header);
 

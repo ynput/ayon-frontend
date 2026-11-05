@@ -77,6 +77,11 @@ strong {
   // text on a badge filled with --color-hl-production, -staging or -developer
   --color-on-hl: light-dark(white, black);
 
+  // shared sizes, so lines line up across panels: headers (tables, kanban columns, list groups) and the rows of
+  // fixed-height lists such as the slicer. Table rows follow the user's row height instead
+  --size-header: 34px;
+  --size-row: 34px;
+
   // table colors
   --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
   --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
