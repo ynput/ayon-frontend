@@ -20,6 +20,7 @@ export const DropdownBadge = styled.span`
 
   &.production {
     background-color: var(--color-hl-production);
+    color: var(--color-on-hl-production);
   }
 
   &.project {

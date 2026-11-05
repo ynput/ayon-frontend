@@ -9,14 +9,14 @@ export const Container = styled.div`
 `
 
 export const ButtonColors = css`
-  background-color: var(--md-sys-color-primary);
+  background-color: var(--md-sys-color-primary-fixed);
 
   &:hover {
-    background-color: var(--md-sys-color-primary-hover, var(--md-sys-color-primary));
+    background-color: var(--md-sys-color-primary-fixed-hover);
   }
   &,
   .icon {
-    color: var(--md-sys-color-on-primary);
+    color: var(--md-sys-color-on-primary-fixed);
   }
 `
 

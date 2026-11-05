@@ -61,10 +61,11 @@ strong {
   --color-hl-developer-surface-hover: hsl(272, 30%, 75%);
   --color-hl-dev: light-dark(#7b3fc4, hsl(272 100% 78%));
 
-  // production colors
-  --color-hl-production: var(--md-sys-color-tertiary);
-  --color-hl-production-hover: var(--md-sys-color-tertiary-hover);
-  --color-hl-production-active: var(--md-sys-color-tertiary-active);
+  // production colors: the brand mint on both themes, with dark text on it
+  --color-hl-production: var(--md-sys-color-tertiary-fixed);
+  --color-hl-production-hover: var(--md-sys-color-tertiary-fixed-hover);
+  --color-hl-production-active: var(--md-sys-color-tertiary-fixed-active);
+  --color-on-hl-production: var(--md-sys-color-on-tertiary-fixed);
 
   // staging colors
   --color-hl-staging-container: light-dark(hsl(21, 85%, 94%), hsl(21deg 83.13% 20.94%));

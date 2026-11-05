@@ -62,7 +62,10 @@ export const BundleBadges = ({
     prodBadge = (
       <DropdownBadge
         className={clsx('badge', { disabled: previous === 'production' })}
-        style={{ backgroundColor: 'var(--color-hl-production)' }}
+        style={{
+          backgroundColor: 'var(--color-hl-production)',
+          color: 'var(--color-on-hl-production)',
+        }}
       >
         {startContent}
         Production
