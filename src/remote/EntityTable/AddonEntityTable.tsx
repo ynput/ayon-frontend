@@ -17,10 +17,15 @@ import type {
   ContextMenuItemConstructors,
 } from '@shared/containers/ProjectTreeTable'
 import { SlicerProvider } from '@shared/containers/Slicer'
-import { ViewsProvider, type UpdateViewSettingsFn, type ViewSettings } from '@shared/containers/Views'
+import {
+  ViewsProvider,
+  type UpdateViewSettingsFn,
+  type ViewSettings,
+} from '@shared/containers/Views'
 import {
   ProjectContextProvider,
   ProjectFoldersContextProvider,
+  TableExportContext,
   useOptionalProjectContext,
   useOptionalProjectFoldersContext,
 } from '@shared/context'
@@ -35,7 +40,13 @@ const noViewUpdate: UpdateViewSettingsFn = async () => {}
 
 // The project's data the Overview stack reads: the page's when it is this project's, else its own
 // (a studio page, a dialog for another project).
-const ProjectProviders = ({ projectName, children }: { projectName: string; children: ReactNode }) => {
+const ProjectProviders = ({
+  projectName,
+  children,
+}: {
+  projectName: string
+  children: ReactNode
+}) => {
   const project = useOptionalProjectContext()
   const folders = useOptionalProjectFoldersContext()
   const data = useOptionalProjectDataContext()
@@ -70,7 +81,10 @@ const useReadOnlyMenu = (projectName: string): ContextMenuItemConstructors => {
 // A single group (e.g. a clicked chart point) opens expanded, once
 const ExpandOnlyGroup = () => {
   const { tableData, expanded, updateExpanded } = useProjectTableContext()
-  const groups = tableData.filter((row) => row.group && row.group.value !== UNGROUPED_VALUE)
+  // Ungrouped is always listed: it counts only when it has rows
+  const groups = tableData.filter(
+    (row) => row.group && (row.group.value !== UNGROUPED_VALUE || !!row.subRows?.length),
+  )
   const onlyGroupId = groups.length === 1 ? groups[0].id : undefined
   const expandedGroupId = useRef<string>()
 
@@ -125,31 +139,34 @@ const OverviewEntityTable = ({
   const contextMenuItems = useReadOnlyMenu(projectName)
 
   return (
-    // the table's own row selection and slicer, apart from the page's
-    <DetailsPanelEntityProvider>
-      <ViewsProvider controlled={controlled}>
-        <SlicerProvider
-          page="entity-table"
-          projectName={projectName}
-          viewSettings={undefined}
-          isLoadingViews={false}
-          updateViewSettings={noViewUpdate}
-          rowSelection={NO_SLICE_SELECTION}
-          setRowSelection={noop}
-        >
-          <Styled.TableWrapper className={className}>
-            <ProjectOverviewDataProvider
-              readOnly
-              page="entity-table"
-              contextMenuItems={contextMenuItems}
-            >
-              <ProjectOverviewTable excludedColumns={excludedColumns} />
-              <ExpandOnlyGroup />
-            </ProjectOverviewDataProvider>
-          </Styled.TableWrapper>
-        </SlicerProvider>
-      </ViewsProvider>
-    </DetailsPanelEntityProvider>
+    // the table's own row selection, slicer and export (the CSV of the selected cells), apart from
+    // the page's
+    <TableExportContext.Provider value={null}>
+      <DetailsPanelEntityProvider>
+        <ViewsProvider controlled={controlled}>
+          <SlicerProvider
+            page="entity-table"
+            projectName={projectName}
+            viewSettings={undefined}
+            isLoadingViews={false}
+            updateViewSettings={noViewUpdate}
+            rowSelection={NO_SLICE_SELECTION}
+            setRowSelection={noop}
+          >
+            <Styled.TableWrapper className={className}>
+              <ProjectOverviewDataProvider
+                readOnly
+                page="entity-table"
+                contextMenuItems={contextMenuItems}
+              >
+                <ProjectOverviewTable excludedColumns={excludedColumns} />
+                <ExpandOnlyGroup />
+              </ProjectOverviewDataProvider>
+            </Styled.TableWrapper>
+          </SlicerProvider>
+        </ViewsProvider>
+      </DetailsPanelEntityProvider>
+    </TableExportContext.Provider>
   )
 }
 

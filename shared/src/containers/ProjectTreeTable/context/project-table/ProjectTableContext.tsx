@@ -19,7 +19,7 @@
  * The context also provides utility functions for entity relationships, expansion state
  * management, filtering,  and folder inheritance operations.
  */
-import { ReactNode, useCallback, useMemo } from 'react'
+import { ReactNode, useCallback, useId, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../../hooks/useBuildProjectDataTable'
@@ -82,6 +82,7 @@ export interface ProjectTableContextType {
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
   isRowReadOnly: (rowId: string) => boolean // TableRow.readOnly or the table's readOnly: no cell of the row can be edited
   readOnly?: boolean // the whole table: nothing can be edited
+  tableId: string // marks the table's container, so its key handlers skip other tables' keys
   loadingLinksEntityIds?: Set<string>
 
   // grouping
@@ -410,6 +411,8 @@ export const ProjectTableProvider = ({
     walk(tableData)
     return ids
   }, [tableData])
+  const tableId = useId()
+
   const isRowReadOnly = useCallback(
     (rowId: string) => !!readOnly || readOnlyRowIds.has(rowId),
     [readOnly, readOnlyRowIds],
@@ -524,6 +527,7 @@ export const ProjectTableProvider = ({
         getEntityById,
         isRowReadOnly,
         readOnly,
+        tableId,
         // folder relationships
         getInheritedDependents,
         findInheritedValueFromAncestors,

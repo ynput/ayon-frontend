@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
+import { TABLE_ID_ATTR } from './utils/tableOwnership'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -301,6 +302,7 @@ export const ProjectTreeTable = ({
     overrideGroupBy,
     loadingLinksEntityIds,
     queryFilters,
+    tableId,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
@@ -844,6 +846,7 @@ export const ProjectTreeTable = ({
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
+          {...{ [TABLE_ID_ATTR]: tableId }}
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
@@ -1968,9 +1971,7 @@ const TD = ({
 
         // check if this is a restricted entity - prevent editing
         const isRestricted =
-          isGroup ||
-          isEntityRestricted(cell.row.original.primary.entityType) ||
-          rowReadOnly
+          isGroup || isEntityRestricted(cell.row.original.primary.entityType) || rowReadOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {
