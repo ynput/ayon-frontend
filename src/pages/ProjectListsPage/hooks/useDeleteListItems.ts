@@ -3,7 +3,7 @@ import { useUpdateEntityListItemsMutation } from '@shared/api'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { UseHistoryReturn } from '@shared/containers/ProjectTreeTable/hooks/useHistory'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import { confirmDelete, getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { confirmDelete, getPlatformShortcutKey, getRequestErrorString, KeyMode } from '@shared/util'
 import { ConfirmDialogReturn } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import type { ListItemsDataContextValue } from '../context/list-items-data'
@@ -24,9 +24,6 @@ type RestoreListItem = DeleteListItem & { position?: number }
 const uniqueListItems = (items: DeleteListItem[]): DeleteListItem[] => [
   ...new Map(items.map((item) => [item.id, item])).values(),
 ]
-
-const getErrorMessage = (error: any): string =>
-  error?.data?.detail ?? error?.message ?? String(error)
 
 type OnDeleteListItems = (items: DeleteListItem[], history?: UseHistoryReturn) => Promise<void>
 type DeleteListItems = (
@@ -89,7 +86,7 @@ const useDeleteListItems = ({
         },
       }).unwrap()
     } catch (error: any) {
-      toast.error(`Error adding items to list: ${getErrorMessage(error)}`)
+      toast.error(`Error adding items to list: ${getRequestErrorString(error)}`)
       // remove from redo stack as well
       if (history) {
         history.removeHistoryEntries(1)
@@ -123,7 +120,7 @@ const useDeleteListItems = ({
       toast.success(`Deleted ${items.length} item${items.length > 1 ? 's' : ''} from list`)
     } catch (error: any) {
       // Handle the error (e.g., show a toast notification)
-      toast.error(`Error deleting list items: ${getErrorMessage(error)}`)
+      toast.error(`Error deleting list items: ${getRequestErrorString(error)}`)
     }
   }
 
