@@ -13,6 +13,8 @@ const SelectionHeaderCell = styled.div`
 
   .icon {
     color: var(--md-sys-color-outline);
+    /* the header cell is 18px wide and clips anything larger */
+    font-size: 16px;
   }
 
   &:hover {
