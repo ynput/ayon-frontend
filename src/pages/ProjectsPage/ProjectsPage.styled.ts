@@ -6,6 +6,11 @@ export const PageContainer = styled.div`
   width: 100%;
   overflow: hidden;
   display: flex;
+
+  /* project names are what people scan the list for */
+  td[data-column-id='label'] .inner-td *:not(.icon) {
+    font-weight: 600;
+  }
 `
 export const Thumbnail = styled.img`
   width: 100%;

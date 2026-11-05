@@ -46,6 +46,24 @@ export const NavItem = styled.li`
         button {
             padding: 4px 16px;
             max-height: unset;
+            /* the active tab is the one in semibold */
+            font-weight: 500;
+        }
+
+        /* each name keeps the width of its semibold form, so the tabs don't move when the active one changes */
+        .tab-name {
+            display: inline-flex;
+            flex-direction: column;
+
+            &::after {
+                content: attr(data-name);
+                font-weight: 600;
+                height: 0;
+                overflow: hidden;
+                visibility: hidden;
+                user-select: none;
+                pointer-events: none;
+            }
         }
 
         /* the active tab is underlined in the accent colour, on the navbar's line */
@@ -53,6 +71,8 @@ export const NavItem = styled.li`
             box-shadow: inset 0 -2px 0 0 var(--md-sys-color-primary);
 
             button {
+                font-weight: 600;
+
                 &:hover {
                     background-color: unset;
                 }

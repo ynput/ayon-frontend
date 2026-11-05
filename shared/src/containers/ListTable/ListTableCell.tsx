@@ -182,6 +182,7 @@ export const RowCells = <TData extends RowData>({
           <Styled.TD
             key={cell.id}
             id={cellId}
+            data-column-id={cell.column.id}
             style={{
               width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
               paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,

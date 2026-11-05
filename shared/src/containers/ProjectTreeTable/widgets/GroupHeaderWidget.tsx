@@ -68,6 +68,11 @@ const StyledTextContent = styled.div`
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+
+  /* group names read like the names in the rows */
+  .label {
+    font-weight: 600;
+  }
 `
 
 // the group value, a pill when it has a colour
