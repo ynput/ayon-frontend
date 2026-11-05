@@ -11,35 +11,38 @@ export type ManifestRemote = {
 // Addons that list a `manifest` module declare their contributions and slots in it
 // (@ynput/ayon-addon). It holds descriptions only, so every manifest loads at startup; the
 // contributions' code loads when their slot needs it.
-// An addon can contribute to a slot another addon declares, so nothing is registered until every
-// manifest has loaded, and then in the order of `remotes`: whichever resolves first doesn't matter.
+// Each manifest registers as it arrives, so a slow one only delays its own addon. The registry gets
+// everything loaded so far in the order of `remotes`, so the order of contributions doesn't depend
+// on which manifest resolved first.
 // Returns the addons whose manifest failed.
 export const loadManifests = async (
   remotes: ManifestRemote[],
   load: (id: string) => Promise<{ default: unknown } | null | undefined>,
 ) => {
   const failed: Record<string, string> = {}
-  const entries = await Promise.all(
+  const loaded: ManifestEntry[] = []
+  await Promise.all(
     remotes
       .filter((r) => r.modules.includes(MANIFEST_MODULE))
-      .map(async (r): Promise<ManifestEntry | undefined> => {
+      .map(async (r, index) => {
         try {
           const manifest = await load(`${r.remote}/${MANIFEST_MODULE}`)
           const definition = manifest?.default as { contributes?: unknown } | undefined
           if (!Array.isArray(definition?.contributes)) {
             throw new Error('the manifest has no "contributes" list: export default defineAddon({ contributes })')
           }
-          return {
+          loaded[index] = {
             addon: { name: r.addon, version: r.version, remote: r.remote },
             manifest: manifest?.default,
           }
+          // filter: the slots of manifests still on their way are holes
+          registerManifests(loaded.filter(Boolean))
         } catch (error) {
           console.error(`[addon ${r.addon}] its manifest failed to load`, error)
           failed[r.addon] = String(error)
         }
       }),
   )
-  registerManifests(entries.filter((entry): entry is ManifestEntry => !!entry))
   setManifestsLoading(false)
   return failed
 }

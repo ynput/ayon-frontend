@@ -9,6 +9,7 @@ import {
   getRegistry,
   registerManifest,
   registerManifests,
+  setManifestsLoading,
   unregisterAddon,
 } from '../../addon/src/registry'
 import { provideHost } from '../../addon/src/hostBridge'
@@ -45,6 +46,8 @@ const warnings = async (fn: () => unknown) => {
   }
   return lines
 }
+
+test.beforeEach(() => setManifestsLoading(false))
 
 test.afterEach(() => {
   unregisterAddon(planner.name)
@@ -118,6 +121,7 @@ test('the result does not depend on the order the manifests resolve in', async (
     resolved.length = 0
     unregisterAddon(planner.name)
     unregisterAddon(tracker.name)
+    setManifestsLoading(true)
     const lines = await warnings(() => loadManifests(remotes, load(delays)))
     expect(lines).toEqual([])
     expect(getContributions(SLOT as never).contributions.map((c: { key: string }) => c.key)).toEqual([
@@ -127,6 +131,56 @@ test('the result does not depend on the order the manifests resolve in', async (
   }
   // the last round did resolve the declaring addon first, the one before the contributor first
   expect(resolved[0]).toBe('planner/manifest')
+})
+
+test('a slow manifest only delays its own addon', async () => {
+  const remotes = [planner, tracker].map((a) => ({
+    remote: a.remote,
+    addon: a.name,
+    version: a.version,
+    modules: ['manifest'],
+  }))
+  const menuItem = { slot: 'detailsPanel.menuItem', id: 'other', label: 'Other', icon: 'x', run }
+  let finishPlanner = (_: { default: unknown }) => {}
+  const load = (id: string): Promise<{ default: unknown }> =>
+    id === 'planner/manifest'
+      ? new Promise((resolve) => (finishPlanner = resolve))
+      : Promise.resolve({ default: trackerManifest(item(), menuItem) })
+
+  setManifestsLoading(true)
+  const lines = await warnings(async () => {
+    const done = loadManifests(remotes, load)
+    await new Promise((resolve) => setTimeout(resolve))
+    // the time tracker is in, its item for the planner's slot waits for the planner
+    expect(getRegistry().contributions.map((c) => c.key)).toEqual(['timetracker.other'])
+    expect(getRegistry().isLoading).toBe(true)
+
+    finishPlanner({ default: plannerManifest })
+    await done
+  })
+  expect(lines).toEqual([])
+  expect(getRegistry().isLoading).toBe(false)
+  expect(getRegistry().contributions.map((c) => c.key).sort()).toEqual([
+    'timetracker.other',
+    'timetracker.start_timer',
+  ])
+  // the order of the bundle, though the time tracker arrived first
+  expect(getRegistry().addons.map((a) => a.name)).toEqual(['planner', 'timetracker'])
+})
+
+test('a slot nobody declares warns once, when every manifest is in', async () => {
+  setManifestsLoading(true)
+  const whileLoading = await warnings(() =>
+    registerManifests([{ addon: tracker, manifest: trackerManifest(item(), { slot: 'nope', id: 'a' }) }]),
+  )
+  // an unknown slot of AYON's own can't be declared later: that one doesn't wait
+  expect(whileLoading).toEqual([
+    '[addon timetracker] skipped contribution "a" for slot "nope": this AYON version has no such slot',
+  ])
+  const atTheEnd = await warnings(() => setManifestsLoading(false))
+  expect(atTheEnd).toEqual([
+    '[addon timetracker] skipped contribution "start_timer" for slot "planner.eventMenuItem": this AYON version has no such slot, and no addon in the bundle declares it (it would be addon "planner")',
+  ])
 })
 
 test('a contribution to an undeclared slot is skipped, naming it; the others register', async () => {
