@@ -52,6 +52,7 @@ const warnings = async (fn: () => unknown) => {
 test.beforeEach(() => setManifestsLoading(false))
 
 test.afterEach(() => {
+  provideHost({ getUser: undefined })
   unregisterAddon(planner.name)
   unregisterAddon(tracker.name)
   unregisterAddon('other')
@@ -217,18 +218,81 @@ test('registering the declaring addon later brings in the contributions it was m
   expect(getRegistry().slots).toEqual([])
 })
 
-test('slotVersion: newer than the declared version is skipped, older and equal register', () => {
+test('slotVersion: only the declared version registers', () => {
   const available = { [SLOT]: { ...declaration, owner: planner } }
   const check = (slotVersion: unknown) =>
     checkManifest(tracker, trackerManifest(item({ slotVersion })), available)
-  expect(check(1).contributions).toHaveLength(1)
   expect(check(2).contributions).toHaveLength(1)
   expect(check(undefined).contributions).toHaveLength(1)
   expect(check(3).contributions).toEqual([])
   expect(check(3).skipped[0].reason).toBe(
     'it was built for version 3 of the slot, but addon "planner" has version 2: update addon "planner"',
   )
+  expect(check(1).contributions).toEqual([])
+  expect(check(1).skipped[0].reason).toBe(
+    'it was built for version 1 of the slot, but addon "planner" has version 2, which is not compatible: update addon "timetracker"',
+  )
   expect(check('2').skipped[0].reason).toBe('invalid slotVersion "2"')
+})
+
+test('a check that throws skips that contribution, and later manifests still register', async () => {
+  const strict = {
+    ...declaration,
+    check: ({ eventTypes }: { eventTypes: string[] }) => (eventTypes.length ? undefined : 'empty'),
+  }
+  const lines = await warnings(() =>
+    registerManifests([
+      { addon: planner, manifest: { slots: [strict], contributes: [] } },
+      { addon: tracker, manifest: trackerManifest(item(), item({ id: 'scoped', eventTypes: ['a'] })) },
+    ]),
+  )
+  expect(getContributions(SLOT as never).contributions.map((c) => (c as { id: string }).id)).toEqual(['scoped'])
+  expect(lines).toHaveLength(1)
+  expect(lines[0]).toContain('[addon timetracker] skipped contribution "start_timer"')
+  expect(lines[0]).toContain('the check of the slot failed (addon "planner")')
+
+  await warnings(() => registerManifest({ ...tracker, name: 'other' }, trackerManifest(item({ id: 'later', eventTypes: ['a'] }))))
+  expect(getContributions(SLOT as never).contributions.map((c) => (c as { id: string }).id)).toEqual(['scoped', 'later'])
+})
+
+test('a pattern that keeps state is refused, so registering twice gives the same result', () => {
+  for (const flags of ['g', 'y']) {
+    const { slots, skipped } = checkSlotDeclarations(planner, {
+      slots: [{ ...declaration, optional: { position: new RegExp('^bottom$', flags) } }],
+    })
+    expect(slots).toEqual([])
+    expect(skipped[0].reason).toBe('optional must map field names to patterns without the g or y flag')
+  }
+})
+
+test('a loader that throws or rejects does not stop the menu being built', async () => {
+  registerManifests([
+    { addon: planner, manifest: plannerManifest },
+    {
+      addon: tracker,
+      manifest: trackerManifest(
+        item({
+          id: 'throws',
+          label: 'Throws',
+          run: () => {
+            throw new Error('failed')
+          },
+        }),
+        item({ id: 'rejects', label: 'Rejects', run: () => Promise.reject(new Error('failed')) }),
+      ),
+    },
+  ])
+  let labels: string[] = []
+  const Menu = () => {
+    const build = useSlotMenuItems(SLOT as never) as unknown as (context: object) => {
+      bottom: { label: string }[]
+    }
+    labels = build({}).bottom.map((entry) => entry.label)
+    return null
+  }
+  renderToHtml(Menu)
+  expect(labels).toEqual(['Throws', 'Rejects'])
+  await new Promise((resolve) => setTimeout(resolve))
 })
 
 test('fields and pieces of a declared slot are checked like a built-in slot', () => {

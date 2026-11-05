@@ -47,9 +47,12 @@ const declarationProblem = (declaration: Record<string, unknown>) => {
     return 'optionalPieces must be a list of piece names'
   if (
     optional !== undefined &&
-    !Object.values((optional || {}) as object).every((pattern) => pattern instanceof RegExp)
+    !Object.values((optional || {}) as object).every(
+      // g and y make a pattern remember where it stopped, so the same value would pass only every other time
+      (pattern) => pattern instanceof RegExp && !pattern.global && !pattern.sticky,
+    )
   )
-    return 'optional must map field names to patterns'
+    return 'optional must map field names to patterns without the g or y flag'
   if (check !== undefined && typeof check !== 'function') return 'check must be a function'
 }
 
@@ -155,6 +158,7 @@ export const checkManifest = (
       continue
     }
     const definition = slots[slotName]
+    const owner = (definition as Partial<DeclaredSlot>).owner?.name
     const { slotVersion } = item as { slotVersion?: unknown }
     if (slotVersion !== undefined) {
       if (!Number.isInteger(slotVersion)) {
@@ -162,11 +166,19 @@ export const checkManifest = (
         continue
       }
       if ((slotVersion as number) > definition.version) {
-        const owner = (definition as Partial<DeclaredSlot>).owner?.name
         skip(
           `it was built for version ${slotVersion} of the slot, but ${
             owner ? `addon "${owner}"` : 'this AYON version'
           } has version ${definition.version}: update ${owner ? `addon "${owner}"` : 'AYON'}`,
+          slotName,
+          idName,
+        )
+        continue
+      }
+      // a new version of an addon's slot is a breaking change: code built for an older one can't run
+      if (owner && (slotVersion as number) < definition.version) {
+        skip(
+          `it was built for version ${slotVersion} of the slot, but addon "${owner}" has version ${definition.version}, which is not compatible: update addon "${addon.name}"`,
           slotName,
           idName,
         )
@@ -219,7 +231,13 @@ export const checkManifest = (
       )
       continue
     }
-    const problem = definition.check?.(item as Record<string, unknown>)
+    let problem: string | undefined
+    try {
+      problem = definition.check?.(item as Record<string, unknown>)
+    } catch (error) {
+      // the check belongs to the slot's addon: its bug skips this contribution, nothing else
+      problem = `the check of the slot failed${owner ? ` (addon "${owner}")` : ''}: ${String(error)}`
+    }
     if (problem) {
       skip(problem, slotName, idName)
       continue
