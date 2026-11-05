@@ -39,16 +39,21 @@ export const SimpleFormDialog = ({
 
   if (!isOpen) return null
 
+  // without a submit button there is nothing for Enter to confirm
+  const handleSubmit = submitLabel ? () => onSubmit(formData) : undefined
+
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
       <Spacer />
       {cancelLabel && <Button onClick={() => onClose()} label={cancelLabel} icon={cancelIcon} />}
       {submitLabel && (
+        // focused on open, so Enter confirms the dialog as the highlighted button suggests
         <Button
-          onClick={() => onSubmit(formData)}
+          onClick={handleSubmit}
           label={submitLabel}
           icon={submitIcon}
           variant="filled"
+          autoFocus
         />
       )}
     </div>
@@ -67,6 +72,7 @@ export const SimpleFormDialog = ({
         fields={fields}
         values={values}
         onChange={setFormData}
+        onSubmit={handleSubmit}
         style={{ width: '95%' }}
       />
     </Dialog>

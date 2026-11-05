@@ -14,8 +14,22 @@ export interface SimpleFormProps {
   /** Called with the full value dict whenever anything changes - a direct
    * edit, a rule forcing a value, or a stale select value getting cleared */
   onChange?: (values: SimpleFormValueDict) => void
+  /** Called on Enter in a single-line field (text or number), like submitting an HTML form */
+  onSubmit?: () => void
   className?: string
   style?: React.CSSProperties
+}
+
+// Input types where Enter submits a native HTML form
+const SUBMIT_INPUT_TYPES = ['text', 'number', 'search', 'email', 'password', 'url', 'tel']
+
+// Enter in a single-line field. Not in a textarea (new line), not on a switch or dropdown
+// (they handle Enter themselves and call preventDefault), not with a modifier.
+const isSubmitKey = (e: React.KeyboardEvent<HTMLElement>) => {
+  if (e.key !== 'Enter' || e.defaultPrevented || e.nativeEvent.isComposing) return false
+  if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return false
+  const target = e.target as HTMLElement
+  return target instanceof HTMLInputElement && SUBMIT_INPUT_TYPES.includes(target.type)
 }
 
 /**
@@ -27,7 +41,14 @@ export interface SimpleFormProps {
  * See useFormState for the rule/resolver "engine"; this component is just
  * the render loop over its output.
  */
-export const SimpleForm = ({ fields, values, onChange, className, style }: SimpleFormProps) => {
+export const SimpleForm = ({
+  fields,
+  values,
+  onChange,
+  onSubmit,
+  className,
+  style,
+}: SimpleFormProps) => {
   const { formData, patches, resolvedOptions, setFieldValue } = useFormState(fields, values)
 
   useEffect(() => {
@@ -43,6 +64,10 @@ export const SimpleForm = ({ fields, values, onChange, className, style }: Simpl
       style={style}
       onKeyDown={(e) => {
         e.stopPropagation()
+        if (onSubmit && isSubmitKey(e)) {
+          e.preventDefault()
+          onSubmit()
+        }
       }}
     >
       {fields.map((field: SimpleFormField) => {
