@@ -117,7 +117,7 @@ export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
 
 // globals: the same in every slot
-export { dispatch, useUser } from './globals'
+export { dispatch, navigate, useUser } from './globals'
 export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
