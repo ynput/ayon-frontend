@@ -42,6 +42,18 @@ const FooterCell = styled.td`
       inset -2px 0 0 0 var(--md-sys-color-surface-container);
   }
 
+  /* the main summary ("160 folders | 265 tasks | 1 selected") can be wider than the name
+     column: let it run over the next cells instead of cutting it off */
+  &.name {
+    > button {
+      flex-shrink: 0;
+      overflow: visible;
+      width: max-content;
+      min-width: 100%;
+      background-color: var(--md-sys-color-surface-container-lowest);
+    }
+  }
+
   /* match the special fixed widths used by header/body cells */
   &.__row_selection__ {
     width: 20px !important;
@@ -159,7 +171,12 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
             <FooterCell
               key={column.id}
               className={clsx(column.id, { 'last-pinned-left': isLastPinnedLeft })}
-              style={{ ...getCommonPinningStyles(column), width: getColumnWidth(column.id) }}
+              style={{
+                ...getCommonPinningStyles(column),
+                width: getColumnWidth(column.id),
+                // above the next cells, which the summary may run over
+                ...(column.id === 'name' && !column.getIsPinned() && { zIndex: 1 }),
+              }}
             >
               {isLoading ? (
                 <CellSkeleton

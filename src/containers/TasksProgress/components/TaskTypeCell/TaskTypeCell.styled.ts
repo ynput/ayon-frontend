@@ -29,5 +29,15 @@ export const Cell = styled.div`
     .no-image {
       top: 45%;
     }
+
+    /* a collapsed card is one row: the title (also in the cell tooltip) would sit on top of the
+       assignees, which shows when the task has no known status to cover it */
+    &.collapsed .row-top {
+      justify-content: flex-end;
+
+      .tag.title {
+        display: none;
+      }
+    }
   }
 `

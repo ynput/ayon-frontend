@@ -55,7 +55,11 @@ import {
   usePowerpack,
   setDetailsPanelTabForScope,
 } from '@shared/context'
-import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  DRAG_HANDLE_COLUMN_ID,
+  ADD_COLUMN_BUTTON_SPACE,
+} from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -862,7 +866,8 @@ export const ProjectTreeTable = ({
               borderCollapse: 'collapse',
               userSelect: 'none',
               ...columnSizeVars,
-              width: table.getTotalSize(),
+              width: table.getTotalSize() + ADD_COLUMN_BUTTON_SPACE,
+              paddingRight: ADD_COLUMN_BUTTON_SPACE,
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
               // stretch tbody to the container so the column dividers fill the empty
               // space below the rows; also pins the summary footer to the bottom

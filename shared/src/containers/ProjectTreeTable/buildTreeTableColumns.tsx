@@ -787,6 +787,8 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'status',
       accessorFn: (row) => getScopedValue(row, 'primary', 'status'),
+      // fits "Pending review" with its icon and chevron
+      size: 190,
       minSize: COLUMN_MIN_SIZE,
       header: getColumnLabel('status'),
       sortingFn: withLoadingStateSort(

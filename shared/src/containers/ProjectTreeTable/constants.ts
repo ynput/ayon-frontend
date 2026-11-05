@@ -3,6 +3,9 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export const LISTS_COLUMN_ID = 'lists'
 export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'
 
+// empty space after the last column, kept free for the floating add column button
+export const ADD_COLUMN_BUTTON_SPACE = 56
+
 // queried against the cell container's content box, not the row height
 export const WRAP_MIN_CELL_HEIGHT = 50
 export const CELL_PADDING_Y = 4

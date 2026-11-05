@@ -11,11 +11,19 @@ import type { ParentColumnDefinition } from '@shared/containers'
 
 const ADD_COLUMN_MENU_TABLE_ID = 'add-column-menu-table'
 
+// Covers the end of the header row so the button never sits on top of header text.
+// ProjectTreeTable reserves the same width after the last column (ADD_COLUMN_BUTTON_SPACE).
 const ButtonPosition = styled.div`
   position: absolute;
-  top: 4px;
-  right: 24px;
+  top: 0;
+  right: 0;
   z-index: 100;
+  display: flex;
+  align-items: center;
+  height: var(--size-header);
+  padding: 0 24px 0 8px;
+  background-color: var(--color-table-header);
+  border-top-right-radius: var(--border-radius-m);
 
   button.hasIcon {
     padding: 2px;

@@ -51,7 +51,7 @@ const SlicerSearch = ({ open, value, subject, onChange }: Props) => {
   }
 
   return (
-    <StyledContainer className={clsx({ open })}>
+    <StyledContainer className={clsx('slicer-search', { open })}>
       {open && (
         <StyledInput
           value={value}
