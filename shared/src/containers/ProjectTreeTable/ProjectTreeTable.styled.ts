@@ -40,6 +40,11 @@ export const TR = styled.tr`
     td:not(.selected) {
       background-color: var(--color-table-row-hover);
     }
+
+    /* a selected row stays selected under the pointer, one step stronger */
+    td.selected-row:not(.selected) {
+      background-color: var(--color-table-selected-row-hover);
+    }
   }
 
   &.group-row {
@@ -301,6 +306,10 @@ export const TD = styled.td<TableCellProps>`
     cursor: pointer;
     &:hover {
       background-color: var(--color-table-hover);
+    }
+
+    &.selected-row:not(.selected):hover {
+      background-color: var(--color-table-selected-row-cell-hover);
     }
 
     &.selected {

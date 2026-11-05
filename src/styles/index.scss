@@ -89,17 +89,13 @@ strong {
   --color-table-row-high: light-dark(#f6f7f9, #20242b);
   --color-table-header: var(--md-sys-color-surface-container);
   --color-table-header-hover: var(--md-sys-color-surface-container-hover);
-  --color-table-hover: var(--md-sys-color-surface-container);
-  --color-table-row-hover: light-dark(
-    var(--md-sys-color-surface-container-lowest-hover),
-    hsl(215 14% 15%)
-  );
-  // on light the grey-blue secondary container was too close to hover and the selected row
-  --color-table-selected: light-dark(
-    var(--md-sys-color-primary-container),
-    var(--md-sys-color-secondary-container)
-  );
-  --color-table-selected-row: var(--md-sys-color-surface-container-high);
+  // hover is grey and a step past the group rows; selection is the one blue used by the tree, lists and cards
+  --color-table-row-hover: var(--md-sys-color-surface-container);
+  --color-table-hover: var(--md-sys-color-surface-container-hover);
+  --color-table-selected: var(--md-sys-color-primary-container);
+  --color-table-selected-row: var(--md-sys-color-primary-container);
+  --color-table-selected-row-hover: var(--md-sys-color-primary-container-hover);
+  --color-table-selected-row-cell-hover: var(--md-sys-color-primary-container-active);
   --color-table-readonly-focused: var(--md-sys-color-surface-container);
   --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
   --color-table-boolean-border: light-dark(
