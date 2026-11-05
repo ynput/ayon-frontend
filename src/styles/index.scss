@@ -168,8 +168,9 @@ strong {
     // Navigation
   }
 }
+// the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
 nav.primary {
-  background-color: var(--panel-background);
+  background-color: var(--md-sys-color-background);
   padding: 8px;
   display: flex;
   flex-direction: row;
