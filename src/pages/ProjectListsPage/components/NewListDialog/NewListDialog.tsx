@@ -9,7 +9,7 @@ import {
 import { forwardRef, useEffect, useRef } from 'react'
 import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
-import { getEntityTypeIcon } from '@shared/util'
+import { getEntityTypeIcon, isDialogConfirmKey } from '@shared/util'
 import { Error } from '@containers/ReleaseInstallerDialog/ReleaseInstaller.styled'
 import { entityTypeOptions } from './NewListDialogHelpers'
 import type { ListFolderOption } from '@pages/ProjectListsPage/util/listFolders'
@@ -116,11 +116,10 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
             e.preventDefault()
           }}
           onKeyDown={(e) => {
-            if (
-              e.nativeEvent instanceof KeyboardEvent &&
-              (e.nativeEvent.metaKey || e.nativeEvent.ctrlKey) &&
-              e.nativeEvent.key === 'Enter'
-            ) {
+            const withModifier = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
+            // the same conditions as the create button
+            if ((withModifier || isDialogConfirmKey(e)) && form?.label && !submitLoading) {
+              e.preventDefault()
               onSubmit?.()
             }
           }}

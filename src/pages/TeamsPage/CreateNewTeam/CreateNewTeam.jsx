@@ -9,7 +9,7 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
-import { parseAndFormatName } from '@shared/util'
+import { isDialogConfirmKey, parseAndFormatName } from '@shared/util'
 import UserListTeams from '../UserListTeams'
 import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'
@@ -133,6 +133,11 @@ const CreateNewTeam = ({
     if (e.key === 'Enter' && e.shiftKey) {
       e.preventDefault()
       handleSubmit(false)
+    }
+    // plain Enter confirms, like clicking the create button
+    if (isDialogConfirmKey(e)) {
+      e.preventDefault()
+      handleSubmit()
     }
     // if escape key close dialog
     if (e.key === 'Escape') {
