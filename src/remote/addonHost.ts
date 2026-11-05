@@ -55,7 +55,7 @@ export const provideAddonHost = () =>
     },
   })
 
-// Gives the package the router's navigate (navigateToEntity). Render it inside <BrowserRouter>.
+// Gives the package the router's navigate (navigate, navigateToEntity). Render it inside <BrowserRouter>.
 export const AddonHostNavigation = () => {
   const navigate = useNavigate()
   useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])
