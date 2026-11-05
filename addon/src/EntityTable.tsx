@@ -8,7 +8,7 @@ export type EntityTableEntityType = 'task' | 'folder'
 export interface EntityTableFilterCondition {
   /** the field: `status`, `taskType`, `assignees`, `attrib.priority`, ...; `folder_` for folders */
   key: string
-  value?: string | number | string[] | number[]
+  value?: string | number | boolean | null | string[] | number[]
   operator?:
     | 'eq'
     | 'like'
@@ -33,7 +33,8 @@ export interface EntityTableFilterCondition {
 /**
  * The rows, in the format of the Overview filter bar (a saved view's `filter`): conditions joined
  * by `operator` (`and` by default), which may nest. A key without a prefix is about tasks,
- * `folder_<key>` about folders (`folder_status`).
+ * `folder_<key>` about folders (`folder_status`, `folder_folderType`). Task and folder conditions
+ * are always joined by `and`: keep an `or` within one of them.
  */
 export interface EntityTableFilter {
   conditions?: (EntityTableFilterCondition | EntityTableFilter)[]
@@ -74,11 +75,11 @@ export interface EntityTableProps {
   /** the project the rows are in; it may be another project than the page's */
   projectName: string
   entityType: EntityTableEntityType
-  /** the rows, as the Overview filter bar would filter them. Keep it stable (`useMemo`) */
+  /** the rows, as the Overview filter bar would filter them */
   filter?: EntityTableFilter
   /**
-   * the rows by id (of `entityType`); with `filter` too, the rows match both. `[]`: no rows. Keep
-   * it stable (`useMemo`): a new array rebuilds the table
+   * the rows by id (of `entityType`); with `filter` too, the rows match both. `[]`: no rows. Every
+   * table request carries them, so keep the list to what the user can look through (a few thousand)
    */
   ids?: string[]
   /**

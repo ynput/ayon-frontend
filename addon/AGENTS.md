@@ -122,11 +122,13 @@ const [settings, setSettings] = useState<EntityTableSettings>({})
 - `entityType`: `task` (the task list) or `folder` (folders, each expandable to its tasks).
 - Rows: `filter` in the Overview filter bar's format (a key without a prefix is about tasks,
   `folder_<key>` about folders), `ids` of `entityType`, or both (rows match both). `ids={[]}`
-  shows no rows. Pass them stable (`useMemo`), not inline: a new object rebuilds the table.
+  shows no rows. Task and folder conditions are always joined by `and`: keep an `or` within one
+  of them. Every table request carries the ids, so keep them to a few thousand.
 - `settings` is what the user changes (columns, sorting, grouping, row height), the same keys as
   AYON's saved views. Controlled when set; store it where you like (e.g. your page's view).
 - `excludedColumns`: column ids the table never shows and the user can't add.
-- Read-only: the right-click menu offers Open in Overview, copy, expand, export and the viewer.
+- Read-only: the right-click menu offers Open in overview, copy, the viewer, expand and export. A
+  single group opens expanded.
 
 ## Picking entities: `EntityPicker`
 

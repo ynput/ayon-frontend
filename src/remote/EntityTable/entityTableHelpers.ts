@@ -31,8 +31,7 @@ export const toOverviewSettings = (
     showHierarchy: false,
     // 'folder' is the Overview's flat folder view: each folder expandable to its tasks
     groupBy: entityType === 'folder' ? 'folder' : settings.groupBy,
-    // tasks: the rows are a narrowed set, so most groups would be empty; folders: it would also
-    // hide the folders without tasks
+    // tasks: most groups would be empty; folders: false would hide folders without tasks
     showEmptyGroups: settings.showEmptyGroups ?? entityType !== 'task',
     filter: { operator: 'and', conditions },
   }

@@ -112,7 +112,7 @@ export interface ViewsProviderProps {
   debug?: {
     powerLicense?: boolean
   }
-  // Settings held by the caller instead of a saved view (use without viewType: nothing loads).
+  // Settings held by the caller instead of a saved view: no view loads, viewType is ignored.
   // onChange gets only the changed keys; the caller merges them.
   controlled?: {
     settings: ViewSettings | undefined
@@ -122,7 +122,7 @@ export interface ViewsProviderProps {
 
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
-  viewType,
+  viewType: viewTypeProp,
   viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
@@ -130,6 +130,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   debug,
   controlled,
 }) => {
+  // controlled settings never load or save a view
+  const viewType = controlled ? undefined : viewTypeProp
   const includeViewsList = include?.viewsList ?? true
   const includeBaseViews = include?.baseViews ?? true
 

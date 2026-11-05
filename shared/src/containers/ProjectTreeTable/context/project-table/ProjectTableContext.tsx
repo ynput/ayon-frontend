@@ -81,6 +81,7 @@ export interface ProjectTableContextType {
   onSyncData: ProjectTableProviderProps['onSyncData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
   isRowReadOnly: (rowId: string) => boolean // TableRow.readOnly or the table's readOnly: no cell of the row can be edited
+  readOnly?: boolean // the whole table: nothing can be edited
   loadingLinksEntityIds?: Set<string>
 
   // grouping
@@ -522,6 +523,7 @@ export const ProjectTableProvider = ({
         toggleExpands,
         getEntityById,
         isRowReadOnly,
+        readOnly,
         // folder relationships
         getInheritedDependents,
         findInheritedValueFromAncestors,

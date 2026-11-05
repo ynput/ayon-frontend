@@ -9,11 +9,7 @@ import {
   useColumnSettingsContext,
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
-import type {
-  ContextMenuItemConstructor,
-  ContextMenuItemConstructors,
-} from '@shared/containers/ProjectTreeTable'
-import { entityUrl } from '@ynput/ayon-addon'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useSlicerContext } from '@shared/containers'
 import { useProjectOverviewContext } from '../context/project-overview'
@@ -31,9 +27,16 @@ type Props = {
   // the table instead of the whole page, e.g. an addon's EntityTable
   children?: ReactNode
   readOnly?: boolean
+  // replaces the Overview's right-click menu
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
-const ProjectOverviewTableProvider: FC<Props> = ({ modules, children, readOnly }) => {
+const ProjectOverviewTableProvider: FC<Props> = ({
+  modules,
+  children,
+  readOnly,
+  contextMenuItems,
+}) => {
   const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
     useProjectOverviewContext()
 
@@ -58,28 +61,6 @@ const ProjectOverviewTableProvider: FC<Props> = ({ modules, children, readOnly }
     setPinnedSlice(null)
     await resetWorkingView()
   }, [resetWorkingView, setPinnedSlice])
-
-  // a read-only table (an addon's EntityTable) has no details panel: the entity opens on Overview
-  const navigate = useNavigate()
-  const contextMenuItems = useMemo<ContextMenuItemConstructors>(() => {
-    if (!readOnly) return props.contextMenuItems
-    const openInOverview: ContextMenuItemConstructor = (_e, cell) => {
-      const url = entityUrl({
-        projectName: props.projectName,
-        // a type without a page (e.g. a group row) gets no url
-        entityType: cell.entityType ?? '',
-        id: cell.entityId,
-      })
-      return {
-        id: 'open-in-overview',
-        label: 'Open in Overview',
-        icon: 'open_in_new',
-        command: () => url && navigate(url),
-        hidden: !url || cell.isGroup,
-      }
-    }
-    return [openInOverview, 'copy-paste', 'expand-collapse', 'export', 'open-viewer']
-  }, [readOnly, props.contextMenuItems, props.projectName, navigate])
 
   // filter-aware per-group counts for the active grouping (community: not license-gated)
   const { groupBy: columnSettingsGroupBy } = useColumnSettingsContext()
@@ -139,7 +120,7 @@ const ProjectOverviewTableProvider: FC<Props> = ({ modules, children, readOnly }
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
         readOnly={readOnly}
-        contextMenuItems={contextMenuItems}
+        contextMenuItems={contextMenuItems ?? props.contextMenuItems}
         scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}

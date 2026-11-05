@@ -1818,7 +1818,7 @@ const TD = ({
   rowHeight,
   ...props
 }: TableCellProps) => {
-  const { getEntityById, onOpenPlayer, isRowReadOnly } = useProjectTableContext()
+  const { getEntityById, onOpenPlayer, isRowReadOnly, readOnly } = useProjectTableContext()
 
   const {
     isCellSelected,
@@ -1876,6 +1876,7 @@ const TD = ({
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
+          'table-readonly': readOnly,
         },
         className,
         ...borderClasses,

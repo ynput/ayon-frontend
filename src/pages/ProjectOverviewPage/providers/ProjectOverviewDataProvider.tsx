@@ -1,5 +1,6 @@
 import { FC, ReactNode } from 'react'
 import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers/ProjectTreeTable'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider } from '@shared/context'
 import { ProjectOverviewProvider } from '../context/project-overview'
@@ -20,9 +21,16 @@ type Props = {
   readOnly?: boolean
   // keys the expanded rows; the Overview page's by default
   page?: string
+  // replaces the Overview's right-click menu
+  contextMenuItems?: ContextMenuItemConstructors
 }
 
-const ProjectOverviewDataProvider: FC<Props> = ({ children, readOnly, page }) => {
+const ProjectOverviewDataProvider: FC<Props> = ({
+  children,
+  readOnly,
+  page,
+  contextMenuItems,
+}) => {
   // view context and update helper
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -42,7 +50,11 @@ const ProjectOverviewDataProvider: FC<Props> = ({ children, readOnly, page }) =>
       <ColumnDndProvider>
         <ProjectOverviewProvider modules={modules} page={page}>
           <SettingsPanelProvider>
-            <ProjectOverviewTableProvider modules={modules} readOnly={readOnly}>
+            <ProjectOverviewTableProvider
+              modules={modules}
+              readOnly={readOnly}
+              contextMenuItems={contextMenuItems}
+            >
               {children}
             </ProjectOverviewTableProvider>
           </SettingsPanelProvider>

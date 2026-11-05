@@ -1,13 +1,20 @@
 // The host's EntityTable (@ynput/ayon-addon): the Overview's table stack for an addon's rows,
 // read-only, with the view settings held by the addon. See src/remote/AGENTS.md.
-import { useCallback, useContext, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import type { RowSelectionState } from '@tanstack/react-table'
-import type { EntityTableProps, EntityTableSettings } from '@ynput/ayon-addon'
+import { entityUrl, type EntityTableProps, type EntityTableSettings } from '@ynput/ayon-addon'
 import { EmptyPlaceholder } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
-  ProjectDataContext,
   ProjectDataProvider,
+  UNGROUPED_VALUE,
+  useOptionalProjectDataContext,
+  useProjectTableContext,
+} from '@shared/containers/ProjectTreeTable'
+import type {
+  ContextMenuItemConstructor,
+  ContextMenuItemConstructors,
 } from '@shared/containers/ProjectTreeTable'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { ViewsProvider, type UpdateViewSettingsFn, type ViewSettings } from '@shared/containers/Views'
@@ -31,7 +38,7 @@ const noViewUpdate: UpdateViewSettingsFn = async () => {}
 const ProjectProviders = ({ projectName, children }: { projectName: string; children: ReactNode }) => {
   const project = useOptionalProjectContext()
   const folders = useOptionalProjectFoldersContext()
-  const data = useContext(ProjectDataContext)
+  const data = useOptionalProjectDataContext()
   if (project?.projectName === projectName && folders && data) return <>{children}</>
   return (
     <ProjectContextProvider projectName={projectName}>
@@ -40,6 +47,43 @@ const ProjectProviders = ({ projectName, children }: { projectName: string; chil
       </ProjectFoldersContextProvider>
     </ProjectContextProvider>
   )
+}
+
+// No details panel here: the entity opens on Overview instead
+const useReadOnlyMenu = (projectName: string): ContextMenuItemConstructors => {
+  const navigate = useNavigate()
+  return useMemo(() => {
+    const openInOverview: ContextMenuItemConstructor = (_e, cell) => {
+      const url = entityUrl({ projectName, entityType: cell.entityType ?? '', id: cell.entityId })
+      return {
+        id: 'open-in-overview',
+        label: 'Open in overview',
+        icon: 'open_in_new',
+        command: () => url && navigate(url),
+        hidden: !url || cell.isGroup,
+      }
+    }
+    return [openInOverview, 'copy-paste', 'open-viewer', 'expand-collapse', 'export']
+  }, [projectName, navigate])
+}
+
+// A single group (e.g. a clicked chart point) opens expanded, once
+const ExpandOnlyGroup = () => {
+  const { tableData, expanded, updateExpanded } = useProjectTableContext()
+  const groups = tableData.filter((row) => row.group && row.group.value !== UNGROUPED_VALUE)
+  const onlyGroupId = groups.length === 1 ? groups[0].id : undefined
+  const expandedGroupId = useRef<string>()
+
+  useEffect(() => {
+    if (!onlyGroupId || expandedGroupId.current === onlyGroupId) return
+    expandedGroupId.current = onlyGroupId
+    if (expanded === true || expanded[onlyGroupId]) return
+    updateExpanded({ ...expanded, [onlyGroupId]: true })
+    // only when the single group changes, not on every expand
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onlyGroupId])
+
+  return null
 }
 
 const OverviewEntityTable = ({
@@ -55,28 +99,30 @@ const OverviewEntityTable = ({
   const [ownSettings, setOwnSettings] = useState<EntityTableSettings>({})
   const current = settings ?? ownSettings
 
+  // keyed on the content: an addon may pass a new filter or ids array on every render
+  const filterKey = JSON.stringify(filter)
+  const idsKey = ids?.join(',')
   const viewSettings = useMemo(
     () => toOverviewSettings({ entityType, filter, ids }, current),
-    [entityType, filter, ids, current],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [entityType, filterKey, idsKey, current],
   )
 
-  // changes in the same tick (group by, then columns) merge before the addon re-renders with them
-  const latest = useRef(current)
-  latest.current = current
   const handleChange = useCallback(
     (changed: ViewSettings) => {
-      const next = toEntityTableSettings(changed, entityType, latest.current)
-      latest.current = next
+      const next = toEntityTableSettings(changed, entityType, current)
       if (!settings) setOwnSettings(next)
       onSettingsChange?.(next)
     },
-    [entityType, settings, onSettingsChange],
+    [entityType, current, settings, onSettingsChange],
   )
 
   const controlled = useMemo(
     () => ({ settings: viewSettings, onChange: handleChange }),
     [viewSettings, handleChange],
   )
+
+  const contextMenuItems = useReadOnlyMenu(projectName)
 
   return (
     // the table's own row selection and slicer, apart from the page's
@@ -92,8 +138,13 @@ const OverviewEntityTable = ({
           setRowSelection={noop}
         >
           <Styled.TableWrapper className={className}>
-            <ProjectOverviewDataProvider readOnly page="entity-table">
+            <ProjectOverviewDataProvider
+              readOnly
+              page="entity-table"
+              contextMenuItems={contextMenuItems}
+            >
               <ProjectOverviewTable excludedColumns={excludedColumns} />
+              <ExpandOnlyGroup />
             </ProjectOverviewDataProvider>
           </Styled.TableWrapper>
         </SlicerProvider>
@@ -108,11 +159,19 @@ const AddonEntityTable = (props: EntityTableProps) => {
   // a newer addon may ask for a type this AYON can't list yet
   if (!SUPPORTED_TYPES.includes(props.entityType)) {
     const label = props.entityType.charAt(0).toUpperCase() + props.entityType.slice(1)
-    return <EmptyPlaceholder message={`${label}s can't be listed here yet`} />
+    return (
+      <Styled.TableWrapper className={props.className}>
+        <EmptyPlaceholder message={`${label}s can't be listed here yet`} />
+      </Styled.TableWrapper>
+    )
   }
   // an empty id list would mean "not narrowed" to the queries
   if (props.ids && !props.ids.length) {
-    return <EmptyPlaceholder message={props.entityType === 'folder' ? 'No folders' : 'No tasks'} />
+    return (
+      <Styled.TableWrapper className={props.className}>
+        <EmptyPlaceholder message={props.entityType === 'folder' ? 'No folders' : 'No tasks'} />
+      </Styled.TableWrapper>
+    )
   }
   return (
     <ProjectProviders projectName={props.projectName}>
