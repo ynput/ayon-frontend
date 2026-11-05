@@ -333,8 +333,10 @@ manifests are in and no addon in the bundle declares the slot (the addon isn't i
 the contribution is skipped with a console warning and the rest of the addon works.
 
 **Versioning.** The declaration has \`version\`, and a contribution the \`slotVersion\` it was built
-against. A contribution newer than the declared version is skipped with a warning. Additive context
-fields are a minor release of the contract package; a breaking change is a new slot version.
+against (the contract package's helper stamps it). A contribution for any other version is skipped
+with a warning naming the addon to update. Additive context fields are a minor release of the contract
+package; a breaking change is a new slot version. To keep older contributions working through a
+transition, declare the new shape under a new slot name and keep the old slot for a while.
 
 ## Slot contexts: one shape
 
