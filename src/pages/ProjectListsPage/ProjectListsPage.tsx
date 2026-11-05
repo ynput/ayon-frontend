@@ -111,6 +111,12 @@ const ProviderFill = styled.div`
     min-height: 0;
     width: 100%;
   }
+
+  /* the review addon shows its own empty state here while no session is selected: on a panel, not the page background */
+  &:has(> .empty-placeholder:only-child) {
+    background-color: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-m);
+  }
 `
 
 const ProjectListsWithOuterProviders: FC<ProjectListsPageProps> = ({
