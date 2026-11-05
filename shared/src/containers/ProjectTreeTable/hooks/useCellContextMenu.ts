@@ -107,7 +107,8 @@ const useCellContextMenu = ({
   const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
+  const { selectedCells, setSelectedCells, clearSelection, selectCell, focusCell } =
+    useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
@@ -298,12 +299,16 @@ const useCellContextMenu = ({
 
   const tableExport = useTableExportContext()
   // the Power Pack export when the table registered what it exports, else the cells as shown
-  const exportItem: ContextMenuItemConstructor = (e, cell) =>
+  const exportItem: ContextMenuItemConstructor = (e, cell, _selected, meta) =>
     tableExport?.isAvailable && tableExport.source
       ? {
           label: 'Export',
           icon: 'download',
-          command: () => tableExport.openExport('selection'),
+          command: () => {
+            // the export reads the table selection: narrow it to the cells the menu acted on
+            if (meta.selectedCells.length) setSelectedCells(new Set(meta.selectedCells))
+            tableExport.openExport('selection')
+          },
           hidden: cell.isGroup,
         }
       : {
@@ -311,7 +316,12 @@ const useCellContextMenu = ({
           icon: 'download',
           items: CSV_DELIMITERS.map(({ value, label }) => ({
             label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
-            command: () => exportCSV(Array.from(selectedCells), projectName, value),
+            command: () =>
+              exportCSV(
+                meta.selectedCells.length ? meta.selectedCells : Array.from(selectedCells),
+                projectName,
+                value,
+              ),
           })),
           hidden: cell.isGroup,
         }
