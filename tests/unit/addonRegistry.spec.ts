@@ -181,6 +181,38 @@ test('a service has an id and a component', () => {
   ])
 })
 
+test('user details sections and menu items check their selection and flags', () => {
+  const section = { slot: 'userDetails.section', title: 'Rates', component: loader }
+  const item = { slot: 'userDetails.menuItem', label: 'Send', icon: 'send', run: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...section, id: 'rates' },
+      { ...section, id: 'single', selection: 'single', serviceUsers: true },
+      { ...section, id: 'noTitle', title: undefined },
+      { ...section, id: 'badSelection', selection: 'some' },
+      { ...section, id: 'badService', serviceUsers: 'yes' },
+      { ...item, id: 'send', position: 'top', selection: 'multi' },
+      { ...item, id: 'noIcon', icon: undefined },
+      { ...item, id: 'badPosition', position: 'middle' },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual([
+    'my-addon.rates',
+    'my-addon.single',
+    'my-addon.send',
+  ])
+  expect(skipped.map((s) => s.id)).toEqual([
+    'noTitle',
+    'badSelection',
+    'badService',
+    'noIcon',
+    'badPosition',
+  ])
+  expect(skipped.find((s) => s.id === 'badService')?.reason).toBe(
+    'serviceUsers must be true or false',
+  )
+})
+
 test("table shortcuts have one action and keys that parse and aren't the table's own", () => {
   const shortcut = { slot: 'table.shortcut', label: 'Copy row', run: loader }
   const { contributions, skipped } = checkManifest(addon, {

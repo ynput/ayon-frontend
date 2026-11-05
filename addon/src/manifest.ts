@@ -19,4 +19,6 @@ export {
   studioPage,
   tableColumn,
   tableShortcut,
+  userDetailsMenuItem,
+  userDetailsSection,
 } from './slotHelpers'

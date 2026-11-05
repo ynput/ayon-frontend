@@ -5,7 +5,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from '@ynput/ayon-react-components'
-import { ContributionView, runContribution, useContributions } from '@ynput/ayon-addon'
+import { ContributionView, runContribution, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
   Contribution,
@@ -30,6 +30,8 @@ import {
   SlicerHost,
   useAddonCustomizeSections,
   useAddonTableShortcuts,
+  useAddonUserMenuItems,
+  AddonUserDetailsSections,
   shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
@@ -197,6 +199,59 @@ const ServiceStage = ({ contribution, selection }: StageProps) => {
   const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
   useReport(contribution, context, true)
   return <ServiceNote />
+}
+
+// userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
+// Settings → Users (it lives in the ayon-frontend app), with the signed-in user selected
+const UserDetailsStage = ({ contribution }: StageProps) => {
+  const user = useUser()
+  const context = useMemo(
+    () => ({
+      users: user
+        ? [
+            {
+              name: user.name,
+              fullName: user.fullName,
+              email: user.email,
+              active: true,
+              isAdmin: user.isAdmin,
+              isManager: user.isManager,
+              isGuest: user.isGuest,
+              isService: user.isService,
+            },
+          ]
+        : [],
+      readOnly: false,
+    }),
+    [user],
+  )
+  const isMenuItem = contribution.slot === 'userDetails.menuItem'
+  useReport(contribution, context, !!user, isMenuItem)
+  const { topItems, items } = useAddonUserMenuItems(context)
+  if (!user) return <Hint>Signing in…</Hint>
+  return (
+    <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
+      <div
+        style={{ width: 'min(420px, 100%)', display: 'flex', flexDirection: 'column', gap: 4 }}
+        data-shell-surface="user-details"
+      >
+        <div className="ayon-shell-bar">
+          <strong>{user.fullName || user.name}</strong>
+          <span className="spacer" />
+          {[...topItems, ...items].map((item) => (
+            <Button
+              key={item.id}
+              icon={item.icon as never}
+              label={item.label as string}
+              variant="text"
+              onClick={() => (item.onClick as () => void)?.()}
+            />
+          ))}
+        </div>
+        <AddonUserDetailsSections context={context} />
+      </div>
+    </div>
+  )
 }
 
 // header.item: left after the dashboard button, right before chat and inbox
@@ -528,6 +583,9 @@ export const Stage = ({
         return <TableStage {...props} />
       case 'app.service':
         return <ServiceStage {...props} />
+      case 'userDetails.section':
+      case 'userDetails.menuItem':
+        return <UserDetailsStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }
