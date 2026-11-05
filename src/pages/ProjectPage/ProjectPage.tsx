@@ -43,7 +43,7 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
-import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { pageAccessLevels, useAddonPages, type OwnedPage } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
@@ -97,11 +97,11 @@ const ADDON_PAGES: AddonPageConfig[] = [
   },
 ]
 
-const OWNED_PAGES = ADDON_PAGES.map(({ module, viewType, addon }) => ({
-  id: module,
-  viewType,
-  addon,
-}))
+// AYON's tabs that one addon's project.page fills; Reports keeps its legacy page without one
+const OWNED_PAGES: OwnedPage[] = [
+  ...ADDON_PAGES.map(({ module, viewType, addon }) => ({ id: module, viewType, addon })),
+  { id: 'reports', viewType: 'reports', addon: 'reports' },
+]
 
 const ProjectContextInfo = () => {
   /**
@@ -358,6 +358,8 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/reports`,
         module: 'reports',
         viewType: 'reports',
+        // the reports addon's own page decides who sees the tab
+        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === 'reports')?.access),
         startContent: <RemotePageBundleDot bundle={getAddonBundle('reports')} />,
       },
       {
@@ -376,7 +378,7 @@ const ProjectPageInner = () => {
           startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
       ...addonPages
-        .filter((page) => !ADDON_PAGES.some((p) => p.module === page.id))
+        .filter((page) => !OWNED_PAGES.some((p) => p.id === page.id))
         .map((page) => ({
           name: page.title,
           module: page.id,
@@ -465,7 +467,7 @@ const ProjectPageInner = () => {
       )
     } else if (module === 'workfiles') {
       component = <WorkfilesPage />
-    } else if (module === 'reports') {
+    } else if (module === 'reports' && !foundAddonPage) {
       component = (
         <ProjectReportsPage
           projectName={projectName}
@@ -544,7 +546,9 @@ const ProjectPageInner = () => {
     !projectName ||
     isLoadingProject ||
     (!!addonName && addonsLoading) ||
-    (!isBuiltInModule && (isLoadingModules || isLoadingContributions))
+    (!isBuiltInModule && (isLoadingModules || isLoadingContributions)) ||
+    // with the reports addon, its manifest decides whether its page or the legacy one renders
+    (module === 'reports' && hasReports && isLoadingContributions)
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {
