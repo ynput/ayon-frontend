@@ -19,11 +19,7 @@ const Wrapper = styled.div`
   padding-bottom: 0;
   filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.25));
   z-index: 10;
-
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
 
   &.loading {
     opacity: 0.5;

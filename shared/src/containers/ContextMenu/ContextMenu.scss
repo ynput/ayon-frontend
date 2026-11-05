@@ -40,6 +40,15 @@
         background-color: var(--md-sys-color-surface-overlay);
       }
 
+      &.danger:not(.p-disabled) {
+        background-color: var(--md-sys-color-error-container);
+        &,
+        .icon,
+        span {
+          color: var(--md-sys-color-on-error-container);
+        }
+      }
+
       &.save {
         background-color: var(--md-sys-color-primary-hover);
         span {
@@ -61,14 +70,22 @@
         color: var(--md-sys-color-on-surface-variant);
       }
 
+      // red text, tinted only while hovered or focused, so it doesn't look hovered all the time
       &.danger {
-        background-color: var(--md-sys-color-error-container);
+        &,
+        .icon,
         span {
-          color: var(--md-sys-color-on-error-container);
+          color: var(--md-sys-color-error);
         }
 
-        &:hover {
-          background-color: var(--md-sys-color-error-container-hover);
+        &:hover,
+        &:focus-visible {
+          background-color: var(--md-sys-color-error-container);
+          &,
+          .icon,
+          span {
+            color: var(--md-sys-color-on-error-container);
+          }
         }
         &:active {
           background-color: var(--md-sys-color-error-container-active);

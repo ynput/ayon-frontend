@@ -133,7 +133,7 @@ export const Content = styled.div`
   .sub-title {
     display: flex;
     align-items: center;
-    gap: var(--base-gap-medium);
+    gap: var(--base-gap-small);
   }
 `
 
