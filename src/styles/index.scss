@@ -82,14 +82,8 @@ strong {
   --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
   // rows that group others and the header: one visible step (about 1.09:1) off the rows on both themes
   --color-table-row-high: light-dark(#f3f5f8, #20242b);
-  --color-table-header: light-dark(
-    var(--md-sys-color-surface-container),
-    var(--md-sys-color-surface-container-lowest)
-  );
-  --color-table-header-hover: light-dark(
-    var(--md-sys-color-surface-container-hover),
-    var(--md-sys-color-surface-container-lowest-hover)
-  );
+  --color-table-header: var(--md-sys-color-surface-container);
+  --color-table-header-hover: var(--md-sys-color-surface-container-hover);
   --color-table-hover: var(--md-sys-color-surface-container);
   --color-table-row-hover: light-dark(
     var(--md-sys-color-surface-container-lowest-hover),
