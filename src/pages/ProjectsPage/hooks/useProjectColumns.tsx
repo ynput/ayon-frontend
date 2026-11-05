@@ -65,6 +65,10 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     id: 'createdAt',
     header: 'Created at',
     size: 150,
+    // without this the list table renders its own date format instead of this cell
+    meta: {
+      listTableCustomCell: true,
+    },
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
@@ -76,6 +80,10 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     id: 'updatedAt',
     header: 'Updated at',
     size: 150,
+    // without this the list table renders its own date format instead of this cell
+    meta: {
+      listTableCustomCell: true,
+    },
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
@@ -215,8 +223,9 @@ export const useProjectColumns = (
   )
 
   const thumbnailColumn = useMemo<ColumnDef<ProjectTableRow, any>>(() => {
+    // wide enough for the "Thumbnail" header label
     const thumbnailSize = Math.max(
-      70,
+      90,
       THUMBNAIL_BASE_SIZE + maxGroupDepth * THUMBNAIL_INDENT_PER_DEPTH,
     )
     return columnHelper.accessor('name', {

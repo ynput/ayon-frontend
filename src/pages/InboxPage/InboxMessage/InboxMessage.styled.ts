@@ -146,9 +146,9 @@ export const Left = styled.div`
   align-items: center;
   gap: var(--base-gap-medium);
   /* a fixed width, unless the row is too narrow for the status change and the date: then the title gives way */
-  flex: 0 1 clamp(350px, 30vw, 500px);
+  flex: 0 1 clamp(260px, 20vw, 380px);
   min-width: 200px;
-  max-width: clamp(350px, 30vw, 500px);
+  max-width: clamp(260px, 20vw, 380px);
 
   .title {
     white-space: nowrap;
@@ -188,7 +188,7 @@ export const Middle = styled.div`
   /* a status change keeps room for its icon-only form (two status squares and the arrow between them),
      after the unread count's place */
   &.status-change {
-    min-width: calc(18px + var(--base-gap-large) + 2 * 20px + 18px + 2 * 4px);
+    min-width: calc(24px + var(--base-gap-large) + 2 * 20px + 18px + 2 * 4px);
   }
 `
 
@@ -227,9 +227,23 @@ export const ClearButton = styled(Button)`
   height: 30px;
 `
 
+/* number of unread messages in the thread, as a small badge */
 export const Unread = styled.span`
-  min-width: 18px;
-  max-width: 18px;
+  flex-shrink: 0;
+  /* same width for one and two digits, so the icons after it line up */
+  min-width: 24px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+
   &.hide {
     opacity: 0;
   }

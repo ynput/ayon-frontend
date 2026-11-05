@@ -780,7 +780,12 @@ const Products = () => {
             loadingProducts={loadingProducts}
           />
         )}
-        {isNone && !isLoading && !isFetching && <NoProducts error={error} />}
+        {isNone && !isLoading && !isFetching && (
+          <NoProducts
+            error={error}
+            label={!focusedFolders.length ? 'Select a folder to see its products' : undefined}
+          />
+        )}
       </TablePanel>
     </Section>
   )

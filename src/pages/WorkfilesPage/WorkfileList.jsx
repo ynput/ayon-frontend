@@ -146,7 +146,10 @@ const WorkfileList = ({ style }) => {
     <Section style={style}>
       <TablePanel loading={isLoading}>
         {!taskIds.length || !data.length ? (
-          <NoEntityFound type="workfile" />
+          <NoEntityFound
+            type="workfile"
+            label={!taskIds.length ? 'Select a task to see its workfiles' : undefined}
+          />
         ) : (
           <DataTable
             ref={tableRef}

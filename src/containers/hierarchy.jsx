@@ -17,7 +17,7 @@ import useTableLoadingData from '@hooks/useTableLoadingData'
 
 // Cell component that uses EntityIcon for proper icon/color from anatomy
 const HierarchyCell = ({ label, name, folderType }) => (
-  <span style={{  alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
     <EntityIcon entity={{ entityType: 'folder', subType: folderType }} />
     <span
       title={name}
@@ -44,9 +44,7 @@ const filterHierarchy = (text, folder) => {
           folderType: item.folderType,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: (
-            <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />
-          ),
+          body: <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />,
         },
       })
     } else if (item.children) {
@@ -388,7 +386,7 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onContextMenu={onContextMenu}
-        className={clsx({ loading: isFetching })}
+        className={clsx('no-row-dividers', { loading: isFetching })}
         rowClassName={(rowData) => ({
           ['id-' + rowData.key]: true,
           compact: true,
@@ -415,7 +413,7 @@ const Hierarchy = (props) => {
       <Section style={props.style}>
         <Toolbar>
           <InputText
-            style={{ flexGrow: 1, minWidth: 100 }}
+            style={{ flexGrow: 1, minWidth: 80 }}
             placeholder="Filter folders..."
             disabled={!projectName || isFetching}
             value={query}
@@ -432,7 +430,7 @@ const Hierarchy = (props) => {
             disabled={!projectName || isFetching}
             selectedItemTemplate={selectedTypeTemplate}
             onChange={(e) => setSelectedFolderTypes(e.value || [])}
-            style={{ flexBasis: 150 }}
+            style={{ flexBasis: 150, flexShrink: 0 }}
           />
         </Toolbar>
 

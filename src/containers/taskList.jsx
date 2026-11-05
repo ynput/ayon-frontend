@@ -288,7 +288,10 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
           onHide={() => setShowDetail(false)}
         />
         {noTasks ? (
-          <NoEntityFound type="task" />
+          <NoEntityFound
+            type="task"
+            label={!folderIds.length ? 'Select a folder to see its tasks' : undefined}
+          />
         ) : (
           <TreeTable
             value={tableData}
@@ -299,7 +302,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             selectionKeys={selectedTasks}
             onSelectionChange={onSelectionChange}
             onContextMenu={onContextMenu}
-            className={clsx({ loading: isFetching })}
+            className={clsx('no-row-dividers', { loading: isFetching })}
             ref={tableRef}
             rowClassName={(rowData) => ({
               ['id-' + rowData.key]: true,

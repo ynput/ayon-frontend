@@ -39,7 +39,7 @@ const StyledNoTasks = styled.div`
   }
 `
 
-const NoEntityFound = ({ type = 'task', icon }) => {
+const NoEntityFound = ({ type = 'task', icon, label }) => {
   let typeIcon = getEntityTypeIcon(type)
 
   if (icon) typeIcon = icon
@@ -48,7 +48,7 @@ const NoEntityFound = ({ type = 'task', icon }) => {
     <StyledNoTasks>
       <Icon icon={typeIcon} />
       <Icon icon={typeIcon} />
-      <span>{`No ${type}s found`}</span>
+      <span>{label || `No ${type}s found`}</span>
     </StyledNoTasks>
   )
 }

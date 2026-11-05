@@ -1,6 +1,7 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '@containers/fieldFormat'
 import { Thumbnail } from '@shared/components'
+import NoEntityFound from '@components/NoEntityFound'
 import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
 import { useSelector } from 'react-redux'
@@ -35,6 +36,16 @@ const WorkfileDetail = ({ style }) => {
   })
 
   let path = Object.keys(rootsData).length ? replaceRoot(data?.path, rootsData) : data?.path
+
+  if (!firstFocusedWorkfile) {
+    return (
+      <Section style={style}>
+        <Panel style={{ flex: 1, position: 'relative' }}>
+          <NoEntityFound type="workfile" label="Select a workfile to see its details" />
+        </Panel>
+      </Section>
+    )
+  }
 
   return (
     <Section style={style}>
