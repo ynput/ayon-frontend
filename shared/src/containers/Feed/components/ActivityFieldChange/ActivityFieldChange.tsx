@@ -140,6 +140,8 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
     return formatValue(value, attribute, key)
   }
 
+  // coloured values show as pills like in the tables: a status filled, tags and other values tinted
+  const pill = isStatus ? 'filled' : 'tinted'
   const oldDisplay = getDisplay(oldValue, oldStatus)
   const newDisplay = getDisplay(newValue, newStatus)
 
@@ -153,9 +155,9 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
             <strong>{fieldTitle}</strong>
           </Styled.Text>
         )}
-        <FieldValue {...oldDisplay} />
+        <FieldValue {...oldDisplay} pill={pill} />
         <Icon icon="trending_flat" />
-        <FieldValue {...newDisplay} />
+        <FieldValue {...newDisplay} pill={pill} />
       </Styled.Body>
       <ActivityDate date={createdAt} />
     </Styled.FieldChange>

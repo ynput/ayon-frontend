@@ -99,6 +99,7 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                       color={status?.color}
                       colorLight={status?.colorLight}
                       name={status?.name || ''}
+                      pill="filled"
                     />
                   </Styled.Title>
                 </div>

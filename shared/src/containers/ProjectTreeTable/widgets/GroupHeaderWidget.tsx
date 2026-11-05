@@ -1,7 +1,7 @@
 import { Button, Icon, theme, getReadableColor } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
-import { getPillColors, type PillStyle } from './pillColors'
+import { getPillColors, type PillStyle } from '@shared/util/pillColors'
 
 const Expander = styled(Button)`
   background-color: unset !important;

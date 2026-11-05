@@ -3,7 +3,7 @@ import { getReadableColor, getTagColors, Icon, IconProps } from '@ynput/ayon-rea
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
-import { getPillColors, type PillStyle } from './pillColors'
+import { getPillColors, type PillStyle } from '@shared/util/pillColors'
 // Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
 const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
