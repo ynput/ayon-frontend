@@ -365,13 +365,13 @@ const Bundles = () => {
   let uploadHeader = ''
   switch (uploadOpen) {
     case 'addon':
-      uploadHeader = 'Upload Addons'
+      uploadHeader = 'Upload addons'
       break
     case 'installer':
-      uploadHeader = 'Upload Launcher'
+      uploadHeader = 'Upload launcher'
       break
     case 'package':
-      uploadHeader = 'Upload Dependency Package'
+      uploadHeader = 'Upload dependency package'
       break
     default:
       break
@@ -437,7 +437,7 @@ const Bundles = () => {
                   data-tooltip="Add new bundle"
                   data-shortcut="N"
                 >
-                  <span>Add Bundle</span>
+                  <span>Add bundle</span>
                 </Button>
                 <Button
                   icon="upload"
@@ -445,7 +445,7 @@ const Bundles = () => {
                   data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Upload Addons</span>
+                  <span className="large">Upload addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button
@@ -454,7 +454,7 @@ const Bundles = () => {
                   data-tooltip="Upload launchers for download"
                   data-shortcut="L"
                 >
-                  <span className="large">Upload Launcher</span>
+                  <span className="large">Upload launcher</span>
                   <span className="small">Launcher</span>
                 </Button>
                 <Button
@@ -463,7 +463,7 @@ const Bundles = () => {
                   data-tooltip="Upload dependency packages"
                   data-shortcut="P"
                 >
-                  <span className="large">Upload Dependency Package</span>
+                  <span className="large">Upload dependency package</span>
                   <span className="small">Package</span>
                 </Button>
                 <span style={{ whiteSpace: 'nowrap' }} className="large">

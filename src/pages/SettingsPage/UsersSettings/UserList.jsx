@@ -2,6 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import UserImage from '@shared/components/UserImage'
+import { DoneCheckbox } from '@shared/components'
 
 import './users.scss'
 
@@ -63,6 +64,18 @@ export const ProfileRow = ({ rowData }) => {
     </StyledProfileRow>
   )
 }
+
+const BooleanCell = ({ value }) => (
+  <DoneCheckbox
+    checked={!!value}
+    isReadOnly
+    style={{
+      fontSize: 18,
+      display: 'block',
+      color: value ? undefined : 'var(--md-sys-color-outline-variant)',
+    }}
+  />
+)
 
 const getUserRole = (user) => {
   if (user.isAdmin) return 'Admin'
@@ -221,14 +234,14 @@ const UserList = ({
           />
           <Column
             header="Has password"
-            body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
+            body={(rowData) => !isLoading && <BooleanCell value={rowData.hasPassword} />}
             field="hasPassword"
             sortable
             resizeable
           />
           <Column
             header="Active"
-            body={(rowData) => (rowData.active ? 'yes' : '')}
+            body={(rowData) => !isLoading && <BooleanCell value={rowData.active} />}
             field="active"
             sortable
             resizeable

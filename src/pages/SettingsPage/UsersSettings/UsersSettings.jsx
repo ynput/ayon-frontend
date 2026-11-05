@@ -230,12 +230,12 @@ const UsersSettings = () => {
           <Toolbar>
             <Button
               onClick={openNewUser}
-              label="Add New User"
+              label="Add new user"
               icon="person_add"
               variant="filled"
               data-shortcut="n"
             />
-            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
+            <Button onClick={openNewServiceUser} label="Add service user" icon="person_add" />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
               <InputText
                 style={{ width: '100%', minWidth: 150 }}
@@ -248,7 +248,7 @@ const UsersSettings = () => {
             <UsersOverview users={userList} />
             <Button
               onClick={() => setShowInviteUser(true)}
-              label="Send Invite"
+              label="Send invite"
               icon="mail"
               disabled={!selectedUsers.length}
             />

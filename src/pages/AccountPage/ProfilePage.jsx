@@ -264,7 +264,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               </FormRow>
             )}
 
-            <FormRow label="Desktop Notifications" key="notifications">
+            <FormRow label="Desktop notifications" key="notifications">
               <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
                 <InputSwitch
                   checked={preferencesData.notifications}
@@ -275,7 +275,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               </div>
             </FormRow>
 
-            <FormRow label="Notification Sound" key="notificationSound">
+            <FormRow label="Notification sound" key="notificationSound">
               <div
                 data-tooltip="Get a little chime sound on new important notifications"
                 style={{ width: 'fit-content' }}

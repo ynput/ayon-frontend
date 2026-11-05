@@ -160,7 +160,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
                 disabled={selectedBundles.length > 1}
                 data-tooltip={`${!active ? 'Set' : 'Unset'} bundle to ${name}`}
               >
-                {!active ? 'Set' : ''} {upperFirst(name)}
+                {active ? upperFirst(name) : `Set ${name}`}
               </BadgeButton>
             )
           })}

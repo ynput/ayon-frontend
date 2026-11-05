@@ -80,7 +80,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
         {formData?.isGuest && (
           <FormRowStyled label="Guest (legacy)">
             <Button
-              label="Remove Guest flag"
+              label="Remove guest flag"
               onClick={() => updateFormData('isGuest', false)}
               variant="filled"
               icon="build_circle"

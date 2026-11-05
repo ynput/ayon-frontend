@@ -11,7 +11,7 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { AttributeEditor, getUiTypeLabel } from '@shared/components'
+import { AttributeEditor, DoneCheckbox, getUiTypeLabel } from '@shared/components'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
@@ -162,11 +162,11 @@ const Attributes = () => {
         )}
         <Section>
           <Toolbar>
-            <Button label="Add Attribute" icon="add" onClick={onNewAttribute} />
+            <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
             <Button
               label="Delete attribute"
               icon="delete"
-              disabled={selectedAttribute?.builtin}
+              disabled={!selectedAttribute || selectedAttribute.builtin}
               onClick={() => onDelete(selectedAttribute)}
             />
             <InputText
@@ -176,7 +176,7 @@ const Attributes = () => {
               onChange={(e) => setSearch(e.target.value)}
             />
             <Spacer />
-            {isChanges && 'Unsaved Changes'}
+            {isChanges && 'Unsaved changes'}
             <Button
               label="Clear changes"
               icon="clear"
@@ -184,7 +184,7 @@ const Attributes = () => {
               onClick={() => setAttributes(data)}
             />
             <SaveButton
-              label="Save attributes changes"
+              label="Save changes"
               onClick={onSave}
               active={isChanges}
               saving={updateLoading}
@@ -212,9 +212,9 @@ const Attributes = () => {
               <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
               <Column
                 field="builtin"
-                header=""
-                style={{ maxWidth: 60 }}
-                body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
+                header="Origin"
+                style={{ maxWidth: 90 }}
+                body={(rowData) => (rowData?.builtin ? 'Built-in' : 'Custom')}
                 sortable
               />
               <Column
@@ -243,7 +243,27 @@ const Attributes = () => {
               />
               <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
               <Column field="data.description" header="Description" sortable />
-              <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />
+              <Column
+                field="data.inherit"
+                header="Inherit"
+                sortable
+                style={{ maxWidth: 80 }}
+                body={(rowData) =>
+                  !isLoading && (
+                    <DoneCheckbox
+                      checked={!!rowData.data?.inherit}
+                      isReadOnly
+                      style={{
+                        fontSize: 18,
+                        display: 'block',
+                        color: rowData.data?.inherit
+                          ? undefined
+                          : 'var(--md-sys-color-outline-variant)',
+                      }}
+                    />
+                  )
+                }
+              />
             </DataTable>
           </TablePanel>
         </Section>

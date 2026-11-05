@@ -17,28 +17,25 @@ import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 const StatusBadge = styled.span`
   display: inline-block;
   padding: 1px 6px;
-  border-radius: 0.25rem;
-  color: #fff;
+  border-radius: var(--border-radius-m);
   font-size: 0.8rem;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface-variant);
 
   &.running {
-    background-color: #28a745;
+    background-color: var(--md-sys-color-tertiary-container);
+    color: var(--md-sys-color-on-tertiary-container);
   }
 
-  &.not-running {
-    background-color: #dc3545;
+  &.not-running,
+  &.unreachable {
+    background-color: var(--md-sys-color-error-container);
+    color: var(--md-sys-color-on-error-container);
   }
 
   &.stopping {
-    background-color: #ffc107;
-  }
-
-  &.disabled {
-    background-color: #007bff;
-  }
-
-  &.unreachable {
-    background-color: #ff1010;
+    background-color: var(--md-sys-color-warning-container);
+    color: var(--md-sys-color-on-warning-container);
   }
 `
 
@@ -76,7 +73,6 @@ const detailsMaxWidth = '40vw'
 const detailsMaxMaxWidth = 700
 
 const ServicesPage = () => {
-  
   const [showServiceDialog, setShowServiceDialog] = useState(false)
   const [editingService, setEditingService] = useState(null)
   const [selectedServices, setSelectedServices] = useState([])
@@ -131,7 +127,7 @@ const ServicesPage = () => {
     if (service.shouldRun) {
       confirmDialog({
         message: 'The service must be stopped before editing. Do you want to stop it now?',
-        header: 'Stop Service',
+        header: 'Stop service',
         acceptLabel: 'Yes, stop service',
         rejectLabel: 'No, cancel',
         accept: async () => {
@@ -234,76 +230,77 @@ const ServicesPage = () => {
     <>
       <DocumentTitle title={pageTitle} />
       <main>
-      {showServiceDialog && (
-        <ServiceDialog onHide={handleCloseDialog} editService={editingService} />
-      )}
-      <Section>
-        <Toolbar>
-          <Button
-            icon="add"
-            label="New service"
-            onClick={() => {
-              setEditingService(null)
-              setShowServiceDialog(true)
-            }}
-          />
-          <Spacer />
-        </Toolbar>
-        <Splitter
-          layout="horizontal"
-          style={{ flex: 1, overflow: 'hidden' }}
-          stateKey="services-splitter"
-          gutterSize={selectedService ? 4 : 0}
-        >
-          <SplitterPanel size={70}>
-            <TablePanel style={{ height: '100%' }}>
-              <DataTable
-                value={services}
-                scrollable="true"
-                scrollHeight="flex"
-                dataKey="name"
-                selectionMode="multiple"
-                selection={selection}
-                onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
-                onSelectionChange={(e) => setSelectedServices(e.value.map((i) => i.name))}
-                onContextMenuSelectionChange={(e) => {
-                  if (!selectedServices.includes(e.value.name)) setSelectedServices([e.value.name])
-                }}
-              >
-                <Column field="name" header="Service name" sortable />
-                <Column field="addonName" header="Addon name" sortable />
-                <Column field="addonVersion" header="Addon version" sortable />
-                <Column field="service" header="Service" sortable />
-                <Column field="hostname" header="Host" sortable />
-                <Column
-                  field="data.env.AYON_DEFAULT_SETTINGS_VARIANT"
-                  header="Settings variant"
-                  sortable
-                />
-                <Column
-                  field="isRunning"
-                  header="Status"
-                  body={formatStatus}
-                  style={{ maxWidth: 130, textAlign: 'center' }}
-                  sortable
-                />
-              </DataTable>
-            </TablePanel>
-          </SplitterPanel>
-          {selectedService ? (
-            <SplitterPanel size={50}>
-              <ServiceDetailsPanel
-                service={selectedService}
-                onClose={() => setSelectedServices([])}
-                onEdit={handleEditService}
-              />
+        {showServiceDialog && (
+          <ServiceDialog onHide={handleCloseDialog} editService={editingService} />
+        )}
+        <Section>
+          <Toolbar>
+            <Button
+              icon="add"
+              label="New service"
+              onClick={() => {
+                setEditingService(null)
+                setShowServiceDialog(true)
+              }}
+            />
+            <Spacer />
+          </Toolbar>
+          <Splitter
+            layout="horizontal"
+            style={{ flex: 1, overflow: 'hidden' }}
+            stateKey="services-splitter"
+            gutterSize={selectedService ? 4 : 0}
+          >
+            <SplitterPanel size={70}>
+              <TablePanel style={{ height: '100%' }}>
+                <DataTable
+                  value={services}
+                  scrollable="true"
+                  scrollHeight="flex"
+                  dataKey="name"
+                  selectionMode="multiple"
+                  selection={selection}
+                  onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
+                  onSelectionChange={(e) => setSelectedServices(e.value.map((i) => i.name))}
+                  onContextMenuSelectionChange={(e) => {
+                    if (!selectedServices.includes(e.value.name))
+                      setSelectedServices([e.value.name])
+                  }}
+                >
+                  <Column field="name" header="Service name" sortable />
+                  <Column field="addonName" header="Addon name" sortable />
+                  <Column field="addonVersion" header="Addon version" sortable />
+                  <Column field="service" header="Service" sortable />
+                  <Column field="hostname" header="Host" sortable />
+                  <Column
+                    field="data.env.AYON_DEFAULT_SETTINGS_VARIANT"
+                    header="Settings variant"
+                    sortable
+                  />
+                  <Column
+                    field="isRunning"
+                    header="Status"
+                    body={formatStatus}
+                    style={{ maxWidth: 130, textAlign: 'center' }}
+                    sortable
+                  />
+                </DataTable>
+              </TablePanel>
             </SplitterPanel>
-          ) : (
-            <SplitterPanel style={{ maxWidth: 0 }} />
-          )}
-        </Splitter>
-      </Section>
-    </main>
+            {selectedService ? (
+              <SplitterPanel size={50}>
+                <ServiceDetailsPanel
+                  service={selectedService}
+                  onClose={() => setSelectedServices([])}
+                  onEdit={handleEditService}
+                />
+              </SplitterPanel>
+            ) : (
+              <SplitterPanel style={{ maxWidth: 0 }} />
+            )}
+          </Splitter>
+        </Section>
+      </main>
     </>
   )
 }

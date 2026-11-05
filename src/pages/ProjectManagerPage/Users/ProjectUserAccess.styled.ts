@@ -2,12 +2,15 @@ import { Button } from '@ynput/ayon-react-components'
 import { DataTable as BaseDataTable } from 'primereact/datatable'
 import styled from 'styled-components'
 
+// sits on top of the panel below it, so it reads as that panel's title
 export const StyledHeader = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
-  padding: 4px 0;
+  padding: 4px 8px;
+  background-color: var(--panel-background);
+  border-radius: var(--border-radius-m) var(--border-radius-m) 0 0;
 `
 
 export const DataColumn = styled.div`
@@ -66,7 +69,7 @@ export const DataTable = styled(BaseDataTable)`
   }
 
   /* Data attribute-based hover highlighting for better performance */
-  tr[data-hover="true"] {
+  tr[data-hover='true'] {
     background-color: rgba(0, 0, 0, 0.05);
 
     button {

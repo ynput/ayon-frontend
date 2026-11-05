@@ -46,11 +46,11 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
       isOpen={true}
       onClose={onHide}
       footer={
-        <SaveButton label="Set Password" onClick={onSubmit} active={password && passwordConfirm} />
+        <SaveButton label="Set password" onClick={onSubmit} active={password && passwordConfirm} />
       }
     >
       <FormLayout>
-        <FormRow label="New Password">
+        <FormRow label="New password">
           <InputPassword
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -58,7 +58,7 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
             id="password"
           />
         </FormRow>
-        <FormRow label="Confirm Password">
+        <FormRow label="Confirm password">
           <InputPassword
             value={passwordConfirm}
             onChange={(e) => setPasswordConfirm(e.target.value)}

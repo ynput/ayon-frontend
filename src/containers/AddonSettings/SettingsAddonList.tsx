@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState, FC } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Icon, Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -173,6 +173,19 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
     return v
   }
 
+  const formatTitle = (rowData: Addon) => {
+    if (!rowData.isBroken) return rowData.title
+    return (
+      <span
+        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+        data-tooltip={rowData.reason?.error || 'Settings could not be loaded'}
+      >
+        <Icon icon="error" style={{ color: 'var(--md-sys-color-error)', fontSize: 18 }} />
+        {rowData.title}
+      </span>
+    )
+  }
+
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel>
@@ -188,7 +201,7 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
           rowClassName={rowDataClassNameFormatter}
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
-          <Column field="title" header="Addon" />
+          <Column field="title" header="Addon" body={formatTitle} />
           <Column field="version" header="Version" style={{ maxWidth: 110 }} body={formatVersion} />
         </DataTable>
       </TablePanel>

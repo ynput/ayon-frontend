@@ -77,7 +77,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
       <DetailHeader
         onClose={() => setSelectedEvent(null)}
         context={event}
-        dialogTitle="Event Context"
+        dialogTitle="Event context"
       >
         <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>

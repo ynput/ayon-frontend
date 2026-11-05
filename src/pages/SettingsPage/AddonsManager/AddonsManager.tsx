@@ -148,7 +148,7 @@ const AddonsManager = (): JSX.Element => {
 
   const viewInMarket = (selected: string[]): ContextMenuItem[] => [
     {
-      label: 'View in Market',
+      label: 'View in market',
       command: () => navigate(`/market?selected=${selected[0].split(' ')[0]}`),
       icon: 'store',
     },
@@ -169,7 +169,7 @@ const AddonsManager = (): JSX.Element => {
   const versionContext = (selected: string[]): ContextMenuItem[] => [
     ...viewInMarket(selected),
     {
-      label: 'API Docs',
+      label: 'API docs',
       command: () => openApiDocs(selected[0]),
       icon: 'description',
     },
@@ -221,17 +221,18 @@ const AddonsManager = (): JSX.Element => {
                   onClick={() => setUploadOpen('addon')}
                   data-shortcut="A"
                   data-tooltip="Upload addon zip files"
-                  label="Upload Addons"
+                  label="Upload addons"
                   icon="upload"
                   style={{ width: '100%' }}
                 />
                 <Link to="/market" style={{ width: '100%' }}>
-                  <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+                  <Button label="Addon market" icon="store" style={{ width: '100%' }} />
                 </Link>
               </div>
             }
             extraContext={viewInMarket}
             emptyMessage="No addons found"
+            emptyIcon="extension"
             isLoading={isLoading}
             onDelete={undefined}
             onDeleteSuccess={undefined}
@@ -251,6 +252,7 @@ const AddonsManager = (): JSX.Element => {
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={versionContext}
             emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
+            emptyIcon="extension"
             isLoading={isLoading}
             header={null}
           />
@@ -272,7 +274,8 @@ const AddonsManager = (): JSX.Element => {
                 icon: 'arrow_circle_right',
               },
             ]}
-            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select versions'}
+            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select a version'}
+            emptyIcon="inventory_2"
             isLoading={isLoading}
             header={null}
             onDeleteSuccess={undefined}

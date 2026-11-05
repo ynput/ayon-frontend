@@ -135,7 +135,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         maxWidth: 700,
       }}
       enableBackdropClose={false}
-      header={'Create New User'}
+      header={'Create new user'}
       onClose={handleClose}
       footer={
         <>
@@ -166,7 +166,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
               input: { placeholder: 'No spaces allowed', autoFocus: true, ref: usernameRef },
             },
             { name: 'password', data: { title: 'Password' } },
-            { name: 'passwordConfirm', data: { title: 'Password Confirm' } },
+            { name: 'passwordConfirm', data: { title: 'Confirm password' } },
             ...attributes,
           ]}
           {...{ password, setPassword, passwordConfirm, setPasswordConfirm }}

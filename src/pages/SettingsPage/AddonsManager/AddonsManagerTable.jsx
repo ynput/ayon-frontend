@@ -5,6 +5,7 @@ import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
+import { EmptyPlaceholderFlex } from '@shared/components'
 
 const AddonsManagerTable = ({
   title = '',
@@ -19,6 +20,7 @@ const AddonsManagerTable = ({
   extraContext,
   sortFunction,
   emptyMessage,
+  emptyIcon,
   isLoading,
   ...props
 }) => {
@@ -91,7 +93,7 @@ const AddonsManagerTable = ({
           disabled={tableSelection.some((v) => v.status?.filter((s) => s !== 'error').length)}
           onClick={(e) => handleDelete(e, selection)}
         >
-          {deleteLabel} {title}
+          {deleteLabel} {title.toLowerCase()}
         </Button>
       )}
       {header && header}
@@ -105,7 +107,13 @@ const AddonsManagerTable = ({
           onSelectionChange={(e) => onChange(e.value?.map((d) => d && d[field]))}
           selection={tableSelection}
           onContextMenu={handleContextClick}
-          emptyMessage={emptyMessage}
+          emptyMessage={
+            <EmptyPlaceholderFlex
+              icon={emptyIcon}
+              message={emptyMessage}
+              style={{ padding: '48px 0' }}
+            />
+          }
           className={clsx({ loading: isLoading })}
           rowClassName={() => ({ loading: isLoading })}
         >

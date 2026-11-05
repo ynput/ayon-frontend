@@ -45,28 +45,28 @@ const attribTypeDefaults = {
 const fields = [
   {
     name: 'userActive',
-    label: 'User Active',
+    label: 'User active',
     data: {
       type: 'boolean',
     },
   },
   {
     name: 'userPool',
-    label: 'User Pool',
+    label: 'User pool',
     data: {
       type: 'string',
     },
   },
   {
     name: 'disablePasswordLogin',
-    label: 'Disable Password Login',
+    label: 'Disable password login',
     data: {
       type: 'boolean',
     },
   },
   {
     name: 'userLevel',
-    label: 'User Level',
+    label: 'User level',
     data: {
       type: 'string',
     },
@@ -420,7 +420,7 @@ const UserDetail = ({
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}
-        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No access groups'}
         menuItems={headerMenuItems}
       />
       {hasServiceUser && singleUserEdit ? (

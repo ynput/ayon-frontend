@@ -183,7 +183,15 @@ const ProjectManagerPage = () => {
   }, [links, selectedProject, module])
 
   useEffect(() => {
-    if (isLoadingUserPermissions || module !== undefined) {
+    // the access page used to live at /manageProjects/userAccess
+    if (module === 'userAccess') {
+      const params = selectedProject ? { project: selectedProject } : {}
+      navigate(replaceQueryParams(ModulePath[Module.projectAccess], params), { replace: true })
+      return
+    }
+
+    // unknown modules fall back to the first page the user can open, like no module
+    if (isLoadingUserPermissions || ModuleList.includes(module)) {
       return
     }
 

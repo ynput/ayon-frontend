@@ -101,7 +101,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
 
     if (onRevert) {
       result.push({
-        label: 'Clear Selected',
+        label: 'Clear selected',
         icon: 'delete',
         command: () => {
           const result = {}

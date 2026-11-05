@@ -122,7 +122,7 @@ const BundleList = ({
 
     // duplicate and edit
     ctxMenuItems.push({
-      label: 'Duplicate and Edit',
+      label: 'Duplicate and edit',
       icon: 'edit_document',
       shortcut: getPlatformShortcutKey('D', [KeyMode.Shift]),
       command: () => onDuplicate(activeBundleName),

@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Icon, Section, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '@containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -23,13 +23,31 @@ const InlineSpinner = styled.div`
   animation: ${spin} 0.8s linear infinite;
 `
 
+const LOG_ICONS = {
+  'log.error': { icon: 'error', color: 'var(--md-sys-color-error)' },
+  'log.warning': { icon: 'warning', color: 'var(--md-sys-color-warning)' },
+  'log.info': { icon: 'info', color: 'var(--md-sys-color-on-surface-variant)' },
+  'log.success': { icon: 'check_circle', color: 'var(--md-sys-color-tertiary)' },
+}
+
 const statusBodyTemplate = (rowData) => {
   const statusObj = {
-  'finished': "check",
-  'aborted': "times",
-  'failed': "error",
-  'pending': "timer",
-  'restarted': "history",
+    finished: 'check',
+    aborted: 'times',
+    failed: 'error',
+    pending: 'timer',
+    restarted: 'history',
+  }
+  // log events all finish instantly, so show their level instead of the status
+  const logIcon = LOG_ICONS[rowData.topic]
+  if (logIcon) {
+    return (
+      <Icon
+        icon={logIcon.icon}
+        style={{ color: logIcon.color, fontSize: 18, verticalAlign: 'middle' }}
+        data-tooltip={rowData.topic}
+      />
+    )
   }
   if (Object.keys(statusObj).includes(rowData.status)) {
     return <CellWithIcon iconStyle={{ marginRight: '0.2rem' }} icon={statusObj[rowData.status]} />

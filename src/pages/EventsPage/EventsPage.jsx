@@ -226,7 +226,7 @@ const EventsPage = () => {
               onChange={() => setShowLogs(!showLogs)}
               style={{ width: 40, marginLeft: 10 }}
             />
-            Show With Logs
+            Show with logs
           </Toolbar>
           <Splitter style={{ height: '100%', width: '100%' }}>
             <SplitterPanel size={70}>

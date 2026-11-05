@@ -28,7 +28,7 @@ const DownloadsPage = () => {
             ))}
           </Styled.Header>
           <Panel style={{ overflow: 'auto' }}>
-            <h2>All Versions</h2>
+            <h2>All versions</h2>
             <Styled.All>
               {Object.entries(allInstallers).map(([version, installers]) => (
                 <div key={version}>

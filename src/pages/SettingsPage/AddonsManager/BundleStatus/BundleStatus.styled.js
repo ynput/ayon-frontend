@@ -3,19 +3,19 @@ import styled from 'styled-components'
 export const StatusDots = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 4px;
   width: 100%;
 
-  span {
-    font-size: 2rem;
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
   }
 
-  .wrapper {
-    width: 30px;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  span:not(:first-child) {
-    margin-left: -7px; // Adjust this value as needed
+  .error {
+    font-size: 16px;
+    color: var(--md-sys-color-error);
   }
 `

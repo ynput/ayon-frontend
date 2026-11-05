@@ -51,7 +51,7 @@ import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { projectBundleFromName } from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
-import { useSessionStorage } from '@shared/hooks'
+import { useSessionStorage, readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
 
@@ -693,13 +693,16 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <>
         <Spacer />
         <Button
-          label="Clear Changes"
+          label="Clear"
           icon="clear"
           onClick={onRevertAllChanges}
           disabled={!canCommit}
+          data-tooltip="Clear all changes"
+          style={{ flexShrink: 0 }}
         />
         <SaveButton
-          label="Save Changes"
+          label="Save changes"
+          style={{ flexShrink: 0 }}
           disabled={
             (!bypassPermissions && !userPermissions.canEditSettings(projectName)) || !canCommit
           }
@@ -718,6 +721,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   )
 
   const onSelectAddon = (newSelection) => {
+    // Open the root section of a newly picked addon, so its settings show without another click.
+    // The root panel id is the same for every addon.
+    if (newSelection.some((a) => !selectedAddons.find((s) => s.name === a.name))) {
+      const expanded = readSessionStorage('expanded-settings-keys', [])
+      if (!expanded.includes('root'))
+        writeSessionStorage('expanded-settings-keys', [...expanded, 'root'])
+    }
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
@@ -831,7 +841,18 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               setFilterKeys(filterKeys)
             }}
           />
-          <Section>
+          <Section style={{ position: 'relative' }}>
+            {!selectedAddons.some((addon) => !addon.isBroken) && (
+              <EmptyPlaceholder
+                style={{ zIndex: 1 }}
+                icon={selectedAddons.length ? 'error' : 'settings'}
+                message={
+                  selectedAddons.length
+                    ? 'Settings could not be loaded'
+                    : 'Select an addon to edit its settings'
+                }
+              />
+            )}
             <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
@@ -917,8 +938,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           </Section>
         </Section>
       </SplitterPanel>
-      <SplitterPanel size={20}>
-        <Section wrap style={{ minWidth: 300 }}>
+      <SplitterPanel size={20} style={{ minWidth: 240 }}>
+        <Section wrap>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable
             changes={changedKeys}

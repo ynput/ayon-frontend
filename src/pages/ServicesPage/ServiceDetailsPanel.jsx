@@ -71,30 +71,30 @@ const ServiceDetailsPanel = ({ service, onClose, onEdit }) => {
           <Value>{service.addonName}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Addon Version:</Label>
+          <Label>Addon version:</Label>
           <Value>{service.addonVersion}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Service Type:</Label>
+          <Label>Service type:</Label>
           <Value>{service.service}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Should Run:</Label>
+          <Label>Should run:</Label>
           <Value>{service.shouldRun ? 'Yes' : 'No'}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Is Running:</Label>
+          <Label>Is running:</Label>
           <Value>{service.isRunning ? 'Yes' : 'No'}</Value>
         </DetailRow>
         {service.lastSeen && (
           <DetailRow>
-            <Label>Last Seen:</Label>
+            <Label>Last seen:</Label>
             <Value>{format(service.lastSeen, 'dd/MM/yy hh:mm')}</Value>
           </DetailRow>
         )}
         {service.data && (
           <JsonWrapper>
-            <h4>Service Data</h4>
+            <h4>Service data</h4>
             <JsonDisplay>{JSON.stringify(service.data, null, 2)}</JsonDisplay>
           </JsonWrapper>
         )}

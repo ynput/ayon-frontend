@@ -86,7 +86,6 @@ const SiteSettings = () => {
         )
         return
       }
-
     }
     toast.success('Site settings saved')
     setNewData({})
@@ -120,7 +119,7 @@ const SiteSettings = () => {
       <Section style={{ flexGrow: 1 }}>
         <Toolbar>
           <Spacer />
-          <Button label="Save Changes" icon="check" onClick={() => saveChanges()} />
+          <Button label="Save changes" icon="check" onClick={() => saveChanges()} />
         </Toolbar>
 
         {(selectedSites.length && (

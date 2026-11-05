@@ -118,7 +118,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
             icon="delete"
           />
         )}
-        <SaveButton onClick={onSave} label="Save Changes" active={isChanged} saving={saving} />
+        <SaveButton onClick={onSave} label="Save changes" active={isChanged} saving={saving} />
       </Toolbar>
       <ScrollPanel
         className="nopad transparent"

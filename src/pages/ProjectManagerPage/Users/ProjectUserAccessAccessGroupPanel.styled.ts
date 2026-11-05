@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 
 export const Wrapper = styled.div`
-position: relative;
+  position: relative;
   justify-content: stretch;
   border-radius: 4px;
   &.dragged {
@@ -58,7 +58,6 @@ export const BodyExpander = styled.div`
   // transition: grid-template-rows 0.25s;
   &.expanded {
     grid-template-rows: 1fr;
-    min-height: 96px;
   }
 `
 

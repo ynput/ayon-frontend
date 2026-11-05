@@ -54,7 +54,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
     type,
   })
 
-  if (skip || isError) return <span>Event Not Found</span>
+  if (skip || isError) return <span>Event not found</span>
 
   const { name = '', status = '', updatedAt } = data || {}
 

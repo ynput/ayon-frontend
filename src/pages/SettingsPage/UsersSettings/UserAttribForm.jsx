@@ -112,6 +112,7 @@ const UserAttribForm = ({
               })
             }}
             autoComplete="cc-csc"
+            placeholder={data.example ? `e.g. ${data.example}` : undefined}
             {...input}
           />
         )
