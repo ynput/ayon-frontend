@@ -103,7 +103,8 @@ const ProviderFill = styled.div`
   gap: var(--base-gap-large);
   width: 100%;
 
-  & > *:only-child {
+  /* not the table splitter, the only child too while no list is selected (no toolbar) */
+  & > *:only-child:not(.p-splitter) {
     display: flex;
     flex-direction: column;
     flex: 1;

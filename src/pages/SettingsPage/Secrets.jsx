@@ -108,12 +108,7 @@ const Secrets = () => {
 
   return (
     <Section>
-      <ScrollPanel
-        style={{
-          height: '100%',
-          backgroundColor: 'transparent',
-        }}
-      >
+      <ScrollPanel style={{ height: '100%' }}>
         <SecretList>
           <h2>New secret</h2>
           <SecretItem name="" value="" stored={false} />
