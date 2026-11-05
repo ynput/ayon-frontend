@@ -108,6 +108,12 @@ const StyledValueWrapper = styled.div`
 
   max-width: 100%;
   min-width: 20px;
+
+  &.pill {
+    gap: 4px;
+    padding: 1px 6px 1px 4px;
+    border-radius: var(--border-radius-m);
+  }
 `
 
 const StyledImg = styled.img`
@@ -153,6 +159,7 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
   isSelected?: boolean
   isReadOnly?: boolean
   iconOnlyColor?: boolean // When true, only the icon gets colored, not the text label
+  isPill?: boolean // each value is a pill of its colour (tinted, with a border), like statuses
   pt?: {
     icon?: Partial<IconProps>
     img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
@@ -172,6 +179,7 @@ export const EnumCellValue = ({
   isSelected,
   isReadOnly,
   iconOnlyColor = false,
+  isPill,
   className,
   pt,
   ...props
@@ -219,46 +227,56 @@ export const EnumCellValue = ({
       {...props}
     >
       <StyledValuesContainer className="values">
-        {selectedOptions.map((option, i) => (
-          <StyledValueWrapper
-            key={option.value.toString() + i}
-            className={clsx({ 'has-img': checkForImgSrc(option.icon) })}
-          >
-            {option.icon && checkForImgSrc(option.icon) ? (
-              <StyledImg
-                src={option.icon}
-                className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
-                style={imgStyle}
-                data-tooltip={option.label}
-                {...imgRest}
-              />
-            ) : option.icon ? (
-              <Icon
-                icon={option.icon}
-                style={{
-                  color: getReadableColor(option),
-                  ...iconStyle,
-                }}
-                className={iconClassName}
-                {...iconRest}
-              />
-            ) : null}
+        {selectedOptions.map((option, i) => {
+          const pill = isPill && option.color ? getTagColors(option) : undefined
+          return (
+            <StyledValueWrapper
+              key={option.value.toString() + i}
+              className={clsx({ 'has-img': checkForImgSrc(option.icon), pill })}
+              style={
+                pill && {
+                  color: pill.text,
+                  backgroundColor: pill.background,
+                  boxShadow: `inset 0 0 0 1px ${pill.border}`,
+                }
+              }
+            >
+              {option.icon && checkForImgSrc(option.icon) ? (
+                <StyledImg
+                  src={option.icon}
+                  className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
+                  style={imgStyle}
+                  data-tooltip={option.label}
+                  {...imgRest}
+                />
+              ) : option.icon ? (
+                <Icon
+                  icon={option.icon}
+                  style={{
+                    color: pill ? pill.text : getReadableColor(option),
+                    ...iconStyle,
+                  }}
+                  className={iconClassName}
+                  {...iconRest}
+                />
+              ) : null}
 
-            {(showLabels || !option.icon) && (
-              <StyledValue
-                style={{
-                  ...getValueColors(option, !!backgroundColor, iconOnlyColor),
-                  ...valueStyle,
-                }}
-                className={clsx({ placeholder: isPlaceholder }, valueClassName)}
-                aria-label={option.label}
-                {...valueRest}
-              >
-                {option.label}
-              </StyledValue>
-            )}
-          </StyledValueWrapper>
-        ))}
+              {(showLabels || !option.icon) && (
+                <StyledValue
+                  style={{
+                    ...(!pill && getValueColors(option, !!backgroundColor, iconOnlyColor)),
+                    ...valueStyle,
+                  }}
+                  className={clsx({ placeholder: isPlaceholder }, valueClassName)}
+                  aria-label={option.label}
+                  {...valueRest}
+                >
+                  {option.label}
+                </StyledValue>
+              )}
+            </StyledValueWrapper>
+          )
+        })}
       </StyledValuesContainer>
       {!isItem && !isReadOnly && (
         <StyledExpandButton
