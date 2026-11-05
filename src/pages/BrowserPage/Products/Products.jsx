@@ -1,22 +1,15 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import {
-  InputText,
-  TablePanel,
-  Section,
-  Toolbar,
-  Spacer,
-  getReadableColor,
-} from '@ynput/ayon-react-components'
+import { InputText, Section, Toolbar, Spacer, getReadableColor } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
 // shared
-import { DetailsDialog } from '@shared/components'
+import { DetailsDialog, EmptyPlaceholder } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { groupResult, confirmDelete } from '@shared/util'
+import { groupResult, confirmDelete, getEntityTypeIcon } from '@shared/util'
 import { extractIdFromClassList } from '@shared/containers/Feed'
 
 import {
@@ -39,7 +32,6 @@ import useColumnResize from '@hooks/useColumnResize'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
-import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
@@ -305,7 +297,7 @@ const Products = () => {
       },
       {
         field: 'versionStatus',
-        header: 'Version Status',
+        header: 'Version status',
         width: 180,
         style: { height: 'max-content' },
         body: (node) => {
@@ -327,6 +319,7 @@ const Products = () => {
               multipleSelected={focusedProducts.length}
               onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
+              invert
             />
           )
         },
@@ -334,7 +327,7 @@ const Products = () => {
       {
         field: 'productType',
         header: 'Product type',
-        width: 120,
+        width: 140,
         body: (node) => {
           if (!node.data.productType) return ''
           const { color, colorLight } = project.getProductType(node.data.productType)
@@ -360,7 +353,7 @@ const Products = () => {
       {
         field: 'versionList',
         header: 'Version',
-        width: 70,
+        width: 100,
         body: (node) => (
           <VersionList
             row={node.data}
@@ -371,8 +364,8 @@ const Products = () => {
       },
       {
         field: 'createdAt',
-        header: 'Created At',
-        width: 150,
+        header: 'Created at',
+        width: 180,
         body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
       },
       {
@@ -740,7 +733,7 @@ const Products = () => {
           disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
-      <TablePanel
+      <Styled.ProductsTablePanel
         style={{ overflow: 'hidden' }}
         onContextMenu={handleTablePanelContext}
         onKeyDown={handleKeyDown}
@@ -781,12 +774,15 @@ const Products = () => {
           />
         )}
         {isNone && !isLoading && !isFetching && (
-          <NoProducts
+          <EmptyPlaceholder
+            icon={getEntityTypeIcon('product')}
+            message={
+              focusedFolders.length ? 'No products found' : 'Select a folder to see its products'
+            }
             error={error}
-            label={!focusedFolders.length ? 'Select a folder to see its products' : undefined}
           />
         )}
-      </TablePanel>
+      </Styled.ProductsTablePanel>
     </Section>
   )
 }

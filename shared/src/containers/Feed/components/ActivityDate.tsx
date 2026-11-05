@@ -1,12 +1,4 @@
-import {
-  format,
-  isValid,
-  isToday,
-  isSameYear,
-  isSameDay,
-  isSameWeek,
-  isSameMinute,
-} from 'date-fns'
+import { format, isValid, isToday, isSameYear, isSameDay, isSameWeek, isSameMinute } from 'date-fns'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
@@ -46,10 +38,7 @@ const ActivityDate = ({ date, isExact, exactTooltip = false, ...props }: Activit
   if (!isValid(dateObj)) return null
 
   useEffect(() => {
-    const interval = setInterval(
-      () => setNow(new Date()),
-      REFRESH_INTERVAL_MS,
-    )
+    const interval = setInterval(() => setNow(new Date()), REFRESH_INTERVAL_MS)
 
     return () => clearInterval(interval)
   }, [])
@@ -62,18 +51,15 @@ const ActivityDate = ({ date, isExact, exactTooltip = false, ...props }: Activit
   const sameMin = isSameMinute(dateObj, now)
 
   const dateFormat = yesterday ? '' : sameYear ? (sameWeek ? 'E' : 'MMM d') : 'MMM d yyyy'
-  const timeFormat = 'h:mm a'
+  const timeFormat = 'HH:mm'
 
   const fuzzyDate = useMemo(() => getFuzzyDate(dateObj), [dateObj])
   const exactDate = useMemo(() => {
     if (today) return format(dateObj, `${dateFormat}, ${timeFormat}`)
-    return format(dateObj, `EEEE, dd MMM yyyy ${timeFormat}`)
+    return format(dateObj, `EEEE, d MMM yyyy, ${timeFormat}`)
   }, [dateObj, today])
 
-  let dateString =
-    isFuzzy && !isExact
-      ? fuzzyDate
-      : exactDate
+  let dateString = isFuzzy && !isExact ? fuzzyDate : exactDate
 
   if (yesterday && isFuzzy && !isExact) dateString = `Yesterday${dateString}`
 

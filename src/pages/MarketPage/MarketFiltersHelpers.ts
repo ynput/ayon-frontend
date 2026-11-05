@@ -18,26 +18,26 @@ export const addonFilters: MarketFilter[] = [
         flags: (v?: string[]) => !v?.includes('licensed'),
       },
     ],
-    tooltip: 'Addons free to download.',
+    tooltip: 'Addons free to download',
   },
   {
     id: 'updates',
     type: 'addons',
-    name: 'Updates Available',
+    name: 'Updates available',
     filter: [{ isOutdated: true }, { isDownloaded: true }],
     tooltip: 'Addons with updates available',
   },
   {
     id: 'production',
     type: 'addons',
-    name: 'In Production',
+    name: 'In production',
     filter: [{ currentProductionVersion: (v: $Any) => v }, { isDownloaded: true }],
     tooltip: 'Addons used in the production bundle',
   },
   {
     id: 'production-outdated',
     type: 'addons',
-    name: 'Production Outdated',
+    name: 'Production outdated',
     filter: [
       {
         isProductionOutdated: true,
@@ -51,7 +51,7 @@ export const addonFilters: MarketFilter[] = [
   {
     id: 'uninstalled',
     type: 'addons',
-    name: 'Downloads Available',
+    name: 'Downloads available',
     filter: [{ isDownloaded: false }],
     tooltip: 'Addons available to download',
   },
@@ -86,7 +86,7 @@ export const marketFilters: {
   },
   {
     type: 'releases',
-    name: 'Release Bundles',
+    name: 'Release bundles',
     filters: releaseFilters,
   },
 ]

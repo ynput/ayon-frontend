@@ -4,7 +4,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { Badge, BadgeWrapper } from '@shared/components'
+import { Badge, BadgeWrapper, EmptyPlaceholder } from '@shared/components'
 import { useURIContext } from '@shared/context'
 
 const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
@@ -173,13 +173,17 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
           onSelectionChange={handleSelectionChange}
           onContextMenuSelectionChange={handleSelectionChange}
           onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
-          emptyMessage="No changes"
+          emptyMessage=" "
           scrollable="true"
           scrollHeight="100%"
+          pt={{ emptyMessage: { style: { display: 'none' } } }}
         >
           <Column header="Name" body={changeNameRenderer} field="key" expander />
           <Column header="" body={actionRenderer} style={{ width: 28 }} />
         </TreeTable>
+        {!changesTree.length && (
+          <EmptyPlaceholder className="compact" icon="edit_off" message="No changes" />
+        )}
       </TablePanel>
     </Section>
   )

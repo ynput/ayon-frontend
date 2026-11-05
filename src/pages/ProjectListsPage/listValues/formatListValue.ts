@@ -1,3 +1,5 @@
+import { formatDate } from '@shared/util/formatDate'
+
 type AttributeLike = {
   data: { type?: string | null; enum?: { value: unknown; label: string }[] | null }
 }
@@ -13,8 +15,8 @@ export const formatListValue = (attribute: AttributeLike | undefined, value: unk
 
   if (Array.isArray(value)) return value.map(label).join(', ')
   if (attribute?.data.type === 'datetime' && typeof value === 'string') {
-    const date = new Date(value)
-    if (!isNaN(date.getTime())) return date.toLocaleDateString()
+    const date = formatDate(value)
+    if (date) return date
   }
   if (typeof value === 'boolean') return value ? 'yes' : 'no'
   return label(value)

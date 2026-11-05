@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
-import { format } from 'date-fns'
+import { formatDateTime } from '@shared/util'
 import styled from 'styled-components'
 import ServiceDialog from './NewServiceDialog'
 
@@ -89,7 +89,7 @@ const ServiceDetailsPanel = ({ service, onClose, onEdit }) => {
         {service.lastSeen && (
           <DetailRow>
             <Label>Last seen:</Label>
-            <Value>{format(service.lastSeen, 'dd/MM/yy hh:mm')}</Value>
+            <Value>{formatDateTime(service.lastSeen)}</Value>
           </DetailRow>
         )}
         {service.data && (

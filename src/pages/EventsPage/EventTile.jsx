@@ -16,13 +16,21 @@ const PanelStyled = styled(Panel)`
   }
 
   header {
-    overflow: hidden;
-    display: inline-block;
+    flex: 1;
+    min-width: 0;
 
     & > * {
+      display: block;
       white-space: nowrap;
-      /* TODO: get text ellipsis working */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
+  }
+
+  .time {
+    flex-shrink: 0;
+    text-align: end;
+    opacity: 0.5;
   }
 
   /* if not disable hover */
@@ -39,13 +47,12 @@ const PanelStyled = styled(Panel)`
 const EventTile = ({ title = '', subTitle = '', time, children, onClick, disableHover }) => {
   return (
     <PanelStyled onClick={onClick} disableHover={disableHover}>
-      <header style={{ flex: 1 }}>
-        <strong>{title}</strong>
-        <br />
+      <header>
+        <strong title={title}>{title}</strong>
         <span style={{ opacity: 0.5 }}>{subTitle}</span>
       </header>
       {time && (
-        <span style={{ textAlign: 'end', opacity: 0.5 }}>
+        <span className="time">
           {formatDistance(new Date(time), new Date(), { addSuffix: true })}
         </span>
       )}

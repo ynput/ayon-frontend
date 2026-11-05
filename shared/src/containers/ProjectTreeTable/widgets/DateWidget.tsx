@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import { DateWidgetInput } from './DateWidgetInput'
 import { WidgetBaseProps } from './CellWidget'
 import { formatUTCDate } from '../../../util/formatUTCDate'
+import { DATE_FORMAT, TIME_FORMAT } from '../../../util/formatDate'
 import { wrapMode } from './wrapMode'
 
 const StyledDateValue = styled.span`
@@ -48,7 +49,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     let isInvalid = false
     if (value) {
       try {
-        const formatString = showTime ? 'dd-MM-yyyy HH:mm:ss' : 'dd-MM-yyyy'
+        const formatString = showTime ? `${DATE_FORMAT}, ${TIME_FORMAT}` : DATE_FORMAT
         const date = isMidnightExclusive ? subMilliseconds(new Date(value), 1) : new Date(value)
         dateString = showTime ? format(date, formatString) : formatUTCDate(date, formatString)
       } catch (error) {
@@ -72,7 +73,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       )
     }
 
-    const parts = dateString && !isInvalid ? dateString.split(' ') : []
+    const parts = dateString && !isInvalid ? dateString.split(', ') : []
 
     return (
       <StyledDateValue {...props} ref={ref}>
@@ -80,7 +81,7 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
           ? dateString
           : parts.map((part, index) => (
               <Fragment key={index}>
-                {index > 0 && ' '}
+                {index > 0 && ', '}
                 <StyledDatePart>{part}</StyledDatePart>
               </Fragment>
             ))}

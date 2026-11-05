@@ -24,7 +24,8 @@ import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
-import { format, isValid } from 'date-fns'
+import { isValid } from 'date-fns'
+import { formatDateTime } from '@shared/util/formatDate'
 import { UserImage } from '@shared/components/UserImage/UserImage'
 import * as CreationStyled from './components/ActivityAssigneeChange/ActivityAssigneeChange.styled'
 import { useOriginFrameStarts } from './hooks/useOriginFrameStarts'
@@ -423,7 +424,7 @@ export const Feed = ({
               <CreationStyled.StatusChange>
                 <CreationStyled.Body style={{ alignItems: 'center' }}>
                   <CreationStyled.Text>
-                    Folder created at {format(new Date(createdFolder.createdAt), 'PPpp')} by
+                    Folder created at {formatDateTime(createdFolder.createdAt)} by
                   </CreationStyled.Text>
                   {createdFolder.createdBy && (
                     <UserImage

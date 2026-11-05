@@ -208,9 +208,9 @@ export const Right = styled.div`
 `
 
 export const DateContainer = styled.div`
-  /* wide enough for a locale date plus time, right aligned so rows line up */
-  min-width: 128px;
-  max-width: 128px;
+  /* wide enough for a date and time ("22 Oct 2026, 22:43"), right aligned so rows line up */
+  min-width: 140px;
+  max-width: 140px;
   display: flex;
   justify-content: flex-end;
   margin-right: var(--padding-m);
@@ -223,8 +223,12 @@ export const Date = styled.span`
   text-overflow: ellipsis;
 `
 
+// a row action, not the page's main one: compact and quiet
 export const ClearButton = styled(Button)`
-  height: 30px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  gap: 4px;
 `
 
 /* number of unread messages in the thread, as a small badge */

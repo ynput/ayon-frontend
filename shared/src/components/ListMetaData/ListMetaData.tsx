@@ -1,7 +1,7 @@
 // displays the meta data for a list
 
 import type { EntityListModel } from '@shared/api'
-import { format } from 'date-fns'
+import { formatDateTime } from '@shared/util'
 import { FC } from 'react'
 import { DetailsSection } from '../DetailsPanelDetails'
 
@@ -12,11 +12,13 @@ interface ListMetaDataProps {
 
 export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
   // data also holds structured entries (list attribute definitions, review session
-  // sections/grouping) which have no meaningful string rendering
+  // sections/grouping) which have no meaningful string rendering, and the thumbnail hash
   const listData = Object.fromEntries(
     Object.entries(list?.data || {}).filter(
       ([key, value]) =>
-        !['category', 'count'].includes(key) && value !== null && typeof value !== 'object',
+        !['category', 'count', 'thumbnail'].includes(key) &&
+        value !== null &&
+        typeof value !== 'object',
     ),
   )
 
@@ -26,9 +28,9 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     'List type': list?.entityListType,
     'Items count': list?.data?.count ?? list?.items?.length,
     Owner: list?.owner,
-    'Created at': list?.createdAt && format(new Date(list?.createdAt), 'PPpp'),
+    'Created at': list?.createdAt && formatDateTime(list.createdAt),
     'Created by': list?.createdBy,
-    'Updated at': list?.updatedAt && format(new Date(list?.updatedAt), 'PPpp'),
+    'Updated at': list?.updatedAt && formatDateTime(list.updatedAt),
     'Last updated by': list?.updatedBy,
     ...listData,
   }

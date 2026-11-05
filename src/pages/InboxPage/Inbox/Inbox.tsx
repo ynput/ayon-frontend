@@ -791,7 +791,7 @@ const Inbox = ({ filter }: InboxProps) => {
                   {!isLoadingAny && (errorInbox || !messagesData.length) && (
                     <EmptyPlaceholder
                       icon="done_all"
-                      message="All caught up! No messages to show."
+                      message="All caught up, no messages to show"
                       error={errorInbox || globalError.projects}
                     />
                   )}

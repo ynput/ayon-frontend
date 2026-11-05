@@ -33,7 +33,6 @@ const StyledAddonList = styled.div`
       width: 120px;
       padding-right: 12px;
       border-radius: var(--border-radius-m);
-      background-color: var(--md-sys-color-surface-container-high) !important;
     }
   }
 `
@@ -178,12 +177,13 @@ const MarketAddonsList = ({
         />
         {onUpdateAll && (
           <Tag
+            variant="filled"
             icon={isUpdatingAll ? 'sync' : isUpdatingAllFinished ? 'check_circle' : 'upgrade'}
             onClick={onUpdateAll}
             className={isUpdatingAll ? 'downloading' : ''}
             disabled={isUpdatingAll || isUpdatingAllFinished}
           >
-            {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All Updated' : 'Update All'}
+            {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All updated' : 'Update all'}
           </Tag>
         )}
       </div>

@@ -1,10 +1,9 @@
 import React from 'react'
 import styled from 'styled-components'
 import type { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
-import { copyToClipboard } from '@shared/util'
+import { copyToClipboard, formatDateTime } from '@shared/util'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import { FieldLabel } from './FieldLabel'
-import { format } from 'date-fns'
 import { UserImage } from '../UserImage/UserImage'
 
 const StyledRow = styled.div`
@@ -91,11 +90,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     }
 
     if (fieldName === 'createdAt' || fieldName === 'updatedAt') {
-      try {
-        return format(new Date(value), 'PPpp')
-      } catch {
-        return value.toString()
-      }
+      return formatDateTime(value) || value.toString()
     }
 
     return value.toString()

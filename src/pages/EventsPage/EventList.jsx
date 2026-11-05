@@ -90,6 +90,8 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             }
           }}
           ref={dataTableRef}
+          // fixed layout: a long description must not push User and Project out of view
+          tableStyle={{ tableLayout: 'fixed', width: '100%' }}
           virtualScrollerOptions={{
             itemSize: 29,
             step: 99,
@@ -97,16 +99,20 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             onLazyLoad: handleLazy,
           }}
         >
-          <Column style={{ maxWidth: 36, overflow: 'hidden' }} body={statusBodyTemplate} />
+          <Column style={{ width: 36, overflow: 'hidden' }} body={statusBodyTemplate} />
           <Column
             header="Time"
             body={(row) => <TimestampField value={row?.updatedAt} />}
-            style={{ maxWidth: 180 }}
+            style={{ width: 180 }}
           />
-          <Column header="Topic" field="topic" style={{ maxWidth: 200 }} />
-          <Column header="Description" field="description" />
-          <Column header="User" field="user" style={{ maxWidth: 120 }} />
-          <Column header="Project" field="project" style={{ maxWidth: 150 }} />
+          <Column header="Topic" field="topic" style={{ width: 180, textOverflow: 'ellipsis' }} />
+          <Column header="Description" field="description" style={{ textOverflow: 'ellipsis' }} />
+          <Column header="User" field="user" style={{ width: 120, textOverflow: 'ellipsis' }} />
+          <Column
+            header="Project"
+            field="project"
+            style={{ width: 120, textOverflow: 'ellipsis' }}
+          />
         </DataTable>
       </TablePanel>
     </Section>

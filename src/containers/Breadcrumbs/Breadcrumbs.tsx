@@ -23,7 +23,7 @@ const parseQueryParams = (query: string): Record<string, string> => {
 }
 
 const getSettingsScopeLabel = (query: string): string => {
-  return query?.includes('project') ? 'Projects Manager' : 'Studio Settings'
+  return query?.includes('project') ? 'Project manager' : 'Studio settings'
 }
 
 const getSettingsPathname = ({ project, site }: { project?: string; site?: string }): string => {
@@ -65,10 +65,33 @@ const getUriTargetUrl = (uri: string, location: Location): string | null => {
 const getPathnameLabel = (pathname: string): string => {
   const pageTitle = pathname.split('/')[1]
 
-  if (pageTitle?.includes('settings')) return 'Studio Settings'
-  if (pageTitle?.includes('manageProjects')) return 'Projects Manager'
+  if (pageTitle?.includes('settings')) return 'Studio settings'
+  if (pageTitle?.includes('manageProjects')) return 'Project manager'
 
   return ''
+}
+
+// route segments named like the nav and tabs that lead to them
+const SECTION_LABELS: Record<string, string> = {
+  dashboard: 'Home',
+  projects: 'Project',
+}
+const MODULE_LABELS: Record<string, Record<string, string>> = {
+  projects: { tasks: 'Task progress', reviews: 'Review', scheduler: 'Schedule' },
+  account: { downloads: 'Launchers' },
+}
+
+const pathname2crumbs = (pathname: string): string[] => {
+  const [section, ...rest] = pathname.split('/').filter(Boolean)
+  if (!section) return []
+  // the project name is an identifier, shown as it is
+  const projectName = section === 'projects' ? rest.shift() : undefined
+  const modules = rest.filter((segment) => segment !== 'addon')
+  return [
+    SECTION_LABELS[section] || upperFirst(section),
+    ...(projectName ? [projectName] : []),
+    ...modules.map((segment) => MODULE_LABELS[section]?.[segment] || upperFirst(segment)),
+  ]
 }
 
 // TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
@@ -87,7 +110,7 @@ const uri2crumbs = (uri: string = '', pathname: string): string[] => {
     if (pathnameLabel) {
       crumbs.unshift(pathnameLabel)
     } else {
-      crumbs.unshift(...pathname.slice(1).split('/').filter(Boolean).map(upperFirst))
+      crumbs.unshift(...pathname2crumbs(pathname))
     }
   }
 

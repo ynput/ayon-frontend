@@ -16,9 +16,10 @@ import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { CellWithIcon } from '@components/icons'
+import { useProjectContext } from '@shared/context'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
-  const tasksTypes = useSelector((state) => state.project.tasks)
+  const { getTaskType } = useProjectContext()
 
   const dispatch = useDispatch()
 
@@ -210,7 +211,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const generateIcon = () => {
       if (!isActive) return 'visibility_off'
       if (isGroup) return 'folder'
-      return tasksTypes[node.data.taskType]?.icon
+      return getTaskType(node.data.taskType)?.icon
     }
 
     let className = ''
@@ -272,6 +273,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const tableData = useTableLoadingData(tasksData, isFetching, 6)
 
   const noTasks = !isFetching && tasksData.length === 0
+  // rows only indent for the expander when tasks are grouped (same name in several folders)
+  const hasGroups = tasksData.some((task) => task.children?.length)
 
   //
   // Render
@@ -316,7 +319,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
               },
             }}
           >
-            <Column field="name" header="Task" expander="true" body={nameRenderer} />
+            <Column field="name" header="Task" expander={hasGroups} body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
             <Column
               field="taskType"

@@ -1,56 +1,13 @@
-import React from 'react'
-import styled from 'styled-components'
-import { Icon } from '@ynput/ayon-react-components'
+import { EmptyPlaceholder } from '@shared/components'
 import { getEntityTypeIcon } from '@shared/util'
 
-const StyledNoTasks = styled.div`
-  position: absolute;
-  top: min(40%, 100px);
-  left: 50%;
-
-  .icon {
-    background-color: var(--md-sys-color-surface-container-low);
-    border: 2px solid var(--md-sys-color-surface-container);
-    padding: 12px;
-    border-radius: var(--border-radius-m);
-    color: var(--md-sys-color-outline-variant);
-
-    transform-origin: bottom center;
-
-    position: absolute;
-
-    user-select: none;
-  }
-
-  .icon:first-child {
-    transform: translate(-50%, -100%) rotate(-20deg) translateX(-10px);
-  }
-
-  .icon:nth-child(2) {
-    transform: translate(-50%, -100%) rotate(20deg) translateX(10px);
-  }
-
-  span:last-child {
-    opacity: 0.5;
-    position: absolute;
-    white-space: nowrap;
-    transform: translate(-50%, 100%);
-    bottom: -30px;
-  }
-`
-
-const NoEntityFound = ({ type = 'task', icon, label }) => {
-  let typeIcon = getEntityTypeIcon(type)
-
-  if (icon) typeIcon = icon
-
-  return (
-    <StyledNoTasks>
-      <Icon icon={typeIcon} />
-      <Icon icon={typeIcon} />
-      <span>{label || `No ${type}s found`}</span>
-    </StyledNoTasks>
-  )
-}
+// the empty state of the narrow entity columns (tasks, workfiles)
+const NoEntityFound = ({ type = 'task', icon, label }) => (
+  <EmptyPlaceholder
+    className="compact"
+    icon={icon || getEntityTypeIcon(type)}
+    message={label || `No ${type}s found`}
+  />
+)
 
 export default NoEntityFound

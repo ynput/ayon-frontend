@@ -1,7 +1,7 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
-import { format, isToday, isValid } from 'date-fns'
+import { isToday, isValid } from 'date-fns'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 import InboxCategoryDots from './InboxCategoryDots'
@@ -10,7 +10,7 @@ import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHel
 import { useMemo, MouseEvent, HTMLAttributes } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
-import { getEntityTypeIcon } from '@shared/util'
+import { formatDateTime, getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
 import type { ProjectsCategories } from '@shared/api'
@@ -117,7 +117,7 @@ const getDateString = (date: string): string => {
 
   if (isToday(dateObj)) return getFuzzyDate(dateObj)
 
-  return format(dateObj, 'MMM d, h:mm a')
+  return formatDateTime(dateObj)
 }
 
 const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
@@ -341,7 +341,7 @@ const InboxMessage = ({
               id={'clear-' + id}
               icon={clearIcon}
               className="clear"
-              variant="filled"
+              variant="text"
               onClick={onClear}
               shortcut={{ children: 'C' }}
             >

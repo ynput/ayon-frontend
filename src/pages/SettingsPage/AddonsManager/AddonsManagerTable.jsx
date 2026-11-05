@@ -5,7 +5,15 @@ import { Button, Section, TablePanel } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { confirmDelete } from '@shared/util'
 import clsx from 'clsx'
-import { EmptyPlaceholderFlex } from '@shared/components'
+import { EmptyPlaceholder } from '@shared/components'
+import styled from 'styled-components'
+
+// the empty state is drawn over the panel, not as a blank table row
+const StyledTablePanel = styled(TablePanel)`
+  .p-datatable-emptymessage {
+    display: none;
+  }
+`
 
 const AddonsManagerTable = ({
   title = '',
@@ -22,6 +30,7 @@ const AddonsManagerTable = ({
   emptyMessage,
   emptyIcon,
   isLoading,
+  footer,
   ...props
 }) => {
   const deleteLabel = isArchive ? 'Archive' : 'Uninstall'
@@ -92,12 +101,13 @@ const AddonsManagerTable = ({
           icon={deleteIcon}
           disabled={tableSelection.some((v) => v.status?.filter((s) => s !== 'error').length)}
           onClick={(e) => handleDelete(e, selection)}
+          style={{ alignSelf: 'flex-start', width: 'auto' }}
         >
           {deleteLabel} {title.toLowerCase()}
         </Button>
       )}
       {header && header}
-      <TablePanel style={{ height: '100%' }}>
+      <StyledTablePanel style={{ height: '100%' }}>
         <DataTable
           {...props}
           value={value}
@@ -107,13 +117,7 @@ const AddonsManagerTable = ({
           onSelectionChange={(e) => onChange(e.value?.map((d) => d && d[field]))}
           selection={tableSelection}
           onContextMenu={handleContextClick}
-          emptyMessage={
-            <EmptyPlaceholderFlex
-              icon={emptyIcon}
-              message={emptyMessage}
-              style={{ padding: '48px 0' }}
-            />
-          }
+          emptyMessage=" "
           className={clsx({ loading: isLoading })}
           rowClassName={() => ({ loading: isLoading })}
         >
@@ -154,7 +158,11 @@ const AddonsManagerTable = ({
             }}
           />
         </DataTable>
-      </TablePanel>
+        {!value?.length && !isLoading && (
+          <EmptyPlaceholder icon={emptyIcon} message={emptyMessage} />
+        )}
+      </StyledTablePanel>
+      {footer}
     </Section>
   )
 }

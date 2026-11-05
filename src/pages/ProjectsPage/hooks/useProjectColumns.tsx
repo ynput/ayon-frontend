@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
-import { format, isValid, parseISO } from 'date-fns'
+import { formatDate } from '@shared/util'
 import {
   ProjectThumbnailCell,
   THUMBNAIL_WIDTH,
@@ -72,8 +72,7 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
-      const date = parseISO(val)
-      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+      return formatDate(val) || val
     },
   }),
   columnHelper.accessor('updatedAt', {
@@ -87,8 +86,7 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
-      const date = parseISO(val)
-      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+      return formatDate(val) || val
     },
   }),
 ]
@@ -155,8 +153,7 @@ export const useProjectColumns = (
             ? (info) => {
                 const val = info.getValue()
                 if (val === undefined || val === null) return ''
-                const date = parseISO(val)
-                return isValid(date) ? format(date, 'dd MMM yyyy') : val
+                return formatDate(val) || val
               }
             : undefined,
           meta: isDateTime

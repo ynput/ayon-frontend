@@ -69,9 +69,8 @@ export const MarketAddonCard = ({
   if (isFinished) stateIcon = 'check_circle'
 
   let stateVariant: ButtonProps['variant'] = 'text'
-  if (state === 'install') stateVariant = 'surface'
+  if (state === 'install' || state === 'update') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
-  if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
     if (['install', 'update'].includes(state)) {
