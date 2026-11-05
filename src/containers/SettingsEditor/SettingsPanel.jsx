@@ -23,7 +23,8 @@ const PanelHeader = styled.div`
   cursor: pointer;
   min-height: 32px;
   max-height: 32px;
-  background-color: var(--md-sys-color-surface-container-highest);
+  /* one step off the panel, so a section bar labels its fields rather than outweighing them */
+  background-color: var(--md-sys-color-surface-container-high);
   border-radius: 4px;
   user-select: none;
   border-left: 4px solid transparent;
