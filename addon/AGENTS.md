@@ -99,6 +99,34 @@ Look in the browser console first: every message starts with `[addon <name>]`.
 | `x (addon): <message>` toast, and `[addon <name>] … failed` in the console | A `run`, `menu` or dialog piece threw. `… crashed` is a component that threw while rendering: it stays inside its own area |
 | `<name> is not available in this AYON frontend` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
 
+## A table of entities: `EntityTable`
+
+AYON's project table as on Overview (columns, sorting, grouping, summaries row, loading on scroll)
+for the rows you give it, read-only. It loads the project's data itself: render it anywhere (a
+project page, a studio page, a dialog for another project). Give its parent a height.
+
+```tsx
+import { EntityTable, type EntityTableSettings } from '@ynput/ayon-addon'
+
+const [settings, setSettings] = useState<EntityTableSettings>({})
+<EntityTable
+  projectName={projectName}
+  entityType="task"
+  filter={{ conditions: [{ key: 'status', operator: 'in', value: ['In progress'] }] }}
+  settings={settings}
+  onSettingsChange={setSettings}
+/>
+```
+
+- `entityType`: `task` (the task list) or `folder` (folders, each expandable to its tasks).
+- Rows: `filter` in the Overview filter bar's format (a key without a prefix is about tasks,
+  `folder_<key>` about folders), `ids` of `entityType`, or both (rows match both). `ids={[]}`
+  shows no rows. Pass them stable (`useMemo`), not inline: a new object rebuilds the table.
+- `settings` is what the user changes (columns, sorting, grouping, row height), the same keys as
+  AYON's saved views. Controlled when set; store it where you like (e.g. your page's view).
+- `excludedColumns`: column ids the table never shows and the user can't add.
+- Read-only: the right-click menu offers Open in Overview, copy, expand, export and the viewer.
+
 ## Picking entities: `EntityPicker`
 
 AYON's entity picker (the dialog AYON uses to link, move or pick a folder, task, product, version,
