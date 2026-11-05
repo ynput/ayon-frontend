@@ -4,7 +4,8 @@
   width: unset;
   padding: 0;
   z-index: 4000 !important;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  // an overlay, like dropdown lists and dialogs (raised above the rows on dark too)
+  background-color: var(--md-sys-color-surface-overlay);
   border-color: var(--md-sys-color-outline-variant);
 
   .p-submenu-list {
@@ -33,10 +34,10 @@
   .p-menuitem {
     // when hovering
     &.p-menuitem-active > .p-menuitem-link {
-      background-color: var(--md-sys-color-surface-container-lowest-hover);
+      background-color: var(--md-sys-color-surface-overlay-hover);
 
       &.p-disabled:not(.danger) {
-        background-color: var(--md-sys-color-surface-container-lowest);
+        background-color: var(--md-sys-color-surface-overlay);
       }
 
       &.save {
