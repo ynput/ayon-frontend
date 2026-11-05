@@ -26,6 +26,8 @@ type LightColorInputProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange
   value?: string | null
   // the item's colour, which the light theme shows while no light colour is picked
   baseColor?: string
+  // the contrast the colour needs on the light theme: MIN_CONTRAST_ICON for colours mostly shown as icons
+  minContrast?: number
   onChange: (value: string | undefined) => void
   disabled?: boolean
 }
@@ -34,6 +36,7 @@ type LightColorInputProps = Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange
 export const LightColorInput = ({
   value,
   baseColor,
+  minContrast,
   onChange,
   disabled,
   ...props
@@ -57,13 +60,13 @@ export const LightColorInput = ({
           Aa
         </Styled.Sample>
       )}
-      {color && !isReadableOnLight(color) && (
+      {color && !isReadableOnLight(color, minContrast) && (
         <Styled.Fix
           icon="warning"
           variant="text"
           disabled={disabled}
           data-tooltip="Hard to read on the light theme. Click to darken it just enough."
-          onClick={() => onChange(makeReadableOnLight(color))}
+          onClick={() => onChange(makeReadableOnLight(color, minContrast))}
         />
       )}
       {value && !disabled && (

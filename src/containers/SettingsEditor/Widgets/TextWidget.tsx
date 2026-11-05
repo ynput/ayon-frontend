@@ -10,6 +10,7 @@ import {
   InputNumber,
   InputText,
   InputTextarea,
+  MIN_CONTRAST_ICON,
 } from '@ynput/ayon-react-components'
 import { DarkColorInput, LightColorInput } from './ThemeColorInput'
 import { useParentSchema } from '../FormTemplates/ParentSchemaContextInstance'
@@ -152,6 +153,9 @@ export const TextWidget = (props: $Any) => {
     Input = LightColorInput
     opts.value = value
     opts.baseColor = typeof color === 'string' ? color : undefined
+    // these are mostly shown as icons, which need less contrast than text
+    if (/^root_(folder_types|task_types|link_types|product_base_types)_/.test(props.id))
+      opts.minContrast = MIN_CONTRAST_ICON
     opts.onChange = (newValue?: string) => {
       updateChangedKeys(props, newValue !== originalValue, path)
       props.onChange(newValue)
