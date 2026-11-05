@@ -80,13 +80,26 @@ strong {
   // table colors
   --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
   --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
-  --color-table-row-high: var(--md-sys-color-surface-container-low);
+  // folder rows and the header: a step off the rows on light too, where -low is barely off white
+  --color-table-row-high: light-dark(#f3f5f8, var(--md-sys-color-surface-container-low));
+  --color-table-header: light-dark(
+    var(--md-sys-color-surface-container),
+    var(--md-sys-color-surface-container-lowest)
+  );
+  --color-table-header-hover: light-dark(
+    var(--md-sys-color-surface-container-hover),
+    var(--md-sys-color-surface-container-lowest-hover)
+  );
   --color-table-hover: var(--md-sys-color-surface-container);
   --color-table-row-hover: light-dark(
     var(--md-sys-color-surface-container-lowest-hover),
     hsl(215 14% 15%)
   );
-  --color-table-selected: var(--md-sys-color-secondary-container);
+  // on light the grey-blue secondary container was too close to hover and the selected row
+  --color-table-selected: light-dark(
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-secondary-container)
+  );
   --color-table-selected-row: var(--md-sys-color-surface-container-high);
   --color-table-readonly-focused: var(--md-sys-color-surface-container);
   --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
