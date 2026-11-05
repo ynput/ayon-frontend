@@ -4,7 +4,7 @@
 // list, the table around the columns). Pages render alone, without AYON's page tabs.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Dropdown } from '@ynput/ayon-react-components'
 import { ContributionView, runContribution, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
@@ -13,7 +13,11 @@ import type {
   TableShortcutContext,
 } from '@ynput/ayon-addon'
 import { getHost, getRegistry } from '@ynput/ayon-addon/host'
-import { useGetProjectQuery, useGetUsersAssigneeQuery } from '@ynput/ayon-frontend-shared/api'
+import {
+  useGetProjectQuery,
+  useGetUsersAssigneeQuery,
+  useGetUsersQuery,
+} from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
   useScopedDetailsPanel,
@@ -31,11 +35,13 @@ import {
   useAddonCustomizeSections,
   useAddonTableShortcuts,
   useAddonUserMenuItems,
+  useUserDetailsSlotContext,
   AddonUserDetailsSections,
   shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
+import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
 import { ButtonItem, ServiceNote } from './parts'
@@ -202,33 +208,27 @@ const ServiceStage = ({ contribution, selection }: StageProps) => {
 }
 
 // userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
-// Settings → Users (it lives in the ayon-frontend app), with the signed-in user selected
+// Settings → Users (it lives in the ayon-frontend app). The target user is picked here, apart from
+// the signed-in one: with an API key that is a service user, which most sections don't show for.
 const UserDetailsStage = ({ contribution }: StageProps) => {
-  const user = useUser()
-  const context = useMemo(
-    () => ({
-      users: user
-        ? [
-            {
-              name: user.name,
-              fullName: user.fullName,
-              email: user.email,
-              active: true,
-              isAdmin: user.isAdmin,
-              isManager: user.isManager,
-              isGuest: user.isGuest,
-              isService: user.isService,
-            },
-          ]
-        : [],
-      readOnly: false,
-    }),
-    [user],
+  const signedIn = useUser()
+  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
+  const [picked, setPicked] = useState<string>()
+  // the signed-in user unless it is a service user, else the first active user
+  const fallback = useMemo(
+    () =>
+      (users as UserDetailsSource[]).find((u) => u.name === signedIn?.name && !u.isService) ??
+      (users as UserDetailsSource[]).find((u) => !u.isService && u.active !== false),
+    [users, signedIn?.name],
   )
+  const target = (users as UserDetailsSource[]).find((u) => u.name === picked) ?? fallback
+  const selected = useMemo(() => (target ? [target] : []), [target])
+  const context = useUserDetailsSlotContext(selected, false)
   const isMenuItem = contribution.slot === 'userDetails.menuItem'
-  useReport(contribution, context, !!user, isMenuItem)
+  useReport(contribution, context, !!target, isMenuItem)
   const { topItems, items } = useAddonUserMenuItems(context)
-  if (!user) return <Hint>Signing in…</Hint>
+  if (isLoading) return <Hint>Loading users…</Hint>
+  if (!target) return <Hint>No users to show.</Hint>
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
       <div
@@ -236,7 +236,16 @@ const UserDetailsStage = ({ contribution }: StageProps) => {
         data-shell-surface="user-details"
       >
         <div className="ayon-shell-bar">
-          <strong>{user.fullName || user.name}</strong>
+          <Dropdown
+            value={[target.name]}
+            options={(users as UserDetailsSource[]).map((u) => ({
+              value: u.name,
+              label: u.isService ? `${u.name} (service)` : u.attrib?.fullName || u.name,
+            }))}
+            search
+            onChange={(names) => setPicked(names[0])}
+            style={{ minWidth: 200 }}
+          />
           <span className="spacer" />
           {[...topItems, ...items].map((item) => (
             <Button
