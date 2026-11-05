@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { Button, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { isEntityRestricted } from '../utils/restrictedEntity'
@@ -95,7 +96,8 @@ const StyledTextContent = styled.div`
     text-overflow: ellipsis;
   }
 
-  /* on one line the path gives way first, cut with an ellipsis, so the name stays readable */
+  /* on one line the path gives way first, cut with an ellipsis, then its divider: the name
+     only shrinks once it alone is wider than the cell */
   &.compact .path {
     margin-bottom: 0;
     flex: 0 1000 auto;
@@ -104,7 +106,13 @@ const StyledTextContent = styled.div`
 
   &.compact .path-divider {
     color: var(--md-sys-color-outline);
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  &.compact .label {
     flex-shrink: 0;
+    max-width: 100%;
   }
 
   /* the name is what people scan for, the path only places it */
@@ -117,6 +125,22 @@ const StyledTextContent = styled.div`
     text-overflow: ellipsis;
     flex: 0 1 auto;
     min-width: 0;
+  }
+
+  /* "product - v004": the product name is cut before the version, which tells rows apart */
+  .label:has(.label-suffix) {
+    display: flex;
+  }
+
+  .label-prefix {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+  }
+
+  .label-suffix {
+    flex-shrink: 0;
+    white-space: pre;
   }
 
   &.stacked .label {
@@ -134,6 +158,15 @@ const StyledTextContent = styled.div`
     flex-shrink: 0;
   }
 `
+
+// version rows are labelled "{product} - {version}"; product names have no spaces, so the first
+// " - " is the separator
+const splitVersionLabel = (entity: EntityData): [string, string] | null => {
+  const label = entity.label || entity.name
+  if (entity.entityType !== 'version' || !label) return null
+  const index = label.indexOf(' - ')
+  return index > 0 ? [label.slice(0, index), label.slice(index)] : null
+}
 
 type EntityNameWidgetProps = {
   id: string
@@ -172,6 +205,23 @@ export const EntityNameWidget = ({
   const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
   const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
+  const versionLabel = isCompact ? splitVersionLabel(entity) : null
+
+  // a cut path or name shows in full on hover (a version's path already ends in its product)
+  const shownPath = shouldShowPath && !isRestricted ? path : undefined
+  const fullName =
+    shownPath && versionLabel
+      ? shownPath + versionLabel[1]
+      : [shownPath, entity.label || entity.name].filter(Boolean).join('/')
+  const showFullNameIfCut = (event: MouseEvent<HTMLElement>) => {
+    const el = event.currentTarget
+    const isCut = Array.from(el.querySelectorAll<HTMLElement>('.path, .label, .label-prefix')).some(
+      (part) => part.scrollWidth > part.clientWidth || part.scrollHeight > part.clientHeight,
+    )
+    if (isCut) el.dataset.tooltip = fullName
+    else delete el.dataset.tooltip
+  }
+
   return (
     <StyledEntityNameWidget className={layout}>
       {isExpandable ? (
@@ -200,12 +250,21 @@ export const EntityNameWidget = ({
               icon={entity.icon || undefined}
               color={entity.color ? entity : undefined}
             />
-            <StyledTextContent className={layout}>
+            <StyledTextContent className={layout} onMouseOver={showFullNameIfCut}>
               {shouldShowPath && !isRestricted && <span className="path">{path}</span>}
               {shouldShowPath && !isRestricted && isCompact && path && (
                 <span className="path-divider">/</span>
               )}
-              <span className="label">{entity.label || entity.name}</span>
+              <span className="label">
+                {versionLabel ? (
+                  <>
+                    <span className="label-prefix">{versionLabel[0]}</span>
+                    <span className="label-suffix">{versionLabel[1]}</span>
+                  </>
+                ) : (
+                  entity.label || entity.name
+                )}
+              </span>
             </StyledTextContent>
           </StyledContent>
         </StyledContentAbsolute>

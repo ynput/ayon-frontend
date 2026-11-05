@@ -37,12 +37,9 @@ export const Warning = styled.div`
 export const FeedContent = styled.ul`
   gap: var(--base-gap-large);
   overflow-y: auto;
-  padding: 8px 0;
+  padding: 12px 0 40px;
   margin: 0;
-  padding-bottom: 40px;
   scrollbar-gutter: stable;
-  /* older activities scrolled up fade out below the search bar */
-  mask-image: linear-gradient(to bottom, transparent 0, black 24px);
 
   display: flex;
   flex-direction: column;

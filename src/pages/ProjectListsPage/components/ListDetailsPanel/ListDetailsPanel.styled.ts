@@ -24,6 +24,43 @@ export const Section = styled.div`
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
     }
   }
+
+  /* the panel is the card: the attribute and detail groups inside are plain, with a title */
+  > div {
+    border: none;
+    border-radius: 0;
+
+    > :first-child:not(.with-padding) {
+      min-height: 0;
+      padding: 4px 0 8px;
+      font-weight: 600;
+    }
+
+    > .with-padding {
+      padding: 0;
+    }
+  }
+
+  & + &:has(> *) {
+    margin-top: var(--padding-m);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  /* labels in a fixed column with their values right next to them */
+  .with-padding > div {
+    grid-template-columns: 120px minmax(0, 1fr) 32px;
+  }
+
+  .field-value > div {
+    text-align: left;
+  }
+
+  /* read-only details: wrap long values (dates) instead of cutting them; an id has no spaces,
+     so it still ends in an ellipsis, with the copy button on hover */
+  .with-padding > div:not(.field-row) > :nth-child(2) {
+    padding-left: 4px;
+    white-space: normal;
+  }
 `
 
 export const Header = styled.div`

@@ -3,8 +3,10 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export const LISTS_COLUMN_ID = 'lists'
 export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'
 
-// empty space after the last column, kept free for the floating add column button
+// a header cell after the last column holds the add column button (AddColumnButton finds it by
+// this attribute), so the button never covers a header
 export const ADD_COLUMN_BUTTON_SPACE = 56
+export const ADD_COLUMN_SLOT_ATTRIBUTE = 'data-add-column-slot'
 
 // queried against the cell container's content box, not the row height
 export const WRAP_MIN_CELL_HEIGHT = 50

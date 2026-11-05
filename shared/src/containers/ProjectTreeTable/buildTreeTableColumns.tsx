@@ -660,6 +660,8 @@ const buildTreeTableColumns = ({
       id: 'name',
       accessorFn: (row) => getScopedValue(row, 'primary', 'name'),
       header: nameLabel,
+      // room for a short path next to the name ("…/010_0010", "renderMain - v004")
+      size: 220,
       minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy && groupBy.id !== 'folder' ? false : canSort('name'),

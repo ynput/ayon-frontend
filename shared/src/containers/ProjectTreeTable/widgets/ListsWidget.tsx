@@ -39,6 +39,10 @@ const ListTags = styled(Chips)`
   .chip:hover .open-icon {
     opacity: 1;
   }
+
+  .chip-label-end {
+    flex-shrink: 0;
+  }
 `
 
 const LoadError = styled.span`
@@ -78,6 +82,14 @@ const getListPath = (projectName: string, list: ListMembership) => {
   const params = new URLSearchParams({ [page.param]: list.id })
   for (const itemId of list.itemIds) params.append('listItemId', itemId)
   return `/projects/${projectName}/${page.path}?${params}`
+}
+
+// A long label is cut in the middle, so its last word, which often tells similar lists apart,
+// stays readable: "List 06/10/2026 23:07:02" -> "List 06/1… 23:07:02".
+const splitChipLabel = (label: string): [string, string | undefined] => {
+  const index = label.lastIndexOf(' ')
+  const end = label.slice(index + 1)
+  return index > 0 && end.length <= 10 ? [label.slice(0, index), end] : [label, undefined]
 }
 
 // same count badge as the links cells
@@ -136,17 +148,21 @@ const EntityListsChips: FC<ListsWidgetProps & { value: ListsWidgetData }> = ({
 
   const chips: ChipValue[] = useMemo(
     () =>
-      items.map(({ list, open }) => ({
-        label: list.label,
-        tooltip: list.itemIds.length > 1 ? `${list.label} (x${list.itemIds.length})` : list.label,
-        suffix: (
-          <>
-            <ItemCount count={list.itemIds.length} />
-            {open && <Icon icon="open_in_new" className="open-icon" />}
-          </>
-        ),
-        onClick: open,
-      })),
+      items.map(({ list, open }) => {
+        const [label, labelEnd] = splitChipLabel(list.label)
+        return {
+          label,
+          tooltip: list.itemIds.length > 1 ? `${list.label} (x${list.itemIds.length})` : list.label,
+          suffix: (
+            <>
+              {labelEnd && <span className="chip-label-end">{labelEnd}</span>}
+              <ItemCount count={list.itemIds.length} />
+              {open && <Icon icon="open_in_new" className="open-icon" />}
+            </>
+          ),
+          onClick: open,
+        }
+      }),
     [items],
   )
 

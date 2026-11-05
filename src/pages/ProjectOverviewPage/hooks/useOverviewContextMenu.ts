@@ -53,7 +53,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
 
   const uploadVersionItem: ContextMenuItemConstructor = (_e, cell) => ({
     id: 'upload-version',
-    label: 'Upload Version',
+    label: 'Upload version',
     icon: 'upload',
     command: () => handleVersionUpload(cell),
   })

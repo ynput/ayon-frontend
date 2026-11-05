@@ -116,6 +116,27 @@ export const ColumnHeader = styled.tr`
   background-color: var(--md-sys-color-surface-container-low);
 `
 
+export const HeaderLabel = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+`
+
+// pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
+// in its own space after the last column
+export const AddColumnSlot = styled.th`
+  position: sticky;
+  right: 0;
+  z-index: 11;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--color-table-header);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+`
+
 export const HeaderCell = styled.th`
   position: relative;
   background-color: var(--color-table-header);

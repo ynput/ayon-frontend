@@ -27,6 +27,7 @@ import type { EntityType, ParentColumnDefinition, TableRow } from './types/table
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getColumnIcon,
   getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
@@ -59,6 +60,7 @@ import {
   ROW_SELECTION_COLUMN_ID,
   DRAG_HANDLE_COLUMN_ID,
   ADD_COLUMN_BUTTON_SPACE,
+  ADD_COLUMN_SLOT_ATTRIBUTE,
 } from './constants'
 
 // Hook imports
@@ -867,7 +869,6 @@ export const ProjectTreeTable = ({
               userSelect: 'none',
               ...columnSizeVars,
               width: table.getTotalSize() + ADD_COLUMN_BUTTON_SPACE,
-              paddingRight: ADD_COLUMN_BUTTON_SPACE,
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
               // stretch tbody to the container so the column dividers fill the empty
               // space below the rows; also pins the summary footer to the bottom
@@ -1200,8 +1201,34 @@ const TableHeadRow = ({
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
+      <Styled.AddColumnSlot
+        {...{ [ADD_COLUMN_SLOT_ATTRIBUTE]: '' }}
+        style={{ width: ADD_COLUMN_BUTTON_SPACE }}
+      />
     </Styled.ColumnHeader>
   )
+}
+
+// the default thumbnail column is narrower than its label, so its header is an icon
+const THUMBNAIL_HEADER_MIN_WIDTH = 84
+
+// a header cut short by its column shows the full label on hover
+const showLabelIfTruncated = (event: React.MouseEvent<HTMLElement>) => {
+  const el = event.currentTarget
+  if (el.scrollWidth > el.clientWidth) el.dataset.tooltip = el.textContent || ''
+  else delete el.dataset.tooltip
+}
+
+const TableHeadLabel = ({ header }: { header: Header<TableRow, unknown> }) => {
+  const { column } = header
+  const label = column.columnDef.header
+  if (typeof label !== 'string') return <>{flexRender(label, header.getContext())}</>
+
+  if (column.id === 'thumbnail' && column.getSize() < THUMBNAIL_HEADER_MIN_WIDTH) {
+    return <Icon icon={getColumnIcon(column.id)} data-tooltip={label} />
+  }
+
+  return <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
 }
 
 interface TableHeadCellProps {
@@ -1319,7 +1346,7 @@ const TableHeadCell = ({
           className={clsx('bold', 'header')}
           {...(isDraggable ? { ...attributes, ...listeners } : {})}
         >
-          {flexRender(column.columnDef.header, header.getContext())}
+          <TableHeadLabel header={header} />
           {headerIcon && <Icon icon={headerIcon.icon} data-tooltip={headerIcon.tooltip} />}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />

@@ -73,6 +73,16 @@ export const Title = styled.div`
     display: none;
     flex: 1;
   }
+
+  /* the version and its status read as one value, not spread across the card */
+  &.version-status {
+    justify-content: flex-start;
+
+    .separator {
+      flex-shrink: 0;
+      color: var(--md-sys-color-outline);
+    }
+  }
 `
 
 export const Thumbnail = styled(ThumbnailSimple)`
