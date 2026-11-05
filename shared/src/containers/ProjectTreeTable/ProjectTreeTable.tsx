@@ -1868,8 +1868,10 @@ const TD = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
+          // only where the table expands rows: a flat list of folders is not grouped
           expandable:
             !isGroup &&
+            cell.row.getCanExpand() &&
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
           'group-header': isGroup,
