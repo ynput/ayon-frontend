@@ -19,6 +19,15 @@ type UseDeleteListItemsProps = {
 export type DeleteListItem = { id: string; entityId: string }
 type RestoreListItem = DeleteListItem & { position?: number }
 
+// The selection holds one entry per cell, so a row that is both ticked and cell selected
+// (or a card plus its checkbox) gives the same list item twice. The server fails on the second.
+const uniqueListItems = (items: DeleteListItem[]): DeleteListItem[] => [
+  ...new Map(items.map((item) => [item.id, item])).values(),
+]
+
+const getErrorMessage = (error: any): string =>
+  error?.data?.detail ?? error?.message ?? String(error)
+
 type OnDeleteListItems = (items: DeleteListItem[], history?: UseHistoryReturn) => Promise<void>
 type DeleteListItems = (
   items: DeleteListItem[],
@@ -80,7 +89,7 @@ const useDeleteListItems = ({
         },
       }).unwrap()
     } catch (error: any) {
-      toast.error(`Error adding items to list: ${error}`)
+      toast.error(`Error adding items to list: ${getErrorMessage(error)}`)
       // remove from redo stack as well
       if (history) {
         history.removeHistoryEntries(1)
@@ -88,7 +97,8 @@ const useDeleteListItems = ({
     }
   }
 
-  const onDeleteListItems: OnDeleteListItems = async (items, history) => {
+  const onDeleteListItems: OnDeleteListItems = async (allItems, history) => {
+    const items = uniqueListItems(allItems)
     try {
       if (!listId) throw { data: { detail: 'No listId provided' } }
       const restoreItems = getRestoreItems(items)
@@ -113,20 +123,22 @@ const useDeleteListItems = ({
       toast.success(`Deleted ${items.length} item${items.length > 1 ? 's' : ''} from list`)
     } catch (error: any) {
       // Handle the error (e.g., show a toast notification)
-      toast.error(`Error deleting list items: ${error}`)
+      toast.error(`Error deleting list items: ${getErrorMessage(error)}`)
     }
   }
 
   const deleteListItemsWithConfirmation: DeleteListItemsWithConfirmation = async (
-    itemIds,
+    allItems,
     history,
-  ) =>
-    confirmDelete({
+  ) => {
+    const itemIds = uniqueListItems(allItems)
+    return confirmDelete({
       label: `remove ${itemIds.length} item${itemIds.length > 1 ? 's' : ''} from list`,
       deleteLabel: 'Remove',
       accept: async () => onDeleteListItems(itemIds, history),
       showToasts: false,
     })
+  }
 
   const deleteListItems: DeleteListItems = async (itemIds, history, force) => {
     if (force) {
