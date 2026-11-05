@@ -9,7 +9,8 @@ import { getEntityViewierIds } from '../utils'
 import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
-  const { attribFields, getEntityById, onOpenPlayer, playerOpen } = useProjectTableContext()
+  const { attribFields, getEntityById, onOpenPlayer, playerOpen, isRowReadOnly } =
+    useProjectTableContext()
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const canOpenRenameDialog = canWriteLabelPermission || canWriteNamePermission
 
@@ -232,7 +233,7 @@ export default function useKeyboardNavigation() {
           }
           e.preventDefault()
           // Check if focused cell is name column on folder/task and user has rename permissions
-          if (colId === 'name' && canOpenRenameDialog) {
+          if (colId === 'name' && canOpenRenameDialog && !isRowReadOnly(rowId)) {
             const entity = getEntityById(rowId)
             if (entity && (entity.entityType === 'folder' || entity.entityType === 'task')) {
               const nameCellId = getCellId(rowId, 'name')

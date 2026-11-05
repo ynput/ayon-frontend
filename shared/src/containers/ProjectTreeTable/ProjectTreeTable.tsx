@@ -1818,7 +1818,7 @@ const TD = ({
   rowHeight,
   ...props
 }: TableCellProps) => {
-  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+  const { getEntityById, onOpenPlayer, isRowReadOnly } = useProjectTableContext()
 
   const {
     isCellSelected,
@@ -1852,8 +1852,11 @@ const TD = ({
     cell.column.id,
   )
   const cellMark = cell.row.original.cellMarks?.[cell.column.id]
-  const isRowReadOnly = !!cell.row.original.readOnly
-  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
+  const rowReadOnly = isRowReadOnly(cell.row.id)
+  const cellContext = useMemo(
+    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly }),
+    [cellMark, rowReadOnly],
+  )
 
   return (
     <Styled.TD
@@ -1951,7 +1954,7 @@ const TD = ({
             }
           }
           // other cells: start editing
-          else {
+          else if (!rowReadOnly) {
             setEditingCellId(cellId)
           }
 
@@ -1966,7 +1969,7 @@ const TD = ({
         const isRestricted =
           isGroup ||
           isEntityRestricted(cell.row.original.primary.entityType) ||
-          !!cell.row.original.readOnly
+          rowReadOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {

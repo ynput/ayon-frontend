@@ -96,6 +96,7 @@ const useCellContextMenu = ({
     contextMenuItems: contextContextMenuItems = [],
     powerpack,
     onOpenPlayer,
+    isRowReadOnly,
   } = useProjectTableContext()
 
   // Merge context menu items from props and context
@@ -185,7 +186,11 @@ const useCellContextMenu = ({
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(meta.selectedCells),
-        hidden: cell.columnId === 'name' || cell.columnId === 'thumbnail' || cell.isGroup,
+        hidden:
+          cell.columnId === 'name' ||
+          cell.columnId === 'thumbnail' ||
+          cell.isGroup ||
+          isRowReadOnly(parseCellId(cell.cellId)?.rowId ?? ''),
         disabled: cell.attribField?.readOnly,
       },
     ]
