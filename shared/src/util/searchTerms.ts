@@ -111,6 +111,30 @@ export const getSearchMatchedFolderIds = (
   return matched
 }
 
+interface SearchableRow {
+  id: string
+  name?: string | null
+  label?: string | null
+  parents?: string[]
+  subRows?: SearchableRow[]
+}
+
+// The rows of a slicer panel its search leaves, at any depth. null when the query is empty.
+export const getSearchMatchedRowIds = (rows: SearchableRow[], query: string): string[] | null => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return null
+
+  const matched: string[] = []
+  const stack = [...rows]
+  while (stack.length) {
+    const row = stack.pop()!
+    const haystack = toSlicerSearchHaystack(row.label ?? undefined, row.name ?? undefined, row.parents)
+    if (matchSearchQuery(haystack, groups).passed) matched.push(row.id)
+    if (row.subRows?.length) stack.push(...row.subRows)
+  }
+  return matched
+}
+
 // best matches first
 export const filterBySearchQuery = <T>(
   items: T[],

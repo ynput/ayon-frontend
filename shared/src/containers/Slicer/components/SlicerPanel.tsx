@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
 import { menuItemsAt } from '@ynput/ayon-addon/host'
@@ -28,6 +28,7 @@ import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shar
 import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
+import { getSearchMatchedRowIds } from '@shared/util'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -146,6 +147,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     getSliceSort,
     setSliceSort,
     projectName,
+    setSearchMatchesByPanel,
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
@@ -221,6 +223,25 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   const globalFilter = search ?? ''
   // the hierarchy panel is named after the tree, but what it lists is folders
   const searchSubject = isHierarchy ? 'Folders' : sliceTypeLabel
+
+  // a value panel's search acts like selecting every row it leaves (useSlicerPanelSelections).
+  // Rows still loading would read as no matches and empty the table, so wait for them.
+  // keyed by content: the rows are rebuilt on count updates, the matches rarely change
+  const searchMatchesKey = useMemo(() => {
+    if (isHierarchy || isLoadingSliceTableData) return null
+    return getSearchMatchedRowIds(sliceTableData, globalFilter)?.join('\n') ?? null
+  }, [isHierarchy, isLoadingSliceTableData, sliceTableData, globalFilter])
+  useEffect(() => {
+    if (searchMatchesKey === null) return
+    const ids = searchMatchesKey ? searchMatchesKey.split('\n') : []
+    setSearchMatchesByPanel((prev) => ({ ...prev, [panel.id]: ids }))
+    return () =>
+      setSearchMatchesByPanel((prev) => {
+        const rest = { ...prev }
+        delete rest[panel.id]
+        return rest
+      })
+  }, [searchMatchesKey, panel.id, setSearchMatchesByPanel])
 
   const hierarchyContextMenu = useHierarchyContextMenuItems(
     onAddToList || contextOnAddToList,
