@@ -22,7 +22,12 @@ type FieldDisplayValue = {
 const getEnumDisplay = (item: EnumItem & UserColor): FieldDisplayValue => {
   const icon = typeof item.icon === 'string' ? item.icon : item.icon?.name
   const color = item.color ?? (typeof item.icon === 'object' ? item.icon?.color : undefined)
-  return { name: item.label, icon, color, colorLight: item.colorLight }
+  return {
+    name: item.label,
+    icon: icon ?? undefined,
+    color: color ?? undefined,
+    colorLight: item.colorLight,
+  }
 }
 
 const formatSingleValue = (value: unknown, attribute?: AttributeModel): string => {
