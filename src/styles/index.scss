@@ -426,10 +426,7 @@ a {
 
 // keep the right-clicked row looking hovered while its context menu is open
 .p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
-  background: light-dark(
-    var(--md-sys-color-surface-container-lowest-hover),
-    rgba(255, 255, 255, 0.03)
-  );
+  background: var(--color-table-row-hover);
   color: light-dark(var(--md-sys-color-on-surface), #ffffffde);
 }
 
