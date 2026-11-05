@@ -394,7 +394,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
           return (
             <EnumCellValue
               selectedOptions={selectedOptions}
-              isPill={columnId === 'status'}
+              pill={columnId === 'status' ? 'filled' : 'tinted'}
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
@@ -410,7 +410,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             isLoadingOptions={isLoadingOptions}
-            isPill={columnId === 'status'}
+            pill={columnId === 'status' ? 'filled' : 'tinted'}
             {...mixedProps}
             {...sharedProps}
             {...pt?.enum}
