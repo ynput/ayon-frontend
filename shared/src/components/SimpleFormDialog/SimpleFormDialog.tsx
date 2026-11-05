@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button, Spacer, Dialog } from '@ynput/ayon-react-components'
 import { SimpleForm } from '@shared/components/SimpleForm'
-import type { SimpleFormValueDict } from '@shared/components/SimpleForm'
+import type { SimpleFormErrors, SimpleFormValueDict } from '@shared/components/SimpleForm'
 import type { SimpleFormField } from '@shared/api'
 
 export interface SimpleFormDialogProps {
@@ -36,11 +36,28 @@ export const SimpleFormDialog = ({
   cancelIcon,
 }: SimpleFormDialogProps) => {
   const [formData, setFormData] = useState<SimpleFormValueDict>({})
+  const [errors, setErrors] = useState<SimpleFormErrors>({})
+  // errors show once a submit was blocked, then follow the values: fixing one clears it
+  const [showErrors, setShowErrors] = useState(false)
 
   if (!isOpen) return null
 
+  const handleChange = (values: SimpleFormValueDict, valueErrors: SimpleFormErrors) => {
+    setFormData(values)
+    setErrors(valueErrors)
+  }
+
+  // the one submit path for the button and Enter: invalid values never reach onSubmit
+  const submit = () => {
+    if (Object.keys(errors).length) {
+      setShowErrors(true)
+      return
+    }
+    onSubmit(formData)
+  }
+
   // without a submit button there is nothing for Enter to confirm
-  const handleSubmit = submitLabel ? () => onSubmit(formData) : undefined
+  const handleSubmit = submitLabel ? submit : undefined
 
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
@@ -71,8 +88,9 @@ export const SimpleFormDialog = ({
       <SimpleForm
         fields={fields}
         values={values}
-        onChange={setFormData}
+        onChange={handleChange}
         onSubmit={handleSubmit}
+        showErrors={showErrors}
         style={{ width: '95%' }}
       />
     </Dialog>

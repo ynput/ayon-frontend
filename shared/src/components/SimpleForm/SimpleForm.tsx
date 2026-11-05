@@ -1,21 +1,32 @@
 import React, { useEffect } from 'react'
 import { FormLayout, FormRow } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 import { useFormState } from './useFormState'
 import { getFieldOptions } from './getFieldOptions'
 import { FormLabel } from './FormLabel'
 import { FormField } from './FormField'
 import type { SimpleFormField } from '@shared/api'
 import type { SimpleFormValueDict } from './types'
+import type { SimpleFormErrors } from './validateFields'
+
+const FieldError = styled.span`
+  color: var(--md-sys-color-error);
+  padding-top: 4px;
+`
 
 export interface SimpleFormProps {
   fields: SimpleFormField[]
   /** Initial/seed values - keyed by field name, same shape as onChange emits */
   values?: SimpleFormValueDict
   /** Called with the full value dict whenever anything changes - a direct
-   * edit, a rule forcing a value, or a stale select value getting cleared */
-  onChange?: (values: SimpleFormValueDict) => void
-  /** Called on Enter in a single-line field (text or number), like submitting an HTML form */
+   * edit, a rule forcing a value, or a stale select value getting cleared -
+   * and the constraint errors of those values (empty when they are valid) */
+  onChange?: (values: SimpleFormValueDict, errors: SimpleFormErrors) => void
+  /** Called on Enter in a single-line field (text or number), like submitting an HTML form.
+   * It is the parent's submit: it must check the errors from onChange, as for its button */
   onSubmit?: () => void
+  /** Show the constraint errors under the fields, e.g. once a submit was blocked */
+  showErrors?: boolean
   className?: string
   style?: React.CSSProperties
 }
@@ -46,15 +57,16 @@ export const SimpleForm = ({
   values,
   onChange,
   onSubmit,
+  showErrors,
   className,
   style,
 }: SimpleFormProps) => {
-  const { formData, patches, resolvedOptions, setFieldValue } = useFormState(fields, values)
+  const { formData, patches, resolvedOptions, errors, setFieldValue } = useFormState(fields, values)
 
   useEffect(() => {
-    if (formData) onChange?.(formData)
+    if (formData) onChange?.(formData, errors)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData])
+  }, [formData, errors])
 
   if (!formData) return null
 
@@ -96,13 +108,17 @@ export const SimpleForm = ({
           return <FormLabel key={field.name} field={effectiveField} />
         }
 
+        const error = showErrors ? errors[field.name] : undefined
+
         return (
           <FormRow key={field.name} label={effectiveField.label || ''} style={rowStyle}>
             <FormField
               field={effectiveField}
               value={formData[field.name]}
               onChange={(value) => setFieldValue(field.name, value)}
+              error={error}
             />
+            {error && <FieldError>{error}</FieldError>}
           </FormRow>
         )
       })}
