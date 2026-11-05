@@ -12,14 +12,14 @@ export const TR = styled.tr`
   border-radius: var(--border-radius-m);
   overflow: hidden;
 
-  /* ROW COLOR: each row is a card for one project, white on light, a raised grey on dark */
+  /* ROW COLOR: each row is a card for one project, white on light, one light step above the panel on dark */
   --list-row-bg: light-dark(
     var(--md-sys-color-surface-container-lowest),
-    var(--md-sys-color-surface-container)
+    var(--color-table-row-high)
   );
   --list-row-bg-hover: light-dark(
     var(--md-sys-color-surface-container-lowest-hover),
-    var(--md-sys-color-surface-container-hover)
+    var(--md-sys-color-surface-container)
   );
 
   .inner-td {
