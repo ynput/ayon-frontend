@@ -1,14 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
-import {
-  Button,
-  Section,
-  Panel,
-  FormRow,
-  LockedInput,
-  SaveButton,
-} from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow, SaveButton } from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
@@ -20,7 +13,7 @@ import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
-import { PanelButtonsStyled } from './userDetail.styled'
+import { EditableLockedInput, PanelButtonsStyled } from './userDetail.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -432,14 +425,14 @@ const UserDetail = ({
           {singleUserEdit && (
             <Panel>
               <FormRow label="Username" key="Username">
-                <LockedInput
+                <EditableLockedInput
                   value={singleUserEdit.name}
                   onEdit={() => setShowRenameUser(true)}
                   disabled={managerDisabled}
                 />
               </FormRow>
               <FormRow label="Password" key="Password">
-                <LockedInput
+                <EditableLockedInput
                   label="Password"
                   value={singleUserEdit.hasPassword ? '1234567890' : ''}
                   type="password"

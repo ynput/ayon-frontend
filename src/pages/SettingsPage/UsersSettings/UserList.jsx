@@ -65,17 +65,9 @@ export const ProfileRow = ({ rowData }) => {
   )
 }
 
-const BooleanCell = ({ value }) => (
-  <DoneCheckbox
-    checked={!!value}
-    isReadOnly
-    style={{
-      fontSize: 18,
-      display: 'block',
-      color: value ? undefined : 'var(--md-sys-color-outline-variant)',
-    }}
-  />
-)
+// only true is marked: an empty circle on every other row reads as a radio button
+const BooleanCell = ({ value }) =>
+  value ? <DoneCheckbox checked isReadOnly style={{ fontSize: 18, display: 'block' }} /> : null
 
 const getUserRole = (user) => {
   if (user.isAdmin) return 'Admin'
@@ -165,7 +157,12 @@ const UserList = ({
 
   const [ctxMenuShow] = useCreateContextMenu()
 
-  const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
+  // A to Z by default, the users query returns them the other way round
+  const sortedList = useMemo(
+    () => [...(tableList || [])].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [tableList],
+  )
+  const tableData = useTableLoadingData(sortedList, isLoading, 40, 'name')
 
   const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
 

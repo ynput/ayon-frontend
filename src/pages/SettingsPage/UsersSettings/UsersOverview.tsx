@@ -5,6 +5,7 @@ import styled from 'styled-components'
 const Totals = styled.div`
   display: flex;
   align-items: center;
+  gap: 4px;
   padding: 2px;
   background-color: var(--md-sys-color-surface-container-low);
   border-radius: var(--border-radius-m);
@@ -12,6 +13,8 @@ const Totals = styled.div`
 `
 
 const Total = styled.div`
+  display: flex;
+  gap: 4px;
   padding: 4px 6px;
   &:hover {
     background-color: var(--md-sys-color-surface-container-low-hover);
@@ -19,6 +22,14 @@ const Total = styled.div`
   }
 
   white-space: nowrap;
+
+  .label {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  .value {
+    font-weight: 600;
+  }
 `
 
 type User = {
@@ -82,7 +93,8 @@ const UsersOverview = ({ users = [] }: UsersOverviewProps) => {
     <Totals>
       {Object.entries(totals).map(([key, { label, tooltip, value }]) => (
         <Total key={key} data-tooltip={tooltip} data-tooltip-delay={0}>
-          <strong>{label}</strong>: {value}
+          <span className="label">{label}</span>
+          <span className="value">{value}</span>
         </Total>
       ))}
     </Totals>

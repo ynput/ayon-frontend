@@ -5,6 +5,7 @@ import { useListAddonsQuery, useListBundlesQuery, useUpdateBundleMutation } from
 import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
+import { BundleStatusLegend } from './BundleStatus/BundleStatus'
 import useGetTableData from './useGetTableData'
 import type { TableDataItem } from './useGetTableData'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -223,14 +224,14 @@ const AddonsManager = (): JSX.Element => {
                   data-tooltip="Upload addon zip files"
                   label="Upload addons"
                   icon="upload"
-                  style={{ width: '100%' }}
                 />
-                <Link to="/market" style={{ width: '100%' }}>
-                  <Button label="Addon market" icon="store" style={{ width: '100%' }} />
+                <Link to="/market">
+                  <Button label="Addon market" icon="store" />
                 </Link>
               </div>
             }
             extraContext={viewInMarket}
+            footer={<BundleStatusLegend />}
             emptyMessage="No addons found"
             emptyIcon="extension"
             isLoading={isLoading}
@@ -255,6 +256,7 @@ const AddonsManager = (): JSX.Element => {
             emptyIcon="extension"
             isLoading={isLoading}
             header={null}
+            footer={null}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -278,6 +280,7 @@ const AddonsManager = (): JSX.Element => {
             emptyIcon="inventory_2"
             isLoading={isLoading}
             header={null}
+            footer={null}
             onDeleteSuccess={undefined}
             sortFunction={undefined}
           />

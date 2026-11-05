@@ -15,6 +15,10 @@ const StyledFormRow = styled(FormRow)`
       white-space: nowrap;
       text-overflow: ellipsis;
       margin-right: 16px;
+
+      &.empty {
+        color: var(--md-sys-color-outline);
+      }
     }
   }
 `
@@ -27,8 +31,8 @@ const BundleDepPackage = ({ children, label, onEdit }) => {
         onClick={onEdit}
         data-tooltip={children ? 'Edit dependency package' : 'Add dependency package'}
       />
-      <span data-tooltip={children || '(NONE)'}>
-        {children || '(NONE)'}
+      <span data-tooltip={children || undefined} className={children ? undefined : 'empty'}>
+        {children || 'None'}
         {/* <span> (author)</span> */}
       </span>
     </StyledFormRow>

@@ -117,6 +117,78 @@ $field-gap: 8px
         gap: 8px
 
 
+  // A list of compact items (anatomy types, statuses, tags, ...) reads as a table: the labels show once,
+  // above the first row, and each kind of field has the same width in every row, so the rows fit the panel.
+  // A dragged row is in an overlay that is both .rjsf and .compact-rows
+  .compact-rows, &.compact-rows
+    // the row takes the width of the list, in the drag overlay too
+    div[data-hidden="false"]:has(> .layout-compact)
+      flex: 1
+      min-width: 0
+
+    .layout-compact > .form-object-field-item > .form-inline-field-wrapper
+      flex: 1 1 140px
+      width: auto
+      min-width: 0
+
+      > .form-inline-field
+        position: relative
+        padding: 0
+
+        > .form-inline-field-label
+          display: none
+
+      .dropdown
+        min-width: 0
+        max-width: none
+
+    .layout-compact > .form-object-field-item
+      // names are short, the room goes to the other fields
+      > .name-wrapper
+        min-width: 140px
+        max-width: 320px
+
+      &.widget-short > .form-inline-field-wrapper
+        flex: 0 0 72px
+        .form-inline-field-widget
+          max-width: none
+          > *
+            min-width: 0 !important
+            max-width: none !important
+
+      // the icon and as much of its name as fits
+      &.widget-icon > .form-inline-field-wrapper
+        flex: 0 1 150px
+        min-width: 110px
+        .form-inline-field-widget
+          max-width: none
+        .dropdown
+          min-width: 0 !important
+          max-width: none !important
+
+      &.widget-color, &.widget-color-dark, &.widget-color-light
+        > .form-inline-field-wrapper
+          flex: 0 0 auto
+
+    > .header-row
+      padding-top: 20px
+
+      .layout-compact > .form-object-field-item > .form-inline-field-wrapper > .form-inline-field > .form-inline-field-label
+        display: block
+        position: absolute
+        bottom: 100%
+        left: 0
+        padding: 0 0 2px
+
+        &.default
+          color: var(--md-sys-color-on-surface-variant)
+
+        span
+          justify-content: flex-start
+          min-height: 0
+          font-size: 12px
+          font-weight: normal
+
   .form-object-field-item
     display: contents
     div[data-hidden="true"]
@@ -146,7 +218,9 @@ $field-gap: 8px
     padding: 0 3px
 
     .form-inline-field-label
-      flex-basis: 250px
+      // one label column, so the fields of a section start at the same x; a longer label wraps
+      flex: 0 0 240px
+      min-width: 0
       padding-left: 4px
       cursor: pointer
       user-select: none
@@ -170,6 +244,7 @@ $field-gap: 8px
         display: inline-block
         width: auto
         height: auto
+        min-height: 0
         padding: 2px 6px
         // the tint reaches past the text without moving it
         margin-right: -6px
@@ -181,9 +256,10 @@ $field-gap: 8px
         align-items: center
         justify-content: flex-end
         width: 100%
-        height: var(--base-input-size)
+        min-height: var(--base-input-size)
         background-color: transparent
-        white-space: nowrap
+        text-align: right
+        line-height: 1.2
         font-weight: 600
 
 
@@ -217,4 +293,10 @@ $field-gap: 8px
     &.error
       .form-inline-field-label
         color: var(--color-hl-error, red)
+
+  // fields side by side keep labels as wide as their text
+  .layout-compact .form-inline-field > .form-inline-field-label
+    flex: 0 1 250px
+    span
+      white-space: nowrap
     

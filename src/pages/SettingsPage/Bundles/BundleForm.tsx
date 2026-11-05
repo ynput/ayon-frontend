@@ -192,7 +192,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
       <ReadOnlyRow
         name="installerVersion"
         title="Launcher version"
-        value={formData.installerVersion || 'NONE'}
+        value={formData.installerVersion || 'None'}
       />
       {dateRows}
     </BorderedSection>

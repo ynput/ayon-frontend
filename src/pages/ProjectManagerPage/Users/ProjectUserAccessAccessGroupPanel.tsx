@@ -1,7 +1,7 @@
 import clsx from 'clsx'
 import { $Any } from '@types'
 import * as Styled from './ProjectUserAccessAccessGroupPanel.styled'
-import { Icon, Spacer } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   header: $Any
@@ -19,10 +19,9 @@ const ProjectUserAccessAccessGroupPanel = ({
   return (
     <Styled.Wrapper>
       <Styled.Header onClick={() => onToggleExpand && onToggleExpand(!isExpanded)}>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Icon icon={isExpanded ? 'expand_more' : 'chevron_right'} />
           {header}
-          <Spacer />
-          <Icon icon={isExpanded ? 'collapse_all' : 'expand_all'} />
         </div>
       </Styled.Header>
 

@@ -62,6 +62,7 @@ const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
       }
     }
 
+    th,
     td {
       display: flex;
       align-items: center;

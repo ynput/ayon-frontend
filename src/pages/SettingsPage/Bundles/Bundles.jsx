@@ -478,7 +478,7 @@ const Bundles = () => {
                   className="large"
                   data-tooltip={'Show per-project bundles'}
                 >
-                  Project
+                  Project bundles
                 </span>
                 <InputSwitch
                   checked={showProject}
