@@ -213,6 +213,24 @@ test('user details sections and menu items check their selection and flags', () 
   )
 })
 
+test('profile sections need a title and check powerFeature', () => {
+  const section = { slot: 'profile.section', title: 'API keys', component: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...section, id: 'keys', order: 2 },
+      { ...section, id: 'power', powerFeature: true },
+      { ...section, id: 'noTitle', title: undefined },
+      { ...section, id: 'badPower', powerFeature: 'yes' },
+      { ...section, id: 'noComponent', component: undefined },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.keys', 'my-addon.power'])
+  expect(skipped.map((s) => s.id)).toEqual(['noTitle', 'badPower', 'noComponent'])
+  expect(skipped.find((s) => s.id === 'badPower')?.reason).toBe(
+    'powerFeature must be true or false',
+  )
+})
+
 test("table shortcuts have one action and keys that parse and aren't the table's own", () => {
   const shortcut = { slot: 'table.shortcut', label: 'Copy row', run: loader }
   const { contributions, skipped } = checkManifest(addon, {

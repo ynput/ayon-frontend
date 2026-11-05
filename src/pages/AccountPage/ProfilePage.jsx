@@ -20,6 +20,9 @@ import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@context'
+import { usePowerpack } from '@shared/context'
+import { AddonProfileSections } from '@shared/components'
+import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
 import { AvatarName } from './ProfilePage.styled'
 
@@ -175,6 +178,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }, [preferencesData, initPreferencesData])
 
   const { sendNotification } = useNotifications()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
 
   const onSavePreferences = async () => {
     setPreferenceChanges(false)
@@ -291,6 +295,11 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               style={{ padding: '6px 18px', marginLeft: 'auto' }}
             />
           </Panel>
+          {/* what addons contribute to this page (profile.section slot, @ynput/ayon-addon) */}
+          <AddonProfileSections />
+          {!powerLicense && !isLoadingLicense && !user?.data?.isGuest && (
+            <PersonalApiKeysPreview />
+          )}
         </FormsStyled>
       </Section>
       {showSetPassword && (

@@ -551,6 +551,24 @@ An item in the user details panel's "more" menu (Settings → Users), for the se
 
 Pieces: `run`.
 
+### `profile.section`: `profileSection`
+
+A section on the signed-in user's profile page (Account → Profile), below AYON's own forms. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's sections |
+| `title` (required) | `string` | the section's title, above its content |
+| `order` | `number \| undefined` | order among addon sections, lowest first |
+| `powerFeature` | `boolean \| undefined` | a Power Pack feature: shown only with a Power Pack licence. Without one, AYON shows its own preview of the feature where it has one. `false` by default |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'profile.section'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+
+Pieces: `component`.
+
 ### `app.service`: `appService`
 
 Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.

@@ -56,6 +56,8 @@ export type {
   UserDetailsMenuItemMeta,
   UserDetailsSectionMeta,
   UserSelection,
+  ProfileSectionContext,
+  ProfileSectionMeta,
 } from './slots'
 export type {
   Access,

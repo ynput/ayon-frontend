@@ -68,3 +68,7 @@ export const userDetailsSection = (section: ContributionFields<'userDetails.sect
 /** An item in the user details panel's "more" menu (Settings → Users), for the selected users. */
 export const userDetailsMenuItem = (item: ContributionFields<'userDetails.menuItem'>) =>
   contribute('userDetails.menuItem', item)
+
+/** A section on the signed-in user's profile page (Account → Profile). */
+export const profileSection = (section: ContributionFields<'profile.section'>) =>
+  contribute('profile.section', section)

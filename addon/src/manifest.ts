@@ -11,6 +11,7 @@ export {
   detailsPanelTab,
   entityMenuItem,
   headerItem,
+  profileSection,
   projectListMenuItem,
   projectPage,
   projectTableCustomizeSection,

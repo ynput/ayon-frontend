@@ -6,6 +6,7 @@ const NO_PROJECT: string[] = [
   'app.service',
   'userDetails.section',
   'userDetails.menuItem',
+  'profile.section',
 ]
 const PROJECTS: string[] = ['studio.page', 'projectList.menuItem']
 const ENTITIES: string[] = [
