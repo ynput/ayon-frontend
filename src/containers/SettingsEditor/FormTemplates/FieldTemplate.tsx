@@ -252,7 +252,7 @@ function FieldTemplate(props: FieldTemplateProps) {
               }}
               style={labelStyle}
             >
-              {props.label}
+              <span className="label-text">{props.label}</span>
             </span>
           </div>
         )}
