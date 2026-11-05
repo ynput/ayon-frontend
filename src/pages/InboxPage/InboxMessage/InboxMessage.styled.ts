@@ -30,11 +30,12 @@ export const Message = styled.li`
   cursor: pointer;
   user-select: none;
 
-  --inbox-row-bg: var(--md-sys-color-surface-container-low);
+  /* messages are rows on the content surface, like table rows, in a list on a panel */
+  --inbox-row-bg: var(--color-table-row);
   background-color: var(--inbox-row-bg);
 
   &:hover:not(.disableHover):not(.placeholder) {
-    --inbox-row-bg: var(--md-sys-color-surface-container-low-hover);
+    --inbox-row-bg: var(--color-table-row-hover);
 
     ${showClearButton}
   }
