@@ -154,7 +154,8 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
             {props.properties
               .filter(
                 (element) =>
-                  (element.name !== 'enabled' || ['compact', 'root'].includes(props.schema.layout)) &&
+                  (element.name !== 'enabled' ||
+                    ['compact', 'root'].includes(props.schema.layout)) &&
                   !hiddenFields.includes(element.name),
               )
               .map((element, index) => {
@@ -163,7 +164,8 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
                 // a colour with a light theme colour next to it shows samples on both themes
                 if (widget === 'color' && element.name === 'colorLight') widget = 'color-light'
                 const hasLight = !!props.schema.properties?.colorLight
-                if (widget === 'color' && element.name === 'color' && hasLight) widget = 'color-dark'
+                if (widget === 'color' && element.name === 'color' && hasLight)
+                  widget = 'color-dark'
                 return (
                   <div
                     key={index}
