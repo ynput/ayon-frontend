@@ -126,7 +126,8 @@ export const useAnnotationModules = () => {
     module: 'AnnotationsProvider',
     fallback: FallbackAnnotationsProvider,
     minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
+    defer: isLoadingLicense, // wait for the license check (reported as loading)
+    skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
   })
   const [
     AnnotationsEditorProvider,
@@ -137,7 +138,8 @@ export const useAnnotationModules = () => {
     module: 'AnnotationsEditorProvider',
     fallback: FallbackAnnotationsEditorProvider,
     minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
+    defer: isLoadingLicense, // wait for the license check (reported as loading)
+    skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
   })
   const [AnnotationsCanvas, { isLoaded: isLoadedCanvas, isLoading: isLoadingCanvas }] =
     useLoadModule({
@@ -146,7 +148,8 @@ export const useAnnotationModules = () => {
       module: 'AnnotationsCanvas',
       fallback: () => null,
       minVersion,
-      skip: !powerLicense, // skip loading if powerpack license is not available
+      defer: isLoadingLicense, // wait for the license check (reported as loading)
+      skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
     })
   const [useAnnotations, { isLoaded: isLoadedHook, isLoading: isLoadingHook }] = useLoadModule({
     addon: 'powerpack',
@@ -154,7 +157,8 @@ export const useAnnotationModules = () => {
     module: 'useAnnotations',
     fallback: useAnnotationsFallback,
     minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
+    defer: isLoadingLicense, // wait for the license check (reported as loading)
+    skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
   })
   const [AnnotationTools, { isLoaded: isLoadedTools, isLoading: isLoadingTools }] = useLoadModule({
     addon: 'powerpack',
@@ -162,7 +166,8 @@ export const useAnnotationModules = () => {
     module: 'AnnotationTools',
     fallback: AnnotationToolsFallback,
     minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
+    defer: isLoadingLicense, // wait for the license check (reported as loading)
+    skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
   })
   const [useDrawHistory, { isLoading: isLoadingDrawHistory }] = useLoadModule({
     addon: 'powerpack',
@@ -170,7 +175,8 @@ export const useAnnotationModules = () => {
     module: 'useDrawHistory',
     fallback: useDrawHistoryFallback,
     minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
+    defer: isLoadingLicense, // wait for the license check (reported as loading)
+    skip: !isLoadingLicense && !powerLicense, // skip loading if powerpack license is not available
   })
 
   const isLoaded =
