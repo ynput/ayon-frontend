@@ -18,9 +18,11 @@ const toContextMenuItems = (
 ): ContextMenuItemType[] =>
   items.map(({ id, label, icon, disabled, danger, link, target, onClick, items: subItems }) => {
     if (id === 'divider') return { separator: true }
-    const command: ((event: CommandEvent) => void) | undefined = link
-      ? () => (target ? window.open(link, target, 'noopener') : navigate(link))
-      : onClick && ((event) => onClick(event.originalEvent))
+    const command: ((event: CommandEvent) => void) | undefined = disabled
+      ? undefined
+      : link
+        ? () => (target ? window.open(link, target, 'noopener') : navigate(link))
+        : onClick && ((event) => onClick(event.originalEvent))
     return {
       label: label as string | undefined,
       icon,
