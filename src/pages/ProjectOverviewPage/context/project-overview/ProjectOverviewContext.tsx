@@ -16,6 +16,7 @@ import {
   buildQueryFilters,
   useEntitiesMap,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useScopedAttributeFields,
   useExpandedState,
@@ -56,7 +57,13 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
@@ -267,6 +274,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
 
   // list tasks narrowed to the hierarchy panel's subtree
@@ -303,12 +311,23 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
       })
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolders =
+        countsSearchFolderIds === searchFolderIds
+          ? selectedFolders
+          : resolveSlicerFolders(
+              sliceSelections,
+              entityIds.folderIds,
+              getChildFolderIds,
+              countsSearchFolderIds,
+            ).selectedFolders
       return {
         projectName,
         filter: countsTaskFilter.filterString || undefined,
         folderFilter: countsFolderFilter.filterString || undefined,
         search: countsTaskFilter.search || undefined,
-        folderIds: selectedFolders.length ? selectedFolders : undefined,
+        folderIds: countsFolders.length ? countsFolders : undefined,
         taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
       }
     },
@@ -320,6 +339,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       projectName,
       selectedFolders,
       selectedTaskIds,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
     ],
   )
 
