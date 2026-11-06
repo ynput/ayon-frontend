@@ -309,24 +309,29 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
   }
 
   // CREATE TEAM
+  // keepOpen: leave the create dialog open for the next team. Resolves true once created.
   const handleNewTeam = async (team, config) => {
-    const { noToast = false } = config || {}
+    const { noToast = false, keepOpen = false } = config || {}
     let { name } = team
 
     // check if name is already taken
     if (teams.some((team) => team.name.toLowerCase() === name.toLowerCase())) {
       toast.warning('Team name already taken')
-      return
+      return false
     }
 
     try {
       await handleUpdateTeams([team], config)
       // Success
-      setCreateTeamOpen(false)
-      setSelectedTeams([name])
+      if (!keepOpen) {
+        setCreateTeamOpen(false)
+        setSelectedTeams([name])
+      }
       !noToast && toast.success(`Created ${name}`)
+      return true
     } catch (error) {
       toast.error(`Failed to create ${name}`)
+      return false
     }
   }
 

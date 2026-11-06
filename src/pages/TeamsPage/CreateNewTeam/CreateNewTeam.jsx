@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import {
   AssigneeSelect,
   Button,
@@ -9,7 +9,7 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
-import { isDialogConfirmKey, parseAndFormatName } from '@shared/util'
+import { getCreateAnotherTooltip, getDialogKeyDown, parseAndFormatName } from '@shared/util'
 import UserListTeams from '../UserListTeams'
 import useSearchFilter from '@hooks/useSearchFilter'
 import * as Styled from './CreateNewTeam.styled'
@@ -30,6 +30,7 @@ const CreateNewTeam = ({
   const rolesOptions = useMemo(() => rolesList.map((role) => ({ name: role })), [rolesList])
   const [nameForm, setNameForm] = useState('')
   const [rolesForm, setRolesForm] = useState([])
+  const nameRef = useRef(null)
 
   const [search, setSearch, searchedUsers] = useSearchFilter(
     ['name', 'attrib.fullName'],
@@ -99,10 +100,10 @@ const CreateNewTeam = ({
     return newTeam
   }
 
-  const handleSubmit = (closeDialog = true) => {
+  // closeDialog = false (Shift+Enter): create it and keep the dialog open for the next team
+  const handleSubmit = async (closeDialog = true) => {
     // first check team name is valid
     if (!nameForm) return
-    const formatted = parseAndFormatName(nameForm)
 
     let newTeam
 
@@ -112,8 +113,12 @@ const CreateNewTeam = ({
       newTeam = createNewTeam()
     }
 
-    // update
-    if (newTeam && closeDialog) onCreate(newTeam)
+    if (!newTeam) return
+    const created = await onCreate(newTeam, { keepOpen: !closeDialog })
+    if (created && !closeDialog) {
+      setNameForm('')
+      nameRef.current?.focus()
+    }
   }
 
   //   clears the form
@@ -123,27 +128,11 @@ const CreateNewTeam = ({
     setRolesForm([])
   }
 
-  const handleKeyDown = (e) => {
-    // submit form on cmd/ctrl+enter
-    // submit form on shift+enter but don't close dialog
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault()
-      handleSubmit()
-    }
-    if (e.key === 'Enter' && e.shiftKey) {
-      e.preventDefault()
-      handleSubmit(false)
-    }
-    // plain Enter confirms, like clicking the create button
-    if (isDialogConfirmKey(e)) {
-      e.preventDefault()
-      handleSubmit()
-    }
-    // if escape key close dialog
-    if (e.key === 'Escape') {
-      onClose()
-    }
-  }
+  const handleKeyDown = getDialogKeyDown(() => handleSubmit(), {
+    onClose,
+    disabled: !nameForm || isUpdating,
+    onContinue: () => handleSubmit(false),
+  })
 
   return (
     <Styled.StyledDialog
@@ -165,11 +154,12 @@ const CreateNewTeam = ({
             disabled={!nameForm}
           />
           <SaveButton
-            onClick={handleSubmit}
+            onClick={() => handleSubmit()}
             label="Create New Team"
             style={{ flex: 1 }}
             active={!!nameForm}
             saving={isUpdating}
+            {...getCreateAnotherTooltip()}
           />
         </>
       }
@@ -199,7 +189,12 @@ const CreateNewTeam = ({
           <FormLayout>
             {subTitle && <h3>{subTitle}</h3>}
             <FormRow label="Team Name">
-              <InputText value={nameForm} onChange={(e) => setNameForm(e.target.value)} autoFocus />
+              <InputText
+                ref={nameRef}
+                value={nameForm}
+                onChange={(e) => setNameForm(e.target.value)}
+                autoFocus
+              />
             </FormRow>
             <FormRow label="Team Members">
               <AssigneeSelect
