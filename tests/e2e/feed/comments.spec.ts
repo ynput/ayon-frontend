@@ -45,7 +45,7 @@ test.describe('activity feed', () => {
     await panel.commentEditor.blur()
     await expect(panel.commentEditor).not.toBeFocused()
 
-    const box = (await panel.commentEditor.boundingBox())!
+    const box = (await panel.commentEditor.locator('../..').boundingBox())!
     await page.mouse.click(box.x + box.width / 2, box.y + box.height - 8)
     await expect(panel.commentEditor).toBeFocused()
   })
