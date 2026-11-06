@@ -6,7 +6,7 @@ import styled from 'styled-components'
 const Value = styled.span`
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   width: 100%;
 
   .icon {

@@ -44,6 +44,7 @@ import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import ayonClient from '@/ayon'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
@@ -842,7 +843,14 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             }}
           />
           <Section style={{ position: 'relative' }}>
-            {!selectedAddons.some((addon) => !addon.isBroken) ? (
+            {showSites && !ayonClient.settings.sites.length ? (
+              <EmptyPlaceholder
+                className="muted"
+                style={{ zIndex: 1 }}
+                icon="computer"
+                message="Site settings become available once a launcher registers a site"
+              />
+            ) : !selectedAddons.some((addon) => !addon.isBroken) ? (
               <EmptyPlaceholder
                 style={{ zIndex: 1 }}
                 icon={selectedAddons.length ? 'error' : 'settings'}
