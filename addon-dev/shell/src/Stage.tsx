@@ -215,9 +215,10 @@ const PROFILE_CONTEXT = {}
 const ProfileStage = ({ contribution }: StageProps) => {
   const user = useUser()
   const { powerLicense, isLoading } = usePowerpack()
-  useReport(contribution, PROFILE_CONTEXT, !!user)
+  const hidden =
+    !!(contribution as { powerFeature?: boolean }).powerFeature && (isLoading || !powerLicense)
+  useReport(contribution, PROFILE_CONTEXT, !!user && !hidden)
   if (!user) return <Hint>Signing in…</Hint>
-  const hidden = !!(contribution as { powerFeature?: boolean }).powerFeature && !powerLicense
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'center' }}>
       <div
