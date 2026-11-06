@@ -3,6 +3,7 @@
 //   @ynput/ayon-addon            addon/
 //   @ynput/ayon-frontend-shared  shared/
 //   @ynput/ayon-addon-dev        addon-dev/
+//   @ynput/ayon-e2e              e2e/
 //
 // Run from the repo root through yarn (the release:* scripts in package.json):
 //   yarn release:status                     local origin/develop version vs npm, per package
@@ -12,7 +13,7 @@
 //   yarn release:bump <pkg>=<level> ...     set explicit versions without prompts; <level> is patch,
 //                                           minor, major or x.y.z. Run on a release branch, never develop.
 //   yarn release:check                      are versions and cross-package pins consistent?
-//   yarn release:build                      yarn build:addon (shared, addon, addon-dev)
+//   yarn release:build                      build:addon and build:e2e
 //   yarn release:publish [pkg ...] [--dry-run] [--yes] [--otp <code>] [--force]
 //                                           build, then npm publish what npm does not have yet, in order
 //
@@ -35,8 +36,9 @@ const PACKAGES = {
   addon: { dir: 'addon', name: '@ynput/ayon-addon' },
   shared: { dir: 'shared', name: '@ynput/ayon-frontend-shared' },
   'addon-dev': { dir: 'addon-dev', name: '@ynput/ayon-addon-dev' },
+  e2e: { dir: 'e2e', name: '@ynput/ayon-e2e' },
 }
-const PUBLISH_ORDER = ['addon', 'shared', 'addon-dev']
+const PUBLISH_ORDER = ['addon', 'shared', 'addon-dev', 'e2e']
 const ARC = '@ynput/ayon-react-components'
 const BASE = 'origin/develop'
 // generated from the backend's OpenAPI / GraphQL: kept apart from hand-written code when reading diffs
@@ -633,14 +635,16 @@ const cmdBump = async (repo, items) => {
   process.exitCode = problems.length ? 1 : 0
 }
 
-// `release:build` requires installed root dependencies and runs `yarn build:addon`, which
-// builds shared, addon, and addon-dev. A failed build stops the release before publishing.
+// `release:build` requires installed root dependencies and builds every publishable package.
+// A failed build stops the release before publishing.
 const cmdBuild = (repo) => {
   if (!existsSync(path.join(repo, 'node_modules'))) {
     die(`no node_modules in ${repo}: run yarn install --frozen-lockfile there`)
   }
-  const r = spawnSync('yarn', ['build:addon'], { cwd: repo, stdio: 'inherit' })
-  if (r.status !== 0) die('yarn build:addon failed: nothing was published')
+  for (const script of ['build:addon', 'build:e2e']) {
+    const r = spawnSync('yarn', [script], { cwd: repo, stdio: 'inherit' })
+    if (r.status !== 0) die(`yarn ${script} failed: nothing was published`)
+  }
 }
 
 // `release:publish` requires a clean checkout at exactly origin/develop and consistent
@@ -719,7 +723,7 @@ const USAGE = `usage: yarn release:<command> [options]
   bump <pkg>=<level> ...        set explicit versions and pins without prompts (patch|minor|major|x.y.z)
                                 both modes require a branch other than develop
   check                         versions and pins consistent?
-  build                         yarn build:addon
+  build                         build:addon and build:e2e
   publish [pkg ...]             build, then npm publish what npm does not have yet (pkg: ${Object.keys(
     PACKAGES,
   ).join(', ')})
