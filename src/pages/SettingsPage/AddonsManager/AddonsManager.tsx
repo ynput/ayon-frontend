@@ -252,7 +252,9 @@ const AddonsManager = (): JSX.Element => {
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={versionContext}
-            emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
+            emptyMessage={
+              selectedAddons.length ? 'No versions found' : 'Select an addon to see its versions'
+            }
             emptyIcon="extension"
             isLoading={isLoading}
             header={null}
@@ -276,7 +278,10 @@ const AddonsManager = (): JSX.Element => {
                 icon: 'arrow_circle_right',
               },
             ]}
-            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select a version'}
+            emptyMessage={
+              selectedVersions.length ? 'No bundles found' : 'Select a version to see its bundles'
+            }
+            emptyMuted={!selectedVersions.length && !versionsTableData.length}
             emptyIcon="inventory_2"
             isLoading={isLoading}
             header={null}

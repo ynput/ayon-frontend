@@ -93,9 +93,9 @@ const TeamUsersDetails = ({
   const rolesOptions = useMemo(() => rolesList.map((role) => ({ name: role })), [rolesList])
 
   const formSubtitle = noUsers
-    ? 'No Users Selected'
+    ? 'No users selected'
     : usersOnTeams.length
-    ? 'Setting On Team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
+    ? 'Setting on team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
     : `Not on ${selectedTeams.join(', ')}`
 
   const leaderInit = leaderValue.some((v) => v) && !leaderMultiple
@@ -199,7 +199,7 @@ const TeamUsersDetails = ({
   return (
     <>
       <Panel>
-        <h2 style={{ marginTop: 0 }}>Member Settings</h2>
+        <h2 style={{ marginTop: 0 }}>Member settings</h2>
         <UserDetailsHeader
           users={users}
           style={{ flex: 'unset', padding: 0 }}
@@ -215,7 +215,7 @@ const TeamUsersDetails = ({
         />
         <Divider style={{ margin: '10px 0' }} />
         <FormLayout>
-          <FormRow label="On Teams" style={{ overflow: 'hidden' }}>
+          <FormRow label="On teams" style={{ overflow: 'hidden' }}>
             <Dropdown
               value={teamsValue}
               options={teams}

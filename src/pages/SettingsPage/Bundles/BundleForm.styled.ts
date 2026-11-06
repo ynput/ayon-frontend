@@ -33,7 +33,7 @@ export const AddonsHeader = styled.div`
   gap: var(--base-gap-small);
   min-height: 32px;
 
-  & > input {
+  & > .search-input {
     flex: 1;
     min-width: 160px;
     max-width: 240px;

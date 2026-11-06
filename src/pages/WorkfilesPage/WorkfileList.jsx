@@ -4,6 +4,7 @@ import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
+import { useGetTasksQuery } from '@queries/getTasks'
 import NoEntityFound from '@components/NoEntityFound'
 import { setFocusedWorkfiles } from '@state/context'
 import { useCallback, useRef, useState } from 'react'
@@ -24,6 +25,7 @@ const WorkfileList = ({ style }) => {
   const pairing = useSelector((state) => state.context.pairing)
   const projectName = useSelector((state) => state.project.name)
   const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
+  const userName = useSelector((state) => state.user.name)
   const [showDetail, setShowDetail] = useState(false)
 
   const {
@@ -32,6 +34,14 @@ const WorkfileList = ({ style }) => {
     isError,
     error,
   } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
+
+  // the task list's query with the same args, so it comes from the cache:
+  // the prompt stays muted while there is no task to pick
+  const { data: folderTasks = [], isFetching: isFetchingTasks } = useGetTasksQuery(
+    { projectName, folderIds, userName },
+    { skip: !folderIds.length },
+  )
+  const noTasksToPick = !folderIds.length || (!isFetchingTasks && !folderTasks.length)
 
   const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
     { projectName },
@@ -150,7 +160,7 @@ const WorkfileList = ({ style }) => {
           <NoEntityFound
             type="workfile"
             label={!taskIds.length ? 'Select a task to see its workfiles' : undefined}
-            muted={!folderIds.length}
+            muted={noTasksToPick}
           />
         ) : (
           <DataTable

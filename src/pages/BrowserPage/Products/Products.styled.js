@@ -6,6 +6,12 @@ import ColumnsSelect from '@components/ColumnsSelect/ColumnsSelect'
 export const TaskFilterDropdown = styled(CategorySelect)`
   min-width: 160px;
   max-width: 160px;
+
+  /* the placeholder reads like the filter input next to it (the dropdown dims it inline) */
+  .placeholder {
+    color: var(--md-sys-color-outline);
+    opacity: 1 !important;
+  }
 `
 
 export const ColumnsFilterSelect = styled(ColumnsSelect)`

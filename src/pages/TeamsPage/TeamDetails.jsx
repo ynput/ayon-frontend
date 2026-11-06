@@ -85,7 +85,7 @@ const TeamDetails = ({
           overflow: 'auto',
         }}
       >
-        <h2 style={{ marginTop: 0 }}>Team Settings</h2>
+        <h2 style={{ marginTop: 0 }}>Team settings</h2>
         <DetailHeader
           style={{
             padding: 0,
@@ -103,7 +103,7 @@ const TeamDetails = ({
         <Divider style={{ margin: '10px 0' }} />
 
         <FormLayout>
-          <FormRow label="Team Name">
+          <FormRow label="Team name">
             <LockedInput
               value={name}
               disabled={disableName}

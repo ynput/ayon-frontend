@@ -101,8 +101,18 @@ const pathname2crumbs = (pathname: string): string[] => {
   return [sectionLabel, ...(projectName ? [projectName] : []), ...modules]
 }
 
+const COLLAPSED_CRUMB = '…'
+
+// an entity opens inside a page: the page keeps its crumbs so the module stays visible, then the
+// entity's project and path
+const getEntityPrefix = (projectName: string, pathname: string): string[] => {
+  if (pathname.startsWith(`/projects/${projectName}/`)) return pathname2crumbs(pathname)
+  if (pathname.startsWith('/projects/')) return ['Project', projectName]
+  return [...pathname2crumbs(pathname), projectName]
+}
+
 // TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
-const uri2crumbs = (uri: string = '', pathname: string): string[] => {
+const uri2crumbs = (uri: string = '', pathname: string, collapse = false): string[] => {
   const [scope, pathAndQuery = ''] = (uri || '').split('://')
   const [path, query] = pathAndQuery.split('?')
   const crumbs: string[] = path.split('/').filter(Boolean)
@@ -111,7 +121,11 @@ const uri2crumbs = (uri: string = '', pathname: string): string[] => {
   if (scope?.includes('ayon+settings')) {
     crumbs.unshift(getSettingsScopeLabel(query))
   } else if (scope?.includes('ayon+entity')) {
-    crumbs.unshift('Project')
+    const [projectName = '', ...folders] = crumbs
+    // deep folder paths keep the leaf folder, the full path is in the tooltip and the uri
+    const shownFolders =
+      collapse && folders.length > 2 ? [COLLAPSED_CRUMB, folders[folders.length - 1]] : folders
+    crumbs.splice(0, crumbs.length, ...getEntityPrefix(projectName, pathname), ...shownFolders)
   } else {
     crumbs.unshift(...pathname2crumbs(pathname))
   }
@@ -197,7 +211,8 @@ const Breadcrumbs = () => {
     }
   }
 
-  const uriDisplay = uri2crumbs(uri, location.pathname).join(' / ')
+  const uriDisplay = uri2crumbs(uri, location.pathname, true).join(' / ')
+  const uriFullDisplay = uri2crumbs(uri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
 
   return (
@@ -228,6 +243,8 @@ const Breadcrumbs = () => {
               onKeyDown={handleKeyDown}
               ref={inputRef}
               style={{ borderRadius: '4px 0 0 4px' }}
+              data-tooltip={!editMode && uriFullDisplay !== uriDisplay ? uriFullDisplay : undefined}
+              data-tooltip-position="bottom"
             />
           </label>
           <Button

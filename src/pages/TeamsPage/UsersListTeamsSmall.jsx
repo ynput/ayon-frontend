@@ -39,7 +39,7 @@ const UsersListTeamsSmall = ({
         >
           <Column
             field="attrib.fullName"
-            header="Full Name"
+            header="Full name"
             style={{ width: '20%' }}
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
           />

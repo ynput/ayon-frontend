@@ -9,6 +9,7 @@ import {
   SaveButton,
   Spacer,
 } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { parseAndFormatName } from '@shared/util'
 import UserListTeams from '../UserListTeams'
 import useSearchFilter from '@hooks/useSearchFilter'
@@ -145,7 +146,7 @@ const CreateNewTeam = ({
       onClose={onClose}
       style={{ height: '700px' }}
       isOpen
-      header={'Create New Team'}
+      header={'Create new team'}
       size="full"
       onKeyDown={handleKeyDown}
       footer={
@@ -161,7 +162,7 @@ const CreateNewTeam = ({
           />
           <SaveButton
             onClick={handleSubmit}
-            label="Create New Team"
+            label="Create new team"
             style={{ flex: 1 }}
             active={!!nameForm}
             saving={isUpdating}
@@ -171,12 +172,11 @@ const CreateNewTeam = ({
     >
       <Styled.Container direction="row">
         <Styled.Column>
-          <InputText
+          <SearchInput
             style={{ width: '100%' }}
-            placeholder="Filter users..."
+            placeholder="Filter users"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            autoComplete="off"
           />
           <UserListTeams
             selectedProjects={[projectName]}
@@ -193,10 +193,10 @@ const CreateNewTeam = ({
         <Styled.Column>
           <FormLayout>
             {subTitle && <h3>{subTitle}</h3>}
-            <FormRow label="Team Name">
+            <FormRow label="Team name">
               <InputText value={nameForm} onChange={(e) => setNameForm(e.target.value)} autoFocus />
             </FormRow>
-            <FormRow label="Team Members">
+            <FormRow label="Team members">
               <AssigneeSelect
                 value={selectedUsers}
                 options={usersOptions}
@@ -212,7 +212,7 @@ const CreateNewTeam = ({
               />
             </FormRow>
 
-            <FormRow label="Member Roles">
+            <FormRow label="Member roles">
               <Dropdown
                 value={rolesForm}
                 options={rolesOptions}
@@ -224,7 +224,7 @@ const CreateNewTeam = ({
                 editable
                 multiSelect
                 widthExpand
-                placeholder={'Add Members Roles...'}
+                placeholder={'Add member roles'}
                 disabled={selectedUsers.length === 0}
               />
             </FormRow>

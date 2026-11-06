@@ -70,7 +70,7 @@ const UserListTeams = ({
 
     const items = [
       {
-        label: showAllUsers ? 'Show All Users' : 'Show Members Only',
+        label: showAllUsers ? 'Show all users' : 'Show members only',
         command: onShowAllUsers,
         icon: showAllUsers ? 'visibility' : 'visibility_off',
       },
@@ -187,7 +187,7 @@ const UserListTeams = ({
           />
           <Column
             field="attrib.fullName"
-            header="Full Name"
+            header="Full name"
             style={{
               width: '20%',
             }}

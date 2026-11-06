@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -237,9 +238,9 @@ const UsersSettings = () => {
             />
             <Button onClick={openNewServiceUser} label="Add service user" icon="person_add" />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-              <InputText
+              <SearchInput
                 style={{ width: '100%', minWidth: 150 }}
-                placeholder="Filter users..."
+                placeholder="Filter users"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoComplete="search-users"

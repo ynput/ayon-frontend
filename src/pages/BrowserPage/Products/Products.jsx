@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from 'react'
 import clsx from 'clsx'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, Section, Toolbar, Spacer, getReadableColor } from '@ynput/ayon-react-components'
+import { Section, Toolbar, Spacer, getReadableColor } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
@@ -399,9 +400,10 @@ const Products = () => {
   const allColumnsNames = filterOptions.map(({ value }) => value)
   const isMultiSelected = focusedFolders.length > 1
 
+  // one folder selected: every row is in it, so its column starts hidden
   const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useLocalStorage(
     'products-columns-filter-single',
-    allColumnsNames,
+    allColumnsNames.filter((name) => name !== 'folder'),
   )
   const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useLocalStorage(
     'products-columns-filter-multi',
@@ -703,12 +705,11 @@ const Products = () => {
   return (
     <Section wrap>
       <Toolbar>
-        <InputText
+        <SearchInput
           style={{ width: '200px' }}
-          placeholder="Filter products..."
+          placeholder="Filter products"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autoComplete="off"
           data-tooltip="Use '!' to exclude and ',' to separate multiple filters. Example: '!image, render, compositing'"
         />
         <Styled.TaskFilterDropdown
@@ -717,7 +718,7 @@ const Products = () => {
           onChange={handleTaskTypeChange}
           onClear={!!selectedTaskTypes.length && handleTaskTypeChange}
           clearTooltip="Clear task types"
-          placeholder="Task types..."
+          placeholder="Task types"
           multiSelect
         />
         <Styled.ColumnsFilterSelect

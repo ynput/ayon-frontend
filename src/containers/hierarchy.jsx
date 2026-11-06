@@ -1,11 +1,12 @@
 import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
+import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 import { EntityIcon, DetailsDialog } from '@shared/components'
+import SearchInput from '@components/SearchInput'
 import { useGetFolderHierarchyQuery } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
@@ -13,7 +14,39 @@ import { setFocusedFolders, setExpandedFolders, setSelectedVersions } from '@sta
 import HierarchyExpandFolders from './HierarchyExpandFolders'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
+import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+
+// the tree's title row is a panel header, like the slicer header on the other project pages,
+// not a table header
+const HierarchyPanel = styled(TablePanel)`
+  --color-table-header: transparent;
+
+  /* collapsed borders: the row's wider line would win over the header's */
+  && .p-treetable-thead > tr {
+    border-bottom: none;
+  }
+
+  && .p-treetable-thead > tr > th {
+    height: 34px;
+    padding: 0 10px;
+    background-color: transparent;
+    font-weight: normal;
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  }
+`
+
+// the placeholder reads like the filter input next to it, on the same baseline
+const FolderTypeSelect = styled(MultiSelect)`
+  .p-multiselect-label {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .p-multiselect-label.p-placeholder {
+    color: var(--md-sys-color-outline);
+  }
+`
 
 // Cell component that uses EntityIcon for proper icon/color from anatomy
 const HierarchyCell = ({ label, name, folderType }) => (
@@ -95,7 +128,8 @@ const Hierarchy = (props) => {
       const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
       return <span style={{ marginRight: '8px' }}>{folder_type_label}</span>
     }
-    return 'Folder types'
+    // nothing selected: the multiselect shows its placeholder
+    return null
   }
 
   //
@@ -412,19 +446,18 @@ const Hierarchy = (props) => {
     <>
       <Section style={props.style}>
         <Toolbar>
-          <InputText
+          <SearchInput
             style={{ flexGrow: 1, minWidth: 80 }}
-            placeholder="Filter folders..."
+            placeholder="Filter folders"
             disabled={!projectName || isFetching}
             value={query}
             onChange={(evt) => setQuery(evt.target.value)}
-            autoComplete="off"
           />
 
-          <MultiSelect
+          <FolderTypeSelect
             value={selectedFolderTypes}
             options={folderTypeList}
-            placeholder="Select folder types"
+            placeholder="Folder types"
             showClear={true}
             optionLabel="label"
             disabled={!projectName || isFetching}
@@ -434,7 +467,7 @@ const Hierarchy = (props) => {
           />
         </Toolbar>
 
-        <TablePanel>
+        <HierarchyPanel>
           <DetailsDialog
             projectName={projectName}
             entityType="folder"
@@ -444,7 +477,7 @@ const Hierarchy = (props) => {
           />
 
           {table}
-        </TablePanel>
+        </HierarchyPanel>
       </Section>
       <HierarchyExpandFolders
         parents={parents}

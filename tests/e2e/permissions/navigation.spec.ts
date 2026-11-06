@@ -62,7 +62,7 @@ test.describe('permissions: studio and project access', () => {
           await page.goto(`/projects/${otherProject}/overview`)
           await expect(page.getByText('Project Not Found, Redirecting...')).toBeVisible()
           await expect(page).toHaveURL(/\/dashboard\/tasks$/)
-          await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
+          await expect(page.getByPlaceholder('Filter tasks')).toBeVisible()
         }
       } finally {
         await context.close()
@@ -90,7 +90,7 @@ test.describe('permissions: studio and project access', () => {
       await expect(navTab(page, 'Site settings')).toBeVisible()
       await expect(navTab(page, 'Users')).toHaveCount(0)
       await expect(navTab(page, 'Studio settings')).toHaveCount(0)
-      await expect(page.getByPlaceholder('Filter users...')).toHaveCount(0)
+      await expect(page.getByPlaceholder('Filter users')).toHaveCount(0)
 
       await page.goto('/events')
       await expect(page).toHaveURL(/\/dashboard\/tasks$/, { timeout: 30_000 })

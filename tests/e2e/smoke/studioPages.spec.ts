@@ -16,7 +16,7 @@ test.describe('smoke: dashboard', () => {
       path: () => '/dashboard/tasks',
       ready: async (page, d) => {
         const dashboard = new DashboardTasksPage(page)
-        await visible(page.getByPlaceholder('Filter tasks...'))
+        await visible(page.getByPlaceholder('Filter tasks'))
         await dashboard.selectProject(d.projectName)
         await expect(dashboard.card(d.task.id)).toBeVisible()
       },
@@ -26,7 +26,7 @@ test.describe('smoke: dashboard', () => {
       path: () => '/dashboard/tasks?view=list',
       ready: async (page, d) => {
         const dashboard = new DashboardTasksPage(page)
-        await visible(page.getByPlaceholder('Filter tasks...'))
+        await visible(page.getByPlaceholder('Filter tasks'))
         await dashboard.selectProject(d.projectName)
         await expect(dashboard.listRow(d.task.id)).toBeVisible()
       },
@@ -105,7 +105,7 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'teams',
       path: manager('teams'),
-      ready: (page) => visible(button(page, 'Add New Team'), heading(page, 'Team Settings')),
+      ready: (page) => visible(button(page, 'Add new team'), heading(page, 'Team settings')),
     },
   ])
 })
@@ -152,15 +152,14 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'attributes',
       path: () => '/settings/attributes',
-      ready: (page) =>
-        visible(page.getByPlaceholder('Filter attributes...'), column(page, 'Scopes')),
+      ready: (page) => visible(page.getByPlaceholder('Filter attributes'), column(page, 'Scopes')),
     },
     {
       name: 'users',
       path: () => '/settings/users',
       ready: (page) =>
         visible(
-          page.getByPlaceholder('Filter users...'),
+          page.getByPlaceholder('Filter users'),
           page.getByRole('cell', { name: adminCredentials().name, exact: true }).first(),
         ),
     },

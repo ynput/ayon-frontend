@@ -6,7 +6,7 @@ export class TeamsPage {
 
   async goto(project: string) {
     await this.page.goto(`/manageProjects/teams?project=${project}`)
-    await expect(this.page.getByRole('button', { name: 'Add New Team' })).toBeVisible()
+    await expect(this.page.getByRole('button', { name: 'Add new team' })).toBeVisible()
   }
 
   teamRow(name: string) {

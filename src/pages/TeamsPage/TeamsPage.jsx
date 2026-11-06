@@ -11,6 +11,7 @@ import {
   Spacer,
   Dialog,
 } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import ProjectManagerPageLayout from '../ProjectManagerPage/ProjectManagerPageLayout'
 import UserListTeams from './UserListTeams'
 import { useGetUsersQuery } from '@shared/api'
@@ -157,9 +158,9 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
           ? 'On A Selected Team'
           : teamsList.filter((t) => !selectedTeams.includes(t)).length
           ? selectedTeams.length
-            ? 'On Other Teams'
-            : 'On Teams'
-          : 'On No Teams'
+            ? 'On other teams'
+            : 'On teams'
+          : 'On no teams'
 
         // Include any other user data in the merged object
         usersObject[user.name] = {
@@ -476,22 +477,21 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
               <>
                 <Button
                   icon={'group_add'}
-                  label="Add New Team"
+                  label="Add new team"
                   onClick={() => setCreateTeamOpen(true)}
                   style={{ width: 200 }}
                 />
-                <InputText
+                <SearchInput
                   style={{ width: '200px' }}
-                  placeholder="Filter users..."
+                  placeholder="Filter users"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  autoComplete="off"
                 />
                 <InputSwitch
                   checked={showTeamUsersOnly}
                   onChange={() => setShowTeamUsersOnly(!showTeamUsersOnly)}
                 />
-                Hide Other Team Members
+                Hide other team members
                 <Spacer />
               </>
             )}
