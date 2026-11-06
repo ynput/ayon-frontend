@@ -9,7 +9,7 @@ import {
 import { forwardRef, useEffect, useRef } from 'react'
 import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
-import { getEntityTypeIcon, isDialogConfirmKey } from '@shared/util'
+import { getCreateAnotherTooltip, getDialogKeyDown, getEntityTypeIcon } from '@shared/util'
 import { Error } from '@containers/ReleaseInstallerDialog/ReleaseInstaller.styled'
 import { entityTypeOptions } from './NewListDialogHelpers'
 import type { ListFolderOption } from '@pages/ProjectListsPage/util/listFolders'
@@ -20,6 +20,8 @@ interface NewListDialogProps extends Omit<DialogProps, 'onChange' | 'hidden'> {
   form?: NewListForm | null
   onChange: (value: NewListForm) => void
   onSubmit?: () => void
+  /** Shift+Enter: create the list and keep the dialog open for the next one */
+  onSubmitAndContinue?: () => Promise<unknown> | void
   submitLoading?: boolean
   error?: string
   hidden?: ('label' | 'entityType')[]
@@ -42,6 +44,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       form = { label: '', entityListType: 'generic', entityType: 'folder', access: {} },
       onChange,
       onSubmit,
+      onSubmitAndContinue,
       submitLoading,
       error,
       hidden,
@@ -79,6 +82,21 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       : labels
 
     if (!form) return null
+
+    const handleContinue = async () => {
+      try {
+        await onSubmitAndContinue?.()
+      } catch {
+        // the error is shown by whoever created the list; keep the label as it was
+        return
+      }
+      // after the fresh label renders: select it, ready to type the next name
+      setTimeout(() => {
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }, 0)
+    }
+
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {
       onChange({
         ...form,
@@ -107,6 +125,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
               onClick={() => onSubmit?.()}
               disabled={!form.label || submitLoading}
               saving={submitLoading}
+              {...(onSubmitAndContinue ? getCreateAnotherTooltip() : { 'data-shortcut': 'Enter' })}
             />
           </Styled.Footer>
         }
@@ -115,14 +134,11 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           onSubmit={(e) => {
             e.preventDefault()
           }}
-          onKeyDown={(e) => {
-            const withModifier = e.key === 'Enter' && (e.metaKey || e.ctrlKey)
-            // the same conditions as the create button
-            if ((withModifier || isDialogConfirmKey(e)) && form?.label && !submitLoading) {
-              e.preventDefault()
-              onSubmit?.()
-            }
-          }}
+          // the same conditions as the create button
+          onKeyDown={getDialogKeyDown(() => onSubmit?.(), {
+            disabled: !form.label || submitLoading,
+            onContinue: onSubmitAndContinue && handleContinue,
+          })}
         >
           {!hidden?.includes('label') && (
             <Styled.Row>
