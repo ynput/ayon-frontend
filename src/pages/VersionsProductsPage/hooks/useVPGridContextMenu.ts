@@ -72,6 +72,7 @@ export const useVPGridContextMenu = (contextMenuItems: VPContextMenuItems) => {
 
       const mockMeta = {
         selectedCells: targetEntityIds.map((id) => getCellId(id, GRID_COLUMN_ID)),
+        scopedCells: targetEntityIds.map((id) => getCellId(id, GRID_COLUMN_ID)),
         selectedRows: targetEntityIds,
         selectedColumns: [GRID_COLUMN_ID],
         selectedFullRows: [],

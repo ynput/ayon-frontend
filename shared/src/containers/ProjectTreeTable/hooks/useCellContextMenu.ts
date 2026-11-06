@@ -60,6 +60,7 @@ export type ContextMenuItemConstructor = (
   selectedCells: TableCellContextData[],
   meta: {
     selectedCells: string[] // minus row selection cells
+    scopedCells: string[] // the menu's whole selection, incl. the checkbox cells when opened from one
     selectedRows: string[]
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
@@ -306,7 +307,7 @@ const useCellContextMenu = ({
           icon: 'download',
           command: () => {
             // the export reads the table selection: narrow it to the cells the menu acted on
-            if (meta.selectedCells.length) setSelectedCells(new Set(meta.selectedCells))
+            setSelectedCells(new Set(meta.scopedCells))
             tableExport.openExport('selection')
           },
           hidden: cell.isGroup,
@@ -316,12 +317,7 @@ const useCellContextMenu = ({
           icon: 'download',
           items: CSV_DELIMITERS.map(({ value, label }) => ({
             label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
-            command: () =>
-              exportCSV(
-                meta.selectedCells.length ? meta.selectedCells : Array.from(selectedCells),
-                projectName,
-                value,
-              ),
+            command: () => exportCSV(meta.scopedCells, projectName, value),
           })),
           hidden: cell.isGroup,
         }
@@ -503,6 +499,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
@@ -518,6 +515,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,

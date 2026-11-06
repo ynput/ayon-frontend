@@ -22,6 +22,13 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if user has editor permissions (accessLevel >= 20)
       if ((selectedList?.accessLevel ?? 0) < 20) return
+      // Ctrl+Backspace while typing in a field (search, a cell editor) is text editing, not removal
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      )
+        return
 
       if (event.key === 'Backspace' && (event.ctrlKey || event.metaKey)) {
         // convert the selected cells to a list of ids; row checkboxes are ignored, as in context menus
