@@ -1,3 +1,4 @@
+import { dialog } from '@ynput/ayon-e2e'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
@@ -155,7 +156,9 @@ test.describe('overview tag and date cells', () => {
     await search.click()
     await expect(search).toBeFocused()
     await search.fill('adhoc')
+    // a new tag is created in the "Add tag" dialog, where it also gets a colour
     await search.press('Enter')
+    await dialog(page, 'Add tag').getByRole('button', { name: 'Add' }).click()
     await page.keyboard.press('Escape')
     await expect(page.locator('.options')).toBeHidden()
 
@@ -284,7 +287,7 @@ test.describe('overview tag and date cells', () => {
 
     await expect(overview.cell('anim', 'attrib_startDate')).toHaveText('15-11-2026')
     await expect
-      .poll(async () => (await api.getTask(projectName, tasks[0].id)).attrib.startDate)
-      .toBe('2026-11-15T00:00:00+00:00')
+      .poll(async () => Date.parse((await api.getTask(projectName, tasks[0].id)).attrib.startDate))
+      .toBe(Date.parse('2026-11-15T00:00:00Z'))
   })
 })
