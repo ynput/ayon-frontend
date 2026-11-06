@@ -315,9 +315,9 @@ const DetailsPanelHeader = ({
                 )}
               </Styled.Title>
               <div className="sub-title">
-                {/* "Folder - Shot", but "Folder" alone when the type is the entity type */}
+                {/* "Folder · Shot", but "Folder" alone when the type is the entity type */}
                 {subTitle?.toLowerCase() !== entityType?.toLowerCase() && (
-                  <span className="entity-type">{upperFirst(entityType)} -</span>
+                  <span className="entity-type">{upperFirst(entityType)} ·</span>
                 )}
                 <h3>{subTitle}</h3>
               </div>

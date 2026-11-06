@@ -1826,7 +1826,30 @@ const TableBodyRow = ({
         //fake empty column to the right for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingRight }} />
       ) : null}
+      <TrailingCell row={row} rowHeight={rowHeight} />
     </Styled.TR>
+  )
+}
+
+// under the header's add column slot: same width, row background
+const TrailingCell = ({ row, rowHeight }: { row: Row<TableRow>; rowHeight: number }) => {
+  const { isRowSelected } = useSelectedRowsContext()
+  const isGroup = !!row.original.group
+
+  return (
+    <Styled.TrailingCell
+      aria-hidden
+      className={clsx({
+        'selected-row': isRowSelected(row.id),
+        expandable:
+          !isGroup &&
+          row.getCanExpand() &&
+          !!row.originalSubRows &&
+          isEntityExpandable(row.original.primary.entityType),
+        'group-header': isGroup,
+      })}
+      style={{ width: ADD_COLUMN_BUTTON_SPACE, height: rowHeight }}
+    />
   )
 }
 

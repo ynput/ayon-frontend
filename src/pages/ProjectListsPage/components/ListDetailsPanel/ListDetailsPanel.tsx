@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, MouseEvent } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -11,6 +11,16 @@ import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsT
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+
+// a read-only detail cut short (the list id) shows its full value on hover
+const showFullValueIfCut = (event: MouseEvent<HTMLElement>) => {
+  const value = (event.target as HTMLElement).closest<HTMLElement>(
+    '.with-padding > div:not(.field-row) > :nth-child(2)',
+  )
+  if (!value) return
+  if (value.scrollWidth > value.clientWidth) value.dataset.tooltip = value.textContent || ''
+  else delete value.dataset.tooltip
+}
 
 interface ListDetailsPanelProps {
   listId: string
@@ -85,7 +95,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             <Styled.Section>
               <ListAttributeForm list={list} isLoading={isLoadingList} projectName={projectName} />
             </Styled.Section>
-            <Styled.Section>
+            <Styled.Section onMouseOver={showFullValueIfCut}>
               <ListMetaData list={list} isLoading={isLoadingList} />
             </Styled.Section>
           </>

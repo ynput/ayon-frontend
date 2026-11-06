@@ -1,6 +1,6 @@
 import { forwardRef } from 'react'
 import styled from 'styled-components'
-import { DoneCheckbox } from '@shared/components/DoneCheckbox/DoneCheckbox'
+import { BooleanValue } from '@shared/components/DoneCheckbox/BooleanValue'
 import { WidgetBaseProps } from './CellWidget'
 
 const StyledCheckbox = styled.input`
@@ -37,7 +37,7 @@ export interface BooleanWidgetProps
 export const BooleanWidget = forwardRef<HTMLInputElement, BooleanWidgetProps>(
   ({ value, onChange, isReadOnly, isEditing, onCancelEdit, isInherited, ...props }, ref) => {
     if (isReadOnly) {
-      return <DoneCheckbox checked={value} isReadOnly className={props.className} />
+      return <BooleanValue value={!!value} className={props.className} />
     }
 
     return (

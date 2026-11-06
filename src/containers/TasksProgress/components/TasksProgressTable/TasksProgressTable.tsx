@@ -408,7 +408,7 @@ export const TasksProgressTable = ({
         body={(row: FolderRow) =>
           row._complete !== undefined && (
             <Body style={{ minWidth: 'unset' }}>
-              <span>{`${Math.round(row._complete * 10) / 10}%`}</span>
+              <span>{`${Math.round(row._complete)}%`}</span>
             </Body>
           )
         }

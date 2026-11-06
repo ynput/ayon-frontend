@@ -24,7 +24,7 @@ const StyledInput = styled(InputText)`
 type Props = {
   open: boolean
   value: string
-  // what the panel lists, for the tooltip: 'Folders', 'Task Type', ...
+  // what the panel lists, for the tooltip: 'Folders', 'Task type', ...
   subject: string
   onChange: (value: string | undefined) => void
 }

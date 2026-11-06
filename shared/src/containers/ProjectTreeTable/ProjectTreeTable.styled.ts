@@ -45,6 +45,10 @@ export const TR = styled.tr`
     td.selected-row:not(.selected) {
       background-color: var(--color-table-selected-row-hover);
     }
+
+    td .expand.edit-trigger {
+      opacity: 1;
+    }
   }
 
   &.group-row {
@@ -124,17 +128,39 @@ export const HeaderLabel = styled.span`
 `
 
 // pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
-// in its own space after the last column
+// in its own space after the last column. Body and footer rows end with a TrailingCell of the
+// same width, so the columns that scroll under it are hidden in every row, not just the header.
+// Above left pinned cells (z-index 100) for narrow tables.
 export const AddColumnSlot = styled.th`
   position: sticky;
   right: 0;
-  z-index: 11;
+  z-index: 101;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   background-color: var(--color-table-header);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+`
+
+// takes the row's background (TR hover rules apply to it as to any td)
+export const TrailingCell = styled.td`
+  position: sticky;
+  right: 0;
+  z-index: 101;
+  flex-shrink: 0;
+  padding: 0 !important;
+  background-color: var(--color-table-row);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+
+  &.expandable,
+  &.group-header {
+    background-color: var(--color-table-row-high);
+  }
+
+  &.selected-row {
+    background-color: var(--color-table-selected-row);
+  }
 `
 
 export const HeaderCell = styled.th`
@@ -320,6 +346,27 @@ export const TD = styled.td<TableCellProps>`
 
   &.selected-row {
     background-color: var(--color-table-selected-row);
+  }
+
+  /* dropdown chevrons show on the hovered row (see TR), the selection and the cell being edited
+     instead of on every row; opacity keeps the cell layout the same */
+  .expand.edit-trigger {
+    opacity: 0;
+  }
+
+  &.selected,
+  &.focused,
+  &.selected-row,
+  &.editing {
+    .expand.edit-trigger {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
+    .expand.edit-trigger {
+      opacity: 1;
+    }
   }
 
   /* show hover effect only if direct child div does NOT have .readonly and is not selected */

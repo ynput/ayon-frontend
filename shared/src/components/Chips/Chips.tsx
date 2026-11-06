@@ -198,7 +198,8 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
           onMouseDown={chip.onClick ? (e) => e.stopPropagation() : pt?.chip?.onMouseDown}
           className={clsx(
             'chip',
-            { last: index === visibleValues.length - 1 && hiddenCount > 0 },
+            // a single chip can still be wider than the cell: the last one always gives way
+            { last: index === visibleValues.length - 1 },
             pt?.chip?.className,
           )}
         >

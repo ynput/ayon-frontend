@@ -134,6 +134,10 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
+  // "Select tags…", but keep acronyms such as "FPS" as they are
+  const placeholderLabel = /^[A-Z][a-z]/.test(labelValue)
+    ? labelValue[0].toLowerCase() + labelValue.slice(1)
+    : labelValue
 
   const isEmptyValue =
     value === null ||
@@ -141,7 +145,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     value === '' ||
     (Array.isArray(value) && value.length === 0)
   if (type !== 'boolean' && isReadOnly && !isMixed && isEmptyValue) {
-    return <FieldValueText>-</FieldValueText>
+    return <FieldValueText>—</FieldValueText>
   }
 
   // Handle different field types
@@ -173,7 +177,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           // entities of one project, the tag goes to its anatomy
           isProjectTags={field.name === 'tags' && new Set(projectNames).size <= 1}
           pt={{ template: { style: { height: 32 }, className: 'enum' } }}
-          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          placeholder={isMixed ? `Mixed ${placeholderLabel}` : `Select ${placeholderLabel}…`}
           {...mixedProps}
           onCancelEdit={onCancelEdit}
           align="right"
@@ -259,8 +263,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             enumError
               ? `Could not load ${labelValue}`
               : isMixed
-              ? `Mixed ${labelValue}`
-              : `Select ${labelValue}...`
+              ? `Mixed ${placeholderLabel}`
+              : `Select ${placeholderLabel}…`
           }
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}

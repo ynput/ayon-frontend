@@ -6,7 +6,11 @@ import clsx from 'clsx'
 import { Button, Icon } from '@ynput/ayon-react-components'
 
 import type { TableRow } from '../types/table'
-import { DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from '../constants'
+import {
+  ADD_COLUMN_BUTTON_SPACE,
+  DRAG_HANDLE_COLUMN_ID,
+  ROW_SELECTION_COLUMN_ID,
+} from '../constants'
 import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
 
@@ -69,6 +73,18 @@ const FooterCell = styled.td`
     width: 24px !important;
     min-width: unset;
   }
+`
+
+// under the header's add column slot, like the body rows' trailing cell
+const FooterTrailingCell = styled.td`
+  position: sticky;
+  right: 0;
+  z-index: 101;
+  flex-shrink: 0;
+  height: 34px !important;
+  padding: 0 !important;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  box-shadow: inset 1px 1px 0 0 var(--md-sys-color-surface-container);
 `
 
 const CellContent = styled.div`
@@ -226,6 +242,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
         {virtualPaddingRight ? (
           <td style={{ display: 'flex', width: virtualPaddingRight }} />
         ) : null}
+        <FooterTrailingCell aria-hidden style={{ width: ADD_COLUMN_BUTTON_SPACE }} />
       </FooterRowEl>
     </Footer>
   )

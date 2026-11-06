@@ -93,7 +93,13 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
   if (columnId === 'subType' && scopes.some((scope) => ['product', 'version'].includes(scope))) {
     return 'Product type'
   }
-  return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
+  const normalizedId = normalizeColumnId(columnId)
+  // in a table of folders only (a folder list) the name column is already "Folder", and this
+  // column shows each row's parent
+  if (normalizedId === ENTITY_COLUMN_IDS.folder && scopes.length === 1 && scopes[0] === 'folder') {
+    return 'Parent folder'
+  }
+  return COLUMN_LABELS[normalizedId] || columnId
 }
 
 // only ids getAttributeIcon can't resolve from the name alone
@@ -1021,7 +1027,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
       accessorFn: (row) => getFolderColumnValue(row),
-      header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
+      header: getColumnLabel(ENTITY_COLUMN_IDS.folder, scopes),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
       sortingFn: withLoadingStateSort(pathSort),

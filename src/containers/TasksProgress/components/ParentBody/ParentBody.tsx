@@ -27,8 +27,8 @@ const ParentBody: FC<ParentBodyProps> = ({
         className={clsx({ collapsed: isCollapsed })}
       />
       <span className="title">{name}</span>
-      {!!folderCount && <span className="count"> - {pluralize(folderCount, 'folder')}</span>}
-      {!!taskCount && <span className="count"> - {pluralize(taskCount, 'task')}</span>}
+      {!!folderCount && <span className="count">· {pluralize(folderCount, 'folder')}</span>}
+      {!!taskCount && <span className="count">· {pluralize(taskCount, 'task')}</span>}
     </Styled.ParentBody>
   )
 }
