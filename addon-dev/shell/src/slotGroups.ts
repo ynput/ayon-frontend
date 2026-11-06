@@ -76,6 +76,11 @@ export const SLOT_AREAS: SlotArea[] = [
       },
     ],
   },
+  {
+    label: 'Account',
+    icon: 'account_circle',
+    sections: [{ label: 'Profile', slots: [{ slot: 'profile.section', label: 'Sections' }] }],
+  },
 ]
 
 /** Where a slot is, as labels from its area down: Project › Tables › Cell menu. */

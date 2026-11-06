@@ -20,6 +20,7 @@ import {
 } from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
+  usePowerpack,
   useScopedDetailsPanel,
   useSettingsPanel,
 } from '@ynput/ayon-frontend-shared/context'
@@ -37,6 +38,7 @@ import {
   useAddonUserMenuItems,
   useUserDetailsSlotContext,
   AddonUserDetailsSections,
+  AddonProfileSections,
   shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
@@ -205,6 +207,34 @@ const ServiceStage = ({ contribution, selection }: StageProps) => {
   const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
   useReport(contribution, context, true)
   return <ServiceNote />
+}
+
+// profile.section: a stand-in for Account → Profile (it lives in the ayon-frontend app), for the
+// signed-in user. The slot's context has nothing besides `user`.
+const PROFILE_CONTEXT = {}
+const ProfileStage = ({ contribution }: StageProps) => {
+  const user = useUser()
+  const { powerLicense, isLoading } = usePowerpack()
+  const hidden =
+    !!(contribution as { powerFeature?: boolean }).powerFeature && (isLoading || !powerLicense)
+  useReport(contribution, PROFILE_CONTEXT, !!user && !hidden)
+  if (!user) return <Hint>Signing in…</Hint>
+  return (
+    <div className="ayon-shell-body" style={{ justifyContent: 'center' }}>
+      <div
+        style={{ width: 'min(600px, 100%)', display: 'flex', flexDirection: 'column', gap: 4 }}
+        data-shell-surface="profile"
+      >
+        <div className="ayon-shell-bar">
+          <strong>{user.fullName || user.name}</strong>
+        </div>
+        {hidden && !isLoading && (
+          <Hint>A power feature: this section shows with a Power Pack licence only.</Hint>
+        )}
+        <AddonProfileSections />
+      </div>
+    </div>
+  )
 }
 
 // userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
@@ -595,6 +625,8 @@ export const Stage = ({
       case 'userDetails.section':
       case 'userDetails.menuItem':
         return <UserDetailsStage {...props} />
+      case 'profile.section':
+        return <ProfileStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }

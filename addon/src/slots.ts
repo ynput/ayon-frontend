@@ -190,6 +190,17 @@ export interface SlotMap {
     pieces: { run: Loader<RunPiece<'userDetails.menuItem'>> }
   }
   /**
+   * A section on the signed-in user's profile page (Account → Profile), below AYON's own forms.
+   * The section shows from the description, titled like AYON's; `component` loads when it is first
+   * shown. Saving is the section's own: AYON's "Save profile" button doesn't see it.
+   */
+  'profile.section': {
+    version: 1
+    meta: ProfileSectionMeta
+    context: ProfileSectionContext
+    pieces: { component: Loader<ComponentType<SlotProps<'profile.section'>>> }
+  }
+  /**
    * Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to
    * websocket events, registering a store listener. `component` loads at startup and is mounted
    * once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks;
@@ -614,6 +625,24 @@ export interface UserDetailsContext extends UsersScope {
   readOnly: boolean
 }
 
+/** Description of a `profile.section` contribution. */
+export interface ProfileSectionMeta {
+  /** unique among the addon's sections */
+  id: string
+  /** the section's title, above its content */
+  title: string
+  /** order among addon sections, lowest first */
+  order?: number
+  /**
+   * a Power Pack feature: shown only with a Power Pack licence. Without one, AYON shows its own
+   * preview of the feature where it has one. `false` by default
+   */
+  powerFeature?: boolean
+}
+
+/** Context of a profile section: nothing besides `user`, the signed-in user it is about. */
+export type ProfileSectionContext = Record<never, never>
+
 /** Description of an `app.service` contribution. */
 export interface AppServiceMeta {
   /** unique among the addon's services */
@@ -801,6 +830,15 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     required: ['label', 'icon'],
     pieces: ['run'],
     optional: { ...menuItemFields, selection: selectionField },
+  },
+  'profile.section': {
+    version: 1,
+    required: ['title'],
+    pieces: ['component'],
+    check: (item) =>
+      item.powerFeature !== undefined && typeof item.powerFeature !== 'boolean'
+        ? 'powerFeature must be true or false'
+        : undefined,
   },
 }
 
