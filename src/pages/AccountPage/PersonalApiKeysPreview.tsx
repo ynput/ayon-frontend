@@ -1,12 +1,11 @@
-// Without a Power Pack licence, the profile page shows what personal API keys look like, faded
-// out. Power Pack's own section (profile.section, powerFeature) shows instead when licensed.
-import { PowerpackButton } from '@shared/components'
+// Preview personal API keys until a licensed Power Pack contributes the real profile section.
 import { usePowerpack } from '@shared/context'
-import { Icon, Panel } from '@ynput/ayon-react-components'
+import { Button, Icon, Panel } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const PreviewPanel = styled(Panel)`
-  cursor: pointer;
+  cursor: ${({ $needsUpdate }: { $needsUpdate: boolean }) =>
+    $needsUpdate ? 'default' : 'pointer'};
 
   .title {
     display: flex;
@@ -51,18 +50,20 @@ const MOCK_KEYS = [
   { label: 'Sync script', meta: 'c41d*****b07c · expires in 12 days' },
 ]
 
-export const PersonalApiKeysPreview = () => {
+export const PersonalApiKeysPreview = ({ needsUpdate = false }: { needsUpdate?: boolean }) => {
   const { setPowerpackDialog } = usePowerpack()
 
   return (
     <PreviewPanel
       data-testid="personal-api-keys-preview"
-      onClick={() => setPowerpackDialog('personalApiKeys')}
+      $needsUpdate={needsUpdate}
+      onClick={needsUpdate ? undefined : () => setPowerpackDialog('personalApiKeys')}
     >
       <b className="title">
         Personal API keys
         <Icon icon="bolt" filled className="bolt" />
       </b>
+      {needsUpdate && <span>Update Power Pack to use personal API keys.</span>}
       <div className="mock" aria-hidden>
         {MOCK_KEYS.map((key) => (
           <div className="key" key={key.label}>
@@ -71,13 +72,16 @@ export const PersonalApiKeysPreview = () => {
           </div>
         ))}
       </div>
-      <PowerpackButton
+      <Button
         className="create"
-        feature="personalApiKeys"
         icon="add"
         label="Create API key"
-        variant="filled"
-        onClick={(e) => e.stopPropagation()}
+        variant="surface"
+        disabled={needsUpdate}
+        onClick={(e) => {
+          e.stopPropagation()
+          setPowerpackDialog('personalApiKeys')
+        }}
       />
     </PreviewPanel>
   )
