@@ -150,6 +150,8 @@ export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
         onClick={handleClick}
+        // The table focuses its cell on mousedown, which would blur and unmount this editor.
+        onMouseDown={(e) => e.stopPropagation()}
       />
     )
   },

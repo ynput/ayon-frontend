@@ -59,12 +59,6 @@ const FooterCell = styled.td`
     }
   }
 
-  /* a column without a total gets a lone "—" from the summaries remote: keep the cell empty
-     until hovered, it stays clickable to pick a calculation */
-  &:not(:hover) > button > .label:only-child {
-    visibility: hidden;
-  }
-
   /* match the special fixed widths used by header/body cells */
   &.__row_selection__ {
     width: 20px !important;

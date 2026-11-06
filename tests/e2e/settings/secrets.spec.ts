@@ -77,7 +77,7 @@ test.describe('secrets', () => {
 
       // the row goes away in the same render that would show the "0"
       await expect(secrets.secretRow(name)).toBeHidden()
-      await expect(secrets.list).toHaveText(/Stored secrets$/)
+      await expect(secrets.list).toContainText('No stored secrets')
       await expect.poll(() => api.getSecretValue(name)).toBeUndefined()
     } finally {
       await api.deleteSecret(name)

@@ -1,7 +1,7 @@
 import { expect, Page } from '@playwright/test'
 import { confirmDialog, toast } from '@ynput/ayon-e2e'
 
-// FLAG: secrets are unlabeled rows of inputs: rows are found by their read-only name, buttons by ligature
+// Secret rows are found by their read-only name.
 export class SecretsPage {
   constructor(readonly page: Page) {}
 
@@ -11,7 +11,7 @@ export class SecretsPage {
   }
 
   get list() {
-    return this.page.locator('div:has(> h2:text-is("Stored secrets"))')
+    return this.page.locator('section:has(> h3:text-is("Stored secrets"))')
   }
 
   get newSecretRow() {
@@ -33,11 +33,11 @@ export class SecretsPage {
   async updateSecret(name: string, value: string) {
     const row = this.secretRow(name)
     await row.getByPlaceholder('Secret value').fill(value)
-    await row.getByRole('button', { name: 'check', exact: true }).click()
+    await row.getByRole('button', { name: 'Save secret', exact: true }).click()
   }
 
   async deleteSecret(name: string) {
-    await this.secretRow(name).getByRole('button', { name: 'delete', exact: true }).click()
+    await this.secretRow(name).getByRole('button', { name: 'Delete secret', exact: true }).click()
     await confirmDialog(this.page).getByRole('button', { name: 'Delete' }).click()
     await expect(toast(this.page, 'Secret deleted')).toBeVisible()
   }

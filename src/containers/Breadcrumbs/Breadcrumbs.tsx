@@ -65,7 +65,6 @@ const getUriTargetUrl = (uri: string, location: Location): string | null => {
 // route segments named like the nav and tabs that lead to them
 const SECTION_LABELS: Record<string, string> = {
   dashboard: 'Home',
-  projects: 'Project',
   settings: 'Studio settings',
   manageProjects: 'Project manager',
 }
@@ -91,24 +90,13 @@ const pathname2crumbs = (pathname: string): string[] => {
   const [section, ...rest] = pathname.split('/').filter(Boolean)
   if (!section) return []
   const sectionLabel = SECTION_LABELS[section] || upperFirst(section)
-  // the project name is an identifier, shown as it is
-  const projectName = section === 'projects' ? rest.shift() : undefined
+  if (section === 'projects') return [section, ...rest].map(upperFirst)
   const modules = rest
     .filter((segment) => segment !== 'addon')
     .map((segment) => MODULE_LABELS[section]?.[segment] || upperFirst(segment))
     // the "Studio settings" tab of Studio settings is not repeated
     .filter((label) => label !== sectionLabel)
-  return [sectionLabel, ...(projectName ? [projectName] : []), ...modules]
-}
-
-const COLLAPSED_CRUMB = '…'
-
-// an entity opens inside a page: the page keeps its crumbs so the module stays visible, then the
-// entity's project and path
-const getEntityPrefix = (projectName: string, pathname: string): string[] => {
-  if (pathname.startsWith(`/projects/${projectName}/`)) return pathname2crumbs(pathname)
-  if (pathname.startsWith('/projects/')) return ['Project', projectName]
-  return [...pathname2crumbs(pathname), projectName]
+  return [sectionLabel, ...modules]
 }
 
 // TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
@@ -121,11 +109,14 @@ const uri2crumbs = (uri: string = '', pathname: string, collapse = false): strin
   if (scope?.includes('ayon+settings')) {
     crumbs.unshift(getSettingsScopeLabel(query))
   } else if (scope?.includes('ayon+entity')) {
-    const [projectName = '', ...folders] = crumbs
-    // deep folder paths keep the leaf folder, the full path is in the tooltip and the uri
-    const shownFolders =
-      collapse && folders.length > 2 ? [COLLAPSED_CRUMB, folders[folders.length - 1]] : folders
-    crumbs.splice(0, crumbs.length, ...getEntityPrefix(projectName, pathname), ...shownFolders)
+    if (pathname.startsWith('/projects/')) {
+      crumbs.unshift('Project')
+    } else {
+      const [projectName = '', ...folders] = crumbs
+      const shownFolders =
+        collapse && folders.length > 2 ? ['…', folders[folders.length - 1]] : folders
+      crumbs.splice(0, crumbs.length, ...pathname2crumbs(pathname), projectName, ...shownFolders)
+    }
   } else {
     crumbs.unshift(...pathname2crumbs(pathname))
   }

@@ -1,6 +1,11 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
-import { getMixedCounts, type MixedChange, type UserColor } from '@ynput/ayon-react-components'
+import {
+  Icon,
+  getMixedCounts,
+  type MixedChange,
+  type UserColor,
+} from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -28,6 +33,22 @@ const FieldValueText = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`
+
+const DateValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  > span:first-child {
+    flex: 1;
+  }
+
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 `
 
 const StyledEnumWidget = styled(EnumWidget)`
@@ -152,15 +173,15 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case type === 'datetime':
       return (
-        <DateWidget
-          value={displayValue}
-          {...widgetCommonProps}
-          isEditing
-          onCancelEdit={onCancelEdit}
-          style={{ width: 'fit-content' }}
-          autoFocus={false}
-          isMidnightExclusive={isMidnightExclusive}
-        />
+        <DateValue>
+          <DateWidget
+            value={displayValue}
+            {...widgetCommonProps}
+            onCancelEdit={onCancelEdit}
+            isMidnightExclusive={isMidnightExclusive}
+          />
+          {!isEditing && !isReadOnly && <Icon icon="calendar_today" aria-hidden />}
+        </DateValue>
       )
 
     case widget === 'tags':

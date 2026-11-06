@@ -280,9 +280,18 @@ test.describe('overview tag and date cells', () => {
     await overview.goto(projectName)
     await overview.expand('sh010')
 
-    await overview.setDateCell('anim', 'attrib_startDate', '2026-11-15')
+    const cell = overview.cell('anim', 'attrib_startDate')
+    await cell.dblclick()
+    const input = cell.locator('input[type="date"]')
+    await expect(input).toBeFocused()
+    await input.click()
+    await expect(input).toBeVisible()
+    await expect(input).toBeFocused()
+    await input.fill('2026-11-15')
+    await overview.nameCell('anim').click()
+    await expect(input).toBeHidden()
 
-    await expect(overview.cell('anim', 'attrib_startDate')).toHaveText('15-11-2026')
+    await expect(cell).toHaveText('15 Nov 2026')
     await expect
       .poll(async () => (await api.getTask(projectName, tasks[0].id)).attrib.startDate)
       .toBe('2026-11-15T00:00:00+00:00')

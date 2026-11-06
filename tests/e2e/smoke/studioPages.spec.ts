@@ -121,7 +121,7 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'global (server config)',
       path: () => '/settings/server',
-      ready: (page) => visible(button(page, 'Save server config'), heading(page, 'Customization')),
+      ready: (page) => visible(button(page, 'Save changes'), heading(page, 'Global settings')),
     },
     {
       name: 'addons',
