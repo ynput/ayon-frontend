@@ -165,6 +165,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
     <Section>
       <TablePanel>
         <TreeTable
+          className="standard-rows"
           value={changesTree}
           expandedKeys={expandedKeys}
           onToggle={(e) => setExpandedKeys(e.value)}

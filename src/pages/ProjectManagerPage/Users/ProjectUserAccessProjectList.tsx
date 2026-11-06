@@ -93,6 +93,8 @@ const ProjectUserAccessProjectList = ({
         scrollable={true}
         scrollHeight="flex"
         selectionMode="multiple"
+        // one column under the panel's "Projects" title: a column header would repeat it
+        showHeaders={false}
         className={clsx({ loading: isLoading })}
         rowClassName={() => ({ loading: isLoading })}
         onSelectionChange={(selection) => {
@@ -101,7 +103,6 @@ const ProjectUserAccessProjectList = ({
       >
         <Column
           field="name"
-          header="Project name"
           body={(rowData) => {
             const isActive = rowData.active
             const hasPermissions =

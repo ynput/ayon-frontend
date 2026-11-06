@@ -72,7 +72,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
         </strong>
         <br />
         <span style={{ opacity: 0.5 }}>
-          Last Updated{' '}
+          Last updated ·{' '}
           {new Date(updatedAt).getDate() &&
             formatDistance(new Date(updatedAt), new Date(), { addSuffix: true })}
         </span>

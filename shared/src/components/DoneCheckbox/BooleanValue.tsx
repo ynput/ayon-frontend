@@ -14,8 +14,9 @@ const Value = styled.span`
     user-select: none;
   }
 
+  /* a read-only state, not a call to action: neutral, so a column of them stays quiet */
   &.true .icon {
-    color: var(--md-sys-color-tertiary);
+    color: var(--md-sys-color-on-surface-variant);
     font-variation-settings: 'FILL' 1;
   }
 

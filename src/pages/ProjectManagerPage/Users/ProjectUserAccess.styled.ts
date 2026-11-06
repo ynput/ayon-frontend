@@ -18,6 +18,10 @@ export const DataColumn = styled.div`
   height: 24px;
   align-items: center;
   gap: var(--base-gap-large);
+  .name {
+    flex-grow: 1;
+  }
+  .name,
   .access-groups {
     min-width: 0;
     overflow: hidden;
@@ -27,8 +31,9 @@ export const DataColumn = styled.div`
   .partial-match {
     color: var(--md-ref-palette-neutral-variant60);
   }
+  /* out of the layout until the row is hovered, so the name has the whole cell */
   button {
-    visibility: hidden;
+    display: none;
     .shortcut {
       font-size: 11px;
       line-height: 16px;
@@ -70,7 +75,7 @@ export const DataTable = styled(BaseDataTable)`
   /* Make buttons visible on row hover for instant response */
   tr:hover {
     button {
-      visibility: visible;
+      display: flex;
     }
   }
 
@@ -79,7 +84,7 @@ export const DataTable = styled(BaseDataTable)`
     background-color: rgba(0, 0, 0, 0.05);
 
     button {
-      visibility: visible;
+      display: flex;
     }
   }
 `

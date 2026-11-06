@@ -139,7 +139,7 @@ const AccessGroupList = ({
           selection={selection}
           onSelectionChange={(e) => onSelectionChange(e.value)}
           rowClassName={getRowClass}
-          className={clsx({ loading: isLoading })}
+          className={clsx('standard-rows', { loading: isLoading })}
           onContextMenu={(e) => onContextMenu(e)}
         >
           <Column field="name" header="Access group" />

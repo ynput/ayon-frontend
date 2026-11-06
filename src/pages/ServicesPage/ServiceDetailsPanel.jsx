@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
+import { BooleanValue } from '@shared/components'
 import { formatDateTime } from '@shared/util'
 import styled from 'styled-components'
 import ServiceDialog from './NewServiceDialog'
@@ -9,6 +10,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  margin-bottom: 8px;
 `
 
 const ButtonGroup = styled.div`
@@ -63,32 +65,36 @@ const ServiceDetailsPanel = ({ service, onClose, onEdit }) => {
           </ButtonGroup>
         </Header>
         <DetailRow>
-          <Label>Host:</Label>
+          <Label>Host</Label>
           <Value>{service.hostname}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Addon:</Label>
+          <Label>Addon</Label>
           <Value>{service.addonName}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Addon version:</Label>
+          <Label>Addon version</Label>
           <Value>{service.addonVersion}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Service type:</Label>
+          <Label>Service type</Label>
           <Value>{service.service}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Should run:</Label>
-          <Value>{service.shouldRun ? 'Yes' : 'No'}</Value>
+          <Label>Should run</Label>
+          <Value>
+            <BooleanValue value={!!service.shouldRun} style={{ justifyContent: 'flex-start' }} />
+          </Value>
         </DetailRow>
         <DetailRow>
-          <Label>Is running:</Label>
-          <Value>{service.isRunning ? 'Yes' : 'No'}</Value>
+          <Label>Is running</Label>
+          <Value>
+            <BooleanValue value={!!service.isRunning} style={{ justifyContent: 'flex-start' }} />
+          </Value>
         </DetailRow>
         {service.lastSeen && (
           <DetailRow>
-            <Label>Last seen:</Label>
+            <Label>Last seen</Label>
             <Value>{formatDateTime(service.lastSeen)}</Value>
           </DetailRow>
         )}

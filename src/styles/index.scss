@@ -454,6 +454,19 @@ a {
   }
 }
 
+// legacy PrimeReact tables of the settings, events and services pages: rows as tall as the project tables'
+// (opt in per table, so tables sized elsewhere, such as the compact Browser and Workfiles ones, keep theirs)
+.standard-rows .p-datatable-tbody > tr:not(.compact) > td,
+.standard-rows .p-treetable-tbody > tr:not(.compact) > td {
+  height: var(--size-row);
+
+  // values start where their header's title does (the first cell has the row's 4px left border for that)
+  &:not(:first-child) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
 // legacy PrimeReact tables: match the header of the new project tables
 .p-datatable .p-datatable-thead > tr > th,
 .p-treetable .p-treetable-thead > tr > th {

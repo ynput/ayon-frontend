@@ -186,7 +186,7 @@ const UserList = ({
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={clsx('user-list-table', { loading: isLoading })}
+          className={clsx('user-list-table', 'standard-rows', { loading: isLoading })}
           rowClassName={(rowData) => clsx({ inactive: !rowData.active, loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}

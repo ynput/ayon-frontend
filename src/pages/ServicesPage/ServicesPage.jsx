@@ -14,12 +14,12 @@ import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/serv
 import { confirmDialog } from 'primereact/confirmdialog'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
-// the size of the other status badges, such as a bundle's Production
+// the size of the status pills in the project tables
 const StatusBadge = styled.span`
   display: inline-block;
-  padding: 0 4px;
+  padding: 1px 6px;
   border-radius: var(--border-radius-m);
-  font-size: 0.9rem;
+  line-height: 20px;
   background-color: var(--md-sys-color-surface-container-highest);
   color: var(--md-sys-color-on-surface-variant);
 
@@ -259,6 +259,7 @@ const ServicesPage = () => {
                   scrollable="true"
                   scrollHeight="flex"
                   dataKey="name"
+                  className="standard-rows"
                   selectionMode="multiple"
                   selection={selection}
                   onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}

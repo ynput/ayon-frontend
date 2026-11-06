@@ -29,6 +29,8 @@ const AddonsManagerTable = ({
   sortFunction,
   emptyMessage,
   emptyIcon,
+  // a prompt whose prerequisite can't be met yet: smaller and grey
+  emptyMuted = false,
   isLoading,
   footer,
   ...props
@@ -118,7 +120,7 @@ const AddonsManagerTable = ({
           selection={tableSelection}
           onContextMenu={handleContextClick}
           emptyMessage=" "
-          className={clsx({ loading: isLoading })}
+          className={clsx('standard-rows', { loading: isLoading })}
           rowClassName={() => ({ loading: isLoading })}
         >
           <Column
@@ -159,7 +161,11 @@ const AddonsManagerTable = ({
           />
         </DataTable>
         {!value?.length && !isLoading && (
-          <EmptyPlaceholder icon={emptyIcon} message={emptyMessage} />
+          <EmptyPlaceholder
+            icon={emptyIcon}
+            message={emptyMessage}
+            className={clsx({ 'compact muted': emptyMuted })}
+          />
         )}
       </StyledTablePanel>
       {footer}

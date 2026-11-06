@@ -767,7 +767,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-        <Section style={{ maxWidth: 400, minWidth: 400 }}>
+        <Section className="standard-rows" style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
           {showCopySettings && (
             <CopySettingsDialog

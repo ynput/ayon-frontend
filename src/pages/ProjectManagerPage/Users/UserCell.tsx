@@ -33,10 +33,9 @@ export const UserCell = ({
       {/* @ts-ignore */}
       <UserImage name={name} highlight={self} size={22} />
       <span
-        style={{
-          flexGrow: 1,
-          color: isMissing ? 'var(--color-hl-error)' : 'inherit',
-        }}
+        className="name"
+        style={{ color: isMissing ? 'var(--color-hl-error)' : 'inherit' }}
+        title={attrib?.fullName || name}
       >
         {attrib?.fullName || name}
       </span>
@@ -63,14 +62,14 @@ export const UserCell = ({
         </Styled.ActionButton>
       )}
 
-      {!readOnly && !showAddButton && (
+      {!readOnly && !showAddButton && onRemove && (
         <Styled.ActionButton
           className="action"
           icon={'remove'}
           variant="filled"
           onClick={(e) => {
             e.stopPropagation()
-            onRemove!()
+            onRemove()
           }}
         >
           Remove <span className="shortcut">R</span>

@@ -137,12 +137,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             <EventTile
               title={project}
               disableHover
-              subTitle={`last updated -  ${
-                new Date(projectLastUpdated).getDate() &&
-                formatDistance(new Date(projectLastUpdated), new Date(), {
+              subTitle={
+                projectLastUpdated &&
+                `Last updated · ${formatDistance(new Date(projectLastUpdated), new Date(), {
                   addSuffix: true,
-                })
-              }`}
+                })}`
+              }
             >
               <Link to={`/manageProjects?project=${project}`}>
                 <Button
@@ -181,7 +181,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
         )}
       </Panel>
 
-      <Panel>{eventRestartButton}</Panel>
+      {eventRestartButton && <Panel>{eventRestartButton}</Panel>}
     </Section>
   )
 }

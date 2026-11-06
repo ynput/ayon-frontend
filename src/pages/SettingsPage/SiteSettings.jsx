@@ -101,7 +101,7 @@ const SiteSettings = () => {
 
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
-      <Section style={{ maxWidth: 400 }}>
+      <Section className="standard-rows" style={{ maxWidth: 400 }}>
         <SettingsAddonList
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}

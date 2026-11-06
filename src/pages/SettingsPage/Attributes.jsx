@@ -7,11 +7,12 @@ import {
   Button,
   Section,
   Toolbar,
-  InputText,
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { AttributeEditor, BooleanValue, getUiTypeLabel } from '@shared/components'
+import { formatDateTime } from '@shared/util'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
@@ -180,9 +181,9 @@ const Attributes = () => {
               disabled={!selectedAttribute || selectedAttribute.builtin}
               onClick={() => onDelete(selectedAttribute)}
             />
-            <InputText
+            <SearchInput
               style={{ width: '200px' }}
-              placeholder="Filter attributes..."
+              placeholder="Filter attributes"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
@@ -215,7 +216,7 @@ const Attributes = () => {
               onContextMenuSelectionChange={handleContextSelectionChange}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
-              className={clsx({ loading: isLoading })}
+              className={clsx('standard-rows', { loading: isLoading })}
               rowClassName={() => ({ loading: isLoading })}
             >
               <Column rowReorder style={{ maxWidth: 30 }} />
@@ -252,7 +253,17 @@ const Attributes = () => {
                   })
                 }}
               />
-              <Column field="data.example" header="Example" style={{ maxWidth: 240 }} sortable />
+              <Column
+                field="data.example"
+                header="Example"
+                style={{ maxWidth: 240 }}
+                body={(rowData) =>
+                  rowData.data?.type === 'datetime'
+                    ? formatDateTime(rowData.data.example) || rowData.data.example
+                    : rowData.data?.example
+                }
+                sortable
+              />
               {/* takes the room that is left and cuts its text there, so the table never gets wider than the page */}
               <Column
                 field="data.description"

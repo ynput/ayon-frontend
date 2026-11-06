@@ -89,9 +89,9 @@ const EventOverview = ({ events, logs, onTotal, search, setSelectedEvent, setSho
         <h2>Last user</h2>
         {lastUser ? (
           <EventTile
-            title={lastUser.topic}
+            title={lastUser.user}
             time={lastUser.updatedAt}
-            subTitle={lastUser.user}
+            subTitle={lastUser.topic}
             onClick={() => handleEventClick(lastUser)}
           />
         ) : (

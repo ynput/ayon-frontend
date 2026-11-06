@@ -78,6 +78,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
           scrollHeight="flex"
           responsive="true"
           dataKey="id"
+          className="standard-rows"
           selectionMode="single"
           onSelectionChange={(e) => setSelectedEvent(e.value.id)}
           selection={selectedEvent}
@@ -93,7 +94,8 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
           // fixed layout: a long description must not push User and Project out of view
           tableStyle={{ tableLayout: 'fixed', width: '100%' }}
           virtualScrollerOptions={{
-            itemSize: 29,
+            // the row height of .standard-rows (--size-row)
+            itemSize: 34,
             step: 99,
             lazy: true,
             onLazyLoad: handleLazy,
@@ -105,7 +107,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             body={(row) => <TimestampField value={row?.updatedAt} />}
             style={{ width: 180 }}
           />
-          <Column header="Topic" field="topic" style={{ width: 180, textOverflow: 'ellipsis' }} />
+          <Column header="Topic" field="topic" style={{ width: 240, textOverflow: 'ellipsis' }} />
           <Column header="Description" field="description" style={{ textOverflow: 'ellipsis' }} />
           <Column header="User" field="user" style={{ width: 120, textOverflow: 'ellipsis' }} />
           <Column
