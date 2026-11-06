@@ -19,7 +19,9 @@ export default defineConfig({
       outDirs: 'dist/types',
       tsconfigPath: './tsconfig.json',
       entryRoot: 'src',
-      bundleTypes: true,
+      // not rolled up per entry: that gives each entry its own copy of SlotMap, and a contract
+      // package's `declare module '@ynput/ayon-addon'` would only reach the main entry's
+      bundleTypes: false,
     }),
   ],
   build: {

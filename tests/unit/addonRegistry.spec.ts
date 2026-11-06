@@ -49,7 +49,7 @@ test('a contribution to an unknown slot is skipped and named', () => {
   expect(contributions.map((c) => c.key)).toEqual(['my-addon.budget'])
   expect(skipped).toHaveLength(1)
   expect(formatSkipped(skipped[0])).toBe(
-    '[addon my-addon] skipped contribution "later" for slot "future.slot": this AYON version has no such slot',
+    '[addon my-addon] skipped contribution "later" for slot "future.slot": this AYON version has no such slot, and no addon in the bundle declares it (it would be addon "future")',
   )
 })
 
