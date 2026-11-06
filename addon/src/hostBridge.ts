@@ -45,7 +45,7 @@ export interface HostImplementation {
   getUser?: () => AddonUser | undefined
   /** the dispatch of the host's store */
   dispatch?: AddonDispatch
-  /** goes to an AYON URL without reloading the page (`navigateToEntity`) */
+  /** goes to an AYON URL without reloading the page (`navigate`, `navigateToEntity`) */
   navigate?: (to: string) => void
   /** opens AYON's viewer (`openViewer`) */
   openViewer?: (target: ViewerTarget) => void
