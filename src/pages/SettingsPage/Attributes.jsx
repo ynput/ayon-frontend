@@ -11,13 +11,24 @@ import {
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { AttributeEditor, DoneCheckbox, getUiTypeLabel } from '@shared/components'
+import { AttributeEditor, BooleanValue, getUiTypeLabel } from '@shared/components'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { isEqual } from 'lodash'
 import clsx from 'clsx'
+import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+
+// the drag handles stay in the background until their row is hovered
+const StyledDataTable = styled(DataTable)`
+  .p-datatable-reorderablerow-handle {
+    color: var(--md-sys-color-outline);
+  }
+  tr:hover .p-datatable-reorderablerow-handle {
+    color: var(--md-sys-color-on-surface);
+  }
+`
 
 // Validation errors point at an index (loc: ['body', 'attributes', 44, 'name']), not a name
 const getSaveErrorReason = (err, attributes) => {
@@ -191,7 +202,7 @@ const Attributes = () => {
             />
           </Toolbar>
           <TablePanel loading={isLoading || updateLoading || isFetching}>
-            <DataTable
+            <StyledDataTable
               scrollable="true"
               scrollHeight="flex"
               dataKey="name"
@@ -241,30 +252,22 @@ const Attributes = () => {
                   })
                 }}
               />
-              <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
-              <Column field="data.description" header="Description" sortable />
+              <Column field="data.example" header="Example" style={{ maxWidth: 240 }} sortable />
+              {/* takes the room that is left and cuts its text there, so the table never gets wider than the page */}
+              <Column
+                field="data.description"
+                header="Description"
+                style={{ width: '100%', maxWidth: 0 }}
+                sortable
+              />
               <Column
                 field="data.inherit"
                 header="Inherit"
                 sortable
-                style={{ maxWidth: 80 }}
-                body={(rowData) =>
-                  !isLoading && (
-                    <DoneCheckbox
-                      checked={!!rowData.data?.inherit}
-                      isReadOnly
-                      style={{
-                        fontSize: 18,
-                        display: 'block',
-                        color: rowData.data?.inherit
-                          ? undefined
-                          : 'var(--md-sys-color-outline-variant)',
-                      }}
-                    />
-                  )
-                }
+                style={{ minWidth: 96 }}
+                body={(rowData) => !isLoading && <BooleanValue value={!!rowData.data?.inherit} />}
               />
-            </DataTable>
+            </StyledDataTable>
           </TablePanel>
         </Section>
       </main>

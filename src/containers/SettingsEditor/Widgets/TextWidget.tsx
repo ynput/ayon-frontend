@@ -5,7 +5,6 @@ import { equiv, getDefaultValue, parseContext, updateChangedKeys } from '../help
 import { $Any } from '@types'
 import {
   Button,
-  IconSelect,
   InputColor,
   InputNumber,
   InputText,
@@ -13,26 +12,23 @@ import {
   MIN_CONTRAST_ICON,
 } from '@ynput/ayon-react-components'
 import { DarkColorInput, LightColorInput } from './ThemeColorInput'
+import { IconWidget } from './IconWidget'
 import { useParentSchema } from '../FormTemplates/ParentSchemaContextInstance'
 
-import {CodeEditorWrapper} from '../SettingsEditor.styled'
+import { CodeEditorWrapper } from '../SettingsEditor.styled'
 
 type PermissionWidgetProps = {
   value: number
   setValue: (value: number) => void
 }
 
-
 const SettingsCodeEditor = (props: $Any) => {
   return (
     <CodeEditorWrapper>
-      <CodeEditor
-        {...props}
-      />
+      <CodeEditor {...props} />
     </CodeEditorWrapper>
   )
 }
-
 
 const PermissionWidget: React.FC<PermissionWidgetProps> = ({ value, setValue }) => {
   return (
@@ -110,7 +106,7 @@ export const TextWidget = (props: $Any) => {
   let opts: $Any = {
     placeholder: props.schema?.placeholder || '',
     disabled:
-    props.schema.readonly ||
+      props.schema.readonly ||
       props.schema.disabled ||
       (props.schema.fixedValue && props.schema.fixedValue === value),
   }
@@ -165,7 +161,8 @@ export const TextWidget = (props: $Any) => {
     // Color picker
     //
     // with a sample on the dark theme when the item has a light theme colour too
-    Input = props.name === 'color' && parentSchema?.properties?.colorLight ? DarkColorInput : InputColor
+    Input =
+      props.name === 'color' && parentSchema?.properties?.colorLight ? DarkColorInput : InputColor
     opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
     opts.format = props.schema.colorFormat || 'hex'
     opts.alpha = props.schema.colorAlpha || false
@@ -176,7 +173,7 @@ export const TextWidget = (props: $Any) => {
       props.onChange(e.target.value)
     }
   } else if (props.schema.widget === 'icon') {
-    Input = IconSelect
+    Input = IconWidget
 
     opts.value = value ? [value] : []
     opts.onChange = (e: $Any) => {
@@ -190,17 +187,14 @@ export const TextWidget = (props: $Any) => {
       onChange(e.target.value)
     }
   } else if (props.schema.widget === 'textarea' && props.schema.syntax) {
-    
     Input = SettingsCodeEditor
-    opts.wrap = "false"
+    opts.wrap = 'false'
     opts.value = value || ''
     opts.language = props.schema.syntax || 'plaintext'
     opts.onBlur = onChangeCommit
     opts.onChange = (e: $Any) => {
       onChange(e.target.value)
     }
-
-
   } else if (props.schema.widget === 'textarea') {
     //
     // Textarea

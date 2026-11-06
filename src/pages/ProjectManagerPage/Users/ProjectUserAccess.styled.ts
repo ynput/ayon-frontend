@@ -18,6 +18,12 @@ export const DataColumn = styled.div`
   height: 24px;
   align-items: center;
   gap: var(--base-gap-large);
+  .access-groups {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .partial-match {
     color: var(--md-ref-palette-neutral-variant60);
   }

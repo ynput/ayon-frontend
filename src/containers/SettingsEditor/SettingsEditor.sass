@@ -82,9 +82,10 @@ $field-gap: 8px
           min-width: 70px
           max-width: 70px
 
+        // the picker, its sample, the warning and the undo button
         &.widget-color-light .form-inline-field-widget
-          min-width: 124px
-          max-width: 124px
+          min-width: 144px
+          max-width: 144px
 
         &.widget-icon .form-inline-field-widget
           max-width: 150px
@@ -158,7 +159,7 @@ $field-gap: 8px
 
       // the icon and as much of its name as fits
       &.widget-icon > .form-inline-field-wrapper
-        flex: 0 1 150px
+        flex: 0 1 180px
         min-width: 110px
         .form-inline-field-widget
           max-width: none
@@ -177,7 +178,8 @@ $field-gap: 8px
         display: block
         position: absolute
         bottom: 100%
-        left: 0
+        // the label text starts where the text in the field does (border and padding, less the label's own padding)
+        left: 3px
         padding: 0 0 2px
 
         &.default
@@ -188,6 +190,10 @@ $field-gap: 8px
           min-height: 0
           font-size: 12px
           font-weight: normal
+
+      // swatches have no text to line up with, so their labels stay put
+      .layout-compact > .form-object-field-item:is(.widget-color, .widget-color-dark, .widget-color-light) > .form-inline-field-wrapper > .form-inline-field > .form-inline-field-label
+        left: 0
 
   .form-object-field-item
     display: contents

@@ -61,7 +61,7 @@ const BundleDeps = ({ bundle, onChange }) => {
     },
     {
       id: 'darwin',
-      label: 'MacOS',
+      label: 'macOS',
     },
   ]
 

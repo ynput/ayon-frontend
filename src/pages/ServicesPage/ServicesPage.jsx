@@ -14,11 +14,12 @@ import { useDeleteServiceMutation, usePatchServiceMutation } from '@queries/serv
 import { confirmDialog } from 'primereact/confirmdialog'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 
+// the size of the other status badges, such as a bundle's Production
 const StatusBadge = styled.span`
   display: inline-block;
-  padding: 1px 6px;
+  padding: 0 4px;
   border-radius: var(--border-radius-m);
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   background-color: var(--md-sys-color-surface-container-highest);
   color: var(--md-sys-color-on-surface-variant);
 
@@ -281,7 +282,7 @@ const ServicesPage = () => {
                     field="isRunning"
                     header="Status"
                     body={formatStatus}
-                    style={{ maxWidth: 130, textAlign: 'center' }}
+                    style={{ maxWidth: 130 }}
                     sortable
                   />
                 </DataTable>

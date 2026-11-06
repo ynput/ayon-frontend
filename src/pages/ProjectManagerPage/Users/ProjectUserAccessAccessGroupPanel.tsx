@@ -5,6 +5,7 @@ import { Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   header: $Any
+  count?: number
   isExpanded: boolean
   children: $Any
   onToggleExpand: $Any
@@ -12,6 +13,7 @@ type Props = {
 
 const ProjectUserAccessAccessGroupPanel = ({
   header,
+  count,
   children,
   isExpanded,
   onToggleExpand,
@@ -22,6 +24,7 @@ const ProjectUserAccessAccessGroupPanel = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <Icon icon={isExpanded ? 'expand_more' : 'chevron_right'} />
           {header}
+          {count !== undefined && <Styled.Count>· {count}</Styled.Count>}
         </div>
       </Styled.Header>
 

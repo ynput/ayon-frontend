@@ -21,3 +21,8 @@ export const Fix = styled(Button)`
     color: var(--md-sys-color-warning);
   }
 `
+
+// the place of the warning button when there is no warning
+export const Slot = styled.span`
+  flex: 0 0 var(--base-input-size);
+`

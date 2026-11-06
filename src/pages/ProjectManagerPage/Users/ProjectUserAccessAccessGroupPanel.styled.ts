@@ -67,3 +67,8 @@ export const Body = styled.div`
   min-height: 0;
   transition: padding 0.25s;
 `
+
+// how many users are in the group
+export const Count = styled.span`
+  color: var(--md-sys-color-on-surface-variant);
+`

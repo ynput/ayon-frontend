@@ -400,10 +400,10 @@ const UserDetail = ({
       accessGroups.push(role)
     }
 
-    // add admin, manager, service
-    if (isUserManager) replaceAccessRoles('manager')
-    if (isUserAdmin) replaceAccessRoles('admin')
-    if (user.isService) replaceAccessRoles('service')
+    // add admin, manager, service, named like the access level control
+    if (isUserManager) replaceAccessRoles('Manager')
+    if (isUserAdmin) replaceAccessRoles('Admin')
+    if (user.isService) replaceAccessRoles('Service')
 
     return [...new Set([...acc, ...accessGroups])]
   }, [])
