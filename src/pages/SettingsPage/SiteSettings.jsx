@@ -122,7 +122,7 @@ const SiteSettings = () => {
           <Button label="Save changes" icon="check" onClick={() => saveChanges()} />
         </Toolbar>
 
-        {(selectedSites.length && (
+        {(selectedSites.length && selectedAddons.length && (
           <ScrollPanel style={{ flexGrow: 1 }}>
             {selectedAddons.map((addon) => {
               return selectedSites.map((siteId) => {
@@ -146,7 +146,11 @@ const SiteSettings = () => {
           </ScrollPanel>
         )) || (
           <EmptyPlaceholderFlexWrapper>
-            <EmptyPlaceholder icon="computer" message="Select a site to edit settings" />
+            {selectedSites.length ? (
+              <EmptyPlaceholder icon="settings" message="Select an addon to edit its settings" />
+            ) : (
+              <EmptyPlaceholder icon="computer" message="Select a site to edit its settings" />
+            )}
           </EmptyPlaceholderFlexWrapper>
         )}
       </Section>

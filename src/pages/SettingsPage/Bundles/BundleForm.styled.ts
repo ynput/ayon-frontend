@@ -57,17 +57,42 @@ export const AddonsList = styled.div`
   min-height: 0;
 `
 
-// same stack as the entity details panel
+// like the lists and review details: the panel is the card, its groups are plain, with a title,
+// and a divider between them
 export const DetailsCards = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 12px;
   height: 100%;
   overflow-y: auto;
   ${panelSurface}
+  padding: 0 0 var(--padding-m);
 
   & > * {
     flex: none;
+    border: none;
+    border-radius: 0;
+    padding: var(--padding-m) var(--padding-m) 0;
+  }
+
+  & > * + * {
+    margin-top: var(--padding-m);
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
+  /* the group title (the description has none while it is edited) */
+  & > * > :first-child:has(+ *) {
+    min-height: 0;
+    margin-top: 4px;
+    padding: 4px 0 8px;
+
+    span {
+      font-weight: 600;
+      color: var(--md-sys-color-on-surface);
+    }
+  }
+
+  & > * > .with-padding {
+    padding: 0;
   }
 `
 

@@ -164,25 +164,24 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   return (
     <Section>
       <TablePanel>
-        <TreeTable
-          className="standard-rows"
-          value={changesTree}
-          expandedKeys={expandedKeys}
-          onToggle={(e) => setExpandedKeys(e.value)}
-          selectionMode="multiple"
-          selectionKeys={selectedKeys}
-          onSelectionChange={handleSelectionChange}
-          onContextMenuSelectionChange={handleSelectionChange}
-          onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
-          emptyMessage=" "
-          scrollable="true"
-          scrollHeight="100%"
-          pt={{ emptyMessage: { style: { display: 'none' } } }}
-        >
-          <Column header="Name" body={changeNameRenderer} field="key" expander />
-          <Column header="" body={actionRenderer} style={{ width: 28 }} />
-        </TreeTable>
-        {!changesTree.length && (
+        {changesTree.length ? (
+          <TreeTable
+            className="standard-rows"
+            value={changesTree}
+            expandedKeys={expandedKeys}
+            onToggle={(e) => setExpandedKeys(e.value)}
+            selectionMode="multiple"
+            selectionKeys={selectedKeys}
+            onSelectionChange={handleSelectionChange}
+            onContextMenuSelectionChange={handleSelectionChange}
+            onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
+            scrollable="true"
+            scrollHeight="100%"
+          >
+            <Column header="Name" body={changeNameRenderer} field="key" expander />
+            <Column header="" body={actionRenderer} style={{ width: 28 }} />
+          </TreeTable>
+        ) : (
           <EmptyPlaceholder className="compact" icon="edit_off" message="No changes" />
         )}
       </TablePanel>

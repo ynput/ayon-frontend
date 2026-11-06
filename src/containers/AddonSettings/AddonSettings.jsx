@@ -842,7 +842,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             }}
           />
           <Section style={{ position: 'relative' }}>
-            {!selectedAddons.some((addon) => !addon.isBroken) && (
+            {!selectedAddons.some((addon) => !addon.isBroken) ? (
               <EmptyPlaceholder
                 style={{ zIndex: 1 }}
                 icon={selectedAddons.length ? 'error' : 'settings'}
@@ -852,6 +852,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                     : 'Select an addon to edit its settings'
                 }
               />
+            ) : (
+              showSites &&
+              !selectedSites.length && (
+                <EmptyPlaceholder
+                  style={{ zIndex: 1 }}
+                  icon="computer"
+                  message="Select a site to edit its settings"
+                />
+              )
             )}
             <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons

@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { AccountPage } from '../pages/AccountPage'
 import { AnatomyPresetsPage } from '../pages/AnatomyPresetsPage'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
@@ -8,6 +9,11 @@ import { button, column, defineRouteTests, expect, heading, test, visible } from
 
 const manager = (tab: string) => (d: { projectName: string }) =>
   `/manageProjects/${tab}?project=${d.projectName}`
+
+// the addon and site lists show a placeholder instead of the table when they are empty
+const addonList = (page: Page) =>
+  column(page, 'Addon').or(page.getByText(/^(No addons found|No bundle set to)/))
+const siteList = (page: Page) => column(page, 'Site ID').or(page.getByText('No sites found'))
 
 test.describe('smoke: dashboard', () => {
   defineRouteTests([
@@ -73,7 +79,7 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'project settings',
       path: manager('projectSettings'),
-      ready: (page) => visible(column(page, 'Addon'), button(page, 'Save Changes')),
+      ready: (page) => visible(addonList(page), button(page, 'Save Changes')),
     },
     {
       name: 'project permissions',
@@ -92,7 +98,7 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'site settings',
       path: manager('siteSettings'),
-      ready: (page) => visible(column(page, 'Site ID'), button(page, 'Save Changes')),
+      ready: (page) => visible(siteList(page), button(page, 'Save Changes')),
     },
     {
       name: 'roots',
@@ -131,12 +137,12 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'studio settings',
       path: () => '/settings/studio',
-      ready: (page) => visible(column(page, 'Addon'), button(page, 'Save Changes')),
+      ready: (page) => visible(addonList(page), button(page, 'Save Changes')),
     },
     {
       name: 'site settings',
       path: () => '/settings/site',
-      ready: (page) => visible(column(page, 'Site ID'), button(page, 'Save Changes')),
+      ready: (page) => visible(siteList(page), button(page, 'Save Changes')),
     },
     {
       name: 'anatomy presets',
@@ -219,7 +225,7 @@ test.describe('smoke: studio pages', () => {
     {
       name: 'account: launchers',
       path: () => '/account/downloads',
-      ready: (page) => visible(heading(page, 'Windows Installer'), heading(page, 'All Versions')),
+      ready: (page) => visible(heading(page, 'Windows installer'), heading(page, 'All versions')),
     },
     {
       name: 'API docs',

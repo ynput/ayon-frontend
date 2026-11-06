@@ -9,6 +9,7 @@ import {
   Panel,
 } from '@ynput/ayon-react-components'
 import DetailHeader from '@components/DetailHeader'
+import { pluralize } from '@shared/util'
 
 const TeamDetails = ({
   teams = [],
@@ -45,9 +46,12 @@ const TeamDetails = ({
 
   const title =
     selectedTeams.length > 1
-      ? `${selectedTeams.length} Teams Selected (${selectedTeams.join(', ')})`
+      ? `${selectedTeams.length} teams selected (${selectedTeams.join(', ')})`
       : selectedTeams[0]
-  const subTitle = `${totalMembers - totalLeaders} Members - ${totalLeaders} Leaders`
+  const subTitle = `${pluralize(totalMembers - totalLeaders, 'member')} · ${pluralize(
+    totalLeaders,
+    'leader',
+  )}`
 
   const handleRoleRename = (role, value) => {
     // loop through every team and every member on each team to rename the role

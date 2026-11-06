@@ -242,7 +242,7 @@ const TeamUsersDetails = ({
               onChange={handleRolesChange}
               valueTemplate={'tags'}
               editable
-              placeholder="Add a Role..."
+              placeholder="Add a role..."
             />
           </FormRow>
           <FormRow label="Leader" style={{ overflow: 'hidden' }}>

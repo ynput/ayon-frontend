@@ -10,33 +10,69 @@ import { ProjectNode } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import { UserPermissions, UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
+// the same rows as the projects list of the other project manager pages: no dividers, rounded
+// highlights and the project code on the right
+const StyledTablePanel = styled(TablePanel)`
+  --color-table-row: transparent;
+  --color-table-row-hover: transparent;
+  --color-table-border: transparent;
+
+  .p-datatable .p-datatable-tbody > tr {
+    &.p-highlight,
+    &.p-highlight:hover {
+      background: transparent !important;
+    }
+
+    & > td {
+      /* 1px apart and 4px in from the panel edges */
+      border: solid transparent;
+      border-width: 1px 4px;
+      background-clip: padding-box;
+      border-radius: var(--border-radius-m);
+      padding: 0 4px;
+    }
+
+    &:hover > td {
+      background-color: var(--md-sys-color-surface-container-hover);
+    }
+
+    &.p-highlight > td {
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+
+    &.p-highlight:hover > td {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
+  }
+`
+
 const StyledProjectName = styled.div`
-  /* use grid to stack items on top of each other */
-  display: grid;
-  grid-template-columns: 1fr;
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+  min-width: 0;
 
-  span {
-    grid-area: 1 / 1 / 2 / 2;
-    transition: opacity 0.15s;
+  .name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
-  /* when open hide the code */
-  span:last-child {
-    opacity: 0;
+  .code {
+    flex-shrink: 0;
+    padding-right: 4px;
+    color: var(--md-sys-color-outline);
   }
 
-  &:not(.isActive) {
+  &:not(.isActive) .name {
     font-style: italic;
     color: var(--md-ref-palette-secondary50);
   }
 
-  &:not(.isOpen) {
-    span:first-child {
-      opacity: 0;
-    }
-    span:last-child {
-      opacity: 1;
-    }
+  tr.p-highlight & .name {
+    font-weight: 600;
   }
 `
 
@@ -85,7 +121,7 @@ const ProjectUserAccessProjectList = ({
   }, [tableData, userPermissions])
 
   return (
-    <TablePanel data-testid={`projectPanel`} style={{ height: '100%' }}>
+    <StyledTablePanel data-testid={`projectPanel`} style={{ height: '100%' }}>
       <DataTable
         value={sortedData}
         selection={selected}
@@ -110,14 +146,15 @@ const ProjectUserAccessProjectList = ({
               userPermissions.canView(UserPermissionsEntity.access, rowData.name)
             return (
               <StyledProjectName className={clsx({ isActive: isActive && hasPermissions })}>
-                <span>{formatName(rowData, userPermissions)}</span>
+                <span className="name">{formatName(rowData, userPermissions)}</span>
+                <span className="code">{rowData.code}</span>
               </StyledProjectName>
             )
           }}
           style={{ minWidth: 150 }}
         />
       </DataTable>
-    </TablePanel>
+    </StyledTablePanel>
   )
 }
 

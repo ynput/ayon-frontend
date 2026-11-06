@@ -1,10 +1,17 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section, Button } from '@ynput/ayon-react-components'
+import styled from 'styled-components'
 
 import { TimestampField } from '@containers/fieldFormat'
 import { useGetUserSessionsQuery } from '@shared/api'
 import { useInvalidateUserSessionMutation } from '@shared/api'
+
+// its label starts where the column title does, and it fits the standard row height
+const InvalidateButton = styled(Button)`
+  margin-left: -8px;
+  padding: 3px 8px;
+`
 
 const SessionList = ({ userName }) => {
   const {
@@ -40,6 +47,7 @@ const SessionList = ({ userName }) => {
         <TablePanel loading={isLoading || isUninitialized ? 'true' : undefined}>
           <DataTable
             value={sessionList}
+            className="standard-rows"
             scrollable="true"
             scrollHeight="flex"
             responsive="true"
@@ -73,7 +81,7 @@ const SessionList = ({ userName }) => {
             <Column
               header="Invalidate"
               body={(rowData) => (
-                <Button
+                <InvalidateButton
                   variant="text"
                   label="Invalidate"
                   onClick={() => invalidate(rowData.token)}

@@ -27,7 +27,7 @@ test.describe('project teams', () => {
 
     const row = page.getByRole('row', { name: /old_team/ })
     await row.click({ button: 'right' })
-    await menuItem(page, 'Delete Team').click()
+    await menuItem(page, 'Delete team').click()
     await confirmDialog(page).getByRole('button', { name: 'Delete' }).click()
 
     await expect(row).toBeHidden()
@@ -170,7 +170,7 @@ test.describe('project teams', () => {
 
     await teams.setLeader(true)
 
-    await expect(page.getByText('0 Members - 1 Leaders')).toBeVisible()
+    await expect(page.getByText('0 members · 1 leader')).toBeVisible()
     await expect
       .poll(async () => (await api.getTeamMembers(projectName, 'comp_team'))?.[0]?.leader)
       .toBe(true)

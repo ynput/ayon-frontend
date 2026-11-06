@@ -155,7 +155,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         const isTeamSelected = selectedTeams.some((team) => teamsList.includes(team))
 
         const group = isTeamSelected
-          ? 'On A Selected Team'
+          ? 'On a selected team'
           : teamsList.filter((t) => !selectedTeams.includes(t)).length
           ? selectedTeams.length
             ? 'On other teams'
@@ -443,7 +443,7 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       <Dialog
         isOpen={duplicateTeamNameVisible}
         onClose={onCancelDuplicate}
-        header={<span>Duplicate Team - {selectedTeams[0]}</span>}
+        header={<span>Duplicate team - {selectedTeams[0]}</span>}
         style={{ minWidth: 300 }}
         size="sm"
       >

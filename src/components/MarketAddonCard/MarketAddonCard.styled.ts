@@ -91,8 +91,7 @@ export const Tag = styled(Button)`
   }
 
   &.downloaded {
-    opacity: 0.5;
-    font-style: italic;
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   &.downloading,

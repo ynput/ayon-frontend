@@ -233,29 +233,22 @@ $field-gap: 8px
       align-self: flex-start
 
       // the accents are too light for text on the light theme, so there an override shows as a shade of its
-      // accent on a tint of it
+      // accent (plain coloured text, as on dark)
       &.studio
         color: light-dark(#006b2b, var(--color-hl-studio))
-        --label-tint: light-dark(#d7f4e1, transparent)
       &.project
         color: light-dark(#8a4d00, var(--color-hl-project))
-        --label-tint: light-dark(#ffe9d1, transparent)
       &.site
         color: light-dark(#9b3f53, var(--color-hl-site))
-        --label-tint: light-dark(#fbe3e9, transparent)
       &.edit
         color: var(--color-changed)
 
+      // the text itself, not a full width line like the span around it
       .label-text
         display: inline-block
         width: auto
         height: auto
         min-height: 0
-        padding: 2px 6px
-        // the tint reaches past the text without moving it
-        margin-right: -6px
-        border-radius: 4px
-        background-color: var(--label-tint, transparent)
 
       span
         display: flex
