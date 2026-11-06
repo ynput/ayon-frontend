@@ -43,7 +43,7 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
-import { pageAccessLevels, useAddonPages, type OwnedPage } from '@/remote/AddonPagesHelpers'
+import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
@@ -72,19 +72,16 @@ const BUILT_IN_MODULES = [
   'lists',
   'reviews',
   'workfiles',
-  'reports',
 ]
 
-// Addon modules that are always shown in the nav.
-// When the addon remote page is available it is used; otherwise the Splash is shown.
 // Tabs AYON always shows for an addon: its project.page with this id (or its legacy remote) fills
-// the tab, and without the addon the tab shows the splash
+// the tab and sets who sees it; without one the tab shows the Fallback
 interface AddonPageConfig {
   name: string
   module: string
   viewType?: string
   addon: string
-  Splash: React.ComponentType
+  Fallback: React.ComponentType<{ projectName: string }>
 }
 
 const ADDON_PAGES: AddonPageConfig[] = [
@@ -93,15 +90,23 @@ const ADDON_PAGES: AddonPageConfig[] = [
     module: 'scheduler',
     viewType: 'scheduler',
     addon: 'planner',
-    Splash: SchedulerSplashscreen,
+    Fallback: SchedulerSplashscreen,
+  },
+  {
+    name: 'Reports',
+    module: 'reports',
+    viewType: 'reports',
+    addon: 'reports',
+    // an older reports addon has only the legacy page
+    Fallback: ProjectReportsPage,
   },
 ]
 
-// AYON's tabs that one addon's project.page fills; Reports keeps its legacy page without one
-const OWNED_PAGES: OwnedPage[] = [
-  ...ADDON_PAGES.map(({ module, viewType, addon }) => ({ id: module, viewType, addon })),
-  { id: 'reports', viewType: 'reports', addon: 'reports' },
-]
+const OWNED_PAGES = ADDON_PAGES.map(({ module, viewType, addon }) => ({
+  id: module,
+  viewType,
+  addon,
+}))
 
 const ProjectContextInfo = () => {
   /**
@@ -251,7 +256,6 @@ const ProjectPageInner = () => {
     { skip: !projectName || addonsListLoading },
   )
   const hasReview = !!getBundleAddonVersion('review')
-  const hasReports = !!getBundleAddonVersion('reports')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -342,26 +346,17 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/${addonModule}`,
         module: addonModule,
         viewType,
+        // a restricted addon page hides the tab, else the user lands on an empty page
+        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === addonModule)?.access),
         startContent: (
           <RemotePageBundleDot
             bundle={
               remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
-              (addonPages.some((page) => page.id === addonModule)
-                ? getAddonBundle(addon)
-                : undefined)
+              getAddonBundle(addon)
             }
           />
         ),
       })),
-      {
-        name: 'Reports',
-        path: `/projects/${projectName}/reports`,
-        module: 'reports',
-        viewType: 'reports',
-        // the reports addon's own page decides who sees the tab
-        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === 'reports')?.access),
-        startContent: <RemotePageBundleDot bundle={getAddonBundle('reports')} />,
-      },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -467,14 +462,6 @@ const ProjectPageInner = () => {
       )
     } else if (module === 'workfiles') {
       component = <WorkfilesPage />
-    } else if (module === 'reports' && !foundAddonPage) {
-      component = (
-        <ProjectReportsPage
-          projectName={projectName}
-          isLoadingAccess={addonsListLoading}
-          hasReportsAddon={hasReports}
-        />
-      )
     } else if (foundAddon) {
       component = (
         <ProjectAddon
@@ -515,10 +502,9 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
-      // If this is a known addon page but the remote page isn't loaded, show its splash
       const addonPage = ADDON_PAGES.find((p) => p.module === module)
       if (addonPage) {
-        component = <addonPage.Splash />
+        component = <addonPage.Fallback projectName={projectName} />
       } else {
         console.log('addon not found, redirecting to overview')
         // Fallback to versions page if no addon matches addonName
@@ -546,9 +532,7 @@ const ProjectPageInner = () => {
     !projectName ||
     isLoadingProject ||
     (!!addonName && addonsLoading) ||
-    (!isBuiltInModule && (isLoadingModules || isLoadingContributions)) ||
-    // with the reports addon, its manifest decides whether its page or the legacy one renders
-    (module === 'reports' && hasReports && isLoadingContributions)
+    (!isBuiltInModule && (isLoadingModules || isLoadingContributions))
 
   // if we aren't loading anymore and there hasn't been a valid page component for a while, redirect to overview
   useEffect(() => {
