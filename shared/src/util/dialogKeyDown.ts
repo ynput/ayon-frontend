@@ -1,16 +1,25 @@
 import type { KeyboardEvent } from 'react'
 
+// elements that handle Enter themselves: a focused button, link or action input clicks itself,
+// a picker input opens its picker, a multiline field adds a newline
+const HANDLES_ENTER =
+  'textarea, button, a[href], select, [role="button"], [role="listbox"], ' +
+  'input:is([type="button"], [type="submit"], [type="reset"], [type="image"], [type="color"], [type="file"])'
+
 /**
  * Enter without modifiers that should confirm a dialog. Not when Enter already means something
- * else: a newline in a multiline field, clicking a focused button or link, picking in a select or
- * an open dropdown (they call preventDefault), or IME composition.
+ * else: a newline in a multiline field, clicking a focused button, link or action input, opening a
+ * picker input, picking in a select or an open dropdown (they call preventDefault), or IME
+ * composition. Not from a dialog portalled out of this one either: React events bubble through
+ * portals, so Enter in a nested dialog would otherwise confirm its parent.
  */
 export const isDialogConfirmKey = (e: KeyboardEvent<HTMLElement>): boolean => {
   if (e.key !== 'Enter' || e.defaultPrevented || e.nativeEvent.isComposing) return false
   if (e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return false
   const target = e.target as HTMLElement
+  if (!e.currentTarget.contains(target)) return false
   if (target.isContentEditable) return false
-  return !target.closest('textarea, button, a[href], select, [role="button"], [role="listbox"]')
+  return !target.closest(HANDLES_ENTER)
 }
 
 type DialogKeyDownOptions = {
