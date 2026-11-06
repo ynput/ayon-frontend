@@ -1297,6 +1297,7 @@ const TableHeadCell = ({
       data-column-id={column.id}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
+        pinned: !!column.getIsPinned(),
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
         dragging: isDragging,

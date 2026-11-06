@@ -84,6 +84,7 @@ export type ChipValue = {
 interface ChipsProps {
   values: ChipValue[]
   disabled?: boolean
+  readOnly?: boolean
   className?: string
   pt?: {
     chip?: Partial<HTMLAttributes<HTMLDivElement>>
@@ -95,7 +96,7 @@ type ChipsLayout = {
   rows: number
 }
 
-export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
+export const Chips: FC<ChipsProps> = ({ values, disabled, readOnly, className, pt }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const [{ visibleCount, rows }, setLayout] = useState<ChipsLayout>({
     visibleCount: 0,
@@ -173,6 +174,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
 
   // for no values return plus button
   if (!values.length) {
+    if (readOnly) return null
     return <AddIcon icon="add" className={pt?.chip?.className} />
   }
 
@@ -202,7 +204,20 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
         </Chip>
       ))}
       {hiddenCount > 0 && (
-        <MoreChip className={clsx('more-chip', pt?.chip?.className)}>+{hiddenCount}</MoreChip>
+        <MoreChip
+          className={clsx('more-chip', pt?.chip?.className)}
+          // read-only cells open no editor, so this is the only way to see the rest
+          data-tooltip={
+            readOnly
+              ? values
+                  .slice(visibleCount)
+                  .map((chip) => chip.label)
+                  .join(', ')
+              : undefined
+          }
+        >
+          +{hiddenCount}
+        </MoreChip>
       )}
       {offscreenChips.map((chip, index) => (
         <OffscreenChip key={chip.label + index} className="offscreen-chip">

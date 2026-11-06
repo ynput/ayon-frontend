@@ -30,7 +30,7 @@ type Props = {}
 const ProjectOverviewTable = ({}: Props) => {
   const { projectName } = useProjectContext()
   const {
-    setLinksVisible,
+    onLinkColumnsVisibleChange,
     setVisibleEntityIds,
     folderStats,
     taskStats,
@@ -86,13 +86,7 @@ const ProjectOverviewTable = ({}: Props) => {
           onOpenNew={onOpenNew}
           clientSorting={showHierarchy || isFlatFolderView}
           onColumnVisibleChangeSubscribed={['link_*']}
-          onColumnVisibleChange={(changes) => {
-            if (Object.values(changes).some((v) => v)) {
-              setLinksVisible(true)
-            } else {
-              setLinksVisible(false)
-            }
-          }}
+          onColumnVisibleChange={onLinkColumnsVisibleChange}
           showColumnSummaries
           fieldStats={fieldStats}
           groupFieldStats={folderStats}

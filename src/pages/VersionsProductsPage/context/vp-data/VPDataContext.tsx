@@ -49,7 +49,7 @@ import type { FieldStats } from '@shared/api'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
-  refreshOtherActiveQueries,
+  refreshOtherActiveQueriesOf,
 } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
@@ -58,6 +58,8 @@ import {
 import useVersionsGroupBy from '../../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../../hooks/useVPColumnStats'
 import { useAppDispatch } from '@state/store'
+import { useVPLinks } from './useVPLinks'
+import type { LinksTableData } from '@shared/containers'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
@@ -142,6 +144,10 @@ export interface VersionsDataContextValue {
   isLoading: boolean
   isFetchingNextPage: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
+  // links
+  linksMap: Map<string, LinksTableData>
+  loadingLinksEntityIds: Set<string>
+  onLinkColumnsVisibleChange: (changes: Record<string, boolean>) => void
   onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
@@ -188,6 +194,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder,
     groupBy,
     columns,
+    showGrid,
   } = useVPViewsContext()
   const { isLoadingViews: isLoadingViewSettings } = useViewsContext()
 
@@ -722,6 +729,20 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     entitiesMap = groupedVersionsMap
   }
 
+  // loaded version rows: grouped, children of expanded products, or the flat list
+  const isProductsTree = showProducts && !groupBy
+  const rowVersionsMap = isProductsTree ? childVersionsMap : versionsMap
+  const rowProductsMap = isProductsTree ? productsMap : undefined
+
+  const { linksMap, loadingLinksEntityIds, onLinkColumnsVisibleChange, ...links } = useVPLinks({
+    projectName,
+    showGrid,
+    skip: isLoadingSlicerData,
+    versionsMap: rowVersionsMap,
+    productsMap: rowProductsMap,
+    entitiesMap,
+  })
+
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
     return determineLoadingVP({
@@ -755,6 +776,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     loadingProductVersions,
     loadingProductVersionsFinished,
     childVersionsErrors,
+    linksMap,
   })
 
   const error = showProducts
@@ -816,6 +838,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (!isVersionStatsUninitialized) {
       queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
     }
+    for (const { isUninitialized, args } of links.linkQueries) {
+      if (!isUninitialized) queriesToRefresh.push({ endpointName: 'getEntityLinks', args })
+    }
 
     await Promise.all([
       ...queriesToRefresh.map(({ endpointName, args }) =>
@@ -829,11 +854,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       dispatch(refreshListsMembership(projectName)),
     ])
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
-        dispatch(refreshOtherActiveQueries(endpointName, args)),
-      ),
-    )
+    await dispatch(refreshOtherActiveQueriesOf(queriesToRefresh))
   }
 
   const value: VersionsDataContextValue = {
@@ -872,7 +893,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     childVersionsMap,
     allVersionsMap,
     productsMap,
-    entitiesMap,
+    entitiesMap: links.entitiesMap,
     hasNextPage,
     fetchNextPage: handleFetchNextPage,
     // grouping
@@ -882,6 +903,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     isFetchingNextPage,
     loadingProductVersions,
     onSyncData,
+    // links
+    linksMap,
+    loadingLinksEntityIds,
+    onLinkColumnsVisibleChange,
     // meta
     error,
   }

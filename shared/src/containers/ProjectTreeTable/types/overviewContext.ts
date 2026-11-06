@@ -104,7 +104,9 @@ export interface ProjectOverviewContextType {
 
   // links
   loadingLinksEntityIds: Set<string>
-  setLinksVisible: (visible: boolean) => void
+  onLinkColumnsVisibleChange?: (changes: Record<string, boolean>) => void
+  /** @deprecated use onLinkColumnsVisibleChange */
+  setLinksVisible?: (visible: boolean) => void
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
