@@ -1,7 +1,7 @@
-import { useMemo, useRef } from 'react'
+import { useMemo, useRef, type ReactNode } from 'react'
 import type { CellContext, ColumnDef } from '@tanstack/react-table'
 
-type CellRenderer<T> = (context: CellContext<T, any>) => any
+type CellRenderer<T> = (context: CellContext<T, any>) => ReactNode
 type Renderer<T> = { current: CellRenderer<T>; stable: CellRenderer<T> }
 
 /**
