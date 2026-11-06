@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -17,7 +17,13 @@ import { LabelWithNameField } from '@components/LabelWithNameField'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useDeployProjectMutation } from '@shared/api'
 import { useGetConfigValueQuery } from '@shared/api'
-import { getRequestErrorString } from '@shared/util'
+import {
+  getCreateAnotherTooltip,
+  getDialogKeyDown,
+  getRequestErrorString,
+  readDialogMemory,
+  writeDialogMemory,
+} from '@shared/util'
 import { camelCase } from 'lodash'
 
 // allow only alphanumeric and underscorer,
@@ -48,6 +54,10 @@ const matchProjectCode = (value, pattern) => {
     .replaceAll(' ', '')
     .replace(/^_+|_+$/g, '')
 }
+
+// the preset and state of the last project, kept for the session (not the library flag: most
+// projects are not libraries, so carrying it over would make one by mistake)
+const PROJECT_MEMORY = 'new-project'
 
 const DialogContent = styled.div`
   width: 100%;
@@ -94,15 +104,22 @@ const AnatomyEditorSection = styled.div`
 `
 
 const NewProjectDialog = ({ onHide, redirect = true }) => {
+  const [remembered] = useState(() => readDialogMemory(PROJECT_MEMORY))
+  const namesRef = useRef(null)
+  const anatomyRef = useRef(null)
   const [label, setLabel] = useState('')
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [codeSet, setCodeSet] = useState(false)
   const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState(null)
-  const [selectedPreset, setSelectedPreset] = useState(null)
+  const [selectedPreset, setSelectedPreset] = useState(remembered.selectedPreset || null)
   const [isLibrary, setIsLibrary] = useState(false)
-  const [projectState, setProjectState] = useState('production')
+  const [projectState, setProjectState] = useState(
+    PROJECT_STATES.some((s) => s.value === remembered.projectState)
+      ? remembered.projectState
+      : 'production',
+  )
   const isPlanningProject = projectState === 'planning'
   const isProductionProject = projectState === 'production'
 
@@ -147,7 +164,8 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
+  // keepOpen (Shift+Enter): create it and keep the dialog open for the next project
+  const handleSubmit = (keepOpen = false) => {
     if (!validate()) return
 
     deployProject({
@@ -162,8 +180,15 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     })
       .unwrap()
       .then(() => {
-        toast.success('Project created')
-        onHide(redirect ? name : undefined)
+        toast.success(`Project ${label} created`)
+        writeDialogMemory(PROJECT_MEMORY, { selectedPreset, projectState })
+        if (!keepOpen) return onHide(redirect ? name : undefined)
+        setLabel('')
+        setName('')
+        setCode('')
+        setCodeSet(false)
+        setErrors({})
+        namesRef.current?.querySelector('input')?.focus()
       })
       .catch((error) => {
         toast.error(`Unable to create project: ${getRequestErrorString(error)}`)
@@ -223,6 +248,9 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     setFormData(originalAnatomy)
   }, [isPlanningProject, originalAnatomy])
 
+  const canSubmit =
+    label && name && code && (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
+
   const footer = (
     <Toolbar style={{}}>
       {isProductionProject && (
@@ -238,27 +266,24 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
       <Spacer />
       <SaveButton
         label="Create Project"
-        onClick={handleSubmit}
-        active={
-          label &&
-          name &&
-          code &&
-          (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
-        }
+        onClick={() => handleSubmit()}
+        active={canSubmit}
         saving={isLoading}
+        {...getCreateAnotherTooltip()}
       />
     </Toolbar>
   )
 
+  const dialogKeyDown = getDialogKeyDown(() => handleSubmit(), {
+    onClose: () => onHide(),
+    disabled: !canSubmit || isLoading,
+    onContinue: () => handleSubmit(true),
+  })
   const handleKeyDown = (e) => {
-    e?.stopPropagation()
-    const enter = e.key === 'Enter'
-    const ctrlMeta = e.ctrlKey || e.metakey
-    const shift = e.shiftKey
-    const esc = e.key === 'Escape'
-
-    if (enter && (ctrlMeta || shift)) handleSubmit()
-    if (esc) onHide()
+    e.stopPropagation()
+    // Enter in the anatomy editor confirms that field, not the whole project
+    if (e.key === 'Enter' && anatomyRef.current?.contains(e.target)) return
+    dialogKeyDown(e)
   }
 
   const anatomyEditor = useMemo(() => {
@@ -297,7 +322,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         </FormRow>
 
         <FormRow style={{ alignItems: 'flex-start' }}>
-          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+          <div ref={namesRef} style={{ flex: '1 1 320px', minWidth: 0 }}>
             <LabelWithNameField
               labelValue={label}
               onLabelChange={setLabel}
@@ -326,7 +351,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         </FormRow>
 
         {!isPlanningProject && (
-          <AnatomySection>
+          <AnatomySection ref={anatomyRef}>
             <FieldGroup style={{ flex: '0 0 auto' }}>
               <FieldLabel>Project anatomy preset</FieldLabel>
               <AnatomyPresetDropdown
