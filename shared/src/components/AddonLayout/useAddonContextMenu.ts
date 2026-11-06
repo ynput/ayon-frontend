@@ -37,8 +37,10 @@ export const useAddonContextMenu = (): HostOpenContextMenu => {
   const [open] = useCreateContextMenu()
   const navigate = useNavigate()
   return useCallback(
-    (event, items, onError) =>
-      open(event, toContextMenuItems(toMenuItems(items, onError), navigate)),
+    (event, items, onError) => {
+      event.stopPropagation()
+      open(event, toContextMenuItems(toMenuItems(items, onError), navigate))
+    },
     [open, navigate],
   )
 }
