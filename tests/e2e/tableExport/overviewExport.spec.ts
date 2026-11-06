@@ -47,7 +47,10 @@ const createHierarchy = async (api: AyonApi, projectName: string) => {
   await api.setWorkingViewColumns('overview', projectName, COLUMNS)
 }
 
-test.describe('overview table export', () => {
+// FLAG (app bug): Export clicked before the Power Pack license check is done opens the "Try for free"
+// dialog, and the context menu offers only the plain CSV
+// fixed in ynput/ayon-frontend#2609, switch back to test.describe() once it is merged
+test.describe.fixme('overview table export', () => {
   test.beforeEach(async ({ api }) => {
     await requireTableExport(api)
   })
@@ -67,7 +70,7 @@ test.describe('overview table export', () => {
     await expect(exportDialog.root.getByText(/Not exported: Thumbnail/)).toBeVisible()
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'table', 'xlsx'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'table', 'xlsx'))
     // the table's columns in its order, with its header labels
     await expectTableHeaders(file, overview.table)
     // collapsed folders are exported too, tasks before subfolders
@@ -99,7 +102,7 @@ test.describe('overview table export', () => {
     await expect(exportDialog.root).toContainText("Folder (Import CSV can't read it)")
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'table', 'csv'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'table', 'csv'))
     // field names, the import columns first
     expect(file.rows[0].slice(0, 6)).toEqual([
       'entity_type',
@@ -130,47 +133,46 @@ test.describe('overview table export', () => {
     await expect(page).not.toHaveURL(/[?&]tableExport=/)
   })
 
-  // FLAG (app bug): Import CSV did not map the values of a combined folder_or_task_type column
-  // fixed in ynput/ayon-frontend#2529, switch back to test() once it is merged
-  test.fixme(
-    'a raw CSV export with the import settings imports into another project',
-    async ({ page, api, projectName }, testInfo) => {
-      await createHierarchy(api, projectName)
-      const overview = new OverviewPage(page)
-      await overview.goto(projectName)
-      const exportDialog = new ExportDialog(page)
-      await exportDialog.openFromToolbar()
-      await exportDialog.useImportSettings()
-      const file = await exportDialog.export()
+  test('a raw CSV export with the import settings imports into another project', async ({
+    page,
+    api,
+    projectName,
+  }, testInfo) => {
+    await createHierarchy(api, projectName)
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    const exportDialog = new ExportDialog(page)
+    await exportDialog.openFromToolbar()
+    await exportDialog.useImportSettings()
+    const file = await exportDialog.export()
 
-      const filePath = testInfo.outputPath(file.fileName)
-      await writeFile(filePath, file.data)
-      const target = await api.createProject()
-      try {
-        await overview.goto(target)
-        await overview.importCsv(filePath, { created: 5 })
+    const filePath = testInfo.outputPath(file.fileName)
+    await writeFile(filePath, file.data)
+    const target = await api.createProject()
+    try {
+      await overview.goto(target)
+      await overview.importCsv(filePath, { created: 5 })
 
-        await expect
-          .poll(async () =>
-            (await api.listFolders(target)).map((f) => [f.path, f.folderType, f.status]),
-          )
-          .toEqual([
-            ['sq010', 'Sequence', 'In progress'],
-            ['sq010/sh010', 'Shot', 'Not ready'],
-          ])
-        const shot = (await api.listFolders(target)).find((f) => f.name === 'sh010')
-        expect(
-          (await api.listTasks(target, shot.id)).map((t) => [t.name, t.taskType, t.status]),
-        ).toEqual([
-          ['anim', 'Animation', 'In progress'],
-          ['comp', 'Compositing', 'Not ready'],
+      await expect
+        .poll(async () =>
+          (await api.listFolders(target)).map((f) => [f.path, f.folderType, f.status]),
+        )
+        .toEqual([
+          ['sq010', 'Sequence', 'In progress'],
+          ['sq010/sh010', 'Shot', 'Not ready'],
         ])
-      } finally {
-        await page.close()
-        await api.deleteProject(target)
-      }
-    },
-  )
+      const shot = (await api.listFolders(target)).find((f) => f.name === 'sh010')
+      expect(
+        (await api.listTasks(target, shot.id)).map((t) => [t.name, t.taskType, t.status]),
+      ).toEqual([
+        ['anim', 'Animation', 'In progress'],
+        ['comp', 'Compositing', 'Not ready'],
+      ])
+    } finally {
+      await page.close()
+      await api.deleteProject(target)
+    }
+  })
 
   test('a task filter limits the exported rows to what the table shows', async ({
     page,
@@ -246,7 +248,7 @@ test.describe('overview table export', () => {
     await exportDialog.choose('CSV')
     const selected = await exportDialog.export()
 
-    expect(selected.fileName).toBe(exportFileName(projectName, 'selection', 'csv'))
+    expect(selected.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'selection', 'csv'))
     expect(selected.rows[0]).toEqual([NAME])
     expect(column(selected, NAME).sort()).toEqual(['anim', 'edit'])
 

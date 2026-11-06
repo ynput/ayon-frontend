@@ -90,19 +90,18 @@ test.describe('version reviewables', () => {
       .toEqual([video.fileId])
   })
 
-  // FLAG (app bug): a version whose only reviewable needs conversion shows an empty viewer, no message
-  // fixed in ynput/ayon-frontend#2408, switch back to test() once it is merged
-  test.fixme(
-    'the viewer explains when a version has no playable reviewable',
-    async ({ page, api, projectName }) => {
-      await seedReviewVersions(api, projectName, [[{ media: MEDIA.unsupportedVideo }]])
-      const products = new ProductsPage(page)
-      await products.goto(projectName)
-      await products.openInViewer('renderMain - v001')
-      const viewer = new ViewerPage(page)
-      await viewer.expectVersion('v001')
+  test('the viewer explains when a version has no playable reviewable', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await seedReviewVersions(api, projectName, [[{ media: MEDIA.unsupportedVideo }]])
+    const products = new ProductsPage(page)
+    await products.goto(projectName)
+    await products.openInViewer('renderMain - v001')
+    const viewer = new ViewerPage(page)
+    await viewer.expectVersion('v001')
 
-      await expect(viewer.root.getByText(/not supported|needs conversion/)).toBeVisible()
-    },
-  )
+    await expect(viewer.root.getByText(/not supported|needs conversion/)).toBeVisible()
+  })
 })

@@ -150,12 +150,13 @@ export const expectTableHeaders = async (file: ExportedFile, table: Locator) => 
   expect(file.rows[0].slice(0, headers.length)).toEqual(headers)
 }
 
-/** `<project>-<table|selection>-<local date>.<extension>` */
+/** `<project>-<entity types>-<table|selection>-<local date>.<extension>` */
 export const exportFileName = (
   projectName: string,
+  entityTypes: 'folders-tasks' | 'products-versions' | 'versions' | 'entities',
   scope: 'table' | 'selection',
   extension: 'xlsx' | 'csv' | 'tsv',
 ) => {
   const date = new Date().toLocaleDateString('sv')
-  return `${projectName}-${scope}-${date}.${extension}`
+  return `${projectName}-${entityTypes}-${scope}-${date}.${extension}`
 }

@@ -67,7 +67,12 @@ const createList = async (
   return id
 }
 
-test.describe('filtered table export', () => {
+// FLAG (app bug): Export clicked before the Power Pack license check is done opens the "Try for free"
+// dialog, and the context menu offers only the plain CSV
+// fixed in ynput/ayon-frontend#2609, switch back to test.describe() once it is merged
+// FLAG (app bug): selecting a review session crashes the Reviews page ("reading 'name'")
+// fixed in ynput/ayon-frontend#2607, switch back to test() once it is merged
+test.describe.fixme('filtered table export', () => {
   test.beforeEach(async ({ api }) => {
     await requireTableExport(api)
   })

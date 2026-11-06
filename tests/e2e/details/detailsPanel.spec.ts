@@ -3,6 +3,7 @@ import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { requireAddon } from '../support/addons'
 import { OverviewPage } from '../pages/OverviewPage'
+import { TagsDropdown } from '../pages/TagsDropdown'
 
 const setup = async (api: AyonApi, projectName: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
@@ -137,18 +138,21 @@ test.describe('details panel', () => {
     await panel.openTab('details')
 
     await panel.attribute('Tags').click()
-    const search = page.locator('.search').getByRole('textbox')
-    await search.click()
-    await expect(search).toBeFocused()
-    await search.fill('adhoc_tag')
-    await search.press('Enter')
+    const tags = new TagsDropdown(page)
+    await tags.createTag('adhoc_tag')
+    // Escape would also close the panel, so the dropdown is closed by clicking outside
+    await panel.attribute('Name').click()
+    await expect(tags.options).toBeHidden()
 
+    await expect(panel.attribute('Tags')).toContainText('adhoc_tag')
     await expect
       .poll(async () => (await api.getTask(projectName, task.id)).tags)
       .toEqual(['adhoc_tag'])
-    // Escape would also close the panel, so the dropdown is closed by clicking outside
-    await panel.attribute('Name').click()
-    await expect(panel.attribute('Tags')).toContainText('adhoc_tag')
+    await expect
+      .poll(async () =>
+        (await api.getProject(projectName)).tags.map((tag: { name: string }) => tag.name),
+      )
+      .toEqual(['adhoc_tag'])
   })
 
   test('search subtasks for all words of any comma separated part', async ({

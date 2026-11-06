@@ -196,9 +196,7 @@ test.describe('overview keyboard', () => {
     await expect(overview.cell('sh010', 'attrib_fps')).toHaveClass(/selected/)
   })
 
-  // FLAG (app bug): left/right arrows and Tab also step onto hidden columns
-  // fixed in ynput/ayon-frontend#2415, switch back to test() once it is merged
-  test.fixme(
+  test(
     'arrow keys and Tab move to the next shown column',
     async ({ page, api, projectName }) => {
       await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

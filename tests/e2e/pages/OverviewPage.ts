@@ -158,10 +158,11 @@ export class OverviewPage {
     const options = this.page.locator('.options')
     for (const value of values) {
       const option = options.locator(`[data-value="${value}"]`).first()
-      const selected = option.locator('.selected')
-      const wasSelected = (await selected.count()) > 0
+      // FLAG: options have no aria-checked; their checkbox icon's ligature shows the state
+      const checkbox = option.locator('.checkbox-icon')
+      const wasChecked = (await checkbox.textContent())?.trim() === 'check_box'
       await option.click()
-      await expect(selected).toHaveCount(wasSelected ? 0 : 1)
+      await expect(checkbox).toHaveText(wasChecked ? 'check_box_outline_blank' : 'check_box')
     }
     await closeBy.click()
     await expect(options).toBeHidden()

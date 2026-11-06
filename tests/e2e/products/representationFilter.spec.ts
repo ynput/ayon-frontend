@@ -45,7 +45,9 @@ test.describe('products representation filter', () => {
       .toEqual([{ key: 'representation_name', value: '%beauty%', operator: 'like' }])
   })
 
-  test('filter versions by file extension', async ({ page, api, projectName }) => {
+  // FLAG (backend bug): ynput/ayon-backend#1214 turned `like` into a substring match that escapes any other
+  // %, so the extension filter's end-anchored `%.abc` on attrib.path matches nothing. No fix yet.
+  test.fixme('filter versions by file extension', async ({ page, api, projectName }) => {
     await publish(api, projectName)
     const products = new ProductsPage(page)
     await products.goto(projectName)

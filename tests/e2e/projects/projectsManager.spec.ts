@@ -137,24 +137,17 @@ test.describe('projects manager', () => {
     await expect(fps).toHaveValue('48')
   })
 
-  // FLAG (app bug): Select/Checkbox widgets report their null defaults on mount, which enables "Save changes"
-  // fixed in ynput/ayon-frontend#2398, switch back to test() once it is merged
-  test.fixme(
-    'viewing the project anatomy does not mark it as changed',
-    async ({ page, projectName }) => {
-      const manager = new ProjectsManagerPage(page)
-      await manager.goto('anatomy', projectName)
-      const save = page.getByRole('button', { name: 'Save changes' })
-      await expect(save).toBeDisabled()
+  test('viewing the project anatomy does not mark it as changed', async ({ page, projectName }) => {
+    const manager = new ProjectsManagerPage(page)
+    await manager.goto('anatomy', projectName)
+    const save = page.getByRole('button', { name: 'Save changes' })
+    await expect(save).toBeDisabled()
 
-      await manager.anatomy.expand('Attributes')
+    await manager.anatomy.expand('Attributes')
 
-      await expect(
-        manager.anatomy.field('root_attributes_fps').getByRole('spinbutton'),
-      ).toBeVisible()
-      await expect(save).toBeDisabled()
-    },
-  )
+    await expect(manager.anatomy.field('root_attributes_fps').getByRole('spinbutton')).toBeVisible()
+    await expect(save).toBeDisabled()
+  })
 
   test('give a user access to a project with an access group', async ({
     page,

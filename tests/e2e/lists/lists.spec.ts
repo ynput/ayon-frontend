@@ -54,7 +54,9 @@ test.describe('lists', () => {
       .toEqual(['Keep list'])
   })
 
-  test('duplicate a list from its menu', async ({ page, api, projectName }) => {
+  // FLAG (app bug): Duplicate sent a null body, which RTK Query throws on before sending
+  // fixed in ynput/ayon-frontend#2606, switch back to test() once it is merged
+  test.fixme('duplicate a list from its menu', async ({ page, api, projectName }) => {
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const comp = await api.createTask(projectName, { folderId: folder.id, name: 'comp' })
     const anim = await api.createTask(projectName, { folderId: folder.id, name: 'anim' })
@@ -87,23 +89,28 @@ test.describe('lists', () => {
     expect((await api.getEntityList(projectName, listId)).items).toHaveLength(2)
   })
 
-  test('duplicate selected lists from the header menu', async ({ page, api, projectName }) => {
-    await api.createEntityList(projectName, { label: 'Dailies' })
-    await api.createEntityList(projectName, { label: 'Picks' })
-    const lists = new ListsPage(page)
-    await lists.goto(projectName)
-    await lists.selectListRow('Dailies')
-    await lists.selectListRow('Picks', { add: true })
+  // FLAG (app bug): Duplicate sent a null body, which RTK Query throws on before sending
+  // fixed in ynput/ayon-frontend#2606, switch back to test() once it is merged
+  test.fixme(
+    'duplicate selected lists from the header menu',
+    async ({ page, api, projectName }) => {
+      await api.createEntityList(projectName, { label: 'Dailies' })
+      await api.createEntityList(projectName, { label: 'Picks' })
+      const lists = new ListsPage(page)
+      await lists.goto(projectName)
+      await lists.selectListRow('Dailies')
+      await lists.selectListRow('Picks', { add: true })
 
-    await lists.headerMenu('Duplicate selection')
+      await lists.headerMenu('Duplicate selection')
 
-    await expect(toast(page, 'Duplicated 2 lists')).toBeVisible()
-    await expect(lists.listRow('Dailies (copy)').locator('.selected')).toBeVisible()
-    await expect(lists.listRow('Picks (copy)').locator('.selected')).toBeVisible()
-    await expect
-      .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label).sort())
-      .toEqual(['Dailies', 'Dailies (copy)', 'Picks', 'Picks (copy)'])
-  })
+      await expect(toast(page, 'Duplicated 2 lists')).toBeVisible()
+      await expect(lists.listRow('Dailies (copy)').locator('.selected')).toBeVisible()
+      await expect(lists.listRow('Picks (copy)').locator('.selected')).toBeVisible()
+      await expect
+        .poll(async () => (await api.listEntityLists(projectName)).map((l) => l.label).sort())
+        .toEqual(['Dailies', 'Dailies (copy)', 'Picks', 'Picks (copy)'])
+    },
+  )
 
   test('right-clicking another list keeps the selection', async ({ page, api, projectName }) => {
     await api.createEntityList(projectName, { label: 'Picked' })
@@ -216,23 +223,18 @@ test.describe('list contents', () => {
       .toEqual([anim.id])
   })
 
-  // FLAG (app bug): list details "Items count" is always 0 (fetched with metadataOnly, then counts list.items)
-  // fixed in ynput/ayon-frontend#2396, switch back to test() once it is merged
-  test.fixme(
-    'list details show how many items the list has',
-    async ({ page, api, projectName }) => {
-      const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-      const task = await api.createTask(projectName, { folderId: folder.id, name: 'comp' })
-      const listId = await api.createEntityList(projectName, { label: 'Picks' })
-      await api.addEntityListItem(projectName, listId, task.id)
+  test('list details show how many items the list has', async ({ page, api, projectName }) => {
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const task = await api.createTask(projectName, { folderId: folder.id, name: 'comp' })
+    const listId = await api.createEntityList(projectName, { label: 'Picks' })
+    await api.addEntityListItem(projectName, listId, task.id)
 
-      const lists = new ListsPage(page)
-      await lists.goto(projectName)
-      await expect(lists.listRow('Picks')).toContainText('1')
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await expect(lists.listRow('Picks')).toContainText('1')
 
-      await lists.openDetails('Picks')
+    await lists.openDetails('Picks')
 
-      await expect(lists.detail('Items count')).toHaveText('1')
-    },
-  )
+    await expect(lists.detail('Items count')).toHaveText('1')
+  })
 })

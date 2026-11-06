@@ -32,6 +32,7 @@ test.describe('bundles', () => {
     await expectRowSelection([selected], [other])
     await menuItem(page, 'Duplicate and Edit').click()
     const escaped = prefix(otherName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-    await expect(page.getByLabel('Bundle name')).toHaveValue(new RegExp(`^${escaped}\\d+$`))
+    // a name without a number at the end gets "-01"
+    await expect(page.getByLabel('Bundle name')).toHaveValue(new RegExp(`^${escaped}-?\\d+$`))
   })
 })

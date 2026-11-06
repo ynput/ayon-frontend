@@ -48,28 +48,27 @@ test.describe('permissions: studio and project access', () => {
     }
   })
 
-  // FLAG (frontend): ProjectPageInner queues a redirect on every error render; it can end on a blank "/"
-  // fixed in ynput/ayon-frontend#2405, switch back to test() once it is merged
-  test.fixme(
-    'opening a project without access by URL lands on the dashboard',
-    async ({ api, restrictedUser, browser }) => {
-      const user = await restrictedUser()
-      const otherProject = await api.createProject()
-      const { context, page } = await signInAs(browser, user.name, user.password)
-      try {
-        // a few tries, the bug is a race
-        for (let attempt = 0; attempt < 3; attempt++) {
-          await page.goto(`/projects/${otherProject}/overview`)
-          await expect(page.getByText('Project Not Found, Redirecting...')).toBeVisible()
-          await expect(page).toHaveURL(/\/dashboard\/tasks$/)
-          await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
-        }
-      } finally {
-        await context.close()
-        await api.deleteProject(otherProject)
+  test('opening a project without access by URL lands on the dashboard', async ({
+    api,
+    restrictedUser,
+    browser,
+  }) => {
+    const user = await restrictedUser()
+    const otherProject = await api.createProject()
+    const { context, page } = await signInAs(browser, user.name, user.password)
+    try {
+      // a few tries, the bug is a race
+      for (let attempt = 0; attempt < 3; attempt++) {
+        await page.goto(`/projects/${otherProject}/overview`)
+        await expect(page.getByText('Project Not Found, Redirecting...')).toBeVisible()
+        await expect(page).toHaveURL(/\/dashboard\/tasks$/)
+        await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
       }
-    },
-  )
+    } finally {
+      await context.close()
+      await api.deleteProject(otherProject)
+    }
+  })
 
   test('a regular user is kept out of studio settings and user management', async ({
     restrictedUser,

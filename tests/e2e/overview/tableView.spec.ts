@@ -59,27 +59,22 @@ test.describe('overview table view', () => {
     await expect.poll(async () => Math.abs((await widthOf()) - saved)).toBeLessThan(2)
   })
 
-  // FLAG (app bug): the first column change saves the columns in definition order, not the displayed order
-  // fixed in ynput/ayon-frontend#2399, switch back to test() once it is merged
-  test.fixme(
-    'hiding a column keeps the order of the others',
-    async ({ page, api, projectName }) => {
-      await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
-      const overview = new OverviewPage(page)
-      await overview.goto(projectName)
-      const before = await overview.columnIds()
-      expect(before).toContain('attrib_priority')
+  test('hiding a column keeps the order of the others', async ({ page, api, projectName }) => {
+    await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    const before = await overview.columnIds()
+    expect(before).toContain('attrib_priority')
 
-      await overview.columnMenu('attrib_priority', 'Hide column')
-      await expect.poll(columnVisibility(api, projectName, 'attrib_priority')).toBe(false)
+    await overview.columnMenu('attrib_priority', 'Hide column')
+    await expect.poll(columnVisibility(api, projectName, 'attrib_priority')).toBe(false)
 
-      // the page briefly keeps the old order until the saved view comes back, so check after a reload
-      await overview.goto(projectName)
-      await expect(overview.columnHeader('status')).toBeVisible()
-      await expect(overview.columnHeader('attrib_priority')).toBeHidden()
-      expect(await overview.columnIds()).toEqual(before.filter((id) => id !== 'attrib_priority'))
-    },
-  )
+    // the page briefly keeps the old order until the saved view comes back, so check after a reload
+    await overview.goto(projectName)
+    await expect(overview.columnHeader('status')).toBeVisible()
+    await expect(overview.columnHeader('attrib_priority')).toBeHidden()
+    expect(await overview.columnIds()).toEqual(before.filter((id) => id !== 'attrib_priority'))
+  })
 
   test('group tasks by status', async ({ page, api, projectName }) => {
     const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

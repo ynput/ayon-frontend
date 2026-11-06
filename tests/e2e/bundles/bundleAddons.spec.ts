@@ -5,7 +5,7 @@ import { requireAddon } from '../support/addons'
 // Bundles are studio wide, so the tests don't change them. The page alone sees the user in
 // another bundle mode, two made up addons with a project page, and (for developer mode) a dev
 // bundle. The addon modules are the server's real ones, the page only treats them as coming
-// from the user's bundle.
+// from the user's bundle. Staging is the production bundle, whatever the server's staging holds.
 
 type Mode = 'production' | 'staging' | 'developer'
 
@@ -56,13 +56,23 @@ const openInBundleMode = async (
     const response = await route.fetch()
     const data = await response.json()
     data.addons = [
-      ...data.addons,
+      ...data.addons.map((addon: { productionVersion?: string }) => ({
+        ...addon,
+        stagingVersion: addon.productionVersion,
+      })),
       // removed from staging and dev, only in production
       fakeAddon(PROD_ONLY, { productionVersion: '1.0.0' }),
       // only in staging (and the dev bundle below)
       fakeAddon(BUNDLE_ONLY, { stagingVersion: '1.0.0' }),
     ]
     await route.fulfill({ response, json: data })
+  })
+
+  await page.route(isPath('/api/frontendModules'), (route) => {
+    const url = new URL(route.request().url())
+    if (url.searchParams.get('variant') !== 'staging') return route.continue()
+    url.searchParams.set('variant', 'production')
+    return route.continue({ url: url.toString() })
   })
 
   await page.route(isPath('/api/bundles'), async (route) => {

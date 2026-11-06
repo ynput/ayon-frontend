@@ -60,28 +60,27 @@ test.describe('project anatomy: attributes and roots', () => {
     ).toBeVisible()
   })
 
-  // FLAG (backend bug): saving project attributes leaves the cached folder list (attrib=true) stale
-  // fixed in ynput/ayon-backend#1169, switch back to test() once it is merged
-  test.fixme(
-    'folders inherit a project attribute changed in the anatomy',
-    async ({ page, api, projectName }) => {
-      const { folder } = await seedShot(api, projectName)
-      const manager = new ProjectsManagerPage(page)
+  test('folders inherit a project attribute changed in the anatomy', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { folder } = await seedShot(api, projectName)
+    const manager = new ProjectsManagerPage(page)
 
-      await setResolutionWidth(manager, projectName, 4096)
+    await setResolutionWidth(manager, projectName, 4096)
 
-      await expect
-        .poll(async () => (await api.getFolder(projectName, folder.id)).attrib.resolutionWidth)
-        .toBe(4096)
-      const list = await api.get(`/api/projects/${projectName}/folders`, { attrib: true })
-      expect(list.folders[0].attrib.resolutionWidth).toBe(4096)
-      const overview = await openOverviewWithWidth(page, api, projectName)
-      await expect(overview.cell('sh010', 'attrib_resolutionWidth')).toHaveText('4096')
-      await expect(
-        overview.cell('sh010', 'attrib_resolutionWidth').locator('.inherited'),
-      ).toBeVisible()
-    },
-  )
+    await expect
+      .poll(async () => (await api.getFolder(projectName, folder.id)).attrib.resolutionWidth)
+      .toBe(4096)
+    const list = await api.get(`/api/projects/${projectName}/folders`, { attrib: true })
+    expect(list.folders[0].attrib.resolutionWidth).toBe(4096)
+    const overview = await openOverviewWithWidth(page, api, projectName)
+    await expect(overview.cell('sh010', 'attrib_resolutionWidth')).toHaveText('4096')
+    await expect(
+      overview.cell('sh010', 'attrib_resolutionWidth').locator('.inherited'),
+    ).toBeVisible()
+  })
 
   test('a folder created in the overview starts with the project attribute values', async ({
     page,

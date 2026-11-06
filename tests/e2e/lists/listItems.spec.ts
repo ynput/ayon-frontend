@@ -67,8 +67,8 @@ test.describe('list items', () => {
       .toEqual([comp.id, anim.id, light.id].sort())
   })
 
-  // FLAG (app bug): undo puts a removed item back at the end of the list instead of its old place
-  // fixed in ynput/ayon-backend#1171 (backend only), switch back to test() once it is merged
+  // FLAG (app bug): undo puts a removed item back at the end; it sends no positions (the server side was ynput/ayon-backend#1171)
+  // fixed in ynput/ayon-frontend#2608, switch back to test() once it is merged
   test.fixme('undo puts a removed item back in its place', async ({ page, api, projectName }) => {
     const { listId, comp, anim, light } = await seedTaskList(api, projectName)
     const lists = new ListsPage(page)

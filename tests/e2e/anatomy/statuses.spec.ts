@@ -174,30 +174,29 @@ test.describe('project anatomy: statuses', () => {
       .toBe(WAITING.name)
   })
 
-  // FLAG (app bug): a status added in the anatomy editor is saved with `scope: []`, usable nowhere
-  // fixed in ynput/ayon-backend#1170, switch back to test() once it is merged
-  test.fixme(
-    'a status added without a scope can be used on tasks',
-    async ({ page, api, projectName }) => {
-      const index = (await statusNames(api, projectName)).length
-      await seedShot(api, projectName)
-      const manager = new ProjectsManagerPage(page)
-      await openStatuses(manager, projectName)
+  test('a status added without a scope can be used on tasks', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const index = (await statusNames(api, projectName)).length
+    await seedShot(api, projectName)
+    const manager = new ProjectsManagerPage(page)
+    await openStatuses(manager, projectName)
 
-      await manager.anatomy.addItem('root_statuses')
-      await manager.anatomy.fillText(`root_statuses_${index}_name`, WAITING.name)
-      await manager.saveAnatomy()
+    await manager.anatomy.addItem('root_statuses')
+    await manager.anatomy.fillText(`root_statuses_${index}_name`, WAITING.name)
+    await manager.saveAnatomy()
 
-      await expect
-        .poll(async () => (await api.getProject(projectName)).statuses[index])
-        .toMatchObject({ name: WAITING.name, scope: ALL_SCOPES })
-      const overview = new OverviewPage(page)
-      await overview.goto(projectName)
-      await overview.expand('sh010')
-      await overview.setEnumCell('anim', 'status', WAITING.name)
-      await expect(overview.cell('anim', 'status')).toContainText(WAITING.name)
-    },
-  )
+    await expect
+      .poll(async () => (await api.getProject(projectName)).statuses[index])
+      .toMatchObject({ name: WAITING.name, scope: ALL_SCOPES })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sh010')
+    await overview.setEnumCell('anim', 'status', WAITING.name)
+    await expect(overview.cell('anim', 'status')).toContainText(WAITING.name)
+  })
 
   test('renaming a status renames it on the tasks that have it', async ({
     page,
