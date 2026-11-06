@@ -792,12 +792,8 @@ export const useFetchOverviewData = ({
     // @ts-expect-error: softError is a string
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     softErrorAction,
-    isLoadingAll:
-      isLoadingViews ||
-      isLoadingFolders ||
-      isLoadingTasksList ||
-      isLoadingTasksFolders ||
-      isLoadingModules, // these all show a full loading state
+    // not modules: they load after the license check and would drop open cell editors
+    isLoadingAll: isLoadingViews || isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders,
     isLoadingMore: isFetchingNextPageTasksList,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
