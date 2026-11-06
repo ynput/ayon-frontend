@@ -17,12 +17,17 @@ export const useGetEntityGroups = ({ groupBy, projectName, entityType }: GetEnti
   // 2. add that filter to the combined filter
   // 3. sort by that filter
   const groupingKey = groupBy?.id || ''
-  const { data: { groups = [] } = {}, error } = useGetEntityGroupsQuery(
+  const {
+    data: { groups = [] } = {},
+    error,
+    isLoading,
+  } = useGetEntityGroupsQuery(
     { projectName, entityType, groupingKey: groupingKey, empty: true },
     { skip: !groupBy?.id },
   )
   return {
     groups,
     error,
+    isLoading,
   }
 }
