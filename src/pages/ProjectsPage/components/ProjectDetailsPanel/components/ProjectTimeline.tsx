@@ -1,8 +1,9 @@
 import { useRef } from 'react'
-import { format, differenceInDays, isValid, parseISO } from 'date-fns'
+import { differenceInDays, isValid, parseISO } from 'date-fns'
 import styled from 'styled-components'
 import ProgressBar from '@pages/ProjectDashboard/panels/ProgressBar'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { formatDate } from '@shared/util'
 import { Button, theme } from '@ynput/ayon-react-components'
 
 const StyledContainer = styled.div`
@@ -79,10 +80,7 @@ const toInputDateValue = (value?: string) => {
 const toDisplayDate = (value?: string) => {
   if (!value) return undefined
 
-  const parsedValue = parseISO(value)
-  if (!isValid(parsedValue)) return undefined
-
-  return format(parsedValue, 'd MMM yyyy')
+  return formatDate(value) || undefined
 }
 
 const openDatePicker = (input: HTMLInputElement | null) => {

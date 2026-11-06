@@ -2,7 +2,7 @@
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { OverflowField, getReadableColor } from '@ynput/ayon-react-components'
-import { copyToClipboard } from '@shared/util'
+import { copyToClipboard, formatDate, formatDateTime } from '@shared/util'
 
 // Attributes
 
@@ -56,37 +56,10 @@ const TagsField = ({ value }) => {
 
 // Datetime
 
-const DateTimeContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: var(--base-gap-large);
-  align-items: center;
-  > span:first-child {
-    color: var(--md-sys-color-on-surface-variant);
-  }
-`
-
-const isoToTime = (isoTime) => {
-  if (!isoTime) return ['-', '-']
-  const date = new Date(isoTime)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-  return [`${day}-${month}-${year}`, `${hours}:${minutes}:${seconds}`]
-}
-
-const TimestampField = ({ value, ddOnly }) => {
+// seconds by default: this field shows event and session logs
+const TimestampField = ({ value, ddOnly, seconds = true }) => {
   if (!value) return ''
-  const [dd, tt] = isoToTime(value)
-  return (
-    <DateTimeContainer>
-      <span>{dd}</span>
-      {!ddOnly && <span>{tt}</span>}
-    </DateTimeContainer>
-  )
+  return <span>{ddOnly ? formatDate(value) : formatDateTime(value, { seconds })}</span>
 }
 
 const PathField = ({ value }) => {

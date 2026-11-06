@@ -45,7 +45,6 @@ const EnableNotifications = () => {
         icon={'notifications'}
         data-tooltip={tooltip}
         onClick={handleEnable}
-        variant="filled"
         disabled={disabled}
       >
         Enable notifications

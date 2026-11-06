@@ -1,6 +1,11 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
-import { getMixedCounts, type MixedChange, type UserColor } from '@ynput/ayon-react-components'
+import {
+  Icon,
+  getMixedCounts,
+  type MixedChange,
+  type UserColor,
+} from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -28,10 +33,21 @@ const FieldValueText = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: right;
+`
 
-  input {
-    text-align: left;
+const DateValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+
+  > span:first-child {
+    flex: 1;
+  }
+
+  .icon {
+    font-size: 18px;
+    color: var(--md-sys-color-on-surface-variant);
   }
 `
 
@@ -134,6 +150,10 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
+  // "Select tags…", but keep acronyms such as "FPS" as they are
+  const placeholderLabel = /^[A-Z][a-z]/.test(labelValue)
+    ? labelValue[0].toLowerCase() + labelValue.slice(1)
+    : labelValue
 
   const isEmptyValue =
     value === null ||
@@ -141,7 +161,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     value === '' ||
     (Array.isArray(value) && value.length === 0)
   if (type !== 'boolean' && isReadOnly && !isMixed && isEmptyValue) {
-    return <FieldValueText>-</FieldValueText>
+    return <FieldValueText>—</FieldValueText>
   }
 
   // Handle different field types
@@ -153,15 +173,15 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case type === 'datetime':
       return (
-        <DateWidget
-          value={displayValue}
-          {...widgetCommonProps}
-          isEditing
-          onCancelEdit={onCancelEdit}
-          style={{ width: 'fit-content' }}
-          autoFocus={false}
-          isMidnightExclusive={isMidnightExclusive}
-        />
+        <DateValue>
+          <DateWidget
+            value={displayValue}
+            {...widgetCommonProps}
+            onCancelEdit={onCancelEdit}
+            isMidnightExclusive={isMidnightExclusive}
+          />
+          {!isEditing && !isReadOnly && <Icon icon="calendar_today" aria-hidden />}
+        </DateValue>
       )
 
     case widget === 'tags':
@@ -173,7 +193,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           // entities of one project, the tag goes to its anatomy
           isProjectTags={field.name === 'tags' && new Set(projectNames).size <= 1}
           pt={{ template: { style: { height: 32 }, className: 'enum' } }}
-          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          placeholder={isMixed ? `Mixed ${placeholderLabel}` : `Select ${placeholderLabel}…`}
           {...mixedProps}
           onCancelEdit={onCancelEdit}
           align="right"
@@ -259,12 +279,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             enumError
               ? `Could not load ${labelValue}`
               : isMixed
-              ? `Mixed ${labelValue}`
-              : `Select ${labelValue}...`
+              ? `Mixed ${placeholderLabel}`
+              : `Select ${placeholderLabel}…`
           }
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}
           align="right"
+          // coloured values are pills, as in the project tables
+          pill={field.name === 'status' ? 'filled' : 'tinted'}
           enableCustomValues={field.enableCustomValues}
           isLoadingOptions={isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}

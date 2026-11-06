@@ -1,5 +1,5 @@
 import { useMemo, useEffect, useState, FC } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Icon, Section, TablePanel } from '@ynput/ayon-react-components'
 
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -9,6 +9,7 @@ import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useURIContext } from '@shared/context'
 import { AddonSettingsItemModel } from '@shared/api'
+import { EmptyPlaceholder } from '@shared/components'
 
 interface Addon extends AddonSettingsItemModel {
   key?: string
@@ -173,24 +174,49 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
     return v
   }
 
+  const formatTitle = (rowData: Addon) => {
+    if (!rowData.isBroken) return rowData.title
+    return (
+      <span
+        style={{ display: 'flex', alignItems: 'center', gap: 4 }}
+        data-tooltip={rowData.reason?.error || 'Settings could not be loaded'}
+      >
+        <Icon icon="error" style={{ color: 'var(--md-sys-color-error)', fontSize: 18 }} />
+        {rowData.title}
+      </span>
+    )
+  }
+
   return (
     <Section style={{ minWidth: 250 }}>
       <TablePanel>
-        <DataTable
-          value={tableData}
-          selectionMode="multiple"
-          scrollable={true}
-          scrollHeight="flex"
-          selection={selectedAddons}
-          onSelectionChange={onSelectionChange}
-          onContextMenu={onContextMenu}
-          className={clsx('addon-list-table', { loading: isLoading })}
-          rowClassName={rowDataClassNameFormatter}
-          emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
-        >
-          <Column field="title" header="Addon" />
-          <Column field="version" header="Version" style={{ maxWidth: 110 }} body={formatVersion} />
-        </DataTable>
+        {tableData.length ? (
+          <DataTable
+            value={tableData}
+            selectionMode="multiple"
+            scrollable={true}
+            scrollHeight="flex"
+            selection={selectedAddons}
+            onSelectionChange={onSelectionChange}
+            onContextMenu={onContextMenu}
+            className={clsx('addon-list-table', { loading: isLoading })}
+            rowClassName={rowDataClassNameFormatter}
+          >
+            <Column field="title" header="Addon" body={formatTitle} />
+            <Column
+              field="version"
+              header="Version"
+              style={{ maxWidth: 110 }}
+              body={formatVersion}
+            />
+          </DataTable>
+        ) : (
+          <EmptyPlaceholder
+            className="compact"
+            icon={isError ? 'warning' : 'extension_off'}
+            message={isError ? `No bundle set to ${variant}` : 'No addons found'}
+          />
+        )}
       </TablePanel>
     </Section>
   )

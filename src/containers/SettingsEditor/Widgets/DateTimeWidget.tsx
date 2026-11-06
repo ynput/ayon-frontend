@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DATE_FORMAT } from '@shared/util/formatDate'
 import { InputDate } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, parseContext } from '../helpers'
@@ -39,8 +40,16 @@ const DateTimeWidget = (props: $Any) => {
     updateChangedKeys(props, isChanged, path)
   }
 
+  const inputProps = {
+    className: 'form-field',
+    dateFormat: DATE_FORMAT,
+    selected: value || undefined,
+    onChange,
+    onFocus,
+  }
+
   // @ts-ignore
-  return <InputDate className="form-field" selected={value || undefined} onChange={onChange} onFocus={onFocus} />
+  return <InputDate {...inputProps} />
 }
 
 export { DateTimeWidget }

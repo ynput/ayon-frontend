@@ -29,7 +29,7 @@ export class InboxPage {
   }
 
   get allCaughtUp(): Locator {
-    return this.page.getByText('All caught up! No messages to show.')
+    return this.page.getByText('All caught up, no messages to show')
   }
 
   // FLAG: the read state is only the `isRead` class, there is no accessible state

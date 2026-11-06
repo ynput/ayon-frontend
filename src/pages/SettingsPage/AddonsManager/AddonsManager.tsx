@@ -5,6 +5,7 @@ import { useListAddonsQuery, useListBundlesQuery, useUpdateBundleMutation } from
 import { useMemo, useState } from 'react'
 import { transformAddonsWithBundles } from './helpers'
 import AddonsManagerTable from './AddonsManagerTable'
+import { BundleStatusLegend } from './BundleStatus/BundleStatus'
 import useGetTableData from './useGetTableData'
 import type { TableDataItem } from './useGetTableData'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -148,7 +149,7 @@ const AddonsManager = (): JSX.Element => {
 
   const viewInMarket = (selected: string[]): ContextMenuItem[] => [
     {
-      label: 'View in Market',
+      label: 'View in market',
       command: () => navigate(`/market?selected=${selected[0].split(' ')[0]}`),
       icon: 'store',
     },
@@ -169,7 +170,7 @@ const AddonsManager = (): JSX.Element => {
   const versionContext = (selected: string[]): ContextMenuItem[] => [
     ...viewInMarket(selected),
     {
-      label: 'API Docs',
+      label: 'API docs',
       command: () => openApiDocs(selected[0]),
       icon: 'description',
     },
@@ -221,17 +222,18 @@ const AddonsManager = (): JSX.Element => {
                   onClick={() => setUploadOpen('addon')}
                   data-shortcut="A"
                   data-tooltip="Upload addon zip files"
-                  label="Upload Addons"
+                  label="Upload addons"
                   icon="upload"
-                  style={{ width: '100%' }}
                 />
-                <Link to="/market" style={{ width: '100%' }}>
-                  <Button label="Addon Market" icon="store" style={{ width: '100%' }} />
+                <Link to="/market">
+                  <Button label="Addon market" icon="store" />
                 </Link>
               </div>
             }
             extraContext={viewInMarket}
+            footer={<BundleStatusLegend />}
             emptyMessage="No addons found"
+            emptyIcon="extension"
             isLoading={isLoading}
             onDelete={undefined}
             onDeleteSuccess={undefined}
@@ -250,9 +252,13 @@ const AddonsManager = (): JSX.Element => {
             onDelete={handleDeleteVersions}
             onDeleteSuccess={handleDeleteVersionsSuccess}
             extraContext={versionContext}
-            emptyMessage={selectedAddons.length ? 'No versions found' : 'Select an addon'}
+            emptyMessage={
+              selectedAddons.length ? 'No versions found' : 'Select an addon to see its versions'
+            }
+            emptyIcon="extension"
             isLoading={isLoading}
             header={null}
+            footer={null}
           />
         </SplitterPanel>
         <SplitterPanel>
@@ -272,9 +278,14 @@ const AddonsManager = (): JSX.Element => {
                 icon: 'arrow_circle_right',
               },
             ]}
-            emptyMessage={selectedVersions.length ? 'No bundles found' : 'Select versions'}
+            emptyMessage={
+              selectedVersions.length ? 'No bundles found' : 'Select a version to see its bundles'
+            }
+            emptyMuted={!selectedVersions.length && !versionsTableData.length}
+            emptyIcon="inventory_2"
             isLoading={isLoading}
             header={null}
+            footer={null}
             onDeleteSuccess={undefined}
             sortFunction={undefined}
           />

@@ -128,10 +128,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
-  const { data: users = [] } = useGetUsersAssigneeQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
@@ -461,7 +458,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
         ) : (
           <EmptyPlaceholderFlexWrapper>
             <EmptyPlaceholder
-              message={'Select a folder to begin.'}
+              message="Select a folder to see its tasks"
               icon="folder_open"
               error={error}
             />

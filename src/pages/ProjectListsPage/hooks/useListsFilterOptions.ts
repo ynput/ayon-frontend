@@ -104,7 +104,7 @@ const useListsFilterOptions = (): Option[] => {
     const opts: Option[] = [
       {
         id: 'entityType',
-        label: 'Entity Type',
+        label: 'Entity type',
         type: 'string',
         icon: 'check_circle',
         values: entityTypeOptions.map((option) => ({ ...option, id: option.value })),

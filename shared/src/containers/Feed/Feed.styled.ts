@@ -7,26 +7,10 @@ export const FeedContainer = styled.section`
 
   height: 100%;
 
+  /* the search bar has its own row, so the activities scroll below it rather than under it */
   display: grid;
-  grid-template-rows: 1fr auto;
+  grid-template-rows: auto 1fr auto;
   background-color: var(--md-sys-color-surface-container-low);
-
-  padding-top: 4px;
-  /* fade out the content at the top with a gradient */
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 45px;
-    background: linear-gradient(
-      to bottom,
-      var(--md-sys-color-surface-container-low) 20%,
-      rgba(255, 255, 255, 0) 100%
-    );
-    z-index: 1;
-  }
 `
 
 export const Warning = styled.div`
@@ -53,9 +37,8 @@ export const Warning = styled.div`
 export const FeedContent = styled.ul`
   gap: var(--base-gap-large);
   overflow-y: auto;
-  padding: 24px 0;
+  padding: 12px 0 40px;
   margin: 0;
-  padding-bottom: 40px;
   scrollbar-gutter: stable;
 
   display: flex;
@@ -65,11 +48,6 @@ export const FeedContent = styled.ul`
 
   &.loading {
     overflow: hidden;
-  }
-
-  /* first (last in dom) has margin to separate from filter */
-  & > *:last-child {
-    margin-top: 32px;
   }
 `
 

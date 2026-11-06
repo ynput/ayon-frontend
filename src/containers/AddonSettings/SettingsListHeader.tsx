@@ -1,11 +1,22 @@
 // @ts-ignore
-import sh from 'searchhash';
+import sh from 'searchhash'
 
 import SearchDropdown from '@components/SearchDropdown/SearchDropdown'
-import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { useEffect, useState } from 'react';
-import { $Any } from '@types';
-import { generateResultsAndFilterIds } from './searchTools';
+import { SearchField } from '@components/SearchInput/SearchInput.styled'
+import { Button, Icon, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { useEffect, useState } from 'react'
+import styled from 'styled-components'
+import { $Any } from '@types'
+import { generateResultsAndFilterIds } from './searchTools'
+
+// the shared search field look around the dropdown search; the icon sits above its raised input
+const SettingsSearchField = styled(SearchField)`
+  width: 100%;
+
+  .search-icon {
+    z-index: 11;
+  }
+`
 
 type AddonData = {
   name: string
@@ -17,10 +28,10 @@ type AddonData = {
 type Props = {
   showHelp: boolean
   addonsData: AddonData[]
-  searchTreeData: $Any,
+  searchTreeData: $Any
   addonSchemas: $Any
   setShowHelp: (value: boolean) => void
-  searchCallback: (searchText?: string, filterKeys?: {[key: string]: string[]}) => void
+  searchCallback: (searchText?: string, filterKeys?: { [key: string]: string[] }) => void
 }
 
 const SettingsListHeader = ({
@@ -36,7 +47,7 @@ const SettingsListHeader = ({
   }
 
   const [search, setSearch] = useState<string>('')
-  const [filterKeys, setFilterKeys] = useState<{[key: string]: string[]}>({})
+  const [filterKeys, setFilterKeys] = useState<{ [key: string]: string[] }>({})
   useEffect(() => {
     filter()
   }, [addonsData, addonSchemas])
@@ -45,8 +56,7 @@ const SettingsListHeader = ({
     searchCallback(search, filterKeys)
   }, [filterKeys])
 
-  useEffect(() => {
-  }, [filterKeys])
+  useEffect(() => {}, [filterKeys])
 
   const filter = () => {
     if (search === '') {
@@ -79,23 +89,26 @@ const SettingsListHeader = ({
 
   return (
     <Toolbar>
-      <SearchDropdown
-        placeholder="Search and filter settings"
-        suggestions={[]}
-        suggestionsLimit={10}
-        isLoading={false}
-        hideSuggestions={true}
-        onSubmit={() => {
-          searchCallback(search, filterKeys)
-        }}
-        onClear={() => searchCallback()}
-        onFocus={() => {}}
-        onClose={() => {}}
-        filter={(newSearch) => {
-          setSearch(newSearch)
-          return filter()
-        }}
-      />
+      <SettingsSearchField>
+        <Icon icon="search" className="search-icon" />
+        <SearchDropdown
+          placeholder="Search and filter settings"
+          suggestions={[]}
+          suggestionsLimit={10}
+          isLoading={false}
+          hideSuggestions={true}
+          onSubmit={() => {
+            searchCallback(search, filterKeys)
+          }}
+          onClear={() => searchCallback()}
+          onFocus={() => {}}
+          onClose={() => {}}
+          filter={(newSearch) => {
+            setSearch(newSearch)
+            return filter()
+          }}
+        />
+      </SettingsSearchField>
 
       <Spacer />
 
@@ -110,7 +123,5 @@ const SettingsListHeader = ({
     </Toolbar>
   )
 }
-
-
 
 export default SettingsListHeader

@@ -92,15 +92,17 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                     <span>{productName}</span>
                     <ActivityDate date={createdAt} isExact />
                   </Styled.Title>
-                  <Styled.Title>
-                    <Styled.VersionName className="version">{name}</Styled.VersionName> -
-                    <FieldValue
-                      icon={status?.icon}
-                      color={status?.color}
-                      colorLight={status?.colorLight}
-                      name={status?.name || ''}
-                      pill="filled"
-                    />
+                  <Styled.Title className="version-status">
+                    <Styled.VersionName className="version">{name}</Styled.VersionName>
+                    {status && (
+                      <FieldValue
+                        icon={status.icon}
+                        color={status.color}
+                        colorLight={status.colorLight}
+                        name={status.name}
+                        pill="filled"
+                      />
+                    )}
                   </Styled.Title>
                 </div>
                 <Styled.Thumbnail

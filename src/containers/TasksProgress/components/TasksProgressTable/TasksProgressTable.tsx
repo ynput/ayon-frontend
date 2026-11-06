@@ -402,12 +402,13 @@ export const TasksProgressTable = ({
       <Column
         field={'_complete'}
         header={'Done'}
-        style={{ maxWidth: 72, width: 72 }}
+        // fits the label next to the sort icon
+        style={{ maxWidth: 80, width: 80 }}
         resizeable
         body={(row: FolderRow) =>
           row._complete !== undefined && (
             <Body style={{ minWidth: 'unset' }}>
-              <span>{`${Math.round(row._complete * 10) / 10}%`}</span>
+              <span>{`${Math.round(row._complete)}%`}</span>
             </Body>
           )
         }

@@ -1,14 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
-import {
-  Button,
-  Section,
-  Panel,
-  FormRow,
-  LockedInput,
-  SaveButton,
-} from '@ynput/ayon-react-components'
+import { Button, Section, Panel, FormRow, SaveButton } from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
 import styled from 'styled-components'
@@ -20,7 +13,7 @@ import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
-import { PanelButtonsStyled } from './userDetail.styled'
+import { EditableLockedInput, PanelButtonsStyled } from './userDetail.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -45,28 +38,28 @@ const attribTypeDefaults = {
 const fields = [
   {
     name: 'userActive',
-    label: 'User Active',
+    label: 'User active',
     data: {
       type: 'boolean',
     },
   },
   {
     name: 'userPool',
-    label: 'User Pool',
+    label: 'User pool',
     data: {
       type: 'string',
     },
   },
   {
     name: 'disablePasswordLogin',
-    label: 'Disable Password Login',
+    label: 'Disable password login',
     data: {
       type: 'boolean',
     },
   },
   {
     name: 'userLevel',
-    label: 'User Level',
+    label: 'User level',
     data: {
       type: 'string',
     },
@@ -407,10 +400,10 @@ const UserDetail = ({
       accessGroups.push(role)
     }
 
-    // add admin, manager, service
-    if (isUserManager) replaceAccessRoles('manager')
-    if (isUserAdmin) replaceAccessRoles('admin')
-    if (user.isService) replaceAccessRoles('service')
+    // add admin, manager, service, named like the access level control
+    if (isUserManager) replaceAccessRoles('Manager')
+    if (isUserAdmin) replaceAccessRoles('Admin')
+    if (user.isService) replaceAccessRoles('Service')
 
     return [...new Set([...acc, ...accessGroups])]
   }, [])
@@ -420,7 +413,7 @@ const UserDetail = ({
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}
-        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No access groups'}
         menuItems={headerMenuItems}
       />
       {hasServiceUser && singleUserEdit ? (
@@ -432,14 +425,14 @@ const UserDetail = ({
           {singleUserEdit && (
             <Panel>
               <FormRow label="Username" key="Username">
-                <LockedInput
+                <EditableLockedInput
                   value={singleUserEdit.name}
                   onEdit={() => setShowRenameUser(true)}
                   disabled={managerDisabled}
                 />
               </FormRow>
               <FormRow label="Password" key="Password">
-                <LockedInput
+                <EditableLockedInput
                   label="Password"
                   value={singleUserEdit.hasPassword ? '1234567890' : ''}
                   type="password"

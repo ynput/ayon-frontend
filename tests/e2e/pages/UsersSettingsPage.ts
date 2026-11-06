@@ -7,11 +7,11 @@ export class UsersSettingsPage {
 
   async goto() {
     await this.page.goto('/settings/users')
-    await expect(this.page.getByPlaceholder('Filter users...')).toBeVisible({ timeout: 30_000 })
+    await expect(this.page.getByPlaceholder('Filter users')).toBeVisible({ timeout: 30_000 })
   }
 
   async filter(text: string) {
-    await this.page.getByPlaceholder('Filter users...').fill(text)
+    await this.page.getByPlaceholder('Filter users').fill(text)
   }
 
   row(name: string) {

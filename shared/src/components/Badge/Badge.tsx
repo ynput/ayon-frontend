@@ -10,7 +10,9 @@ const BaseBadge = styled.span`
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius-m);
-  padding: 0px 4px;
+  /* the size of the status pills in the project tables */
+  padding: 1px 6px;
+  line-height: 20px;
 
   &.placeholder {
     color: var(--md-sys-color-outline);
@@ -57,17 +59,8 @@ export const Badge = (props: BadgeProps) => {
   nstyle.backgroundColor = backgroundColor
   nstyle.color = foregroundColor
 
-  if (backgroundColor) {
-    nstyle.fontSize= '0.9rem';
-  }
-
   return (
-    <BaseBadge
-      style={nstyle}
-      className={className}
-      aria-label={label}
-      {...additionalProps}
-    >
+    <BaseBadge style={nstyle} className={className} aria-label={label} {...additionalProps}>
       {label}
     </BaseBadge>
   )

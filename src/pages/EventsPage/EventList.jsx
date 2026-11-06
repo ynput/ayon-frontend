@@ -1,5 +1,5 @@
 import React, { useRef } from 'react'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Icon, Section, TablePanel } from '@ynput/ayon-react-components'
 import { TimestampField } from '@containers/fieldFormat'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
@@ -23,13 +23,31 @@ const InlineSpinner = styled.div`
   animation: ${spin} 0.8s linear infinite;
 `
 
+const LOG_ICONS = {
+  'log.error': { icon: 'error', color: 'var(--md-sys-color-error)' },
+  'log.warning': { icon: 'warning', color: 'var(--md-sys-color-warning)' },
+  'log.info': { icon: 'info', color: 'var(--md-sys-color-on-surface-variant)' },
+  'log.success': { icon: 'check_circle', color: 'var(--md-sys-color-tertiary)' },
+}
+
 const statusBodyTemplate = (rowData) => {
   const statusObj = {
-  'finished': "check",
-  'aborted': "times",
-  'failed': "error",
-  'pending': "timer",
-  'restarted': "history",
+    finished: 'check',
+    aborted: 'times',
+    failed: 'error',
+    pending: 'timer',
+    restarted: 'history',
+  }
+  // log events all finish instantly, so show their level instead of the status
+  const logIcon = LOG_ICONS[rowData.topic]
+  if (logIcon) {
+    return (
+      <Icon
+        icon={logIcon.icon}
+        style={{ color: logIcon.color, fontSize: 18, verticalAlign: 'middle' }}
+        data-tooltip={rowData.topic}
+      />
+    )
   }
   if (Object.keys(statusObj).includes(rowData.status)) {
     return <CellWithIcon iconStyle={{ marginRight: '0.2rem' }} icon={statusObj[rowData.status]} />
@@ -60,6 +78,7 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
           scrollHeight="flex"
           responsive="true"
           dataKey="id"
+          className="standard-rows"
           selectionMode="single"
           onSelectionChange={(e) => setSelectedEvent(e.value.id)}
           selection={selectedEvent}
@@ -72,23 +91,30 @@ const EventList = ({ eventData, isLoading, selectedEvent, setSelectedEvent, onSc
             }
           }}
           ref={dataTableRef}
+          // fixed layout: a long description must not push User and Project out of view
+          tableStyle={{ tableLayout: 'fixed', width: '100%' }}
           virtualScrollerOptions={{
-            itemSize: 29,
+            // the row height of .standard-rows (--size-row)
+            itemSize: 34,
             step: 99,
             lazy: true,
             onLazyLoad: handleLazy,
           }}
         >
-          <Column style={{ maxWidth: 36, overflow: 'hidden' }} body={statusBodyTemplate} />
+          <Column style={{ width: 36, overflow: 'hidden' }} body={statusBodyTemplate} />
           <Column
             header="Time"
             body={(row) => <TimestampField value={row?.updatedAt} />}
-            style={{ maxWidth: 180 }}
+            style={{ width: 180 }}
           />
-          <Column header="Topic" field="topic" style={{ maxWidth: 200 }} />
-          <Column header="Description" field="description" />
-          <Column header="User" field="user" style={{ maxWidth: 120 }} />
-          <Column header="Project" field="project" style={{ maxWidth: 150 }} />
+          <Column header="Topic" field="topic" style={{ width: 240, textOverflow: 'ellipsis' }} />
+          <Column header="Description" field="description" style={{ textOverflow: 'ellipsis' }} />
+          <Column header="User" field="user" style={{ width: 120, textOverflow: 'ellipsis' }} />
+          <Column
+            header="Project"
+            field="project"
+            style={{ width: 120, textOverflow: 'ellipsis' }}
+          />
         </DataTable>
       </TablePanel>
     </Section>

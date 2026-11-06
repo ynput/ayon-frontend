@@ -61,14 +61,14 @@ const BundleDeps = ({ bundle, onChange }) => {
     },
     {
       id: 'darwin',
-      label: 'MacOS',
+      label: 'macOS',
     },
   ]
 
   return (
     <>
       <Dialog
-        header={'Update Dependency Package'}
+        header={'Update dependency package'}
         isOpen={!!updatePackageForm.platform}
         onClose={handleCloseForm}
         size="sm"
@@ -84,7 +84,7 @@ const BundleDeps = ({ bundle, onChange }) => {
           onCancel={handleCloseForm}
         />
       </Dialog>
-      <BorderedSection title="Dependency Packages" autoHeight showHeader withPadding>
+      <BorderedSection title="Dependency packages" autoHeight showHeader withPadding>
         {bundle && (
           <FormLayout>
             {platforms.map((platform) => (

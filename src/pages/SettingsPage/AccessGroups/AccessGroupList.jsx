@@ -69,7 +69,7 @@ const AccessGroupList = ({
   const ctxMenuItems = (eventData) => {
     const menuItems = [
       {
-        label: 'Clear Overrides',
+        label: 'Clear overrides',
         icon: 'clear',
         disabled: !eventData.isProjectLevel,
         command: async () =>
@@ -120,7 +120,12 @@ const AccessGroupList = ({
             icon="group_add"
           />
           <Spacer />
-          <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
+          <Button
+            label="Delete access group"
+            onClick={onDeleteGlobal}
+            icon="delete"
+            disabled={!selection}
+          />
         </Toolbar>
       )}
 
@@ -134,7 +139,7 @@ const AccessGroupList = ({
           selection={selection}
           onSelectionChange={(e) => onSelectionChange(e.value)}
           rowClassName={getRowClass}
-          className={clsx({ loading: isLoading })}
+          className={clsx('standard-rows', { loading: isLoading })}
           onContextMenu={(e) => onContextMenu(e)}
         >
           <Column field="name" header="Access group" />

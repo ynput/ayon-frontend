@@ -1,14 +1,6 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
-import {
-  FormRow,
-  Section,
-  Panel,
-  LockedInput,
-  SaveButton,
-  InputText,
-  InputSwitch,
-} from '@ynput/ayon-react-components'
+import { FormRow, Section, Panel, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
@@ -21,7 +13,8 @@ import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@context'
 import clsx from 'clsx'
-import { AvatarName } from './ProfilePage.styled'
+import { AvatarName, ReadOnlyInput } from './ProfilePage.styled'
+import { EditableLockedInput } from '../SettingsPage/UsersSettings/userDetail.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -244,7 +237,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
           </AvatarName>
           <Panel style={{ background: 'none' }}>
             <FormRow label="Username" key="Username">
-              <InputText value={name} disabled />
+              <ReadOnlyInput value={name} readOnly />
             </FormRow>
             <UserAttribForm
               formData={formData}
@@ -255,7 +248,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
             {!user?.data?.disablePasswordLogin && (
               <FormRow label="Password" key="Password">
-                <LockedInput
+                <EditableLockedInput
                   label="Password"
                   value={password}
                   type="password"
@@ -264,7 +257,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               </FormRow>
             )}
 
-            <FormRow label="Desktop Notifications" key="notifications">
+            <FormRow label="Desktop notifications" key="notifications">
               <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
                 <InputSwitch
                   checked={preferencesData.notifications}
@@ -275,7 +268,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               </div>
             </FormRow>
 
-            <FormRow label="Notification Sound" key="notificationSound">
+            <FormRow label="Notification sound" key="notificationSound">
               <div
                 data-tooltip="Get a little chime sound on new important notifications"
                 style={{ width: 'fit-content' }}

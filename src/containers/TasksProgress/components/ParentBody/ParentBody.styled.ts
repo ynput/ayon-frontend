@@ -7,6 +7,11 @@ export const ParentBody = styled(Body)`
     ${theme.titleMedium}
     font-weight: 600;
   }
+  /* the counts are details of the group name */
+  & > .count {
+    font-weight: 400;
+    color: var(--md-sys-color-on-surface-variant);
+  }
   gap: var(--base-gap-small) !important;
   display: flex;
 `

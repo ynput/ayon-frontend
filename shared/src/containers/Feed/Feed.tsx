@@ -24,7 +24,8 @@ import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
-import { format, isValid } from 'date-fns'
+import { isValid } from 'date-fns'
+import { formatDateTime } from '@shared/util/formatDate'
 import { UserImage } from '@shared/components/UserImage/UserImage'
 import * as CreationStyled from './components/ActivityAssigneeChange/ActivityAssigneeChange.styled'
 import { useOriginFrameStarts } from './hooks/useOriginFrameStarts'
@@ -183,6 +184,17 @@ export const Feed = ({
   // REFS
   const feedRef = useRef(null)
   // const commentInputRef = useRef(null)
+
+  // the activities keep a gutter for their scrollbar: the search row above takes the same
+  // inset, so both end at one edge whatever width the platform gives a scrollbar
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
+  useEffect(() => {
+    const el = feedRef.current as HTMLElement | null
+    if (!el) return
+    const observer = new ResizeObserver(() => setScrollbarWidth(el.offsetWidth - el.clientWidth))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
 
   // scroll by height of comment input when it opens or closes
   useScrollOnInputOpen({ feedRef, isInputOpen: editingId === FEED_NEW_COMMENT, height: 93 })
@@ -348,7 +360,10 @@ export const Feed = ({
 
   return (
     <>
-      <Styled.FeedContainer className="feed">
+      <Styled.FeedContainer
+        className="feed"
+        style={{ '--feed-scrollbar-width': `${scrollbarWidth}px` } as React.CSSProperties}
+      >
         {warningMessage && (
           <Styled.Warning>
             <Icon icon="info" />
@@ -423,7 +438,7 @@ export const Feed = ({
               <CreationStyled.StatusChange>
                 <CreationStyled.Body style={{ alignItems: 'center' }}>
                   <CreationStyled.Text>
-                    Folder created at {format(new Date(createdFolder.createdAt), 'PPpp')} by
+                    Folder created at {formatDateTime(createdFolder.createdAt)} by
                   </CreationStyled.Text>
                   {createdFolder.createdBy && (
                     <UserImage

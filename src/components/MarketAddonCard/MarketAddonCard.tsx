@@ -69,9 +69,8 @@ export const MarketAddonCard = ({
   if (isFinished) stateIcon = 'check_circle'
 
   let stateVariant: ButtonProps['variant'] = 'text'
-  if (state === 'install') stateVariant = 'surface'
+  if (state === 'install' || state === 'update') stateVariant = 'surface'
   if (state === 'failed') stateVariant = 'danger'
-  if (state === 'update') stateVariant = 'filled'
 
   const handleActionClick = () => {
     if (['install', 'update'].includes(state)) {
@@ -98,9 +97,21 @@ export const MarketAddonCard = ({
       <Styled.Content className={clsx({ loading: isPlaceholder })}>
         <Styled.TitleWrapper className="header">
           <Styled.Title className={Type.titleMedium}>{title}</Styled.Title>
-          {isOfficial && <img src="/favicon-32x32.png" width={15} height={15} />}
+          {isOfficial && (
+            <img
+              src="/favicon-32x32.png"
+              width={15}
+              height={15}
+              alt="Official addon"
+              data-tooltip="Official addon, made by Ynput"
+            />
+          )}
           {isVerified && !isOfficial && (
-            <Icon icon="new_release" style={{ color: 'var(--md-sys-color-secondary)' }} />
+            <Icon
+              icon="new_releases"
+              style={{ color: 'var(--md-sys-color-secondary)' }}
+              data-tooltip="Verified addon"
+            />
           )}
         </Styled.TitleWrapper>
         <Styled.AuthorWrapper className="details">

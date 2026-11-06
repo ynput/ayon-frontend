@@ -148,8 +148,6 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         setRegistryUsername(auth.username || '')
         setRegistryPassword(auth.password || '')
       }
-
-
     }
   }, [isEditMode, editService, addonData])
 
@@ -258,7 +256,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         if (editService.shouldRun === false) {
           confirmDialog({
             message: 'Do you want to start the service now?',
-            header: 'Start Service',
+            header: 'Start service',
             acceptLabel: 'Yes, start service',
             rejectLabel: 'No, keep stopped',
             accept: async () => {
@@ -440,26 +438,33 @@ const ServiceDialog = ({ onHide, editService = null }) => {
         </FormRow>
       </FormLayout>
 
-
       <Divider>Registry settings</Divider>
       <FormLayout>
-
         <FormRow label="Registry login">
-          <InputSwitch checked={useRegistryAuth} onChange={() => setUseRegistryAuth(!useRegistryAuth)} />
+          <InputSwitch
+            checked={useRegistryAuth}
+            onChange={() => setUseRegistryAuth(!useRegistryAuth)}
+          />
         </FormRow>
 
         {useRegistryAuth && (
           <>
             <FormRow label="Registry username">
-              <InputText value={registryUsername} onChange={(e) => setRegistryUsername(e.target.value)} />
+              <InputText
+                value={registryUsername}
+                onChange={(e) => setRegistryUsername(e.target.value)}
+              />
             </FormRow>
             <FormRow label="Registry password">
-              <InputText value={registryPassword} onChange={(e) => setRegistryPassword(e.target.value)} type="password" />
+              <InputText
+                value={registryPassword}
+                onChange={(e) => setRegistryPassword(e.target.value)}
+                type="password"
+              />
             </FormRow>
           </>
         )}
       </FormLayout>
-
     </Dialog>
   )
 }

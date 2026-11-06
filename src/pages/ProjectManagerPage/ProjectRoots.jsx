@@ -125,7 +125,7 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
         </EmptyPlaceholderFlexWrapper>
       ) : forms.length === 0 ? (
         <EmptyPlaceholderFlexWrapper>
-          <EmptyPlaceholder icon="lists" message="No sites were found" />
+          <EmptyPlaceholder icon="lists" message="No sites found" />
         </EmptyPlaceholderFlexWrapper>
       ) : (
         <div style={{ height: '100%', overflow: 'auto' }}>

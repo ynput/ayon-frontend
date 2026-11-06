@@ -168,8 +168,10 @@ strong {
 nav.primary {
   background-color: var(--md-sys-color-background);
   padding: 8px;
-  display: flex;
-  flex-direction: row;
+  // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
+  // page's centre line on every page; a side wider than its half pushes them over, never under it
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);
@@ -452,6 +454,77 @@ a {
   }
 }
 
+// legacy PrimeReact tables of the settings, events and services pages: rows as tall as the project tables'
+// (opt in per table, so tables sized elsewhere, such as the compact Browser and Workfiles ones, keep theirs)
+.standard-rows .p-datatable-tbody > tr:not(.compact) > td,
+.standard-rows .p-treetable-tbody > tr:not(.compact) > td {
+  height: var(--size-row);
+
+  // values start where their header's title does (the first cell has the row's 4px left border for that)
+  &:not(:first-child) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+// legacy PrimeReact tables: match the header of the new project tables
+.p-datatable .p-datatable-thead > tr > th,
+.p-treetable .p-treetable-thead > tr > th {
+  height: var(--size-header);
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .p-column-header-content {
+    min-width: 0;
+  }
+
+  .p-column-title {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  // sort icons only on hover/focus and on the sorted column; hidden, not removed, so titles don't shift
+  &.p-sortable-column:not(.p-highlight):not(:hover):not(:focus-visible) .p-sortable-column-icon {
+    visibility: hidden;
+  }
+
+  .p-sortable-column-icon {
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+}
+
+// legacy PrimeReact tables and trees: the focus ring is for keyboard focus only,
+// a click shows the selection fill alone (like the project tables)
+.p-treetable .p-treetable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr > td,
+.p-treetable .p-sortable-column {
+  &:focus:not(:focus-visible) {
+    outline: none !important;
+  }
+}
+.p-tree .p-treenode-content,
+.p-datatable .p-sortable-column,
+.p-treetable-toggler,
+.p-row-toggler,
+.p-tree-toggler {
+  &:focus:not(:focus-visible) {
+    box-shadow: none !important;
+  }
+}
+
+// navigation trees (folder hierarchy, task list) read as one list, without row dividers
+.p-treetable.no-row-dividers .p-treetable-tbody > tr > td {
+  box-shadow: none;
+}
+
 // project list styles for collapsed
 .project-list-section {
   .collapse-button {
@@ -564,8 +637,7 @@ a {
 }
 
 .broken-addon-row {
-  color: red !important;
-  font-style: italic;
+  color: var(--md-sys-color-error) !important;
 }
 
 .p-sidebar-left .p-sidebar {
@@ -581,4 +653,19 @@ a {
 .sort-desc-icon .icon,
 .sort-desc-icon svg {
   transform: none !important;
+}
+
+// disabled filled buttons looked more clickable than enabled secondary ones
+button.filled:disabled,
+button.tonal:disabled,
+button.tertiary:disabled {
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.5;
+  cursor: default;
+
+  .shortcut {
+    background-color: var(--md-sys-color-on-surface);
+    color: var(--md-sys-color-surface-container-highest);
+  }
 }

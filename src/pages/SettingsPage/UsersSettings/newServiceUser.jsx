@@ -118,7 +118,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
         maxWidth: 700,
       }}
       enableBackdropClose={false}
-      header={'Create Service User'}
+      header={'Create service user'}
       onClose={handleClose}
       footer={
         <>

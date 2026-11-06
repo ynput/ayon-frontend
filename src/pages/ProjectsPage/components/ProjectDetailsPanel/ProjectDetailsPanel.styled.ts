@@ -38,6 +38,11 @@ export const ThumbnailRow = styled.div`
   align-items: center;
   gap: 16px;
   position: relative;
+
+  /* the project icon of a project without a thumbnail, sized like the details panel's */
+  .thumbnail .type-icon {
+    font-size: 24px;
+  }
 `
 
 export const TitleBlock = styled.div`

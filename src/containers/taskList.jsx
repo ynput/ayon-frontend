@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -16,9 +16,11 @@ import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { CellWithIcon } from '@components/icons'
+import { useProjectContext } from '@shared/context'
+import { FlatHeaderTablePanel } from './FlatHeaderTablePanel.styled'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
-  const tasksTypes = useSelector((state) => state.project.tasks)
+  const { getTaskType } = useProjectContext()
 
   const dispatch = useDispatch()
 
@@ -210,7 +212,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
     const generateIcon = () => {
       if (!isActive) return 'visibility_off'
       if (isGroup) return 'folder'
-      return tasksTypes[node.data.taskType]?.icon
+      return getTaskType(node.data.taskType)?.icon
     }
 
     let className = ''
@@ -272,6 +274,8 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
   const tableData = useTableLoadingData(tasksData, isFetching, 6)
 
   const noTasks = !isFetching && tasksData.length === 0
+  // rows only indent for the expander when tasks are grouped (same name in several folders)
+  const hasGroups = tasksData.some((task) => task.children?.length)
 
   //
   // Render
@@ -279,7 +283,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   return (
     <Section style={style}>
-      <TablePanel>
+      <FlatHeaderTablePanel>
         <DetailsDialog
           projectName={projectName}
           entityType="task"
@@ -288,7 +292,10 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
           onHide={() => setShowDetail(false)}
         />
         {noTasks ? (
-          <NoEntityFound type="task" />
+          <NoEntityFound
+            type="task"
+            label={!folderIds.length ? 'Select a folder to see its tasks' : undefined}
+          />
         ) : (
           <TreeTable
             value={tableData}
@@ -299,7 +306,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             selectionKeys={selectedTasks}
             onSelectionChange={onSelectionChange}
             onContextMenu={onContextMenu}
-            className={clsx({ loading: isFetching })}
+            className={clsx('no-row-dividers', { loading: isFetching })}
             ref={tableRef}
             rowClassName={(rowData) => ({
               ['id-' + rowData.key]: true,
@@ -313,7 +320,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
               },
             }}
           >
-            <Column field="name" header="Task" expander="true" body={nameRenderer} />
+            <Column field="name" header="Task" expander={hasGroups} body={nameRenderer} />
             {folderIds.length > 1 && <Column field="folderName" header="Folder" />}
             <Column
               field="taskType"
@@ -323,7 +330,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             />
           </TreeTable>
         )}
-      </TablePanel>
+      </FlatHeaderTablePanel>
     </Section>
   )
 }

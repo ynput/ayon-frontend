@@ -3,6 +3,14 @@ export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export const LISTS_COLUMN_ID = 'lists'
 export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'
 
+// a header cell after the last column holds the add column button (AddColumnButton finds it by
+// this attribute), so the button never covers a header
+export const ADD_COLUMN_BUTTON_SPACE = 56
+export const ADD_COLUMN_SLOT_ATTRIBUTE = 'data-add-column-slot'
+// on the table container while columns scroll under that slot (a data attribute, not a class:
+// React rewrites className on renders and would drop it)
+export const COLUMNS_UNDER_SLOT_ATTRIBUTE = 'data-columns-under-slot'
+
 // queried against the cell container's content box, not the row height
 export const WRAP_MIN_CELL_HEIGHT = 50
 export const CELL_PADDING_Y = 4

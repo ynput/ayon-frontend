@@ -22,14 +22,18 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {}, men
 
   const getUserName = (user) => user?.attrib?.fullName || user?.name
 
-  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} Users Selected`
+  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} users selected`
 
   const buttonRef = useRef(null)
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
   const [showContext, setShowContext] = useState(false)
 
   const menuId = useMemo(() => {
-    const seed = users.map((u) => u?.name).filter(Boolean).join(',') || 'none'
+    const seed =
+      users
+        .map((u) => u?.name)
+        .filter(Boolean)
+        .join(',') || 'none'
     return `user-detail-more-menu-${seed}`
   }, [users])
 

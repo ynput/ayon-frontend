@@ -9,6 +9,7 @@ import {
   InputSwitch,
   Panel,
 } from '@ynput/ayon-react-components'
+import { EmptyPlaceholderFlex } from '@shared/components'
 import addRemoveMembers from './addRemoveMembers'
 import UserSubtitle from './UserSubtitle'
 
@@ -92,10 +93,10 @@ const TeamUsersDetails = ({
 
   const rolesOptions = useMemo(() => rolesList.map((role) => ({ name: role })), [rolesList])
 
-  const formSubtitle = noUsers
-    ? 'No Users Selected'
+  const formSubtitle = !selectedTeams.length
+    ? 'Select a team to set roles'
     : usersOnTeams.length
-    ? 'Setting On Team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
+    ? 'Setting on team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
     : `Not on ${selectedTeams.join(', ')}`
 
   const leaderInit = leaderValue.some((v) => v) && !leaderMultiple
@@ -196,10 +197,22 @@ const TeamUsersDetails = ({
     onUpdateTeams(updatedTeamsWithNewLeaders)
   }
 
+  if (noUsers)
+    return (
+      <Panel>
+        <h2 style={{ marginTop: 0 }}>Member settings</h2>
+        <EmptyPlaceholderFlex
+          className="compact"
+          icon="person"
+          message="Select members to edit their teams and roles"
+        />
+      </Panel>
+    )
+
   return (
     <>
       <Panel>
-        <h2 style={{ marginTop: 0 }}>Member Settings</h2>
+        <h2 style={{ marginTop: 0 }}>Member settings</h2>
         <UserDetailsHeader
           users={users}
           style={{ flex: 'unset', padding: 0 }}
@@ -215,7 +228,7 @@ const TeamUsersDetails = ({
         />
         <Divider style={{ margin: '10px 0' }} />
         <FormLayout>
-          <FormRow label="On Teams" style={{ overflow: 'hidden' }}>
+          <FormRow label="On teams" style={{ overflow: 'hidden' }}>
             <Dropdown
               value={teamsValue}
               options={teams}
@@ -242,7 +255,7 @@ const TeamUsersDetails = ({
               onChange={handleRolesChange}
               valueTemplate={'tags'}
               editable
-              placeholder="Add a Role..."
+              placeholder="Add a role..."
             />
           </FormRow>
           <FormRow label="Leader" style={{ overflow: 'hidden' }}>

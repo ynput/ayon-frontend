@@ -1,7 +1,7 @@
 import * as Styled from './InboxMessage.styled'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
-import { format, isToday, isValid } from 'date-fns'
+import { isToday, isValid } from 'date-fns'
 
 import InboxMessageStatus from './InboxMessageStatus/InboxMessageStatus'
 import InboxCategoryDots from './InboxCategoryDots'
@@ -10,7 +10,7 @@ import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHel
 import { useMemo, MouseEvent, HTMLAttributes } from 'react'
 import RemoveMarkdown from 'remove-markdown'
 import Typography from '@/theme/typography.module.css'
-import { getEntityTypeIcon } from '@shared/util'
+import { formatDateTime, formatTime, getEntityTypeIcon } from '@shared/util'
 import type { InboxMessage as InboxMessageType } from '@/services/inbox/inboxTransform'
 import type { InboxActivityType, InboxStatusChange, ProjectsInfo } from '../types'
 import type { ProjectsCategories } from '@shared/api'
@@ -111,13 +111,14 @@ const activityTypeLabelsMultiple: Record<string, string> = {
   reviewable: 'Versions published',
 }
 
-const getDateString = (date: string): string => {
+// under a day divider the row shows only the time, the divider already says the day
+const getDateString = (date: string, timeOnly?: boolean): string => {
   const dateObj = new Date(date)
   if (!isValid(dateObj)) return ''
 
   if (isToday(dateObj)) return getFuzzyDate(dateObj)
 
-  return format(dateObj, 'MMM d, h:mm a')
+  return timeOnly ? formatTime(dateObj) : formatDateTime(dateObj)
 }
 
 const getCategoryNames = (messages: InboxMessageType[] = []): string[] => {
@@ -140,6 +141,8 @@ interface InboxMessageProps extends Omit<HTMLAttributes<HTMLLIElement>, 'onSelec
   entitySubType?: string | null
   entityId?: string | null
   date?: string
+  // the list groups rows under day dividers
+  timeOnly?: boolean
   changes?: string[]
   onClear?: () => void
   clearLabel?: string
@@ -170,6 +173,7 @@ const InboxMessage = ({
   entitySubType,
   entityId,
   date,
+  timeOnly,
   changes,
   onClear,
   clearLabel = 'Clear',
@@ -341,14 +345,14 @@ const InboxMessage = ({
               id={'clear-' + id}
               icon={clearIcon}
               className="clear"
-              variant="filled"
+              variant="text"
               onClick={onClear}
               shortcut={{ children: 'C' }}
             >
               {clearLabel}
             </Styled.ClearButton>
           )}
-          <Styled.Date className="date">{getDateString(date || '')}</Styled.Date>
+          <Styled.Date className="date">{getDateString(date || '', timeOnly)}</Styled.Date>
         </Styled.DateContainer>
       </Styled.Right>
     </Styled.Message>

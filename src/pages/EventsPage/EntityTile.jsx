@@ -54,7 +54,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
     type,
   })
 
-  if (skip || isError) return <span>Event Not Found</span>
+  if (skip || isError) return <span>Event not found</span>
 
   const { name = '', status = '', updatedAt } = data || {}
 
@@ -72,7 +72,7 @@ const EntityTile = ({ id, children, onClick, disableHover, projectName, type }) 
         </strong>
         <br />
         <span style={{ opacity: 0.5 }}>
-          Last Updated{' '}
+          Last updated ·{' '}
           {new Date(updatedAt).getDate() &&
             formatDistance(new Date(updatedAt), new Date(), { addSuffix: true })}
         </span>

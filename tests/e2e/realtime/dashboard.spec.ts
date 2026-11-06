@@ -91,7 +91,7 @@ test.describe('dashboard live updates', () => {
           // back home through the header, without reloading the app
           await page.getByRole('link', { name: 'home Home' }).click()
           const dashboard = new DashboardTasksPage(page)
-          await expect(page.getByPlaceholder('Filter tasks...')).toBeVisible()
+          await expect(page.getByPlaceholder('Filter tasks')).toBeVisible()
           await dashboard.selectProject(projectName)
           await expect(dashboard.card(anim.id)).toBeVisible()
           await live.expectSubscribed('entity.task.assignees_changed', projectName)

@@ -1,4 +1,5 @@
-import { Section, Toolbar, InputText, InputSwitch } from '@ynput/ayon-react-components'
+import { Section, Toolbar, InputSwitch } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { useGetEventsWithLogsQuery, useLazyGetEventsWithLogsQuery } from '@queries/events/getEvents'
 import EventDetail from './EventDetail'
 import { useDispatch } from 'react-redux'
@@ -213,12 +214,11 @@ const EventsPage = () => {
         <Section>
           <Toolbar>
             <form onSubmit={handleSearchSubmit}>
-              <InputText
+              <SearchInput
                 style={{ width: '200px' }}
-                placeholder="Filter events..."
+                placeholder="Filter events"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                autoComplete="off"
               />
             </form>
             <InputSwitch
@@ -226,7 +226,7 @@ const EventsPage = () => {
               onChange={() => setShowLogs(!showLogs)}
               style={{ width: 40, marginLeft: 10 }}
             />
-            Show With Logs
+            Show with logs
           </Toolbar>
           <Splitter style={{ height: '100%', width: '100%' }}>
             <SplitterPanel size={70}>

@@ -27,6 +27,7 @@ import type { EntityType, ParentColumnDefinition, TableRow } from './types/table
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getColumnIcon,
   getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
@@ -55,7 +56,13 @@ import {
   usePowerpack,
   setDetailsPanelTabForScope,
 } from '@shared/context'
-import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  DRAG_HANDLE_COLUMN_ID,
+  ADD_COLUMN_BUTTON_SPACE,
+  ADD_COLUMN_SLOT_ATTRIBUTE,
+  COLUMNS_UNDER_SLOT_ATTRIBUTE,
+} from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -155,6 +162,8 @@ declare module '@tanstack/react-table' {
     selection?: string[]
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
+    // the anatomy's look for product types it does not define
+    defaultProductType?: { icon?: string; color?: string; colorLight?: string | null }
   }
 }
 
@@ -656,6 +665,7 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
+      defaultProductType: projectInfo.anatomy?.product_base_types?.default,
     },
   })
 
@@ -832,6 +842,31 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
+  // marks the container while columns are scrolled under the trailing add column slot; set on
+  // the element directly so scrolling does not re-render the rows
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (!container) return
+    const update = () => {
+      const { scrollLeft, clientWidth, scrollWidth } = container
+      container.toggleAttribute(
+        COLUMNS_UNDER_SLOT_ATTRIBUTE,
+        scrollLeft + clientWidth < scrollWidth - 1,
+      )
+    }
+    update()
+    container.addEventListener('scroll', update, { passive: true })
+    // the table resizes with its columns, the container with the page
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    const tableEl = container.querySelector('table')
+    if (tableEl) observer.observe(tableEl)
+    return () => {
+      container.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [])
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -862,7 +897,7 @@ export const ProjectTreeTable = ({
               borderCollapse: 'collapse',
               userSelect: 'none',
               ...columnSizeVars,
-              width: table.getTotalSize(),
+              width: table.getTotalSize() + ADD_COLUMN_BUTTON_SPACE,
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
               // stretch tbody to the container so the column dividers fill the empty
               // space below the rows; also pins the summary footer to the bottom
@@ -1195,8 +1230,34 @@ const TableHeadRow = ({
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
+      <Styled.AddColumnSlot
+        {...{ [ADD_COLUMN_SLOT_ATTRIBUTE]: '' }}
+        style={{ width: ADD_COLUMN_BUTTON_SPACE }}
+      />
     </Styled.ColumnHeader>
   )
+}
+
+// the default thumbnail column is narrower than its label, so its header is an icon
+const THUMBNAIL_HEADER_MIN_WIDTH = 84
+
+// a header cut short by its column shows the full label on hover
+const showLabelIfTruncated = (event: React.MouseEvent<HTMLElement>) => {
+  const el = event.currentTarget
+  if (el.scrollWidth > el.clientWidth) el.dataset.tooltip = el.textContent || ''
+  else delete el.dataset.tooltip
+}
+
+const TableHeadLabel = ({ header }: { header: Header<TableRow, unknown> }) => {
+  const { column } = header
+  const label = column.columnDef.header
+  if (typeof label !== 'string') return <>{flexRender(label, header.getContext())}</>
+
+  if (column.id === 'thumbnail' && column.getSize() < THUMBNAIL_HEADER_MIN_WIDTH) {
+    return <Icon icon={getColumnIcon(column.id)} data-tooltip={label} />
+  }
+
+  return <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
 }
 
 interface TableHeadCellProps {
@@ -1314,7 +1375,7 @@ const TableHeadCell = ({
           className={clsx('bold', 'header')}
           {...(isDraggable ? { ...attributes, ...listeners } : {})}
         >
-          {flexRender(column.columnDef.header, header.getContext())}
+          <TableHeadLabel header={header} />
           {headerIcon && <Icon icon={headerIcon.icon} data-tooltip={headerIcon.tooltip} />}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -1794,7 +1855,30 @@ const TableBodyRow = ({
         //fake empty column to the right for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingRight }} />
       ) : null}
+      <TrailingCell row={row} rowHeight={rowHeight} />
     </Styled.TR>
+  )
+}
+
+// under the header's add column slot: same width, row background
+const TrailingCell = ({ row, rowHeight }: { row: Row<TableRow>; rowHeight: number }) => {
+  const { isRowSelected } = useSelectedRowsContext()
+  const isGroup = !!row.original.group
+
+  return (
+    <Styled.TrailingCell
+      aria-hidden
+      className={clsx({
+        'selected-row': isRowSelected(row.id),
+        expandable:
+          !isGroup &&
+          row.getCanExpand() &&
+          !!row.originalSubRows &&
+          isEntityExpandable(row.original.primary.entityType),
+        'group-header': isGroup,
+      })}
+      style={{ width: ADD_COLUMN_BUTTON_SPACE, height: rowHeight }}
+    />
   )
 }
 

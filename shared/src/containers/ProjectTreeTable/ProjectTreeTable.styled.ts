@@ -1,4 +1,5 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import { COLUMNS_UNDER_SLOT_ATTRIBUTE } from './constants'
 
 // Create shadow mixins to make combinations work properly
 const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
@@ -44,6 +45,10 @@ export const TR = styled.tr`
     /* a selected row stays selected under the pointer, one step stronger */
     td.selected-row:not(.selected) {
       background-color: var(--color-table-selected-row-hover);
+    }
+
+    td .expand.edit-trigger {
+      opacity: 1;
     }
   }
 
@@ -114,6 +119,76 @@ export const ResizedHandler = styled.div`
 
 export const ColumnHeader = styled.tr`
   background-color: var(--md-sys-color-surface-container-low);
+`
+
+export const HeaderLabel = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+`
+
+// while columns are scrolled under the add column slot, a shadow on its left edge shows that the
+// cut off column continues; a gradient beside the cell rather than a blurred box-shadow, which
+// would bleed into the rows above and below
+export const trailingSlotShadow = css`
+  --trailing-slot-shadow: 40%;
+  [data-theme='light'] & {
+    --trailing-slot-shadow: 16%;
+  }
+
+  [${COLUMNS_UNDER_SLOT_ATTRIBUTE}] &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 10px;
+    pointer-events: none;
+    background: linear-gradient(
+      to left,
+      color-mix(in srgb, var(--md-sys-color-shadow) var(--trailing-slot-shadow), transparent),
+      transparent
+    );
+  }
+`
+
+// pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
+// in its own space after the last column. Body and footer rows end with a TrailingCell of the
+// same width, so the columns that scroll under it are hidden in every row, not just the header.
+// Above left pinned cells (z-index 100) for narrow tables.
+export const AddColumnSlot = styled.th`
+  position: sticky;
+  right: 0;
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background-color: var(--color-table-header);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  ${trailingSlotShadow}
+`
+
+// takes the row's background (TR hover rules apply to it as to any td)
+export const TrailingCell = styled.td`
+  position: sticky;
+  right: 0;
+  z-index: 101;
+  flex-shrink: 0;
+  padding: 0 !important;
+  background-color: var(--color-table-row);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  ${trailingSlotShadow}
+
+  &.expandable,
+  &.group-header {
+    background-color: var(--color-table-row-high);
+  }
+
+  &.selected-row {
+    background-color: var(--color-table-selected-row);
+  }
 `
 
 export const HeaderCell = styled.th`
@@ -299,6 +374,27 @@ export const TD = styled.td<TableCellProps>`
 
   &.selected-row {
     background-color: var(--color-table-selected-row);
+  }
+
+  /* dropdown chevrons show on the hovered row (see TR), the selection and the cell being edited
+     instead of on every row; opacity keeps the cell layout the same */
+  .expand.edit-trigger {
+    opacity: 0;
+  }
+
+  &.selected,
+  &.focused,
+  &.selected-row,
+  &.editing {
+    .expand.edit-trigger {
+      opacity: 1;
+    }
+  }
+
+  @media (hover: none) {
+    .expand.edit-trigger {
+      opacity: 1;
+    }
   }
 
   /* show hover effect only if direct child div does NOT have .readonly and is not selected */

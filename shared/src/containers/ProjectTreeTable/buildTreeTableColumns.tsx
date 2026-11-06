@@ -93,7 +93,13 @@ export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
   if (columnId === 'subType' && scopes.some((scope) => ['product', 'version'].includes(scope))) {
     return 'Product type'
   }
-  return COLUMN_LABELS[normalizeColumnId(columnId)] || columnId
+  const normalizedId = normalizeColumnId(columnId)
+  // in a table of folders only (a folder list) the name column is already "Folder", and this
+  // column shows each row's parent
+  if (normalizedId === ENTITY_COLUMN_IDS.folder && scopes.length === 1 && scopes[0] === 'folder') {
+    return 'Parent folder'
+  }
+  return COLUMN_LABELS[normalizedId] || columnId
 }
 
 // only ids getAttributeIcon can't resolve from the name alone
@@ -660,6 +666,8 @@ const buildTreeTableColumns = ({
       id: 'name',
       accessorFn: (row) => getScopedValue(row, 'primary', 'name'),
       header: nameLabel,
+      // room for a short path next to the name ("…/010_0010", "renderMain - v004")
+      size: 220,
       minSize: COLUMN_MIN_SIZE,
       sortingFn: withLoadingStateSort(pathSort),
       enableSorting: groupBy && groupBy.id !== 'folder' ? false : canSort('name'),
@@ -787,6 +795,8 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: 'status',
       accessorFn: (row) => getScopedValue(row, 'primary', 'status'),
+      // fits "Pending review" with its icon and chevron
+      size: 190,
       minSize: COLUMN_MIN_SIZE,
       header: getColumnLabel('status'),
       sortingFn: withLoadingStateSort(
@@ -904,6 +914,23 @@ const buildTreeTableColumns = ({
           type === 'folder' &&
           row.original.primary.entityType === 'folder' &&
           row.original.primary.hasVersions
+        let options =
+          type === 'folder'
+            ? meta?.options?.folderType
+            : type === 'task'
+            ? meta?.options?.taskType
+            : isProductType
+            ? meta?.options?.productType
+            : []
+        // product types the anatomy does not define look like its default one, so that every
+        // value in the column starts at the same place
+        if (isProductType && value && !options?.some((option) => option.value === value)) {
+          const { icon, color, colorLight } = meta?.defaultProductType || {}
+          options = [
+            ...(options || []),
+            { value, label: value, icon: icon || getEntityTypeIcon('product'), color, colorLight },
+          ]
+        }
         return (
           <CellWidget
             rowId={id}
@@ -911,15 +938,7 @@ const buildTreeTableColumns = ({
             columnId={column.id}
             value={value}
             attributeData={{ type: 'string' }}
-            options={
-              type === 'folder'
-                ? meta?.options?.folderType
-                : type === 'task'
-                ? meta?.options?.taskType
-                : isProductType
-                ? meta?.options?.productType
-                : []
-            }
+            options={options}
             isCollapsed={!!row.original.childOnlyMatch}
             onChange={(value) =>
               meta?.updateEntities?.(
@@ -1017,7 +1036,7 @@ const buildTreeTableColumns = ({
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
       accessorFn: (row) => getFolderColumnValue(row),
-      header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
+      header: getColumnLabel(ENTITY_COLUMN_IDS.folder, scopes),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
       sortingFn: withLoadingStateSort(pathSort),

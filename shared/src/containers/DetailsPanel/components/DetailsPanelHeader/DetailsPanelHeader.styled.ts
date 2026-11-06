@@ -63,6 +63,11 @@ export const Header = styled.header`
     min-width: fit-content;
   }
 
+  /* an entity without a thumbnail shows its type icon, sized like the stacked ones */
+  .thumbnail .type-icon {
+    font-size: 24px;
+  }
+
   &.loading {
     .playable {
       display: none;
@@ -133,7 +138,7 @@ export const Content = styled.div`
   .sub-title {
     display: flex;
     align-items: center;
-    gap: var(--base-gap-medium);
+    gap: var(--base-gap-small);
   }
 `
 

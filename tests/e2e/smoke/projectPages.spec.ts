@@ -32,7 +32,7 @@ test.describe('smoke: project pages', () => {
         visible(
           page.getByRole('button', { name: 'Expand all rows' }),
           page.getByRole('table').first().getByText(d.folder.name, { exact: true }),
-          heading(page, 'Select a folder to begin.'),
+          heading(page, 'Select a folder to see its tasks'),
         ),
     },
     {
@@ -57,7 +57,7 @@ test.describe('smoke: project pages', () => {
         'workfiles queries project "null" before ProjectPage sets the project name (fixed in ynput/ayon-frontend#2418)',
       ready: async (page, d) => {
         await visible(
-          page.getByPlaceholder('Filter folders...'),
+          page.getByPlaceholder('Filter folders'),
           new WorkfilesPage(page).row(d.folder.name),
         )
       },
@@ -129,7 +129,7 @@ test.describe('smoke: deep links', () => {
       name: 'dashboard with the details of a task',
       path: (d) => `/dashboard/tasks${details('task', (d) => d.task.id)(d)}`,
       ready: async (page, d) => {
-        await visible(page.getByPlaceholder('Filter tasks...'))
+        await visible(page.getByPlaceholder('Filter tasks'))
         await new DetailsPanel(page).expectOpenFor(d.task.name)
       },
     },

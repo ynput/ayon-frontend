@@ -9,6 +9,8 @@ import {
   Panel,
 } from '@ynput/ayon-react-components'
 import DetailHeader from '@components/DetailHeader'
+import { EmptyPlaceholderFlex } from '@shared/components'
+import { pluralize } from '@shared/util'
 
 const TeamDetails = ({
   teams = [],
@@ -45,9 +47,12 @@ const TeamDetails = ({
 
   const title =
     selectedTeams.length > 1
-      ? `${selectedTeams.length} Teams Selected (${selectedTeams.join(', ')})`
+      ? `${selectedTeams.length} teams selected (${selectedTeams.join(', ')})`
       : selectedTeams[0]
-  const subTitle = `${totalMembers - totalLeaders} Members - ${totalLeaders} Leaders`
+  const subTitle = `${pluralize(totalMembers - totalLeaders, 'member')} · ${pluralize(
+    totalLeaders,
+    'leader',
+  )}`
 
   const handleRoleRename = (role, value) => {
     // loop through every team and every member on each team to rename the role
@@ -78,6 +83,18 @@ const TeamDetails = ({
     onUpdateTeams(updatedTeams)
   }
 
+  if (noneSelected)
+    return (
+      <Panel>
+        <h2 style={{ marginTop: 0 }}>Team settings</h2>
+        <EmptyPlaceholderFlex
+          className="compact"
+          icon="groups"
+          message="Select a team to rename it or edit its roles"
+        />
+      </Panel>
+    )
+
   return (
     <>
       <Panel
@@ -85,7 +102,7 @@ const TeamDetails = ({
           overflow: 'auto',
         }}
       >
-        <h2 style={{ marginTop: 0 }}>Team Settings</h2>
+        <h2 style={{ marginTop: 0 }}>Team settings</h2>
         <DetailHeader
           style={{
             padding: 0,
@@ -103,7 +120,7 @@ const TeamDetails = ({
         <Divider style={{ margin: '10px 0' }} />
 
         <FormLayout>
-          <FormRow label="Team Name">
+          <FormRow label="Team name">
             <LockedInput
               value={name}
               disabled={disableName}

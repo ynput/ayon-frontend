@@ -25,7 +25,6 @@ const Row = styled.div`
 
   .key {
     opacity: 0.7;
-    text-transform: capitalize;
     min-width: 100px;
   }
 
@@ -175,13 +174,14 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
     })
   }, [licenses])
 
-  // Cloud loading placeholder data
-  const cloudPlaceholderFields: (keyof YnputCloudInfoModel)[] = [
-    'instanceId',
-    'instanceName',
-    'orgId',
-    'orgName',
-  ]
+  // the instance fields shown, with their labels
+  const cloudFields: Partial<Record<keyof YnputCloudInfoModel, string>> = {
+    instanceId: 'Instance ID',
+    instanceName: 'Instance name',
+    orgId: 'Organization ID',
+    orgName: 'Organization name',
+  }
+  const cloudFieldKeys = Object.keys(cloudFields) as (keyof YnputCloudInfoModel)[]
 
   if (!cloud && !isLoadingCloud) {
     return (
@@ -193,7 +193,7 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
         style={{ maxHeight: '90vh', minHeight: '50vh' }}
       >
         <Container>
-          <EmptyPlaceholder message="Connect this instance to Ynput Cloud to get license information." />
+          <EmptyPlaceholder message="Connect this instance to Ynput Cloud to get license information" />
         </Container>
       </Dialog>
     )
@@ -217,21 +217,21 @@ const LicensesDialog: FC<LicensesDialogProps> = ({ onClose }) => {
           data-tooltip="Manage seat counts, billing information and plan options on your Ynput Cloud account."
           data-tooltip-delay={0}
         >
-          Manage Subscriptions
+          Manage subscriptions
         </Button>
       </a>
       <Container>
         {isLoadingCloud
-          ? cloudPlaceholderFields.map((key) => (
+          ? cloudFieldKeys.map((key) => (
               <Row key={key}>
-                <span className="key">{key}:</span>
+                <span className="key">{cloudFields[key]}</span>
                 <span className="value loading">placeholder</span>
               </Row>
             ))
           : cloud &&
-            cloudPlaceholderFields.map((key) => (
+            cloudFieldKeys.map((key) => (
               <Row key={key}>
-                <span className="key">{key}:</span>
+                <span className="key">{cloudFields[key]}</span>
                 <span className="value">{cloud[key]?.toString()}</span>
                 <Icon
                   className="copy-icon"

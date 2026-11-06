@@ -1,10 +1,11 @@
 import clsx from 'clsx'
 import { $Any } from '@types'
 import * as Styled from './ProjectUserAccessAccessGroupPanel.styled'
-import { Icon, Spacer } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 
 type Props = {
   header: $Any
+  count?: number
   isExpanded: boolean
   children: $Any
   onToggleExpand: $Any
@@ -12,6 +13,7 @@ type Props = {
 
 const ProjectUserAccessAccessGroupPanel = ({
   header,
+  count,
   children,
   isExpanded,
   onToggleExpand,
@@ -19,10 +21,10 @@ const ProjectUserAccessAccessGroupPanel = ({
   return (
     <Styled.Wrapper>
       <Styled.Header onClick={() => onToggleExpand && onToggleExpand(!isExpanded)}>
-        <div style={{ display: 'flex' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <Icon icon={isExpanded ? 'expand_more' : 'chevron_right'} />
           {header}
-          <Spacer />
-          <Icon icon={isExpanded ? 'collapse_all' : 'expand_all'} />
+          {count !== undefined && <Styled.Count>· {count}</Styled.Count>}
         </div>
       </Styled.Header>
 

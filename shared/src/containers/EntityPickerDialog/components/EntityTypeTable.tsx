@@ -59,7 +59,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         title={upperFirst(entityType) + 's'}
       />
       {!isLoading && !tableData?.length && (
-        <EmptyPlaceholder message={`No ${entityType}s found.`} error={error} />
+        <EmptyPlaceholder message={`No ${entityType}s found`} error={error} />
       )}
       <SimpleTable
         data={tableData}

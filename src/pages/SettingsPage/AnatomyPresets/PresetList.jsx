@@ -100,7 +100,7 @@ const PresetList = ({
           onSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenuSelectionChange={(e) => setSelectedPreset(e.value.name)}
           onContextMenu={(e) => ctxMenuShow(e.originalEvent, getCtxMenuItems(e.data))}
-          className={clsx({ loading: isLoading })}
+          className={clsx('standard-rows', { loading: isLoading })}
           rowClassName={(data) => clsx({ default: data.primary, loading: isLoading })}
         >
           <Column field="label" header="Name" />

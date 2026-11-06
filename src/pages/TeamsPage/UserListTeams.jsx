@@ -1,7 +1,8 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
-import { ProfileRow } from '@pages/SettingsPage/UsersSettings/UserList'
+import TeamMemberRow from './TeamMemberRow'
+import { GroupHeader } from './UserListTeams.styled'
 
 import { useMemo } from 'react'
 import addRemoveMembers from './addRemoveMembers'
@@ -70,7 +71,7 @@ const UserListTeams = ({
 
     const items = [
       {
-        label: showAllUsers ? 'Show All Users' : 'Show Members Only',
+        label: showAllUsers ? 'Show all users' : 'Show members only',
         command: onShowAllUsers,
         icon: showAllUsers ? 'visibility' : 'visibility_off',
       },
@@ -160,7 +161,7 @@ const UserListTeams = ({
           scrollHeight="flex"
           dataKey="name"
           selectionMode="multiple"
-          className={clsx('user-list-table', { loading: isLoading })}
+          className={clsx('user-list-table', 'standard-rows', { loading: isLoading })}
           rowClassName={() => clsx({ loading: isLoading })}
           onSelectionChange={onSelectionChange}
           onContextMenu={handleContext}
@@ -173,21 +174,19 @@ const UserListTeams = ({
           }}
           groupRowsBy={'group'}
           rowGroupMode="subheader"
-          rowGroupHeaderTemplate={(data) => {
-            return <div>{data.group}</div>
-          }}
+          rowGroupHeaderTemplate={(data) => <GroupHeader>{data.group}</GroupHeader>}
         >
           <Column
             field="name"
             header="Username"
-            body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
+            body={(rowData) => !isLoading && <TeamMemberRow rowData={rowData} />}
             style={{
               width: '20%',
             }}
           />
           <Column
             field="attrib.fullName"
-            header="Full Name"
+            header="Full name"
             style={{
               width: '20%',
             }}
@@ -218,6 +217,7 @@ const UserListTeams = ({
                         opacity: selectedTeams.includes(team) ? 1 : 0.5,
                         marginLeft: i === 0 ? 0 : 4,
                       }}
+                      data-tooltip={rowData.teams[team].leader ? 'Team leader' : undefined}
                     >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
                   ))}
                 </span>

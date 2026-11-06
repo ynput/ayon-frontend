@@ -1,3 +1,4 @@
+import type { Page } from '@playwright/test'
 import { AccountPage } from '../pages/AccountPage'
 import { AnatomyPresetsPage } from '../pages/AnatomyPresetsPage'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
@@ -9,6 +10,11 @@ import { button, column, defineRouteTests, expect, heading, test, visible } from
 const manager = (tab: string) => (d: { projectName: string }) =>
   `/manageProjects/${tab}?project=${d.projectName}`
 
+// the addon and site lists show a placeholder instead of the table when they are empty
+const addonList = (page: Page) =>
+  column(page, 'Addon').or(page.getByText(/^(No addons found|No bundle set to)/))
+const siteList = (page: Page) => column(page, 'Site ID').or(page.getByText('No sites found'))
+
 test.describe('smoke: dashboard', () => {
   defineRouteTests([
     {
@@ -16,7 +22,7 @@ test.describe('smoke: dashboard', () => {
       path: () => '/dashboard/tasks',
       ready: async (page, d) => {
         const dashboard = new DashboardTasksPage(page)
-        await visible(page.getByPlaceholder('Filter tasks...'))
+        await visible(page.getByPlaceholder('Filter tasks'))
         await dashboard.selectProject(d.projectName)
         await expect(dashboard.card(d.task.id)).toBeVisible()
       },
@@ -26,7 +32,7 @@ test.describe('smoke: dashboard', () => {
       path: () => '/dashboard/tasks?view=list',
       ready: async (page, d) => {
         const dashboard = new DashboardTasksPage(page)
-        await visible(page.getByPlaceholder('Filter tasks...'))
+        await visible(page.getByPlaceholder('Filter tasks'))
         await dashboard.selectProject(d.projectName)
         await expect(dashboard.listRow(d.task.id)).toBeVisible()
       },
@@ -73,13 +79,16 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'project settings',
       path: manager('projectSettings'),
-      ready: (page) => visible(column(page, 'Addon'), button(page, 'Save Changes')),
+      ready: (page) => visible(addonList(page), button(page, 'Save Changes')),
     },
     {
       name: 'project permissions',
       path: manager('permissions'),
       ready: (page) =>
-        visible(column(page, 'Access group'), heading(page, 'No access group selected')),
+        visible(
+          column(page, 'Access group'),
+          heading(page, 'Select an access group to see its permissions'),
+        ),
     },
     {
       name: 'project access',
@@ -89,7 +98,7 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'site settings',
       path: manager('siteSettings'),
-      ready: (page) => visible(column(page, 'Site ID'), button(page, 'Save Changes')),
+      ready: (page) => visible(siteList(page), button(page, 'Save Changes')),
     },
     {
       name: 'roots',
@@ -102,7 +111,7 @@ test.describe('smoke: projects manager', () => {
     {
       name: 'teams',
       path: manager('teams'),
-      ready: (page) => visible(button(page, 'Add New Team'), heading(page, 'Team Settings')),
+      ready: (page) => visible(button(page, 'Add new team'), heading(page, 'Team settings')),
     },
   ])
 })
@@ -112,7 +121,7 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'global (server config)',
       path: () => '/settings/server',
-      ready: (page) => visible(button(page, 'Save server config'), heading(page, 'Customization')),
+      ready: (page) => visible(button(page, 'Save changes'), heading(page, 'Global settings')),
     },
     {
       name: 'addons',
@@ -128,12 +137,12 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'studio settings',
       path: () => '/settings/studio',
-      ready: (page) => visible(column(page, 'Addon'), button(page, 'Save Changes')),
+      ready: (page) => visible(addonList(page), button(page, 'Save Changes')),
     },
     {
       name: 'site settings',
       path: () => '/settings/site',
-      ready: (page) => visible(column(page, 'Site ID'), button(page, 'Save Changes')),
+      ready: (page) => visible(siteList(page), button(page, 'Save Changes')),
     },
     {
       name: 'anatomy presets',
@@ -149,15 +158,14 @@ test.describe('smoke: studio settings', () => {
     {
       name: 'attributes',
       path: () => '/settings/attributes',
-      ready: (page) =>
-        visible(page.getByPlaceholder('Filter attributes...'), column(page, 'Scopes')),
+      ready: (page) => visible(page.getByPlaceholder('Filter attributes'), column(page, 'Scopes')),
     },
     {
       name: 'users',
       path: () => '/settings/users',
       ready: (page) =>
         visible(
-          page.getByPlaceholder('Filter users...'),
+          page.getByPlaceholder('Filter users'),
           page.getByRole('cell', { name: adminCredentials().name, exact: true }).first(),
         ),
     },
@@ -165,7 +173,10 @@ test.describe('smoke: studio settings', () => {
       name: 'permissions (access groups)',
       path: () => '/settings/accessGroups',
       ready: (page) =>
-        visible(button(page, 'New access group'), heading(page, 'No access group selected')),
+        visible(
+          button(page, 'New access group'),
+          heading(page, 'Select an access group to see its permissions'),
+        ),
     },
     {
       name: 'secrets',
@@ -214,7 +225,7 @@ test.describe('smoke: studio pages', () => {
     {
       name: 'account: launchers',
       path: () => '/account/downloads',
-      ready: (page) => visible(heading(page, 'Windows Installer'), heading(page, 'All Versions')),
+      ready: (page) => visible(heading(page, 'Windows installer'), heading(page, 'All versions')),
     },
     {
       name: 'API docs',

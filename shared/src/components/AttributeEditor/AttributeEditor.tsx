@@ -250,7 +250,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       )}
       <Spacer />
       <SaveButton
-        label={isNew ? 'Create Attribute' : 'Save Attribute'}
+        label={isNew ? 'Create attribute' : 'Save attribute'}
         icon={'check'}
         disabled={!!internalError || !formData}
         active={!internalError && !!formData}

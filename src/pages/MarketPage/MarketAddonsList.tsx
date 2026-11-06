@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import MarketAddonCard, { MarketAddonCardGroup } from '@components/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import { InputText } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 import { MarketAddonItem } from '@queries/market/getMarket'
 import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
@@ -33,15 +33,8 @@ const StyledAddonList = styled.div`
       width: 120px;
       padding-right: 12px;
       border-radius: var(--border-radius-m);
-      background-color: var(--md-sys-color-surface-container-high) !important;
     }
   }
-`
-
-const StyledInput = styled(InputText)`
-  max-height: 40px;
-  height: 40px;
-  flex: 1;
 `
 
 const StyledList = styled(PerfectScrollbar)`
@@ -171,19 +164,21 @@ const MarketAddonsList = ({
   return (
     <StyledAddonList ref={listRef}>
       <div className="search">
-        <StyledInput
-          placeholder="Search"
+        <SearchInput
+          style={{ flex: 1 }}
+          placeholder="Search addons"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
         {onUpdateAll && (
           <Tag
+            variant="filled"
             icon={isUpdatingAll ? 'sync' : isUpdatingAllFinished ? 'check_circle' : 'upgrade'}
             onClick={onUpdateAll}
             className={isUpdatingAll ? 'downloading' : ''}
             disabled={isUpdatingAll || isUpdatingAllFinished}
           >
-            {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All Updated' : 'Update All'}
+            {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All updated' : 'Update all'}
           </Tag>
         )}
       </div>

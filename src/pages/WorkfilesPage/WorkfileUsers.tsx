@@ -1,7 +1,7 @@
 // shows createdBy and updatdeBy for a workfile
 import { Assignees } from '@shared/api'
 import { UserImage } from '@shared/components'
-import { format, isDate } from 'date-fns'
+import { formatDateTime } from '@shared/util'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
 
@@ -9,25 +9,26 @@ const UsersContainer = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
-  max-width: clamp(100px, 10vw, 250px);
   overflow: hidden;
+
+  /* the avatars keep their size, the name gives way */
+  > * {
+    flex-shrink: 0;
+  }
 `
 
 const UserName = styled.span`
   overflow: hidden;
   flex: 1;
-  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
   text-overflow: ellipsis;
 `
 
 const TOOLTIP_DELAY = 200
 const formatTooltip = (user: Assignees[number], action: string, date?: string) => {
   if (!user) return ''
-  let formattedDate = ''
-  if (date && isDate(new Date(date))) {
-    // dd//mm/yyyy, hh:mm
-    formattedDate = format(new Date(date), 'dd/MM/yyyy, HH:mm')
-  }
+  const formattedDate = formatDateTime(date)
 
   return `${action} by ${user.fullName || user.name} ${user.fullName && `(${user.name})`}${
     formattedDate ? ` on ${formattedDate}` : ''

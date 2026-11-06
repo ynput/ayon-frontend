@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { toast } from 'react-toastify'
-import { Button, Section, Toolbar, InputText } from '@ynput/ayon-react-components'
+import { Button, Section, Toolbar } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 // Comps
 import SetPasswordDialog from './SetPasswordDialog'
 import RenameUserDialog from './RenameUserDialog'
@@ -230,16 +231,16 @@ const UsersSettings = () => {
           <Toolbar>
             <Button
               onClick={openNewUser}
-              label="Add New User"
+              label="Add new user"
               icon="person_add"
               variant="filled"
               data-shortcut="n"
             />
-            <Button onClick={openNewServiceUser} label="Add Service User" icon="person_add" />
+            <Button onClick={openNewServiceUser} label="Add service user" icon="person_add" />
             <form style={{ flex: 1 }} autoComplete="off" onSubmit={(e) => e.preventDefault()}>
-              <InputText
+              <SearchInput
                 style={{ width: '100%', minWidth: 150 }}
-                placeholder="Filter users..."
+                placeholder="Filter users"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 autoComplete="search-users"
@@ -248,7 +249,7 @@ const UsersSettings = () => {
             <UsersOverview users={userList} />
             <Button
               onClick={() => setShowInviteUser(true)}
-              label="Send Invite"
+              label="Send invite"
               icon="mail"
               disabled={!selectedUsers.length}
             />

@@ -1,5 +1,6 @@
 import { useProjectContext } from '@shared/context'
-import { Dialog, DialogProps, InputText } from '@ynput/ayon-react-components'
+import { Dialog, DialogProps } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { FC, useRef, useCallback, useState, useMemo } from 'react'
 import { toast } from 'react-toastify'
 import useGetListsItemsForReviewSession from '@pages/ProjectListsPage/hooks/useGetListsItemsForReviewSession'
@@ -63,10 +64,7 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
 
         // Note: closing the dialog and selecting the new list is handled in useNewList.ts
       } catch (error: any) {
-        toast.error(
-          'Failed to create review session: ' + error ||
-            'Unknown error',
-        )
+        toast.error('Failed to create review session: ' + error || 'Unknown error')
       }
     },
     [onSubmit],
@@ -92,9 +90,9 @@ const NewReviewSessionDialog: FC<NewReviewSessionDialogProps> = ({
         }}
         onScroll={handleScroll}
       >
-        <InputText
+        <SearchInput
           autoFocus
-          placeholder="Filter lists..."
+          placeholder="Filter lists"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           style={{ marginBottom: 4 }}

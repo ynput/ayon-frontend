@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useStore } from 'react-redux'
 import { AttributeData, AttributeModel } from '@shared/api'
 import { ColumnDef, createColumnHelper } from '@tanstack/react-table'
-import { format, isValid, parseISO } from 'date-fns'
+import { formatDate } from '@shared/util'
 import {
   ProjectThumbnailCell,
   THUMBNAIL_WIDTH,
@@ -65,22 +65,28 @@ const STATIC_COLUMNS_AFTER_HEARTBEAT: ColumnDef<ProjectTableRow, any>[] = [
     id: 'createdAt',
     header: 'Created at',
     size: 150,
+    // without this the list table renders its own date format instead of this cell
+    meta: {
+      listTableCustomCell: true,
+    },
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
-      const date = parseISO(val)
-      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+      return formatDate(val) || val
     },
   }),
   columnHelper.accessor('updatedAt', {
     id: 'updatedAt',
     header: 'Updated at',
     size: 150,
+    // without this the list table renders its own date format instead of this cell
+    meta: {
+      listTableCustomCell: true,
+    },
     cell: (info) => {
       const val = info.getValue()
       if (!val) return ''
-      const date = parseISO(val)
-      return isValid(date) ? format(date, 'dd MMM yyyy') : val
+      return formatDate(val) || val
     },
   }),
 ]
@@ -147,8 +153,7 @@ export const useProjectColumns = (
             ? (info) => {
                 const val = info.getValue()
                 if (val === undefined || val === null) return ''
-                const date = parseISO(val)
-                return isValid(date) ? format(date, 'dd MMM yyyy') : val
+                return formatDate(val) || val
               }
             : undefined,
           meta: isDateTime
@@ -215,8 +220,9 @@ export const useProjectColumns = (
   )
 
   const thumbnailColumn = useMemo<ColumnDef<ProjectTableRow, any>>(() => {
+    // wide enough for the "Thumbnail" header label, which starts where the image does
     const thumbnailSize = Math.max(
-      70,
+      100,
       THUMBNAIL_BASE_SIZE + maxGroupDepth * THUMBNAIL_INDENT_PER_DEPTH,
     )
     return columnHelper.accessor('name', {

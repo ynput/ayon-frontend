@@ -42,6 +42,7 @@ export const LightColorInput = ({
   ...props
 }: LightColorInputProps) => {
   const color = value || baseColor
+  const canReset = !!value && !disabled
 
   return (
     <Styled.Row {...props}>
@@ -60,7 +61,7 @@ export const LightColorInput = ({
           Aa
         </Styled.Sample>
       )}
-      {color && !isReadableOnLight(color, minContrast) && (
+      {color && !isReadableOnLight(color, minContrast) ? (
         <Styled.Fix
           icon="warning"
           variant="text"
@@ -68,8 +69,11 @@ export const LightColorInput = ({
           data-tooltip="Hard to read on the light theme. Click to darken it just enough."
           onClick={() => onChange(makeReadableOnLight(color, minContrast))}
         />
+      ) : (
+        // keeps the undo button in the same place in every row of a list
+        canReset && <Styled.Slot />
       )}
-      {value && !disabled && (
+      {canReset && (
         <Button
           icon="undo"
           variant="text"

@@ -21,7 +21,16 @@ const RowStyled = styled.div`
   }
 `
 
+// messages and tracebacks on a code surface, like the payload of a service
 const MessageField = styled.pre`
+  margin: 0;
+  padding: 8px 12px;
+  border-radius: var(--border-radius-m);
+  background-color: light-dark(var(--md-sys-color-surface-container-lowest), var(--surface-ground));
+  color: light-dark(var(--md-sys-color-on-surface), var(--text-color));
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 18px;
   white-space: pre-wrap;
   overflow: auto;
   max-height: 300px;
@@ -77,7 +86,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
       <DetailHeader
         onClose={() => setSelectedEvent(null)}
         context={event}
-        dialogTitle="Event Context"
+        dialogTitle="Event context"
       >
         <div style={{ overflow: 'hidden' }}>
           <h2>{event.topic}</h2>
@@ -128,12 +137,12 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
             <EventTile
               title={project}
               disableHover
-              subTitle={`last updated -  ${
-                new Date(projectLastUpdated).getDate() &&
-                formatDistance(new Date(projectLastUpdated), new Date(), {
+              subTitle={
+                projectLastUpdated &&
+                `Last updated · ${formatDistance(new Date(projectLastUpdated), new Date(), {
                   addSuffix: true,
-                })
-              }`}
+                })}`
+              }
             >
               <Link to={`/manageProjects?project=${project}`}>
                 <Button
@@ -172,7 +181,7 @@ const EventDetail = ({ id, setSelectedEvent, onFilter, events }) => {
         )}
       </Panel>
 
-      <Panel>{eventRestartButton}</Panel>
+      {eventRestartButton && <Panel>{eventRestartButton}</Panel>}
     </Section>
   )
 }

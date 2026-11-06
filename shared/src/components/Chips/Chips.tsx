@@ -37,6 +37,13 @@ const Chip = styled.div`
     min-width: 0;
   }
 
+  /* a bare text node in a flex row cannot ellipsis, so the label gets its own box */
+  .chip-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   &:hover {
     background-color: var(--md-sys-color-surface-container-high-hover);
   }
@@ -191,13 +198,14 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
           onMouseDown={chip.onClick ? (e) => e.stopPropagation() : pt?.chip?.onMouseDown}
           className={clsx(
             'chip',
-            { last: index === visibleValues.length - 1 && hiddenCount > 0 },
+            // a single chip can still be wider than the cell: the last one always gives way
+            { last: index === visibleValues.length - 1 },
             pt?.chip?.className,
           )}
         >
           {chip.prefix}
           {chip?.icon && <Icon icon={chip.icon} />}
-          {chip.label}
+          <span className="chip-label">{chip.label}</span>
           {chip.suffix}
         </Chip>
       ))}
@@ -208,7 +216,7 @@ export const Chips: FC<ChipsProps> = ({ values, disabled, className, pt }) => {
         <OffscreenChip key={chip.label + index} className="offscreen-chip">
           {chip.prefix}
           {chip?.icon && <Icon icon={chip.icon} />}
-          {chip.label}
+          <span className="chip-label">{chip.label}</span>
           {chip.suffix}
         </OffscreenChip>
       ))}

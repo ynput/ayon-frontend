@@ -1,6 +1,7 @@
 import { FC } from 'react'
 import * as Styled from './ParentBody.styled'
 import clsx from 'clsx'
+import { pluralize } from '@shared/util'
 
 interface ParentBodyProps {
   name: string
@@ -26,8 +27,8 @@ const ParentBody: FC<ParentBodyProps> = ({
         className={clsx({ collapsed: isCollapsed })}
       />
       <span className="title">{name}</span>
-      {folderCount && <span className="count"> - {folderCount} folders</span>}
-      {taskCount && <span className="count"> - {taskCount} tasks</span>}
+      {!!folderCount && <span className="count">· {pluralize(folderCount, 'folder')}</span>}
+      {!!taskCount && <span className="count">· {pluralize(taskCount, 'task')}</span>}
     </Styled.ParentBody>
   )
 }

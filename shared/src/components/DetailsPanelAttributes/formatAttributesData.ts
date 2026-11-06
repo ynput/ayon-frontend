@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { format } from 'date-fns'
+import { formatDate } from '@shared/util/formatDate'
 
 const formatAttributesData = (nodes = []) => {
   try {
@@ -37,7 +37,7 @@ const formatAttributesData = (nodes = []) => {
         if (uniqueValues.length > 1 && uniqueValues.flat().length > 1) {
           if (key.includes('Date')) {
             attribsData[key] = `Mixed(${uniqueValues
-              .map((v) => (v ? format(new Date(v), 'dd/MM/yyyy') : 'null'))
+              .map((v) => (v ? formatDate(v) : 'null'))
               .join(', ')})`
           } else {
             attribsData[key] = `Mixed(${uniqueValues

@@ -1,6 +1,7 @@
 import clsx from 'clsx'
 import { toast } from 'react-toastify'
 import { useMemo } from 'react'
+import { upperFirst } from 'lodash'
 import ReactMarkdown from 'react-markdown'
 import SettingsPanel from '../SettingsPanel'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
@@ -267,14 +268,13 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       <Badge color="site" label={props.formContext.headerSiteId} />
     )
 
-    const envMark = props.formContext.headerVariant && (
+    const variant = props.formContext.headerVariant
+    const isMainVariant = ['production', 'staging'].includes(variant)
+    // production and staging are named like the variant buttons, a dev bundle by its name
+    const envMark = variant && (
       <Badge
-        color={
-          ['production', 'staging'].includes(props.formContext.headerVariant)
-            ? props.formContext.headerVariant
-            : 'developer'
-        }
-        label={props.formContext.headerVariant}
+        color={isMainVariant ? variant : 'developer'}
+        label={isMainVariant ? upperFirst(variant) : variant}
       />
     )
 

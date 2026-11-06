@@ -7,17 +7,29 @@ import {
   Button,
   Section,
   Toolbar,
-  InputText,
   Spacer,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import { AttributeEditor, getUiTypeLabel } from '@shared/components'
+import SearchInput from '@components/SearchInput'
+import { AttributeEditor, BooleanValue, getUiTypeLabel } from '@shared/components'
+import { formatDateTime } from '@shared/util'
 import { useGetAttributeListQuery, useSetAttributeListMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useSearchFilter from '@hooks/useSearchFilter'
 import { isEqual } from 'lodash'
 import clsx from 'clsx'
+import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+
+// the drag handles stay in the background until their row is hovered
+const StyledDataTable = styled(DataTable)`
+  .p-datatable-reorderablerow-handle {
+    color: var(--md-sys-color-outline);
+  }
+  tr:hover .p-datatable-reorderablerow-handle {
+    color: var(--md-sys-color-on-surface);
+  }
+`
 
 // Validation errors point at an index (loc: ['body', 'attributes', 44, 'name']), not a name
 const getSaveErrorReason = (err, attributes) => {
@@ -162,21 +174,21 @@ const Attributes = () => {
         )}
         <Section>
           <Toolbar>
-            <Button label="Add Attribute" icon="add" onClick={onNewAttribute} />
+            <Button label="Add attribute" icon="add" onClick={onNewAttribute} />
             <Button
               label="Delete attribute"
               icon="delete"
-              disabled={selectedAttribute?.builtin}
+              disabled={!selectedAttribute || selectedAttribute.builtin}
               onClick={() => onDelete(selectedAttribute)}
             />
-            <InputText
+            <SearchInput
               style={{ width: '200px' }}
-              placeholder="Filter attributes..."
+              placeholder="Filter attributes"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
             <Spacer />
-            {isChanges && 'Unsaved Changes'}
+            {isChanges && 'Unsaved changes'}
             <Button
               label="Clear changes"
               icon="clear"
@@ -184,14 +196,14 @@ const Attributes = () => {
               onClick={() => setAttributes(data)}
             />
             <SaveButton
-              label="Save attributes changes"
+              label="Save changes"
               onClick={onSave}
               active={isChanges}
               saving={updateLoading}
             />
           </Toolbar>
           <TablePanel loading={isLoading || updateLoading || isFetching}>
-            <DataTable
+            <StyledDataTable
               scrollable="true"
               scrollHeight="flex"
               dataKey="name"
@@ -204,7 +216,7 @@ const Attributes = () => {
               onContextMenuSelectionChange={handleContextSelectionChange}
               onRowDoubleClick={() => !Array.isArray(selectedAttribute) && setShowEditor(true)}
               resizableColumns
-              className={clsx({ loading: isLoading })}
+              className={clsx('standard-rows', { loading: isLoading })}
               rowClassName={() => ({ loading: isLoading })}
             >
               <Column rowReorder style={{ maxWidth: 30 }} />
@@ -212,9 +224,9 @@ const Attributes = () => {
               <Column field="data.title" header="Title" style={{ maxWidth: 130 }} sortable />
               <Column
                 field="builtin"
-                header=""
-                style={{ maxWidth: 60 }}
-                body={(rowData) => (rowData?.builtin ? 'built-in' : '')}
+                header="Origin"
+                style={{ maxWidth: 90 }}
+                body={(rowData) => (rowData?.builtin ? 'Built-in' : 'Custom')}
                 sortable
               />
               <Column
@@ -241,10 +253,32 @@ const Attributes = () => {
                   })
                 }}
               />
-              <Column field="data.example" header="Example" style={{ maxWidth: 200 }} sortable />
-              <Column field="data.description" header="Description" sortable />
-              <Column field="data.inherit" header="Inherit" sortable style={{ maxWidth: 80 }} />
-            </DataTable>
+              <Column
+                field="data.example"
+                header="Example"
+                style={{ maxWidth: 240 }}
+                body={(rowData) =>
+                  rowData.data?.type === 'datetime'
+                    ? formatDateTime(rowData.data.example) || rowData.data.example
+                    : rowData.data?.example
+                }
+                sortable
+              />
+              {/* takes the room that is left and cuts its text there, so the table never gets wider than the page */}
+              <Column
+                field="data.description"
+                header="Description"
+                style={{ width: '100%', maxWidth: 0 }}
+                sortable
+              />
+              <Column
+                field="data.inherit"
+                header="Inherit"
+                sortable
+                style={{ minWidth: 96 }}
+                body={(rowData) => !isLoading && <BooleanValue value={!!rowData.data?.inherit} />}
+              />
+            </StyledDataTable>
           </TablePanel>
         </Section>
       </main>

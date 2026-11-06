@@ -6,7 +6,7 @@ export class TeamsPage {
 
   async goto(project: string) {
     await this.page.goto(`/manageProjects/teams?project=${project}`)
-    await expect(this.page.getByRole('button', { name: 'Add New Team' })).toBeVisible()
+    await expect(this.page.getByRole('button', { name: 'Add new team' })).toBeVisible()
   }
 
   teamRow(name: string) {
@@ -57,12 +57,12 @@ export class TeamsPage {
 
   async openTeamMenu(name: string) {
     await this.teamRow(name).click({ button: 'right' })
-    await expect(menuItem(this.page, 'Duplicate Team')).toBeVisible()
+    await expect(menuItem(this.page, 'Duplicate team')).toBeVisible()
   }
 
   async duplicateFromMenu(source: string, newName: string) {
-    await menuItem(this.page, 'Duplicate Team').click()
-    const duplicate = dialog(this.page, `Duplicate Team - ${source}`)
+    await menuItem(this.page, 'Duplicate team').click()
+    const duplicate = dialog(this.page, `Duplicate team - ${source}`)
     await expect(duplicate).toBeVisible()
     await duplicate.getByPlaceholder('New team name...').fill(newName)
     await duplicate.getByRole('button', { name: 'Create' }).click()
@@ -71,7 +71,7 @@ export class TeamsPage {
   }
 
   async deleteFromMenu() {
-    await menuItem(this.page, 'Delete Team').click()
+    await menuItem(this.page, 'Delete team').click()
     await confirmDialog(this.page).getByRole('button', { name: 'Delete' }).click()
   }
 }
