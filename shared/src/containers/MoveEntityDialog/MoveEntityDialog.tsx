@@ -57,6 +57,8 @@ export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({
 
   return (
     <EntityPickerDialog
+      // the picker reads its initial selection on mount: remount if the destination resolves later (folders still loading)
+      key={initialFolder ?? 'no-destination'}
       projectName={projectName}
       entityType="folder"
       onSubmit={handleMoveSubmit}
