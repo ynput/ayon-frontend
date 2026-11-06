@@ -60,6 +60,7 @@ export type ContextMenuItemConstructor = (
   selectedCells: TableCellContextData[],
   meta: {
     selectedCells: string[] // minus row selection cells
+    scopedCells: string[] // the menu's whole selection, incl. the checkbox cells when opened from one
     selectedRows: string[]
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
@@ -107,7 +108,8 @@ const useCellContextMenu = ({
   const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
+  const { selectedCells, setSelectedCells, clearSelection, selectCell, focusCell } =
+    useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
@@ -298,12 +300,16 @@ const useCellContextMenu = ({
 
   const tableExport = useTableExportContext()
   // the Power Pack export when the table registered what it exports, else the cells as shown
-  const exportItem: ContextMenuItemConstructor = (e, cell) =>
+  const exportItem: ContextMenuItemConstructor = (e, cell, _selected, meta) =>
     tableExport?.isAvailable && tableExport.source
       ? {
           label: 'Export',
           icon: 'download',
-          command: () => tableExport.openExport('selection'),
+          command: () => {
+            // the export reads the table selection: narrow it to the cells the menu acted on
+            setSelectedCells(new Set(meta.scopedCells))
+            tableExport.openExport('selection')
+          },
           hidden: cell.isGroup,
         }
       : {
@@ -311,7 +317,7 @@ const useCellContextMenu = ({
           icon: 'download',
           items: CSV_DELIMITERS.map(({ value, label }) => ({
             label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
-            command: () => exportCSV(Array.from(selectedCells), projectName, value),
+            command: () => exportCSV(meta.scopedCells, projectName, value),
           })),
           hidden: cell.isGroup,
         }
@@ -446,20 +452,18 @@ const useCellContextMenu = ({
 
     if (!cellData) return
 
+    // The menu acts on the selected body cells only: checkbox (row selection) cells are ignored,
+    // so a row that is both ticked and cell selected is not counted twice.
+    const isRowSelectionCell = parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID
     let currentSelectedCells = Array.from(selectedCells)
-    const selectedRowCellIds = currentSelectedCells.filter(
-      (selectedCellId) => parseCellId(selectedCellId)?.colId === ROW_SELECTION_COLUMN_ID,
-    )
-    const clickedRowIsSelected = selectedRowCellIds.some(
-      (selectedCellId) => parseCellId(selectedCellId)?.rowId === cellData.entityId,
-    )
-    // if selecting a cell outside of the current selection
-    if (
-      (!currentSelectedCells.includes(cellId) && !clickedRowIsSelected) ||
-      !currentSelectedCells.length
-    ) {
+    if (!isRowSelectionCell) {
+      currentSelectedCells = currentSelectedCells.filter(
+        (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+      )
+    }
+    // right clicking outside of the selection selects that cell on its own
+    if (!currentSelectedCells.includes(cellId)) {
       currentSelectedCells = [cellId]
-      // update selection
       selectCell(cellId, false, false)
       focusCell(cellId)
     }
@@ -495,6 +499,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
@@ -510,6 +515,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
