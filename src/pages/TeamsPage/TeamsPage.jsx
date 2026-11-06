@@ -303,8 +303,9 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
         teams,
         ...config,
       }).unwrap()
+      return true
     } catch {
-      return
+      return false
     }
   }
 
@@ -320,19 +321,19 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
       return false
     }
 
-    try {
-      await handleUpdateTeams([team], config)
-      // Success
-      if (!keepOpen) {
-        setCreateTeamOpen(false)
-        setSelectedTeams([name])
-      }
-      !noToast && toast.success(`Created ${name}`)
-      return true
-    } catch (error) {
+    const created = await handleUpdateTeams([team], config)
+    if (!created) {
       toast.error(`Failed to create ${name}`)
       return false
     }
+
+    // Success
+    if (!keepOpen) {
+      setCreateTeamOpen(false)
+      setSelectedTeams([name])
+    }
+    !noToast && toast.success(`Created ${name}`)
+    return true
   }
 
   // HANDLE DELETE TEAMS
@@ -379,8 +380,13 @@ const TeamsPage = ({ projectName, projectList, isUser }) => {
 
     try {
       setIsUpdating(true)
-      // first create duplicate team with new name
-      await handleNewTeam(newTeam, { noToast: true, noOpt: true, noInvalidate: true })
+      // first create duplicate team with new name (never delete the old team if that failed)
+      const created = await handleNewTeam(newTeam, {
+        noToast: true,
+        noOpt: true,
+        noInvalidate: true,
+      })
+      if (!created) throw new Error('Failed to create the renamed team')
       // then delete old team
       await handleDeleteTeams([oldName], { noToast: true, noOpt: true })
 
