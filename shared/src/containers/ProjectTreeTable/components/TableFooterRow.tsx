@@ -13,6 +13,7 @@ import {
 } from '../constants'
 import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
+import { trailingSlotShadow } from '../ProjectTreeTable.styled'
 
 const Footer = styled.tfoot`
   display: grid !important;
@@ -85,6 +86,7 @@ const FooterTrailingCell = styled.td`
   padding: 0 !important;
   background-color: var(--md-sys-color-surface-container-lowest);
   box-shadow: inset 1px 1px 0 0 var(--md-sys-color-surface-container);
+  ${trailingSlotShadow}
 `
 
 const CellContent = styled.div`

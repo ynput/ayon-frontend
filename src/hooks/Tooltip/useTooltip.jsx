@@ -124,12 +124,36 @@ const useTooltip = () => {
       }
   }, [tooltip, isActive])
 
+  // a press closes the tooltip, and the pressed element's tooltip stays closed until the pointer
+  // leaves it, so it does not cover the menu or context menu the press opened
+  const pressedTargetRef = useRef(null)
+  useEffect(() => {
+    const handlePress = (e) => {
+      // clickable tooltips hold links
+      if (e.target?.closest?.('.tooltip')) return
+      pressedTargetRef.current = e.target?.closest?.('[data-tooltip], [data-shortcut]') || null
+      setTooltip(null)
+    }
+    window.addEventListener('pointerdown', handlePress, true)
+    // also covers the keyboard context menu key
+    window.addEventListener('contextmenu', handlePress, true)
+    return () => {
+      window.removeEventListener('pointerdown', handlePress, true)
+      window.removeEventListener('contextmenu', handlePress, true)
+    }
+  }, [])
+
   const handleMouse = useCallback(
     (e) => {
       const target = e.target.closest('[data-tooltip], [data-shortcut]')
 
       // if we are hovering over the tooltip, don't do anything
       if (e.target?.closest('.tooltip')) return
+
+      if (pressedTargetRef.current) {
+        if (target === pressedTargetRef.current) return
+        pressedTargetRef.current = null
+      }
 
       if (!target) {
         setTooltip(null)

@@ -1,4 +1,5 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+import { COLUMNS_UNDER_SLOT_ATTRIBUTE } from './constants'
 
 // Create shadow mixins to make combinations work properly
 const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
@@ -127,6 +128,31 @@ export const HeaderLabel = styled.span`
   min-width: 0;
 `
 
+// while columns are scrolled under the add column slot, a shadow on its left edge shows that the
+// cut off column continues; a gradient beside the cell rather than a blurred box-shadow, which
+// would bleed into the rows above and below
+export const trailingSlotShadow = css`
+  --trailing-slot-shadow: 40%;
+  [data-theme='light'] & {
+    --trailing-slot-shadow: 16%;
+  }
+
+  [${COLUMNS_UNDER_SLOT_ATTRIBUTE}] &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 100%;
+    width: 10px;
+    pointer-events: none;
+    background: linear-gradient(
+      to left,
+      color-mix(in srgb, var(--md-sys-color-shadow) var(--trailing-slot-shadow), transparent),
+      transparent
+    );
+  }
+`
+
 // pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
 // in its own space after the last column. Body and footer rows end with a TrailingCell of the
 // same width, so the columns that scroll under it are hidden in every row, not just the header.
@@ -141,6 +167,7 @@ export const AddColumnSlot = styled.th`
   flex-shrink: 0;
   background-color: var(--color-table-header);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  ${trailingSlotShadow}
 `
 
 // takes the row's background (TR hover rules apply to it as to any td)
@@ -152,6 +179,7 @@ export const TrailingCell = styled.td`
   padding: 0 !important;
   background-color: var(--color-table-row);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  ${trailingSlotShadow}
 
   &.expandable,
   &.group-header {

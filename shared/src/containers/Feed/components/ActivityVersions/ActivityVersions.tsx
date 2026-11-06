@@ -94,7 +94,6 @@ const ActivityVersions: React.FC<ActivityVersionsProps> = ({
                   </Styled.Title>
                   <Styled.Title className="version-status">
                     <Styled.VersionName className="version">{name}</Styled.VersionName>
-                    {name && status && <span className="separator">-</span>}
                     {status && (
                       <FieldValue
                         icon={status.icon}

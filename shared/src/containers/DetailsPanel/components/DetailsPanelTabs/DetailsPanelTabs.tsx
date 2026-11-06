@@ -1,7 +1,7 @@
 // High-level tabs for the details panel: Feed, Subtasks, Details
 // Each tab manages its own sub-filters
 import { FC } from 'react'
-import { Button, Spacer } from '@ynput/ayon-react-components'
+import { Button } from '@ynput/ayon-react-components'
 import type { IconType } from '@ynput/ayon-react-components'
 import { prefetchPiece } from '@ynput/ayon-addon'
 import type { DetailsPanelTab } from '@shared/context'
@@ -70,7 +70,6 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           variant="text"
         />
       ))}
-      <Spacer />
       {showFilesTab && (
         <Button
           icon="order_play"
@@ -82,9 +81,9 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
         />
       )}
       <Button
+        icon="lists"
         onClick={() => onTabChange('details')}
         selected={currentTab === 'details'}
-        style={{ padding: '6px 8px' }}
         variant="text"
       >
         Details

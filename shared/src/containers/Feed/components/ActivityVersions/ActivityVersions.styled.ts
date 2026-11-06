@@ -77,11 +77,7 @@ export const Title = styled.div`
   /* the version and its status read as one value, not spread across the card */
   &.version-status {
     justify-content: flex-start;
-
-    .separator {
-      flex-shrink: 0;
-      color: var(--md-sys-color-outline);
-    }
+    gap: var(--base-gap-large);
   }
 `
 

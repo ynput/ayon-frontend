@@ -28,11 +28,6 @@ const FieldValueText = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: right;
-
-  input {
-    text-align: left;
-  }
 `
 
 const StyledEnumWidget = styled(EnumWidget)`
@@ -269,6 +264,8 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}
           align="right"
+          // coloured values are pills, as in the project tables
+          pill={field.name === 'status' ? 'filled' : 'tinted'}
           enableCustomValues={field.enableCustomValues}
           isLoadingOptions={isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}

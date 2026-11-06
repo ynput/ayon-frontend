@@ -61,6 +61,7 @@ import {
   DRAG_HANDLE_COLUMN_ID,
   ADD_COLUMN_BUTTON_SPACE,
   ADD_COLUMN_SLOT_ATTRIBUTE,
+  COLUMNS_UNDER_SLOT_ATTRIBUTE,
 } from './constants'
 
 // Hook imports
@@ -161,6 +162,8 @@ declare module '@tanstack/react-table' {
     selection?: string[]
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
+    // the anatomy's look for product types it does not define
+    defaultProductType?: { icon?: string; color?: string; colorLight?: string | null }
   }
 }
 
@@ -662,6 +665,7 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
+      defaultProductType: projectInfo.anatomy?.product_base_types?.default,
     },
   })
 
@@ -837,6 +841,31 @@ export const ProjectTreeTable = ({
     },
     [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
+
+  // marks the container while columns are scrolled under the trailing add column slot; set on
+  // the element directly so scrolling does not re-render the rows
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (!container) return
+    const update = () => {
+      const { scrollLeft, clientWidth, scrollWidth } = container
+      container.toggleAttribute(
+        COLUMNS_UNDER_SLOT_ATTRIBUTE,
+        scrollLeft + clientWidth < scrollWidth - 1,
+      )
+    }
+    update()
+    container.addEventListener('scroll', update, { passive: true })
+    // the table resizes with its columns, the container with the page
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    const tableEl = container.querySelector('table')
+    if (tableEl) observer.observe(tableEl)
+    return () => {
+      container.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [])
 
   const tableUiContent = (
     <ClipboardProvider
