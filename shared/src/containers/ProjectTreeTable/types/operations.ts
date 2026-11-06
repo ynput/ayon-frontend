@@ -35,6 +35,7 @@ export type QueryCondition = {
     | 'eq'
     | 'like'
     | 'notlike'
+    | 're'
     | 'lt'
     | 'gt'
     | 'lte'
