@@ -4,12 +4,7 @@ import type { CellContext, ColumnDef } from '@tanstack/react-table'
 type CellRenderer<T> = (context: CellContext<T, any>) => ReactNode
 type Renderer<T> = { current: CellRenderer<T>; stable: CellRenderer<T> }
 
-/**
- * flexRender uses a column's `cell` function as a component type. The columns are rebuilt when
- * their inputs change (an addon's column registers, options load), and a new function remounts
- * every cell of the column, dropping an open cell editor and what it had picked. Each column id
- * keeps one cell function for the table's lifetime, which renders with the column's current one.
- */
+// flexRender treats cell as a component type, keep one per column id so cells don't remount
 export const useStableCellRenderers = <T>(columns: ColumnDef<T, any>[]): ColumnDef<T, any>[] => {
   const renderers = useRef(new Map<string, Renderer<T>>())
 
