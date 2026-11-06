@@ -106,6 +106,9 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
   }
 
   const handleNameKeydown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // while the name is being edited, Enter and Shift+Enter bubble up to the dialog to create
+    if (e.key === 'Enter' && nameInputFocused) return
+
     if (e.key === 'Enter' || e.key === 'Escape' || (e.key === 'ArrowUp' && !e.altKey)) {
       // prevent propagation to avoid closing the dialog
       e.stopPropagation()

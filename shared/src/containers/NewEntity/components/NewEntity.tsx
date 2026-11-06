@@ -394,6 +394,8 @@ export const NewEntity: React.FC<NewEntityProps> = ({
           labelRef.current.focus()
           labelRef.current.select()
         }
+        // clear the entity so the next one starts empty, but keep the type
+        setEntityForm((prev) => ({ ...prev, label: '', name: '' }))
         setNameManuallyEdited(false)
       } else {
         handleClose()
@@ -404,7 +406,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     }
   }
 
-  // Enter on any field does what the create button does (it follows the Create more switch);
+  // Enter on any field creates and closes (the standard form behaviour, whatever the Create more switch says);
   // Shift+Enter always creates and keeps the dialog open for the next one
   const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
     e.stopPropagation()
@@ -415,7 +417,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     if (isSubmitting || !entityForm.name || !entityForm.label || missingTaskParent) return
     if (isDialogConfirmKey(e)) {
       e.preventDefault()
-      handleSubmit(createMore)
+      handleSubmit(false)
     } else if (isDialogContinueKey(e)) {
       e.preventDefault()
       handleSubmit(true)
