@@ -3,7 +3,7 @@ import { resolveSlicerFolders } from './resolveSlicerFolders'
 import type { SelectedFoldersResult, SliceRowSelection } from './resolveSlicerFolders'
 
 export type { SelectedFoldersResult, SliceRowSelection }
-export { NO_MATCH_FOLDER_ID, scopeIdsToFolders } from './resolveSlicerFolders'
+export { NO_MATCH_FOLDER_ID, resolveSlicerFolders, scopeIdsToFolders } from './resolveSlicerFolders'
 
 interface UseSelectedFoldersProps {
   slices: SliceRowSelection[]

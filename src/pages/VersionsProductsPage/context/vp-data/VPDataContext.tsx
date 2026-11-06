@@ -30,6 +30,7 @@ import {
   useQueryFilters,
   buildQueryFilters,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
@@ -245,8 +246,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, searchFolderIds, isLicensePending } =
-    useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -418,6 +424,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
             operator: 'and',
           })
         : countsTaskFilter.filterString
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolderIds =
+        countsSearchFolderIds === searchFolderIds
+          ? slicerFolderIds
+          : getFolderIdsWithoutChildren(
+              resolveSlicerFolders(
+                sliceSelections,
+                entityIds.folderIds,
+                getChildFolderIds,
+                countsSearchFolderIds,
+              ).selectedFolders,
+            )
       return {
         projectName,
         versionFilter: countsVersionFilter.filterString,
@@ -425,7 +444,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         taskFilter: countsTaskFilterString,
         folderFilter: countsFolderFilter.filterString,
         representationFilter: combinedRepresentationFilter.filterString,
-        folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+        folderIds: countsFolderIds.length ? countsFolderIds : undefined,
         versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
         productIds: scopedProductIds.length ? scopedProductIds : undefined,
         latestPerFolder,
@@ -445,6 +464,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       scopedProductIds,
       scopedTaskIds,
       latestPerFolder,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
+      getFolderIdsWithoutChildren,
     ],
   )
 

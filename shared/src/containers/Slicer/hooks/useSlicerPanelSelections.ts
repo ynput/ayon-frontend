@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { AttributeModel } from '@shared/api'
 import { usePowerpack, useProjectFoldersContext } from '@shared/context'
 import { getSearchMatchedFolderIds } from '@shared/util'
@@ -14,6 +14,8 @@ export interface SlicerPanelSelections {
   // top-most folders the hierarchy panel search matches, null without a search, empty when a
   // search (hierarchy or value panel) leaves nothing
   searchFolderIds: string[] | null
+  // searchFolderIds for a panel's counts query: without that panel's own empty search
+  getCountsSearchFolderIds: (sliceType: string) => string[] | null
   // panels 2+ are license-gated; pages hold their first fetch until the license resolves
   isLicensePending: boolean
 }
@@ -31,42 +33,25 @@ export const useSlicerPanelSelections = (attribFields: AttributeModel[]): Slicer
   }, [searchMatchesByPanel])
 
   // without a license only the first panel renders, so only it may contribute.
-  // A search acts as selecting every row it leaves. Lists resolve their selection to
-  // entities, so their search narrows the selection itself.
-  const { sliceSelections, searchFilterSlices, hasEmptySearch } = useMemo(() => {
+  // A search acts as selecting every row it leaves; a selection inside the results
+  // narrows them and one the search hides leaves nothing.
+  const { sliceSelections, emptySearchSliceTypes } = useMemo(() => {
     const visible = powerLicense ? slices : slices.slice(0, 1)
-    let hasEmptySearch = false
-    const searchFilterSlices: SliceRowSelection[] = []
+    const emptySearchSliceTypes: string[] = []
     const sliceSelections = visible.map((slice) => {
       const rowSelection = getPanelSelection(slice.id)
       const matches = slice.sliceType === 'hierarchy' ? undefined : debouncedMatches[slice.id]
       if (!matches) return { sliceType: slice.sliceType, rowSelection }
-      if (slice.sliceType === 'entityList') {
-        const searched = applySearchMatches(rowSelection, matches)
-        if (!searched) hasEmptySearch = true
-        return { sliceType: slice.sliceType, rowSelection: searched ?? {} }
-      }
-      if (!matches.length) hasEmptySearch = true
-      else
-        searchFilterSlices.push({
-          sliceType: slice.sliceType,
-          rowSelection: Object.fromEntries(matches.map((id) => [id, true])),
-        })
-      return { sliceType: slice.sliceType, rowSelection }
+      const searched = applySearchMatches(rowSelection, matches)
+      if (!searched) emptySearchSliceTypes.push(slice.sliceType)
+      return { sliceType: slice.sliceType, rowSelection: searched ?? {} }
     })
-    return { sliceSelections, searchFilterSlices, hasEmptySearch }
+    return { sliceSelections, emptySearchSliceTypes }
   }, [slices, getPanelSelection, powerLicense, debouncedMatches])
 
-  // a value panel's search is a second filter of that panel, ANDed with its selection: a
-  // selection inside the results narrows them, one the search hides leaves nothing. It
-  // keeps the panel's id, so the panel's own counts still leave it out.
   const sliceFilters = useMemo(
-    () =>
-      createFiltersFromSlicer({
-        slices: [...sliceSelections, ...searchFilterSlices],
-        attribFields,
-      }),
-    [sliceSelections, searchFilterSlices, attribFields],
+    () => createFiltersFromSlicer({ slices: sliceSelections, attribFields }),
+    [sliceSelections, attribFields],
   )
 
   // the hierarchy search matches against every folder, not only the rows the panel has
@@ -80,20 +65,37 @@ export const useSlicerPanelSelections = (attribFields: AttributeModel[]): Slicer
     return () => clearTimeout(timeout)
   }, [hierarchySearch])
 
-  const searchFolderIds = useMemo(() => {
-    // a search that leaves no rows has no filter value to express it: an empty folder match
-    // is the restriction every page already turns into no rows
-    if (hasEmptySearch) return []
+  const hierarchySearchFolderIds = useMemo(
     // folders still loading: no restriction yet rather than an empty table
-    return debouncedSearch && folders.length
-      ? getSearchMatchedFolderIds(folders, debouncedSearch)
-      : null
-  }, [folders, debouncedSearch, hasEmptySearch])
+    () =>
+      debouncedSearch && folders.length
+        ? getSearchMatchedFolderIds(folders, debouncedSearch)
+        : null,
+    [folders, debouncedSearch],
+  )
+
+  // a value search that leaves nothing has no filter value to express it: an empty folder
+  // match is the restriction every page already turns into no rows
+  const hasEmptySearch = emptySearchSliceTypes.length > 0
+  const searchFolderIds = useMemo(
+    () => (hasEmptySearch ? [] : hierarchySearchFolderIds),
+    [hasEmptySearch, hierarchySearchFolderIds],
+  )
+
+  // a panel's counts leave its own filter out, and so its own empty search too
+  const getCountsSearchFolderIds = useCallback(
+    (sliceType: string) =>
+      emptySearchSliceTypes.length === 1 && emptySearchSliceTypes[0] === sliceType
+        ? hierarchySearchFolderIds
+        : searchFolderIds,
+    [emptySearchSliceTypes, hierarchySearchFolderIds, searchFolderIds],
+  )
 
   return {
     sliceSelections,
     sliceFilters,
     searchFolderIds,
+    getCountsSearchFolderIds,
     isLicensePending: slices.length > 1 && isLoadingPowerLicense,
   }
 }
