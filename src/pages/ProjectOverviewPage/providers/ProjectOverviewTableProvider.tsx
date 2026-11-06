@@ -1,4 +1,4 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, ReactNode, useCallback, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import {
   ProjectTableProvider,
@@ -9,6 +9,7 @@ import {
   useColumnSettingsContext,
   useGroupCounts,
 } from '@shared/containers/ProjectTreeTable'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 import { usePowerpack, useSubtasksModulesContext } from '@shared/context'
 import { useSlicerContext } from '@shared/containers'
 import { useProjectOverviewContext } from '../context/project-overview'
@@ -21,7 +22,21 @@ import { ProjectTableModulesType } from '@shared/hooks'
 
 const SCOPES = ['folder', 'task']
 
-const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = ({ modules }) => {
+type Props = {
+  modules: ProjectTableModulesType
+  // the table instead of the whole page, e.g. an addon's EntityTable
+  children?: ReactNode
+  readOnly?: boolean
+  // replaces the Overview's right-click menu
+  contextMenuItems?: ContextMenuItemConstructors
+}
+
+const ProjectOverviewTableProvider: FC<Props> = ({
+  modules,
+  children,
+  readOnly,
+  contextMenuItems,
+}) => {
   const { taskGroups, viewGroupBy, viewGroupByDesc, isFlatFolderView, ...props } =
     useProjectOverviewContext()
 
@@ -104,10 +119,13 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         powerpack={powerpack}
         modules={modules}
         groupByConfig={{ entityType: 'task' }}
+        readOnly={readOnly}
+        contextMenuItems={contextMenuItems ?? props.contextMenuItems}
         scopes={SCOPES}
         playerOpen={viewerOpen}
         onOpenPlayer={handleOpenPlayer}
-        onResetView={handleResetView}
+        // the rows are the addon's: there is no filter to reset
+        onResetView={readOnly ? undefined : handleResetView}
         SubtasksManager={SubtasksManager}
         useParams={useParams}
         useNavigate={useNavigate}
@@ -118,7 +136,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         <SelectionCellsProvider>
           <SelectedRowsProvider>
             <CellEditingProvider>
-              <ProjectOverviewPage />
+              {children ?? <ProjectOverviewPage />}
             </CellEditingProvider>
           </SelectedRowsProvider>
         </SelectionCellsProvider>

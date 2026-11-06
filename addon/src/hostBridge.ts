@@ -6,6 +6,7 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
@@ -37,6 +38,8 @@ export interface HostComponents {
   EntityPicker: ComponentType<EntityPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
+  /** AYON's project table with the providers it needs (`EntityTable`); not in the dev shell */
+  EntityTable?: ComponentType<EntityTableProps>
 }
 
 export interface HostImplementation {

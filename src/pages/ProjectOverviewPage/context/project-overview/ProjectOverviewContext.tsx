@@ -40,7 +40,11 @@ import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { getRequestErrorString } from '@shared/util'
 
-export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
+export const ProjectOverviewProvider = ({
+  children,
+  modules,
+  page = 'overview',
+}: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
 
   // Get project data from the new context
@@ -63,8 +67,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     attribFields,
     allowedScopes: ['task', 'folder'],
   })
-
-  const page = 'overview'
 
   const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
     createLocalStorageKey(page, 'expanded', projectName),
