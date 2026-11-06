@@ -110,16 +110,17 @@ const useViewerFrameLink = (selectedVersionId?: string) => {
   return { commentFrameLink, registerFrameLinkPlayer, feedFrameLinks, setFeedFrameLinks }
 }
 
-type ViewerProviderProps = {
-  children: ReactNode
-  selectedVersionId?: string
-}
-
-export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderProps) => {
-  const { powerLicense } = usePowerpack()
+// The powerpack annotation modules. They wrap the whole viewer and their hooks are called by it, so
+// the viewer waits for them (`isLoading`): swapping the fallbacks for the loaded modules once it is
+// open would remount it, which reloads the video and autoplays it again (undoing a pause).
+export const useAnnotationModules = () => {
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
   const minVersion = '1.0.0'
   // get annotation remotes
-  const [AnnotationsProvider, { isLoaded: isLoadedProvider, outdated }] = useLoadModule({
+  const [
+    AnnotationsProvider,
+    { isLoaded: isLoadedProvider, isLoading: isLoadingProvider, outdated },
+  ] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsProvider',
@@ -127,7 +128,10 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     minVersion,
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
-  const [AnnotationsEditorProvider, { isLoaded: isLoadedEditorProvider }] = useLoadModule({
+  const [
+    AnnotationsEditorProvider,
+    { isLoaded: isLoadedEditorProvider, isLoading: isLoadingEditorProvider },
+  ] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationsEditorProvider',
@@ -135,15 +139,16 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     minVersion,
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
-  const [AnnotationsCanvas, { isLoaded: isLoadedCanvas }] = useLoadModule({
-    addon: 'powerpack',
-    remote: 'annotations',
-    module: 'AnnotationsCanvas',
-    fallback: () => null,
-    minVersion,
-    skip: !powerLicense, // skip loading if powerpack license is not available
-  })
-  const [useAnnotations, { isLoaded: isLoadedHook }] = useLoadModule({
+  const [AnnotationsCanvas, { isLoaded: isLoadedCanvas, isLoading: isLoadingCanvas }] =
+    useLoadModule({
+      addon: 'powerpack',
+      remote: 'annotations',
+      module: 'AnnotationsCanvas',
+      fallback: () => null,
+      minVersion,
+      skip: !powerLicense, // skip loading if powerpack license is not available
+    })
+  const [useAnnotations, { isLoaded: isLoadedHook, isLoading: isLoadingHook }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'useAnnotations',
@@ -151,7 +156,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     minVersion,
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
-  const [AnnotationTools, { isLoaded: isLoadedTools }] = useLoadModule({
+  const [AnnotationTools, { isLoaded: isLoadedTools, isLoading: isLoadingTools }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'AnnotationTools',
@@ -159,7 +164,7 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     minVersion,
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
-  const [useDrawHistory] = useLoadModule({
+  const [useDrawHistory, { isLoading: isLoadingDrawHistory }] = useLoadModule({
     addon: 'powerpack',
     remote: 'annotations',
     module: 'useDrawHistory',
@@ -167,6 +172,54 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
     minVersion,
     skip: !powerLicense, // skip loading if powerpack license is not available
   })
+
+  const isLoaded =
+    isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
+  const isLoading =
+    isLoadingLicense ||
+    isLoadingProvider ||
+    isLoadingEditorProvider ||
+    isLoadingCanvas ||
+    isLoadingHook ||
+    isLoadingTools ||
+    isLoadingDrawHistory
+
+  return {
+    AnnotationsProvider,
+    AnnotationsEditorProvider,
+    AnnotationsCanvas,
+    useAnnotations,
+    AnnotationTools,
+    useDrawHistory,
+    isLoaded,
+    isLoading,
+    outdated,
+  }
+}
+
+export type AnnotationModules = ReturnType<typeof useAnnotationModules>
+
+type ViewerProviderProps = {
+  children: ReactNode
+  selectedVersionId?: string
+  annotationModules: AnnotationModules
+}
+
+export const ViewerProvider = ({
+  children,
+  selectedVersionId,
+  annotationModules,
+}: ViewerProviderProps) => {
+  const {
+    AnnotationsProvider,
+    AnnotationsEditorProvider,
+    AnnotationsCanvas,
+    useAnnotations,
+    AnnotationTools,
+    useDrawHistory,
+    isLoaded,
+    outdated,
+  } = annotationModules
 
   // show error message if annotations version is outdated
   useEffect(() => {
@@ -178,9 +231,6 @@ export const ViewerProvider = ({ children, selectedVersionId }: ViewerProviderPr
   }, [!!outdated])
 
   const frameLink = useViewerFrameLink(selectedVersionId)
-
-  const isLoaded =
-    isLoadedProvider && isLoadedEditorProvider && isLoadedCanvas && isLoadedHook && isLoadedTools
 
   // get annotations-tools dom element for portal
   const createToolbar = useCallback(() => {
