@@ -63,6 +63,11 @@ export const Header = styled.header`
     min-width: fit-content;
   }
 
+  /* an entity without a thumbnail shows its type icon, sized like the stacked ones */
+  .thumbnail .type-icon {
+    font-size: 24px;
+  }
+
   &.loading {
     .playable {
       display: none;

@@ -103,10 +103,13 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     handleGroupingChange(nextGrouping, nextGroupSortByDesc)
   }
 
-  // the table is read-only: yes/no as a check or a dash, like the other settings tables
+  // the table is read-only: yes/no as a check or a dash, like the other settings tables,
+  // under the start of its header like the other columns
   const dataTypeWidgets = {
     ...getDefaultListTableDataTypeWidgets<ProjectTableRow>(),
-    boolean: ({ value }: { value: unknown }) => <BooleanValue value={!!value} />,
+    boolean: ({ value }: { value: unknown }) => (
+      <BooleanValue value={!!value} style={{ justifyContent: 'flex-start' }} />
+    ),
   }
 
   // TABLE: Build table rows and apply filters and grouping

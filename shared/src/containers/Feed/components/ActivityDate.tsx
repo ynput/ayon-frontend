@@ -1,4 +1,13 @@
-import { format, isValid, isToday, isSameYear, isSameDay, isSameWeek, isSameMinute } from 'date-fns'
+import {
+  format,
+  isValid,
+  isToday,
+  isSameYear,
+  isSameDay,
+  isSameWeek,
+  isSameMinute,
+  subDays,
+} from 'date-fns'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { useEffect, useMemo, useState } from 'react'
@@ -46,7 +55,7 @@ const ActivityDate = ({ date, isExact, exactTooltip = false, ...props }: Activit
   // is date over a day old?
   const today = isToday(dateObj)
   const sameYear = isSameYear(dateObj, now)
-  const yesterday = isSameDay(dateObj, new Date(now.setDate(now.getDate() - 1)))
+  const yesterday = isSameDay(dateObj, subDays(now, 1))
   const sameWeek = isSameWeek(dateObj, now)
   const sameMin = isSameMinute(dateObj, now)
 
@@ -61,7 +70,7 @@ const ActivityDate = ({ date, isExact, exactTooltip = false, ...props }: Activit
 
   let dateString = isFuzzy && !isExact ? fuzzyDate : exactDate
 
-  if (yesterday && isFuzzy && !isExact) dateString = `Yesterday${dateString}`
+  if (yesterday && isFuzzy && !isExact) dateString = 'Yesterday'
 
   // if less than a minute ago overwrite the date string
   if (sameMin) dateString = 'Just now'

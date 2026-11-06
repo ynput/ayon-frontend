@@ -1,6 +1,6 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
@@ -16,6 +16,7 @@ import { useDeleteWorkfileMutation } from '@queries/workfiles/deleteWorkfile'
 import { DetailsDialog } from '@shared/components'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@shared/api'
 import { WorkfileUsers } from './WorkfileUsers'
+import { FlatHeaderTablePanel } from '@containers/FlatHeaderTablePanel.styled'
 
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)
@@ -118,9 +119,8 @@ const WorkfileList = ({ style }) => {
           command: () => setShowDetail(true),
           icon: 'database',
         },
-        ,
         {
-          label: 'Delete File',
+          label: 'Delete file',
           icon: 'delete',
           command: () => handleDeleteWorkfile(workfile),
           danger: true,
@@ -155,7 +155,7 @@ const WorkfileList = ({ style }) => {
 
   return (
     <Section style={style}>
-      <TablePanel loading={isLoading}>
+      <FlatHeaderTablePanel loading={isLoading}>
         {!taskIds.length || !data.length ? (
           <NoEntityFound
             type="workfile"
@@ -193,7 +193,7 @@ const WorkfileList = ({ style }) => {
             />
           </DataTable>
         )}
-      </TablePanel>
+      </FlatHeaderTablePanel>
       <DetailsDialog
         projectName={projectName}
         entityType={'workfile'}

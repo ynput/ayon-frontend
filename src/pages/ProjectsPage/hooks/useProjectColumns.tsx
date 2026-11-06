@@ -220,9 +220,9 @@ export const useProjectColumns = (
   )
 
   const thumbnailColumn = useMemo<ColumnDef<ProjectTableRow, any>>(() => {
-    // wide enough for the "Thumbnail" header label
+    // wide enough for the "Thumbnail" header label, which starts where the image does
     const thumbnailSize = Math.max(
-      90,
+      100,
       THUMBNAIL_BASE_SIZE + maxGroupDepth * THUMBNAIL_INDENT_PER_DEPTH,
     )
     return columnHelper.accessor('name', {

@@ -52,7 +52,8 @@ export const ProjectsSplitter = styled(Splitter)`
 `
 
 export const InboxSection = styled(Section)`
-  padding: var(--padding-s) var(--padding-m) 0;
+  /* the same top padding as the other pages, so the toolbar sits at the same height */
+  padding: var(--padding-m) var(--padding-m) 0;
 
   overflow: hidden;
   align-items: flex-start;

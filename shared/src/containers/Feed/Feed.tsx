@@ -185,6 +185,17 @@ export const Feed = ({
   const feedRef = useRef(null)
   // const commentInputRef = useRef(null)
 
+  // the activities keep a gutter for their scrollbar: the search row above takes the same
+  // inset, so both end at one edge whatever width the platform gives a scrollbar
+  const [scrollbarWidth, setScrollbarWidth] = useState(0)
+  useEffect(() => {
+    const el = feedRef.current as HTMLElement | null
+    if (!el) return
+    const observer = new ResizeObserver(() => setScrollbarWidth(el.offsetWidth - el.clientWidth))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   // scroll by height of comment input when it opens or closes
   useScrollOnInputOpen({ feedRef, isInputOpen: editingId === FEED_NEW_COMMENT, height: 93 })
 
@@ -349,7 +360,10 @@ export const Feed = ({
 
   return (
     <>
-      <Styled.FeedContainer className="feed">
+      <Styled.FeedContainer
+        className="feed"
+        style={{ '--feed-scrollbar-width': `${scrollbarWidth}px` } as React.CSSProperties}
+      >
         {warningMessage && (
           <Styled.Warning>
             <Icon icon="info" />

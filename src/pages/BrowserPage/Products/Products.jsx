@@ -266,12 +266,14 @@ const Products = () => {
     }
   }
 
+  // default widths fit product, status, type, task and version next to an open details panel
+  // at 1600px; widths people set by resizing are kept in local storage and win
   let columns = useMemo(
     () => [
       {
         field: 'name',
         header: 'Product',
-        width: 200,
+        width: 190,
         body: (node) => {
           let className = ''
           let i = 0
@@ -300,7 +302,7 @@ const Products = () => {
       {
         field: 'versionStatus',
         header: 'Version status',
-        width: 180,
+        width: 150,
         style: { height: 'max-content' },
         body: (node) => {
           if (node.data.isGroup) return ''
@@ -329,7 +331,7 @@ const Products = () => {
       {
         field: 'productType',
         header: 'Product type',
-        width: 140,
+        width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
           const { color, colorLight } = project.getProductType(node.data.productType)
@@ -345,7 +347,7 @@ const Products = () => {
       {
         field: 'taskName',
         header: 'Task',
-        width: 120,
+        width: 96,
       },
       {
         field: 'folder',
@@ -355,7 +357,7 @@ const Products = () => {
       {
         field: 'versionList',
         header: 'Version',
-        width: 100,
+        width: 84,
         body: (node) => (
           <VersionList
             row={node.data}
@@ -367,7 +369,7 @@ const Products = () => {
       {
         field: 'createdAt',
         header: 'Created at',
-        width: 180,
+        width: 160,
         body: (node) =>
           node.data.createdAt && <TimestampField value={node.data.createdAt} seconds={false} />,
       },
@@ -706,7 +708,7 @@ const Products = () => {
     <Section wrap>
       <Toolbar>
         <SearchInput
-          style={{ width: '200px' }}
+          style={{ flex: '0 1 200px', minWidth: 128 }}
           placeholder="Filter products"
           value={search}
           onChange={(e) => setSearch(e.target.value)}

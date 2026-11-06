@@ -1,6 +1,5 @@
 import { Section, Panel } from '@ynput/ayon-react-components'
 import { PathField } from '@containers/fieldFormat'
-import { Thumbnail } from '@shared/components'
 import NoEntityFound from '@components/NoEntityFound'
 import AttributeTable from '@containers/attributeTable'
 import { useState } from 'react'
@@ -8,8 +7,14 @@ import { useSelector } from 'react-redux'
 import { useGetWorkfileByIdQuery, useGetWorkfileListQuery } from '@queries/getWorkfiles'
 import { useGetSiteRootsQuery } from '@queries/customRoots'
 import SiteDropdown from '@containers/SiteDropdown'
-import { getCurrentPlatform, replaceRoot, useRegisterActiveEntities } from '@shared/util'
+import {
+  getCurrentPlatform,
+  getEntityTypeIcon,
+  replaceRoot,
+  useRegisterActiveEntities,
+} from '@shared/util'
 import { useProjectContext } from '@shared/context'
+import * as Styled from './WorkfileDetail.styled'
 
 const WorkfileDetail = ({ style }) => {
   const { projectName } = useProjectContext()
@@ -67,26 +72,31 @@ const WorkfileDetail = ({ style }) => {
           <div>Loading...</div>
         ) : (
           <>
-            <Thumbnail
+            <Styled.WorkfileThumbnail
               projectName={projectName}
               entityType="workfile"
               entityId={firstFocusedWorkfile}
+              icon={getEntityTypeIcon('workfile')}
             />
 
-            <AttributeTable
-              entityType="workfile"
-              data={data?.attrib || {}}
-              additionalData={[
-                {
-                  title: 'Path for site',
-                  value: <SiteDropdown value={selectedSite} onChange={setSelectedSite} allowNull />,
-                },
-                {
-                  title: 'Path',
-                  value: <PathField value={path} />,
-                },
-              ]}
-            />
+            <Styled.Attributes>
+              <AttributeTable
+                entityType="workfile"
+                data={data?.attrib || {}}
+                additionalData={[
+                  {
+                    title: 'Path for site',
+                    value: (
+                      <SiteDropdown value={selectedSite} onChange={setSelectedSite} allowNull />
+                    ),
+                  },
+                  {
+                    title: 'Path',
+                    value: <PathField value={path} />,
+                  },
+                ]}
+              />
+            </Styled.Attributes>
           </>
         )}
       </Panel>

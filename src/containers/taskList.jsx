@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import { TablePanel, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
@@ -17,6 +17,7 @@ import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { CellWithIcon } from '@components/icons'
 import { useProjectContext } from '@shared/context'
+import { FlatHeaderTablePanel } from './FlatHeaderTablePanel.styled'
 
 const TaskList = ({ style = {}, autoSelect = false }) => {
   const { getTaskType } = useProjectContext()
@@ -282,7 +283,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
 
   return (
     <Section style={style}>
-      <TablePanel>
+      <FlatHeaderTablePanel>
         <DetailsDialog
           projectName={projectName}
           entityType="task"
@@ -329,7 +330,7 @@ const TaskList = ({ style = {}, autoSelect = false }) => {
             />
           </TreeTable>
         )}
-      </TablePanel>
+      </FlatHeaderTablePanel>
     </Section>
   )
 }

@@ -37,8 +37,7 @@ export const VersionReviewPill = ({ lastOwnVersionReview }: Props) => {
   return (
     <Styled.LastOwnVersionReview className={clsx(lastOwnVersionReviewFeedback)}>
       <Icon icon={getIconForFeedback(lastOwnVersionReviewFeedback)} />
-      You last {getVerbForFeedback(lastOwnVersionReviewFeedback)} {lastOwnVersionReviewDate}{' '}
-      {lastOwnVersionReviewDate === 'just now' ? '' : 'ago'}
+      You last {getVerbForFeedback(lastOwnVersionReviewFeedback)} {lastOwnVersionReviewDate}
     </Styled.LastOwnVersionReview>
   )
 }

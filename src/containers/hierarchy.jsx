@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { Section, Toolbar, TablePanel } from '@ynput/ayon-react-components'
+import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
@@ -12,29 +12,11 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import { setFocusedFolders, setExpandedFolders, setSelectedVersions } from '@state/context'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
+import { FlatHeaderTablePanel } from './FlatHeaderTablePanel.styled'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
-
-// the tree's title row is a panel header, like the slicer header on the other project pages,
-// not a table header
-const HierarchyPanel = styled(TablePanel)`
-  --color-table-header: transparent;
-
-  /* collapsed borders: the row's wider line would win over the header's */
-  && .p-treetable-thead > tr {
-    border-bottom: none;
-  }
-
-  && .p-treetable-thead > tr > th {
-    height: 34px;
-    padding: 0 10px;
-    background-color: transparent;
-    font-weight: normal;
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
-`
 
 // the placeholder reads like the filter input next to it, on the same baseline
 const FolderTypeSelect = styled(MultiSelect)`
@@ -446,8 +428,9 @@ const Hierarchy = (props) => {
     <>
       <Section style={props.style}>
         <Toolbar>
+          {/* in a narrow pane the folder types give way before the filter becomes unreadable */}
           <SearchInput
-            style={{ flexGrow: 1, minWidth: 80 }}
+            style={{ flex: '1 1 0', minWidth: 128 }}
             placeholder="Filter folders"
             disabled={!projectName || isFetching}
             value={query}
@@ -463,11 +446,11 @@ const Hierarchy = (props) => {
             disabled={!projectName || isFetching}
             selectedItemTemplate={selectedTypeTemplate}
             onChange={(e) => setSelectedFolderTypes(e.value || [])}
-            style={{ flexBasis: 150, flexShrink: 0 }}
+            style={{ flexBasis: 150, flexShrink: 1, minWidth: 0 }}
           />
         </Toolbar>
 
-        <HierarchyPanel>
+        <FlatHeaderTablePanel>
           <DetailsDialog
             projectName={projectName}
             entityType="folder"
@@ -477,7 +460,7 @@ const Hierarchy = (props) => {
           />
 
           {table}
-        </HierarchyPanel>
+        </FlatHeaderTablePanel>
       </Section>
       <HierarchyExpandFolders
         parents={parents}

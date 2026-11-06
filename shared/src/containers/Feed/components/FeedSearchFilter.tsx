@@ -17,6 +17,8 @@ import { CustomDateRangeDialog } from '@shared/components/SearchFilter/CustomDat
 const Wrapper = styled.div`
   padding: 4px 8px;
   padding-bottom: 0;
+  /* ends where the activity cards below do, they leave room for a scrollbar */
+  padding-right: calc(8px + var(--feed-scrollbar-width, 0px));
   z-index: 10;
   position: relative;
 

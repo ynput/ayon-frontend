@@ -89,9 +89,11 @@ export const Thumbnail = ({
         <Styled.Image
           alt={`Entity thumbnail ${entityId || projectName}`}
           src={url}
-          onLoad={() => {
+          onLoad={(e) => {
             setLoaded(true)
-            setError(false)
+            // without a thumbnail the server answers with a 1px transparent image:
+            // show the type icon instead of an empty slot
+            setError(e.currentTarget.naturalWidth <= 1)
           }}
           onError={() => {
             setLoaded(true)

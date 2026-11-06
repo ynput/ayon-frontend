@@ -10,7 +10,7 @@ const StyledDropdown = styled(Dropdown)`
     }
     & > div {
       border: none;
-      /* the 100px column fits "v001" with room for longer names */
+      /* the 84px column fits "v001" with room for longer names */
       padding: 0 8px;
     }
   }
