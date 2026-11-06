@@ -26,7 +26,7 @@ import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
-import { useGetEntityLinksQuery } from '@shared/api'
+import { useGetEntityLinksInBatchesQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
 import {
@@ -293,11 +293,15 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     isUninitialized: isUninitializedFoldersLinks,
     isFetching: isFetchingFoldersLinks,
-  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
+  } = useGetEntityLinksInBatchesQuery(foldersLinksArgs, {
+    skip: isLoadingViews || skipLinks,
+    priorityIds: debouncedVisibleEntityIds,
+  })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
     const map = new Map()
+    const linksById = new Map(foldersLinks.map((entity) => [entity.id, entity.links]))
 
     const addExtraDataToFolder = (folder: FolderListItem) => {
       // add any extra data to folder
@@ -305,7 +309,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
-        links: foldersLinks?.find((link) => link.id === folder.id)?.links || [],
+        links: linksById.get(folder.id) || [],
       }
       return folderWithExtraData
     }
@@ -586,8 +590,9 @@ export const useFetchOverviewData = ({
     data: tasksLinks = [],
     isUninitialized: isUninitializedTasksLinks,
     isFetching: isFetchingTasksLinks,
-  } = useGetEntityLinksQuery(tasksLinksArgs, {
+  } = useGetEntityLinksInBatchesQuery(tasksLinksArgs, {
     skip: isLoadingViews || visibleTasks.size === 0 || skipLinks,
+    priorityIds: debouncedVisibleEntityIds,
   })
 
   // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
@@ -635,12 +640,13 @@ export const useFetchOverviewData = ({
   const { tasksMap, tasksByFolderMap } = useMemo(() => {
     const tasksMap: TaskNodeMap = new Map()
     const tasksByFolderMap: TasksByFolderMap = new Map()
+    const linksById = new Map(tasksLinks.map((entity) => [entity.id, entity.links]))
 
     const addExtraDataToTask = (task: EditorTaskNode) => ({
       ...task,
       entityId: task.id,
       entityType: 'task' as const,
-      links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
+      links: linksById.get(task.id) || [],
     })
 
     for (const task of resolvedTasks) {
