@@ -12,6 +12,10 @@ import { TextWidget } from './Widgets/TextWidget'
 import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
 import { FormWrapper } from './SettingsEditor.styled'
+import { useAppSelector } from '@state/store'
+import clsx from 'clsx'
+import { SettingsOutline } from './SettingsOutline'
+import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContextInstance'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -97,9 +101,19 @@ const SettingsEditor = ({
   level,
   changedKeys,
   context,
+  // pages that don't want the flat layout's table of contents (Global settings) turn it off,
+  // and pages stacking several editors draw one for all of them (AddonSettings)
+  outline = true,
+  // tells apart the group ids of editors sharing a page (getSettingsGroupAnchor)
+  anchorScope,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
   const formWrapperRef = useRef()
+  const sheetRef = useRef(null)
+  // per-user choice between the classic nested panels and the flat card layout
+  const flatLayout = useAppSelector(
+    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
+  )
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -131,7 +145,7 @@ const SettingsEditor = ({
       changedKeys: changedKeys || [],
       level: level || 'studio',
     }
-  }, [schema, formData, overrides, level, changedKeys])
+  }, [schema, formData, overrides, level, changedKeys, originalOverrides])
 
   // we need to add the props.context to form context independently
   // otherwise it breaks memoized overrides
@@ -173,13 +187,14 @@ const SettingsEditor = ({
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
     currentId: currentId,
+    flatLayout,
   }
 
   // console.log('context? ', fullContext)
   // console.log('schema? ', schema)
 
-  return (
-    <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
+  const form = (
+    <SettingsAnchorScopeContext.Provider value={anchorScope}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
@@ -197,6 +212,25 @@ const SettingsEditor = ({
       >
         <div />
       </Form>
+    </SettingsAnchorScopeContext.Provider>
+  )
+
+  return (
+    <FormWrapper
+      $currentSelection={currentId}
+      ref={formWrapperRef}
+      className={clsx(flatLayout && 'settings-flat')}
+    >
+      {flatLayout ? (
+        <div className="settings-flat-layout">
+          {outline && <SettingsOutline sheetRef={sheetRef} />}
+          <div className="settings-flat-sheet" ref={sheetRef}>
+            {form}
+          </div>
+        </div>
+      ) : (
+        form
+      )}
     </FormWrapper>
   )
 }

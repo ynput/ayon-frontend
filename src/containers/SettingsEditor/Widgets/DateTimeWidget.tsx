@@ -4,6 +4,10 @@ import { InputDate } from '@ynput/ayon-react-components'
 import { updateChangedKeys, parseContext } from '../helpers'
 import { $Any } from '@types'
 
+// react-datepicker creates this element under the body when it's missing
+const DATE_PICKER_PORTAL_ID = 'settings-date-picker-portal'
+const fieldProps: $Any = { className: 'form-field' }
+
 const DateTimeWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)
   const [value, setValue] = useState<Date | null | undefined>(null)
@@ -39,8 +43,19 @@ const DateTimeWidget = (props: $Any) => {
     updateChangedKeys(props, isChanged, path)
   }
 
-  // @ts-ignore
-  return <InputDate className="form-field" selected={value || undefined} onChange={onChange} onFocus={onFocus} />
+  // the flat layout keeps each row in its own stacking context, which would put the
+  // calendar under the rows below it: it opens in a portal instead
+  const portalId = props.formContext?.flatLayout ? DATE_PICKER_PORTAL_ID : undefined
+
+  return (
+    <InputDate
+      {...fieldProps}
+      selected={value || undefined}
+      onChange={onChange}
+      onFocus={onFocus}
+      portalId={portalId}
+    />
+  )
 }
 
 export { DateTimeWidget }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import {
   FormRow,
@@ -41,19 +41,25 @@ const FormsStyled = styled.section`
   }
 `
 
+const initialPreferences = {
+  notifications: false,
+  notificationSound: false,
+  flatSettingsLayout: false,
+}
+
 const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
-  const attributes = ayonClient.getAttribsByScope('user')
+  const attributes = useMemo(() => ayonClient.getAttribsByScope('user'), [])
   const [showSetPassword, setShowSetPassword] = useState(false)
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
 
   // build initial form data
-  const initialFormData = {}
-  attributes.forEach((attrib) => {
-    initialFormData[attrib.name] = ''
-  })
+  const initialFormData = useMemo(
+    () => Object.fromEntries(attributes.map((attrib) => [attrib.name, ''])),
+    [attributes],
+  )
 
   const [name, setName] = useState('')
   const [password] = useState('randompasswor')
@@ -85,7 +91,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       setFormData(initialFormData)
       setName('')
     }
-  }, [isLoading, user])
+  }, [attributes, initialFormData, isLoading, user])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -96,7 +102,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData])
+  }, [changesMade, formData, initData])
 
   const onSave = async () => {
     const trimmedFormData = Object.fromEntries(
@@ -136,10 +142,10 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [updatePreferences, { isLoading: isUpdatingPreferences }] =
     useSetFrontendPreferencesMutation()
 
-  const initPreferences = { notifications: false, notificationSound: false }
-  const [initPreferencesData, setInitPreferencesData] = useState(initPreferences)
-  const [preferencesData, setPreferencesData] = useState(initPreferences)
-  const [preferenceChanges, setPreferenceChanges] = useState(false)
+  const initPreferencesData = useRef(initialPreferences)
+  const [preferencesData, setPreferencesData] = useState(initialPreferences)
+  const preferenceChanges =
+    JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData.current)
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -149,35 +155,24 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       const newPreferencesData = {
         notifications: data.frontendPreferences?.notifications,
         notificationSound: data.frontendPreferences?.notificationSound,
+        flatSettingsLayout: !!data.frontendPreferences?.flatSettingsLayout,
       }
 
       setPreferencesData(newPreferencesData)
       // used to reset form and detect changes
-      setInitPreferencesData(newPreferencesData)
+      initPreferencesData.current = newPreferencesData
     }
 
     return () => {
       // reset forms
-      setInitPreferencesData(initPreferences)
-      setPreferencesData(initPreferences)
+      initPreferencesData.current = initialPreferences
+      setPreferencesData(initialPreferences)
     }
   }, [isLoading, user])
-
-  // look for changes when preferencesData changes
-  useEffect(() => {
-    const isDiff = JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData)
-
-    if (isDiff) {
-      if (!preferenceChanges) setPreferenceChanges(true)
-    } else {
-      setPreferenceChanges(false)
-    }
-  }, [preferencesData, initPreferencesData])
 
   const { sendNotification } = useNotifications()
 
   const onSavePreferences = async () => {
-    setPreferenceChanges(false)
     try {
       await updatePreferences({
         userName: user.name,
@@ -186,7 +181,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       dispatch(updateUserPreferences(preferencesData))
       // reset form
-      setInitPreferencesData(preferencesData)
+      initPreferencesData.current = preferencesData
 
       // if the user has enabled notifications for the first time, ask for permission
       if (preferencesData.notifications && Notification.permission !== 'granted') {
@@ -203,7 +198,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
           }).unwrap()
         }
       }
-    } catch (error) {
+    } catch {
       toast.error('Unable to update preferences')
     }
   }
@@ -277,6 +272,20 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 <InputSwitch
                   checked={preferencesData.notificationSound}
                   id={'notificationSound'}
+                  onChange={handleChangePreferences}
+                  disabled={isUpdatingPreferences || isLoading}
+                />
+              </div>
+            </FormRow>
+
+            <FormRow label="Flat settings layout" key="flatSettingsLayout">
+              <div
+                data-tooltip="Show settings as one flat sheet of cards instead of nested panels"
+                style={{ width: 'fit-content' }}
+              >
+                <InputSwitch
+                  checked={preferencesData.flatSettingsLayout}
+                  id={'flatSettingsLayout'}
                   onChange={handleChangePreferences}
                   disabled={isUpdatingPreferences || isLoading}
                 />
