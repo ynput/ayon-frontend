@@ -32,7 +32,7 @@ test.describe('smoke: project pages', () => {
         visible(
           page.getByRole('button', { name: 'Expand all rows' }),
           page.getByRole('table').first().getByText(d.folder.name, { exact: true }),
-          heading(page, 'Select a folder to begin.'),
+          heading(page, 'Select a folder to see its tasks'),
         ),
     },
     {

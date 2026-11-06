@@ -19,6 +19,7 @@ import { WorkfileUsers } from './WorkfileUsers'
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)
   const dispatch = useDispatch()
+  const folderIds = useSelector((state) => state.context.focused.folders)
   const taskIds = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
   const projectName = useSelector((state) => state.project.name)
@@ -149,6 +150,7 @@ const WorkfileList = ({ style }) => {
           <NoEntityFound
             type="workfile"
             label={!taskIds.length ? 'Select a task to see its workfiles' : undefined}
+            muted={!folderIds.length}
           />
         ) : (
           <DataTable

@@ -79,7 +79,10 @@ test.describe('smoke: projects manager', () => {
       name: 'project permissions',
       path: manager('permissions'),
       ready: (page) =>
-        visible(column(page, 'Access group'), heading(page, 'No access group selected')),
+        visible(
+          column(page, 'Access group'),
+          heading(page, 'Select an access group to see its permissions'),
+        ),
     },
     {
       name: 'project access',
@@ -165,7 +168,10 @@ test.describe('smoke: studio settings', () => {
       name: 'permissions (access groups)',
       path: () => '/settings/accessGroups',
       ready: (page) =>
-        visible(button(page, 'New access group'), heading(page, 'No access group selected')),
+        visible(
+          button(page, 'New access group'),
+          heading(page, 'Select an access group to see its permissions'),
+        ),
     },
     {
       name: 'secrets',

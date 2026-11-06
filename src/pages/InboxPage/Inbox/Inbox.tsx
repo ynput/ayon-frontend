@@ -745,6 +745,7 @@ const Inbox = ({ filter }: InboxProps) => {
                           entityId={group.entityId ?? undefined}
                           projectName={group.projectName}
                           date={group.date}
+                          timeOnly={showDayDividers}
                           userName={group.userName}
                           isRead={group.read || group.active}
                           unReadCount={group.unRead}

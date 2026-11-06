@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from 'react'
+import clsx from 'clsx'
 import { useSelector, useDispatch } from 'react-redux'
 import { InputText, Section, Toolbar, Spacer, getReadableColor } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
@@ -366,7 +367,8 @@ const Products = () => {
         field: 'createdAt',
         header: 'Created at',
         width: 180,
-        body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
+        body: (node) =>
+          node.data.createdAt && <TimestampField value={node.data.createdAt} seconds={false} />,
       },
       {
         field: 'versionAuthor',
@@ -696,6 +698,7 @@ const Products = () => {
   //
 
   const isNone = tableData.length === 0
+  const showPlaceholder = isNone && !isLoading && !isFetching
 
   return (
     <Section wrap>
@@ -734,6 +737,7 @@ const Products = () => {
         />
       </Toolbar>
       <Styled.ProductsTablePanel
+        className={clsx({ empty: showPlaceholder })}
         style={{ overflow: 'hidden' }}
         onContextMenu={handleTablePanelContext}
         onKeyDown={handleKeyDown}
@@ -773,7 +777,7 @@ const Products = () => {
             loadingProducts={loadingProducts}
           />
         )}
-        {isNone && !isLoading && !isFetching && (
+        {showPlaceholder && (
           <EmptyPlaceholder
             icon={getEntityTypeIcon('product')}
             message={

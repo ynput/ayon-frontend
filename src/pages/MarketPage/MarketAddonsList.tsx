@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import MarketAddonCard, { MarketAddonCardGroup } from '@components/MarketAddonCard'
 import styled from 'styled-components'
 import PerfectScrollbar from 'react-perfect-scrollbar'
-import { InputText } from '@ynput/ayon-react-components'
+import { Icon, InputText } from '@ynput/ayon-react-components'
 import { Tag } from '@components/MarketAddonCard/MarketAddonCard.styled'
 import { MarketAddonItem } from '@queries/market/getMarket'
 import { ListItemType } from '@components/MarketAddonCard/MarketAddonCard'
@@ -37,10 +37,25 @@ const StyledAddonList = styled.div`
   }
 `
 
-const StyledInput = styled(InputText)`
-  max-height: 40px;
-  height: 40px;
+// the standard search field: the default input height, a search icon at the start
+const SearchField = styled.div`
+  position: relative;
   flex: 1;
+  display: flex;
+
+  .icon {
+    position: absolute;
+    left: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--md-sys-color-outline);
+    pointer-events: none;
+  }
+
+  input {
+    flex: 1;
+    padding-left: 36px;
+  }
 `
 
 const StyledList = styled(PerfectScrollbar)`
@@ -170,11 +185,15 @@ const MarketAddonsList = ({
   return (
     <StyledAddonList ref={listRef}>
       <div className="search">
-        <StyledInput
-          placeholder="Search"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <SearchField>
+          <Icon icon="search" />
+          <InputText
+            placeholder="Search addons"
+            aria-label="Search addons"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </SearchField>
         {onUpdateAll && (
           <Tag
             variant="filled"

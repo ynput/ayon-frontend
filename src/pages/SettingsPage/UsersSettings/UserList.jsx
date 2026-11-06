@@ -2,7 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import UserImage from '@shared/components/UserImage'
-import { DoneCheckbox } from '@shared/components'
+import { BooleanValue } from '@shared/components'
 
 import './users.scss'
 
@@ -15,6 +15,14 @@ import { useGetUserPoolsQuery } from '@shared/api'
 import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
 import { getInvitationState } from './InvitationStatusHelpers'
+
+// a few very long imported names would otherwise push Access level and the rest out of view
+const NAME_COLUMN_STYLE = {
+  maxWidth: 240,
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+}
 
 const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
 
@@ -30,6 +38,12 @@ const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
+  min-width: 0;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `
 
 const StyledLicenseRow = styled.div`
@@ -64,10 +78,6 @@ export const ProfileRow = ({ rowData }) => {
     </StyledProfileRow>
   )
 }
-
-// only true is marked: an empty circle on every other row reads as a radio button
-const BooleanCell = ({ value }) =>
-  value ? <DoneCheckbox checked isReadOnly style={{ fontSize: 18, display: 'block' }} /> : null
 
 const getUserRole = (user) => {
   if (user.isAdmin) return 'Admin'
@@ -194,8 +204,15 @@ const UserList = ({
             sortable
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             resizeable
+            style={NAME_COLUMN_STYLE}
           />
-          <Column field="attrib.fullName" header="Full name" sortable resizeable />
+          <Column
+            field="attrib.fullName"
+            header="Full name"
+            sortable
+            resizeable
+            style={NAME_COLUMN_STYLE}
+          />
           <Column field="attrib.email" header="Email" sortable />
           {!!userPools.length && (
             <Column
@@ -231,14 +248,14 @@ const UserList = ({
           />
           <Column
             header="Has password"
-            body={(rowData) => !isLoading && <BooleanCell value={rowData.hasPassword} />}
+            body={(rowData) => !isLoading && <BooleanValue value={!!rowData.hasPassword} />}
             field="hasPassword"
             sortable
             resizeable
           />
           <Column
             header="Active"
-            body={(rowData) => !isLoading && <BooleanCell value={rowData.active} />}
+            body={(rowData) => !isLoading && <BooleanValue value={!!rowData.active} />}
             field="active"
             sortable
             resizeable

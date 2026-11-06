@@ -1,6 +1,5 @@
 import { memo } from 'react'
 import { CellContext } from '@tanstack/react-table'
-import { Icon } from '@ynput/ayon-react-components'
 import ProjectThumbnailUploader from '../ProjectThumbnailUploader/ProjectThumbnailUploader'
 import { isEmptyFolderPlaceholderRow, ProjectTableRow } from '../../hooks/useProjectTableRows'
 
@@ -33,15 +32,7 @@ export const ProjectThumbnailCell = memo(({ info }: ProjectThumbnailCellProps) =
             flexShrink: 0,
           }}
         >
-          {/* projects without a thumbnail get a transparent image, so this icon shows through */}
-          <Icon
-            icon="image"
-            style={{
-              position: 'absolute',
-              fontSize: 18,
-              color: 'var(--md-sys-color-outline-variant)',
-            }}
-          />
+          {/* projects without a thumbnail get a transparent image: the background is an empty tile */}
           <img
             src={
               updatedAt
@@ -55,6 +46,7 @@ export const ProjectThumbnailCell = memo(({ info }: ProjectThumbnailCellProps) =
               position: 'relative',
               objectFit: 'cover',
               borderRadius: 'var(--border-radius-m)',
+              backgroundColor: 'var(--md-sys-color-surface-container-high)',
               flexShrink: 0,
             }}
           />

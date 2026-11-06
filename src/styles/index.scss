@@ -168,8 +168,10 @@ strong {
 nav.primary {
   background-color: var(--md-sys-color-background);
   padding: 8px;
-  display: flex;
-  flex-direction: row;
+  // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
+  // page's centre line on every page; a side wider than its half pushes them over, never under it
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);
@@ -482,6 +484,26 @@ a {
   .p-sortable-column-icon {
     flex-shrink: 0;
     vertical-align: middle;
+  }
+}
+
+// legacy PrimeReact tables and trees: the focus ring is for keyboard focus only,
+// a click shows the selection fill alone (like the project tables)
+.p-treetable .p-treetable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr > td,
+.p-treetable .p-sortable-column {
+  &:focus:not(:focus-visible) {
+    outline: none !important;
+  }
+}
+.p-tree .p-treenode-content,
+.p-datatable .p-sortable-column,
+.p-treetable-toggler,
+.p-row-toggler,
+.p-tree-toggler {
+  &:focus:not(:focus-visible) {
+    box-shadow: none !important;
   }
 }
 

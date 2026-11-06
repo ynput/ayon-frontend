@@ -157,15 +157,16 @@ export const Left = styled.div`
   }
 `
 
+// rows have no thumbnails, only the entity type's icon, without the empty image box around it
 export const MessageThumbnail = styled(Thumbnail)`
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
   height: 30px;
   max-height: 30px;
   margin: 0;
   border-radius: var(--border-radius-m);
-  margin-right: 4px;
+  background-color: transparent;
 
   .icon {
     font-size: 18px;

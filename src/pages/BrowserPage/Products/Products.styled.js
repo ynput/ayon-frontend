@@ -15,6 +15,11 @@ export const ColumnsFilterSelect = styled(ColumnsSelect)`
 
 // version statuses as filled pills, the same as the status cells of the project tables
 export const ProductsTablePanel = styled(TablePanel)`
+  /* the empty state replaces the table, its header row would float above the message */
+  &.empty .p-treetable {
+    visibility: hidden;
+  }
+
   td.versionStatus .status-field.value {
     width: fit-content;
     max-width: 100%;

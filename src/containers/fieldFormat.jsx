@@ -2,7 +2,7 @@
 import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { OverflowField, getReadableColor } from '@ynput/ayon-react-components'
-import { copyToClipboard, formatDate, formatTime } from '@shared/util'
+import { copyToClipboard, formatDate, formatDateTime } from '@shared/util'
 
 // Attributes
 
@@ -56,24 +56,10 @@ const TagsField = ({ value }) => {
 
 // Datetime
 
-const DateTimeContainer = styled.div`
-  display: flex;
-  flex-direction: row;
-  gap: var(--base-gap-large);
-  align-items: center;
-  > span:first-child {
-    color: var(--md-sys-color-on-surface-variant);
-  }
-`
-
-const TimestampField = ({ value, ddOnly }) => {
+// seconds by default: this field shows event and session logs
+const TimestampField = ({ value, ddOnly, seconds = true }) => {
   if (!value) return ''
-  return (
-    <DateTimeContainer>
-      <span>{formatDate(value)}</span>
-      {!ddOnly && <span>{formatTime(value, { seconds: true })}</span>}
-    </DateTimeContainer>
-  )
+  return <span>{ddOnly ? formatDate(value) : formatDateTime(value, { seconds })}</span>
 }
 
 const PathField = ({ value }) => {

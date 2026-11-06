@@ -330,7 +330,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
       {loadError && (
         <EmptyPlaceholder
           icon="hide_image"
-          message={'Unable to load video.'}
+          message="Unable to load video"
           error={loadError?.code !== 4 && loadError?.message}
         />
       )}

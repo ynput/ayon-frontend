@@ -75,9 +75,9 @@ const ViewerComponent = ({
     let canUploadReviewable = false
 
     if (noVersions) {
-      message = 'This task has published no versions.'
+      message = 'This task has published no versions'
     } else if (!reviewables.length) {
-      message = 'This version has no online reviewables.'
+      message = 'This version has no online reviewables'
       canUploadReviewable = true
     } else if (!isPlayable || !hasPlayableReviewable) {
       message = 'File not supported and needs conversion'

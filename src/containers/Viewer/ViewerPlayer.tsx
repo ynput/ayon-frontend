@@ -36,7 +36,7 @@ const ViewerPlayer = ({
 
   if (!reviewable)
     return (
-      <EmptyPlaceholder icon="hide_image" message={'This version has no reviewable content.'}>
+      <EmptyPlaceholder icon="hide_image" message="This version has no reviewable content">
         <Button icon="add" onClick={onUpload}>
           Upload reviewable
         </Button>

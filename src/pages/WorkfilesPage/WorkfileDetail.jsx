@@ -14,6 +14,7 @@ import { useProjectContext } from '@shared/context'
 const WorkfileDetail = ({ style }) => {
   const { projectName } = useProjectContext()
   const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
+  const taskIds = useSelector((state) => state.context.focused.tasks)
   const [selectedSite, setSelectedSite] = useState(null)
 
   const firstFocusedWorkfile = focusedWorkfiles[0]
@@ -41,7 +42,11 @@ const WorkfileDetail = ({ style }) => {
     return (
       <Section style={style}>
         <Panel style={{ flex: 1, position: 'relative' }}>
-          <NoEntityFound type="workfile" label="Select a workfile to see its details" />
+          <NoEntityFound
+            type="workfile"
+            label="Select a workfile to see its details"
+            muted={!taskIds.length}
+          />
         </Panel>
       </Section>
     )

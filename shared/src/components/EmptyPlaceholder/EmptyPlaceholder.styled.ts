@@ -46,6 +46,18 @@ export const Placeholder = styled.div`
     }
   }
 
+  /* a prompt that can't be acted on yet: its prerequisite (e.g. a selection in the previous pane) is missing */
+  &.muted {
+    .placeholder-icon {
+      background-color: transparent;
+      color: var(--md-sys-color-outline);
+    }
+
+    h3 {
+      color: var(--md-sys-color-outline);
+    }
+  }
+
   &.isError {
     .placeholder-icon {
       color: var(--md-sys-color-error-container);

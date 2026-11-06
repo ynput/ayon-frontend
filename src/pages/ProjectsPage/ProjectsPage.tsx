@@ -20,19 +20,14 @@ import {
   type ListTableRowContextMenuBuilder,
 } from '@shared/containers/ListTable'
 import * as Styled from './ProjectsPage.styled'
-import {
-  Button,
-  SortCardType,
-  SortingDropdown,
-  Toolbar,
-} from '@ynput/ayon-react-components'
+import { Button, SortCardType, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import { ProjectDetailsPanel } from './components/ProjectDetailsPanel/ProjectDetailsPanel'
 import { ProjectsPageTableSettings } from './components/ProjectsPageTableSettings'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter'
 import useShortcuts from '@hooks/useShortcuts'
 import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/context'
-import { CustomizeButton, InfoMessage, PowerpackButton } from '@shared/components'
+import { BooleanValue, CustomizeButton, InfoMessage, PowerpackButton } from '@shared/components'
 import { useSessionStorage } from '@shared/hooks'
 import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
 import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
@@ -108,7 +103,11 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     handleGroupingChange(nextGrouping, nextGroupSortByDesc)
   }
 
-  const dataTypeWidgets = getDefaultListTableDataTypeWidgets<ProjectTableRow>()
+  // the table is read-only: yes/no as a check or a dash, like the other settings tables
+  const dataTypeWidgets = {
+    ...getDefaultListTableDataTypeWidgets<ProjectTableRow>(),
+    boolean: ({ value }: { value: unknown }) => <BooleanValue value={!!value} />,
+  }
 
   // TABLE: Build table rows and apply filters and grouping
   const displayRows = useProjectTableRows({
