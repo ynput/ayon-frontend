@@ -146,8 +146,8 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
-  (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
+  \`ProjectList\`), \`MoreMenu\` and \`useContextMenu\` (below). Data comes from
+  \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
   \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
   Menu items (their context has no \`navigate\`, unlike buttons) open another AYON page with
   \`navigate(to)\` from this package; it is the same as a button's \`context.navigate\`.
@@ -310,6 +310,33 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
+
+## A right-click menu: \`useContextMenu\`
+
+AYON's right-click menu with the same items as \`MoreMenu\`. Don't import AYON's own context menu
+from \`@ynput/ayon-frontend-shared\`: its items have another shape and it needs AYON's provider.
+
+\`\`\`tsx
+import { useContextMenu } from '@ynput/ayon-addon'
+
+const openContextMenu = useContextMenu()
+
+<tr
+  onContextMenu={(event) =>
+    openContextMenu(event, [
+      { id: 'edit', label: 'Edit', icon: 'edit', onClick: () => edit(log) },
+      { divider: true },
+      { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: log.locked, onClick: () => askDelete(log) },
+    ])
+  }
+/>
+\`\`\`
+
+- The opener takes the mouse event and the items, built when the menu opens. It stops the browser's
+  own menu. Items as in \`MoreMenu\`; \`selected\` has no look in this menu.
+- To ask before a destructive item, open your own confirmation (AYON's \`Dialog\` from
+  \`@ynput/ayon-react-components\`) from its \`onClick\`. The \`confirmDelete\` of
+  \`@ynput/ayon-frontend-shared\` needs a dialog AYON doesn't render for addons.
 
 ## Slot contexts: one shape
 

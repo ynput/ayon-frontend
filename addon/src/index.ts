@@ -125,6 +125,9 @@ export type {
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+// AYON's right-click menu, with the same items
+export { useContextMenu } from './useContextMenu'
+export type { OpenContextMenu } from './useContextMenu'
 
 // globals: the same in every slot
 export { dispatch, navigate, useUser } from './globals'

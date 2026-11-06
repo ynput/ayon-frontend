@@ -7,6 +7,7 @@ import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
+import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
 import { LazyEntityTable } from './EntityTable/LazyEntityTable'
 
@@ -46,6 +47,7 @@ export const provideAddonHost = () =>
     openViewer: (target) => {
       store.dispatch(openViewer(target))
     },
+    useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
