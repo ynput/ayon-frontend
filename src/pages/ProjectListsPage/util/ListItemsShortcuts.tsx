@@ -1,4 +1,8 @@
-import { useCellEditing, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  useCellEditing,
+  useSelectionCellsContext,
+} from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect } from 'react'
 import { useListItemsDataContext } from '../context/list-items-data'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
@@ -19,11 +23,13 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
       if ((selectedList?.accessLevel ?? 0) < 20) return
 
       if (event.key === 'Backspace' && (event.ctrlKey || event.metaKey)) {
-        // convert selection to a list of ids
+        // convert the selected cells to a list of ids; row checkboxes are ignored, as in context menus
         const selectedListItems: DeleteListItem[] = []
 
         Array.from(selectedCells).forEach((cell) => {
-          const itemId = parseCellId(cell)?.rowId
+          const parsed = parseCellId(cell)
+          if (!parsed || parsed.colId === ROW_SELECTION_COLUMN_ID) return
+          const itemId = parsed.rowId
           if (!itemId) return
           const item = listItemsMap.get(itemId)
           if (!item) return
