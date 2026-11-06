@@ -50,6 +50,11 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
 
         // rows selected only by their checkbox are not removed, so tell the user to select cells
         if (!hasCellSelection) {
+          const target = event.target as HTMLElement | null
+          const isTyping =
+            target?.isContentEditable ||
+            target?.closest('input, textarea, [role="textbox"], .block-shortcuts')
+          if (!selectedCells.size || isTyping) return
           toast.warning(
             'Select some cells to remove. Rows selected with the checkbox are not included.',
           )
