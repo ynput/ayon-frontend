@@ -9,14 +9,19 @@ const UsersContainer = styled.div`
   display: flex;
   gap: var(--base-gap-small);
   align-items: center;
-  max-width: clamp(100px, 10vw, 250px);
   overflow: hidden;
+
+  /* the avatars keep their size, the name gives way */
+  > * {
+    flex-shrink: 0;
+  }
 `
 
 const UserName = styled.span`
   overflow: hidden;
   flex: 1;
-  width: 100%;
+  min-width: 0;
+  white-space: nowrap;
   text-overflow: ellipsis;
 `
 

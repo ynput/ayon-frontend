@@ -273,7 +273,7 @@ const Products = () => {
       {
         field: 'name',
         header: 'Product',
-        width: 190,
+        width: 170,
         body: (node) => {
           let className = ''
           let i = 0
@@ -302,7 +302,7 @@ const Products = () => {
       {
         field: 'versionStatus',
         header: 'Version status',
-        width: 150,
+        width: 130,
         style: { height: 'max-content' },
         body: (node) => {
           if (node.data.isGroup) return ''

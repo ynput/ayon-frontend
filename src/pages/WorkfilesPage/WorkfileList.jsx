@@ -69,6 +69,7 @@ const WorkfileList = ({ style }) => {
         iconClassName={className}
         text={rowData.name}
         name={rowData.path}
+        style={{ display: 'flex' }}
       />
     )
   }
@@ -176,11 +177,14 @@ const WorkfileList = ({ style }) => {
             onKeyDown={handleTableKeyDown}
             onContextMenu={onContextMenu}
             rowClassName={(rowData) => ({ ['id-' + rowData.id]: true })}
+            // fixed layout keeps the table inside the pane; the name and author cut with an ellipsis
+            tableStyle={{ tableLayout: 'fixed', width: '100%' }}
           >
             <Column field="name" header="Name" body={formatName} />
             <Column
               field="author"
               header="Author"
+              style={{ width: 120 }}
               body={(rowData) => (
                 <WorkfileUsers
                   users={users}

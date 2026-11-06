@@ -9,6 +9,7 @@ import {
   Panel,
 } from '@ynput/ayon-react-components'
 import DetailHeader from '@components/DetailHeader'
+import { EmptyPlaceholderFlex } from '@shared/components'
 import { pluralize } from '@shared/util'
 
 const TeamDetails = ({
@@ -81,6 +82,18 @@ const TeamDetails = ({
 
     onUpdateTeams(updatedTeams)
   }
+
+  if (noneSelected)
+    return (
+      <Panel>
+        <h2 style={{ marginTop: 0 }}>Team settings</h2>
+        <EmptyPlaceholderFlex
+          className="compact"
+          icon="groups"
+          message="Select a team to rename it or edit its roles"
+        />
+      </Panel>
+    )
 
   return (
     <>

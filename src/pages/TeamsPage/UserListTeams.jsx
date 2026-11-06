@@ -217,6 +217,7 @@ const UserListTeams = ({
                         opacity: selectedTeams.includes(team) ? 1 : 0.5,
                         marginLeft: i === 0 ? 0 : 4,
                       }}
+                      data-tooltip={rowData.teams[team].leader ? 'Team leader' : undefined}
                     >{`${team}${i < arr.length - 1 ? ',' : ''}`}</span>
                   ))}
                 </span>

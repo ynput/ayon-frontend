@@ -13,8 +13,9 @@ export const EmptyPlaceholderFlex = styled(EmptyPlaceholder)`
   left: 0;
   transform: none;
 
-  /* smaller by default; className "full" keeps the base size for a placeholder that fills a page */
-  &:not(.full) {
+  /* smaller by default; className "full" keeps the base size for a placeholder that fills a page,
+     "compact" the base compact size */
+  &:not(.full):not(.compact) {
     gap: 8px;
     .icon {
       font-size: 34px;

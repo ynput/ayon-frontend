@@ -5,6 +5,8 @@ import { TablePanel } from '@ynput/ayon-react-components'
 // header on the other project pages, not a filled table header
 export const FlatHeaderTablePanel = styled(TablePanel)`
   --color-table-header: transparent;
+  /* rows show the panel surface, so the body is one colour down to the panel's end, as in Overview */
+  --color-table-row: transparent;
 
   /* collapsed borders: the row's wider line would win over the header's */
   && .p-treetable-thead > tr,

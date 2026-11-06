@@ -96,18 +96,12 @@ const StyledTextContent = styled.div`
     text-overflow: ellipsis;
   }
 
-  /* on one line the path gives way first, cut with an ellipsis, then its divider: the name
-     only shrinks once it alone is wider than the cell */
+  /* on one line the path (ending in its "/") gives way first, cut with an ellipsis the name
+     follows directly; the name only shrinks once it alone is wider than the cell */
   &.compact .path {
     margin-bottom: 0;
     flex: 0 1000 auto;
     min-width: 0;
-  }
-
-  &.compact .path-divider {
-    color: var(--md-sys-color-outline);
-    min-width: 0;
-    overflow: hidden;
   }
 
   &.compact .label {
@@ -251,9 +245,11 @@ export const EntityNameWidget = ({
               color={entity.color ? entity : undefined}
             />
             <StyledTextContent className={layout} onMouseOver={showFullNameIfCut}>
-              {shouldShowPath && !isRestricted && <span className="path">{path}</span>}
-              {shouldShowPath && !isRestricted && isCompact && path && (
-                <span className="path-divider">/</span>
+              {shouldShowPath && !isRestricted && (
+                <span className="path">
+                  {path}
+                  {isCompact && path && '/'}
+                </span>
               )}
               <span className="label">
                 {versionLabel ? (

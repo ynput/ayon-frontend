@@ -16,10 +16,10 @@ export const TaskFilterDropdown = styled(CategorySelect)`
   }
 `
 
+// keeps its natural width: the search field gives way first, the count stays readable
 export const ColumnsFilterSelect = styled(ColumnsSelect)`
-  flex: 0 1 170px;
-  min-width: 128px;
-  max-width: 170px;
+  flex: 0 0 auto;
+  min-width: 144px;
 
   /* narrowed, the count ends in an ellipsis rather than a cut word */
   .template-value > div,

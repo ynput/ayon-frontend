@@ -4,7 +4,14 @@ import type { EntityListModel } from '@shared/api'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import { formatDateTime } from '@shared/util'
 import { FC, useMemo } from 'react'
+import { upperFirst } from 'lodash'
 import { DetailsSection } from '../DetailsPanelDetails'
+
+// list types as people read them; anything else falls back to its capitalised id
+const listTypeLabels: Record<string, string> = {
+  generic: 'Generic',
+  'review-session': 'Review session',
+}
 
 interface ListMetaDataProps {
   list?: EntityListModel
@@ -44,8 +51,10 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     'Created by': getUserLabel(list?.createdBy),
     'Updated at': list?.updatedAt && formatDateTime(list.updatedAt),
     'Last updated by': getUserLabel(list?.updatedBy),
-    'Entity type': list?.entityType,
-    'List type': list?.entityListType,
+    'Entity type': list?.entityType && upperFirst(list.entityType),
+    'List type':
+      list?.entityListType &&
+      (listTypeLabels[list.entityListType] ?? upperFirst(list.entityListType)),
     'Items count': list?.data?.count ?? list?.items?.length,
     ...listData,
     // last: the panel mutes it

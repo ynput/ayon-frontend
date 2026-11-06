@@ -7,10 +7,20 @@ import { TimestampField } from '@containers/fieldFormat'
 import { useGetUserSessionsQuery } from '@shared/api'
 import { useInvalidateUserSessionMutation } from '@shared/api'
 
-// its label starts where the column title does, and it fits the standard row height
+// its label starts where the column title does, and it fits the standard row height;
+// repeated on every row, so it stays quiet until hovered
 const InvalidateButton = styled(Button)`
   margin-left: -8px;
   padding: 3px 8px;
+
+  && {
+    font-weight: normal;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  &&:hover {
+    color: var(--md-sys-color-error);
+  }
 `
 
 const SessionList = ({ userName }) => {

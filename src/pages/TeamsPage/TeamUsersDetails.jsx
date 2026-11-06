@@ -9,6 +9,7 @@ import {
   InputSwitch,
   Panel,
 } from '@ynput/ayon-react-components'
+import { EmptyPlaceholderFlex } from '@shared/components'
 import addRemoveMembers from './addRemoveMembers'
 import UserSubtitle from './UserSubtitle'
 
@@ -92,8 +93,8 @@ const TeamUsersDetails = ({
 
   const rolesOptions = useMemo(() => rolesList.map((role) => ({ name: role })), [rolesList])
 
-  const formSubtitle = noUsers
-    ? 'No users selected'
+  const formSubtitle = !selectedTeams.length
+    ? 'Select a team to set roles'
     : usersOnTeams.length
     ? 'Setting on team' + (usersOnTeams.length > 1 ? 's' : '') + ': ' + usersOnTeams.join(', ')
     : `Not on ${selectedTeams.join(', ')}`
@@ -195,6 +196,18 @@ const TeamUsersDetails = ({
 
     onUpdateTeams(updatedTeamsWithNewLeaders)
   }
+
+  if (noUsers)
+    return (
+      <Panel>
+        <h2 style={{ marginTop: 0 }}>Member settings</h2>
+        <EmptyPlaceholderFlex
+          className="compact"
+          icon="person"
+          message="Select members to edit their teams and roles"
+        />
+      </Panel>
+    )
 
   return (
     <>
