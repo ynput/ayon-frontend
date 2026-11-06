@@ -9,7 +9,7 @@
 //   yarn release:status                     local origin/develop version vs npm, per package
 //   yarn release:changes [--json]           what merged since each package's last npm release, and the
 //                                           signals that decide patch / minor / major
-//   yarn release:bump                     suggest bumps from commits, prompt for overrides, then confirm
+//   yarn release:bump                     suggest bumps, confirm (Enter or y), then commit and push
 //   yarn release:bump <pkg>=<level> ...     set explicit versions without prompts; <level> is patch,
 //                                           minor, major or x.y.z. Run on a release branch, never develop.
 //   yarn release:check                      are versions and cross-package pins consistent?
@@ -19,6 +19,7 @@
 //
 // --repo <dir> runs a command against another checkout or worktree (default: this repo).
 // status, changes, interactive bump and publish fetch origin.
+// bump needs clean release files and an origin remote; it pushes the current release branch.
 // publish needs HEAD at origin/develop, a clean tree and npm login.
 //
 // The skill that runs the whole release (PR, versions, hand-over) lives in the AYON dev workbench:
@@ -48,6 +49,8 @@ const die = (msg) => {
   console.error(msg)
   process.exit(1)
 }
+
+const isConfirmed = (answer) => ['', 'y'].includes(answer.trim().toLowerCase())
 
 // stdout of a command, trimmed. A failure stops with its stderr, unless check is false (then '').
 const sh = (cmd, args, { cwd, check = true } = {}) => {
@@ -560,8 +563,8 @@ const promptBumps = async (repo) => {
     }
     console.log('\nSelected versions:')
     for (const key of Object.keys(levels)) console.log(`  ${PACKAGES[key].name}: ${versions[key]}`)
-    const answer = await rl.question('Apply these bumps and update dependency pins? [y/N] ')
-    if (answer.trim().toLowerCase() !== 'y') {
+    const answer = await rl.question('Apply these bumps, update dependency pins, commit and push? [Y/n] ')
+    if (!isConfirmed(answer)) {
       console.log('Aborted; nothing changed.')
       return []
     }
@@ -574,13 +577,22 @@ const promptBumps = async (repo) => {
 // With no arguments, `release:bump` suggests versions from commits on origin/develop
 // since each package's release baseline, then prompts for overrides and confirmation.
 // Explicit pkg=level arguments retain the non-interactive workflow. Both modes update
-// cross-package pins and the addon guide header, then check consistency without committing.
+// cross-package pins and the addon guide header, check consistency, then commit and push.
 const cmdBump = async (repo, items) => {
-  if (git(repo, 'branch', '--show-current') === 'develop') {
+  const branch = git(repo, 'branch', '--show-current')
+  if (!branch || branch === 'develop') {
     die(
-      'bump changes files: run it on a release branch, not develop (git switch -c chore/release-packages-<date>, or a worktree)',
+      'bump commits and pushes: run it on a release branch, not develop or detached HEAD (git switch -c chore/release-packages-<date>, or a worktree)',
     )
   }
+  const releaseFiles = [
+    ...Object.values(PACKAGES).map(({ dir }) => `${dir}/package.json`),
+    'addon/AGENTS.md',
+  ]
+  if (git(repo, 'status', '--porcelain', '--', ...releaseFiles)) {
+    die('release files have existing changes: commit or stash those changes before bumping')
+  }
+  git(repo, 'remote', 'get-url', 'origin')
   if (!items.length) {
     items = await promptBumps(repo)
     if (!items.length) return
@@ -607,6 +619,8 @@ const cmdBump = async (repo, items) => {
     )
   }
   const want = expected(repo, versions)
+  const changedFiles = []
+  const changedPackages = new Set()
   for (const k of Object.keys(PACKAGES)) {
     const file = path.join(repo, PACKAGES[k].dir, 'package.json')
     const text = readFileSync(file, 'utf8')
@@ -617,6 +631,8 @@ const cmdBump = async (repo, items) => {
     }
     if (next !== text) {
       writeFileSync(file, next)
+      changedFiles.push(`${PACKAGES[k].dir}/package.json`)
+      changedPackages.add(k)
       console.log(`${PACKAGES[k].dir}/package.json  ${versions[k]}`)
     }
   }
@@ -626,13 +642,36 @@ const cmdBump = async (repo, items) => {
     const n = t.replace(/^# @ynput\/ayon-addon \S+/m, `# @ynput/ayon-addon ${versions.addon}`)
     if (n !== t) {
       writeFileSync(agents, n)
+      changedFiles.push('addon/AGENTS.md')
+      changedPackages.add('addon')
       console.log('addon/AGENTS.md  header')
     }
   }
   console.log()
   const problems = check(repo)
   console.log(problems.length ? problems.join('\n') : 'consistent')
-  process.exitCode = problems.length ? 1 : 0
+  if (problems.length) {
+    process.exitCode = 1
+    return
+  }
+  if (!changedFiles.length) {
+    console.log('No release changes to commit or push.')
+    return
+  }
+  git(
+    repo,
+    'commit',
+    '--only',
+    '-m',
+    `chore: bump ${[...changedPackages].map((key) => `${key}@${versions[key]}`).join(', ')}`,
+    '-m',
+    'Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>',
+    '--',
+    ...changedFiles,
+  )
+  console.log('Committed release changes; pushing to origin.')
+  git(repo, 'push', '--set-upstream', 'origin', `HEAD:refs/heads/${branch}`)
+  console.log(`Pushed release changes to origin/${branch}.`)
 }
 
 // `release:build` requires installed root dependencies and builds every publishable package.
@@ -692,9 +731,9 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force }) => {
   )
   if (!yes) {
     const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
-    const answer = await rl.question('continue? [y/N] ')
+    const answer = await rl.question('continue? [Y/n] ')
     rl.close()
-    if (answer.trim().toLowerCase() !== 'y') die('aborted')
+    if (!isConfirmed(answer)) die('aborted')
   }
   cmdBuild(repo)
   for (const [k, v] of todo) {
@@ -719,9 +758,9 @@ const USAGE = `usage: yarn release:<command> [options]
 
   status                        local origin/develop version vs npm, per package
   changes [--json]              what merged since each package's last release, and the signals for the bump
-  bump                          suggest bumps from commits; override each suggestion, then confirm
+  bump                          suggest bumps from commits; override, then confirm (Enter or y)
   bump <pkg>=<level> ...        set explicit versions and pins without prompts (patch|minor|major|x.y.z)
-                                both modes require a branch other than develop
+                                both modes commit and push to origin; require a release branch and clean release files
   check                         versions and pins consistent?
   build                         build:addon and build:e2e
   publish [pkg ...]             build, then npm publish what npm does not have yet (pkg: ${Object.keys(
