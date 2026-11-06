@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-e2e",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Playwright end-to-end tests for the AYON web UI and addons: config, fixtures, REST client, UI helpers",
   "repository": {
     "type": "git",

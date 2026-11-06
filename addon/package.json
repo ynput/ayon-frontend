@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-addon",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Public API for AYON addon frontends: slots, manifest and the host's globals",
   "repository": {
     "type": "git",
