@@ -13,6 +13,7 @@ import {
 } from '@ynput/ayon-react-components'
 
 import {CodeEditorWrapper} from '../SettingsEditor.styled'
+import { checkNumber, getNumberLimits, getNumberStep } from './TextWidgetHelpers'
 
 type PermissionWidgetProps = {
   value: number
@@ -69,21 +70,11 @@ export const TextWidget = (props: $Any) => {
     setValue(props.value)
   }, [props.value])
 
-  const checkNumber = (o: $Any, v: $Any, t: $Any) => {
-    // no value, return original
-    if (v === '') return o || 0
-    // type is integer
-    if (t === 'integer') {
-      const parsed = parseInt(v)
-      return isNaN(parsed) ? 0 : parsed
-    } else return v
-  }
-
   const onChangeCommit = (type?: $Any) => {
     let commitValue = value
     // if number is blank set to 0
     if (['integer', 'number'].includes(type))
-      commitValue = checkNumber(originalValue, commitValue, type)
+      commitValue = checkNumber(originalValue, commitValue, type, getNumberLimits(props.schema))
 
     if (commitValue === props.value) return
     const isChanged = commitValue !== originalValue
@@ -129,6 +120,10 @@ export const TextWidget = (props: $Any) => {
     } else {
       Input = InputNumber
       opts.value = value !== null && value !== undefined ? value : getDefaultValue(props)
+      const { min, max } = getNumberLimits(props.schema)
+      opts.min = min
+      opts.max = max
+      opts.step = getNumberStep(props.schema)
       // Not valid props - causing flooing of console
       // opts.showButtons = true
       // opts.useGrouping = false
@@ -222,7 +217,7 @@ export const TextWidget = (props: $Any) => {
     if (e.keyCode === 13) {
       e.preventDefault()
       e.stopPropagation()
-      onChangeCommit()
+      onChangeCommit(props.schema.type)
     }
   }
 
