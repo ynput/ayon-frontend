@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-addon-dev",
-  "version": "0.4.1",
+  "version": "0.4.2",
   "description": "Dev tooling for AYON addon frontends: Vite plugin, dev server, CLI, lint preset",
   "repository": {
     "type": "git",
@@ -43,7 +43,7 @@
     "@module-federation/vite": ">=1.14",
     "@ynput/ayon-addon": "0.5.0",
     "vite": ">=6",
-    "@ynput/ayon-frontend-shared": ">=0.10.0",
+    "@ynput/ayon-frontend-shared": ">=0.10.1",
     "@ynput/ayon-react-components": "^1.25.1",
     "primereact": ">=9",
     "react": ">=18",
