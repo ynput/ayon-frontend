@@ -32,45 +32,65 @@ export const scopeIdsToFolders = (
   return scoped.length ? scoped : [NO_MATCH_FOLDER_ID]
 }
 
+type GetChildFolderIds = (folderIds: string[], includeSelf?: boolean) => string[]
+
+// intersect subtrees, not ids: either side may hold the ancestor, and the narrower
+// side is the one that survives
+const intersectFolderTrees = (
+  a: string[],
+  b: string[],
+  getChildFolderIds?: GetChildFolderIds,
+): string[] => {
+  const aScope = new Set(getChildFolderIds && a.length ? getChildFolderIds(a, true) : a)
+  const bScope = new Set(getChildFolderIds && b.length ? getChildFolderIds(b, true) : b)
+  return [...new Set([...a.filter((id) => bScope.has(id)), ...b.filter((id) => aScope.has(id))])]
+}
+
+// searchFolderIds: the top-most folders the hierarchy panel search matches, null when
+// there is no search. An active search restricts the table like a selection does.
 export const resolveSlicerFolders = (
   slices: SliceRowSelection[],
   entityListFolderIds?: string[],
-  getChildFolderIds?: (folderIds: string[], includeSelf?: boolean) => string[],
+  getChildFolderIds?: GetChildFolderIds,
+  searchFolderIds?: string[] | null,
 ): SelectedFoldersResult => {
   const hierarchyPanel = slices.find((slice) => slice.sliceType === 'hierarchy')
   const listPanel = slices.find((slice) => slice.sliceType === 'entityList')
 
-  const hierarchyIds = Object.entries(hierarchyPanel?.rowSelection || {})
+  const selectedHierarchyIds = Object.entries(hierarchyPanel?.rowSelection || {})
     .filter(([, value]) => value)
     .map(([id]) => id)
+
+  const isSearching = !!searchFolderIds
+  const hierarchyIds = !searchFolderIds
+    ? selectedHierarchyIds
+    : selectedHierarchyIds.length
+    ? intersectFolderTrees(selectedHierarchyIds, searchFolderIds, getChildFolderIds)
+    : searchFolderIds
 
   const listPanelSelected =
     !!listPanel &&
     Object.entries(listPanel.rowSelection).some(([id, value]) => value && !id.startsWith('folder-'))
 
   if (!listPanelSelected) {
-    return { selectedFolders: hierarchyIds, folderScope: null, listPanelSelected: false }
+    return {
+      // a search with no matches (or none under the selection) shows no rows, not all rows
+      selectedFolders: isSearching && !hierarchyIds.length ? [NO_MATCH_FOLDER_ID] : hierarchyIds,
+      folderScope: null,
+      listPanelSelected: false,
+    }
   }
 
   const listFolderIds = entityListFolderIds?.length ? entityListFolderIds : []
+  // a search with no matches leaves an empty scope, so every list entity is scoped out
   const folderScope =
-    hierarchyIds.length && getChildFolderIds ? new Set(getChildFolderIds(hierarchyIds, true)) : null
+    (hierarchyIds.length || isSearching) && getChildFolderIds
+      ? new Set(getChildFolderIds(hierarchyIds, true))
+      : null
 
-  // intersect subtrees, not ids: either side may hold the ancestor, and the narrower
-  // side is the one that survives
-  let intersectedFolderIds = listFolderIds
-  if (folderScope) {
-    const listScope =
-      getChildFolderIds && listFolderIds.length
-        ? new Set(getChildFolderIds(listFolderIds, true))
-        : new Set(listFolderIds)
-    intersectedFolderIds = [
-      ...new Set([
-        ...listFolderIds.filter((id) => folderScope.has(id)),
-        ...hierarchyIds.filter((id) => listScope.has(id)),
-      ]),
-    ]
-  }
+  const intersectedFolderIds = folderScope
+    ? intersectFolderTrees(listFolderIds, hierarchyIds, getChildFolderIds)
+    : listFolderIds
 
   // every list entity resolves to a folder, so no folders means the selected lists are
   // empty (or disjoint from the hierarchy) and nothing should match

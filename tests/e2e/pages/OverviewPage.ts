@@ -158,10 +158,12 @@ export class OverviewPage {
     const options = this.page.locator('.options')
     for (const value of values) {
       const option = options.locator(`[data-value="${value}"]`).first()
-      const selected = option.locator('.selected')
-      const wasSelected = (await selected.count()) > 0
+      // single-value items are marked `.selected`, multi-select lists (assignees) show a ticked checkbox
+      const marker = option.locator('.selected, .checkbox-icon.all')
+      const isSelected = async () => (await marker.count()) > 0
+      const wasSelected = await isSelected()
       await option.click()
-      await expect(selected).toHaveCount(wasSelected ? 0 : 1)
+      await expect.poll(isSelected).toBe(!wasSelected)
     }
     await closeBy.click()
     await expect(options).toBeHidden()

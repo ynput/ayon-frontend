@@ -146,9 +146,11 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
-  (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
+  \`ProjectList\`), \`MoreMenu\` and \`useContextMenu\` (below). Data comes from
+  \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
   \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
+  Menu items (their context has no \`navigate\`, unlike buttons) open another AYON page with
+  \`navigate(to)\` from this package; it is the same as a button's \`context.navigate\`.
 - URL query params: \`useQueryParam\` / \`useQueryParams\` and the params (\`StringParam\`,
   \`withDefault\`, ...) from this package. They read the \`QueryParamProvider\` AYON renders around
   every slot: no provider or router adapter in the addon. A change replaces only that param in the
@@ -210,6 +212,36 @@ Look in the browser console first: every message starts with \`[addon <name>]\`.
 | \`the file has no default export\` / \`"run" has no default export function\` | A piece's file must \`export default\` its component or function |
 | \`x (addon): <message>\` toast, and \`[addon <name>] … failed\` in the console | A \`run\`, \`menu\` or dialog piece threw. \`… crashed\` is a component that threw while rendering: it stays inside its own area |
 | \`<name> is not available in this AYON frontend\` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
+
+## A table of entities: \`EntityTable\`
+
+AYON's project table as on Overview (columns, sorting, grouping, summaries row, loading on scroll)
+for the rows you give it, read-only. It loads the project's data itself: render it anywhere (a
+project page, a studio page, a dialog for another project). Give its parent a height.
+
+\`\`\`tsx
+import { EntityTable, type EntityTableSettings } from '@ynput/ayon-addon'
+
+const [settings, setSettings] = useState<EntityTableSettings>({})
+<EntityTable
+  projectName={projectName}
+  entityType="task"
+  filter={{ conditions: [{ key: 'status', operator: 'in', value: ['In progress'] }] }}
+  settings={settings}
+  onSettingsChange={setSettings}
+/>
+\`\`\`
+
+- \`entityType\`: \`task\` (the task list) or \`folder\` (folders, each expandable to its tasks).
+- Rows: \`filter\` in the Overview filter bar's format (a key without a prefix is about tasks,
+  \`folder_<key>\` about folders), \`ids\` of \`entityType\`, or both (rows match both). \`ids={[]}\`
+  shows no rows. Task and folder conditions are always joined by \`and\`: keep an \`or\` within one
+  of them. Every table request carries the ids, so keep them to a few thousand.
+- \`settings\` is what the user changes (columns, sorting, grouping, row height), the same keys as
+  AYON's saved views. Controlled when set; store it where you like (e.g. your page's view).
+- \`excludedColumns\`: column ids the table never shows and the user can't add.
+- Read-only: the right-click menu offers Open in overview, copy, the viewer, expand and export. A
+  single group opens expanded.
 
 ## Picking entities: \`EntityPicker\`
 
@@ -279,6 +311,33 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
 
+## A right-click menu: \`useContextMenu\`
+
+AYON's right-click menu with the same items as \`MoreMenu\`. Don't import AYON's own context menu
+from \`@ynput/ayon-frontend-shared\`: its items have another shape and it needs AYON's provider.
+
+\`\`\`tsx
+import { useContextMenu } from '@ynput/ayon-addon'
+
+const openContextMenu = useContextMenu()
+
+<tr
+  onContextMenu={(event) =>
+    openContextMenu(event, [
+      { id: 'edit', label: 'Edit', icon: 'edit', onClick: () => edit(log) },
+      { divider: true },
+      { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: log.locked, onClick: () => askDelete(log) },
+    ])
+  }
+/>
+\`\`\`
+
+- The opener takes the mouse event and the items, built when the menu opens. It stops the browser's
+  own menu. Items as in \`MoreMenu\`; \`selected\` has no look in this menu.
+- To ask before a destructive item, open your own confirmation (AYON's \`Dialog\` from
+  \`@ynput/ayon-react-components\`) from its \`onClick\`. The \`confirmDelete\` of
+  \`@ynput/ayon-frontend-shared\` needs a dialog AYON doesn't render for addons.
+
 ## Slot contexts: one shape
 
 The same thing has the same name and type in every slot that has it:
@@ -296,6 +355,10 @@ The same thing has the same name and type in every slot that has it:
   one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
   tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
   entity: \`tableColumn\` has \`entity\`.
+- **\`users\`** (\`UserRef[]\`: \`name\`, \`fullName?\`, \`email?\`, \`active\` and the flags of
+  \`user\` without \`isDeveloper\`), in slots about other users: \`userDetails.section\` and
+  \`userDetails.menuItem\` (the users selected in Settings → Users). Not the signed-in user: that is
+  \`user\`.
 
 ## Slots
 

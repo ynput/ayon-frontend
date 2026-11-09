@@ -16,6 +16,7 @@ import {
   AddonMoreMenu,
   ProjectPageLayoutHost,
   SlicerHost,
+  useAddonContextMenu,
 } from '@ynput/ayon-frontend-shared/components'
 import { useGlobalContext, useMenuContext, usePowerpack } from '@ynput/ayon-frontend-shared/context'
 import {
@@ -165,6 +166,7 @@ const ProjectList = ({ multiSelect = false }: ProjectListProps) => {
 export const provideShellHost = () =>
   provideHost({
     useUser,
+    useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,

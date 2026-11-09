@@ -8,22 +8,13 @@ import './users.scss'
 import { useMemo } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useTableExportContext } from '@shared/context'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@shared/api'
-import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
+import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
 import { getInvitationState } from './InvitationStatusHelpers'
-
-const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
-
-const inviteStatusSortFunction = (event) => {
-  const { data, order } = event
-  return [...data].sort((a, b) => {
-    const diff = INVITE_SORT_RANK[getInvitationState(a)] - INVITE_SORT_RANK[getInvitationState(b)]
-    return order === 1 ? diff : -diff
-  })
-}
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -87,6 +78,8 @@ const UserList = ({
 }) => {
   // GET LICENSE USER POOLS
   const { data: userPools = [] } = useGetUserPoolsQuery()
+  const sortFunctions = getUserSortFunctions(userPools)
+  const tableExport = useTableExportContext()
 
   // Selection
   const selection = useMemo(() => {
@@ -141,6 +134,13 @@ const UserList = ({
         icon: 'mail',
       },
       {
+        label: 'Export',
+        icon: 'download',
+        powerFeature: 'tableExport',
+        disabled: !ctxSelection.length,
+        command: withSelection(() => tableExport?.openExport('selection')),
+      },
+      {
         label: 'Delete selected',
         disabled: !ctxSelection.length || ctxSelfSelected,
         command: withSelection(() => setShowDeleteUser(newSelectedUsers)),
@@ -174,7 +174,7 @@ const UserList = ({
           columnResizeMode="expand"
           resizableColumns
           responsive="true"
-          stateKey="users-datatable"
+          stateKey={USERS_TABLE_STATE_KEY}
           stateStorage={'local'}
           reorderableColumns
         >
@@ -200,7 +200,7 @@ const UserList = ({
                 )
               }}
               sortable
-              sortFunction={(event) => userPoolSortFunction(event, userPools)}
+              sortFunction={sortFunctions.userPool}
               resizeable
             />
           )}
@@ -208,7 +208,7 @@ const UserList = ({
             field={'accessLevel'}
             header="Access level"
             body={(rowData) => getUserRole(rowData)}
-            sortFunction={accessGroupsSortFunction}
+            sortFunction={sortFunctions.accessLevel}
             sortable
             resizeable
           />
@@ -238,7 +238,7 @@ const UserList = ({
             field="inviteSentAt"
             body={(rowData) => <InvitationStatus user={rowData} plain />}
             sortable
-            sortFunction={inviteStatusSortFunction}
+            sortFunction={sortFunctions.inviteSentAt}
             resizeable
           />
         </DataTable>

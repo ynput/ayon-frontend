@@ -52,6 +52,12 @@ export type {
   TableShortcutPieces,
   AppServiceContext,
   AppServiceMeta,
+  UserDetailsContext,
+  UserDetailsMenuItemMeta,
+  UserDetailsSectionMeta,
+  UserSelection,
+  ProfileSectionContext,
+  ProfileSectionMeta,
 } from './slots'
 export type {
   Access,
@@ -70,7 +76,9 @@ export type {
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  UserRef,
   UserScope,
+  UsersScope,
   ViewsScope,
 } from './scopes'
 export type {
@@ -106,12 +114,25 @@ export type {
 // AYON's entity picker, usable anywhere
 export { EntityPicker } from './EntityPicker'
 export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+// AYON's project table for given rows, usable anywhere
+export { EntityTable } from './EntityTable'
+export type {
+  EntityTableColumn,
+  EntityTableEntityType,
+  EntityTableFilter,
+  EntityTableFilterCondition,
+  EntityTableProps,
+  EntityTableSettings,
+} from './EntityTable'
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+// AYON's right-click menu, with the same items
+export { useContextMenu } from './useContextMenu'
+export type { OpenContextMenu } from './useContextMenu'
 
 // globals: the same in every slot
-export { dispatch, useUser } from './globals'
+export { dispatch, navigate, useUser } from './globals'
 export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
