@@ -605,6 +605,50 @@ test.describe('entities dragged from the table', () => {
       `@${data.local.name}`,
     ])
   })
+
+  test('a drop on an empty line mentions there', async ({ page, api, projectName }) => {
+    const data = await seed(api, projectName)
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    await panel.commentEditor.pressSequentially('first')
+    await panel.commentEditor.press('Enter')
+    await panel.commentEditor.press('Enter')
+    await panel.commentEditor.pressSequentially('last')
+    const lines = panel.commentEditor.locator('.md-paragraph')
+    await expect(lines).toHaveCount(3)
+    const overview = new OverviewPage(page)
+    await dragHandle(overview, data.remoteParent.name).dragTo(lines.nth(1))
+    await expect(lines.nth(1).locator('.mention')).toHaveText(`@${data.remoteParent.name}`)
+    await expect(lines.nth(2)).toHaveText('last')
+  })
+
+  test('a click on the icon of a selected row still selects', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    await openFolder(page, projectName, data)
+    const overview = new OverviewPage(page)
+    // the cell class, not `selected-row` or `multiple-selected`
+    const SELECTED = /(^|\s)selected(\s|$)/
+    await overview.clickCell(data.parent.name, 'name')
+    await overview.clickCell(data.local.name, 'name', { shift: true })
+    // a plain click selects that row only
+    await dragHandle(overview, data.parent.name).click()
+    await expect(overview.nameCell(data.local.name)).not.toHaveClass(SELECTED)
+    await expect(overview.nameCell(data.parent.name)).toHaveClass(SELECTED)
+    // shift sets the range from the anchor to it
+    await overview.clickCell(data.local.name, 'name', { shift: true })
+    await dragHandle(overview, data.parent.name).click({ modifiers: ['Shift'] })
+    await expect(overview.nameCell(data.local.name)).not.toHaveClass(SELECTED)
+    await expect(overview.nameCell(data.parent.name)).toHaveClass(SELECTED)
+    // ctrl/cmd toggles it
+    await overview.clickCell(data.local.name, 'name', { shift: true })
+    await dragHandle(overview, data.parent.name).click({ modifiers: ['ControlOrMeta'] })
+    await expect(overview.nameCell(data.parent.name)).not.toHaveClass(SELECTED)
+    await expect(overview.nameCell(data.local.name)).toHaveClass(SELECTED)
+  })
 })
 
 test('project search returns at most five unique results', async ({ page, api, projectName }) => {

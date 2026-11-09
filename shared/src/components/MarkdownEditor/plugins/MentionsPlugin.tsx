@@ -22,7 +22,6 @@ import {
   $createRangeSelection,
   $getNearestNodeFromDOMNode,
   $getRoot,
-  $normalizeSelection__EXPERIMENTAL,
   $setSelection,
   type LexicalEditor,
   SKIP_DOM_SELECTION_TAG,
@@ -195,23 +194,24 @@ const $insertEntityLinks = (
 
 // the caret where a drag is dropped, the end of the text when there is none
 const $selectDropPoint = (editor: LexicalEditor, event: DragEvent) => {
-  const range = caretFromPoint(event.clientX, event.clientY, editor.getRootElement())
-  const node = range && $getNearestNodeFromDOMNode(range.node)
-  if (!range || !node) {
+  const point = caretFromPoint(event.clientX, event.clientY, editor.getRootElement())
+  const selection = $createRangeSelection()
+  if (point && $getNearestNodeFromDOMNode(point.node)) {
+    // the same mapping as a click, which keeps the offset in an empty paragraph
+    selection.applyDOMRange(
+      new StaticRange({
+        startContainer: point.node,
+        startOffset: point.offset,
+        endContainer: point.node,
+        endOffset: point.offset,
+      }),
+    )
+  }
+  if (selection.anchor.key === 'root') {
     $getRoot().selectEnd()
     return
   }
-  const selection = $createRangeSelection()
-  if ($isTextNode(node)) {
-    selection.anchor.set(node.getKey(), range.offset, 'text')
-    selection.focus.set(node.getKey(), range.offset, 'text')
-  } else {
-    const parentKey = node.getParentOrThrow().getKey()
-    const offset = node.getIndexWithinParent() + 1
-    selection.anchor.set(parentKey, offset, 'element')
-    selection.focus.set(parentKey, offset, 'element')
-  }
-  $setSelection($normalizeSelection__EXPERIMENTAL(selection))
+  $setSelection(selection)
 }
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
