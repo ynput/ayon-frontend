@@ -1,6 +1,7 @@
 import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
+import semver from 'semver'
 import { usePowerpack } from '../powerpack/PowerpackContextInstance'
 import { useRemoteModules } from '../remote-modules/RemoteModulesContextInstance'
 import {
@@ -25,9 +26,10 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   // an export asked for while the license is still being checked opens once the check is done
   const [pendingScope, setPendingScope] = useState<TableExportScope | null>(null)
 
-  const isInstalled = modules.some(
+  const installedVersion = modules.find(
     (addon) => addon.addonName === ADDON && addon.modules[REMOTE]?.includes(MODULE),
   )
+  const isInstalled = !!installedVersion
   const isAvailable = (!!powerLicense || isCheckingLicense) && isInstalled
 
   const registerSource = useCallback((next: TableExportSource) => {
@@ -39,14 +41,31 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
     (scope: TableExportScope) => {
       if (isCheckingLicense) return setPendingScope(scope)
       if (!powerLicense) return setPowerpackDialog('tableExport')
-      if (!isInstalled)
-        return void toast.error('Update to Power Pack ' + PP_VERSION + ' to export tables')
+      // a page can need a newer Power Pack than the first table export
+      const minVersion = source?.minPowerpackVersion
+      const isOutdated =
+        !installedVersion ||
+        (!!minVersion &&
+          !semver.gte(semver.coerce(installedVersion.addonVersion) || '0.0.0', minVersion))
+      if (isOutdated)
+        return void toast.error(
+          `Update to Power Pack ${minVersion || PP_VERSION} to export ${
+            minVersion ? 'this table' : 'tables'
+          }`,
+        )
       setSearchParams((params) => {
         params.set(TABLE_EXPORT_SEARCH_PARAM, scope)
         return params
       })
     },
-    [isCheckingLicense, powerLicense, isInstalled, setPowerpackDialog, setSearchParams],
+    [
+      isCheckingLicense,
+      powerLicense,
+      installedVersion,
+      source,
+      setPowerpackDialog,
+      setSearchParams,
+    ],
   )
 
   useEffect(() => {
