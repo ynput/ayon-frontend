@@ -5,6 +5,7 @@ import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../
 import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 import type { EntityData } from '../types/table'
 import { WRAP_MIN_ROW_HEIGHT } from '../constants'
+import { useEntityDrag } from '../hooks/useEntityDrag'
 
 const Expander = styled(Button)`
   &.expander {
@@ -70,6 +71,15 @@ const StyledContent = styled.div`
       color: var(--md-sys-color-primary);
     }
   } */
+`
+
+// the icon drags the entity, e.g. into a comment to mention it
+const StyledDragHandle = styled.span`
+  display: flex;
+
+  &[draggable='true'] {
+    cursor: grab;
+  }
 `
 
 const StyledTextContent = styled.div`
@@ -164,6 +174,8 @@ export const EntityNameWidget = ({
   const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
   const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
+  const dragProps = useEntityDrag(id, entity)
+
   return (
     <StyledEntityNameWidget className={layout}>
       {isExpandable ? (
@@ -184,14 +196,20 @@ export const EntityNameWidget = ({
       <StyledContentWrapper className={layout}>
         <StyledContentAbsolute>
           <StyledContent className={layout}>
-            <EntityIcon
-              entity={{
-                entityType: entity.entityType,
-                subType: 'subType' in entity ? entity.subType : undefined,
-              }}
-              icon={entity.icon || undefined}
-              color={entity.color || undefined}
-            />
+            <StyledDragHandle
+              {...dragProps}
+              data-tooltip={dragProps.draggable ? 'Drag into a comment to mention' : undefined}
+              data-tooltip-delay={dragProps.draggable ? 500 : undefined}
+            >
+              <EntityIcon
+                entity={{
+                  entityType: entity.entityType,
+                  subType: 'subType' in entity ? entity.subType : undefined,
+                }}
+                icon={entity.icon || undefined}
+                color={entity.color || undefined}
+              />
+            </StyledDragHandle>
             <StyledTextContent className={layout}>
               {shouldShowPath && !isRestricted && (
                 <span className="path">

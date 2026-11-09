@@ -73,12 +73,21 @@ export const createFeedMentionSource = ({
       : undefined,
   resolve:
     projectName && lookup
-      ? async (ref) => {
-          const type = ENTITY_TYPES.find((t) => t === ref.type)
-          // links to other projects stay links
-          if (ref.projectName !== projectName || !type) return null
-          const [item] = await lookup(type, [ref.id])
-          return item ?? null
+      ? async (refs) => {
+          // one lookup per type, links to other projects stay links
+          const found = new Map<string, MentionItem>()
+          await Promise.all(
+            ENTITY_TYPES.map(async (type) => {
+              const ids = refs
+                .filter((ref) => ref.type === type && ref.projectName === projectName)
+                .map((ref) => ref.id)
+              if (!ids.length) return
+              for (const item of await lookup(type, ids)) found.set(`${type}:${item.id}`, item)
+            }),
+          )
+          return refs.map((ref) =>
+            ref.projectName === projectName ? found.get(`${ref.type}:${ref.id}`) ?? null : null,
+          )
         }
       : undefined,
   getOptions: ({ search: text, filter }) => {

@@ -15,8 +15,16 @@ import {
   $isTextNode,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_NORMAL,
+  DRAGOVER_COMMAND,
+  DROP_COMMAND,
   HISTORY_MERGE_TAG,
   PASTE_COMMAND,
+  $createRangeSelection,
+  $getNearestNodeFromDOMNode,
+  $getRoot,
+  $normalizeSelection__EXPERIMENTAL,
+  $setSelection,
+  type LexicalEditor,
   SKIP_DOM_SELECTION_TAG,
   type LexicalNode,
   type TextNode,
@@ -27,6 +35,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import UserImage from '../../UserImage'
 import { $createMentionNode } from '../nodes/MentionNode'
 import type {
+  MentionEntityRef,
   MentionItem,
   MentionPlacement,
   MentionSource,
@@ -37,7 +46,13 @@ import * as Styled from '../MarkdownEditor.styled'
 import SuggestionMenu from './SuggestionMenu'
 import { $isSelectionInCode } from './selectionHelpers'
 import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
-import { parseEntityLink } from '../links/entityLinks'
+import {
+  ENTITY_DRAG_TYPE,
+  getEntityDragData,
+  getEntityLink,
+  parseEntityLink,
+} from '../links/entityLinks'
+import { caretFromPoint } from '@lexical/clipboard'
 import { getRequestErrorString } from '@shared/util'
 
 const ALL_TRIGGERS: MentionTrigger[] = ['@', '@@', '@@@']
@@ -126,8 +141,78 @@ const $getLinkSelection = (link: LinkNode): 'caret' | 'selected' | 'elsewhere' =
   return isCaret ? 'caret' : 'elsewhere'
 }
 
-// the update that pastes an entity link
+// the update that inserts entity links
 const ENTITY_LINK_PASTE_TAG = 'entity-link-paste'
+
+/**
+ * Inserts links to entities at the selection, separated by spaces, each replaced with the
+ * entity's mention once it is found. A link stays when its entity is not found (e.g. another
+ * project), was edited meanwhile, or is being selected.
+ */
+const $insertEntityLinks = (
+  editor: LexicalEditor,
+  resolve: NonNullable<MentionSource['resolve']>,
+  links: { ref: MentionEntityRef; url: string }[],
+) => {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection)) return
+  $addUpdateTag(ENTITY_LINK_PASTE_TAG)
+  const linkNodes = links.map(({ url }) => $createLinkNode(url).append($createTextNode(url)))
+  selection.insertNodes(linkNodes.flatMap((node, i) => (i ? [$createTextNode(' '), node] : [node])))
+  const keys = linkNodes.map((node) => node.getKey())
+
+  // other edits before the entities are found make the mentions an undo step of their own
+  let edited = false
+  const stopWatching = editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
+    if (tags.has(ENTITY_LINK_PASTE_TAG)) return
+    if (dirtyElements.size || dirtyLeaves.size) edited = true
+  })
+
+  resolve(links.map(({ ref }) => ref))
+    .catch(() => [])
+    .then((items) => {
+      stopWatching()
+      if (!items.some(Boolean)) return
+      editor.update(
+        () => {
+          links.forEach(({ url }, i) => {
+            const item = items[i]
+            const node = $getNodeByKey(keys[i])
+            if (!item) return
+            // the link was changed or removed in the meantime
+            if (!$isLinkNode(node) || node.getURL() !== url || node.getTextContent() !== url) return
+            // the user is selecting the link, it stays a link
+            const linkSelection = $getLinkSelection(node)
+            if (linkSelection === 'selected') return
+            $insertMentions([item], node, { select: linkSelection === 'caret' })
+          })
+        },
+        // undo goes back to before the paste or drop
+        { tag: edited ? ENTITY_LINK_PASTE_TAG : [ENTITY_LINK_PASTE_TAG, HISTORY_MERGE_TAG] },
+      )
+    })
+}
+
+// the caret where a drag is dropped, the end of the text when there is none
+const $selectDropPoint = (editor: LexicalEditor, event: DragEvent) => {
+  const range = caretFromPoint(event.clientX, event.clientY, editor.getRootElement())
+  const node = range && $getNearestNodeFromDOMNode(range.node)
+  if (!range || !node) {
+    $getRoot().selectEnd()
+    return
+  }
+  const selection = $createRangeSelection()
+  if ($isTextNode(node)) {
+    selection.anchor.set(node.getKey(), range.offset, 'text')
+    selection.focus.set(node.getKey(), range.offset, 'text')
+  } else {
+    const parentKey = node.getParentOrThrow().getKey()
+    const offset = node.getIndexWithinParent() + 1
+    selection.anchor.set(parentKey, offset, 'element')
+    selection.focus.set(parentKey, offset, 'element')
+  }
+  $setSelection($normalizeSelection__EXPERIMENTAL(selection))
+}
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
@@ -340,63 +425,60 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
     editor.focus(() => setFilter(type))
   }
 
-  // a pasted link to a folder, task or version becomes its mention. The link shows until the
-  // entity is found and stays when it is not, e.g. an entity of another project.
+  // a pasted link to a folder, task or version, or one dropped from a table, becomes its mention
   const resolve = source.resolve
   useEffect(() => {
     if (!resolve) return
-    return editor.registerCommand(
-      PASTE_COMMAND,
-      (event) => {
-        if (!(event instanceof ClipboardEvent) || !event.clipboardData) return false
-        const url = event.clipboardData.getData('text/plain').trim()
-        const ref = parseEntityLink(url)
-        if (!ref) return false
-        // pasting over a selection links the selection, a link in code stays text
-        const selection = $getSelection()
-        if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
-        if ($isSelectionInCode()) return false
-        if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
+    return mergeRegister(
+      editor.registerCommand(
+        PASTE_COMMAND,
+        (event) => {
+          if (!(event instanceof ClipboardEvent) || !event.clipboardData) return false
+          const url = event.clipboardData.getData('text/plain').trim()
+          const ref = parseEntityLink(url)
+          if (!ref) return false
+          // pasting over a selection links the selection, a link in code stays text
+          const selection = $getSelection()
+          if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
+          if ($isSelectionInCode()) return false
+          if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
 
-        event.preventDefault()
-        $addUpdateTag(ENTITY_LINK_PASTE_TAG)
-        const link = $createLinkNode(url).append($createTextNode(url))
-        selection.insertNodes([link])
-        const key = link.getKey()
-
-        // other edits before the entity is found make the mention an undo step of its own
-        let edited = false
-        const stopWatching = editor.registerUpdateListener(
-          ({ dirtyElements, dirtyLeaves, tags }) => {
-            if (tags.has(ENTITY_LINK_PASTE_TAG)) return
-            if (dirtyElements.size || dirtyLeaves.size) edited = true
-          },
-        )
-
-        resolve(ref)
-          .catch(() => null)
-          .then((item) => {
-            stopWatching()
-            if (!item) return
-            editor.update(
-              () => {
-                const node = $getNodeByKey(key)
-                // the link was changed or removed in the meantime
-                if (!$isLinkNode(node) || node.getURL() !== url || node.getTextContent() !== url)
-                  return
-                // the user is selecting the link, it stays a link
-                const linkSelection = $getLinkSelection(node)
-                if (linkSelection === 'selected') return
-                $insertMentions([item], node, { select: linkSelection === 'caret' })
-              },
-              // undo goes back to before the paste
-              edited ? undefined : { tag: HISTORY_MERGE_TAG },
-            )
+          event.preventDefault()
+          $insertEntityLinks(editor, resolve, [{ ref, url }])
+          return true
+        },
+        // before the rich text paste
+        COMMAND_PRIORITY_NORMAL,
+      ),
+      // entities can be dropped (the editor takes text moves only)
+      editor.registerCommand(
+        DRAGOVER_COMMAND,
+        (event) => {
+          if (!event.dataTransfer?.types.includes(ENTITY_DRAG_TYPE)) return false
+          event.preventDefault()
+          event.dataTransfer.dropEffect = 'copy'
+          return true
+        },
+        COMMAND_PRIORITY_NORMAL,
+      ),
+      editor.registerCommand(
+        DROP_COMMAND,
+        (event) => {
+          const links = getEntityDragData(event.dataTransfer).flatMap((ref) => {
+            const url = getEntityLink(ref)
+            return url ? [{ ref, url }] : []
           })
-        return true
-      },
-      // before the rich text paste
-      COMMAND_PRIORITY_NORMAL,
+          if (!links.length) return false
+          event.preventDefault()
+          $selectDropPoint(editor, event)
+          $insertEntityLinks(editor, resolve, links)
+          // dropped from outside: the editor takes the focus to keep typing
+          setTimeout(() => editor.focus())
+          return true
+        },
+        // before the rich text drop
+        COMMAND_PRIORITY_NORMAL,
+      ),
     )
   }, [editor, resolve])
 

@@ -1984,6 +1984,11 @@ const TD = ({
           return
         }
 
+        // a drag handle (the entity icon of the name) drags the selected rows, so pressing it in
+        // a selected cell keeps the selection, and the default is kept to start the drag
+        const isDragHandle = !!target.closest('[draggable="true"]')
+        if (isDragHandle && isCellSelected(cellId)) return
+
         // If there's an active edit on a different cell, blur it first to save changes
         if (editingCellId && editingCellId !== cellId) {
           // Find the currently editing input and blur it
@@ -2012,7 +2017,7 @@ const TD = ({
           }
 
           // Prevent default browser behavior to ensure focus stays on the cell
-          e.preventDefault()
+          if (!isDragHandle) e.preventDefault()
         }
       }}
       onMouseOver={(e) => {

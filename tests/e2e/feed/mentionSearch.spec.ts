@@ -565,6 +565,48 @@ test.describe('pasted entity links', () => {
   })
 })
 
+test.describe('entities dragged from the table', () => {
+  const dragHandle = (overview: OverviewPage, label: string) =>
+    overview.nameCell(label).locator('[draggable="true"]')
+
+  test('a dragged folder is mentioned where it is dropped', async ({ page, api, projectName }) => {
+    const data = await seed(api, projectName)
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    await panel.commentEditor.pressSequentially('see')
+    const overview = new OverviewPage(page)
+    await dragHandle(overview, data.remoteParent.name).dragTo(panel.commentEditor)
+    await expect(panel.commentEditor.locator('.mention')).toHaveText(`@${data.remoteParent.name}`)
+    await panel.commentEditor.pressSequentially('please')
+    await panel.submitComment()
+    await expect
+      .poll(async () =>
+        (await api.listActivities(projectName, 'folder', data.local.id)).map((a) => a.body.trim()),
+      )
+      .toEqual([
+        expect.stringContaining(`[${data.remoteParent.name}](folder:${data.remoteParent.id})`),
+      ])
+  })
+
+  test('dragging a selected row mentions every selected row', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    const panel = await openFolder(page, projectName, data)
+    const overview = new OverviewPage(page)
+    await overview.clickCell(data.parent.name, 'name')
+    await overview.clickCell(data.local.name, 'name', { shift: true })
+    await panel.openCommentBox()
+    await dragHandle(overview, data.local.name).dragTo(panel.commentEditor)
+    await expect(panel.commentEditor.locator('.mention')).toHaveText([
+      `@${data.parent.name}`,
+      `@${data.local.name}`,
+    ])
+  })
+})
+
 test('project search returns at most five unique results', async ({ page, api, projectName }) => {
   const data = await seed(api, projectName)
   const prefix = uniqueName('searchLimit')
