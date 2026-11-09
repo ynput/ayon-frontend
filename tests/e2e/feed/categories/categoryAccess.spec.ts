@@ -1,5 +1,5 @@
-import { apiAs } from '../../support/session'
-import { uniqueName } from '../../support/names'
+import { uniqueName } from '@ynput/ayon-e2e'
+import { apiAs } from '../../support/api'
 import {
   CAN_POST,
   Category,

@@ -14,8 +14,10 @@ import {
 } from './DetailsPanelContextInstance'
 import { BundleMode, getBundleModeFromUser } from '@shared/util'
 
-// High-level tabs for the details panel
-export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files'
+// High-level tabs for the details panel: built-in ones and addon tabs (`<addon>.<id>`,
+// detailsPanel.tab slot)
+export type AddonDetailsPanelTab = `${string}.${string}`
+export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files' | AddonDetailsPanelTab
 
 // Filters within the feed tab
 export type FeedFilter = QueryFilter
@@ -207,7 +209,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     [panelOpenByScope],
   )
 
-  // Use localStorage to persist tab preferences by scope
+  // Use sessionStorage to persist tab preferences by scope
   const [tabsByScope, setTabByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
   // Get the current tab for a specific scope
@@ -261,7 +263,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
 
   const [highlightedActivities, setHighlightedActivities] = useState<string[]>([])
 
-  const { uriType, uri, entity, getUriEntities } = useURIContext()
+  const { uriType, uri, entity, getUriEntities, setUri } = useURIContext()
   const [searchParams] = forwardedProps.useSearchParams()
 
   const project = searchParams.get('project')
@@ -274,8 +276,14 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     // closing the panel deletes these params; bail so the stale uri state below can't reopen it
     if (!project && !type && !id) return
 
+    // the uri is the panel's copy of the entity it shows. URL params for another entity (navigateToEntity)
+    // win over it: clear it first, or the old entity's uri would reopen it before the new one loads
+    const urlEntityChanged =
+      !!entities && !!project && !!type && !!id && entities.entities[0]?.id !== id
+    if (urlEntityChanged) setUri('')
+
     // Priority 1: Check for 'uri' parameter (ayon+entity://...)
-    if (uriType === 'entity' && entity && entity.entityType !== 'product') {
+    if (!urlEntityChanged && uriType === 'entity' && entity && entity.entityType !== 'product') {
       getUriEntities()
         .then((result) => {
           if (result.length === 0) return
@@ -327,18 +335,20 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
       }
 
       setEntities(newEntities)
-
-      // if there is an activity param, open the feed tab (activity is shown by default)
-
-      if (activity) {
-        setHighlightedActivities([activity])
-        setTabByScope({
-          ...tabsByScope,
-          overview: 'feed',
-        })
-      }
     }
   }, [project, type, id])
+
+  // an activity param highlights that comment in the feed and opens the feed tab (activity is shown by default).
+  // Its own effect: navigating to the same entity with another activity only changes the URL
+  useEffect(() => {
+    if (!project || !type || !id || !activity) return
+
+    setHighlightedActivities([activity])
+    setTabByScope({
+      ...tabsByScope,
+      overview: 'feed',
+    })
+  }, [project, type, id, activity])
 
   const value = {
     // open state for the panel by scope

@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import semver from 'semver'
@@ -21,14 +21,16 @@ const PP_VERSION = '1.6.9'
 export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   const [source, setSource] = useState<TableExportSource | null>(null)
   const [, setSearchParams] = useSearchParams()
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { powerLicense, isLoading: isCheckingLicense, setPowerpackDialog } = usePowerpack()
   const { modules } = useRemoteModules()
+  // an export asked for while the license is still being checked opens once the check is done
+  const [pendingScope, setPendingScope] = useState<TableExportScope | null>(null)
 
   const installedVersion = modules.find(
     (addon) => addon.addonName === ADDON && addon.modules[REMOTE]?.includes(MODULE),
-  )?.addonVersion
+  )
   const isInstalled = !!installedVersion
-  const isAvailable = !!powerLicense && isInstalled
+  const isAvailable = (!!powerLicense || isCheckingLicense) && isInstalled
 
   const registerSource = useCallback((next: TableExportSource) => {
     setSource(next)
@@ -37,12 +39,14 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
 
   const openExport = useCallback(
     (scope: TableExportScope) => {
+      if (isCheckingLicense) return setPendingScope(scope)
       if (!powerLicense) return setPowerpackDialog('tableExport')
       // a page can need a newer Power Pack than the first table export
       const minVersion = source?.minPowerpackVersion
       const isOutdated =
         !installedVersion ||
-        (!!minVersion && !semver.gte(semver.coerce(installedVersion) || '0.0.0', minVersion))
+        (!!minVersion &&
+          !semver.gte(semver.coerce(installedVersion.addonVersion) || '0.0.0', minVersion))
       if (isOutdated)
         return void toast.error(
           `Update to Power Pack ${minVersion || PP_VERSION} to export ${
@@ -54,8 +58,21 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
         return params
       })
     },
-    [powerLicense, installedVersion, source, setPowerpackDialog, setSearchParams],
+    [
+      isCheckingLicense,
+      powerLicense,
+      installedVersion,
+      source,
+      setPowerpackDialog,
+      setSearchParams,
+    ],
   )
+
+  useEffect(() => {
+    if (!pendingScope || isCheckingLicense) return
+    setPendingScope(null)
+    openExport(pendingScope)
+  }, [pendingScope, isCheckingLicense, openExport])
 
   const value = useMemo(
     () => ({ source, isAvailable, openExport, registerSource }),

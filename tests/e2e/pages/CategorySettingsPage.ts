@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { dialog, toast } from '../support/ui'
+import { dialog, toast } from '@ynput/ayon-e2e'
 import { SettingsEditor } from './SettingsEditor'
 
 const LIST = 'root_activity_categories'

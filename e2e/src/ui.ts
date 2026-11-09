@@ -1,0 +1,50 @@
+import { expect, Locator, Page } from '@playwright/test'
+
+// Locators for AYON's shared UI (@ynput/ayon-react-components, primereact, react-toastify), which
+// addons use too. The FLAGs are accessibility gaps in those components.
+
+/** A react-toastify notification containing `text` */
+export const toast = (page: Page, text: string | RegExp) =>
+  page.locator('.Toastify__toast').filter({ hasText: text }).first()
+
+/**
+ * A dialog from @ynput/ayon-react-components, found by its header text.
+ * FLAG: that Dialog renders a plain `div.dialog` without role="dialog" or an accessible name,
+ * so `getByRole('dialog')` does not work for it.
+ */
+export const dialog = (page: Page, header: string | RegExp): Locator =>
+  page.locator('.dialog').filter({ has: page.locator('.header', { hasText: header }) })
+
+/** primereact confirm dialog (used by confirmDelete) */
+export const confirmDialog = (page: Page) => page.locator('.p-confirm-dialog')
+
+/**
+ * A menu item by its visible label. Covers both menu implementations in the app:
+ * - primereact context menus (`role=menuitem`)
+ * - the shared `Menu` dropdowns (`<li aria-label>` inside a list)
+ * - menu items whose label is a bare text node after the icon (e.g. addons' own menus)
+ * FLAG: material icon ligatures are not aria-hidden, so accessible names look like "archive Archive";
+ * matching the label element, or the name with one icon word before it, avoids depending on the icon.
+ */
+export const menuItem = (page: Page, label: string) =>
+  page
+    .getByRole('menuitem')
+    .filter({ has: page.getByText(label, { exact: true }) })
+    .or(page.getByRole('menuitem', { name: new RegExp(`^(\\S+ )?${escapeRegExp(label)}$`) }))
+    .or(page.getByRole('listitem', { name: label, exact: true }))
+    .first()
+
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+// FLAG: FormRow labels are not associated with their fields, so `getByLabel` does not work
+export const formRow = (scope: Page | Locator, label: string) =>
+  scope.locator(`div:has(> div.label:text-is(${JSON.stringify(label)})):has(> div.field)`)
+
+// FLAG: InputSwitch hides its unnamed checkbox (0x0, opacity 0), so `.check()` never sees it as visible
+export const switchBody = (scope: Locator) => scope.locator('label.switch-body')
+
+// FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
+export const expectRowSelection = async (selected: Locator[], notSelected: Locator[] = []) => {
+  for (const row of selected) await expect(row).toHaveClass(/\bp-highlight\b/)
+  for (const row of notSelected) await expect(row).not.toHaveClass(/\bp-highlight\b/)
+}

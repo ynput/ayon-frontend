@@ -55,6 +55,8 @@ export type ListTableRowDoubleClickHandler<TData extends RowData> = (
 declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     listTableCustomCell?: boolean
+    // This column takes the free width. Without one the last column does.
+    listTableGrow?: boolean
     editable?: boolean
   }
 
@@ -105,4 +107,12 @@ export interface ListTableProps<TData> {
   expanded?: ExpandedState
   onExpandedChange?: (expanded: ExpandedState) => void
   getIsRowInactive?: (row: TData) => boolean
+  getRowClassName?: (row: TData) => string | undefined
+  // 'data': compact, flush rows for read only records such as logs. Columns keep their width and
+  // the table scrolls sideways when they don't fit.
+  variant?: 'default' | 'data'
+  // Scroll to the selected row when the selection changes from outside the table
+  scrollToSelection?: boolean
+  // Name of the table for screen readers
+  ariaLabel?: string
 }

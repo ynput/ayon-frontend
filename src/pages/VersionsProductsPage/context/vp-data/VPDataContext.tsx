@@ -30,6 +30,7 @@ import {
   useQueryFilters,
   buildQueryFilters,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
@@ -245,7 +246,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -301,6 +308,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
   const slicerFolderIds = useMemo(
     () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
@@ -416,6 +424,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
             operator: 'and',
           })
         : countsTaskFilter.filterString
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolderIds =
+        countsSearchFolderIds === searchFolderIds
+          ? slicerFolderIds
+          : getFolderIdsWithoutChildren(
+              resolveSlicerFolders(
+                sliceSelections,
+                entityIds.folderIds,
+                getChildFolderIds,
+                countsSearchFolderIds,
+              ).selectedFolders,
+            )
       return {
         projectName,
         versionFilter: countsVersionFilter.filterString,
@@ -423,7 +444,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         taskFilter: countsTaskFilterString,
         folderFilter: countsFolderFilter.filterString,
         representationFilter: combinedRepresentationFilter.filterString,
-        folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+        folderIds: countsFolderIds.length ? countsFolderIds : undefined,
         versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
         productIds: scopedProductIds.length ? scopedProductIds : undefined,
         latestPerFolder,
@@ -443,6 +464,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       scopedProductIds,
       scopedTaskIds,
       latestPerFolder,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
+      getFolderIdsWithoutChildren,
     ],
   )
 
@@ -590,6 +617,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
@@ -607,6 +635,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isLoading: isLoadingVersions,
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
@@ -621,22 +650,29 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
+    folderIds: slicerFolderIds,
     modules,
     versionArguments,
     expanded,
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
+  const isLoadingQueryArgs = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
+  // switching grouping keeps the query args, so cover the source that just became active
+  const isLoadingTable =
+    isLoadingQueryArgs ||
+    (groupBy ? isLoadingGroups : showProducts ? isLoadingProducts : isLoadingVersions)
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage

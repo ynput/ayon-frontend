@@ -223,6 +223,7 @@ const useGetListItemsData = ({
               columnSummaries: columns.columnSummaries,
               columnSummaryScopes: columns.columnSummaryScopes,
             }),
+            statsEntity,
           )
         : [],
     [
@@ -293,6 +294,8 @@ const useGetListItemsData = ({
     tags: [],
     updatedAt: '',
     createdAt: '', // <-- required to match EntityListItemWithLinks type
+    createdBy: null,
+    updatedBy: null,
     position: 0,
     ownItemAttrib: [],
     links: [],

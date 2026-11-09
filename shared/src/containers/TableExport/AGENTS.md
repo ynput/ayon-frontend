@@ -13,6 +13,8 @@ user's folder and attribute permissions. The host only says what the open table 
   row count, `getContent(scope, options)` (rows, columns and their labels) and `getSkippedColumns`.
 - `openExport(scope)` sets the `tableExport` URL search param. The App module renders the dialog while the param is set
   and there is a source, and removes it on close. Without a Power Pack license `openExport` opens the Power Pack dialog.
+  While the license is still being checked (just after a page load) it waits for the check, and the menus already
+  offer the Power Pack export.
 - The contract types (`TableExportContent`, `TableExportSource`, ...) are hand written in `TableExportContextInstance.ts`,
   the endpoint isn't in the server's OpenAPI. Changing them changes what the Power Pack module receives: keep both in step,
   add fields rather than rename them, an older Power Pack keeps reading the old ones.

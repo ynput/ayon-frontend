@@ -1,5 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import axios from 'axios'
+import { clearAccessToken, storeAccessToken } from '@shared/util/accessToken'
 
 const userSlice = createSlice({
   name: 'user',
@@ -32,11 +32,7 @@ const userSlice = createSlice({
   },
   reducers: {
     login: (state, action) => {
-      if (action.payload.accessToken) {
-        localStorage.setItem('accessToken', action.payload.accessToken)
-        axios.defaults.headers.common['Authorization'] = `Bearer ${action.payload.accessToken}`
-        document.cookie = `accessToken=${action.payload.accessToken}; path=/; max-age=86400`
-      }
+      if (action.payload.accessToken) storeAccessToken(action.payload.accessToken)
 
       const user = { ...action.payload.user, data: { ...action.payload.user?.data } }
       // set if isUser
@@ -54,8 +50,7 @@ const userSlice = createSlice({
     },
 
     logout: (state) => {
-      localStorage.removeItem('accessToken')
-      document.cookie = 'accessToken=; path=/; max-age=0'
+      clearAccessToken()
       state = {}
       return state
     },

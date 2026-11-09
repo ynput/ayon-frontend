@@ -18,7 +18,7 @@ import { hasEnumOptions } from '@shared/util'
 import type { ParentColumnDefinition } from '@shared/containers'
 
 interface UseProjectTableColumnItemsProps {
-  extraColumns?: { value: string; label: string; icon?: string }[]
+  extraColumns?: Pick<AddColumnItem, 'value' | 'label' | 'icon' | 'menu'>[]
   hiddenColumns?: string[]
   includeLinks?: boolean
   parentColumns?: ParentColumnDefinition[]
@@ -98,9 +98,19 @@ export const useProjectTableColumnItems = ({
         icon: getColumnIcon('createdAt'),
       },
       {
+        value: 'createdBy',
+        label: getColumnLabel('createdBy'),
+        icon: getColumnIcon('createdBy'),
+      },
+      {
         value: 'updatedAt',
         label: getColumnLabel('updatedAt'),
         icon: getColumnIcon('updatedAt'),
+      },
+      {
+        value: 'updatedBy',
+        label: getColumnLabel('updatedBy'),
+        icon: getColumnIcon('updatedBy'),
       },
       {
         value: 'subtasks',

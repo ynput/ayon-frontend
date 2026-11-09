@@ -14,6 +14,8 @@ import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjec
 export interface ProjectOverviewProviderProps {
   children: ReactNode
   modules: ProjectTableModulesType
+  // keys the expanded rows in session storage; another table of the project needs its own
+  page?: string
 }
 
 type QueryFilterParams = {

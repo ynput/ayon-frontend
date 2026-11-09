@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { dialog, menuItem, toast } from '../support/ui'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { DetailsPanel } from './DetailsPanel'
 import { SearchFilterBar } from './SearchFilterBar'
 
@@ -158,10 +158,12 @@ export class OverviewPage {
     const options = this.page.locator('.options')
     for (const value of values) {
       const option = options.locator(`[data-value="${value}"]`).first()
-      const selected = option.locator('.selected')
-      const wasSelected = (await selected.count()) > 0
+      // single-value items are marked `.selected`, multi-select lists (assignees) show a ticked checkbox
+      const marker = option.locator('.selected, .checkbox-icon.all')
+      const isSelected = async () => (await marker.count()) > 0
+      const wasSelected = await isSelected()
       await option.click()
-      await expect(selected).toHaveCount(wasSelected ? 0 : 1)
+      await expect.poll(isSelected).toBe(!wasSelected)
     }
     await closeBy.click()
     await expect(options).toBeHidden()
@@ -230,6 +232,21 @@ export class OverviewPage {
       .locator('th[data-column-id]')
       .evaluateAll((ths) => ths.map((th) => th.getAttribute('data-column-id')))
     return ids.filter((id) => id !== '__row_selection__')
+  }
+
+  /** Drags the column's resize handle (shown while the header is hovered) by `delta` pixels */
+  async resizeColumn(columnId: string, delta: number) {
+    const header = this.columnHeader(columnId)
+    await header.hover()
+    const handle = header.locator('.resize-handle')
+    const box = await handle.boundingBox()
+    if (!box) throw new Error(`column ${columnId} has no resize handle`)
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x + delta, y, { steps: 10 })
+    await this.page.mouse.up()
   }
 
   async columnMenu(columnId: string, item: string) {
@@ -405,7 +422,7 @@ export class OverviewPage {
   // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
     await this.page.getByTestId('table-import-export').click()
-    await this.page.getByTestId('import-csv').click()
+    await this.page.getByTestId('import-file').click()
     const wizard = this.importDialog()
     await expect(wizard).toBeVisible()
     await wizard.locator('input[type="file"]').setInputFiles(filePath)

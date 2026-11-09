@@ -28,7 +28,9 @@ export const visibleFields: Array<keyof EntityForm> = [
   'tags',
   'status',
   'updatedAt',
+  'updatedBy',
   'createdAt',
+  'createdBy',
   'projectName',
   'path',
   'description',
@@ -40,7 +42,9 @@ export const readOnlyFields: Array<keyof EntityForm> = [
   'projectName',
   'path',
   'createdAt',
+  'createdBy',
   'updatedAt',
+  'updatedBy',
 ]
 
 export const attributeFields: Array<keyof EntityForm> = [

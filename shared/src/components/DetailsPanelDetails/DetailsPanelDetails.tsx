@@ -5,7 +5,7 @@ import {
   DetailsPanelAttributesEditorProps,
 } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { useGetActivitiesInfiniteInfiniteQuery } from '@shared/api'
+import { useGetActivitiesInfiniteInfiniteQuery, useGetUsersAssigneeQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
 import styled from 'styled-components'
@@ -80,6 +80,14 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     folderHasVersions,
     attribAccess,
   })
+
+  const authorNames = [formData?.createdBy, formData?.updatedBy].filter(
+    (name): name is string => typeof name === 'string' && !!name,
+  )
+  const { data: authors = [] } = useGetUsersAssigneeQuery(
+    { names: authorNames, projectName: formData?.projectName || '' },
+    { skip: !authorNames.length || !formData?.projectName },
+  )
 
   const { writableAttributes } = attribAccess
   const enableDescriptionEditing =
@@ -187,6 +195,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         form={formData || {}}
         mixedFields={mixedFields}
         isLoading={isLoading}
+        users={authors}
       />
     </StyledContainer>
   )

@@ -804,7 +804,11 @@ const isEmpty =
     <ActivityCategorySelect
       value={category}
       categories={categoryOptions}
-      onChange={(c) => setCategory(c)}
+      onChange={(c) => {
+        setCategory(c)
+        // back to typing; after the dropdown has closed, it focuses its own button
+        requestAnimationFrame(() => editorRef.current?.focus())
+      }}
       isCompact={isEditing}
       hasPowerpack={hasLicense}
       onPowerFeature={onPowerFeature}
