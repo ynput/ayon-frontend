@@ -64,6 +64,12 @@ Start with a clean working tree, installed root dependencies, and an authenticat
 commit and never bypasses them. If a merge is blocked, resolve its requirements and retry at the
 prompt. npm login is started in the terminal if needed.
 
+After GitHub confirms the merge, the CLI automatically switches to `develop`, fast-forwards to
+`origin/develop`, and deletes the merged release branch locally and on origin. It refuses to delete
+a branch whose tip changed after review. Building and publishing still require confirmation.
+The final summary uses successful npm publish acknowledgements for versions released in that run;
+other registry lookups refresh npm metadata to avoid stale cached versions.
+
 Rerun `yarn release:start` on the generated release branch to continue an interrupted PR stage.
 If the bumped versions are already on `origin/develop` but not npm, it goes straight to the
 build/publish stage without bumping again. Failed or declined publishing can be retried this way;

@@ -177,7 +177,7 @@ const bumped = (v, level) => {
 const npmInfo = (name) => {
   try {
     return JSON.parse(
-      execFileSync('npm', ['view', name, 'version', 'gitHead', '--json'], {
+      execFileSync('npm', ['view', name, 'version', 'gitHead', '--json', '--prefer-online'], {
         encoding: 'utf8',
         stdio: ['ignore', 'pipe', 'ignore'],
       }),
@@ -224,17 +224,24 @@ const baseline = (repo, key) => {
 
 // `release:status` fetches origin and compares each package version on origin/develop with
 // the version currently published to npm. It does not inspect the working-tree versions.
-const cmdStatus = (repo) => {
+const cmdStatus = (repo, publishedVersions = {}) => {
   git(repo, 'fetch', '-q', 'origin')
   section('Package release status')
   line(`Comparing ${BASE} with npm.`, { tone: 'muted' })
+  if (Object.keys(publishedVersions).length)
+    line(
+      'Versions published in this run are confirmed by npm publish; registry metadata may take time to update.',
+      {
+        tone: 'muted',
+      },
+    )
   console.log()
   console.log(
     paint(`  ${'PACKAGE'.padEnd(32)} ${'DEVELOP'.padEnd(10)} ${'NPM'.padEnd(10)} STATUS`, 'muted'),
   )
   for (const key of PUBLISH_ORDER) {
     const local = pkgJson(repo, key, BASE).version
-    const npm = npmInfo(PACKAGES[key].name).version ?? '?'
+    const npm = publishedVersions[key] ?? npmInfo(PACKAGES[key].name).version ?? '?'
     const state = npm === '?' ? 'UNKNOWN' : local === npm ? 'PUBLISHED' : 'NOT ON NPM'
     const tone = state === 'PUBLISHED' ? 'green' : 'yellow'
     console.log(
@@ -927,7 +934,7 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force, expectedVer
   if (!todo.length) {
     section('Nothing to publish')
     line('No selected package has a newer version than npm.', { tone: 'green' })
-    return true
+    return {}
   }
 
   section(dryRun ? 'Publish plan (DRY RUN)' : 'Publish plan')
@@ -992,7 +999,7 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force, expectedVer
     tone: 'green',
   })
   if (!dryRun && !expectedVersions) nextStep('yarn release:status')
-  return !dryRun
+  if (!dryRun) return Object.fromEntries(todo)
 }
 
 const gh = (repo, ...args) => sh('gh', args, { cwd: repo })
@@ -1097,6 +1104,26 @@ const checkoutDevelop = (repo, mergeCommit) => {
     )
 }
 
+const cleanupReleaseBranch = (repo, branch, head) => {
+  if (!branch.startsWith(RELEASE_BRANCH_PREFIX) || branch === git(repo, 'branch', '--show-current'))
+    die('refusing to delete an unexpected or checked-out release branch')
+  if (!gitOk(repo, 'merge-base', '--is-ancestor', head, BASE))
+    die('refusing to delete a release branch that is not merged into origin/develop')
+  const ref = `refs/heads/${branch}`
+  const localExists = gitOk(repo, 'show-ref', '--verify', '--quiet', ref)
+  if (localExists && git(repo, 'rev-parse', ref) !== head)
+    die('local release branch changed after review; it was not deleted')
+  const remoteHead = git(repo, 'ls-remote', '--heads', 'origin', ref).split(/\s/)[0]
+  if (remoteHead && remoteHead !== head)
+    die('remote release branch changed after review; it was not deleted')
+
+  section('Clean up merged release branch')
+  if (remoteHead)
+    git(repo, 'push', `--force-with-lease=${ref}:${head}`, 'origin', '--delete', branch)
+  if (localExists) git(repo, 'branch', '-d', branch)
+  line(`Removed ${branch} locally and on origin.`, { tone: 'green' })
+}
+
 // Git and the PR are the resume state: no local state file, reset, forced merge or force-publish.
 const cmdStart = async (repo, opts, reviewedData) => {
   if (!process.stdin.isTTY) die('release:start needs an interactive terminal')
@@ -1133,6 +1160,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
   let branch = git(repo, 'branch', '--show-current')
   let versions
   let mergeCommit
+  let releaseHead
   const branchFiles = branch.startsWith(RELEASE_BRANCH_PREFIX)
     ? git(repo, 'diff', '--name-only', `${BASE}...HEAD`).split('\n').filter(Boolean)
     : []
@@ -1167,6 +1195,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
   if (versions) {
     section('Release pull request')
     const head = git(repo, 'rev-parse', 'HEAD')
+    releaseHead = head
     const prs = JSON.parse(
       gh(
         repo,
@@ -1221,8 +1250,8 @@ const cmdStart = async (repo, opts, reviewedData) => {
   }
 
   section('Build merged release')
-  if (!(await confirm('Switch to develop, fast-forward to origin/develop and continue?'))) return
   checkoutDevelop(repo, mergeCommit)
+  if (mergeCommit) cleanupReleaseBranch(repo, branch, releaseHead)
   const published = await cmdPublish(repo, {
     packages: Object.keys(versions),
     expectedVersions: versions,
@@ -1231,7 +1260,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
     dryRun: false,
     otp: opts.otp,
   })
-  if (published) cmdStatus(repo)
+  if (published) cmdStatus(repo, published)
 }
 
 // ----------------------------------------------------------------------------- cli
