@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext'
 import {
@@ -46,6 +46,13 @@ const DEFAULT_CONFIG: Record<MentionTrigger, MentionTriggerConfig> = {
   '@@': { title: '@@ Versions', noun: 'version' },
   '@@@': { title: '@@@ Tasks', noun: 'task' },
 }
+
+// wait for typing to pause before searching beyond the given options
+const SEARCH_DEBOUNCE_MS = 250
+// shorter searches match too much to be useful
+const MIN_SEARCH_LENGTH = 2
+
+const getItemKey = (item: MentionItem) => `${item.type}:${item.id}`
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
@@ -110,13 +117,45 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   const config: MentionTriggerConfig = { ...DEFAULT_CONFIG[trigger], ...source.config?.[trigger] }
   const error = query !== null ? source.getError?.(trigger) : null
 
+  // search beyond the given options, debounced, only the latest search is shown
+  const search = source.search
+  const searchesTrigger = source.searchTriggers?.includes(trigger) ?? true
+  const searchText = query?.toLowerCase() ?? ''
+  const searchKey =
+    search && searchesTrigger && !error && searchText.length >= MIN_SEARCH_LENGTH
+      ? `${trigger}|${filter ?? ''}|${searchText}`
+      : null
+  const [searchResult, setSearchResult] = useState<{ key: string; items: MentionItem[] } | null>(
+    null,
+  )
+
+  useEffect(() => {
+    if (!search || !searchKey) return
+    let cancelled = false
+    const timer = setTimeout(() => {
+      search({ trigger, search: searchText, filter })
+        .catch(() => [])
+        .then((items) => !cancelled && setSearchResult({ key: searchKey, items }))
+    }, SEARCH_DEBOUNCE_MS)
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+  }, [search, searchKey, trigger, searchText, filter])
+
+  const searchItems = searchResult?.key === searchKey ? searchResult.items : null
+  const isSearching = !!searchKey && !searchItems
+
   const options = useMemo(() => {
     if (query === null || error) return []
-    return source
-      .getOptions({ trigger, search: query.toLowerCase(), filter })
-      .slice(0, limit)
-      .map((item, i) => new MentionMenuOption(item, i))
-  }, [query, trigger, filter, source, limit, error])
+    const items = source.getOptions({ trigger, search: searchText, filter }).slice(0, limit)
+    // search results after the given options, without the ones already listed
+    if (searchItems) {
+      const listed = new Set(items.map(getItemKey))
+      items.push(...searchItems.filter((item) => !listed.has(getItemKey(item))).slice(0, limit))
+    }
+    return items.map((item, i) => new MentionMenuOption(item, i))
+  }, [query, searchText, trigger, filter, source, limit, error, searchItems])
 
   const onSelectOption = useCallback(
     (option: MentionMenuOption, nodeToReplace: TextNode | null, closeMenu: () => void) => {
@@ -199,7 +238,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         const anchor = anchorElementRef.current
         if (!anchor) return null
         // nothing matches the search, get out of the way
-        if (!options.length && !error && (query || filter)) return null
+        if (!options.length && !error && !isSearching && (query || filter)) return null
 
         return (
           <SuggestionMenu
@@ -231,7 +270,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
             onSelect={selectOptionAndCleanUp}
             onHighlight={setHighlightedIndex}
             optionClassName={() => (config.isCircle ? undefined : 'square')}
-            emptyMessage={error || `No ${config.noun}s found`}
+            emptyMessage={error || (isSearching ? 'Searching…' : `No ${config.noun}s found`)}
             renderOption={({ item }) => (
               <>
                 {source.renderOptionImage ? (

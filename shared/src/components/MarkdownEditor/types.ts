@@ -23,6 +23,7 @@ export const MENTION_TRIGGER_BY_TYPE: Record<string, MentionTrigger> = {
   team: '@',
   version: '@@',
   task: '@@@',
+  folder: '@@@',
 }
 
 export const getMentionTrigger = (type: string): MentionTrigger =>
@@ -72,6 +73,11 @@ export interface MentionSource {
   triggers?: MentionTrigger[]
   config?: Partial<Record<MentionTrigger, Partial<MentionTriggerConfig>>>
   getOptions: (query: MentionQuery) => MentionItem[]
+  // search beyond the given options (e.g. the whole project), called debounced while typing,
+  // the results are listed after the matching options
+  search?: (query: MentionQuery) => Promise<MentionItem[]>
+  // triggers `search` is called for, defaults to all
+  searchTriggers?: MentionTrigger[]
   // show a message instead of options (e.g. version mentions disabled for folders)
   getError?: (trigger: MentionTrigger) => string | null | undefined
   // limit of options shown at once

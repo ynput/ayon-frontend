@@ -11,8 +11,10 @@ interface FeedMentionSourceOptions {
   suggestions?: SuggestResponse
   project?: Pick<ProjectContextValue, 'productTypes'>
   taskTypes?: TaskType[]
-  // version mentions are not available on folders
+  // version mentions are not available on folders, unless the project can be searched
   entityType?: string
+  // search beyond the suggestions, see `useProjectMentionSearch`
+  search?: MentionSource['search']
 }
 
 /**
@@ -25,7 +27,24 @@ export const createFeedMentionSource = ({
   project = { productTypes: [] },
   taskTypes = [],
   entityType,
+  search,
 }: FeedMentionSourceOptions): MentionSource => ({
+  search,
+  // users and teams are all in the suggestions already
+  searchTriggers: ['@@', '@@@'],
+  // the project search also finds folders
+  config: search
+    ? {
+        '@@@': {
+          title: '@@@ Tasks & Folders',
+          noun: 'item',
+          filters: [
+            { id: 'task', icon: 'check_circle', tooltip: 'Filter tasks' },
+            { id: 'folder', icon: 'folder', tooltip: 'Filter folders' },
+          ],
+        },
+      }
+    : undefined,
   getOptions: ({ trigger, search, filter }) => {
     const options = getMentionOptions(
       trigger,
@@ -41,7 +60,7 @@ export const createFeedMentionSource = ({
     return options.filter((option): option is MentionItem => !!option)
   },
   getError: (trigger) =>
-    trigger === '@@' && entityType === 'folder'
+    trigger === '@@' && entityType === 'folder' && !search
       ? 'Version mentions are disabled for folders'
       : null,
 })

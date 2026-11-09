@@ -139,9 +139,9 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
   const mentionsContext = useMemo(
     () =>
       projectName && entityId
-        ? { projectName, entityType, entityId, productTypes, taskTypes }
+        ? { projectName, entityType, entityId, productTypes, taskTypes, folderTypes }
         : undefined,
-    [projectName, entityType, entityId, productTypes, taskTypes],
+    [projectName, entityType, entityId, productTypes, taskTypes, folderTypes],
   )
 
   const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
