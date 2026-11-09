@@ -60,6 +60,9 @@ const getItemKey = (item: MentionItem) => `${item.type}:${item.id}`
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
+// the same, words separated by single spaces, for a project search: `@sh010 render v3`
+const MENTION_WORDS_REGEX = /(^|[\s([{"'])(@{1,3})((?:[^\s@]+(?: [^\s@]+)* ?)?)$/
+const MAX_QUERY_LENGTH = 75
 
 class MentionMenuOption extends MenuOption {
   item: MentionItem
@@ -88,12 +91,14 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   const triggers = source.triggers ?? ALL_TRIGGERS
   const limit = source.limit ?? (placement === 'top' ? 8 : 5)
 
+  // a project search narrows by several words, e.g. the folder, product and version
+  const allowSpaces = !!source.search
   const triggerFn = useCallback(
     (text: string): MenuTextMatch | null => {
       // no mentions while writing code
       if ($isSelectionInCode()) return null
-      const match = MENTION_REGEX.exec(text)
-      if (!match) return null
+      const match = (allowSpaces ? MENTION_WORDS_REGEX : MENTION_REGEX).exec(text)
+      if (!match || match[3].length > MAX_QUERY_LENGTH) return null
       const typed = match[2] as MentionTrigger
       if (!triggers.includes(typed)) return null
       triggerRef.current = typed
@@ -103,7 +108,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         replaceableString: match[2] + match[3],
       }
     },
-    [triggers.join()],
+    [triggers.join(), allowSpaces],
   )
 
   const handleQueryChange = useCallback((matchingString: string | null) => {
@@ -123,7 +128,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   // search beyond the given options, debounced, only the latest search is shown
   const search = source.search
-  const searchText = query?.toLowerCase() ?? ''
+  const searchText = query?.trim().toLowerCase() ?? ''
   const searchKey =
     search && !error && searchText.length >= MIN_SEARCH_LENGTH
       ? `${trigger}|${filter ?? ''}|${searchText}`
@@ -212,7 +217,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
               const node = anchor.getNode()
               if ($isTextNode(node)) {
                 const text = node.getTextContent().slice(0, anchor.offset)
-                const match = MENTION_REGEX.exec(text)
+                const match = (allowSpaces ? MENTION_WORDS_REGEX : MENTION_REGEX).exec(text)
                 if (match) {
                   const start = match.index + match[1].length
                   node.spliceText(start, anchor.offset - start, '', true)
@@ -234,7 +239,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
           COMMAND_PRIORITY_EDITOR,
         ),
       ),
-    [editor, query],
+    [editor, query, allowSpaces],
   )
 
   return (
@@ -255,8 +260,15 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         // reads a stale state), but the query is already cleared.
         if (!anchor || query === null) return null
         // nothing matches the search, get out of the way. A filter keeps the menu, it is the
-        // only way to turn the filter off again.
-        if (!options.length && !error && !searchError && !isSearching && query && !filter)
+        // only way to turn the filter off again, until a space shows the mention is done.
+        if (
+          !options.length &&
+          !error &&
+          !searchError &&
+          !isSearching &&
+          query &&
+          (!filter || query.includes(' '))
+        )
           return null
 
         return (

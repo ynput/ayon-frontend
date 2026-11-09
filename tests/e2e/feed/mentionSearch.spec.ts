@@ -230,6 +230,45 @@ test('slash path search selects only the task in the named folder', async ({
   )
 })
 
+test('words separated by spaces find one version of a product in a folder', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  // v002 of the product, and v002 of another product in the same folder
+  await api.createVersion(projectName, { productId: data.product.id, version: 2 })
+  const other = await api.createProduct(projectName, {
+    folderId: data.remote.id,
+    name: uniqueName('plate'),
+  })
+  await api.createVersion(projectName, { productId: other.id, version: 2 })
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+
+  await picker.search(`${data.remote.name} ${data.product.name} v2`)
+  const option = picker.option(data.product.name)
+  await expect(option).toHaveCount(1)
+  await expect(option).toContainText('v002')
+  await expect(picker.option(other.name)).toHaveCount(0)
+  await option.click()
+  await expect(panel.commentEditor).toContainText(`@v002`)
+})
+
+test('a space ends the mention once nothing matches', async ({ page, api, projectName }) => {
+  const data = await seed(api, projectName)
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search(data.remote.name)
+  await expect(picker.option(data.remote.name).first()).toBeVisible()
+  await panel.commentEditor.pressSequentially(' thanks for')
+  await expect(picker.title).toBeHidden()
+  await panel.commentEditor.press('Enter')
+  await expect(panel.commentEditor).toContainText(`@${data.remote.name} thanks for`)
+})
+
 test('project search returns at most five unique results', async ({ page, api, projectName }) => {
   const data = await seed(api, projectName)
   const prefix = uniqueName('searchLimit')

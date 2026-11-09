@@ -58,7 +58,8 @@ const getSearchTypes = ({ filter }: MentionQuery): MentionSearchType[] => {
 /**
  * Searches folders, tasks and versions across the whole project for the mention picker,
  * `SEARCH_LIMIT` per type, the best `SEARCH_LIMIT` of them are returned.
- * `sh010/comp` searches for `sh010` and `comp`.
+ * Every word has to match: `sh010 render v3` (or `sh010/render/v3`) finds version 3 of a
+ * render product in sh010.
  */
 export const useProjectMentionSearch = ({
   projectName,
@@ -73,7 +74,7 @@ export const useProjectMentionSearch = ({
       const types = getSearchTypes(query)
       if (!projectName || !types.length) return []
 
-      const terms = query.search.split('/').filter(Boolean)
+      const terms = query.search.split(/[\s/]+/).filter(Boolean)
       const result = await searchEntities(
         { projectName, search: terms.join(' '), types, first: SEARCH_LIMIT },
         // new versions and tasks show up the next time, the picker debounces the requests
