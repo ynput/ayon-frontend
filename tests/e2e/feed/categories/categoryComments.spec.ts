@@ -77,6 +77,24 @@ test.describe('comment categories', () => {
       .toBeNull()
   })
 
+  test('picking a category goes back to typing the comment', async ({
+    page,
+    api,
+    projectName,
+    setCategories,
+  }) => {
+    await setCategories([{ name: 'Director', access: { [EVERYONE]: CREATOR } }])
+    await setup(api, projectName)
+    const panel = await openTask(page, projectName)
+    await panel.openCommentBox()
+
+    await panel.pickCategory('Director')
+    await expect(panel.commentEditor).toBeFocused()
+    // typed with the keyboard, not into the editor, which would focus it first
+    await page.keyboard.type('Straight after the category')
+    await expect(panel.commentEditor).toContainText('Straight after the category')
+  })
+
   test('a draft keeps its category after a reload', async ({
     page,
     api,

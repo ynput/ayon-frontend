@@ -10,6 +10,51 @@ export class UsersSettingsPage {
     await expect(this.page.getByPlaceholder('Filter users...')).toBeVisible({ timeout: 30_000 })
   }
 
+  get table() {
+    return this.page
+      .getByRole('table')
+      .filter({ has: this.page.getByRole('columnheader', { name: 'Username' }) })
+  }
+
+  async sort(header: string, direction: string) {
+    const column = this.table.getByRole('columnheader', { name: header, exact: true })
+    await column.getByText(header, { exact: true }).click()
+    await expect(column).toHaveAttribute('aria-sort', direction)
+  }
+
+  async columnNames() {
+    return this.table.getByRole('columnheader').allTextContents()
+  }
+
+  async reorderColumn(source: string, target: string) {
+    await this.table
+      .getByRole('columnheader', { name: source, exact: true })
+      .dragTo(this.table.getByRole('columnheader', { name: target, exact: true }))
+  }
+
+  async visibleNames() {
+    return this.table.locator('tbody tr td:first-child').allInnerTexts()
+  }
+
+  async previewImport(name: string, buffer: Buffer) {
+    await this.page.getByTestId('table-import-export').click()
+    await this.page.getByTestId('import-file').click()
+    const wizard = dialog(this.page, /Import users/)
+    await expect(wizard).toBeVisible()
+    await wizard.locator('input[type="file"]').setInputFiles({ name, mimeType: 'text/csv', buffer })
+    await expect(wizard.getByText(/1 rows found/)).toBeVisible()
+    await wizard.getByRole('button', { name: 'Next', exact: true }).click()
+    await expect(wizard.getByRole('columnheader', { name: 'File column' })).toBeVisible()
+    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
+    await expect(wizard.getByRole('columnheader', { name: 'Mapped Value' })).toBeVisible()
+    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
+    await expect(wizard.getByText('Updating: 1')).toBeVisible()
+    await expect(wizard.getByRole('button', { name: 'Import data', exact: true })).toBeEnabled()
+    await expect(wizard).toContainText(/Errors:\s*0/)
+    await wizard.getByRole('button', { name: 'close', exact: true }).click()
+    await expect(wizard).toBeHidden()
+  }
+
   async filter(text: string) {
     await this.page.getByPlaceholder('Filter users...').fill(text)
   }

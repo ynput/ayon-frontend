@@ -107,7 +107,11 @@ export const useVPContextMenu = (callbacks?: {
             const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
             selectedRows.add(rowSelectionCellId)
           }
-          setSelectedCells(new Set<string>([...selectedCells, ...selectedRows]))
+          // drop other checkbox cells so unrelated rows do not join the details selection
+          const bodyCells = [...selectedCells].filter(
+            (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+          )
+          setSelectedCells(new Set<string>([...bodyCells, ...selectedRows]))
         } else {
           // For table view, select the row to open details
           const rowSelectionCellId = getCellId(cell.entityId, ROW_SELECTION_COLUMN_ID)

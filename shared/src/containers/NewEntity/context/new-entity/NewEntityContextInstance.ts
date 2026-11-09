@@ -10,3 +10,5 @@ export const useNewEntityContext = () => {
   }
   return context
 }
+
+export const useOptionalNewEntityContext = () => useContext(NewEntityContext)

@@ -154,7 +154,7 @@ export const GroupHeaderWidget = ({
             {count !== undefined && count > 0 ? (
               <Count>
                 {count}
-                {percentage !== undefined && ` (${percentage}%)`}
+                {percentage !== undefined && ` (${percentage === 0 ? '<1' : percentage}%)`}
               </Count>
             ) : isEmpty ? (
               <Count>(Empty)</Count>

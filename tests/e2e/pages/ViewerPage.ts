@@ -172,6 +172,20 @@ export class ViewerPage {
     await this.expectFrame(frame)
   }
 
+  async goToFrameAndPress(frame: number, key: string, shiftKey = false) {
+    await this.frameInput.fill(String(frame))
+    // Send both commands in one browser task, before the first seek can present its frame.
+    await this.frameInput.evaluate(
+      (input, shortcut) => {
+        input.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+        document.body.dispatchEvent(
+          new KeyboardEvent('keydown', { ...shortcut, bubbles: true, cancelable: true }),
+        )
+      },
+      { key, shiftKey },
+    )
+  }
+
   async expectFrame(frame: number, fps = 24) {
     await expect(this.frameInput).toHaveValue(String(frame))
     await expect

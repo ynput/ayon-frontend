@@ -4,4 +4,8 @@ export type {
   NewEntityContextType,
   NewEntityOpenConfig,
 } from './new-entity/NewEntityContext'
-export { NewEntityContext, useNewEntityContext } from './new-entity/NewEntityContextInstance'
+export {
+  NewEntityContext,
+  useNewEntityContext,
+  useOptionalNewEntityContext,
+} from './new-entity/NewEntityContextInstance'

@@ -31,7 +31,7 @@ import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { compareItems } from '@tanstack/match-sorter-utils'
-import { parseSearchQuery, matchSearchQuery } from '@shared/util'
+import { parseSearchQuery, matchSearchQuery, toSlicerSearchHaystack } from '@shared/util'
 import { useSimpleTableContext } from './context/simple-table'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
@@ -69,8 +69,10 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addM
 
   // combine label and parents into a single string for searching if columnId is 'label'
   if (columnId === 'label') {
-    searchString = [row.original.label, row.original.name, ...(row.original.parents || [])].join(
-      ' ',
+    searchString = toSlicerSearchHaystack(
+      row.original.label,
+      row.original.name,
+      row.original.parents,
     )
   }
 
