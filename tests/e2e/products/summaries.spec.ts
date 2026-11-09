@@ -3,7 +3,13 @@ import { AyonApi } from '../support/api'
 import { ProductsPage } from '../pages/ProductsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { MEDIA } from '../media'
-import { expandAllRows, readMainCount, rowLabels } from '../support/summary'
+import {
+  expandAllRows,
+  readBreakdown,
+  readMainCount,
+  rowLabels,
+  summaryCell,
+} from '../support/summary'
 
 // shots/sh010: renderA v1 v2 (approved), plateA v1; shots/sh020: renderB v1; assets/hero: modelA v1 v2
 const createProjectProducts = async (api: AyonApi, projectName: string) => {
@@ -215,5 +221,61 @@ test.describe('products summary matches the table', () => {
       renderB: ['v001'],
       modelA: ['v001', 'v002'],
     })
+  })
+})
+
+test.describe('products summary of the version columns', () => {
+  const summaryColumns = (
+    columns: Record<string, { summary?: string; summaryScope?: string }>,
+  ) => ({
+    columns: [
+      { name: 'name', visible: true },
+      ...Object.entries(columns).map(([name, summary]) => ({ name, visible: true, ...summary })),
+    ],
+  })
+
+  test('product type summary counts the product types of the versions', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await createProjectProducts(api, projectName)
+    const products = new ProductsPage(page)
+    await openWithView(
+      api,
+      products,
+      projectName,
+      summaryColumns({ subType: { summary: 'values', summaryScope: 'all' } }),
+    )
+    await readMainCount(products.table)
+
+    const breakdown = await readBreakdown(products.table, 'subType')
+    await expect(breakdown).toContainText(/render\s*3/)
+    await expect(breakdown).toContainText(/model\s*2/)
+    await expect(breakdown).toContainText(/plate\s*1/)
+  })
+
+  test('version number and author summaries', async ({ page, api, projectName }) => {
+    await createProjectProducts(api, projectName)
+    const products = new ProductsPage(page)
+    await openWithView(
+      api,
+      products,
+      projectName,
+      summaryColumns({
+        version: { summary: 'max', summaryScope: 'all' },
+        author: { summary: 'values', summaryScope: 'all' },
+      }),
+    )
+    await readMainCount(products.table)
+
+    await expect(summaryCell(products.table, 'version')).toContainText(/2\s*max/)
+    await summaryCell(products.table, 'version').getByRole('button').click()
+    await expect(page.getByText('Average', { exact: true })).toBeVisible()
+    await expect(page.getByText('Sum', { exact: true })).toBeHidden()
+    await page.keyboard.press('Escape')
+
+    const breakdown = await readBreakdown(products.table, 'author')
+    await expect(breakdown).toContainText(/6/)
   })
 })
