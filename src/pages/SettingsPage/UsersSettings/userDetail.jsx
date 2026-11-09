@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, memo } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
 import {
@@ -517,4 +517,5 @@ const UserDetail = ({
   )
 }
 
-export default UserDetail
+// memo: typing in the users search re-renders the page, this panel only depends on the selection
+export default memo(UserDetail)

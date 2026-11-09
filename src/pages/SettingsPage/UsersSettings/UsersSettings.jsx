@@ -59,6 +59,11 @@ const formatAccessGroups = (rowData) => {
   return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
 
+// stable fallback, so memos that depend on the user list don't rerun every render while loading
+const EMPTY_USERS = []
+
+const SEARCHABLE_FIELDS = ['name', 'attrib.fullName', 'attrib.email', 'accessGroupList', 'hasPassword']
+
 const UsersSettings = () => {
   // QUERY PARAMS STATE
   const [searchParams] = useSearchParams()
@@ -95,9 +100,11 @@ const UsersSettings = () => {
   const isSelfSelected = selectedUsers.includes(selfName)
 
   // RTK QUERY HOOKS
-  let { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
+  let { data: userList = EMPTY_USERS, isLoading, isError, isFetching } = useGetUsersQuery({
+    selfName,
+  })
   if (isError || !Array.isArray(userList)) {
-    userList = []
+    userList = EMPTY_USERS
     toast.error('Unable to load users')
   }
 
@@ -163,21 +170,17 @@ const UsersSettings = () => {
     [userList],
   )
 
-  const searchableFields = [
-    'name',
-    'attrib.fullName',
-    'attrib.email',
-    'accessGroupList',
-    'hasPassword',
-  ]
-
   const [search, setSearch, filteredData] = useSearchFilter(
-    searchableFields,
+    SEARCHABLE_FIELDS,
     userListWithAccessGroups,
     'users',
   )
 
-  const selectedUserList = userList.filter((user) => selectedUsers.includes(user.name))
+  // keep the same array between renders: the detail panel rebuilds its form whenever it changes
+  const selectedUserList = useMemo(() => {
+    const selected = new Set(selectedUsers)
+    return userList.filter((user) => selected.has(user.name))
+  }, [userList, selectedUsers])
 
   const levels = useMemo(() => {
     let levels = []
