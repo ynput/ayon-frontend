@@ -31,6 +31,8 @@ interface SuggestionMenuProps<TOption extends MenuOption> {
   optionClassName?: (option: TOption) => string | undefined
   // shown when there are no options
   emptyMessage?: string | null
+  // no options but actions (e.g. browse), the empty message is shown before them
+  isEmpty?: boolean
   className?: string
 }
 
@@ -51,6 +53,7 @@ const SuggestionMenu = <TOption extends MenuOption>({
   renderOption,
   optionClassName,
   emptyMessage,
+  isEmpty = !options.length,
   className,
   getGroup,
 }: SuggestionMenuProps<TOption>) => {
@@ -87,7 +90,7 @@ const SuggestionMenu = <TOption extends MenuOption>({
     const spaceBelow = window.innerHeight - rect.top - MENU_OFFSET
     const spaceAbove = rect.top - MENU_OFFSET_ABOVE
     setOpenAbove(height > spaceBelow && spaceAbove > spaceBelow)
-  }, [isTop, anchor, options.length, title, emptyMessage])
+  }, [isTop, anchor, options.length, title, emptyMessage, isEmpty])
 
   return createPortal(
     <Styled.MentionMenu
@@ -106,6 +109,9 @@ const SuggestionMenu = <TOption extends MenuOption>({
         </Styled.MentionMenuTitle>
       )}
       <ul ref={listRef} role="listbox" className={clsx({ untitled: !title && !titleActions })}>
+        {isEmpty && emptyMessage && (
+          <Styled.MentionMenuItem className="empty">{emptyMessage}</Styled.MentionMenuItem>
+        )}
         {options.map((option, i) => [
           i > 0 && getGroup && getGroup(option) !== getGroup(options[i - 1]) && (
             <Styled.MentionMenuDivider key={`divider-${option.key}`} role="separator" />
@@ -125,9 +131,6 @@ const SuggestionMenu = <TOption extends MenuOption>({
             {renderOption(option)}
           </Styled.MentionMenuItem>,
         ])}
-        {!options.length && emptyMessage && (
-          <Styled.MentionMenuItem className="empty">{emptyMessage}</Styled.MentionMenuItem>
-        )}
       </ul>
     </Styled.MentionMenu>,
     target,

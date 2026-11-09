@@ -71,6 +71,22 @@ export interface MentionSource {
   limit?: number
   // optional custom renderer for the image part of an option
   renderOptionImage?: (option: MentionItem) => ReactNode
+  // a dialog to pick from all entities of a type, offered while the picker filters that type
+  browse?: MentionBrowse
+}
+
+export interface MentionBrowseProps {
+  // the filter of the picker, e.g. `task`
+  type: string
+  // the picked entities, mentioned where the trigger was typed
+  onPick: (items: MentionItem[]) => void
+  onClose: () => void
+}
+
+export interface MentionBrowse {
+  // filters the dialog can pick, e.g. folder, task, version
+  types: string[]
+  render: (props: MentionBrowseProps) => ReactNode
 }
 
 export interface MentionEventHandlers {

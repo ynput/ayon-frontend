@@ -1,3 +1,4 @@
+import { createElement } from 'react'
 import { rankings } from 'match-sorter'
 import type { EntityMentionSuggestions } from '@shared/api'
 import type { ProjectContextValue } from '@shared/context'
@@ -8,6 +9,7 @@ import getMentionTasks from '@shared/containers/Feed/mentionHelpers/getMentionTa
 import getMentionVersions from '@shared/containers/Feed/mentionHelpers/getMentionVersions'
 import type { MentionItem, MentionSource } from '../types'
 import { getFolderMention } from './useProjectMentionSearch'
+import { MentionEntityPicker } from './MentionEntityPicker'
 
 interface FeedMentionSourceOptions {
   suggestions?: EntityMentionSuggestions
@@ -16,6 +18,8 @@ interface FeedMentionSourceOptions {
   folderTypes?: { name: string; icon?: string | null }[]
   // search beyond the suggestions, see `useProjectMentionSearch`
   search?: MentionSource['search']
+  // offers the entity picker of the filtered type
+  projectName?: string
 }
 
 // filter chips of the picker, the ids are the mention types
@@ -49,10 +53,24 @@ export const createFeedMentionSource = ({
   taskTypes = [],
   folderTypes,
   search,
+  projectName,
 }: FeedMentionSourceOptions): MentionSource => ({
   triggers: ['@'],
   config: { '@': { title: '@ Mention', noun: 'result', filters: FILTERS } },
   search,
+  browse: projectName
+    ? {
+        types: ['folder', 'task', 'version'],
+        render: (props) =>
+          createElement(MentionEntityPicker, {
+            ...props,
+            projectName,
+            folderTypes,
+            taskTypes,
+            productTypes: project.productTypes,
+          }),
+      }
+    : undefined,
   getOptions: ({ search: text, filter }) => {
     const users = getMentionUsers(suggestions.users, suggestions.teams)
     const tasks = getMentionTasks(suggestions.tasks, taskTypes)

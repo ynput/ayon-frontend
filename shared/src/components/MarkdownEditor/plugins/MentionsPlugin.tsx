@@ -7,12 +7,15 @@ import {
   type MenuTextMatch,
 } from '@lexical/react/LexicalTypeaheadMenuPlugin'
 import {
+  $addUpdateTag,
   $createTextNode,
+  $getNodeByKey,
   $getSelection,
   $isRangeSelection,
   $isTextNode,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_NORMAL,
+  SKIP_DOM_SELECTION_TAG,
   type TextNode,
 } from 'lexical'
 import { mergeRegister } from '@lexical/utils'
@@ -58,6 +61,41 @@ const MIN_SEARCH_SLOTS = 2
 
 const getItemKey = (item: MentionItem) => `${item.type}:${item.id}`
 
+// the last option while a filter can be browsed, opens the dialog of the source
+const BROWSE_TYPE = '__browse'
+
+// mentions in place of the typed trigger (or at the caret), separated by spaces, then a space to
+// continue typing after
+const $insertMentions = (items: MentionItem[], nodeToReplace: TextNode | null) => {
+  const nodes = items.map(({ type, id, label, mentionLabel }) =>
+    $createMentionNode(type, id, mentionLabel || label),
+  )
+  if (!nodes.length) return
+  if (nodeToReplace) {
+    nodeToReplace.replace(nodes[0])
+  } else {
+    const selection = $getSelection()
+    if (!$isRangeSelection(selection)) return
+    selection.insertNodes([nodes[0]])
+  }
+  let last = nodes[0]
+  for (const node of nodes.slice(1)) {
+    const space = $createTextNode(' ')
+    last.insertAfter(space)
+    space.insertAfter(node)
+    last = node
+  }
+  // reuse an existing space
+  const next = last.getNextSibling()
+  if ($isTextNode(next) && next.getTextContent().startsWith(' ')) {
+    next.select(1, 1)
+  } else {
+    const space = $createTextNode(' ')
+    last.insertAfter(space)
+    space.select(1, 1)
+  }
+}
+
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
 // the same, words separated by single spaces, for a project search: `@sh010 render v3`
@@ -87,6 +125,9 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   // set by the trigger function, which knows how many @ were typed
   const triggerRef = useRef<MentionTrigger>('@')
   const [trigger, setTrigger] = useState<MentionTrigger>('@')
+
+  // the typed trigger is kept (as a token) while the browse dialog is open
+  const [browsing, setBrowsing] = useState<{ type: string; nodeKey: string | null } | null>(null)
 
   const triggers = source.triggers ?? ALL_TRIGGERS
   const limit = source.limit ?? (placement === 'top' ? 8 : 5)
@@ -160,45 +201,75 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   const searchError = searchResult?.key === searchKey ? searchResult.error : undefined
   const isSearching = !!searchKey && !searchItems
 
+  const browseType = filter && source.browse?.types.includes(filter) ? filter : null
+
   const options = useMemo(() => {
     if (query === null || error) return []
     const given = source.getOptions({ trigger, search: searchText, filter })
+    // the browse option takes the last slot
+    const max = browseType ? limit - 1 : limit
     // search results not given already fill the limit after the given options,
     // keeping at least `MIN_SEARCH_SLOTS`
     const listed = new Set(given.map(getItemKey))
     const found = (searchItems ?? []).filter((item) => !listed.has(getItemKey(item)))
-    const givenSlots = found.length
-      ? Math.max(limit - found.length, limit - MIN_SEARCH_SLOTS)
-      : limit
-    const items = [...given.slice(0, givenSlots), ...found].slice(0, limit)
+    const givenSlots = found.length ? Math.max(max - found.length, max - MIN_SEARCH_SLOTS) : max
+    const items = [...given.slice(0, givenSlots), ...found].slice(0, max)
+    if (browseType) {
+      items.push({
+        type: BROWSE_TYPE,
+        id: browseType,
+        label: `Browse ${browseType}s…`,
+        icon: 'manage_search',
+      })
+    }
     return items.map((item, i) => new MentionMenuOption(item, i))
-  }, [query, searchText, trigger, filter, source, limit, error, searchItems])
+  }, [query, searchText, trigger, filter, source, limit, error, searchItems, browseType])
+  const hasResults = options.some((option) => option.item.type !== BROWSE_TYPE)
 
   const onSelectOption = useCallback(
     (option: MentionMenuOption, nodeToReplace: TextNode | null, closeMenu: () => void) => {
       editor.update(() => {
-        const { type, id, label, mentionLabel } = option.item
-        const mentionNode = $createMentionNode(type, id, mentionLabel || label)
-        if (nodeToReplace) {
-          nodeToReplace.replace(mentionNode)
+        if (option.item.type === BROWSE_TYPE) {
+          // a token is not merged into the text around it, so it can be replaced after the dialog
+          nodeToReplace?.setMode('token')
+          // the editor keeps no focus, the dialog takes it
+          $addUpdateTag(SKIP_DOM_SELECTION_TAG)
+          setBrowsing({ type: option.item.id, nodeKey: nodeToReplace?.getKey() ?? null })
         } else {
-          const selection = $getSelection()
-          if ($isRangeSelection(selection)) selection.insertNodes([mentionNode])
-        }
-        // continue typing after a space, reusing an existing one
-        const next = mentionNode.getNextSibling()
-        if ($isTextNode(next) && next.getTextContent().startsWith(' ')) {
-          next.select(1, 1)
-        } else {
-          const space = $createTextNode(' ')
-          mentionNode.insertAfter(space)
-          space.select(1, 1)
+          $insertMentions([option.item], nodeToReplace)
         }
         closeMenu()
       })
     },
     [editor],
   )
+
+  const getBrowsedNode = (nodeKey: string | null) => {
+    const node = nodeKey ? $getNodeByKey(nodeKey) : null
+    return $isTextNode(node) && node.isAttached() ? node : null
+  }
+
+  // the picked entities replace the typed trigger
+  const handleBrowsePick = (items: MentionItem[]) => {
+    if (!browsing) return
+    const { nodeKey } = browsing
+    setBrowsing(null)
+    editor.update(() => $insertMentions(items, getBrowsedNode(nodeKey)))
+    editor.focus()
+  }
+
+  // back to the picker, with the same filter
+  const handleBrowseClose = () => {
+    if (!browsing) return
+    const { type, nodeKey } = browsing
+    setBrowsing(null)
+    editor.update(() => {
+      const node = getBrowsedNode(nodeKey)
+      node?.setMode('normal')
+      node?.selectEnd()
+    })
+    editor.focus(() => setFilter(type))
+  }
 
   // toolbar buttons type a trigger at the caret, which opens the picker
   useLayoutEffect(
@@ -243,97 +314,110 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   )
 
   return (
-    <LexicalTypeaheadMenuPlugin<MentionMenuOption>
-      onQueryChange={handleQueryChange}
-      onSelectOption={onSelectOption}
-      triggerFn={triggerFn}
-      options={options}
-      parent={menuParent}
-      // before the enter to submit handler of chat inputs
-      commandPriority={COMMAND_PRIORITY_NORMAL}
-      menuRenderFn={(
-        anchorElementRef,
-        { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
-      ) => {
-        const anchor = anchorElementRef.current
-        // no query: the trigger is gone. Typing fast can leave Lexical's menu open (its close
-        // reads a stale state), but the query is already cleared.
-        if (!anchor || query === null) return null
-        // nothing matches the search, get out of the way. A filter keeps the menu, it is the
-        // only way to turn the filter off again, until a space shows the mention is done.
-        if (
-          !options.length &&
-          !error &&
-          !searchError &&
-          !isSearching &&
-          query &&
-          (!filter || query.includes(' '))
-        )
-          return null
+    <>
+      <LexicalTypeaheadMenuPlugin<MentionMenuOption>
+        onQueryChange={handleQueryChange}
+        onSelectOption={onSelectOption}
+        triggerFn={triggerFn}
+        options={options}
+        parent={menuParent}
+        // before the enter to submit handler of chat inputs
+        commandPriority={COMMAND_PRIORITY_NORMAL}
+        menuRenderFn={(
+          anchorElementRef,
+          { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
+        ) => {
+          const anchor = anchorElementRef.current
+          // no query: the trigger is gone. Typing fast can leave Lexical's menu open (its close
+          // reads a stale state), but the query is already cleared.
+          if (!anchor || query === null) return null
+          // nothing matches the search, get out of the way. A filter keeps the menu, it is the
+          // only way to turn the filter off again, until a space shows the mention is done.
+          if (
+            !hasResults &&
+            !error &&
+            !searchError &&
+            !isSearching &&
+            query &&
+            (!filter || query.includes(' '))
+          )
+            return null
 
-        return (
-          <SuggestionMenu
-            editor={editor}
-            anchor={anchor}
-            placement={placement}
-            title={config.title}
-            titleActions={
-              !!config.filters?.length && (
-                <Styled.MentionFilters>
-                  {config.filters.map((f) => (
-                    <Styled.MentionFilterButton
-                      key={f.id}
-                      className={clsx({ active: filter === f.id })}
-                      onClick={() => setFilter((prev) => (prev === f.id ? null : f.id))}
-                      data-tooltip={f.tooltip}
-                      aria-label={f.tooltip}
-                      data-tooltip-delay={0}
-                      type="button"
-                    >
-                      <Icon icon={f.icon} />
-                    </Styled.MentionFilterButton>
-                  ))}
-                </Styled.MentionFilters>
-              )
-            }
-            options={options}
-            selectedIndex={selectedIndex}
-            onSelect={selectOptionAndCleanUp}
-            onHighlight={setHighlightedIndex}
-            // users and teams are round, entities square
-            optionClassName={({ item }) =>
-              item.type === 'user' || item.type === 'team' ? undefined : 'square'
-            }
-            emptyMessage={
-              error ||
-              searchError ||
-              (isSearching
-                ? 'Searching…'
-                : search && filter && !searchText
-                ? 'Type to search'
-                : `No ${config.noun}s found`)
-            }
-            renderOption={({ item }) => (
-              <>
-                {source.renderOptionImage ? (
-                  source.renderOptionImage(item)
-                ) : item.type === 'user' ? (
-                  <UserImage size={20} name={item.id} className="image" />
-                ) : (
-                  item.icon && (
-                    <Icon icon={item.icon} className="image" style={{ color: item.color }} />
-                  )
-                )}
-                {item.context && <span className="context">{item.context} - </span>}
-                <span className="label">{item.label}</span>
-                {item.suffix && <span className="suffix">{item.suffix}</span>}
-                <span className="type">{getTypeLabel(item.type)}</span>
-              </>
-            )}
-          />
-        )
-      }}
-    />
+          return (
+            <SuggestionMenu
+              editor={editor}
+              anchor={anchor}
+              placement={placement}
+              title={config.title}
+              titleActions={
+                !!config.filters?.length && (
+                  <Styled.MentionFilters>
+                    {config.filters.map((f) => (
+                      <Styled.MentionFilterButton
+                        key={f.id}
+                        className={clsx({ active: filter === f.id })}
+                        onClick={() => setFilter((prev) => (prev === f.id ? null : f.id))}
+                        data-tooltip={f.tooltip}
+                        aria-label={f.tooltip}
+                        data-tooltip-delay={0}
+                        type="button"
+                      >
+                        <Icon icon={f.icon} />
+                      </Styled.MentionFilterButton>
+                    ))}
+                  </Styled.MentionFilters>
+                )
+              }
+              options={options}
+              // the browse option on its own, after the results or the empty message
+              getGroup={(option) => (option.item.type === BROWSE_TYPE ? 'browse' : 'results')}
+              isEmpty={!hasResults}
+              selectedIndex={selectedIndex}
+              onSelect={selectOptionAndCleanUp}
+              onHighlight={setHighlightedIndex}
+              // users and teams are round, entities square
+              optionClassName={({ item }) =>
+                item.type === 'user' || item.type === 'team' ? undefined : 'square'
+              }
+              emptyMessage={
+                error ||
+                searchError ||
+                (isSearching
+                  ? 'Searching…'
+                  : search && filter && !searchText
+                  ? 'Type to search'
+                  : `No ${config.noun}s found`)
+              }
+              renderOption={({ item }) => (
+                <>
+                  {source.renderOptionImage ? (
+                    source.renderOptionImage(item)
+                  ) : item.type === 'user' ? (
+                    <UserImage size={20} name={item.id} className="image" />
+                  ) : (
+                    item.icon && (
+                      <Icon icon={item.icon} className="image" style={{ color: item.color }} />
+                    )
+                  )}
+                  {item.context && <span className="context">{item.context} - </span>}
+                  <span className="label">{item.label}</span>
+                  {item.suffix && <span className="suffix">{item.suffix}</span>}
+                  {item.type !== BROWSE_TYPE && (
+                    <span className="type">{getTypeLabel(item.type)}</span>
+                  )}
+                </>
+              )}
+            />
+          )
+        }}
+      />
+      {browsing &&
+        source.browse?.render({
+          type: browsing.type,
+          onPick: handleBrowsePick,
+          onClose: handleBrowseClose,
+        })}
+    </>
   )
 }
 

@@ -55,8 +55,9 @@ export const useDescriptionMentions = (
             taskTypes,
             folderTypes,
             search,
+            projectName: context.projectName,
           })
         : undefined,
-    [!!context, suggestions, productTypes, taskTypes, folderTypes, search],
+    [!!context, context?.projectName, suggestions, productTypes, taskTypes, folderTypes, search],
   )
 }

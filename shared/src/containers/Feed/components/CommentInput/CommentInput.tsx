@@ -387,6 +387,7 @@ const CommentInput: FC<CommentInputProps> = ({
               taskTypes: projectInfo?.taskTypes,
               folderTypes: project?.folderTypes,
               search: mentionSearch,
+              projectName,
             }),
             // keep the picker short
             limit: 5,
@@ -398,6 +399,7 @@ const CommentInput: FC<CommentInputProps> = ({
       projectInfo?.taskTypes,
       project?.folderTypes,
       mentionSearch,
+      projectName,
     ],
   )
 

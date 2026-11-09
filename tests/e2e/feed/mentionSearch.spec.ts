@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test'
-import { signInAs, uniqueName } from '@ynput/ayon-e2e'
+import { dialog, signInAs, uniqueName } from '@ynput/ayon-e2e'
 import { expect, hierarchy, onlyFolders, test } from '../permissions/restrictedUser'
 import { apiAs, AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
@@ -296,6 +296,70 @@ test('a space ends the mention once nothing matches', async ({ page, api, projec
   await expect(panel.commentEditor).toContainText(`@${data.remote.name} thanks for`)
 })
 
+test('browse picks folders in the entity picker and mentions them', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  await panel.commentEditor.pressSequentially('see ')
+  await panel.newCommentBox.locator('button[data-tooltip="Mention folder"]').click()
+  const browse = page.getByRole('option').filter({ hasText: 'Browse folders…' })
+  await expect(browse).toBeVisible()
+  await browse.click()
+
+  const picker = dialog(page, /^Select Folder/)
+  await expect(picker).toBeVisible()
+  await picker.getByRole('button', { name: 'search', exact: true }).first().click()
+  await picker.getByPlaceholder('Search', { exact: true }).first().fill(data.remote.name)
+  await picker.getByText(data.remote.name, { exact: true }).click()
+  await picker.getByRole('button', { name: 'Select folders', exact: true }).click()
+  await expect(picker).toBeHidden()
+  await expect(panel.commentEditor).toHaveText(`see @${data.remote.name} `)
+})
+
+test('browse picks a task with its folder, closing it returns to the picker', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search('comp')
+  await picker.filter('tasks')
+  await page.getByRole('option').filter({ hasText: 'Browse tasks…' }).click()
+
+  const dialogBox = dialog(page, /^Select Task/)
+  await expect(dialogBox).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(dialogBox).toBeHidden()
+  // back where it was, still filtered
+  await expect(panel.commentEditor).toHaveText('@comp')
+  await expect(page.getByRole('button', { name: 'Filter tasks', exact: true })).toHaveClass(
+    /active/,
+  )
+
+  await page.getByRole('option').filter({ hasText: 'Browse tasks…' }).click()
+  await expect(dialogBox).toBeVisible()
+  await dialogBox.getByRole('button', { name: 'search', exact: true }).first().click()
+  await dialogBox.getByPlaceholder('Search', { exact: true }).first().fill(data.remote.name)
+  await dialogBox.getByText(data.remote.name, { exact: true }).click()
+  await dialogBox.getByText(data.remoteTask.name, { exact: true }).click()
+  await dialogBox.getByRole('button', { name: 'Select tasks', exact: true }).click()
+  await expect(dialogBox).toBeHidden()
+  await expect(panel.commentEditor).toHaveText(`@${data.remote.name}/${data.remoteTask.name} `)
+  await panel.submitComment()
+  await expect
+    .poll(async () =>
+      (await api.listActivities(projectName, 'folder', data.local.id)).map((a) => a.body.trim()),
+    )
+    .toEqual([`[${data.remote.name}/${data.remoteTask.name}](task:${data.remoteTask.id})`])
+})
+
 test('project search returns at most five unique results', async ({ page, api, projectName }) => {
   const data = await seed(api, projectName)
   const prefix = uniqueName('searchLimit')
@@ -476,8 +540,9 @@ test('the toolbar mentions one type each, the slash menu offers one Mention comm
     await expect(filterButton(filter)).toHaveClass(/active/)
     // only suggestions of that type, a type without suggestions waits for a search
     const options = page.getByRole('listbox', { name: '', exact: true }).getByRole('option')
-    await expect(options.first().or(page.getByText('Type to search'))).toBeVisible()
-    for (const option of await options.all()) await expect(option).toContainText(label)
+    await expect(options.first().or(page.getByText('Type to search')).first()).toBeVisible()
+    for (const option of await options.filter({ hasNotText: 'Browse' }).all())
+      await expect(option).toContainText(label)
   }
 
   await panel.commentEditor.press('ControlOrMeta+a')

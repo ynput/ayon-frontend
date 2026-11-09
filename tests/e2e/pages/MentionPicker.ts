@@ -11,8 +11,13 @@ export class MentionPicker {
     return this.page.getByRole('listbox', { name: '', exact: true })
   }
 
+  // the found entities, without the browse option
   get options() {
-    return this.list.getByRole('option')
+    return this.list.getByRole('option').filter({ hasNotText: /Browse \w+s…$/ })
+  }
+
+  browse(type: 'folders' | 'tasks' | 'versions') {
+    return this.list.getByRole('option').filter({ hasText: `Browse ${type}…` })
   }
 
   option(text: string) {

@@ -3,6 +3,7 @@ import { matchSorter, rankings } from 'match-sorter'
 import {
   useLazySearchMentionEntitiesQuery,
   type MentionSearchFolder,
+  type MentionSearchResult,
   type MentionSearchType,
 } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
@@ -49,6 +50,38 @@ export const getFolderMention = (
   keywords: [folder.name, folder.label || '', folder.path],
 })
 
+// mention options for found or picked folders, tasks and versions
+export const getEntityMentionItems = (
+  result: MentionSearchResult,
+  { folderTypes, taskTypes, productTypes }: Omit<ProjectMentionSearchOptions, 'projectName'>,
+): MentionItem[] => [
+  ...result.tasks.map((task) => {
+    const taskType = getType(taskTypes, task.taskType)
+    const label = task.label || task.name
+    return {
+      type: 'task',
+      id: task.id,
+      label,
+      mentionLabel: `${folderName(task.folder.path)}/${label}`,
+      context: shortPath(task.folder.path),
+      icon: taskType?.icon || getEntityTypeIcon('task'),
+      color: taskType?.color || undefined,
+    }
+  }),
+  ...result.folders.map((folder) => getFolderMention(folder, folderTypes)),
+  ...result.versions.map((version) => ({
+    type: 'version',
+    id: version.id,
+    label: version.name,
+    context: `${folderName(version.product.folder.path)}/${version.product.name}`,
+    mentionLabel: `${folderName(version.product.folder.path)}/${version.product.name}/${
+      version.name
+    }`,
+    icon: getType(productTypes, version.product.productType)?.icon || getEntityTypeIcon('version'),
+    suffix: getFuzzyDate(new Date(version.createdAt)),
+  })),
+]
+
 const SEARCH_TYPES: MentionSearchType[] = ['task', 'folder', 'version']
 
 // every searchable type, unless a picker filter picks one (users and teams are not searched)
@@ -83,33 +116,7 @@ export const useProjectMentionSearch = ({
         false,
       ).unwrap()
 
-      const items: MentionItem[] = [
-        ...result.tasks.map((task) => {
-          const taskType = getType(taskTypes, task.taskType)
-          const label = task.label || task.name
-          return {
-            type: 'task',
-            id: task.id,
-            label,
-            mentionLabel: `${folderName(task.folder.path)}/${label}`,
-            context: shortPath(task.folder.path),
-            icon: taskType?.icon || getEntityTypeIcon('task'),
-            color: taskType?.color || undefined,
-          }
-        }),
-        ...result.folders.map((folder) => getFolderMention(folder, folderTypes)),
-        ...result.versions.map((version) => ({
-          type: 'version',
-          id: version.id,
-          label: version.name,
-          context: `${folderName(version.product.folder.path)}/${version.product.name}`,
-          mentionLabel: `${folderName(version.product.folder.path)}/${version.product.name}/${version.name}`,
-          icon:
-            getType(productTypes, version.product.productType)?.icon ||
-            getEntityTypeIcon('version'),
-          suffix: getFuzzyDate(new Date(version.createdAt)),
-        })),
-      ]
+      const items = getEntityMentionItems(result, { folderTypes, taskTypes, productTypes })
 
       // best match of the last term first, keeping the server order otherwise
       const lastTerm = terms[terms.length - 1] ?? ''

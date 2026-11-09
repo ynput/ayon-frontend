@@ -5,7 +5,10 @@ export type MentionSearchType = 'folder' | 'task' | 'version'
 
 export interface MentionSearchArgs {
   projectName: string
-  search: string
+  // words that all have to match, or
+  search?: string
+  // the entities to get, e.g. the ones picked in the entity picker
+  ids?: string[]
   types: MentionSearchType[]
   // results per type
   first: number
@@ -45,20 +48,21 @@ export interface MentionSearchResult {
 const SEARCH_MENTIONS_QUERY = `
   query SearchMentionEntities(
     $projectName: String!
-    $search: String!
+    $search: String
+    $ids: [String!]
     $first: Int!
     $folders: Boolean!
     $tasks: Boolean!
     $versions: Boolean!
   ) {
     project(name: $projectName) {
-      folders(search: $search, first: $first) @include(if: $folders) {
+      folders(search: $search, ids: $ids, first: $first) @include(if: $folders) {
         edges { node { id name label folderType path } }
       }
-      tasks(search: $search, first: $first) @include(if: $tasks) {
+      tasks(search: $search, ids: $ids, first: $first) @include(if: $tasks) {
         edges { node { id name label taskType folder { path } } }
       }
-      versions(search: $search, first: $first, sortBy: "-createdAt") @include(if: $versions) {
+      versions(search: $search, ids: $ids, first: $first, sortBy: "-createdAt") @include(if: $versions) {
         edges {
           node {
             id
@@ -80,11 +84,12 @@ const injectedApi = gqlApi.injectEndpoints({
   endpoints: (build) => ({
     searchMentionEntities: build.query<MentionSearchResult, MentionSearchArgs>({
       // the graphql base query, its errors keep the `{ status, data }` shape
-      query: ({ projectName, search, types, first }) => ({
+      query: ({ projectName, search, ids, types, first }) => ({
         document: SEARCH_MENTIONS_QUERY,
         variables: {
           projectName,
           search,
+          ids,
           first,
           folders: types.includes('folder'),
           tasks: types.includes('task'),

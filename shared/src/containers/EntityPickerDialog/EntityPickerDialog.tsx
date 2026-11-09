@@ -2,7 +2,7 @@
 // Each entity type has it's own table
 
 import { RowSelectionState } from '@tanstack/react-table'
-import { FC, useState } from 'react'
+import { FC, useEffect, useRef, useState } from 'react'
 import { entityHierarchies } from './util'
 import EntityTypeTable from './components/EntityTypeTable'
 import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/simple-table'
@@ -126,6 +126,10 @@ const EntityPickerDialogContent: FC<EntityPickerDialogProps> = ({
   }
 
   const [rowSelection, setRowSelection] = useState<PickerSelection>(initSelectionState)
+
+  // keys go to the dialog, Escape closes it and not what is behind it
+  const dialogRef = useRef<HTMLDivElement>(null)
+  useEffect(() => dialogRef.current?.focus(), [])
 
   // helper function to set the row selection for each entity type
   const setEntityRowSelection = (selection: RowSelectionState, entityType: PickerEntityType) => {
@@ -289,6 +293,7 @@ const EntityPickerDialogContent: FC<EntityPickerDialogProps> = ({
   return (
     <Dialog
       {...props}
+      ref={dialogRef}
       className="entity-picker-dialog block-shortcuts"
       header={`Select ${upperFirst(entityType)}`}
       isOpen
