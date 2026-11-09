@@ -127,7 +127,7 @@ const VideoPlayerControls = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [loop, muted])
+  }, [loop, muted, getCurrentFrame, seekToFrame])
 
   const handleFullscreen = () => {
     dispatch(toggleFullscreen())
