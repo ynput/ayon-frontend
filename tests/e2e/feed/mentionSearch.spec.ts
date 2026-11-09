@@ -1,4 +1,4 @@
-import { Locator, Page } from '@playwright/test'
+import { Locator, Page, Route } from '@playwright/test'
 import { dialog, signInAs, uniqueName } from '@ynput/ayon-e2e'
 import { expect, hierarchy, onlyFolders, test } from '../permissions/restrictedUser'
 import { apiAs, AyonApi } from '../support/api'
@@ -296,6 +296,97 @@ test('a space ends the mention once nothing matches', async ({ page, api, projec
   await expect(panel.commentEditor).toContainText(`@${data.remote.name} thanks for`)
 })
 
+test('a space ends a filtered mention without leaving a hidden browse option', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await panel.newCommentBox.locator('button[data-tooltip="Mention task"]').click()
+  await panel.commentEditor.pressSequentially('zzqq')
+  await expect(picker.browse('tasks')).toBeVisible()
+  await panel.commentEditor.pressSequentially(' thanks')
+  await expect(picker.title).toBeHidden()
+  await panel.commentEditor.press('Enter')
+  await expect(dialog(page, /^Select Task/)).toBeHidden()
+  await expect(panel.commentEditor).toContainText('@zzqq thanks')
+})
+
+// the mention lookup of picked entities (by id), held back or emptied
+const routeMentionLookup = (page: Page, handle: (route: Route) => Promise<void>) =>
+  page.route('**/graphql', async (route) => {
+    const body = route.request().postDataJSON()
+    if (body?.query?.includes('SearchMentionEntities') && body.variables?.ids) return handle(route)
+    return route.continue()
+  })
+
+// filters tasks, opens the task picker and picks the remote task
+const pickRemoteTask = async (picker: MentionPicker, data: Awaited<ReturnType<typeof seed>>) => {
+  const { page } = picker
+  await picker.filter('tasks')
+  await picker.browse('tasks').click()
+  const dialogBox = dialog(page, /^Select Task/)
+  await expect(dialogBox).toBeVisible()
+  await dialogBox.getByRole('button', { name: 'search', exact: true }).first().click()
+  await dialogBox.getByPlaceholder('Search', { exact: true }).first().fill(data.remote.name)
+  await dialogBox.getByText(data.remote.name, { exact: true }).click()
+  await dialogBox.getByText(data.remoteTask.name, { exact: true }).click()
+  await dialogBox.getByRole('button', { name: 'Select tasks', exact: true }).click()
+  return dialogBox
+}
+
+test('closing the task picker before its lookup returns mentions nothing', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  let lookups = 0
+  await routeMentionLookup(page, async (route) => {
+    lookups++
+    await new Promise((resolve) => setTimeout(resolve, 1500))
+    await route.continue().catch(() => {})
+  })
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search('comp')
+  const dialogBox = await pickRemoteTask(picker, data)
+  await expect.poll(() => lookups).toBe(1)
+  await page.keyboard.press('Escape')
+  await expect(dialogBox).toBeHidden()
+  await page.waitForTimeout(2000)
+  await expect(panel.commentEditor).toHaveText('@comp')
+  await expect(panel.commentEditor.locator('.mention')).toHaveCount(0)
+})
+
+test('a picked task that is not found leaves the typed mention editable', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  await routeMentionLookup(page, async (route) => {
+    const response = await route.fetch()
+    const json = await response.json()
+    json.data.project.tasks.edges = []
+    await route.fulfill({ response, json })
+  })
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search('comp')
+  const dialogBox = await pickRemoteTask(picker, data)
+  await expect(dialogBox).toBeHidden()
+  await expect(panel.commentEditor).toHaveText('@comp')
+  // plain text again: backspace removes one character, not the whole query
+  await panel.commentEditor.press('Backspace')
+  await expect(panel.commentEditor).toHaveText('@com')
+})
+
 test('browse picks folders in the entity picker and mentions them', async ({
   page,
   api,
@@ -406,11 +497,7 @@ test.describe('pasted entity links', () => {
     })
   }
 
-  test('a pasted link to another project stays a link', async ({
-    page,
-    api,
-    projectName,
-  }) => {
+  test('a pasted link to another project stays a link', async ({ page, api, projectName }) => {
     const data = await seed(api, projectName)
     const panel = await openFolder(page, projectName, data)
     await panel.openCommentBox()

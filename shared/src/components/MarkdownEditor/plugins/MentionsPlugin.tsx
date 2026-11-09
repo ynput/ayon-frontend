@@ -122,6 +122,12 @@ const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
 const MENTION_WORDS_REGEX = /(^|[\s([{"'])(@{1,3})((?:[^\s@]+(?: [^\s@]+)* ?)?)$/
 const MAX_QUERY_LENGTH = 75
 
+// the browse dialog of a filter, opened from the typed trigger
+interface Browsing {
+  type: string
+  nodeKey: string | null
+}
+
 class MentionMenuOption extends MenuOption {
   item: MentionItem
   constructor(item: MentionItem, index: number) {
@@ -146,8 +152,20 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   const triggerRef = useRef<MentionTrigger>('@')
   const [trigger, setTrigger] = useState<MentionTrigger>('@')
 
-  // the typed trigger is kept (as a token) while the browse dialog is open
-  const [browsing, setBrowsing] = useState<{ type: string; nodeKey: string | null } | null>(null)
+  // the typed trigger is kept (as a token) while the browse dialog is open. The ref is the open
+  // dialog, a pick or close of a dialog closed already (e.g. a late lookup) is ignored.
+  const [browsing, setBrowsingState] = useState<Browsing | null>(null)
+  const browsingRef = useRef<Browsing | null>(null)
+  const setBrowsing = useCallback((value: Browsing | null) => {
+    browsingRef.current = value
+    setBrowsingState(value)
+  }, [])
+  useEffect(
+    () => () => {
+      browsingRef.current = null
+    },
+    [],
+  )
 
   const triggers = source.triggers ?? ALL_TRIGGERS
   const limit = source.limit ?? (placement === 'top' ? 8 : 5)
@@ -223,7 +241,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   const browseType = filter && source.browse?.types.includes(filter) ? filter : null
 
-  const options = useMemo(() => {
+  const results = useMemo(() => {
     if (query === null || error) return []
     const given = source.getOptions({ trigger, search: searchText, filter })
     // the browse option takes the last slot
@@ -233,18 +251,36 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
     const listed = new Set(given.map(getItemKey))
     const found = (searchItems ?? []).filter((item) => !listed.has(getItemKey(item)))
     const givenSlots = found.length ? Math.max(max - found.length, max - MIN_SEARCH_SLOTS) : max
-    const items = [...given.slice(0, givenSlots), ...found].slice(0, max)
-    if (browseType) {
-      items.push({
-        type: BROWSE_TYPE,
-        id: browseType,
-        label: `Browse ${browseType}s…`,
-        icon: 'manage_search',
-      })
-    }
-    return items.map((item, i) => new MentionMenuOption(item, i))
+    return [...given.slice(0, givenSlots), ...found].slice(0, max)
   }, [query, searchText, trigger, filter, source, limit, error, searchItems, browseType])
-  const hasResults = options.some((option) => option.item.type !== BROWSE_TYPE)
+  const hasResults = results.length > 0
+
+  // nothing matches the search, the menu gets out of the way with nothing left to pick (enter
+  // would pick a hidden option). A filter keeps the menu, it is the only way to turn the filter
+  // off again, until a space shows the mention is done.
+  const isHidden =
+    !hasResults &&
+    !error &&
+    !searchError &&
+    !isSearching &&
+    !!query &&
+    (!filter || query.includes(' '))
+
+  const options = useMemo(() => {
+    if (query === null || error || isHidden) return []
+    const items: MentionItem[] = browseType
+      ? [
+          ...results,
+          {
+            type: BROWSE_TYPE,
+            id: browseType,
+            label: `Browse ${browseType}s…`,
+            icon: 'manage_search',
+          },
+        ]
+      : results
+    return items.map((item, i) => new MentionMenuOption(item, i))
+  }, [query, error, isHidden, results, browseType])
 
   const onSelectOption = useCallback(
     (option: MentionMenuOption, nodeToReplace: TextNode | null, closeMenu: () => void) => {
@@ -261,7 +297,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         closeMenu()
       })
     },
-    [editor],
+    [editor, setBrowsing],
   )
 
   const getBrowsedNode = (nodeKey: string | null) => {
@@ -269,19 +305,19 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
     return $isTextNode(node) && node.isAttached() ? node : null
   }
 
-  // the picked entities replace the typed trigger
-  const handleBrowsePick = (items: MentionItem[]) => {
-    if (!browsing) return
-    const { nodeKey } = browsing
+  // the picked entities replace the typed trigger, none found is a close
+  const handleBrowsePick = (session: Browsing, items: MentionItem[]) => {
+    if (browsingRef.current !== session) return
+    if (!items.length) return handleBrowseClose(session)
     setBrowsing(null)
-    editor.update(() => $insertMentions(items, getBrowsedNode(nodeKey)))
+    editor.update(() => $insertMentions(items, getBrowsedNode(session.nodeKey)))
     editor.focus()
   }
 
   // back to the picker, with the same filter
-  const handleBrowseClose = () => {
-    if (!browsing) return
-    const { type, nodeKey } = browsing
+  const handleBrowseClose = (session: Browsing) => {
+    if (browsingRef.current !== session) return
+    const { type, nodeKey } = session
     setBrowsing(null)
     editor.update(() => {
       const node = getBrowsedNode(nodeKey)
@@ -396,17 +432,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
           // no query: the trigger is gone. Typing fast can leave Lexical's menu open (its close
           // reads a stale state), but the query is already cleared.
           if (!anchor || query === null) return null
-          // nothing matches the search, get out of the way. A filter keeps the menu, it is the
-          // only way to turn the filter off again, until a space shows the mention is done.
-          if (
-            !hasResults &&
-            !error &&
-            !searchError &&
-            !isSearching &&
-            query &&
-            (!filter || query.includes(' '))
-          )
-            return null
+          if (isHidden) return null
 
           return (
             <SuggestionMenu
@@ -479,8 +505,8 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
       {browsing &&
         source.browse?.render({
           type: browsing.type,
-          onPick: handleBrowsePick,
-          onClose: handleBrowseClose,
+          onPick: (items) => handleBrowsePick(browsing, items),
+          onClose: () => handleBrowseClose(browsing),
         })}
     </>
   )
