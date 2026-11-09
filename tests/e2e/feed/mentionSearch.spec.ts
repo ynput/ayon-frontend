@@ -141,6 +141,50 @@ test('project search keeps the local match first without duplicating it', async 
   await expect(picker.options.last()).toContainText(`${data.remoteParent.name}/${data.remote.name}`)
 })
 
+test('search results the picker already lists leave their slots to other matches', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const prefix = uniqueName('slotTask')
+  for (let i = 0; i < 6; i++) {
+    await api.createTask(projectName, { folderId: data.local.id, name: `${prefix}_${i}` })
+  }
+  const overview = new OverviewPage(page)
+  await overview.goto(projectName)
+  await overview.expand(data.parent.name)
+  await overview.expand(data.local.name)
+  const panel = await overview.openDetails(`${prefix}_0`)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  // the sibling tasks are listed already and the search finds the same tasks
+  await picker.search(prefix)
+  await expect(picker.options).toHaveCount(5)
+  const labels = await picker.options.allTextContents()
+  expect(new Set(labels).size).toBe(5)
+  for (const label of labels) expect(label).toContain(prefix)
+})
+
+test('a filter without matches keeps the picker open so it can be turned off', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search('')
+  await expect(picker.options.first()).toBeVisible()
+  // no folder is suggested without a search
+  await picker.filter('folders')
+  await expect(picker.title).toBeVisible()
+  await expect(page.getByText('Type to search', { exact: true })).toBeVisible()
+  await picker.filter('folders')
+  await expect(picker.options.first()).toBeVisible()
+})
+
 test('slash path search selects only the task in the named folder', async ({
   page,
   api,
