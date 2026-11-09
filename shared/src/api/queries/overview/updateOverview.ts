@@ -657,19 +657,24 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
           const updatedTaskIds = getUpdatedEntityIds(taskOperations)
           const updatedFolderIds = getUpdatedEntityIds(folderOperations)
 
-          // Get all active task list cache entries. From the state now, not from before the
-          // change: a fetch that was running meanwhile may have brought back the old data.
+          // Keep caches from before optimistic changes as well as any loaded meanwhile.
+          // An optimistic delete can remove the task's tag from its original cache.
           const stateNow = getState()
           const overviewTaskTags = updatedTaskIds.map((id) => ({ type: 'overviewTask', id }))
-          const tasksListInfiniteEntries = getOverviewApi.util
-            .selectInvalidatedBy(stateNow, overviewTaskTags)
-            .filter((entry) => entry.endpointName === 'getTasksListInfinite')
+          const tasksListInfiniteEntries = new Map(
+            [state, stateNow]
+              .flatMap((snapshot) =>
+                getOverviewApi.util.selectInvalidatedBy(snapshot, overviewTaskTags),
+              )
+              .filter((entry) => entry.endpointName === 'getTasksListInfinite')
+              .map((entry) => [entry.queryCacheKey, entry]),
+          )
 
           // Requirement: "refetch the full data for the specific entity/entities"
           // For each cache with its own filter, fetch entities and update that cache
           if (updatedTaskIds.length > 0 && projectName) {
             // Process getTasksListInfinite caches
-            for (const entry of tasksListInfiniteEntries) {
+            for (const entry of tasksListInfiniteEntries.values()) {
               await refetchTasksForCacheEntry({
                 dispatch,
                 projectName,
@@ -678,18 +683,18 @@ const operationsApiEnhancedInjected = operationsEnhanced.injectEndpoints({
               })
             }
 
-            // Process getOverviewTasksByFolders caches
-            // Use selectInvalidatedBy to get only caches that contain the updated tasks
-            const overviewTasksEntries = getOverviewApi.util
-              .selectInvalidatedBy(stateNow, overviewTaskTags)
-              .filter((entry) => entry.endpointName === 'getOverviewTasksByFolders')
+            // Pending folder caches may not have task tags yet. Reconcile every view of
+            // this project, including those where optimistic deletion removed the tag.
+            const overviewTasksArgs = getOverviewApi.util
+              .selectCachedArgsForQuery(getState(), 'getOverviewTasksByFolders')
+              .filter((args) => args.projectName === projectName)
 
-            for (const entry of overviewTasksEntries) {
+            for (const originalArgs of overviewTasksArgs) {
               await refetchOverviewTasksForCacheEntry({
                 dispatch,
                 projectName,
                 updatedTaskIds,
-                cacheEntry: entry,
+                cacheEntry: { originalArgs },
               })
             }
           }
