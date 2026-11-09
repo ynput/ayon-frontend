@@ -241,7 +241,9 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         { selectedIndex, selectOptionAndCleanUp, setHighlightedIndex },
       ) => {
         const anchor = anchorElementRef.current
-        if (!anchor) return null
+        // no query: the trigger is gone. Typing fast can leave Lexical's menu open (its close
+        // reads a stale state), but the query is already cleared.
+        if (!anchor || query === null) return null
         // nothing matches the search, get out of the way
         if (!options.length && !error && !isSearching && (query || filter)) return null
 
