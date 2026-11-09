@@ -105,16 +105,29 @@ const $insertMentions = (
   }
 }
 
-// the caret is in the link or right after it, where the user pasted it
-const $isCaretAtLink = (link: LinkNode) => {
+// where the selection is for a pasted link: `caret` in it or right after it (where it was
+// pasted), `selected` when a range starts or ends in it, `elsewhere` otherwise
+const $getLinkSelection = (link: LinkNode): 'caret' | 'selected' | 'elsewhere' => {
   const selection = $getSelection()
-  if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
+  if (!$isRangeSelection(selection)) return 'elsewhere'
+  const isIn = (node: LexicalNode) => node.is(link) || link.isParentOf(node)
+  if (!selection.isCollapsed()) {
+    return isIn(selection.anchor.getNode()) || isIn(selection.focus.getNode())
+      ? 'selected'
+      : 'elsewhere'
+  }
   const { anchor } = selection
   const node = anchor.getNode()
-  if (node.is(link) || link.isParentOf(node)) return true
-  if (anchor.type === 'text') return anchor.offset === 0 && !!node.getPreviousSibling()?.is(link)
-  return node.is(link.getParent()) && anchor.offset === link.getIndexWithinParent() + 1
+  const isCaret =
+    isIn(node) ||
+    (anchor.type === 'text'
+      ? anchor.offset === 0 && !!node.getPreviousSibling()?.is(link)
+      : node.is(link.getParent()) && anchor.offset === link.getIndexWithinParent() + 1)
+  return isCaret ? 'caret' : 'elsewhere'
 }
+
+// the update that pastes an entity link
+const ENTITY_LINK_PASTE_TAG = 'entity-link-paste'
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
 const MENTION_REGEX = /(^|[\s([{"'])(@{1,3})([^\s@]{0,75})$/
@@ -346,12 +359,24 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
 
         event.preventDefault()
+        $addUpdateTag(ENTITY_LINK_PASTE_TAG)
         const link = $createLinkNode(url).append($createTextNode(url))
         selection.insertNodes([link])
         const key = link.getKey()
+
+        // other edits before the entity is found make the mention an undo step of its own
+        let edited = false
+        const stopWatching = editor.registerUpdateListener(
+          ({ dirtyElements, dirtyLeaves, tags }) => {
+            if (tags.has(ENTITY_LINK_PASTE_TAG)) return
+            if (dirtyElements.size || dirtyLeaves.size) edited = true
+          },
+        )
+
         resolve(ref)
           .catch(() => null)
           .then((item) => {
+            stopWatching()
             if (!item) return
             editor.update(
               () => {
@@ -359,10 +384,13 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                 // the link was changed or removed in the meantime
                 if (!$isLinkNode(node) || node.getURL() !== url || node.getTextContent() !== url)
                   return
-                $insertMentions([item], node, { select: $isCaretAtLink(node) })
+                // the user is selecting the link, it stays a link
+                const linkSelection = $getLinkSelection(node)
+                if (linkSelection === 'selected') return
+                $insertMentions([item], node, { select: linkSelection === 'caret' })
               },
               // undo goes back to before the paste
-              { tag: HISTORY_MERGE_TAG },
+              edited ? undefined : { tag: HISTORY_MERGE_TAG },
             )
           })
         return true

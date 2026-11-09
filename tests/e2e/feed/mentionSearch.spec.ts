@@ -497,6 +497,57 @@ test.describe('pasted entity links', () => {
     })
   }
 
+  test('a pasted link being selected when its entity is found stays a link', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    await routeMentionLookup(page, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue().catch(() => {})
+    })
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    const url = await pasteLink(
+      page,
+      panel.commentEditor,
+      `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
+    )
+    for (let i = 0; i < 3; i++) await panel.commentEditor.press('Shift+ArrowLeft')
+    await page.waitForTimeout(2500)
+    await expect(panel.commentEditor.getByRole('link', { name: url })).toBeVisible()
+    await expect(panel.commentEditor.locator('.mention')).toHaveCount(0)
+  })
+
+  test('typing before a pasted link is found keeps the typing on undo', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    await routeMentionLookup(page, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue().catch(() => {})
+    })
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    const url = await pasteLink(
+      page,
+      panel.commentEditor,
+      `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
+    )
+    await panel.commentEditor.pressSequentially(' ok')
+    const mention = `@${data.remote.name}/${data.remoteTask.name}`
+    await expect(panel.commentEditor).toHaveText(`${mention} ok`)
+    // the mention is its own undo step, the typing stays
+    await panel.commentEditor.press('ControlOrMeta+z')
+    await expect(panel.commentEditor.getByRole('link', { name: url })).toBeVisible()
+    await expect(panel.commentEditor).toContainText(' ok')
+    await panel.commentEditor.press('ControlOrMeta+Shift+z')
+    await expect(panel.commentEditor).toHaveText(`${mention} ok`)
+  })
+
   test('a pasted link to another project stays a link', async ({ page, api, projectName }) => {
     const data = await seed(api, projectName)
     const panel = await openFolder(page, projectName, data)
