@@ -231,18 +231,24 @@ test.describe('users settings', () => {
       await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
     })
 
-    test('deleting a user keeps the scroll position', async ({ page }) => {
+    test('deleting a user keeps the scroll position and shift click still works', async ({
+      page,
+    }) => {
       const users = new UsersSettingsPage(page)
       await users.goto({ filter: '' })
       await expect(users.row(bulkName(0))).toBeVisible()
 
       const target = bulkName(1500)
+      // hovering a row in the loop would scroll it back into view
+      await users.row(bulkName(0)).hover()
       await expect(async () => {
-        await page.getByRole('row').filter({ hasText: 'bulk_' }).first().hover()
-        await page.mouse.wheel(0, 2_000)
+        // less than the rendered rows, so the target is never skipped
+        await page.mouse.wheel(0, 1_500)
         await expect(users.row(target)).toBeVisible({ timeout: 300 })
       }).toPass()
 
+      // the table remembers this click as the start of a shift click range
+      await users.row(bulkName(1499)).click()
       const reloaded = page.waitForResponse((response) =>
         /query UserList\s*\{/.test(response.request().postData() ?? ''),
       )
@@ -253,6 +259,11 @@ test.describe('users settings', () => {
       await expect(users.row(target)).toBeHidden()
       await expect(users.row(bulkName(1499))).toBeVisible()
       await expect(users.row(bulkName(0))).toBeHidden()
+
+      // the rows changed, so a shift click selects only the clicked user
+      await users.row(bulkName(1502)).click({ modifiers: ['Shift'] })
+      await users.expectSelected(bulkName(1502))
+      await expect(page.locator('tr.p-highlight')).toHaveCount(1)
     })
   })
 })

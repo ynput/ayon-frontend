@@ -121,10 +121,15 @@ const UserList = ({
   // With the virtual scroller the table only knows the rendered rows, so its own shift-click range
   // is wrong or throws. Track the range here, by index in display order.
   const onRowClick = ({ index, originalEvent }) => {
-    shiftRange.current =
-      originalEvent.shiftKey && anchorIndex.current !== null
-        ? [Math.min(anchorIndex.current, index), Math.max(anchorIndex.current, index)]
-        : null
+    if (!originalEvent.shiftKey) shiftRange.current = null
+    // no anchor yet (or the rows changed since): select the clicked user only. The table keeps its
+    // own anchor across row changes, so its range would point at other rows.
+    else if (anchorIndex.current === null) shiftRange.current = [index, index]
+    else
+      shiftRange.current = [
+        Math.min(anchorIndex.current, index),
+        Math.max(anchorIndex.current, index),
+      ]
     anchorIndex.current = index
   }
 
@@ -138,7 +143,7 @@ const UserList = ({
       : e.value
     shiftRange.current = null
     let result = []
-    for (const user of users) result.push(user.name)
+    for (const user of users) if (user) result.push(user.name)
     onSelectUsers(result)
   }
 
