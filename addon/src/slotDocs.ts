@@ -95,7 +95,8 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'profile.section': {
     helper: 'profileSection',
-    where: "a section on the signed-in user's profile page (Account → Profile), below AYON's forms",
+    where:
+      "a section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens)",
     loads: 'first shown',
   },
 }
