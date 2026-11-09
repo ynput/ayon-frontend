@@ -1,5 +1,5 @@
 import { rankings } from 'match-sorter'
-import type { SuggestResponse } from '@shared/api/generated'
+import type { EntityMentionSuggestions } from '@shared/api'
 import type { ProjectContextValue } from '@shared/context'
 import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
 import getMentionOptions from '@shared/containers/Feed/mentionHelpers/getMentionOptions'
@@ -7,11 +7,13 @@ import getMentionUsers from '@shared/containers/Feed/mentionHelpers/getMentionUs
 import getMentionTasks from '@shared/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '@shared/containers/Feed/mentionHelpers/getMentionVersions'
 import type { MentionItem, MentionSource } from '../types'
+import { getFolderMention } from './useProjectMentionSearch'
 
 interface FeedMentionSourceOptions {
-  suggestions?: SuggestResponse
+  suggestions?: EntityMentionSuggestions
   project?: Pick<ProjectContextValue, 'productTypes'>
   taskTypes?: TaskType[]
+  folderTypes?: { name: string; icon?: string | null }[]
   // search beyond the suggestions, see `useProjectMentionSearch`
   search?: MentionSource['search']
 }
@@ -45,6 +47,7 @@ export const createFeedMentionSource = ({
   // version options read the product types
   project = { productTypes: [] },
   taskTypes = [],
+  folderTypes,
   search,
 }: FeedMentionSourceOptions): MentionSource => ({
   triggers: ['@'],
@@ -54,14 +57,20 @@ export const createFeedMentionSource = ({
     const users = getMentionUsers(suggestions.users, suggestions.teams)
     const tasks = getMentionTasks(suggestions.tasks, taskTypes)
     const versions = getMentionVersions(suggestions.versions, project as ProjectContextValue)
+    // keep the order of the folders: the folder of the entity, then the ones next to it
+    const folders = (suggestions.folders ?? []).map((folder, i, all) => ({
+      ...getFolderMention(folder, folderTypes),
+      relevance: all.length - i,
+    }))
     // the helper understands `team:` / `task:` ... prefixes
     const prefix = filter ? `${filter}:` : ''
 
-    // nothing typed: users, tasks and versions of the entity taking turns, each in its own order
+    // nothing typed: the types take turns, sibling tasks and folders first, each in its own order
     if (!text) {
       return interleave(
-        getMentionOptions('@', { '@': () => users }, prefix || undefined),
         getMentionOptions('@@@', { '@@@': () => tasks }, prefix || undefined),
+        getMentionOptions('@', { '@': () => folders }, prefix || undefined),
+        getMentionOptions('@', { '@': () => users }, prefix || undefined),
         getMentionOptions('@@', { '@@': () => versions }, prefix || undefined),
       ).filter(isMentionItem)
     }
@@ -70,7 +79,7 @@ export const createFeedMentionSource = ({
     // push its results out, so only real matches (down to acronyms) are kept.
     return getMentionOptions(
       '@',
-      { '@': () => [...users, ...tasks, ...versions] },
+      { '@': () => [...tasks, ...folders, ...users, ...versions] },
       prefix + text,
       search ? rankings.ACRONYM : undefined,
     ).filter(isMentionItem)

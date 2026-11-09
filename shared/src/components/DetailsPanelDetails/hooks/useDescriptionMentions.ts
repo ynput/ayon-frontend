@@ -20,7 +20,7 @@ export interface DescriptionMentionsContext {
 }
 
 /**
- * Users, sibling tasks and versions to mention in a description, the same suggestions as the
+ * Users, sibling tasks, folders and versions to mention in a description, the same suggestions as the
  * comments of the entity, plus a search of the whole project. Only fetched while editing.
  */
 export const useDescriptionMentions = (
@@ -53,9 +53,10 @@ export const useDescriptionMentions = (
             suggestions,
             project: { productTypes: productTypes ?? [] },
             taskTypes,
+            folderTypes,
             search,
           })
         : undefined,
-    [!!context, suggestions, productTypes, taskTypes, search],
+    [!!context, suggestions, productTypes, taskTypes, folderTypes, search],
   )
 }

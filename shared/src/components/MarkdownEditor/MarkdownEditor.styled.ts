@@ -619,6 +619,14 @@ export const MentionMenuItem = styled.li`
     color: var(--md-sys-color-outline);
     margin-left: auto;
   }
+  .type {
+    color: var(--md-sys-color-outline);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .suffix + .type {
+    margin-left: 8px;
+  }
   .hint {
     font-family: monospace;
     font-size: 11px;

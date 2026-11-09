@@ -1,6 +1,10 @@
 import { useCallback } from 'react'
 import { matchSorter, rankings } from 'match-sorter'
-import { useLazySearchMentionEntitiesQuery, type MentionSearchType } from '@shared/api'
+import {
+  useLazySearchMentionEntitiesQuery,
+  type MentionSearchFolder,
+  type MentionSearchType,
+} from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHelpers'
 import type { MentionItem, MentionQuery, MentionSource } from '../types'
@@ -26,6 +30,22 @@ const shortPath = (path = '', segments = 2) =>
   path.split('/').filter(Boolean).slice(-segments).join('/')
 
 const parentPath = (path = '') => path.split('/').filter(Boolean).slice(0, -1).join('/')
+
+const getType = (list: TypeIcon[] | undefined, name: string) =>
+  list?.find((type) => type.name === name)
+
+// a folder to mention, shown with the end of its parent path
+export const getFolderMention = (
+  folder: MentionSearchFolder,
+  folderTypes?: TypeIcon[],
+): MentionItem & { keywords: string[] } => ({
+  type: 'folder',
+  id: folder.id,
+  label: folder.label || folder.name,
+  context: shortPath(parentPath(folder.path)) || undefined,
+  icon: getType(folderTypes, folder.folderType)?.icon || getEntityTypeIcon('folder'),
+  keywords: [folder.name, folder.label || '', folder.path],
+})
 
 const SEARCH_TYPES: MentionSearchType[] = ['task', 'folder', 'version']
 
@@ -60,9 +80,6 @@ export const useProjectMentionSearch = ({
         false,
       ).unwrap()
 
-      const getType = (list: TypeIcon[] | undefined, name: string) =>
-        list?.find((type) => type.name === name)
-
       const items: MentionItem[] = [
         ...result.tasks.map((task) => {
           const taskType = getType(taskTypes, task.taskType)
@@ -75,13 +92,7 @@ export const useProjectMentionSearch = ({
             color: taskType?.color || undefined,
           }
         }),
-        ...result.folders.map((folder) => ({
-          type: 'folder',
-          id: folder.id,
-          label: folder.label || folder.name,
-          context: shortPath(parentPath(folder.path)) || undefined,
-          icon: getType(folderTypes, folder.folderType)?.icon || getEntityTypeIcon('folder'),
-        })),
+        ...result.folders.map((folder) => getFolderMention(folder, folderTypes)),
         ...result.versions.map((version) => ({
           type: 'version',
           id: version.id,

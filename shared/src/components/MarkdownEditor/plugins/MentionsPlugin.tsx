@@ -51,6 +51,8 @@ const DEFAULT_CONFIG: Record<MentionTrigger, MentionTriggerConfig> = {
 const SEARCH_DEBOUNCE_MS = 250
 // shorter searches match too much to be useful
 const MIN_SEARCH_LENGTH = 2
+// the entity type shown at the end of an option, e.g. `task` -> `Task`
+const getTypeLabel = (type: string) => type.charAt(0).toUpperCase() + type.slice(1)
 // slots of the limit kept for search results when the given options would fill it
 const MIN_SEARCH_SLOTS = 2
 
@@ -310,6 +312,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                 {item.context && <span className="context">{item.context} - </span>}
                 <span className="label">{item.label}</span>
                 {item.suffix && <span className="suffix">{item.suffix}</span>}
+                <span className="type">{getTypeLabel(item.type)}</span>
               </>
             )}
           />

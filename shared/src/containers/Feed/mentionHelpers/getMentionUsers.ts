@@ -16,7 +16,6 @@ const getMentionUsers = (users: UserSuggestionItem[] = [], teams: TeamSuggestion
     keywords: [team.name],
     relevance: team.relevance,
     icon: 'group',
-    suffix: 'Team',
   }))
 
   return [...userItems, ...teamItems]

@@ -340,7 +340,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
-const isEmpty =
+  const isEmpty =
     !hasText &&
     !files.length &&
     !filesUploading.length &&
@@ -382,12 +382,20 @@ const isEmpty =
               suggestions: mentionSuggestionsData,
               project: { productTypes },
               taskTypes: projectInfo?.taskTypes,
+              folderTypes: project?.folderTypes,
               search: mentionSearch,
             }),
             // keep the picker short
             limit: 5,
           },
-    [isGuest, mentionSuggestionsData, productTypes, projectInfo?.taskTypes, mentionSearch],
+    [
+      isGuest,
+      mentionSuggestionsData,
+      productTypes,
+      projectInfo?.taskTypes,
+      project?.folderTypes,
+      mentionSearch,
+    ],
   )
 
   const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
