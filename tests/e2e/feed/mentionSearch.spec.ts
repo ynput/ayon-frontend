@@ -78,12 +78,16 @@ for (const trigger of ['@@', '@@@']) {
   })
 }
 
-test('empty @ lists users, related tasks and versions taking turns', async ({
+test('empty @ lists sibling tasks, folders, users and versions taking turns', async ({
   page,
   api,
   projectName,
 }) => {
   const data = await seed(api, projectName)
+  const sibling = await api.createFolder(projectName, {
+    name: uniqueName('shotC'),
+    parentId: data.parent.id,
+  })
   const overview = new OverviewPage(page)
   await overview.goto(projectName)
   await overview.expand(data.parent.name)
@@ -92,16 +96,40 @@ test('empty @ lists users, related tasks and versions taking turns', async ({
   await panel.openCommentBox()
   const picker = new MentionPicker(page, panel.commentEditor)
   await picker.search('')
-  await expect(picker.option(data.localTask.name)).toBeVisible()
-  await expect(picker.option('v002')).toBeVisible()
-  const texts = await picker.options.allTextContents()
-  const index = (text: string) => texts.findIndex((value) => value.includes(text))
-  // which users show depends on the server, but a user comes first, then the first related
-  // task, then the first related version
-  expect(index(data.localTask.name)).toBe(1)
-  expect(index('v002')).toBe(2)
+  await expect(picker.options).toHaveCount(5)
+  // which users show depends on the server: a sibling task, the folder of the task, a user,
+  // a version, then the folder next to it
+  await expect(picker.options.nth(0)).toContainText(data.localTask.name)
+  await expect(picker.options.nth(0)).toContainText('Task')
+  await expect(picker.options.nth(1)).toContainText(data.local.name)
+  await expect(picker.options.nth(1)).toContainText('Folder')
+  await expect(picker.options.nth(2)).toContainText(/User|Team/)
+  await expect(picker.options.nth(3)).toContainText('v002')
+  await expect(picker.options.nth(3)).toContainText('Version')
+  await expect(picker.options.nth(4)).toContainText(sibling.name)
+  await expect(picker.options.nth(4)).toContainText('Folder')
   await expect(picker.option(data.remote.name)).toHaveCount(0)
   await expect(picker.option('v001')).toHaveCount(0)
+})
+
+test('a sibling folder is listed before project results', async ({ page, api, projectName }) => {
+  const data = await seed(api, projectName)
+  const prefix = uniqueName('nearShot')
+  const sibling = await api.createFolder(projectName, {
+    name: `${prefix}_sibling`,
+    parentId: data.parent.id,
+  })
+  for (let i = 0; i < 6; i++) {
+    await api.createFolder(projectName, { name: `${prefix}_${i}`, parentId: data.remoteParent.id })
+  }
+  const panel = await openFolder(page, projectName, data)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+  await picker.search(prefix)
+  await expect(picker.options).toHaveCount(5)
+  await expect(picker.options.first()).toContainText(sibling.name)
+  await expect(picker.options.first()).toContainText('Folder')
+  await expect(picker.option(sibling.name)).toHaveCount(1)
 })
 
 test('project search starts at two characters after a debounce', async ({
@@ -337,7 +365,8 @@ test('filter chips narrow both related items and project results', async ({
   await picker.filter('users')
   await picker.search(user.name)
   await expect(picker.options).toHaveCount(1)
-  await expect(picker.options.first()).toHaveText(user.name)
+  await expect(picker.options.first()).toContainText(user.name)
+  await expect(picker.options.first()).toContainText('User')
   await picker.filter('users')
   await picker.filter('teams')
   await picker.search(team)
