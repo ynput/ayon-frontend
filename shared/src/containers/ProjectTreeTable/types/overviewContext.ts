@@ -15,6 +15,8 @@ export interface ProjectOverviewProviderProps {
   children: ReactNode
   /** @deprecated unused, the overview data no longer waits for the GroupSettings remote */
   modules?: ProjectTableModulesType
+  // keys the expanded rows in session storage; another table of the project needs its own
+  page?: string
 }
 
 type QueryFilterParams = {

@@ -83,4 +83,19 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     where: "nowhere: code with no UI, mounted once while AYON is open",
     loads: 'at startup',
   },
+  'userDetails.section': {
+    helper: 'userDetailsSection',
+    where: "a section in the user details panel (Settings → Users), below AYON's forms",
+    loads: 'first shown',
+  },
+  'userDetails.menuItem': {
+    helper: 'userDetailsMenuItem',
+    where: "an item in the user details panel's more menu (Settings → Users)",
+    loads: 'menu open / click',
+  },
+  'profile.section': {
+    helper: 'profileSection',
+    where: "a section on the signed-in user's profile page (Account → Profile), below AYON's forms",
+    loads: 'first shown',
+  },
 }

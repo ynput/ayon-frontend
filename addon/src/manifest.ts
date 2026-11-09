@@ -11,6 +11,7 @@ export {
   detailsPanelTab,
   entityMenuItem,
   headerItem,
+  profileSection,
   projectListMenuItem,
   projectPage,
   projectTableCustomizeSection,
@@ -19,4 +20,6 @@ export {
   studioPage,
   tableColumn,
   tableShortcut,
+  userDetailsMenuItem,
+  userDetailsSection,
 } from './slotHelpers'

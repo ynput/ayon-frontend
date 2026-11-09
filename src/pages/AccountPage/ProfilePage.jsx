@@ -20,6 +20,10 @@ import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@context'
+import { usePowerpack } from '@shared/context'
+import { useContributions } from '@ynput/ayon-addon'
+import { AddonProfileSections } from '@shared/components'
+import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
 import { AvatarName } from './ProfilePage.styled'
 
@@ -175,6 +179,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }, [preferencesData, initPreferencesData])
 
   const { sendNotification } = useNotifications()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
+  const { contributions: profileSections, isLoading: isLoadingSections } =
+    useContributions('profile.section')
+  const hasPersonalApiKeys = profileSections.some(
+    (section) => section.addon.name === 'powerpack' && section.id === 'personalApiKeys',
+  )
 
   const onSavePreferences = async () => {
     setPreferenceChanges(false)
@@ -291,6 +301,13 @@ const ProfilePage = ({ user = {}, isLoading }) => {
               style={{ padding: '6px 18px', marginLeft: 'auto' }}
             />
           </Panel>
+          {/* what addons contribute to this page (profile.section slot, @ynput/ayon-addon) */}
+          <AddonProfileSections />
+          {!isLoadingLicense &&
+            !user?.data?.isGuest &&
+            (!powerLicense || (!isLoadingSections && !hasPersonalApiKeys)) && (
+              <PersonalApiKeysPreview needsUpdate={powerLicense} />
+            )}
         </FormsStyled>
       </Section>
       {showSetPassword && (

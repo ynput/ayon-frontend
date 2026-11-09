@@ -1,4 +1,5 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isFromOtherTable } from '../../utils/tableOwnership'
 import { CellId, getTypeDefaultValue, parseCellId } from '../../utils'
 import useHistory from '../../hooks/useHistory'
 import { useSelectionCellsContext } from '../selection-cells/SelectionCellsContext'
@@ -50,7 +51,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     pushHistory,
     removeHistoryEntries,
   })
-  const { attribFields, getEntityById, isRowReadOnly } = useProjectTableContext()
+  const { attribFields, getEntityById, isRowReadOnly, tableId } = useProjectTableContext()
   const { projectName } = useProjectContext()
   const [updateSubtasks] = useUpdateSubtasksMutation()
 
@@ -359,6 +360,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // clear - backspace or delete
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isFromOtherTable(e, tableId)) return
       const target = e.target as HTMLElement
       if (
         target.tagName === 'INPUT' ||
@@ -425,7 +427,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [canUndo, canRedo, handleUndo, handleRedo, selectedCells, handleClear])
+  }, [canUndo, canRedo, handleUndo, handleRedo, selectedCells, handleClear, tableId])
 
   return <CellEditingContext.Provider value={value}>{children}</CellEditingContext.Provider>
 }

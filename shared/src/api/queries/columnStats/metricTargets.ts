@@ -92,11 +92,11 @@ const ENUM: StatsOperation[] = [
 
 // The table's unified subType column per entity (result columnName maps back
 // to subType via COLUMN_ALIASES in columnStats).
-const SUB_TYPE_FIELD: Record<StatsEntity, string | null> = {
+const SUB_TYPE_FIELD: Record<StatsEntity, string> = {
   folder: 'folder_type',
   task: 'task_type',
   product: 'product_type',
-  version: null,
+  version: 'product_type',
 }
 
 // Structural subset of ProjectTableAttribute — two near-identical versions of
@@ -153,6 +153,11 @@ export const buildMetricTargets = ({
   if (entity === 'task' && isActive('assignees')) {
     targets.push({ field: 'assignees', aggregations: ENUM })
   }
+  // version-only columns: sending them for other entities fails the whole stats query
+  if (entity === 'version') {
+    if (isActive('version')) targets.push({ field: 'version', aggregations: NUMERIC })
+    if (isActive('author')) targets.push({ field: 'author', aggregations: ENUM })
+  }
 
   // no visibility check: it's opt-in, and a name column missing from both maps would kill this
   const nameScope = columnSummaryScopes?.['name'] ?? 'all'
@@ -165,7 +170,7 @@ export const buildMetricTargets = ({
     isSummaryActive('name', columnSummaries, columnSummaryScopes) &&
     nameScopeCoversEntity
   const subTypeField = SUB_TYPE_FIELD[entity]
-  if (subTypeField && (isActive('subType') || nameBreakdown)) {
+  if (isActive('subType') || nameBreakdown) {
     targets.push({ field: subTypeField, aggregations: ENUM })
   }
 

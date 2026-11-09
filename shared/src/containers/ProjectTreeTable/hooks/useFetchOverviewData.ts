@@ -641,7 +641,6 @@ export const useFetchOverviewData = ({
 
     for (const task of resolvedTasks) {
       const taskId = task.id as string
-      const folderId = task.folderId as string
 
       if (tasksMap.has(taskId)) {
         // merge specific data if the task already exists
@@ -657,15 +656,16 @@ export const useFetchOverviewData = ({
       } else {
         tasksMap.set(taskId, addExtraDataToTask(task))
       }
+    }
 
-      if (tasksByFolderMap.has(folderId)) {
-        // dedup like tasksMap — resolvedTasks can contain the same task twice
-        // (overlapping infinite-query pages, or a task in multiple groups)
-        const folderTaskIds = tasksByFolderMap.get(folderId)!
-        if (!folderTaskIds.includes(taskId)) folderTaskIds.push(taskId)
-      } else {
-        tasksByFolderMap.set(folderId, [taskId])
-      }
+    // A task goes under the folder of its merged data only. resolvedTasks can contain the same task
+    // twice, from sources that briefly disagree on its folder (e.g. right after a move), and two
+    // rows with the same id would leave one behind in the table.
+    for (const [taskId, task] of tasksMap) {
+      const folderId = task.folderId as string
+      const folderTaskIds = tasksByFolderMap.get(folderId)
+      if (folderTaskIds) folderTaskIds.push(taskId)
+      else tasksByFolderMap.set(folderId, [taskId])
     }
 
     return { tasksMap, tasksByFolderMap }
