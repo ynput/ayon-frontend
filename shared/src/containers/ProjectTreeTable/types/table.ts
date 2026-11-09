@@ -20,6 +20,8 @@ export type FolderListItem = {
   ownAttrib?: string[]
   updatedAt: string
   createdAt: string
+  createdBy?: string | null
+  updatedBy?: string | null
   thumbnailHash?: string
   hasReviewables?: boolean
   hasVersions?: boolean
@@ -49,6 +51,8 @@ export interface BaseEntityData {
   tags?: string[]
   createdAt?: string
   updatedAt?: string
+  createdBy?: string | null
+  updatedBy?: string | null
   thumbnailHash?: string
   attrib?: Record<string, any>
   ownAttrib?: string[]
@@ -134,6 +138,8 @@ export const ENTITY_FIELD_SUPPORT: Record<string, readonly EntityType[]> = {
   tags: ['folder', 'task', 'product', 'version'],
   createdAt: ['folder', 'task', 'product', 'version'],
   updatedAt: ['folder', 'task', 'product', 'version'],
+  createdBy: ['folder', 'task', 'product', 'version'],
+  updatedBy: ['folder', 'task', 'product', 'version'],
   name: ['folder', 'task', 'product', 'version'],
   label: ['folder', 'task', 'version'],
   thumbnailHash: ['folder', 'task', 'version'],
@@ -178,13 +184,17 @@ export const getScopedValue = (
 }
 
 export type MatchingFolder = FolderListItem & {
+  createdBy?: string | null
+  updatedBy?: string | null
   childOnlyMatch?: boolean
   entityId: string
   entityType: 'folder'
 }
 export type FolderNodeMap = Map<string, MatchingFolder>
 type TaskNode = GetTasksByParentQuery['project']['tasks']['edges'][0]['node']
-export type EditorTaskNode = Omit<TaskNode, 'links' | 'data'> & {
+export type EditorTaskNode = Omit<TaskNode, 'links' | 'data' | 'createdBy' | 'updatedBy'> & {
+  createdBy?: string | null
+  updatedBy?: string | null
   attrib: Record<string, any>
   entityId: string
   entityType: 'task'
@@ -195,6 +205,8 @@ export type EditorTaskNode = Omit<TaskNode, 'links' | 'data'> & {
 }
 
 export type EditorVersionNode = {
+  createdBy?: string | null
+  updatedBy?: string | null
   id: string
   entityId: string
   entityType: 'version'
@@ -223,6 +235,8 @@ export type EditorVersionNode = {
 }
 
 export type EditorProductNode = {
+  createdBy?: string | null
+  updatedBy?: string | null
   id: string
   entityId: string
   entityType: 'product'

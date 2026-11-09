@@ -3,6 +3,8 @@
 // fetchers, <Form>, createBrowserRouter) aren't here: they can't work under it.
 // Not `import * as`: that keeps react-router's server, framework and data router code in the main
 // bundle (about 370 KB). An export left out here is undefined in an addon that shares the router.
+// The data router contexts are here although the host has no data router: libraries read them
+// with useContext and expect null without one (use-query-params' adapter), not undefined.
 import {
   BrowserRouter,
   HashRouter,
@@ -15,6 +17,8 @@ import {
   Route,
   Router,
   Routes,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
   UNSAFE_LocationContext,
   UNSAFE_NavigationContext,
   UNSAFE_RouteContext,
@@ -58,6 +62,8 @@ export const routerExports = {
   Route,
   Router,
   Routes,
+  UNSAFE_DataRouterContext,
+  UNSAFE_DataRouterStateContext,
   UNSAFE_LocationContext,
   UNSAFE_NavigationContext,
   UNSAFE_RouteContext,

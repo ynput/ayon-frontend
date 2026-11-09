@@ -20,6 +20,11 @@ import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
+import {
+  AddonUserDetailsSections,
+  useAddonUserMenuItems,
+  useUserDetailsSlotContext,
+} from '@shared/components'
 import { PanelButtonsStyled } from './userDetail.styled'
 
 const FormsStyled = styled.section`
@@ -283,7 +288,13 @@ const UserDetail = ({
 
   const deleteLabel = formUsers.length === 1 ? 'Delete user' : 'Delete users'
 
+  // what addons contribute to this panel (userDetails.* slots, @ynput/ayon-addon)
+  const addonContext = useUserDetailsSlotContext(formUsers, !!managerDisabled)
+  const addonMenu = useAddonUserMenuItems(addonContext)
+
   const headerMenuItems = [
+    ...addonMenu.topItems,
+    ...addonMenu.items,
     {
       id: 'delete',
       label: deleteLabel,
@@ -422,10 +433,12 @@ const UserDetail = ({
         onClose={onClose}
         subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
         menuItems={headerMenuItems}
+        onMenuOpen={addonMenu.prefetch}
       />
       {hasServiceUser && singleUserEdit ? (
         <FormsStyled>
           <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
+          <AddonUserDetailsSections context={addonContext} />
         </FormsStyled>
       ) : (
         <FormsStyled>
@@ -482,6 +495,7 @@ const UserDetail = ({
               />
             </Panel>
           )}
+          <AddonUserDetailsSections context={addonContext} />
         </FormsStyled>
       )}
       <PanelButtonsStyled>

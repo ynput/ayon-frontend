@@ -15,6 +15,13 @@ export const FriendlyDialog = styled(Dialog)`
     }
     .message {
       ${theme.bodyMedium}
+      a {
+        margin-right: 0;
+      }
+    }
+    ul.message {
+      margin: 0;
+      padding-left: var(--padding-l);
     }
   }
 
@@ -97,4 +104,29 @@ export const Row = styled.div`
 export const TargetBundle = styled.span`
   padding: 6px 8px;
   flex: 1;
+`
+
+export const AddonList = styled.div`
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin-top: var(--padding-m);
+  max-height: 240px;
+  overflow-y: auto;
+`
+
+export const AddonRow = styled.div`
+  ${theme.bodyMedium}
+  display: flex;
+  justify-content: space-between;
+  gap: var(--base-gap-large);
+  padding: 4px var(--padding-m);
+`
+
+export const KeptAddons = styled.span`
+  ${theme.bodyMedium}
+  align-self: flex-start;
+  padding: 4px var(--padding-m);
+  color: var(--md-sys-color-outline);
+  cursor: help;
 `

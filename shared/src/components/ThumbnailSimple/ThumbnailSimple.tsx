@@ -1,7 +1,8 @@
 import React from 'react'
 import styled from 'styled-components'
 import { Icon } from '@ynput/ayon-react-components'
-import { getEntityThumbnailUrl } from '@shared/util'
+import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
+import { Filmstrip } from '../Filmstrip'
 
 export interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElement> {
   projectName: string
@@ -15,6 +16,12 @@ export interface ThumbnailSimpleProps extends React.HTMLAttributes<HTMLDivElemen
   onLoad?: React.ReactEventHandler<HTMLImageElement>
   onError?: React.ReactEventHandler<HTMLImageElement>
   iconOnly?: boolean
+  /** show a hover-scrub filmstrip (the entity should have reviewables) */
+  filmstrip?: boolean
+  /** filmstrip url override, when the entity props are not available */
+  filmstripUrl?: string | null
+  /** should match object-fit of the image */
+  filmstripFit?: 'cover' | 'contain'
 }
 
 const ThumbnailStyled = styled.div`
@@ -38,6 +45,12 @@ const ThumbnailStyled = styled.div`
     inset: 0;
     background-color: hsl(220 20% 8%);
     color: var(--md-sys-color-outline);
+  }
+
+  /* the hover-scrub filmstrip replaces the static image */
+  &[data-filmstrip-active] > img,
+  &[data-filmstrip-active] > span {
+    visibility: hidden;
   }
 `
 
@@ -65,6 +78,9 @@ export const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
   onLoad,
   onError,
   iconOnly,
+  filmstrip,
+  filmstripUrl,
+  filmstripFit = 'contain',
   ...props
 }) => {
   const url = getEntityThumbnailUrl({
@@ -86,6 +102,15 @@ export const ThumbnailSimple: React.FC<ThumbnailSimpleProps> = ({
           src={src || url || undefined}
           onLoad={onLoad}
           onError={onError}
+        />
+      )}
+      {(filmstrip || filmstripUrl) && !isLoading && !disabled && (
+        <Filmstrip
+          src={
+            filmstripUrl ||
+            getEntityFilmstripUrl({ projectName, entityType, entityId, thumbnailHash })
+          }
+          fit={filmstripFit}
         />
       )}
     </ThumbnailStyled>

@@ -14,10 +14,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/bundles`,
         method: 'POST',
         body: queryArg.bundleModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
         params: {
           force: queryArg.force,
         },
@@ -33,11 +29,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.bundleModel,
       }),
     }),
-    bundleActions: build.mutation<BundleActionsApiResponse, BundleActionsApiArg>({
+    updateBundle: build.mutation<UpdateBundleApiResponse, UpdateBundleApiArg>({
       query: (queryArg) => ({
         url: `/api/bundles/${queryArg.bundleName}`,
-        method: 'POST',
-        body: queryArg.bundleActionModel,
+        method: 'PATCH',
+        body: queryArg.bundlePatchModel,
+        params: {
+          build: queryArg.build,
+          force: queryArg.force,
+        },
       }),
     }),
     deleteExistingBundle: build.mutation<
@@ -46,19 +46,11 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({ url: `/api/bundles/${queryArg.bundleName}`, method: 'DELETE' }),
     }),
-    updateBundle: build.mutation<UpdateBundleApiResponse, UpdateBundleApiArg>({
+    bundleActions: build.mutation<BundleActionsApiResponse, BundleActionsApiArg>({
       query: (queryArg) => ({
         url: `/api/bundles/${queryArg.bundleName}`,
-        method: 'PATCH',
-        body: queryArg.bundlePatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-        params: {
-          build: queryArg.build,
-          force: queryArg.force,
-        },
+        method: 'POST',
+        body: queryArg.bundleActionModel,
       }),
     }),
     migrateSettingsByBundle: build.mutation<
@@ -84,8 +76,6 @@ export type CreateNewBundleApiResponse = /** status 201 Successful Response */ a
 export type CreateNewBundleApiArg = {
   /** Force creation of bundle */
   force?: boolean
-  'x-sender'?: string
-  'x-sender-type'?: string
   bundleModel: BundleModel
 }
 export type CheckBundleCompatibilityApiResponse =
@@ -93,29 +83,30 @@ export type CheckBundleCompatibilityApiResponse =
 export type CheckBundleCompatibilityApiArg = {
   bundleModel: BundleModel
 }
-export type BundleActionsApiResponse = /** status 201 Successful Response */ any
-export type BundleActionsApiArg = {
+export type UpdateBundleApiResponse = unknown
+export type UpdateBundleApiArg = {
   bundleName: string
-  bundleActionModel: BundleActionModel
+  /** Build dependency packages for selected platforms */
+  build?: ('windows' | 'linux' | 'darwin')[] | null
+  /** Force creation of bundle */
+  force?: boolean
+  bundlePatchModel: BundlePatchModel
 }
 export type DeleteExistingBundleApiResponse = unknown
 export type DeleteExistingBundleApiArg = {
   bundleName: string
 }
-export type UpdateBundleApiResponse = unknown
-export type UpdateBundleApiArg = {
+export type BundleActionsApiResponse = /** status 201 Successful Response */ any
+export type BundleActionsApiArg = {
   bundleName: string
-  /** Build dependency packages for selected platforms */
-  build?: ('windows' | 'linux' | 'darwin')[]
-  /** Force creation of bundle */
-  force?: boolean
-  'x-sender'?: string
-  'x-sender-type'?: string
-  bundlePatchModel: BundlePatchModel
+  bundleActionModel: BundleActionModel
 }
 export type MigrateSettingsByBundleApiResponse = /** status 200 Successful Response */ any
 export type MigrateSettingsByBundleApiArg = {
   migrateBundleSettingsRequest: MigrateBundleSettingsRequest
+}
+export type DependencyPackages = {
+  [key: string]: string | null
 }
 export type AddonDevelopmentItem = {
   /** Enable/disable addon development */
@@ -124,74 +115,70 @@ export type AddonDevelopmentItem = {
   path?: string
 }
 export type BundleModel = {
+  description?: string | null
+  isProject?: boolean
+  addons?: {
+    [key: string]: string | null
+  }
+  installerVersion?: string | null
+  dependencyPackages?: DependencyPackages
+  addonDevelopment?: {
+    [key: string]: AddonDevelopmentItem
+  }
   /** Name of the bundle */
   name: string
   createdAt?: string
   updatedAt?: string
-  description?: string | null
-  addons?: {
-    [key: string]: string
-  }
-  installerVersion?: string
-  /** mapping of platform:dependency_package_filename */
-  dependencyPackages?: {
-    [key: string]: string
-  }
-  addonDevelopment?: {
-    [key: string]: AddonDevelopmentItem
-  }
   isProduction?: boolean
   isStaging?: boolean
   isArchived?: boolean
   isDev?: boolean
-  isProject?: boolean
-  activeUser?: string
+  activeUser?: string | null
 }
 export type ListBundleModel = {
   bundles?: BundleModel[]
-  productionBundle?: string
-  stagingBundle?: string
+  productionBundle?: string | null
+  stagingBundle?: string | null
   devBundles?: string[]
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type BundleIssueModel = {
   severity: 'error' | 'warning'
-  addon?: string
+  addon?: string | null
   message: string
-  requiredAddon?: string
+  requiredAddon?: string | null
 }
 export type CheckBundleResponseModel = {
   success?: boolean
   issues?: BundleIssueModel[]
 }
-export type BundleActionModel = {
-  action: 'promote'
-}
 export type BundlePatchModel = {
   description?: string | null
   addons?: {
-    [key: string]: string
-  }
-  installerVersion?: string
-  /** mapping of platform:dependency_package_filename */
-  dependencyPackages?: {
-    [key: string]: string
-  }
-  isProduction?: boolean
-  isStaging?: boolean
-  isArchived?: boolean
-  isDev?: boolean
-  activeUser?: string
+    [key: string]: string | null
+  } | null
+  installerVersion?: string | null
+  dependencyPackages?: DependencyPackages | null
+  isProduction?: boolean | null
+  isStaging?: boolean | null
+  isArchived?: boolean | null
+  isDev?: boolean | null
+  activeUser?: string | null
   addonDevelopment?: {
     [key: string]: AddonDevelopmentItem
-  }
+  } | null
+}
+export type BundleActionModel = {
+  action: 'promote'
 }
 export type MigrateBundleSettingsRequest = {
   /** Source bundle */

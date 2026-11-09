@@ -69,6 +69,30 @@ export interface EntityScope {
   entities: EntityRef[]
 }
 
+/**
+ * A user a slot is about, e.g. one selected in Settings → Users. Not the signed-in user: that is
+ * `user` in every slot.
+ */
+export interface UserRef {
+  name: string
+  fullName?: string
+  email?: string
+  /** the account is active (not disabled) */
+  active: boolean
+  isAdmin: boolean
+  /** managers and admins */
+  isManager: boolean
+  isGuest: boolean
+  /** a service user (API key) */
+  isService: boolean
+}
+
+/** Slots about one or more users. */
+export interface UsersScope {
+  /** the users the slot is about, e.g. the ones selected in Settings → Users */
+  users: UserRef[]
+}
+
 /** The project pages with a project table (ProjectTreeTable). */
 export type ProjectTablePage = 'overview' | 'products' | 'lists'
 
@@ -170,4 +194,13 @@ export interface PageMeta {
    * be the page's own: one AYON or another page already uses is not shown.
    */
   viewType?: string
+}
+
+/** Description of a `project.page` contribution: a page, and what the host adds around it. */
+export interface ProjectPageMeta extends PageMeta {
+  /**
+   * Shows AYON's details panel next to the page, for the page to open with `openDetails`. The page
+   * is in a splitter while the panel is there; it only shows when the page opens it.
+   */
+  detailsPanel?: boolean
 }

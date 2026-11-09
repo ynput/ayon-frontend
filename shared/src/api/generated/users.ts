@@ -4,6 +4,22 @@ const injectedRtkApi = api.injectEndpoints({
     getUserPools: build.query<GetUserPoolsApiResponse, GetUserPoolsApiArg>({
       query: () => ({ url: `/api/auth/pools` }),
     }),
+    getCurrentUserProfile: build.query<
+      GetCurrentUserProfileApiResponse,
+      GetCurrentUserProfileApiArg
+    >({
+      query: () => ({ url: `/api/profile` }),
+    }),
+    updateCurrentUserProfile: build.mutation<
+      UpdateCurrentUserProfileApiResponse,
+      UpdateCurrentUserProfileApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/profile`,
+        method: 'PATCH',
+        body: queryArg.userPatchModel,
+      }),
+    }),
     getUserApiKeys: build.query<GetUserApiKeysApiResponse, GetUserApiKeysApiArg>({
       query: (queryArg) => ({ url: `/api/users/${queryArg.userName}/apikeys` }),
     }),
@@ -14,17 +30,17 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.apiKeyPostModel,
       }),
     }),
-    deleteUserApiKey: build.mutation<DeleteUserApiKeyApiResponse, DeleteUserApiKeyApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}/apikeys/${queryArg.entityId}`,
-        method: 'DELETE',
-      }),
-    }),
     updateUserApiKey: build.mutation<UpdateUserApiKeyApiResponse, UpdateUserApiKeyApiArg>({
       query: (queryArg) => ({
         url: `/api/users/${queryArg.userName}/apikeys/${queryArg.entityId}`,
         method: 'PATCH',
         body: queryArg.apiKeyPatchModel,
+      }),
+    }),
+    deleteUserApiKey: build.mutation<DeleteUserApiKeyApiResponse, DeleteUserApiKeyApiArg>({
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}/apikeys/${queryArg.entityId}`,
+        method: 'DELETE',
       }),
     }),
     getAvatar: build.query<GetAvatarApiResponse, GetAvatarApiArg>({
@@ -101,21 +117,10 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}`,
         method: 'PUT',
         body: queryArg.newUserModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     deleteUser: build.mutation<DeleteUserApiResponse, DeleteUserApiArg>({
-      query: (queryArg) => ({
-        url: `/api/users/${queryArg.userName}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-      }),
+      query: (queryArg) => ({ url: `/api/users/${queryArg.userName}`, method: 'DELETE' }),
     }),
     patchUser: build.mutation<PatchUserApiResponse, PatchUserApiArg>({
       query: (queryArg) => ({
@@ -143,10 +148,13 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/users/${queryArg.userName}/rename`,
         method: 'PATCH',
         body: queryArg.changeUserNameRequestModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
+      }),
+    }),
+    renameUser: build.mutation<RenameUserApiResponse, RenameUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/users/${queryArg.userName}/rename`,
+        method: 'POST',
+        body: queryArg.renameUserRequestModel,
       }),
     }),
     getUserSessions: build.query<GetUserSessionsApiResponse, GetUserSessionsApiArg>({
@@ -181,6 +189,12 @@ const injectedRtkApi = api.injectEndpoints({
 export { injectedRtkApi as api }
 export type GetUserPoolsApiResponse = /** status 200 Successful Response */ UserPoolModel[]
 export type GetUserPoolsApiArg = void
+export type GetCurrentUserProfileApiResponse = /** status 200 Successful Response */ UserModel
+export type GetCurrentUserProfileApiArg = void
+export type UpdateCurrentUserProfileApiResponse = /** status 200 Successful Response */ any
+export type UpdateCurrentUserProfileApiArg = {
+  userPatchModel: UserPatchModel
+}
 export type GetUserApiKeysApiResponse = /** status 200 Successful Response */ ApiKeyModel[]
 export type GetUserApiKeysApiArg = {
   userName: string
@@ -190,16 +204,16 @@ export type CreateUserApiKeyApiArg = {
   userName: string
   apiKeyPostModel: ApiKeyPostModel
 }
-export type DeleteUserApiKeyApiResponse = /** status 200 Successful Response */ any
-export type DeleteUserApiKeyApiArg = {
-  userName: string
-  entityId: string
-}
 export type UpdateUserApiKeyApiResponse = /** status 200 Successful Response */ any
 export type UpdateUserApiKeyApiArg = {
   userName: string
   entityId: string
   apiKeyPatchModel: ApiKeyPatchModel
+}
+export type DeleteUserApiKeyApiResponse = /** status 200 Successful Response */ any
+export type DeleteUserApiKeyApiArg = {
+  userName: string
+  entityId: string
 }
 export type GetAvatarApiResponse = /** status 200 Successful Response */ any
 export type GetAvatarApiArg = {
@@ -250,7 +264,7 @@ export type GetCurrentUserApiArg = void
 export type GetUserApiResponse = /** status 200 Successful Response */
   | UserModel
   | {
-      [key: string]: string
+      [key: string]: any
     }
 export type GetUserApiArg = {
   userName: string
@@ -258,15 +272,11 @@ export type GetUserApiArg = {
 export type CreateUserApiResponse = /** status 200 Successful Response */ any
 export type CreateUserApiArg = {
   userName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   newUserModel: NewUserModel
 }
 export type DeleteUserApiResponse = /** status 200 Successful Response */ any
 export type DeleteUserApiArg = {
   userName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type PatchUserApiResponse = /** status 200 Successful Response */ any
 export type PatchUserApiArg = {
@@ -286,9 +296,12 @@ export type CheckPasswordApiArg = {
 export type ChangeUserNameApiResponse = /** status 200 Successful Response */ any
 export type ChangeUserNameApiArg = {
   userName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   changeUserNameRequestModel: ChangeUserNameRequestModel
+}
+export type RenameUserApiResponse = /** status 200 Successful Response */ any
+export type RenameUserApiArg = {
+  userName: string
+  renameUserRequestModel: RenameUserRequestModel
 }
 export type GetUserSessionsApiResponse =
   /** status 200 Successful Response */ UserSessionsResponseModel
@@ -308,7 +321,9 @@ export type AssignAccessGroupsApiArg = {
 export type SetFrontendPreferencesApiResponse = /** status 200 Successful Response */ any
 export type SetFrontendPreferencesApiArg = {
   userName: string
-  patchData: object
+  patchData: {
+    [key: string]: any
+  }
 }
 export type UserPoolModel = {
   id: string
@@ -319,74 +334,89 @@ export type UserPoolModel = {
   exp: number
   max: number
   used: number
-  meta?: object
-}
-export type ApiKeyModel = {
-  id: string
-  label: string
-  preview: string
-  created: number
-  expires?: number
-}
-export type ValidationError = {
-  loc: (string | number)[]
-  msg: string
-  type: string
-}
-export type HttpValidationError = {
-  detail?: ValidationError[]
-}
-export type ApiKeyPostModel = {
-  label: string
-  key: string
-  expires?: number
-}
-export type ApiKeyPatchModel = {
-  label?: string
-  expires?: number
-}
-export type InviteUserRequest = {
-  message?: string
-}
-export type PasswordResetRequestModel = {
-  email: string
-}
-export type UserAttribModel = {
-  fullName?: string
-  email?: string
-  avatarUrl?: string
-  developerMode?: boolean
+  meta?: {
+    [key: string]: any
+  } | null
 }
 export type UserModel = {
-  /** Name is an unique id of the {entity_name} */
+  /** Unique name of the user */
   name: string
-  uiExposureLevel?: number
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
+  uiExposureLevel?: number | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
   updatedAt?: string
 }
+export type ValidationError = {
+  loc: (string | number)[]
+  msg: string
+  type: string
+  input?: any
+  ctx?: object
+}
+export type HttpValidationError = {
+  detail?: ValidationError[]
+}
+export type UserPatchModel = {
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
+}
+export type ApiKeyModel = {
+  id: string
+  label: string
+  preview: string
+  created: number
+  expires?: number | null
+}
+export type ApiKeyPostModel = {
+  label: string
+  key: string
+  expires?: number | null
+}
+export type ApiKeyPatchModel = {
+  label?: string | null
+  expires?: number | null
+}
+export type InviteUserRequest = {
+  message?: string | null
+}
 export type LoginResponseModel = {
   /** Text message, which may be displayed to the user */
-  detail?: string
-  error?: string
-  token?: string
-  user?: UserModel
+  detail?: string | null
+  error?: string | null
+  token?: string | null
+  user?: UserModel | null
   /** URL to redirect the user after login */
-  redirectUrl?: string
+  redirectUrl?: string | null
 }
 export type AcceptInviteRequest = {
   token: string
-  password?: string
+  password?: string | null
+}
+export type PasswordResetRequestModel = {
+  email: string
 }
 export type PasswordResetModel = {
   token: string
-  password?: string
+  password?: string | null
 }
 export type StudioManagementPermissions = {
   /** Allow users to create new projects */
@@ -405,7 +435,7 @@ export type ProjectManagementPermissions = {
 export type FolderAccess = {
   access_type?: string
   /** The path of the folder to allow access to. Required for access_type 'hierarchy and 'children' */
-  path?: string
+  path?: string | null
 }
 export type FolderAccessList = {
   enabled?: boolean
@@ -470,33 +500,32 @@ export type Permissions = {
 export type UserPermissionsModel = {
   user_level?: 'admin' | 'manager' | 'user'
   /** Permissions for the studio */
-  studio?: StudioManagementPermissions
+  studio?: StudioManagementPermissions | null
   /** Permissions for individual projects */
   projects?: {
     [key: string]: Permissions
-  }
+  } | null
 }
 export type NewUserModel = {
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
   /** Password for the new user */
-  password?: string
+  password?: string | null
   /** API Key for the new service user */
-  apiKey?: string
-}
-export type UserPatchModel = {
-  attrib?: UserAttribModel
-  data?: Record<string, any>
-  /** Whether the user is active */
-  active?: boolean
+  apiKey?: string | null
 }
 export type ChangePasswordRequestModel = {
   /** New password */
-  password?: string
+  password?: string | null
   /** API Key to set to a service user */
-  apiKey?: string
+  apiKey?: string | null
 }
 export type CheckPasswordRequestModel = {
   password: string
@@ -505,28 +534,32 @@ export type ChangeUserNameRequestModel = {
   /** New user name */
   newName: string
 }
+export type RenameUserRequestModel = {
+  /** New user name */
+  name: string
+}
 export type LocationInfo = {
-  country?: string
-  subdivision?: string
-  city?: string
+  country?: string | null
+  subdivision?: string | null
+  city?: string | null
 }
 export type AgentInfo = {
-  platform?: string
-  client?: string
-  device?: string
+  platform?: string | null
+  client?: string | null
+  device?: string | null
 }
 export type ClientInfo = {
   ip: string
   languages?: string[]
-  location?: LocationInfo
-  agent?: AgentInfo
-  site_id?: string
+  location?: LocationInfo | null
+  agent?: AgentInfo | null
+  site_id?: string | null
 }
 export type UserSessionModel = {
   token: string
   isService: boolean
   lastUsed: number
-  clientInfo?: ClientInfo
+  clientInfo?: ClientInfo | null
 }
 export type UserSessionsResponseModel = {
   sessions: UserSessionModel[]

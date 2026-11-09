@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
+import { TABLE_ID_ATTR } from './utils/tableOwnership'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -124,6 +125,7 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
@@ -300,6 +302,7 @@ export const ProjectTreeTable = ({
     overrideGroupBy,
     loadingLinksEntityIds,
     queryFilters,
+    tableId,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
@@ -843,6 +846,7 @@ export const ProjectTreeTable = ({
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
+          {...{ [TABLE_ID_ATTR]: tableId }}
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
@@ -1818,7 +1822,7 @@ const TD = ({
   rowHeight,
   ...props
 }: TableCellProps) => {
-  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+  const { getEntityById, onOpenPlayer, isRowReadOnly, readOnly } = useProjectTableContext()
 
   const {
     isCellSelected,
@@ -1852,8 +1856,11 @@ const TD = ({
     cell.column.id,
   )
   const cellMark = cell.row.original.cellMarks?.[cell.column.id]
-  const isRowReadOnly = !!cell.row.original.readOnly
-  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
+  const rowReadOnly = isRowReadOnly(cell.row.id)
+  const cellContext = useMemo(
+    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly }),
+    [cellMark, rowReadOnly],
+  )
 
   return (
     <Styled.TD
@@ -1873,6 +1880,7 @@ const TD = ({
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
+          'table-readonly': readOnly,
         },
         className,
         ...borderClasses,
@@ -1940,12 +1948,18 @@ const TD = ({
               const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
-                onOpenPlayer(targetIds, { quickView: true })
+                // open the scrubbed reviewable at the hovered filmstrip frame
+                const filmstrip = getFilmstripTarget(e)
+                onOpenPlayer(targetIds, {
+                  quickView: true,
+                  goToPosition: filmstrip?.position,
+                  reviewableId: filmstrip?.fileId,
+                })
               }
             }
           }
           // other cells: start editing
-          else {
+          else if (!rowReadOnly) {
             setEditingCellId(cellId)
           }
 
@@ -1958,9 +1972,7 @@ const TD = ({
 
         // check if this is a restricted entity - prevent editing
         const isRestricted =
-          isGroup ||
-          isEntityRestricted(cell.row.original.primary.entityType) ||
-          !!cell.row.original.readOnly
+          isGroup || isEntityRestricted(cell.row.original.primary.entityType) || rowReadOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {

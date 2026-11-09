@@ -422,8 +422,8 @@ export const TD = styled.td<TableCellProps>`
     pointer-events: none;
   }
 
-  /* read only fields are dimmed down for bg and border */
-  &:has(> div.readonly) {
+  /* read only fields are dimmed down for bg and border; a fully read-only table keeps the normal focus */
+  &:has(> div.readonly):not(.table-readonly) {
     &:not(.multiple-selected) {
       &.focused {
         background-color: var(--color-table-readonly-focused);

@@ -64,27 +64,27 @@ export type GetReleaseInfoApiArg = {
 }
 export type LinkModel = {
   type?: 'homepage' | 'github' | 'documentation' | 'license'
-  label?: string
+  label?: string | null
   url: string
 }
 export type AddonListItem = {
   name: string
   title: string
   /** Addon description */
-  description?: string
-  orgName?: string
-  orgTitle?: string
-  icon?: string
+  description?: string | null
+  orgName?: string | null
+  orgTitle?: string | null
+  icon?: string | null
   tags?: string[]
   flags?: string[]
   /** Latest version of the addon */
-  latestVersion?: string
+  latestVersion?: string | null
   /** Links to the addon's homepage and GitHub repository */
-  links?: LinkModel[]
+  links?: LinkModel[] | null
   /** Addon is avaliable for download */
   available?: boolean
-  currentProductionVersion?: string
-  currentLatestVersion?: string
+  currentProductionVersion?: string | null
+  currentLatestVersion?: string | null
   isOutdated?: boolean
 }
 export type AddonList = {
@@ -93,44 +93,46 @@ export type AddonList = {
 export type AddonVersionListItem = {
   version: string
   /** Required Ayon server version to run the addon */
-  ayonVersion?: string
-  createdAt?: string
-  updatedAt?: string
+  ayonVersion?: string | null
+  createdAt?: string | null
+  updatedAt?: string | null
   /** Is this version compatible? */
-  isCompatible?: boolean
+  isCompatible?: boolean | null
   /** Is this version installed? */
-  isInstalled?: boolean
+  isInstalled?: boolean | null
   /** Is this version in production? */
-  isProduction?: boolean
+  isProduction?: boolean | null
 }
 export type AddonDetail = {
   name: string
   title: string
   /** Addon description */
-  description?: string
-  orgName?: string
-  orgTitle?: string
-  icon?: string
+  description?: string | null
+  orgName?: string | null
+  orgTitle?: string | null
+  icon?: string | null
   tags?: string[]
   flags?: string[]
   /** Latest version of the addon */
-  latestVersion?: string
+  latestVersion?: string | null
   /** Links to the addon's homepage and GitHub repository */
-  links?: LinkModel[]
+  links?: LinkModel[] | null
   /** Addon is avaliable for download */
   available?: boolean
-  currentProductionVersion?: string
-  currentLatestVersion?: string
+  currentProductionVersion?: string | null
+  currentLatestVersion?: string | null
   isOutdated?: boolean
   /** A list of versions of this addon */
   versions?: AddonVersionListItem[]
   /** A warning message to display to the user */
-  warning?: string
+  warning?: string | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -139,27 +141,27 @@ export type AddonVersionDetail = {
   name: string
   title: string
   /** Addon description */
-  description?: string
-  orgName?: string
-  orgTitle?: string
-  icon?: string
+  description?: string | null
+  orgName?: string | null
+  orgTitle?: string | null
+  icon?: string | null
   tags?: string[]
   flags?: string[]
   /** Latest version of the addon */
-  latestVersion?: string
+  latestVersion?: string | null
   /** Links to the addon's homepage and GitHub repository */
-  links?: LinkModel[]
+  links?: LinkModel[] | null
   /** Addon is avaliable for download */
   available?: boolean
-  currentProductionVersion?: string
-  currentLatestVersion?: string
+  currentProductionVersion?: string | null
+  currentLatestVersion?: string | null
   isOutdated?: boolean
   version: string
-  url?: string
-  altUrl?: string
-  checksum?: string
+  url?: string | null
+  altUrl?: string | null
+  checksum?: string | null
   /** The version of Ayon this version is compatible with */
-  ayonVersion?: string
+  ayonVersion?: string | null
   /** When this version was created */
   createdAt?: string
   /** When this version was last updated */
@@ -172,8 +174,10 @@ export type AddonVersionDetail = {
   isCompatible?: boolean
 }
 export type LicenseListModel = {
-  licenses?: object[]
-  syncedAt?: number
+  licenses?: {
+    [key: string]: any
+  }[]
+  syncedAt?: number | null
 }
 export type ReleaseListItemModel = {
   name: string
@@ -193,21 +197,24 @@ export type ReleaseListModel = {
 export type SourceModel = {
   /** If set to server, the file is stored on the server. If set to http, the file is downloaded from the specified URL. */
   type: 'server' | 'http'
-  /** URL to download the file from. Only used if type is url */
-  url?: string
+  /** URL to download the file from. Only used if type is http */
+  url?: string | null
 }
 export type InstallerManifest = {
+  /** Name of the package file */
   filename: string
   platform: 'windows' | 'linux' | 'darwin'
-  size?: number
-  checksum?: string
-  checksumAlgorithm?: 'md5' | 'sha1' | 'sha256'
+  size?: number | null
+  checksum?: string | null
+  checksumAlgorithm?: ('md5' | 'sha1' | 'sha256') | null
   /** List of sources to download the file from. Server source is added automatically by the server if the file is uploaded. */
   sources?: SourceModel[]
+  /** Used Python version */
+  pythonVersion?: string | null
+  /** Short name of the Linux distribution */
+  distroShort?: string | null
   /** Version of the installer */
   version: string
-  /** Version of Python that the installer is created with */
-  pythonVersion: string
   /** mapping of module name:version used to create the installer */
   pythonModules?: {
     [key: string]:
@@ -216,26 +223,31 @@ export type InstallerManifest = {
           [key: string]: string
         }
   }
-  /** mapping of module_name:module_version used to run the installer */
+  /** mapping of module_name:version used to run the installer */
   runtimePythonModules?: {
     [key: string]: string
   }
 }
 export type DependencyPackageManifest = {
+  /** Name of the package file */
   filename: string
   platform: 'windows' | 'linux' | 'darwin'
-  size?: number
-  checksum?: string
-  checksumAlgorithm?: 'md5' | 'sha1' | 'sha256'
+  size?: number | null
+  checksum?: string | null
+  checksumAlgorithm?: ('md5' | 'sha1' | 'sha256') | null
   /** List of sources to download the file from. Server source is added automatically by the server if the file is uploaded. */
   sources?: SourceModel[]
+  /** Used Python version */
+  pythonVersion?: string | null
+  /** Short name of the Linux distribution */
+  distroShort?: string | null
   /** Version of the Ayon installer this package is created with */
   installerVersion: string
-  /** mapping of addon_name:addon_version used to create the package */
+  /** mapping of addon_name:version used to create the package */
   sourceAddons?: {
-    [key: string]: string
+    [key: string]: string | null
   }
-  /** mapping of module_name:module_version used to create the package */
+  /** mapping of module_name:version used to create the package */
   pythonModules?: {
     [key: string]:
       | string
@@ -253,6 +265,6 @@ export type ReleaseInfoModel = {
   createdAt: string
   mandatoryAddons?: string[]
   addons?: AddonVersionDetail[]
-  installers?: InstallerManifest[]
-  dependencyPackages?: DependencyPackageManifest[]
+  installers?: InstallerManifest[] | null
+  dependencyPackages?: DependencyPackageManifest[] | null
 }

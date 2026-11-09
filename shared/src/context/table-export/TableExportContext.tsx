@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useMemo, useState } from 'react'
+import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { usePowerpack } from '../powerpack/PowerpackContextInstance'
@@ -20,13 +20,15 @@ const PP_VERSION = '1.6.9'
 export const TableExportProvider = ({ children }: { children: ReactNode }) => {
   const [source, setSource] = useState<TableExportSource | null>(null)
   const [, setSearchParams] = useSearchParams()
-  const { powerLicense, setPowerpackDialog } = usePowerpack()
+  const { powerLicense, isLoading: isCheckingLicense, setPowerpackDialog } = usePowerpack()
   const { modules } = useRemoteModules()
+  // an export asked for while the license is still being checked opens once the check is done
+  const [pendingScope, setPendingScope] = useState<TableExportScope | null>(null)
 
   const isInstalled = modules.some(
     (addon) => addon.addonName === ADDON && addon.modules[REMOTE]?.includes(MODULE),
   )
-  const isAvailable = !!powerLicense && isInstalled
+  const isAvailable = (!!powerLicense || isCheckingLicense) && isInstalled
 
   const registerSource = useCallback((next: TableExportSource) => {
     setSource(next)
@@ -35,6 +37,7 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
 
   const openExport = useCallback(
     (scope: TableExportScope) => {
+      if (isCheckingLicense) return setPendingScope(scope)
       if (!powerLicense) return setPowerpackDialog('tableExport')
       if (!isInstalled)
         return void toast.error('Update to Power Pack ' + PP_VERSION + ' to export tables')
@@ -43,8 +46,14 @@ export const TableExportProvider = ({ children }: { children: ReactNode }) => {
         return params
       })
     },
-    [powerLicense, isInstalled, setPowerpackDialog, setSearchParams],
+    [isCheckingLicense, powerLicense, isInstalled, setPowerpackDialog, setSearchParams],
   )
+
+  useEffect(() => {
+    if (!pendingScope || isCheckingLicense) return
+    setPendingScope(null)
+    openExport(pendingScope)
+  }, [pendingScope, isCheckingLicense, openExport])
 
   const value = useMemo(
     () => ({ source, isAvailable, openExport, registerSource }),

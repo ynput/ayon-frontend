@@ -52,6 +52,12 @@ export type {
   TableShortcutPieces,
   AppServiceContext,
   AppServiceMeta,
+  UserDetailsContext,
+  UserDetailsMenuItemMeta,
+  UserDetailsSectionMeta,
+  UserSelection,
+  ProfileSectionContext,
+  ProfileSectionMeta,
 } from './slots'
 export type {
   Access,
@@ -61,6 +67,7 @@ export type {
   FolderInfo,
   PageMeta,
   PageViews,
+  ProjectPageMeta,
   ProjectFolders,
   ProjectFoldersScope,
   ProjectInfo,
@@ -69,7 +76,9 @@ export type {
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  UserRef,
   UserScope,
+  UsersScope,
   ViewsScope,
 } from './scopes'
 export type {
@@ -89,6 +98,9 @@ export { prefetchPiece, runContribution } from './pieces'
 export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
 export { entityUrl, navigateToEntity } from './entityLinks'
 export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
+// AYON's details panel and viewer, opened from addon code
+export { closeDetails, openDetails, openViewer } from './openInHost'
+export type { ViewerTarget } from './openInHost'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
@@ -102,13 +114,54 @@ export type {
 // AYON's entity picker, usable anywhere
 export { EntityPicker } from './EntityPicker'
 export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+// AYON's project table for given rows, usable anywhere
+export { EntityTable } from './EntityTable'
+export type {
+  EntityTableColumn,
+  EntityTableEntityType,
+  EntityTableFilter,
+  EntityTableFilterCondition,
+  EntityTableProps,
+  EntityTableSettings,
+} from './EntityTable'
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+// AYON's right-click menu, with the same items
+export { useContextMenu } from './useContextMenu'
+export type { OpenContextMenu } from './useContextMenu'
 
 // globals: the same in every slot
-export { dispatch, useUser } from './globals'
+export { dispatch, navigate, useUser } from './globals'
 export type { AddonDispatch } from './hostBridge'
 // the host's router and toasts: an addon's own copies would have no router or container
 export { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 export { toast } from 'react-toastify'
+// query params in the URL, through the QueryParamProvider AYON renders around every slot: no
+// provider or router adapter in the addon
+export {
+  useQueryParam,
+  useQueryParams,
+  withDefault,
+  StringParam,
+  NumberParam,
+  BooleanParam,
+  ArrayParam,
+  NumericArrayParam,
+  DelimitedArrayParam,
+  DelimitedNumericArrayParam,
+  ObjectParam,
+  NumericObjectParam,
+  JsonParam,
+  DateParam,
+  DateTimeParam,
+  createEnumParam,
+  createEnumArrayParam,
+  createEnumDelimitedArrayParam,
+} from 'use-query-params'
+export type {
+  QueryParamConfig,
+  QueryParamConfigMap,
+  QueryParamOptions,
+  UrlUpdateType,
+} from 'use-query-params'

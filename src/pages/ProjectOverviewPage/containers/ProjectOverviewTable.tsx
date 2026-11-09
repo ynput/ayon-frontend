@@ -9,7 +9,7 @@ import {
   ProjectTreeTable,
   useAddonTableColumns,
 } from '@shared/containers/ProjectTreeTable'
-import { useNewEntityContext } from '@shared/containers/NewEntity'
+import { useOptionalNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
 import type { FieldStats } from '@shared/api'
@@ -25,9 +25,11 @@ const TableWrapper = styled.div`
   align-self: stretch;
 `
 
-type Props = {}
+type Props = {
+  excludedColumns?: string[]
+}
 
-const ProjectOverviewTable = ({}: Props) => {
+const ProjectOverviewTable = ({ excludedColumns }: Props) => {
   const { projectName } = useProjectContext()
   const {
     onLinkColumnsVisibleChange,
@@ -41,7 +43,8 @@ const ProjectOverviewTable = ({}: Props) => {
   } = useProjectOverviewContext()
   // the heavy lifting is done in ProjectTableContext and is where the data is fetched
   const { showHierarchy, isFlatFolderView, isLoading, fetchNextPage } = useProjectTableContext()
-  const { onOpenNew } = useNewEntityContext()
+  // absent outside the project page (an addon's EntityTable)
+  const onOpenNew = useOptionalNewEntityContext()?.onOpenNew
   // columns addons contribute (tableColumn slot)
   const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
     useAddonTableColumns('overview')
@@ -95,8 +98,9 @@ const ProjectOverviewTable = ({}: Props) => {
           mainBreakdownFields={{ primary: 'folderType', secondary: 'taskType' }}
           onVisibleRowsChange={setVisibleEntityIds}
           extraColumns={addonColumns}
+          excludedColumns={excludedColumns}
         />
-        <AddColumnButton extraColumns={addonSettingsColumns} />
+        <AddColumnButton extraColumns={addonSettingsColumns} hiddenColumns={excludedColumns} />
       </TableWrapper>
     </Section>
   )

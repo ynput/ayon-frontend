@@ -33,7 +33,7 @@ export type ResolveUrisApiArg = {
   /** Return only file paths */
   pathOnly?: boolean
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
-  'x-ayon-site-id'?: string
+  'x-ayon-site-id'?: string | null
   resolveRequestModel: ResolveRequestModel
 }
 export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response */ GetUrisResponse
@@ -42,28 +42,30 @@ export type GetProjectEntityUrisApiArg = {
   getUrisRequest: GetUrisRequest
 }
 export type ResolvedEntityModel = {
-  projectName?: string
-  folderId?: string
-  productId?: string
-  taskId?: string
-  versionId?: string
-  representationId?: string
-  workfileId?: string
+  projectName?: string | null
+  folderId?: string | null
+  productId?: string | null
+  taskId?: string | null
+  versionId?: string | null
+  representationId?: string | null
+  workfileId?: string | null
   /** Path to the file if a representation is specified */
-  filePath?: string
+  filePath?: string | null
   /** The deepest entity type queried */
-  target?: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
+  target?: ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile') | null
 }
 export type ResolvedUriModel = {
   uri: string
   entities?: ResolvedEntityModel[]
   /** Error message if the URI could not be resolved */
-  error?: string
+  error?: string | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
