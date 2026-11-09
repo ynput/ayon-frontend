@@ -1,3 +1,4 @@
+import { rankings } from 'match-sorter'
 import type { SuggestResponse } from '@shared/api/generated'
 import type { ProjectContextValue } from '@shared/context'
 import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
@@ -26,6 +27,14 @@ const FILTERS = [
 
 const isMentionItem = (option: unknown): option is MentionItem => !!option
 
+// the first of each list, then the second of each, ... so every type shows within the limit
+const interleave = <T>(...lists: T[][]): T[] => {
+  const longest = Math.max(0, ...lists.map((list) => list.length))
+  const merged: T[] = []
+  for (let i = 0; i < longest; i++) lists.forEach((list) => list[i] && merged.push(list[i]))
+  return merged
+}
+
 /**
  * Mention source backed by the activity feed's mention suggestions (`useGetEntityMentionsQuery`),
  * using the same option builders and sorting as the legacy comment input. One `@` lists users,
@@ -48,20 +57,22 @@ export const createFeedMentionSource = ({
     // the helper understands `team:` / `task:` ... prefixes
     const prefix = filter ? `${filter}:` : ''
 
-    // nothing typed: users first, then the tasks and versions of the entity, each in its own order
+    // nothing typed: users, tasks and versions of the entity taking turns, each in its own order
     if (!text) {
-      return [
-        ...getMentionOptions('@', { '@': () => users }, prefix || undefined),
-        ...getMentionOptions('@@@', { '@@@': () => tasks }, prefix || undefined),
-        ...getMentionOptions('@@', { '@@': () => versions }, prefix || undefined),
-      ].filter(isMentionItem)
+      return interleave(
+        getMentionOptions('@', { '@': () => users }, prefix || undefined),
+        getMentionOptions('@@@', { '@@@': () => tasks }, prefix || undefined),
+        getMentionOptions('@@', { '@@': () => versions }, prefix || undefined),
+      ).filter(isMentionItem)
     }
 
-    // best matches first, whatever the type
+    // best matches first, whatever the type. With a project search, loose fuzzy matches would
+    // push its results out, so only real matches (down to acronyms) are kept.
     return getMentionOptions(
       '@',
       { '@': () => [...users, ...tasks, ...versions] },
       prefix + text,
+      search ? rankings.ACRONYM : undefined,
     ).filter(isMentionItem)
   },
 })

@@ -50,6 +50,8 @@ const DEFAULT_CONFIG: Record<MentionTrigger, MentionTriggerConfig> = {
 const SEARCH_DEBOUNCE_MS = 250
 // shorter searches match too much to be useful
 const MIN_SEARCH_LENGTH = 2
+// slots of the limit kept for search results when the given options would fill it
+const MIN_SEARCH_SLOTS = 2
 
 const getItemKey = (item: MentionItem) => `${item.type}:${item.id}`
 
@@ -146,11 +148,16 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   const options = useMemo(() => {
     if (query === null || error) return []
-    const items = source.getOptions({ trigger, search: searchText, filter }).slice(0, limit)
-    // search results after the given options, without the ones already listed
+    const given = source.getOptions({ trigger, search: searchText, filter })
+    // search results fill the limit after the given options, keeping at least `MIN_SEARCH_SLOTS`
+    const givenSlots = searchItems?.length
+      ? Math.max(limit - searchItems.length, limit - MIN_SEARCH_SLOTS)
+      : limit
+    const items = given.slice(0, givenSlots)
     if (searchItems) {
       const listed = new Set(items.map(getItemKey))
-      items.push(...searchItems.filter((item) => !listed.has(getItemKey(item))).slice(0, limit))
+      const found = searchItems.filter((item) => !listed.has(getItemKey(item)))
+      items.push(...found.slice(0, limit - items.length))
     }
     return items.map((item, i) => new MentionMenuOption(item, i))
   }, [query, searchText, trigger, filter, source, limit, error, searchItems])
