@@ -27,6 +27,9 @@ const VideoPlayerControls = ({
   const dispatch = useDispatch()
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
   const frameCountRef = useRef(0)
+  // Keyboard listeners must use the latest FPS callbacks without resubscribing every video frame.
+  const seekingRef = useRef({ getCurrentFrame, seekToFrame })
+  seekingRef.current = { getCurrentFrame, seekToFrame }
 
   // Keep the duration in a ref to avoid stale values in keypress events. Steps start from the
   // video's own time (getCurrentFrame), which a seek still running already has: currentFrame
@@ -40,45 +43,45 @@ const VideoPlayerControls = ({
 
   const handleGoToStart = () => {
     console.debug('VideoPlayerControls: Go to start')
-    seekToFrame(0)
+    seekingRef.current.seekToFrame(0)
   }
   const handleGoToEnd = () => {
     console.debug('VideoPlayerControls: Go to end')
-    seekToFrame(frameCountRef.current - 1)
+    seekingRef.current.seekToFrame(frameCountRef.current - 1)
   }
 
   const handleGoBack1 = () => {
     console.debug('VideoPlayerControls: Go back 1')
-    let prevFrame = getCurrentFrame() - 1
+    let prevFrame = seekingRef.current.getCurrentFrame() - 1
     if (prevFrame < 0) {
       prevFrame = loop ? frameCountRef.current - 1 : 0
     }
-    seekToFrame(prevFrame)
+    seekingRef.current.seekToFrame(prevFrame)
   }
   const handleGoForward1 = () => {
     console.debug('VideoPlayerControls: Go forward 1')
-    let nextFrame = getCurrentFrame() + 1
+    let nextFrame = seekingRef.current.getCurrentFrame() + 1
     if (nextFrame > frameCountRef.current - 1) {
       nextFrame = loop ? 0 : frameCountRef.current - 1
     }
-    seekToFrame(nextFrame)
+    seekingRef.current.seekToFrame(nextFrame)
   }
 
   const handleGoBack5 = () => {
     console.debug('VideoPlayerControls: Go back 5')
-    let prevFrame = getCurrentFrame() - 5
+    let prevFrame = seekingRef.current.getCurrentFrame() - 5
     if (prevFrame < 0) {
       prevFrame = loop ? frameCountRef.current - prevFrame : 0
     }
-    seekToFrame(prevFrame)
+    seekingRef.current.seekToFrame(prevFrame)
   }
   const handleGoForward5 = () => {
     console.debug('VideoPlayerControls: Go forward 5')
-    let nextFrame = getCurrentFrame() + 5
+    let nextFrame = seekingRef.current.getCurrentFrame() + 5
     if (nextFrame > frameCountRef.current - 1) {
       nextFrame = loop ? nextFrame - frameCountRef.current : frameCountRef.current - 1
     }
-    seekToFrame(nextFrame)
+    seekingRef.current.seekToFrame(nextFrame)
   }
 
   //
@@ -127,7 +130,7 @@ const VideoPlayerControls = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [loop, muted, getCurrentFrame, seekToFrame])
+  }, [loop, muted])
 
   const handleFullscreen = () => {
     dispatch(toggleFullscreen())
