@@ -85,28 +85,37 @@ const useSearchFilter = (fields = [], data = [], id) => {
   // so on a slow page React resets the input to the old value and typed characters get lost.
   const [searchString, setSearchString] = useState(id ? urlSearch : '')
   const [appliedSearch, setAppliedSearch] = useState(searchString)
-  // the value we last wrote to the url, until the url catches up with it
-  const pendingUrlSearch = useRef(null)
+  // the values we wrote to the url, oldest first, until the url catches up with them
+  const pendingUrlSearches = useRef([])
+  const latestUrlSearch = useRef(urlSearch)
+  latestUrlSearch.current = urlSearch
 
   useEffect(() => {
     if (searchString === appliedSearch) return
     const timeout = setTimeout(() => {
       setAppliedSearch(searchString)
-      if (id) {
-        pendingUrlSearch.current = searchString
+      // writing the value the url already has doesn't change it, so there is nothing to wait for
+      if (id && searchString !== latestUrlSearch.current) {
+        pendingUrlSearches.current.push(searchString)
         setUrlSearch(searchString)
       }
     }, SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timeout)
   }, [searchString, appliedSearch, id, setUrlSearch])
 
-  // follow url changes made elsewhere (e.g. a link to the same page), ignoring our own writes
+  // follow url changes made elsewhere (e.g. back/forward or a link to the same page), ignoring our
+  // own writes as they land
   useEffect(() => {
     if (!id) return
-    if (pendingUrlSearch.current !== null) {
-      if (urlSearch === pendingUrlSearch.current) pendingUrlSearch.current = null
+    const pending = pendingUrlSearches.current
+    const written = pending.indexOf(urlSearch)
+    if (written !== -1) {
+      // one of our writes landed: earlier ones are superseded, later ones are still on their way
+      pending.splice(0, written + 1)
       return
     }
+    // the url changed to something we didn't write, which replaces any write still pending
+    pending.length = 0
     setSearchString(urlSearch)
     setAppliedSearch(urlSearch)
   }, [urlSearch, id])
