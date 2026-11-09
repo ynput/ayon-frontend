@@ -73,6 +73,15 @@ export interface MentionSource {
   renderOptionImage?: (option: MentionItem) => ReactNode
   // a dialog to pick from all entities of a type, offered while the picker filters that type
   browse?: MentionBrowse
+  // the mention of a pasted entity link, null to keep the link (e.g. an entity of another project)
+  resolve?: (ref: MentionEntityRef) => Promise<MentionItem | null>
+}
+
+// an entity a link points to
+export interface MentionEntityRef {
+  projectName: string
+  type: string
+  id: string
 }
 
 export interface MentionBrowseProps {

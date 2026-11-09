@@ -15,10 +15,14 @@ import {
   $isTextNode,
   COMMAND_PRIORITY_EDITOR,
   COMMAND_PRIORITY_NORMAL,
+  HISTORY_MERGE_TAG,
+  PASTE_COMMAND,
   SKIP_DOM_SELECTION_TAG,
+  type LexicalNode,
   type TextNode,
 } from 'lexical'
-import { mergeRegister } from '@lexical/utils'
+import { $createLinkNode, $isLinkNode, type LinkNode } from '@lexical/link'
+import { $findMatchingParent, mergeRegister } from '@lexical/utils'
 import { Icon } from '@ynput/ayon-react-components'
 import UserImage from '../../UserImage'
 import { $createMentionNode } from '../nodes/MentionNode'
@@ -33,6 +37,7 @@ import * as Styled from '../MarkdownEditor.styled'
 import SuggestionMenu from './SuggestionMenu'
 import { $isSelectionInCode } from './selectionHelpers'
 import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
+import { parseEntityLink } from '../links/entityLinks'
 import { getRequestErrorString } from '@shared/util'
 
 const ALL_TRIGGERS: MentionTrigger[] = ['@', '@@', '@@@']
@@ -65,8 +70,12 @@ const getItemKey = (item: MentionItem) => `${item.type}:${item.id}`
 const BROWSE_TYPE = '__browse'
 
 // mentions in place of the typed trigger (or at the caret), separated by spaces, then a space to
-// continue typing after
-const $insertMentions = (items: MentionItem[], nodeToReplace: TextNode | null) => {
+// continue typing after, with the caret after it unless `select` is false
+const $insertMentions = (
+  items: MentionItem[],
+  nodeToReplace: LexicalNode | null,
+  { select = true } = {},
+) => {
   const nodes = items.map(({ type, id, label, mentionLabel }) =>
     $createMentionNode(type, id, mentionLabel || label),
   )
@@ -88,12 +97,23 @@ const $insertMentions = (items: MentionItem[], nodeToReplace: TextNode | null) =
   // reuse an existing space
   const next = last.getNextSibling()
   if ($isTextNode(next) && next.getTextContent().startsWith(' ')) {
-    next.select(1, 1)
+    if (select) next.select(1, 1)
   } else {
     const space = $createTextNode(' ')
     last.insertAfter(space)
-    space.select(1, 1)
+    if (select) space.select(1, 1)
   }
+}
+
+// the caret is in the link or right after it, where the user pasted it
+const $isCaretAtLink = (link: LinkNode) => {
+  const selection = $getSelection()
+  if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
+  const { anchor } = selection
+  const node = anchor.getNode()
+  if (node.is(link) || link.isParentOf(node)) return true
+  if (anchor.type === 'text') return anchor.offset === 0 && !!node.getPreviousSibling()?.is(link)
+  return node.is(link.getParent()) && anchor.offset === link.getIndexWithinParent() + 1
 }
 
 // `@`, `@@` or `@@@` at the start of a word followed by the search (no whitespace or more @)
@@ -270,6 +290,51 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
     })
     editor.focus(() => setFilter(type))
   }
+
+  // a pasted link to a folder, task or version becomes its mention. The link shows until the
+  // entity is found and stays when it is not, e.g. an entity of another project.
+  const resolve = source.resolve
+  useEffect(() => {
+    if (!resolve) return
+    return editor.registerCommand(
+      PASTE_COMMAND,
+      (event) => {
+        if (!(event instanceof ClipboardEvent) || !event.clipboardData) return false
+        const url = event.clipboardData.getData('text/plain').trim()
+        const ref = parseEntityLink(url)
+        if (!ref) return false
+        // pasting over a selection links the selection, a link in code stays text
+        const selection = $getSelection()
+        if (!$isRangeSelection(selection) || !selection.isCollapsed()) return false
+        if ($isSelectionInCode()) return false
+        if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
+
+        event.preventDefault()
+        const link = $createLinkNode(url).append($createTextNode(url))
+        selection.insertNodes([link])
+        const key = link.getKey()
+        resolve(ref)
+          .catch(() => null)
+          .then((item) => {
+            if (!item) return
+            editor.update(
+              () => {
+                const node = $getNodeByKey(key)
+                // the link was changed or removed in the meantime
+                if (!$isLinkNode(node) || node.getURL() !== url || node.getTextContent() !== url)
+                  return
+                $insertMentions([item], node, { select: $isCaretAtLink(node) })
+              },
+              // undo goes back to before the paste
+              { tag: HISTORY_MERGE_TAG },
+            )
+          })
+        return true
+      },
+      // before the rich text paste
+      COMMAND_PRIORITY_NORMAL,
+    )
+  }, [editor, resolve])
 
   // toolbar buttons type a trigger at the caret, which opens the picker
   useLayoutEffect(

@@ -13,6 +13,7 @@ import { Button, Icon, SaveButton, type IconType } from '@ynput/ayon-react-compo
 import {
   MarkdownEditor,
   createFeedMentionSource,
+  useProjectMentionLookup,
   useProjectMentionSearch,
   getInlineMediaFileIds,
   getSourceLink,
@@ -370,12 +371,14 @@ const CommentInput: FC<CommentInputProps> = ({
   // MENTIONS
   // keep the source stable, a new one resets the highlighted option of the picker
   const productTypes = project?.productTypes
-  const mentionSearch = useProjectMentionSearch({
+  const mentionProject = {
     projectName: isGuest ? undefined : projectName,
     productTypes,
     taskTypes: projectInfo?.taskTypes,
     folderTypes: project?.folderTypes,
-  })
+  }
+  const mentionSearch = useProjectMentionSearch(mentionProject)
+  const mentionLookup = useProjectMentionLookup(mentionProject)
   const mentions = useMemo(
     () =>
       isGuest
@@ -388,6 +391,7 @@ const CommentInput: FC<CommentInputProps> = ({
               folderTypes: project?.folderTypes,
               search: mentionSearch,
               projectName,
+              lookup: mentionLookup,
             }),
             // keep the picker short
             limit: 5,
@@ -400,6 +404,7 @@ const CommentInput: FC<CommentInputProps> = ({
       project?.folderTypes,
       mentionSearch,
       projectName,
+      mentionLookup,
     ],
   )
 

@@ -1,14 +1,14 @@
+import { useState } from 'react'
 import { toast } from 'react-toastify'
-import { useLazySearchMentionEntitiesQuery, type MentionSearchType } from '@shared/api'
+import type { MentionSearchType } from '@shared/api'
 import { EntityPickerDialog } from '@shared/containers/EntityPickerDialog/EntityPickerDialog'
 import { getRequestErrorString } from '@shared/util'
 import type { MentionBrowseProps } from '../types'
-import { getEntityMentionItems, type ProjectMentionSearchOptions } from './useProjectMentionSearch'
+import type { ProjectMentionLookup } from './useProjectMentionSearch'
 
-export interface MentionEntityPickerProps
-  extends MentionBrowseProps,
-    Omit<ProjectMentionSearchOptions, 'projectName'> {
+export interface MentionEntityPickerProps extends MentionBrowseProps {
   projectName: string
+  lookup: ProjectMentionLookup
 }
 
 /** The entity picker of a type, the picked entities become mentions with the folder in the label. */
@@ -17,24 +17,16 @@ export const MentionEntityPicker = ({
   type,
   onPick,
   onClose,
-  ...types
+  lookup,
 }: MentionEntityPickerProps) => {
-  const [getEntities, { isFetching }] = useLazySearchMentionEntitiesQuery()
+  const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (ids: string[]) => {
     if (!ids.length) return onClose()
+    setIsLoading(true)
     try {
-      const result = await getEntities({
-        projectName,
-        ids,
-        types: [type as MentionSearchType],
-        first: ids.length,
-      }).unwrap()
       // in the order they were picked
-      const items = getEntityMentionItems(result, types).sort(
-        (a, b) => ids.indexOf(a.id) - ids.indexOf(b.id),
-      )
-      onPick(items)
+      onPick(await lookup(type as MentionSearchType, ids))
     } catch (error) {
       toast.error(getRequestErrorString(error) || 'Could not mention the picked entities')
       onClose()
@@ -46,7 +38,7 @@ export const MentionEntityPicker = ({
       projectName={projectName}
       entityType={type as MentionSearchType}
       isMultiSelect
-      isLoading={isFetching}
+      isLoading={isLoading}
       onSubmit={handleSubmit}
       onClose={onClose}
     />

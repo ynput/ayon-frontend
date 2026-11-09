@@ -3,6 +3,7 @@ import { useGetEntityMentionsQuery } from '@shared/api'
 import type { SuggestRequest } from '@shared/api'
 import {
   createFeedMentionSource,
+  useProjectMentionLookup,
   useProjectMentionSearch,
   type MentionSource,
 } from '@shared/components/MarkdownEditor'
@@ -39,12 +40,14 @@ export const useDescriptionMentions = (
   )
 
   const { productTypes, taskTypes, folderTypes } = context ?? {}
-  const search = useProjectMentionSearch({
+  const projectOptions = {
     projectName: skip ? undefined : context?.projectName,
     productTypes,
     taskTypes,
     folderTypes,
-  })
+  }
+  const search = useProjectMentionSearch(projectOptions)
+  const lookup = useProjectMentionLookup(projectOptions)
   // keep the source stable, a new one resets the highlighted option of the picker
   return useMemo(
     () =>
@@ -56,8 +59,18 @@ export const useDescriptionMentions = (
             folderTypes,
             search,
             projectName: context.projectName,
+            lookup,
           })
         : undefined,
-    [!!context, context?.projectName, suggestions, productTypes, taskTypes, folderTypes, search],
+    [
+      !!context,
+      context?.projectName,
+      suggestions,
+      productTypes,
+      taskTypes,
+      folderTypes,
+      search,
+      lookup,
+    ],
   )
 }

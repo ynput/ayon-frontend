@@ -7,7 +7,10 @@ export { $getMarkdown, $setMarkdown, normalizeLegacyMarkdown } from './markdown/
 export { markdownToPlainText } from './markdown/plainText'
 export { INSERT_MENTION_TRIGGER_COMMAND } from './plugins/MentionsPluginHelpers'
 export { createFeedMentionSource } from './mentions/createFeedMentionSource'
-export { useProjectMentionSearch } from './mentions/useProjectMentionSearch'
+export {
+  useProjectMentionLookup,
+  useProjectMentionSearch,
+} from './mentions/useProjectMentionSearch'
 export { toggleBlockFormat, type BlockFormat } from './plugins/formatting'
 export { YouTubeNode, $createYouTubeNode, $isYouTubeNode } from './nodes/YouTubeNode'
 export { YouTubeEmbed } from './youtube/YouTubeEmbed'

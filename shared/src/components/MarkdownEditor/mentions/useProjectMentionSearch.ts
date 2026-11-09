@@ -131,3 +131,37 @@ export const useProjectMentionSearch = ({
 
   return projectName ? search : undefined
 }
+
+// mentions of entities of a type by id, in the order of the ids, missing ones left out
+export type ProjectMentionLookup = (
+  type: MentionSearchType,
+  ids: string[],
+) => Promise<MentionItem[]>
+
+/** Looks up the mentions of picked or linked folders, tasks and versions of the project. */
+export const useProjectMentionLookup = ({
+  projectName,
+  folderTypes,
+  taskTypes,
+  productTypes,
+}: ProjectMentionSearchOptions): ProjectMentionLookup | undefined => {
+  const [getEntities] = useLazySearchMentionEntitiesQuery()
+
+  const lookup = useCallback<ProjectMentionLookup>(
+    async (type, ids) => {
+      if (!projectName || !ids.length) return []
+      const result = await getEntities({
+        projectName,
+        ids,
+        types: [type],
+        first: ids.length,
+      }).unwrap()
+      return getEntityMentionItems(result, { folderTypes, taskTypes, productTypes }).sort(
+        (a, b) => ids.indexOf(a.id) - ids.indexOf(b.id),
+      )
+    },
+    [projectName, folderTypes, taskTypes, productTypes, getEntities],
+  )
+
+  return projectName ? lookup : undefined
+}

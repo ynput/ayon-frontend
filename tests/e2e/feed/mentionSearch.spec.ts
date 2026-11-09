@@ -1,4 +1,4 @@
-import { Page } from '@playwright/test'
+import { Locator, Page } from '@playwright/test'
 import { dialog, signInAs, uniqueName } from '@ynput/ayon-e2e'
 import { expect, hierarchy, onlyFolders, test } from '../permissions/restrictedUser'
 import { apiAs, AyonApi } from '../support/api'
@@ -358,6 +358,73 @@ test('browse picks a task with its folder, closing it returns to the picker', as
       (await api.listActivities(projectName, 'folder', data.local.id)).map((a) => a.body.trim()),
     )
     .toEqual([`[${data.remote.name}/${data.remoteTask.name}](task:${data.remoteTask.id})`])
+})
+
+// pastes a link copied from the address bar of this server
+const pasteLink = async (page: Page, editor: Locator, path: string) => {
+  const url = new URL(path, page.url()).href
+  await page.evaluate((text) => navigator.clipboard.writeText(text), url)
+  await editor.press('ControlOrMeta+v')
+  return url
+}
+
+test.describe('pasted entity links', () => {
+  test.beforeEach(async ({ context }) => {
+    await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  })
+
+  for (const type of ['folder', 'task', 'version'] as const) {
+    test(`a pasted ${type} link becomes its mention`, async ({ page, api, projectName }) => {
+      const data = await seed(api, projectName)
+      const target = { folder: data.remote, task: data.remoteTask, version: data.version }[type]
+      const mention = {
+        folder: data.remote.name,
+        task: `${data.remote.name}/${data.remoteTask.name}`,
+        version: `${data.remote.name}/${data.product.name}/v001`,
+      }[type]
+      const route = type === 'version' ? 'products' : 'overview'
+      const panel = await openFolder(page, projectName, data)
+      await panel.openCommentBox()
+      await panel.commentEditor.pressSequentially('see ')
+      await pasteLink(
+        page,
+        panel.commentEditor,
+        `/projects/${projectName}/${route}?project=${projectName}&type=${type}&id=${target.id}`,
+      )
+      await expect(panel.commentEditor).toHaveText(`see @${mention} `)
+      // the caret is after the mention
+      await panel.commentEditor.pressSequentially('please')
+      await expect(panel.commentEditor).toHaveText(`see @${mention} please`)
+      await panel.submitComment()
+      await expect
+        .poll(async () =>
+          (
+            await api.listActivities(projectName, 'folder', data.local.id)
+          ).map((a) => a.body.trim()),
+        )
+        .toEqual([`see [${mention}](${type}:${target.id}) please`])
+    })
+  }
+
+  test('a pasted link to another project stays a link', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    const other = await pasteLink(
+      page,
+      panel.commentEditor,
+      `/projects/otherProject/overview?project=otherProject&type=task&id=${data.remoteTask.id}`,
+    )
+    await expect(panel.commentEditor.getByRole('link', { name: other })).toBeVisible()
+    // still a link once the lookup would be done
+    await page.waitForTimeout(500)
+    await expect(panel.commentEditor.getByRole('link', { name: other })).toBeVisible()
+    await expect(panel.commentEditor.locator('.mention')).toHaveCount(0)
+  })
 })
 
 test('project search returns at most five unique results', async ({ page, api, projectName }) => {

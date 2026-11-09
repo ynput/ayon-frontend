@@ -1,6 +1,6 @@
 import { createElement } from 'react'
 import { rankings } from 'match-sorter'
-import type { EntityMentionSuggestions } from '@shared/api'
+import type { EntityMentionSuggestions, MentionSearchType } from '@shared/api'
 import type { ProjectContextValue } from '@shared/context'
 import type { TaskType } from '@shared/containers/ProjectTreeTable/types/project'
 import getMentionOptions from '@shared/containers/Feed/mentionHelpers/getMentionOptions'
@@ -8,7 +8,7 @@ import getMentionUsers from '@shared/containers/Feed/mentionHelpers/getMentionUs
 import getMentionTasks from '@shared/containers/Feed/mentionHelpers/getMentionTasks'
 import getMentionVersions from '@shared/containers/Feed/mentionHelpers/getMentionVersions'
 import type { MentionItem, MentionSource } from '../types'
-import { getFolderMention } from './useProjectMentionSearch'
+import { getFolderMention, type ProjectMentionLookup } from './useProjectMentionSearch'
 import { MentionEntityPicker } from './MentionEntityPicker'
 
 interface FeedMentionSourceOptions {
@@ -18,9 +18,14 @@ interface FeedMentionSourceOptions {
   folderTypes?: { name: string; icon?: string | null }[]
   // search beyond the suggestions, see `useProjectMentionSearch`
   search?: MentionSource['search']
-  // offers the entity picker of the filtered type
+  // the project of the entities: offers the entity picker of the filtered type and turns
+  // pasted links to its entities into mentions, see `useProjectMentionLookup`
   projectName?: string
+  lookup?: ProjectMentionLookup
 }
+
+// entity types the picker can browse and pasted links can mention
+const ENTITY_TYPES: MentionSearchType[] = ['folder', 'task', 'version']
 
 // filter chips of the picker, the ids are the mention types
 const FILTERS = [
@@ -54,23 +59,28 @@ export const createFeedMentionSource = ({
   folderTypes,
   search,
   projectName,
+  lookup,
 }: FeedMentionSourceOptions): MentionSource => ({
   triggers: ['@'],
   config: { '@': { title: '@ Mention', noun: 'result', filters: FILTERS } },
   search,
-  browse: projectName
-    ? {
-        types: ['folder', 'task', 'version'],
-        render: (props) =>
-          createElement(MentionEntityPicker, {
-            ...props,
-            projectName,
-            folderTypes,
-            taskTypes,
-            productTypes: project.productTypes,
-          }),
-      }
-    : undefined,
+  browse:
+    projectName && lookup
+      ? {
+          types: ENTITY_TYPES,
+          render: (props) => createElement(MentionEntityPicker, { ...props, projectName, lookup }),
+        }
+      : undefined,
+  resolve:
+    projectName && lookup
+      ? async (ref) => {
+          const type = ENTITY_TYPES.find((t) => t === ref.type)
+          // links to other projects stay links
+          if (ref.projectName !== projectName || !type) return null
+          const [item] = await lookup(type, [ref.id])
+          return item ?? null
+        }
+      : undefined,
   getOptions: ({ search: text, filter }) => {
     const users = getMentionUsers(suggestions.users, suggestions.teams)
     const tasks = getMentionTasks(suggestions.tasks, taskTypes)
