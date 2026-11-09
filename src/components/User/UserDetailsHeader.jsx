@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import clsx from 'clsx'
 import DetailHeader from '../DetailHeader'
@@ -16,7 +16,14 @@ const SubHeader = styled.span`
   text-overflow: ellipsis;
 `
 
-const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {}, menuItems }) => {
+const UserDetailsHeader = ({
+  users = [],
+  onClose,
+  subTitle = '',
+  style = {},
+  menuItems,
+  onMenuOpen,
+}) => {
   // a single user
   const singleUserEdit = users.length === 1 ? users[0] || ' ' : null
 
@@ -34,6 +41,9 @@ const UserDetailsHeader = ({ users = [], onClose, subTitle = '', style = {}, men
   }, [users])
 
   const isOpen = menuOpen === menuId
+  useEffect(() => {
+    if (isOpen) onMenuOpen?.()
+  }, [isOpen, onMenuOpen])
   const hasMenu = Array.isArray(menuItems) && menuItems.length > 0
   const fullItems = hasMenu
     ? [
@@ -142,6 +152,8 @@ UserDetailsHeader.propTypes = {
   subTitle: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
   style: PropTypes.object,
   menuItems: PropTypes.array,
+  /** called when the more menu opens */
+  onMenuOpen: PropTypes.func,
 }
 
 export default UserDetailsHeader

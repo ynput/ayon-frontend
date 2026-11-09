@@ -69,6 +69,30 @@ export interface EntityScope {
   entities: EntityRef[]
 }
 
+/**
+ * A user a slot is about, e.g. one selected in Settings → Users. Not the signed-in user: that is
+ * `user` in every slot.
+ */
+export interface UserRef {
+  name: string
+  fullName?: string
+  email?: string
+  /** the account is active (not disabled) */
+  active: boolean
+  isAdmin: boolean
+  /** managers and admins */
+  isManager: boolean
+  isGuest: boolean
+  /** a service user (API key) */
+  isService: boolean
+}
+
+/** Slots about one or more users. */
+export interface UsersScope {
+  /** the users the slot is about, e.g. the ones selected in Settings → Users */
+  users: UserRef[]
+}
+
 /** The project pages with a project table (ProjectTreeTable). */
 export type ProjectTablePage = 'overview' | 'products' | 'lists'
 

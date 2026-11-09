@@ -19,6 +19,7 @@ interface GroupRowProps {
   isExpanded: boolean
   onToggle: () => void
   virtualStart: number
+  rowIndex: number
   onContextMenu?: React.MouseEventHandler<HTMLTableRowElement>
 }
 
@@ -31,6 +32,7 @@ export function GroupRow({
   isExpanded,
   onToggle,
   virtualStart,
+  rowIndex,
   onContextMenu,
 }: GroupRowProps) {
   const parsedColumnId = parseInternalGroupingColumnId(groupColumnId)
@@ -41,6 +43,9 @@ export function GroupRow({
 
   return (
     <Styled.TR
+      role="row"
+      aria-rowindex={rowIndex + 2}
+      aria-expanded={isExpanded}
       style={{
         transform: `translateY(${virtualStart}px)`,
         paddingLeft: depth * 16,
@@ -49,7 +54,7 @@ export function GroupRow({
       onContextMenu={onContextMenu}
       className={clsx('group-row', { expanded: isExpanded })}
     >
-      <Styled.GroupTD>
+      <Styled.GroupTD role="gridcell">
         <Styled.GroupRowContent>
           <Styled.Expander
             className="expander"

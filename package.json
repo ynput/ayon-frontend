@@ -7,6 +7,7 @@
     "build": "vite build",
     "build:shared": "yarn --cwd ./shared build",
     "build:addon": "yarn build:shared && yarn --cwd ./addon build && yarn --cwd ./addon-dev build",
+    "release:start": "node scripts/release-packages.mjs start",
     "release:status": "node scripts/release-packages.mjs status",
     "release:changes": "node scripts/release-packages.mjs changes",
     "release:bump": "node scripts/release-packages.mjs bump",

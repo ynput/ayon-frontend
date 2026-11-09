@@ -223,6 +223,7 @@ const useGetListItemsData = ({
               columnSummaries: columns.columnSummaries,
               columnSummaryScopes: columns.columnSummaryScopes,
             }),
+            statsEntity,
           )
         : [],
     [

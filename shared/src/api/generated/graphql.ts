@@ -3048,7 +3048,7 @@ export const GetVersionsFrameStartDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          attrib(names: ["frameStart"])
+          attrib(names: ["frameStart", "handleStart"])
         }
       }
     }

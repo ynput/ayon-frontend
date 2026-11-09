@@ -10,3 +10,5 @@ export const useProjectDataContext = () => {
   }
   return context
 }
+
+export const useOptionalProjectDataContext = () => useContext(ProjectDataContext)

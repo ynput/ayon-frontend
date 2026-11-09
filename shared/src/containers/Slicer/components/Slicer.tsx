@@ -52,7 +52,15 @@ export const Slicer: FC<SlicerProps> = ({
   onAddToList,
   enableSplit,
 }) => {
-  const { slices, page, setPanelExpanded, projectName, collapsedPanels } = useSlicerContext()
+  const {
+    slices,
+    page,
+    setPanelExpanded,
+    projectName,
+    collapsedPanels,
+    searchByPanel,
+    setSearchByPanel,
+  } = useSlicerContext()
   const { powerLicense } = usePowerpack()
 
   // the split affordance stays visible without a license and sells the power feature; the
@@ -117,12 +125,10 @@ export const Slicer: FC<SlicerProps> = ({
     )
     .filter((index) => index >= 0)
 
-  // an undefined entry is a closed search box, '' an open and empty one
-  const [searchByPanel, setSearchByPanel] = useState<Record<string, string | undefined>>({})
   const handleSearchChange = useCallback(
     (panelId: string, value: string | undefined) =>
       setSearchByPanel((prev) => ({ ...prev, [panelId]: value })),
-    [],
+    [setSearchByPanel],
   )
   // a removed panel must not hand its search text to the next panel of the same type
   const panelIdKey = panelIds.join('|')
@@ -132,7 +138,7 @@ export const Slicer: FC<SlicerProps> = ({
       if (kept.length === Object.keys(prev).length) return prev
       return Object.fromEntries(kept.map((id) => [id, prev[id]]))
     })
-  }, [panelIdKey])
+  }, [panelIdKey, setSearchByPanel])
 
   const panelProps = {
     visibleSlices,
