@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 
 export const filterByFieldsAndValues = ({
@@ -63,39 +63,69 @@ export const filterByFieldsAndValues = ({
   } else return data
 }
 
+const SEARCH_DEBOUNCE_MS = 200
+
+const parseSearch = (search) =>
+  // separate search into array by ,
+  // end up with array ['search', 'search2']
+  search.split(',').reduce((acc, cur) => {
+    const value = cur.trim().toLowerCase()
+    if (value) acc.push(value)
+    return acc
+  }, [])
+
+// Returns [inputValue, setInputValue, filteredData].
+// The input value updates right away; filtering (and the url, when `id` is set) follows once typing
+// pauses, so large lists are filtered once per pause instead of once per key.
 const useSearchFilter = (fields = [], data = [], id) => {
   let key = 'search'
   id && (key += '-' + id)
-  const [search, setSearch] = useQueryParam(key, withDefault(StringParam, ''))
-  const [searchLocal, setSearchLocal] = useState('')
-  const searchString = id ? search : searchLocal
+  const [urlSearch, setUrlSearch] = useQueryParam(key, withDefault(StringParam, ''))
+  // The input must not be driven by the url: the router commits location changes in a transition,
+  // so on a slow page React resets the input to the old value and typed characters get lost.
+  const [searchString, setSearchString] = useState(id ? urlSearch : '')
+  const [appliedSearch, setAppliedSearch] = useState(searchString)
+  // the value we last wrote to the url, until the url catches up with it
+  const pendingUrlSearch = useRef(null)
+
+  useEffect(() => {
+    if (searchString === appliedSearch) return
+    const timeout = setTimeout(() => {
+      setAppliedSearch(searchString)
+      if (id) {
+        pendingUrlSearch.current = searchString
+        setUrlSearch(searchString)
+      }
+    }, SEARCH_DEBOUNCE_MS)
+    return () => clearTimeout(timeout)
+  }, [searchString, appliedSearch, id, setUrlSearch])
+
+  // follow url changes made elsewhere (e.g. a link to the same page), ignoring our own writes
+  useEffect(() => {
+    if (!id) return
+    if (pendingUrlSearch.current !== null) {
+      if (urlSearch === pendingUrlSearch.current) pendingUrlSearch.current = null
+      return
+    }
+    setSearchString(urlSearch)
+    setAppliedSearch(urlSearch)
+  }, [urlSearch, id])
 
   if (!fields.length) {
     fields = data
   }
 
-  // separate searchString into array by ,
-  // end up with array ['search', 'search2']
-  const searchArray = searchString?.split(',').reduce((acc, cur) => {
-    if (!cur) return acc
-    if (cur.trim() === '') return acc
-    else {
-      acc.push(cur.trim()?.toLowerCase())
-      return acc
-    }
-  }, [])
+  const filteredData = useMemo(() => {
+    if (!appliedSearch.length) return data
+    return filterByFieldsAndValues({
+      filters: parseSearch(appliedSearch),
+      data,
+      fields,
+      matchesAll: true,
+    })
+  }, [appliedSearch, data])
 
-  let filteredData = useMemo(
-    () =>
-      searchString.length
-        ? filterByFieldsAndValues({ filters: searchArray, data, fields, matchesAll: true })
-        : data,
-    [searchString, data],
-  )
-
-  const onSearchChange = (v) => (id ? setSearch(v) : setSearchLocal(v))
-
-  return [searchString, onSearchChange, filteredData]
+  return [searchString, setSearchString, filteredData]
 }
 
 export default useSearchFilter
