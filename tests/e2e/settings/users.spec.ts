@@ -152,4 +152,76 @@ test.describe('users settings', () => {
     expect((await api.getUser(user.name)).data.isAdmin).toBeFalsy()
     await expect(users.row(user.name)).toContainText('Manager')
   })
+
+  test('typing in the filter keeps unsaved changes in the user panel', async ({
+    page,
+    createUser,
+  }) => {
+    const user = await createUser()
+    const users = new UsersSettingsPage(page)
+    await users.goto()
+    await users.select(user.name)
+    await users.setActive(false)
+
+    await users.filter(user.name)
+    await expect(users.row(user.name)).toBeVisible()
+    await expect(users.activeRow.getByRole('checkbox')).not.toBeChecked()
+  })
+
+  test.describe('with thousands of users', () => {
+    const COUNT = 3000
+    const bulkName = (i: number) => `bulk_${String(i).padStart(4, '0')}`
+    const last = bulkName(COUNT - 1)
+
+    test.beforeEach(async ({ page }) => {
+      // the real users plus mocked ones: creating this many would take minutes
+      const bulk = Array.from({ length: COUNT }, (_, i) => ({
+        node: {
+          name: bulkName(i),
+          active: true,
+          accessGroups: '{}',
+          defaultAccessGroups: [],
+          allAttrib: JSON.stringify({ fullName: `Bulk ${i}`, email: `${bulkName(i)}@example.com` }),
+        },
+      }))
+      await page.route('**/graphql', async (route) => {
+        if (!/query UserList\s*\{/.test(route.request().postData() ?? '')) return route.continue()
+        const response = await route.fetch()
+        const json = await response.json()
+        json.data.users.edges.push(...bulk)
+        await route.fulfill({ response, json })
+      })
+    })
+
+    test('filter, scroll and shift select', async ({ page }) => {
+      const users = new UsersSettingsPage(page)
+      await users.goto({ filter: '' })
+      await expect(users.row(bulkName(0))).toBeVisible()
+      const input = page.getByPlaceholder('Filter users...')
+
+      // every typed character is kept, and the list follows
+      await input.click()
+      await page.keyboard.type('bulk_029', { delay: 30 })
+      await expect(input).toHaveValue('bulk_029')
+      await expect(page).toHaveURL(/search-users=bulk_029/)
+      await expect(users.row(bulkName(290))).toBeVisible()
+      await expect(page.getByRole('row').filter({ hasText: 'bulk_' })).toHaveCount(10)
+
+      // after clearing, the list scrolls to the end again
+      await users.filter('')
+      await users.row(bulkName(1)).click()
+      await expect(async () => {
+        await page.getByRole('row').filter({ hasText: 'bulk_' }).first().hover()
+        await page.mouse.wheel(0, 50_000)
+        await expect(users.row(last)).toBeVisible({ timeout: 500 })
+      }).toPass()
+
+      // a shift click selects past the rendered rows, and the selection survives filtering
+      await users.row(last).click({ modifiers: ['Shift'] })
+      await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+      await users.filter('bulk_029')
+      await users.expectSelected(bulkName(290))
+      await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+    })
+  })
 })
