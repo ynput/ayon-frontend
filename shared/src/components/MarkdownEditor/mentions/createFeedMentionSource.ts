@@ -11,56 +11,57 @@ interface FeedMentionSourceOptions {
   suggestions?: SuggestResponse
   project?: Pick<ProjectContextValue, 'productTypes'>
   taskTypes?: TaskType[]
-  // version mentions are not available on folders, unless the project can be searched
-  entityType?: string
   // search beyond the suggestions, see `useProjectMentionSearch`
   search?: MentionSource['search']
 }
 
+// filter chips of the picker, the ids are the mention types
+const FILTERS = [
+  { id: 'user', icon: 'person', tooltip: 'Filter users' },
+  { id: 'team', icon: 'group', tooltip: 'Filter teams' },
+  { id: 'task', icon: 'check_circle', tooltip: 'Filter tasks' },
+  { id: 'folder', icon: 'folder', tooltip: 'Filter folders' },
+  { id: 'version', icon: 'layers', tooltip: 'Filter versions' },
+]
+
+const isMentionItem = (option: unknown): option is MentionItem => !!option
+
 /**
  * Mention source backed by the activity feed's mention suggestions (`useGetEntityMentionsQuery`),
- * using the same option builders and sorting as the legacy comment input.
+ * using the same option builders and sorting as the legacy comment input. One `@` lists users,
+ * teams, tasks and versions, plus the project search results (folders too) when `search` is set.
  */
 export const createFeedMentionSource = ({
   suggestions = {},
   // version options read the product types
   project = { productTypes: [] },
   taskTypes = [],
-  entityType,
   search,
 }: FeedMentionSourceOptions): MentionSource => ({
+  triggers: ['@'],
+  config: { '@': { title: '@ Mention', noun: 'result', filters: FILTERS } },
   search,
-  // users and teams are all in the suggestions already
-  searchTriggers: ['@@', '@@@'],
-  // the project search also finds folders
-  config: search
-    ? {
-        '@@@': {
-          title: '@@@ Tasks & Folders',
-          noun: 'item',
-          filters: [
-            { id: 'task', icon: 'check_circle', tooltip: 'Filter tasks' },
-            { id: 'folder', icon: 'folder', tooltip: 'Filter folders' },
-          ],
-        },
-      }
-    : undefined,
-  getOptions: ({ trigger, search, filter }) => {
-    const options = getMentionOptions(
-      trigger,
-      {
-        '@': () => getMentionUsers(suggestions.users, suggestions.teams),
-        '@@': () => getMentionVersions(suggestions.versions, project as ProjectContextValue),
-        '@@@': () => getMentionTasks(suggestions.tasks, taskTypes),
-      },
-      // the helper understands `team:` / `user:` prefixes
-      (filter ? `${filter}:` : '') + search || undefined,
-    ) as (MentionItem | null)[]
+  getOptions: ({ search: text, filter }) => {
+    const users = getMentionUsers(suggestions.users, suggestions.teams)
+    const tasks = getMentionTasks(suggestions.tasks, taskTypes)
+    const versions = getMentionVersions(suggestions.versions, project as ProjectContextValue)
+    // the helper understands `team:` / `task:` ... prefixes
+    const prefix = filter ? `${filter}:` : ''
 
-    return options.filter((option): option is MentionItem => !!option)
+    // nothing typed: users first, then the tasks and versions of the entity, each in its own order
+    if (!text) {
+      return [
+        ...getMentionOptions('@', { '@': () => users }, prefix || undefined),
+        ...getMentionOptions('@@@', { '@@@': () => tasks }, prefix || undefined),
+        ...getMentionOptions('@@', { '@@': () => versions }, prefix || undefined),
+      ].filter(isMentionItem)
+    }
+
+    // best matches first, whatever the type
+    return getMentionOptions(
+      '@',
+      { '@': () => [...users, ...tasks, ...versions] },
+      prefix + text,
+    ).filter(isMentionItem)
   },
-  getError: (trigger) =>
-    trigger === '@@' && entityType === 'folder' && !search
-      ? 'Version mentions are disabled for folders'
-      : null,
 })

@@ -27,19 +27,18 @@ const shortPath = (path = '', segments = 2) =>
 
 const parentPath = (path = '') => path.split('/').filter(Boolean).slice(0, -1).join('/')
 
-// the entity types each trigger searches, a picker filter narrows them down
-const getSearchTypes = ({ trigger, filter }: MentionQuery): MentionSearchType[] => {
-  if (trigger === '@@') return ['version']
-  if (trigger === '@@@') {
-    if (filter === 'task' || filter === 'folder') return [filter]
-    return ['task', 'folder']
-  }
-  return []
+const SEARCH_TYPES: MentionSearchType[] = ['task', 'folder', 'version']
+
+// every searchable type, unless a picker filter picks one (users and teams are not searched)
+const getSearchTypes = ({ filter }: MentionQuery): MentionSearchType[] => {
+  if (!filter) return SEARCH_TYPES
+  return SEARCH_TYPES.filter((type) => type === filter)
 }
 
 /**
  * Searches folders, tasks and versions across the whole project for the mention picker,
- * `SEARCH_LIMIT` per type. `sh010/comp` searches for `sh010` and `comp`.
+ * `SEARCH_LIMIT` per type, the best `SEARCH_LIMIT` of them are returned.
+ * `sh010/comp` searches for `sh010` and `comp`.
  */
 export const useProjectMentionSearch = ({
   projectName,

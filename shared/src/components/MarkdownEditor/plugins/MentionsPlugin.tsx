@@ -37,7 +37,6 @@ const DEFAULT_CONFIG: Record<MentionTrigger, MentionTriggerConfig> = {
   '@': {
     title: '@ Users & Teams',
     noun: 'user',
-    isCircle: true,
     filters: [
       { id: 'user', icon: 'person', tooltip: 'Filter users' },
       { id: 'team', icon: 'group', tooltip: 'Filter teams' },
@@ -119,10 +118,9 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   // search beyond the given options, debounced, only the latest search is shown
   const search = source.search
-  const searchesTrigger = source.searchTriggers?.includes(trigger) ?? true
   const searchText = query?.toLowerCase() ?? ''
   const searchKey =
-    search && searchesTrigger && !error && searchText.length >= MIN_SEARCH_LENGTH
+    search && !error && searchText.length >= MIN_SEARCH_LENGTH
       ? `${trigger}|${filter ?? ''}|${searchText}`
       : null
   const [searchResult, setSearchResult] = useState<{ key: string; items: MentionItem[] } | null>(
@@ -269,7 +267,10 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
             selectedIndex={selectedIndex}
             onSelect={selectOptionAndCleanUp}
             onHighlight={setHighlightedIndex}
-            optionClassName={() => (config.isCircle ? undefined : 'square')}
+            // users and teams are round, entities square
+            optionClassName={({ item }) =>
+              item.type === 'user' || item.type === 'team' ? undefined : 'square'
+            }
             emptyMessage={error || (isSearching ? 'Searching…' : `No ${config.noun}s found`)}
             renderOption={({ item }) => (
               <>

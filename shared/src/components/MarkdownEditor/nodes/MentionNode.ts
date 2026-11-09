@@ -10,7 +10,7 @@ import {
   type SerializedTextNode,
   type Spread,
 } from 'lexical'
-import { MENTION_REF_TYPES, getMentionTrigger } from '../types'
+import { MENTION_REF_TYPES } from '../types'
 
 export type SerializedMentionNode = Spread<
   { mentionType: string; mentionId: string },
@@ -155,7 +155,8 @@ export class MentionNode extends TextNode {
 }
 
 export const $createMentionNode = (type: string, id: string, label: string): MentionNode => {
-  const node = new MentionNode(type, id, getMentionTrigger(type) + stripTrigger(label))
+  // every mention reads `@label`, whatever its type
+  const node = new MentionNode(type, id, '@' + stripTrigger(label))
   node.setMode('token').toggleDirectionless()
   return $applyNodeReplacement(node)
 }

@@ -24,7 +24,6 @@ const DocumentDemo = () => {
   const [tab, setTab] = useState<Tab>('preview')
   const [showToolbar, setShowToolbar] = useState(true)
   const [readOnly, setReadOnly] = useState(false)
-  const [isFolder, setIsFolder] = useState(false)
   const [spacedPreview, setSpacedPreview] = useState(true)
   // remount the editor to test the initial value import
   const [editorKey, setEditorKey] = useState(0)
@@ -33,7 +32,7 @@ const DocumentDemo = () => {
   const log = (message: string) =>
     setEvents((prev) => [`${new Date().toLocaleTimeString()}  ${message}`, ...prev].slice(0, 100))
 
-  const mentions = useMockMentions(isFolder)
+  const mentions = useMockMentions()
 
   const loadMarkdown = (value: string) => {
     setSource(value)
@@ -76,14 +75,6 @@ const DocumentDemo = () => {
             />
             Read only
           </Styled.Toggle>
-          <Styled.Toggle>
-            <input
-              type="checkbox"
-              checked={isFolder}
-              onChange={(e) => setIsFolder(e.target.checked)}
-            />
-            Folder entity
-          </Styled.Toggle>
         </Styled.Group>
       </Styled.Header>
 
@@ -111,25 +102,11 @@ const DocumentDemo = () => {
               <Styled.Footer>
                 <Styled.Group>
                   <Button
-                    icon="person"
+                    icon="alternate_email"
                     variant="text"
-                    data-tooltip="Mention user"
+                    data-tooltip="Mention"
                     data-shortcut="@"
                     onClick={() => editorRef.current?.insertMentionTrigger('@')}
-                  />
-                  <Button
-                    icon="layers"
-                    variant="text"
-                    data-tooltip="Mention version"
-                    data-shortcut="@@"
-                    onClick={() => editorRef.current?.insertMentionTrigger('@@')}
-                  />
-                  <Button
-                    icon="check_circle"
-                    variant="text"
-                    data-tooltip="Mention task"
-                    data-shortcut="@@@"
-                    onClick={() => editorRef.current?.insertMentionTrigger('@@@')}
                   />
                 </Styled.Group>
                 <SaveButton

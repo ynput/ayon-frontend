@@ -94,9 +94,7 @@ const isReferenced = (id: string, markdown: string) =>
   !!id && getInlineMediaFileIds(markdown).has(id)
 
 const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
-  { trigger: '@', icon: 'person', tooltip: 'Mention user' },
-  { trigger: '@@', icon: 'layers', tooltip: 'Mention version' },
-  { trigger: '@@@', icon: 'check_circle', tooltip: 'Mention task' },
+  { trigger: '@', icon: 'alternate_email', tooltip: 'Mention' },
 ]
 
 const CommentInput: FC<CommentInputProps> = ({
@@ -367,7 +365,6 @@ const isEmpty =
   }, [isOpen, isEditing, isChecklistsFilter])
 
   // MENTIONS
-  const entityType = entities[0]?.entityType
   // keep the source stable, a new one resets the highlighted option of the picker
   const productTypes = project?.productTypes
   const mentionSearch = useProjectMentionSearch({
@@ -385,20 +382,12 @@ const isEmpty =
               suggestions: mentionSuggestionsData,
               project: { productTypes },
               taskTypes: projectInfo?.taskTypes,
-              entityType,
               search: mentionSearch,
             }),
             // keep the picker short
             limit: 5,
           },
-    [
-      isGuest,
-      mentionSuggestionsData,
-      productTypes,
-      projectInfo?.taskTypes,
-      entityType,
-      mentionSearch,
-    ],
+    [isGuest, mentionSuggestionsData, productTypes, projectInfo?.taskTypes, mentionSearch],
   )
 
   const handleMentionClick = ({ type, id }: { type: string; id: string }) => {

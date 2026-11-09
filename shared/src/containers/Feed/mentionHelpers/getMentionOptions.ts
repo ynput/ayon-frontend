@@ -41,7 +41,7 @@ const sortByRelevanceThenAlpha = (a, b) => {
 }
 
 // Prefixes that filter the @ mention list to a specific type
-const TYPE_PREFIXES = ['team:', 'user:', 'task:', 'folder:']
+const TYPE_PREFIXES = ['team:', 'user:', 'task:', 'folder:', 'version:']
 
 /**
  * Parse a search string for type prefix filtering.

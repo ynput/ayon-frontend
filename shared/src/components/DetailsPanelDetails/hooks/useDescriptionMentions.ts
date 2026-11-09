@@ -38,7 +38,7 @@ export const useDescriptionMentions = (
     { skip: skip || !context?.projectName || !context?.entityId },
   )
 
-  const { entityType, productTypes, taskTypes, folderTypes } = context ?? {}
+  const { productTypes, taskTypes, folderTypes } = context ?? {}
   const search = useProjectMentionSearch({
     projectName: skip ? undefined : context?.projectName,
     productTypes,
@@ -53,10 +53,9 @@ export const useDescriptionMentions = (
             suggestions,
             project: { productTypes: productTypes ?? [] },
             taskTypes,
-            entityType,
             search,
           })
         : undefined,
-    [!!context, suggestions, productTypes, taskTypes, entityType, search],
+    [!!context, suggestions, productTypes, taskTypes, search],
   )
 }

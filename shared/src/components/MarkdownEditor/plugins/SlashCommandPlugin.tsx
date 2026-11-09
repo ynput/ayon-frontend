@@ -201,7 +201,12 @@ const SlashCommandPlugin = ({
 
     const mentions: { trigger: MentionTrigger; label: string; icon: IconType; words: string[] }[] =
       [
-        { trigger: '@', label: 'Mention user', icon: 'person', words: ['user', 'team', 'person'] },
+        {
+          trigger: '@',
+          label: 'Mention',
+          icon: 'alternate_email',
+          words: ['user', 'team', 'person', 'task', 'folder', 'version'],
+        },
         { trigger: '@@', label: 'Mention version', icon: 'layers', words: ['version'] },
         { trigger: '@@@', label: 'Mention task', icon: 'check_circle', words: ['task'] },
       ]

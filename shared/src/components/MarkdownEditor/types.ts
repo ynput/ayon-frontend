@@ -17,18 +17,6 @@ export const MENTION_REF_TYPES = [
 ] as const
 export type MentionRefType = (typeof MENTION_REF_TYPES)[number]
 
-// Which trigger is shown in front of a mention of each type
-export const MENTION_TRIGGER_BY_TYPE: Record<string, MentionTrigger> = {
-  user: '@',
-  team: '@',
-  version: '@@',
-  task: '@@@',
-  folder: '@@@',
-}
-
-export const getMentionTrigger = (type: string): MentionTrigger =>
-  MENTION_TRIGGER_BY_TYPE[type] ?? '@'
-
 // where the mention picker opens
 export type MentionPlacement = 'inline' | 'top'
 
@@ -57,8 +45,6 @@ export interface MentionTriggerConfig {
   title: string
   // label used in the "No ... found" message
   noun: string
-  // users are shown with a round avatar, entities with a square icon
-  isCircle?: boolean
   filters?: MentionFilter[]
 }
 
@@ -76,8 +62,6 @@ export interface MentionSource {
   // search beyond the given options (e.g. the whole project), called debounced while typing,
   // the results are listed after the matching options
   search?: (query: MentionQuery) => Promise<MentionItem[]>
-  // triggers `search` is called for, defaults to all
-  searchTriggers?: MentionTrigger[]
   // show a message instead of options (e.g. version mentions disabled for folders)
   getError?: (trigger: MentionTrigger) => string | null | undefined
   // limit of options shown at once
