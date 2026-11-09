@@ -5,16 +5,38 @@ import UserImage from '@shared/components/UserImage'
 
 import './users.scss'
 
-import { useMemo } from 'react'
+import { memo, useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableExportContext } from '@shared/context'
 import clsx from 'clsx'
+import { omit } from 'lodash'
 import useTableLoadingData from '@hooks/useTableLoadingData'
 import { useGetUserPoolsQuery } from '@shared/api'
 import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
 import { getInvitationState } from './InvitationStatusHelpers'
+
+// fixed row height, needed by the virtual scroller
+const ROW_HEIGHT = 33
+
+// Save sort, column widths and order only. Left to itself the table also saves every selected user
+// object, on every render, and selects them again on mount.
+const saveTableState = (state) => {
+  try {
+    localStorage.setItem(USERS_TABLE_STATE_KEY, JSON.stringify(omit(state, 'selection')))
+  } catch {
+    // storage full or blocked: the table works without it
+  }
+}
+
+const restoreTableState = () => {
+  try {
+    return omit(JSON.parse(localStorage.getItem(USERS_TABLE_STATE_KEY) || '{}'), 'selection')
+  } catch {
+    return {}
+  }
+}
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -83,7 +105,8 @@ const UserList = ({
 
   // Selection
   const selection = useMemo(() => {
-    return userList.filter((user) => selectedUsers.includes(user.name))
+    const selected = new Set(selectedUsers)
+    return userList.filter((user) => selected.has(user.name))
   }, [selectedUsers, selectedProjects, userList])
 
   const onContextMenu = (e) => {
@@ -91,10 +114,31 @@ const UserList = ({
     ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
   }
 
+  const tableRef = useRef(null)
+  const anchorIndex = useRef(null)
+  const shiftRange = useRef(null)
+
+  // With the virtual scroller the table only knows the rendered rows, so its own shift-click range
+  // is wrong or throws. Track the range here, by index in display order.
+  const onRowClick = ({ index, originalEvent }) => {
+    shiftRange.current =
+      originalEvent.shiftKey && anchorIndex.current !== null
+        ? [Math.min(anchorIndex.current, index), Math.max(anchorIndex.current, index)]
+        : null
+    anchorIndex.current = index
+  }
+
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
+    // the scroller's items are the rows in display order: filtered and sorted
+    const users = shiftRange.current
+      ? tableRef.current
+          .getVirtualScroller()
+          .props.items.slice(shiftRange.current[0], shiftRange.current[1] + 1)
+      : e.value
+    shiftRange.current = null
     let result = []
-    for (const user of e.value) result.push(user.name)
+    for (const user of users) result.push(user.name)
     onSelectUsers(result)
   }
 
@@ -154,6 +198,11 @@ const UserList = ({
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
+  // row indexes point at other users once the rows change
+  useEffect(() => {
+    anchorIndex.current = null
+  }, [tableData])
+
   const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
 
   // Render
@@ -161,6 +210,9 @@ const UserList = ({
     <Section wrap>
       <TablePanel>
         <DataTable
+          // the virtual scroller keeps its old scroll height when the row count changes
+          key={tableData.length}
+          ref={tableRef}
           value={tableData}
           scrollable="true"
           scrollHeight="flex"
@@ -168,15 +220,20 @@ const UserList = ({
           selectionMode="multiple"
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData) => clsx({ inactive: !rowData.active, loading: isLoading })}
+          onRowClick={onRowClick}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
           responsive="true"
-          stateKey={USERS_TABLE_STATE_KEY}
-          stateStorage={'local'}
+          stateStorage="custom"
+          customSaveState={saveTableState}
+          customRestoreState={restoreTableState}
           reorderableColumns
+          // render only the visible rows: thousands of users otherwise means thousands of rows
+          // and avatar requests
+          virtualScrollerOptions={{ itemSize: ROW_HEIGHT }}
         >
           <Column
             field="name"
@@ -247,4 +304,5 @@ const UserList = ({
   )
 }
 
-export default UserList
+// memo: typing in the search box re-renders the page, the table only changes with the results
+export default memo(UserList)
