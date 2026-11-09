@@ -107,7 +107,10 @@ export const useSelectedEntityIds = ({
         const results = await Promise.all(
           selectedListIds.map((listId) =>
             dispatch(
-              entityListsApi.endpoints.getListEntities.initiate({ projectName, listId }),
+              entityListsApi.endpoints.getListEntities.initiate({
+                projectName,
+                entityListId: listId,
+              }),
             ).unwrap(),
           ),
         )

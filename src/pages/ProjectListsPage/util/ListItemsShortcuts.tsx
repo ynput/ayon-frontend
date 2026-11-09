@@ -1,5 +1,10 @@
-import { useCellEditing, useSelectionCellsContext } from '@shared/containers/ProjectTreeTable'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  useCellEditing,
+  useSelectionCellsContext,
+} from '@shared/containers/ProjectTreeTable'
 import { FC, useEffect } from 'react'
+import { toast } from 'react-toastify'
 import { useListItemsDataContext } from '../context/list-items-data'
 import { parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
 import { DeleteListItem } from '../hooks/useDeleteListItems'
@@ -17,13 +22,24 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if user has editor permissions (accessLevel >= 20)
       if ((selectedList?.accessLevel ?? 0) < 20) return
+      // Ctrl+Backspace while typing in a field (search, a cell editor) is text editing, not removal
+      const target = event.target as HTMLElement | null
+      if (
+        target &&
+        (target.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName))
+      )
+        return
 
       if (event.key === 'Backspace' && (event.ctrlKey || event.metaKey)) {
-        // convert selection to a list of ids
+        // convert the selected cells to a list of ids; row checkboxes are ignored, as in context menus
         const selectedListItems: DeleteListItem[] = []
+        let hasCellSelection = false
 
         Array.from(selectedCells).forEach((cell) => {
-          const itemId = parseCellId(cell)?.rowId
+          const parsed = parseCellId(cell)
+          if (!parsed || parsed.colId === ROW_SELECTION_COLUMN_ID) return
+          hasCellSelection = true
+          const itemId = parsed.rowId
           if (!itemId) return
           const item = listItemsMap.get(itemId)
           if (!item) return
@@ -31,6 +47,18 @@ const ListItemsShortcuts: FC<ListTableShortcutsProps> = ({}) => {
           if (isEntityRestricted(item.entityType)) return
           selectedListItems.push({ id: itemId, entityId: item.entityId })
         })
+
+        // rows selected only by their checkbox are not removed, so tell the user to select cells
+        if (!hasCellSelection) {
+          const isTyping =
+            target?.isContentEditable ||
+            target?.closest('input, textarea, [role="textbox"], .block-shortcuts')
+          if (!selectedCells.size || isTyping) return
+          toast.warning(
+            'Select some cells to remove. Rows selected with the checkbox are not included.',
+          )
+          return
+        }
 
         // Only delete if there are non-restricted items
         if (selectedListItems.length > 0) {

@@ -8,6 +8,7 @@ import {
   useSelectionCellsContext,
   useProjectTableContext,
   getEntityViewierIds,
+  useAddonEntityMenuItems,
 } from '@shared/containers'
 import { useVersionsDataContext } from '../context/vp-data'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
@@ -43,6 +44,9 @@ export interface VPContextMenuItems {
   versionDetailItem: ContextMenuItemConstructor
   deleteVersionItem: ContextMenuItemConstructor
   deleteProductItem: ContextMenuItemConstructor
+  // items addons contribute (entityMenuItem slot)
+  addonTopItems: ContextMenuItemConstructor
+  addonItems: ContextMenuItemConstructor
 }
 
 export const useVPContextMenu = (callbacks?: {
@@ -103,7 +107,11 @@ export const useVPContextMenu = (callbacks?: {
             const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
             selectedRows.add(rowSelectionCellId)
           }
-          setSelectedCells(new Set<string>([...selectedCells, ...selectedRows]))
+          // drop other checkbox cells so unrelated rows do not join the details selection
+          const bodyCells = [...selectedCells].filter(
+            (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+          )
+          setSelectedCells(new Set<string>([...bodyCells, ...selectedRows]))
         } else {
           // For table view, select the row to open details
           const rowSelectionCellId = getCellId(cell.entityId, ROW_SELECTION_COLUMN_ID)
@@ -411,6 +419,10 @@ export const useVPContextMenu = (callbacks?: {
     [entitiesMap, handleDeleteProduct],
   )
 
+  // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
+  const addonTopItems = useAddonEntityMenuItems('products', 'top')
+  const addonItems = useAddonEntityMenuItems('products')
+
   return {
     showDetailsItem,
     openViewerItem,
@@ -420,5 +432,7 @@ export const useVPContextMenu = (callbacks?: {
     versionDetailItem,
     deleteVersionItem,
     deleteProductItem,
+    addonTopItems,
+    addonItems,
   }
 }

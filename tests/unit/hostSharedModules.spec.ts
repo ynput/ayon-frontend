@@ -22,3 +22,33 @@ test('the host provides every published @ynput/ayon-frontend-shared entry', () =
   expect(hostEntries).toEqual(libEntries)
   expect(registeredNames).toEqual(libEntries.map(([name]) => name))
 })
+
+// Addons that share react-router render their routes in the host's router, e.g. Reports pages
+// under /projects/<project>/reports/*: it checks for a router above it and falls back to a
+// MemoryRouter, takes its base path from the splat params and navigates with the host's history.
+// An export left out of hostRouterExports.ts is undefined in those addons and breaks their pages.
+test('the host shares the react-router API addons render their routes with', async () => {
+  const { routerExports } = await import('../../src/remote/hostRouterExports')
+  const used = [
+    'MemoryRouter',
+    'Routes',
+    'Route',
+    'useInRouterContext',
+    'useLocation',
+    'useNavigate',
+    'useParams',
+    'useSearchParams',
+  ]
+  const missing = used.filter((name) => !(routerExports as Record<string, unknown>)[name])
+  expect(missing).toEqual([])
+})
+
+// Libraries read the data router contexts with useContext and expect null under a declarative
+// router (use-query-params' react-router-6 adapter). Left out, they are undefined in an addon that
+// shares the router, and useContext(undefined) crashes the page.
+test('the host shares the data router contexts libraries read', async () => {
+  const { routerExports } = await import('../../src/remote/hostRouterExports')
+  const exports = routerExports as Record<string, unknown>
+  expect(exports.UNSAFE_DataRouterContext).toBeDefined()
+  expect(exports.UNSAFE_DataRouterStateContext).toBeDefined()
+})

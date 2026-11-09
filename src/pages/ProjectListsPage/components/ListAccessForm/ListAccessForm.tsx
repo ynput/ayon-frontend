@@ -8,10 +8,11 @@ import {
 } from '@shared/api'
 import { RequiredAddonVersion } from '@shared/components/Powerpack'
 import { useGlobalContext, usePowerpack } from '@shared/context'
-import { FC, useEffect } from 'react'
+import { type ComponentProps, FC, useCallback, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { Section } from '../ListDetailsPanel/ListDetailsPanel.styled'
 import { copyToClipboard } from '@shared/util'
+import type { GuestAccessFallback } from './ListAccessFallback'
 
 export interface ListAccessFormProps {
   list: EntityListModel
@@ -43,6 +44,18 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
   })
 
   const [updateList] = useUpdateEntityListMutation()
+  const updateGuestAccessList = useCallback<
+    ComponentProps<typeof GuestAccessFallback>['updateList']
+  >(
+    (arg) => {
+      if ('entityListId' in arg) return updateList(arg)
+
+      // Older review modules pass the list ID under the previous API argument name.
+      const { listId, ...rest } = arg
+      return updateList({ ...rest, entityListId: listId })
+    },
+    [updateList],
+  )
 
   // load in sharing module
   const {
@@ -79,7 +92,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
           isShareOptionsLoading={isShareOptionsLoading}
           onUpdateList={(payload) =>
             updateList({
-              listId: list.id as string,
+              entityListId: list.id as string,
               projectName,
               entityListPatchModel: payload,
             }).unwrap()
@@ -100,7 +113,7 @@ export const ListAccessForm: FC<ListAccessFormProps> = ({
               isLoadingModule.guestAccess
             }
             categories={categories}
-            updateList={updateList}
+            updateList={updateGuestAccessList}
             provider={{
               projectName,
               router: {

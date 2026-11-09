@@ -9,6 +9,7 @@ import { buildFolderMap, wouldCreateCircularDependency } from '../util/listFolde
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import {
   canEditList,
   canEditAllLists,
@@ -41,6 +42,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     openRenameList,
     setListDetailsOpen,
     deleteLists,
+    duplicateLists,
     createReviewSessionList,
     isReview,
     onOpenFolderList,
@@ -52,6 +54,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     setRowSelection,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
+  const { openForContext: openImportDialog } = useImportDialogContext()
 
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = {
@@ -195,6 +198,13 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
+          label: 'Duplicate',
+          icon: 'content_copy',
+          command: () => duplicateLists(selectedListIds),
+          // review sessions carry review addon data, only plain lists are copied
+          hidden: !allSelectedRowsAreLists || isReview,
+        },
+        {
           label: 'Edit folder',
           icon: FOLDER_ICON_EDIT,
           command: () => {
@@ -216,6 +226,21 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           },
           shortcut: 'N',
           hidden: !isSelectedRowFolder,
+          disabled: selectedFolderIds.length > 1,
+        },
+        {
+          label: 'Create list from CSV',
+          icon: 'upload_file',
+          command: () =>
+            selectedFolder &&
+            openImportDialog(
+              'entity_list_item',
+              projectName,
+              undefined,
+              selectedFolder.label,
+              selectedFolder.id,
+            ),
+          hidden: !isSelectedRowFolder || isReview,
           disabled: selectedFolderIds.length > 1,
         },
         // Root level Create folder (lists selection) / gated if no power license
@@ -301,6 +326,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       setListDetailsOpen,
       setRowSelection,
       deleteLists,
+      duplicateLists,
       createReviewSessionList,
       onOpenFolderList,
       onDeleteListFolders,
@@ -312,6 +338,8 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       isReview,
       powerLicense,
       extraBuilders,
+      openImportDialog,
+      projectName,
     ],
   )
 

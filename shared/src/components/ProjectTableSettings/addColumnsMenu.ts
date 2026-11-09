@@ -18,6 +18,8 @@ export type AddColumnItem = SettingsPanelItem & {
   field?: string
   isLink?: boolean
   parentScope?: EntityType
+  // the submenu an addon column sits in (tableColumn slot's `menu`), shared by name
+  menu?: string
 }
 
 export type AddColumnSection = {
@@ -109,10 +111,14 @@ export const buildAddColumnsMenu = ({
   const sectioned = new Map(activeSections.map((section) => [section.id, [] as AddColumnItem[]]))
   const topLevel: AddColumnItem[] = []
 
+  const submenus = new Map<string, AddColumnItem[]>()
+
   columns.forEach((column) => {
     const section = activeSections.find((s) => s.match(column))
     if (section) sectioned.get(section.id)?.push(column)
-    else topLevel.push(column)
+    else if (column.menu) {
+      submenus.set(column.menu, [...(submenus.get(column.menu) || []), column])
+    } else topLevel.push(column)
   })
 
   const sectionItems: MenuItemType[] = activeSections
@@ -158,7 +164,16 @@ export const buildAddColumnsMenu = ({
       }
     })
 
-  const groups = [topLevel.map(toMenuItem), sectionItems, extraItems].filter(
+  const submenuItems: MenuItemType[] = Array.from(submenus)
+    .toSorted(([a], [b]) => a.localeCompare(b))
+    .map(([label, submenuColumns]) => ({
+      id: `menu-${label}`,
+      label,
+      icon: 'extension',
+      items: submenuColumns.toSorted((a, b) => a.label.localeCompare(b.label)).map(toMenuItem),
+    }))
+
+  const groups = [topLevel.map(toMenuItem), [...sectionItems, ...submenuItems], extraItems].filter(
     (group) => group.length,
   )
 

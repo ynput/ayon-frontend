@@ -6,25 +6,17 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
       }),
     }),
-    deleteTask: build.mutation<DeleteTaskApiResponse, DeleteTaskApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
-      }),
-    }),
     updateTask: build.mutation<UpdateTaskApiResponse, UpdateTaskApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
         method: 'PATCH',
         body: queryArg.taskPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
+      }),
+    }),
+    deleteTask: build.mutation<DeleteTaskApiResponse, DeleteTaskApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}`,
+        method: 'DELETE',
       }),
     }),
     createTask: build.mutation<CreateTaskApiResponse, CreateTaskApiArg>({
@@ -32,10 +24,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/tasks`,
         method: 'POST',
         body: queryArg.taskPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     assignUsersToTask: build.mutation<AssignUsersToTaskApiResponse, AssignUsersToTaskApiArg>({
@@ -52,6 +40,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.tasksFoldersQuery,
       }),
     }),
+    createTaskThumbnail: build.mutation<CreateTaskThumbnailApiResponse, CreateTaskThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
+        method: 'POST',
+        headers: {
+          'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
     getTaskThumbnail: build.query<GetTaskThumbnailApiResponse, GetTaskThumbnailApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
@@ -61,12 +58,11 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
-    createTaskThumbnail: build.mutation<CreateTaskThumbnailApiResponse, CreateTaskThumbnailApiArg>({
+    getTaskFilmstrip: build.query<GetTaskFilmstripApiResponse, GetTaskFilmstripApiArg>({
       query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/thumbnail`,
-        method: 'POST',
-        headers: {
-          'content-type': queryArg['content-type'],
+        url: `/api/projects/${queryArg.projectName}/tasks/${queryArg.taskId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
         },
       }),
     }),
@@ -79,26 +75,20 @@ export type GetTaskApiArg = {
   projectName: string
   taskId: string
 }
-export type DeleteTaskApiResponse = unknown
-export type DeleteTaskApiArg = {
-  projectName: string
-  taskId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-}
 export type UpdateTaskApiResponse = unknown
 export type UpdateTaskApiArg = {
   projectName: string
   taskId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   taskPatchModel: TaskPatchModel
+}
+export type DeleteTaskApiResponse = unknown
+export type DeleteTaskApiArg = {
+  projectName: string
+  taskId: string
 }
 export type CreateTaskApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateTaskApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   taskPostModel: TaskPostModel
 }
 export type AssignUsersToTaskApiResponse = unknown
@@ -113,6 +103,13 @@ export type QueryTasksFoldersApiArg = {
   projectName: string
   tasksFoldersQuery: TasksFoldersQuery
 }
+export type CreateTaskThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateTaskThumbnailApiArg = {
+  projectName: string
+  taskId: string
+  'content-type'?: string | null
+}
 export type GetTaskThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetTaskThumbnailApiArg = {
   projectName: string
@@ -120,60 +117,43 @@ export type GetTaskThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateTaskThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateTaskThumbnailApiArg = {
+export type GetTaskFilmstripApiResponse = /** status 200 Successful Response */ FilmstripModel
+export type GetTaskFilmstripApiArg = {
   projectName: string
   taskId: string
-  'content-type'?: string
-}
-export type TaskAttribModel = {
-  priority?: 'urgent' | 'high' | 'normal' | 'low'
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  /** Date and time when the project or task or asset was started */
-  startDate?: string
-  /** Deadline date and time */
-  endDate?: string
-  /** Textual description of the entity */
-  description?: string
+  placeholder?: 'empty' | 'none'
 }
 export type TaskModel = {
-  /** Unique identifier of the {entity_name} */
+  /** Unique identifier of the entity */
   id?: string
   name: string
-  label?: string
+  label?: string | null
   taskType: string
-  thumbnailId?: string
+  thumbnailId?: string | null
   /** List of users assigned to the task */
   assignees?: string[]
-  /** Folder ID */
-  folderId?: string
-  path?: string
-  attrib?: TaskAttribModel
-  data?: Record<string, any>
-  /** Whether the task is active */
+  /** ID of the parent folder */
+  folderId?: string | null
+  path?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
-  /** Status of the task */
-  status?: string
-  /** Tags assigned to the the task */
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the task */
-  createdBy?: string
-  /** Who last updated the task */
-  updatedBy?: string
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
   /** Time of creation */
   createdAt?: string
   /** Time of last update */
@@ -183,58 +163,70 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type TaskPatchModel = {
-  name?: string
-  label?: string
-  taskType?: string
-  thumbnailId?: string
+  name?: string | null
+  label?: string | null
+  taskType?: string | null
+  thumbnailId?: string | null
   /** List of users assigned to the task */
-  assignees?: string[]
-  /** Folder ID */
-  folderId?: string
-  /** Status of the task */
-  status?: string
-  /** Tags assigned to the the task */
-  tags?: string[]
-  /** Who created the task */
-  createdBy?: string
-  /** Who last updated the task */
-  updatedBy?: string
-  attrib?: TaskAttribModel
-  data?: Record<string, any>
-  /** Whether the task is active */
-  active?: boolean
+  assignees?: string[] | null
+  /** ID of the parent folder */
+  folderId?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
+  tags?: string[] | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type EntityIdResponse = {
   /** Entity ID */
   id: string
 }
 export type TaskPostModel = {
-  /** Explicitly set the ID of the entity */
+  /** Unique identifier of the entity */
   id?: string
   name: string
-  label?: string
+  label?: string | null
   taskType: string
-  thumbnailId?: string
+  thumbnailId?: string | null
   /** List of users assigned to the task */
   assignees?: string[]
-  /** Folder ID */
-  folderId?: string
-  /** Status of the task */
-  status?: string
-  /** Tags assigned to the the task */
+  /** ID of the parent folder */
+  folderId?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  /** Who created the task */
-  createdBy?: string
-  /** Who last updated the task */
-  updatedBy?: string
-  attrib?: TaskAttribModel
-  data?: Record<string, any>
-  /** Whether the task is active */
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
 }
 export type AssignUsersRequestModel = {
@@ -251,12 +243,13 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | boolean | string[] | number[] | number[]
-  /** Comparison operator */
+  value?: string | number | number | boolean | string[] | number[] | number[] | null
+  /** Comparison operator. like and notlike perform case-insensitive substring matching. One surrounding pair of % is treated as a substring wrapper; %, _ and backslashes within it are literal. */
   operator?:
     | 'eq'
     | 'like'
     | 'notlike'
+    | 're'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -281,10 +274,25 @@ export type QueryFilter = {
 }
 export type TasksFoldersQuery = {
   /** Filter object used to resolve the tasks */
-  filter?: QueryFilter
+  filter?: QueryFilter | null
   /** 'fulltext' search used to resolve the tasks */
-  search?: string
+  search?: string | null
+}
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
 }
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[] | null
+}
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }

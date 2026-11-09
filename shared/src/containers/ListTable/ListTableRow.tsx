@@ -10,7 +10,11 @@ import {
   ListTableCellEditingState,
   RowCells,
 } from './ListTableCell'
-import { ListTableColumnAttributeData, ListTableDataTypeWidgets } from './ListTableWidgets'
+import {
+  getListTableRowId,
+  ListTableColumnAttributeData,
+  ListTableDataTypeWidgets,
+} from './ListTableWidgets'
 import { GroupRow } from './ListTableGroupRow'
 import { isCustomGroupRowValue } from './ListTableGroupRowHelpers'
 
@@ -20,6 +24,7 @@ const isPlaceholderRowValue = (value: unknown): value is { __listTablePlaceholde
 // --- DraggableRow (regular data row) ---
 
 interface DraggableRowProps<TData extends RowData> {
+  tableId: string
   row: Row<TData>
   virtualRow: any
   isSelected: boolean
@@ -42,9 +47,11 @@ interface DraggableRowProps<TData extends RowData> {
   callbacks: ListTableCellCallbacks<TData>
   editable?: boolean
   isInactive?: boolean
+  rowClassName?: string
 }
 
 function DraggableRowInner<TData extends RowData>({
+  tableId,
   row,
   virtualRow,
   isSelected,
@@ -59,6 +66,7 @@ function DraggableRowInner<TData extends RowData>({
   callbacks,
   editable,
   isInactive,
+  rowClassName,
 }: DraggableRowProps<TData>) {
   const isGroupRow = isCustomGroupRowValue(row.original)
   const isPlaceholderRow = isPlaceholderRowValue(row.original)
@@ -89,6 +97,7 @@ function DraggableRowInner<TData extends RowData>({
         isExpanded={row.getIsExpanded()}
         onToggle={row.getToggleExpandedHandler()}
         virtualStart={virtualRow.start}
+        rowIndex={rowIndex}
         onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
       />
     )
@@ -100,6 +109,10 @@ function DraggableRowInner<TData extends RowData>({
   return (
     <Styled.TR
       ref={setNodeRef}
+      id={getListTableRowId(tableId, rowIndex)}
+      role="row"
+      aria-rowindex={rowIndex + 2}
+      aria-selected={isPlaceholderRow ? undefined : isSelected}
       style={{
         transform: `${virtualTransform} ${dndTransform}`,
         transition,
@@ -108,7 +121,7 @@ function DraggableRowInner<TData extends RowData>({
       onClick={(e) => onRowClick(row.id, rowIndex, e)}
       onDoubleClick={onRowDoubleClick ? (e) => onRowDoubleClick(row.id, rowIndex, e) : undefined}
       onContextMenu={onRowContextMenu ? (e) => onRowContextMenu(row.id, rowIndex, e) : undefined}
-      className={clsx('table-list-row', {
+      className={clsx('table-list-row', rowClassName, {
         dragging: isDragging,
         selected: isSelected,
         inactive: isInactive,

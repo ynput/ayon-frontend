@@ -1,10 +1,9 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
-import { AyonApi } from '../support/api'
+import { adminCredentials, signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { InboxPage } from '../pages/InboxPage'
 import { OverviewPage } from '../pages/OverviewPage'
-import { adminCredentials } from '../support/env'
-import { apiAs, signInAs } from '../support/session'
 
 const setup = async (api: AyonApi, projectName: string) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

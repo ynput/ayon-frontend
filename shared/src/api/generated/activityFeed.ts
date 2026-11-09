@@ -6,10 +6,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/activities`,
         method: 'POST',
         body: queryArg.projectActivityPostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     deleteProjectActivity: build.mutation<
@@ -19,10 +15,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     patchProjectActivity: build.mutation<
@@ -33,10 +25,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}`,
         method: 'PATCH',
         body: queryArg.activityPatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     getActivityCategories: build.query<
@@ -53,10 +41,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}/reactions`,
         method: 'POST',
         body: queryArg.createReactionModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     deleteReactionToActivity: build.mutation<
@@ -66,10 +50,6 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/activities/${queryArg.activityId}/reactions/${queryArg.reaction}`,
         method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     suggestEntityMention: build.mutation<
@@ -92,10 +72,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/${queryArg.entityType}/${queryArg.entityId}/watchers`,
         method: 'POST',
         body: queryArg.watchersModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
@@ -109,23 +85,17 @@ export type PostProjectActivityApiArg = {
   /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   projectActivityPostModel: ProjectActivityPostModel
 }
 export type DeleteProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectActivityApiArg = {
   projectName: string
   activityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type PatchProjectActivityApiResponse = /** status 200 Successful Response */ any
 export type PatchProjectActivityApiArg = {
   projectName: string
   activityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   activityPatchModel: ActivityPatchModel
 }
 export type GetActivityCategoriesApiResponse =
@@ -137,8 +107,6 @@ export type CreateReactionToActivityApiResponse = /** status 201 Successful Resp
 export type CreateReactionToActivityApiArg = {
   projectName: string
   activityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   createReactionModel: CreateReactionModel
 }
 export type DeleteReactionToActivityApiResponse = unknown
@@ -147,8 +115,6 @@ export type DeleteReactionToActivityApiArg = {
   reaction: string
   projectName: string
   activityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
 }
 export type SuggestEntityMentionApiResponse = /** status 200 Successful Response */ SuggestResponse
 export type SuggestEntityMentionApiArg = {
@@ -168,24 +134,25 @@ export type SetEntityWatchersApiArg = {
   /** Project level entity type is used in the endpoint path to specify the type of entity to operate on. It is usually one of 'folders', 'products', 'versions', 'representations', 'tasks', 'workfiles'. (trailing 's' is optional). */
   entityType: string
   entityId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   watchersModel: WatchersModel
 }
 export type CreateActivityResponseModel = {
+  /** Activity ID */
   id: string
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type ProjectActivityPostModel = {
   /** Explicitly set the ID of the activity */
-  id?: string
+  id?: string | null
   activityType:
     | 'comment'
     | 'watch'
@@ -194,26 +161,36 @@ export type ProjectActivityPostModel = {
     | 'assignee.add'
     | 'assignee.remove'
     | 'version.publish'
+    | 'version.review'
+    | 'attrib.change'
+    | 'tags.change'
+    | 'subtype.change'
   body?: string
-  tags?: string[]
-  files?: string[]
-  timestamp?: string
+  tags?: string[] | null
+  files?: string[] | null
+  timestamp?: string | null
   /** Additional data */
-  data?: Record<string, any>
+  data?: {
+    [key: string]: any
+  } | null
 }
 export type ActivityPatchModel = {
   /** When set, update the activity body */
-  body?: string
+  body?: string | null
   /** When set, update the activity tags */
-  tags?: string[]
+  tags?: string[] | null
   /** When set, update the activity files */
-  files?: string[]
+  files?: string[] | null
   /** When true, append files to the existing ones. replace them otherwise */
   appendFiles?: boolean
-  data?: Record<string, any>
+  data?: {
+    [key: string]: any
+  } | null
 }
 export type ActivityCategoriesResponseModel = {
-  categories: object[]
+  categories: {
+    [key: string]: any
+  }[]
 }
 export type CreateReactionModel = {
   /** The reaction to be created */
@@ -221,61 +198,61 @@ export type CreateReactionModel = {
 }
 export type UserSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   name: string
-  fullName?: string
+  fullName?: string | null
 }
 export type TeamSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   name: string
 }
 export type FolderSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   id: string
   folderType: string
   name: string
-  label?: string
-  thumbnailId?: string
+  label?: string | null
+  thumbnailId?: string | null
 }
 export type TaskSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   id: string
   taskType: string
   name: string
-  label?: string
-  thumbnailId?: string
-  parent?: FolderSuggestionItem
+  label?: string | null
+  thumbnailId?: string | null
+  parent?: FolderSuggestionItem | null
 }
 export type ProductSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   id: string
   name: string
   productType: string
-  parent?: FolderSuggestionItem
+  parent?: FolderSuggestionItem | null
 }
 export type VersionSuggestionItem = {
   /** The date and time when the suggested entity was created */
-  createdAt?: string
+  createdAt?: string | null
   /** The relevance score of the suggestion */
-  relevance?: number
+  relevance?: number | null
   id: string
   version: number
-  parent?: ProductSuggestionItem
-  name?: string
+  parent?: ProductSuggestionItem | null
+  name?: string | null
 }
 export type SuggestResponse = {
   users?: UserSuggestionItem[]

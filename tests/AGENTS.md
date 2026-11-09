@@ -24,14 +24,9 @@ Playwright runs two kinds of tests:
    - `yarn test-ui`: Playwright UI mode
    - `yarn test-report`: open the last HTML report
 
-Playwright starts its own frontend on port 3100. By default it builds the app (`vite build` into `dist-e2e/`) and serves it with `vite preview`. The preview server uses the same `/api` proxy as the dev server.
-- `TEST_DEV_SERVER=1` uses the vite dev server instead. Use it while writing tests. It is too slow for several workers, because every page load fetches hundreds of unbundled modules.
-- `TEST_SERVER_URL=https://...` skips the local server and tests an already running frontend.
-- `TEST_WORKERS=n` changes the number of workers (default 2, see below).
+The config, fixtures, REST client and UI helpers come from `@ynput/ayon-e2e` (`e2e/`, imported from source through tsconfig `paths`). Its guide, [e2e/AGENTS.md](../e2e/AGENTS.md), covers the servers Playwright starts (`TEST_DEV_SERVER`, `TEST_SERVER_URL`, `TEST_WORKERS`), the fixtures and the rules every suite follows. Read it first; this file only adds what is specific to the frontend's suite.
 
-If a test server is already listening on 3100 it is reused locally. **It will not be rebuilt**, so stop it after changing app code.
-
-While writing tests, run only your specs: `npx playwright test --project=chromium --no-deps --workers=1 --retries=0 tests/e2e/<area>`. `--no-deps` skips the login setup once `playwright/.auth/admin.json` exists. When several runs share one checkout, give each its own `--output=<dir>`, or they delete each other's `test-results/`.
+While writing tests, run only your specs: `npx playwright test --project=chromium --no-deps --workers=1 --retries=0 tests/e2e/<area>`. `--no-deps` skips the login setup once `playwright/.auth/admin.json` exists.
 
 ## When to add a test
 
@@ -62,51 +57,30 @@ Prefer e2e over unit for these: they cover what the user hit. CI runs the whole 
 
 **Scope.** Only the frontend's own pages. Addon pages (planner, review, reports and other addons) are tested in their addons' repos, so don't add tests for them here.
 
-**Isolation.** Every test gets its own project from the `projectName` fixture (`fixtures.ts`).
-- The project is created through the API before the test and deleted after it, so tests never see each other's data.
-- Users from the `createUser` fixture and the group from the `accessGroup` fixture are deleted after the test.
-- Every name comes from `uniqueName()` (`support/names.ts`). The format is `e2e_<runId>_<label>_<worker><n><random>`, which makes names unique across tests, workers and parallel runs by different people.
-- `global.teardown.ts` deletes anything left over from the current run's prefix, for example after a crashed worker: projects, users, access groups, secrets and anatomy presets.
-- Studio-wide data (secrets, anatomy presets, access groups) is shared by every project. Always name it with `uniqueName()` and delete it in a `finally`. Never make a preset primary or change bundles, addons, studio settings or the attribute library.
-- When a test needs studio-wide state it may not create (no other secrets, no primary preset), it fetches the real response in `page.route` and filters it (`route.fetch()`, then `route.fulfill({ response, json })`), so only the page sees the difference. See `secrets.spec.ts` and `anatomyPresets.spec.ts`.
-
-**Other users.** The suite runs as an admin. Anything that changes the signed-in user (profile, password, sign out) or depends on whose data is shown (inbox, my tasks) signs in as a user the test creates:
-- `signInAs(browser, name, password)` (`support/session.ts`) opens a separate signed-in browser context. Close it in a `finally`.
-- `apiAs(testInfo, name, password)` is a REST client for that user. `AyonApi.login` inside a test always acts as the admin, because the request context inherits the admin's `accessToken` cookie and the server prefers the cookie over the `Authorization` header.
-
-**Setup through the API, behaviour through the UI.**
-- `support/api.ts` creates the data a test needs: projects, folders, tasks, products, versions, comments, lists, teams, users and access groups.
-- The test then does the one thing it is testing through the UI, the way a user would: real clicks, typing and drag and drop. It never calls app internals.
-- Assert the result in the UI **and** through the API (`expect.poll(...)`), so a change that only looks right in the browser fails the test.
-
-**Shared UI helpers.**
+**What lives where.**
+- `@ynput/ayon-e2e`: everything an addon's suite needs too. The `projectName`, `createUser`, `accessGroup` and `page` fixtures, `uniqueName()`, `signInAs`, `apiAs`, the generic locators (`toast`, `dialog`, `confirmDialog`, `menuItem`, `formRow`, `switchBody`, `expectRowSelection`) and the REST client for projects, folders, tasks, products, versions, users and access groups.
+- `support/api.ts`: `AyonApi` extends the package's client with the frontend's own areas (anatomy, representations, reviewables, activities, addon settings, lists, views, inbox, teams, secrets, presets). `fixtures.ts` passes it to `ayonTest`, so `api` has them. Add an endpoint here unless an addon's suite needs it too.
+- `global.teardown.ts`: the package's teardown, plus the run's secrets and anatomy presets.
 - Page objects live in `pages/`, e.g. `OverviewPage.createFolder()`, `DetailsPanel.addComment()` and `ProjectsList.select()`.
-- Generic locators are in `support/ui.ts`: `toast`, `dialog`, `confirmDialog` and `menuItem`.
-- Reuse these instead of writing selectors in specs. When a flow is needed in a second spec, move it into a page object.
 
-**Comments.** Only `FLAG` markers (one line: what is wrong in the app and the workaround), the note naming the fix PR above a `test.fixme`, and one-line notes on deliberately unusual steps. Explain everything else in the commit message or the PR description.
+**Studio-wide data.** Never make a preset primary or change the attribute library. When a test needs studio-wide state it may not create (no other secrets, no primary preset), it fetches the real response in `page.route` and filters it (`route.fetch()`, then `route.fulfill({ response, json })`), so only the page sees the difference. See `secrets.spec.ts` and `anatomyPresets.spec.ts`.
 
-**Popups.** The `page` fixture marks one-off prompts as already dismissed, using the same storage keys the prompts set themselves. This covers "Complete your profile", the restart banner and the release installer prompt. It also blocks featurebase.
+**Other users.** Anything that changes the signed-in user (profile, password, sign out) or depends on whose data is shown (inbox, my tasks) signs in as a user the test creates. `AyonApi.login` inside a test acts as the admin unless it goes through `apiAs`: the admin's `accessToken` cookie beats the `Authorization` header.
+
+**Comments.** Besides `FLAG` markers, the note naming the fix PR above a `test.fixme`. Explain everything else in the commit message or the PR description.
 
 ## Gotchas
 
-- **Fixture teardown order.** The `projectName` fixture closes the test's pages before deleting the project. Dropping a project schema while the page is still querying it blocks the database for every other worker.
-- **Worker count.** Each test creates and drops a Postgres schema. With 4 or more workers, a local docker server stalls: requests take 30 s, redis times out and deletes occasionally deadlock. `deleteProject` retries on deadlocks.
-- **Dialogs.** `@ynput/ayon-react-components` dialogs are a plain `div.dialog` without `role="dialog"`. Use `dialog(page, header)`.
-- **Accessible names.** Material icon ligatures are not `aria-hidden`, so a button's name is `"<icon> <label>"`, e.g. `"add Create"`. Use `menuItem(page, label)` for menus. It handles both the primereact context menu and the shared `Menu`.
+The generic ones (workers, teardown order, failed logins, access groups, dialogs, accessible names, switches, transient states) are in [e2e/AGENTS.md](../e2e/AGENTS.md).
+
 - **Two menus.** Project pages have a second `more_horiz` button in the top nav that opens the "Project Context" debug dialog. Scope generic buttons to the panel you mean.
 - **Per-user views.** Views (columns, grouping, filters) are stored on the server per user and project. Fresh projects use the default view, e.g. the products page lists one row per version.
-- **Assignees.** Only licensed users are offered as assignees. Use `createUser({ licensed: true })`.
-- **Access groups.** Do not use the default groups (`artist`, `supervisor`, ...). Studios rename or remove them, and the server silently drops unknown groups from a user, leaving them without project access. Use the `accessGroup` fixture: `createUser({ accessGroups: { [projectName]: [accessGroup] } })`.
 - **Cross-project queries.** A manager's or admin's inbox reads every project. It fails while another worker is creating or dropping a project. Give inbox users access to the test project only, not `isManager`.
 - **Edit only after selecting.** Task progress cells only become editable once selected (`.tag.status.editable`). On the dashboard, clicking a card selects it and clicking its title opens the details panel.
 - **New entity dialog.** The dialog opens its type dropdown by itself about 180 ms after it appears. `OverviewPage.fillCreateDialog` waits for that rather than racing it with a click.
-- **Failed logins ban the IP.** More than 10 wrong-password logins from one IP ban it for 10 minutes. Locally that is also the admin's IP, so the whole suite would fail. Keep wrong-password tests to a minimum. ("User is not active" does not count.)
 - **Overview columns.** The default view hides most attributes. Show one for setup with `api.setWorkingViewColumns(...)`. A header's accessible name changes on hover, so use `OverviewPage.columnHeader(id)`. Enter in a text cell saves and starts editing the next row (`editTextCell` presses Escape afterwards).
 - **Escape in the overview details panel** also reaches the table, which clears the selection and closes the panel. Close dropdowns there by clicking outside.
 - **Settings editor** (anatomy, access groups, addon settings): expand a section with its chevron (`.panel-toggler`), not the header. Field labels are not linked to inputs, so use `[data-schema-id="root_..."]`. Number fields commit on blur.
-- **Switches and selection.** `InputSwitch` hides its checkbox, so click `switchBody(scope)` (`support/ui.ts`). primereact table rows have no `aria-selected`; selection is the `p-highlight` class.
-- **Transient states.** Saved views and feed filters briefly show the old (or a correct-looking) state. Before asserting that something is absent, wait for a stable signal: the API has saved it, a reload, or other content showing.
 - **Not tested on purpose.** "Set username" renames the user in every project schema in one transaction, the same concurrency hazard as project create/delete.
 
 ### Areas added in round 2
@@ -120,6 +94,7 @@ Prefer e2e over unit for these: they cover what the user hit. CI runs the whole 
 - **Activity feed:** `.comment` also matches the comment box's submit button, so count comments with `.feed li.comment`. Commenting makes the author a watcher, so watch tests must not seed admin comments first. The watcher picker lists licensed users only. `version.publish` activities come from a server event and their order varies; GraphQL `activities(last: N)` is newest first.
 - **Settings editor lists** (anatomy statuses, types, ...) are addressed by index (`root_statuses_<i>_name`); get it from the API (anatomy order), new items go last. Text fields and color pickers commit on blur (`fillText`, `setColor`), and `setOptions` selects exactly the given options of a multi-select. Names must not exist in the default anatomy already (e.g. "Matchmove"), or the save fails. Removing a status or type that is in use is refused (409) and nothing is saved.
 - **Addon features** (`support/addons.ts`): `requireAddon(api, name, { license, minVersion })` skips the test unless the addon is in the production bundle, and optionally licensed (from `/api/info` `extras`) and recent enough. The reason shows in the report as a skip, never as a pass. It works in a test, `beforeEach` or a fixture.
+- **Bundle modes** (`bundles/bundleAddons.spec.ts`): staging and developer mode are faked for the page only, by filtering the user in `/api/info` (it seeds the current user), with made up addons in `/api/addons` and a dev bundle in `/api/bundles`. Bundles are never changed. The tab bundle dot is hidden, not removed, on tabs that aren't selected, so match it with `:visible`.
 - **Comment categories** (`feed/categories/`, Power Pack): categories are the Power Pack `activity_categories` setting. Tests only save them in the test project's settings (`setCategories`), never in studio settings. The server caches the resolved list in redis until `settings.changed`, so `setCategories` waits for it. `/activityCategories` reports 30, not 20, for every category a user may post in (admins and managers included); the highest level of `__everyone__`, the user, their groups and their teams wins. The "Edit Access" dialog only offers licensed users (`restrictedUser({}, { licensed: true })`), and its search results re-render while they settle, so pick with Enter. A feed filter set that was used before is cached and not refetched; a test that waits for the refetch needs a new set at each step. The category filter chip reopens as a multi-select that applies on Confirm.
 - **Filter states** (`support/filterStates.ts`): one seeded project (`seedFilterData`) and, per page, a varied set of filter states (bar fields, parent scopes, attributes, AND/OR groups, excludes, global search, the hierarchy slicer, latest per folder...) with the rows each leaves. `applyFilterState` saves the working view, selects slicer folders (session storage, not the view) and types a search. Use it for any test that needs tables in filtered states (`tableExport/filteredExport.spec.ts`); add a state rather than seeding a new dataset, and keep it a spread of kinds, not every field. Saved filter keys are `<scope>_<field>` on pages with several scopes, `entity_<field>` / `attrib.<name>` on lists.
 - **Unit tests** (`tests/unit/`) are transpiled to CommonJS: use static imports only. They can import pure modules (single files under `shared/src/util/`, not its index; `ProjectTreeTable/utils/*`; MarkdownEditor `markdown/plainText`, `links/*`, `media/mediaUtils`). They cannot import anything that loads `@ynput/ayon-react-components` at runtime or reaches `@shared/api` (its client reads `window.location` on import). `yarn test-typecheck` does not cover `tests/unit`. Run them without the app build: `TEST_SERVER_URL=http://localhost:3100 npx playwright test --project=unit`. To render a component, use `renderToHtml` (`tests/unit/support/render.ts`): Playwright compiles JSX to its own element objects, which React can't render as they are.

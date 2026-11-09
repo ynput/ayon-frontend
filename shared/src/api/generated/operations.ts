@@ -16,10 +16,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations/activities`,
         method: 'POST',
         body: queryArg.activityOperationsRequestModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     operations: build.mutation<OperationsApiResponse, OperationsApiArg>({
@@ -27,10 +23,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations`,
         method: 'POST',
         body: queryArg.operationsRequestModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     backgroundOperations: build.mutation<
@@ -41,10 +33,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/operations/background`,
         method: 'POST',
         body: queryArg.operationsRequestModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     getBackgroundOperationsStatus: build.query<
@@ -67,23 +55,17 @@ export type ActivitiesOperationsApiResponse =
   /** status 200 Successful Response */ ActivityOperationsResponseModel
 export type ActivitiesOperationsApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   activityOperationsRequestModel: ActivityOperationsRequestModel
 }
 export type OperationsApiResponse = /** status 200 Successful Response */ OperationsResponseModel
 export type OperationsApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
 }
 export type BackgroundOperationsApiResponse =
   /** status 200 Successful Response */ BackgroundOperationsResponseModel
 export type BackgroundOperationsApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   operationsRequestModel: OperationsRequestModel
 }
 export type GetBackgroundOperationsStatusApiResponse =
@@ -96,6 +78,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -104,12 +88,13 @@ export type QueryCondition = {
   /** Path to the key separated by slashes */
   key: string
   /** Value to compare against */
-  value?: string | number | number | boolean | string[] | number[] | number[]
-  /** Comparison operator */
+  value?: string | number | number | boolean | string[] | number[] | number[] | null
+  /** Comparison operator. like and notlike perform case-insensitive substring matching. One surrounding pair of % is treated as a substring wrapper; %, _ and backslashes within it are literal. */
   operator?:
     | 'eq'
     | 'like'
     | 'notlike'
+    | 're'
     | 'lt'
     | 'gt'
     | 'lte'
@@ -141,10 +126,10 @@ export type ActivityOperationResponseModel = {
   id: string
   type: 'create' | 'update' | 'delete'
   success: boolean
-  status?: number
-  detail?: string
+  status?: number | null
+  detail?: string | null
   /** `None` if type is `create` and the operation fails. */
-  activityId?: string
+  activityId?: string | null
 }
 export type ActivityOperationsResponseModel = {
   operations?: ActivityOperationResponseModel[]
@@ -155,9 +140,11 @@ export type ActivityOperationModel = {
   id?: string
   type: 'create' | 'update' | 'delete'
   /** ID of the activity. None for create */
-  activityId?: string
+  activityId?: string | null
   /** Data to be used for create or update. Ignored for delete.See create/patch activity endpoint for details */
-  data?: Record<string, any>
+  data?: {
+    [key: string]: any
+  } | null
 }
 export type ActivityOperationsRequestModel = {
   operations?: ActivityOperationModel[]
@@ -167,11 +154,11 @@ export type OperationResponseModel = {
   id: string
   type: 'create' | 'update' | 'delete'
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
-  entityId?: string
+  entityId?: string | null
   success: boolean
   status: number
-  errorCode?: string
-  detail?: string
+  errorCode?: string | null
+  detail?: string | null
 }
 export type OperationsResponseModel = {
   operations?: OperationResponseModel[]
@@ -181,10 +168,12 @@ export type OperationModel = {
   id?: string
   type: 'create' | 'update' | 'delete'
   entityType: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
-  entityId?: string
-  data?: Record<string, any>
+  entityId?: string | null
+  data?: {
+    [key: string]: any
+  } | null
   force?: boolean
-  asUser?: string
+  asUser?: string | null
 }
 export type OperationsRequestModel = {
   operations?: OperationModel[]
@@ -195,5 +184,6 @@ export type OperationsRequestModel = {
 export type BackgroundOperationsResponseModel = {
   id: string
   status?: 'pending' | 'in_progress' | 'completed'
-  result?: OperationsResponseModel
+  progress?: number | null
+  result?: OperationsResponseModel | null
 }

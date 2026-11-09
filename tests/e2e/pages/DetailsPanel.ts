@@ -1,5 +1,5 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { confirmDialog, menuItem } from '../support/ui'
+import { confirmDialog, menuItem } from '@ynput/ayon-e2e'
 
 /**
  * The entity details panel (header with status/assignees + activity feed).
@@ -141,8 +141,11 @@ export class DetailsPanel {
     await this.root.getByText(/^(Leave a comment|Comment, or type)/).click()
     await expect(this.commentEditor).toBeVisible()
     await this.commentEditor.pressSequentially(text)
-    await this.root.getByRole('button', { name: 'Comment', exact: true }).click()
+    const submit = this.root.getByRole('button', { name: 'Comment', exact: true })
+    await submit.click()
     await expect(this.comment(text)).toBeVisible()
+    // the comment shows before the server has it, the box stays busy (and keeps its keys) until then
+    await expect(submit).toBeEnabled()
   }
 
   /** Type a comment that mentions a user, picking them by full name from the @ suggestions */

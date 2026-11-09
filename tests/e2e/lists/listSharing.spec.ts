@@ -1,9 +1,8 @@
 import { expect, test } from '../fixtures'
 import { addToList, hasPowerpack, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
-import { AyonApi } from '../support/api'
-import { apiAs, signInAs } from '../support/session'
-import { dialog, menuItem } from '../support/ui'
+import { dialog, menuItem, signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 
 const seedList = async (api: AyonApi, projectName: string) => {
   const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })

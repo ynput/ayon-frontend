@@ -1,6 +1,5 @@
 import { expect, test } from '../fixtures'
-import { uniqueName } from '../support/names'
-import { dialog, menuItem } from '../support/ui'
+import { dialog, menuItem, uniqueName } from '@ynput/ayon-e2e'
 import { hasPowerpack } from '../pages/ListsPage'
 import { ProjectsList } from '../pages/ProjectsList'
 import { ProjectsManagerPage } from '../pages/ProjectsManagerPage'

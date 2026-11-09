@@ -138,6 +138,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <ProjectTreeTable
+        addonPage="lists"
         scope={scope}
         sliceId={''}
         // pagination

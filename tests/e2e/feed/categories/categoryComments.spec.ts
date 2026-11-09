@@ -1,7 +1,6 @@
 import { Page } from '@playwright/test'
-import { AyonApi } from '../../support/api'
-import { apiAs, signInAs } from '../../support/session'
-import { toast } from '../../support/ui'
+import { signInAs, toast } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../../support/api'
 import { OverviewPage } from '../../pages/OverviewPage'
 import { CREATOR, EVERYONE, NONE, VIEWER, expect, test, user } from './categoryFixtures'
 
@@ -76,6 +75,24 @@ test.describe('comment categories', () => {
           )['Needs a warmer key light'],
       )
       .toBeNull()
+  })
+
+  test('picking a category goes back to typing the comment', async ({
+    page,
+    api,
+    projectName,
+    setCategories,
+  }) => {
+    await setCategories([{ name: 'Director', access: { [EVERYONE]: CREATOR } }])
+    await setup(api, projectName)
+    const panel = await openTask(page, projectName)
+    await panel.openCommentBox()
+
+    await panel.pickCategory('Director')
+    await expect(panel.commentEditor).toBeFocused()
+    // typed with the keyboard, not into the editor, which would focus it first
+    await page.keyboard.type('Straight after the category')
+    await expect(panel.commentEditor).toContainText('Straight after the category')
   })
 
   test('a draft keeps its category after a reload', async ({

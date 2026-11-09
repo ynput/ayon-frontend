@@ -11,15 +11,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.projectFolderPostModel,
       }),
     }),
-    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
-      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
-    }),
     updateProjectFolder: build.mutation<UpdateProjectFolderApiResponse, UpdateProjectFolderApiArg>({
       query: (queryArg) => ({
         url: `/api/projectFolders/${queryArg.folderId}`,
         method: 'PATCH',
         body: queryArg.projectFolderPatchModel,
       }),
+    }),
+    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
+      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
     }),
     setProjectFoldersOrder: build.mutation<
       SetProjectFoldersOrderApiResponse,
@@ -52,14 +52,14 @@ export type CreateProjectFolderApiResponse = /** status 200 Successful Response 
 export type CreateProjectFolderApiArg = {
   projectFolderPostModel: ProjectFolderPostModel
 }
-export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
-export type DeleteProjectFolderApiArg = {
-  folderId: string
-}
 export type UpdateProjectFolderApiResponse = /** status 200 Successful Response */ any
 export type UpdateProjectFolderApiArg = {
   folderId: string
   projectFolderPatchModel: ProjectFolderPatchModel
+}
+export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFolderApiArg = {
+  folderId: string
 }
 export type SetProjectFoldersOrderApiResponse = /** status 200 Successful Response */ any
 export type SetProjectFoldersOrderApiArg = {
@@ -71,14 +71,14 @@ export type AssignProjectsToFolderApiArg = {
 }
 export type ProjectFolderData = {
   /** Hex color code */
-  color?: string
+  color?: string | null
   /** Icon name */
-  icon?: string
+  icon?: string | null
 }
 export type ProjectFolderModel = {
   id: string
   label: string
-  parentId?: string
+  parentId?: string | null
   position?: number
   isEmpty?: boolean
   data?: ProjectFolderData
@@ -94,20 +94,22 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type ProjectFolderPostModel = {
-  id?: string
+  id?: string | null
   label: string
-  parentId?: string
+  parentId?: string | null
   data?: ProjectFolderData
 }
 export type ProjectFolderPatchModel = {
-  label?: string
+  label?: string | null
   parentId?: string | null
-  data?: ProjectFolderData
+  data?: ProjectFolderData | null
 }
 export type ProjectFolderOrderModel = {
   order: string[]

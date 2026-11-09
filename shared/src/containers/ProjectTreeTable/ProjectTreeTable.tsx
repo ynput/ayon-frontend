@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
+import { TABLE_ID_ATTR } from './utils/tableOwnership'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -124,7 +125,12 @@ import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
 import { getRequestErrorString } from '@shared/util'
+import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
+import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
+import { AddonColumnDataScope } from './addonColumns/AddonColumns'
+import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
+import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
   entity: Omit<EntityUpdate, 'id'> & { id?: string },
@@ -135,6 +141,12 @@ type CellUpdate = (
 const SummaryCellContentFallback: FC<SummaryCellContentProps> = () => null
 
 declare module '@tanstack/react-table' {
+  // the type parameters must match the interface this merges into
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  interface ColumnMeta<TData extends RowData, TValue> {
+    // a column an addon contributes (tableColumn slot)
+    addonColumn?: AddonColumnMeta
+  }
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
@@ -198,6 +210,8 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   // scrolls this row into view once it is in the table, then calls onScrolledToRow
   scrollToRowId?: string | null
   onScrolledToRow?: (rowId: string) => void
+  // the page, for addon contributions to the table (table.shortcut)
+  addonPage?: ProjectTablePage
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
     head?: Partial<TableHeadProps>
@@ -239,6 +253,7 @@ export const ProjectTreeTable = ({
   onVisibleRowsChange,
   scrollToRowId,
   onScrolledToRow,
+  addonPage,
   pt,
   ...props
 }: ProjectTreeTableProps) => {
@@ -287,6 +302,7 @@ export const ProjectTreeTable = ({
     overrideGroupBy,
     loadingLinksEntityIds,
     queryFilters,
+    tableId,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
@@ -825,9 +841,12 @@ export const ProjectTreeTable = ({
       columnReadOnly={readOnlyAttribs}
       visibleColumns={visibleColumns}
     >
+      {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}
+      {addonPage && <AddonCellShortcuts page={addonPage} containerRef={tableContainerRef} />}
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
+          {...{ [TABLE_ID_ATTR]: tableId }}
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
@@ -1487,18 +1506,19 @@ const TableBody = ({
   }, [virtualRows, rows, onVisibleRowsChange])
 
   const { projectName } = useProjectContext()
-  const isListsColumnShown = table
-    .getVisibleLeafColumns()
-    .some((column) => LIST_COLUMN_IDS.includes(column.id))
+  const visibleLeafColumns = table.getVisibleLeafColumns()
+  // the entities of the rows on screen, for data fetched per table rather than per cell
+  const visibleEntities = virtualRows.flatMap((virtualRow) => {
+    const row = rows[virtualRow.index]?.original
+    return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
+  })
+  const isListsColumnShown = visibleLeafColumns.some((column) =>
+    LIST_COLUMN_IDS.includes(column.id),
+  )
   useFetchListsMembership({
     projectName,
     enabled: isListsColumnShown,
-    entities: isListsColumnShown
-      ? virtualRows.flatMap((virtualRow) => {
-          const row = rows[virtualRow.index]?.original
-          return row && !row.group && !row.metaType && !row.isLoading ? [row.primary] : []
-        })
-      : [],
+    entities: isListsColumnShown ? visibleEntities : [],
   })
 
   useEffect(() => {
@@ -1523,7 +1543,6 @@ const TableBody = ({
 
   // vertical column lines painted behind the rows so they extend into the empty
   // space between the last row and the summary footer
-  const visibleLeafColumns = table.getVisibleLeafColumns()
   const columnDividerLefts = useMemo(() => {
     const lefts: string[] = []
     const sizeVars: string[] = []
@@ -1629,14 +1648,21 @@ const TableBody = ({
     )
   }
 
+  // addon columns get their values for the rows on screen (tableColumn slot)
+  const body = (
+    <AddonColumnDataScope columns={visibleLeafColumns} entities={visibleEntities}>
+      {tbodyContent}
+    </AddonColumnDataScope>
+  )
+
   if (sortableRows) {
     return (
       <SortableContext items={rowOrderIds} strategy={verticalListSortingStrategy}>
-        {tbodyContent}
+        {body}
       </SortableContext>
     )
   } else {
-    return tbodyContent
+    return body
   }
 }
 
@@ -1795,7 +1821,7 @@ const TD = ({
   rowHeight,
   ...props
 }: TableCellProps) => {
-  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+  const { getEntityById, onOpenPlayer, isRowReadOnly, readOnly } = useProjectTableContext()
 
   const {
     isCellSelected,
@@ -1829,8 +1855,11 @@ const TD = ({
     cell.column.id,
   )
   const cellMark = cell.row.original.cellMarks?.[cell.column.id]
-  const isRowReadOnly = !!cell.row.original.readOnly
-  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
+  const rowReadOnly = isRowReadOnly(cell.row.id)
+  const cellContext = useMemo(
+    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly }),
+    [cellMark, rowReadOnly],
+  )
 
   return (
     <Styled.TD
@@ -1850,6 +1879,7 @@ const TD = ({
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
           'multiple-selected': isMultipleSelected,
+          'table-readonly': readOnly,
         },
         className,
         ...borderClasses,
@@ -1917,12 +1947,18 @@ const TD = ({
               const entity = getEntityById(cell.row.original.primary.id)
               if (entity) {
                 const targetIds = getEntityViewierIds(entity)
-                onOpenPlayer(targetIds, { quickView: true })
+                // open the scrubbed reviewable at the hovered filmstrip frame
+                const filmstrip = getFilmstripTarget(e)
+                onOpenPlayer(targetIds, {
+                  quickView: true,
+                  goToPosition: filmstrip?.position,
+                  reviewableId: filmstrip?.fileId,
+                })
               }
             }
           }
           // other cells: start editing
-          else {
+          else if (!rowReadOnly) {
             setEditingCellId(cellId)
           }
 
@@ -1935,9 +1971,7 @@ const TD = ({
 
         // check if this is a restricted entity - prevent editing
         const isRestricted =
-          isGroup ||
-          isEntityRestricted(cell.row.original.primary.entityType) ||
-          !!cell.row.original.readOnly
+          isGroup || isEntityRestricted(cell.row.original.primary.entityType) || rowReadOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {

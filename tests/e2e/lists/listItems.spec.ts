@@ -2,8 +2,8 @@ import { expect, test } from '../fixtures'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
+import { dialog, menuItem } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { dialog, menuItem } from '../support/ui'
 import { readBreakdown, readMainCount } from '../support/summary'
 
 const seedTaskList = async (api: AyonApi, projectName: string) => {
