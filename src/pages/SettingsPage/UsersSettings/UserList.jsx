@@ -5,7 +5,7 @@ import UserImage from '@shared/components/UserImage'
 
 import './users.scss'
 
-import { memo, useEffect, useMemo, useRef } from 'react'
+import { memo, useEffect, useMemo, useReducer, useRef } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableExportContext } from '@shared/context'
@@ -203,6 +203,30 @@ const UserList = ({
     anchorIndex.current = null
   }, [tableData])
 
+  // The virtual scroller (primereact 9.6) doesn't follow row changes by itself:
+  // - it works out the new scroll height in an effect but only applies it on its next render, so the
+  //   list can't be scrolled past the old height. Render once more to apply it.
+  // - it keeps its first rendered row until the next scroll event, so a shorter list scrolled past
+  //   its end shows no rows. Scroll inside the new list to update it.
+  const [, rerender] = useReducer((n) => n + 1, 0)
+  const prevUserList = useRef(userList)
+  useEffect(() => {
+    const scroller = tableRef.current?.getVirtualScroller()
+    const element = scroller?.getElementRef().current
+    if (element) {
+      if (prevUserList.current === userList) {
+        // same users, so the search changed: show the results from the top
+        if (element.scrollTop > 0) scroller.scrollTo({ top: 0 })
+      } else {
+        // users were added, deleted or reloaded: stay where we were
+        const maxTop = Math.max(0, tableData.length * ROW_HEIGHT - element.clientHeight)
+        if (element.scrollTop > maxTop) scroller.scrollTo({ top: maxTop })
+      }
+    }
+    prevUserList.current = userList
+    rerender()
+  }, [tableData, userList])
+
   const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
 
   // Render
@@ -210,8 +234,6 @@ const UserList = ({
     <Section wrap>
       <TablePanel>
         <DataTable
-          // the virtual scroller keeps its old scroll height when the row count changes
-          key={tableData.length}
           ref={tableRef}
           value={tableData}
           scrollable="true"

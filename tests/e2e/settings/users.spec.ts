@@ -175,7 +175,7 @@ test.describe('users settings', () => {
 
     test.beforeEach(async ({ page }) => {
       // the real users plus mocked ones: creating this many would take minutes
-      const bulk = Array.from({ length: COUNT }, (_, i) => ({
+      let bulk = Array.from({ length: COUNT }, (_, i) => ({
         node: {
           name: bulkName(i),
           active: true,
@@ -190,6 +190,13 @@ test.describe('users settings', () => {
         const json = await response.json()
         json.data.users.edges.push(...bulk)
         await route.fulfill({ response, json })
+      })
+      // deleting a mocked user only removes it from the mocked list
+      await page.route('**/api/users/bulk_*', (route) => {
+        if (route.request().method() !== 'DELETE') return route.continue()
+        const name = new URL(route.request().url()).pathname.split('/').pop()
+        bulk = bulk.filter((edge) => edge.node.name !== name)
+        return route.fulfill({ status: 204 })
       })
     })
 
@@ -222,6 +229,30 @@ test.describe('users settings', () => {
       await users.filter('bulk_029')
       await users.expectSelected(bulkName(290))
       await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+    })
+
+    test('deleting a user keeps the scroll position', async ({ page }) => {
+      const users = new UsersSettingsPage(page)
+      await users.goto({ filter: '' })
+      await expect(users.row(bulkName(0))).toBeVisible()
+
+      const target = bulkName(1500)
+      await expect(async () => {
+        await page.getByRole('row').filter({ hasText: 'bulk_' }).first().hover()
+        await page.mouse.wheel(0, 2_000)
+        await expect(users.row(target)).toBeVisible({ timeout: 300 })
+      }).toPass()
+
+      const reloaded = page.waitForResponse((response) =>
+        /query UserList\s*\{/.test(response.request().postData() ?? ''),
+      )
+      await users.openContextMenu(target)
+      await users.deleteUserFromMenu(target)
+      await reloaded
+
+      await expect(users.row(target)).toBeHidden()
+      await expect(users.row(bulkName(1499))).toBeVisible()
+      await expect(users.row(bulkName(0))).toBeHidden()
     })
   })
 })
