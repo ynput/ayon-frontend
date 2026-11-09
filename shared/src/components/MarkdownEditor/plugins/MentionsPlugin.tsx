@@ -201,7 +201,9 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
       mergeRegister(
         editor.registerCommand(
           INSERT_MENTION_TRIGGER_COMMAND,
-          (newTrigger) => {
+          (payload) => {
+            const { trigger: newTrigger, filter: newFilter = null } =
+              typeof payload === 'string' ? { trigger: payload } : payload
             const selection = $getSelection()
             if (!$isRangeSelection(selection)) return false
             // replace an open query so buttons can switch between mention types
@@ -226,6 +228,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
                 : ''
             const needsSpace = before.length > 0 && !/\s$/.test(before)
             current.insertText((needsSpace ? ' ' : '') + newTrigger)
+            setFilter(newFilter)
             return true
           },
           COMMAND_PRIORITY_EDITOR,

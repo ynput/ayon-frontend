@@ -374,7 +374,7 @@ test('filter chips narrow both related items and project results', async ({
   await expect(picker.options.first()).toContainText(team)
 })
 
-test('the toolbar and slash menu each offer one Mention command', async ({
+test('the toolbar mentions one type each, the slash menu offers one Mention command', async ({
   page,
   api,
   projectName,
@@ -382,12 +382,32 @@ test('the toolbar and slash menu each offer one Mention command', async ({
   const data = await seed(api, projectName)
   const panel = await openFolder(page, projectName, data)
   await panel.openCommentBox()
-  const mentionButtons = panel.newCommentBox.locator('button[data-tooltip="Mention"]')
-  await expect(mentionButtons).toHaveCount(1)
-  await expect(panel.newCommentBox.locator('button[data-tooltip*="mention" i]')).toHaveCount(1)
-  await mentionButtons.click()
-  await expect(panel.commentEditor).toHaveText('@')
-  await expect(page.getByText('@ Mention', { exact: true })).toBeVisible()
+  const filterButton = (type: string) =>
+    page.getByRole('button', { name: `Filter ${type}`, exact: true })
+  const toolbar = [
+    { tooltip: 'Mention user', filter: 'users', label: 'User' },
+    { tooltip: 'Mention folder', filter: 'folders', label: 'Folder' },
+    { tooltip: 'Mention task', filter: 'tasks', label: 'Task' },
+    { tooltip: 'Mention version', filter: 'versions', label: 'Version' },
+  ]
+  await expect(panel.newCommentBox.locator('button[data-tooltip^="Mention"]')).toHaveCount(4)
+  await expect(panel.newCommentBox.locator('button[data-tooltip="Mention user"]')).toHaveAttribute(
+    'data-shortcut',
+    '@',
+  )
+  for (const { tooltip, filter, label } of toolbar) {
+    await panel.commentEditor.press('ControlOrMeta+a')
+    await panel.commentEditor.press('Backspace')
+    await panel.newCommentBox.locator(`button[data-tooltip="${tooltip}"]`).click()
+    await expect(panel.commentEditor).toHaveText('@')
+    await expect(page.getByText('@ Mention', { exact: true })).toBeVisible()
+    await expect(filterButton(filter)).toHaveClass(/active/)
+    // only suggestions of that type, a type without suggestions waits for a search
+    const options = page.getByRole('listbox', { name: '', exact: true }).getByRole('option')
+    await expect(options.first().or(page.getByText('Type to search'))).toBeVisible()
+    for (const option of await options.all()) await expect(option).toContainText(label)
+  }
+
   await panel.commentEditor.press('ControlOrMeta+a')
   await panel.commentEditor.pressSequentially('/')
   const commands = page.getByRole('option').filter({ hasText: /mention/i })
@@ -396,6 +416,8 @@ test('the toolbar and slash menu each offer one Mention command', async ({
   await commands.click()
   await expect(panel.commentEditor).toHaveText('@')
   await expect(page.getByText('@ Mention', { exact: true })).toBeVisible()
+  // a typed or slash command `@` lists every type
+  await expect(filterButton('users')).not.toHaveClass(/active/)
 })
 
 test('the description editor searches the project and saves a remote folder mention', async ({

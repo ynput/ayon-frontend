@@ -158,6 +158,6 @@ export interface MarkdownEditorHandle {
   setMarkdown: (markdown: string) => void
   clear: () => void
   isEmpty: () => boolean
-  // type a mention trigger at the caret and open the picker
-  insertMentionTrigger: (trigger: MentionTrigger) => void
+  // type a mention trigger at the caret and open the picker, with one of its filters on
+  insertMentionTrigger: (trigger: MentionTrigger, filter?: string) => void
 }

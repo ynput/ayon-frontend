@@ -19,7 +19,6 @@ import {
   normalizeLegacyMarkdown,
   type EditorCommand,
   type MarkdownEditorHandle,
-  type MentionTrigger,
   type UploadMedia,
 } from '@shared/components/MarkdownEditor'
 import FilesGrid from '../FilesGrid'
@@ -93,8 +92,12 @@ const getProjectFileUrl = (projectName: string, id: string) =>
 const isReferenced = (id: string, markdown: string) =>
   !!id && getInlineMediaFileIds(markdown).has(id)
 
-const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
-  { trigger: '@', icon: 'alternate_email', tooltip: 'Mention' },
+// open the mention picker filtered to one type, a typed `@` lists them all
+const MENTION_BUTTONS: { filter: string; icon: IconType; tooltip: string; shortcut?: string }[] = [
+  { filter: 'user', icon: 'alternate_email', tooltip: 'Mention user', shortcut: '@' },
+  { filter: 'folder', icon: 'folder', tooltip: 'Mention folder' },
+  { filter: 'task', icon: 'check_circle', tooltip: 'Mention task' },
+  { filter: 'version', icon: 'layers', tooltip: 'Mention version' },
 ]
 
 const CommentInput: FC<CommentInputProps> = ({
@@ -963,15 +966,16 @@ const CommentInput: FC<CommentInputProps> = ({
             {(!isGuest || showFrameLink) && (
               <Styled.Buttons>
                 {!isGuest &&
-                  MENTION_BUTTONS.map(({ trigger, icon, tooltip }) => (
+                  MENTION_BUTTONS.map(({ filter, icon, tooltip, shortcut }) => (
                     <Button
-                      key={trigger}
+                      key={filter}
                       icon={icon}
                       variant="text"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => editorRef.current?.insertMentionTrigger(trigger)}
+                      onClick={() => editorRef.current?.insertMentionTrigger('@', filter)}
                       data-tooltip={tooltip}
-                      data-shortcut={trigger}
+                      data-shortcut={shortcut}
+                      aria-label={tooltip}
                     />
                   ))}
                 {showFrameLink && (
