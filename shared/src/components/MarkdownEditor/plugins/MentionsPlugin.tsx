@@ -177,8 +177,8 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   const onSelectOption = useCallback(
     (option: MentionMenuOption, nodeToReplace: TextNode | null, closeMenu: () => void) => {
       editor.update(() => {
-        const { type, id, label } = option.item
-        const mentionNode = $createMentionNode(type, id, label)
+        const { type, id, label, mentionLabel } = option.item
+        const mentionNode = $createMentionNode(type, id, mentionLabel || label)
         if (nodeToReplace) {
           nodeToReplace.replace(mentionNode)
         } else {

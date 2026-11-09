@@ -25,8 +25,11 @@ export interface MentionItem {
   type: string
   // entity id written to markdown, e.g. user name or task id
   id: string
-  // label shown in the editor and written to markdown
+  // label shown in the picker, also in the editor and markdown without a `mentionLabel`
   label: string
+  // shown in the editor and written to markdown, names the parents of tasks and versions:
+  // `sh010/lighting`, `sh010/renderMain/v003`
+  mentionLabel?: string
   icon?: string
   color?: string
   context?: string

@@ -112,6 +112,33 @@ test('empty @ lists sibling tasks, folders, users and versions taking turns', as
   await expect(picker.option('v001')).toHaveCount(0)
 })
 
+test('suggested tasks and versions are written with their folder and product', async ({
+  page,
+  api,
+  projectName,
+}) => {
+  const data = await seed(api, projectName)
+  const overview = new OverviewPage(page)
+  await overview.goto(projectName)
+  await overview.expand(data.parent.name)
+  await overview.expand(data.local.name)
+  const panel = await overview.openDetails(data.localTask.name)
+  await panel.openCommentBox()
+  const picker = new MentionPicker(page, panel.commentEditor)
+
+  await picker.search('')
+  await picker.filter('tasks')
+  await picker.option(data.localTask.name).click()
+  await expect(panel.commentEditor).toContainText(`@${data.local.name}/${data.localTask.name}`)
+
+  await panel.commentEditor.pressSequentially('@')
+  await picker.filter('versions')
+  await picker.option('v002').click()
+  await expect(panel.commentEditor).toContainText(
+    `@${data.local.name}/${data.localProduct.name}/v002`,
+  )
+})
+
 test('a sibling folder is listed before project results', async ({ page, api, projectName }) => {
   const data = await seed(api, projectName)
   const prefix = uniqueName('nearShot')
@@ -253,7 +280,7 @@ test('words separated by spaces find one version of a product in a folder', asyn
   await expect(option).toContainText('v002')
   await expect(picker.option(other.name)).toHaveCount(0)
   await option.click()
-  await expect(panel.commentEditor).toContainText(`@v002`)
+  await expect(panel.commentEditor).toContainText(`@${data.remote.name}/${data.product.name}/v002`)
 })
 
 test('a space ends the mention once nothing matches', async ({ page, api, projectName }) => {
@@ -300,6 +327,12 @@ for (const type of ['folder', 'task', 'version'] as const) {
     }[type]
     const label =
       type === 'version' ? 'v001' : type === 'folder' ? data.remote.name : data.remoteTask.name
+    // tasks and versions are written with their folder and product
+    const mention = {
+      folder: data.remote.name,
+      task: `${data.remote.name}/${data.remoteTask.name}`,
+      version: `${data.remote.name}/${data.product.name}/v001`,
+    }[type]
     const panel = await openFolder(page, projectName, data)
     await panel.openCommentBox()
     const picker = new MentionPicker(page, panel.commentEditor)
@@ -312,15 +345,15 @@ for (const type of ['folder', 'task', 'version'] as const) {
     )
     if (type === 'version') await expect(option).toContainText(data.product.name)
     await option.click()
-    await expect(panel.commentEditor).toContainText(`@${label}`)
+    await expect(panel.commentEditor).toContainText(`@${mention}`)
     await panel.commentEditor.pressSequentially('cross-folder reference')
     await panel.submitComment()
-    await expect(panel.reference('cross-folder reference', label)).toBeVisible()
+    await expect(panel.reference('cross-folder reference', mention)).toBeVisible()
     await expect
       .poll(async () =>
         (await api.listActivities(projectName, 'folder', data.local.id)).map((a) => a.body.trim()),
       )
-      .toEqual([`[${label}](${type}:${target.id}) cross-folder reference`])
+      .toEqual([`[${mention}](${type}:${target.id}) cross-folder reference`])
     await expect
       .poll(async () =>
         (
@@ -328,10 +361,10 @@ for (const type of ['folder', 'task', 'version'] as const) {
         ).map((a) => ({ body: a.body.trim(), referenceType: a.referenceType })),
       )
       .toContainEqual({
-        body: `[${label}](${type}:${target.id}) cross-folder reference`,
+        body: `[${mention}](${type}:${target.id}) cross-folder reference`,
         referenceType: 'mention',
       })
-    await panel.reference('cross-folder reference', label).click()
+    await panel.reference('cross-folder reference', mention).click()
     const slideOut = DetailsPanel.slideOut(page)
     await slideOut.expectOpenFor(label)
     if (type === 'task') await expect(slideOut.header).toContainText(data.remote.name)

@@ -31,6 +31,8 @@ const shortPath = (path = '', segments = 2) =>
 
 const parentPath = (path = '') => path.split('/').filter(Boolean).slice(0, -1).join('/')
 
+const folderName = (path = '') => shortPath(path, 1)
+
 const getType = (list: TypeIcon[] | undefined, name: string) =>
   list?.find((type) => type.name === name)
 
@@ -84,10 +86,12 @@ export const useProjectMentionSearch = ({
       const items: MentionItem[] = [
         ...result.tasks.map((task) => {
           const taskType = getType(taskTypes, task.taskType)
+          const label = task.label || task.name
           return {
             type: 'task',
             id: task.id,
-            label: task.label || task.name,
+            label,
+            mentionLabel: `${folderName(task.folder.path)}/${label}`,
             context: shortPath(task.folder.path),
             icon: taskType?.icon || getEntityTypeIcon('task'),
             color: taskType?.color || undefined,
@@ -98,7 +102,8 @@ export const useProjectMentionSearch = ({
           type: 'version',
           id: version.id,
           label: version.name,
-          context: `${shortPath(version.product.folder.path, 1)}/${version.product.name}`,
+          context: `${folderName(version.product.folder.path)}/${version.product.name}`,
+          mentionLabel: `${folderName(version.product.folder.path)}/${version.product.name}/${version.name}`,
           icon:
             getType(productTypes, version.product.productType)?.icon ||
             getEntityTypeIcon('version'),

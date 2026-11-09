@@ -17,6 +17,8 @@ const getMentionTasks = (tasks: TaskSuggestionItem[] = [], taskTypes: TaskType[]
       type: 'task',
       id: task.id,
       label,
+      // the folder too, the mention is read outside of it
+      mentionLabel: context ? `${context}/${label}` : label,
       context,
       icon,
       color,

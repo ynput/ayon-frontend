@@ -1,8 +1,10 @@
 import { activityFeedApi } from '@shared/api/generated'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import type {
+  FolderSuggestionItem,
   SuggestEntityMentionApiArg,
   SuggestEntityMentionApiResponse,
+  VersionSuggestionItem,
 } from '@shared/api/generated'
 import type { MentionSearchFolder } from './searchMentions'
 
@@ -38,6 +40,17 @@ const SIBLING_FOLDERS_QUERY = `
     project(name: $projectName) {
       folders(parentIds: $parentIds, first: $first) {
         edges { node { ${FOLDER_FIELDS} } }
+      }
+    }
+  }
+`
+
+// the folders of suggested versions, the suggestions leave them out
+const VERSION_FOLDERS_QUERY = `
+  query MentionVersionFolders($projectName: String!, $ids: [String!]!, $first: Int!) {
+    project(name: $projectName) {
+      versions(ids: $ids, first: $first) {
+        edges { node { id product { folder { id name label folderType } } } }
       }
     }
   }
@@ -90,6 +103,26 @@ const injectedApi = enhancedMentionsApi.injectEndpoints({
           return entityType === 'folder' ? siblings : [folder, ...siblings]
         }
 
+        // the folder of each version as the parent of its product
+        const addVersionFolders = async (
+          versions: VersionSuggestionItem[] = [],
+        ): Promise<VersionSuggestionItem[]> => {
+          const ids = versions.filter((v) => v.parent && !v.parent.parent).map((v) => v.id)
+          if (!ids.length) return versions
+          const res = await baseQuery({
+            document: VERSION_FOLDERS_QUERY,
+            variables: { projectName, ids, first: ids.length },
+          })
+          const edges: { node: { id: string; product: { folder: FolderSuggestionItem } } }[] =
+            (res.data as any)?.project?.versions?.edges ?? []
+          const folders = new Map(edges.map(({ node }) => [node.id, node.product.folder]))
+          return versions.map((v) =>
+            v.parent && folders.has(v.id)
+              ? { ...v, parent: { ...v.parent, parent: folders.get(v.id) } }
+              : v,
+          )
+        }
+
         // fetched next to the suggestions, a failure only leaves the folders out
         const [res, folders] = await Promise.all([
           dispatch(enhancedMentionsApi.endpoints.suggestEntityMention.initiate(args)),
@@ -100,7 +133,10 @@ const injectedApi = enhancedMentionsApi.injectEndpoints({
           return { error: normalizeQueryError(res.error) }
         }
 
-        return { data: { ...res.data, folders } }
+        const versions = await addVersionFolders(res.data?.versions).catch(
+          () => res.data?.versions,
+        )
+        return { data: { ...res.data, versions, folders } }
       },
       providesTags: [{ type: 'team' as const, id: 'LIST' }],
     }),
