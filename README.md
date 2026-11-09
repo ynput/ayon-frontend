@@ -46,6 +46,37 @@ yarn build
 yarn preview
 ```
 
+### Releasing npm packages
+
+```bash
+yarn release:start
+```
+
+The guided CLI reviews changes since each package's last npm release, creates a release branch
+from `origin/develop`, suggests version bumps (including export/API signals), updates dependency
+pins, and commits and pushes the bumps. It then creates a PR using the repository template and
+asks before merging, building the merged checkout, and publishing to npm, then shows the final
+release status. Type `y` or press Enter to accept a suggestion or continue; type `n` at a
+confirmation to stop.
+
+Start with a clean working tree, installed root dependencies, and an authenticated GitHub CLI
+(`gh auth login`). GitHub checks, reviews and branch protections still apply; the CLI uses a merge
+commit and never bypasses them. If a merge is blocked, resolve its requirements and retry at the
+prompt. npm login is started in the terminal if needed.
+
+Rerun `yarn release:start` on the generated release branch to continue an interrupted PR stage.
+If the bumped versions are already on `origin/develop` but not npm, it goes straight to the
+build/publish stage without bumping again. Failed or declined publishing can be retried this way;
+versions already published are skipped. The checkout must match `origin/develop` before publishing,
+and failed builds or checkout changes stop publication rather than publishing an unreviewed version.
+
+The individual `release:status`, `release:changes`, `release:bump`, `release:check`,
+`release:build` and `release:publish` commands remain available. Interactive `release:changes`
+offers to continue into the guided workflow; `--json` and piped output never prompt.
+Use `--verbose` for supporting details or `--repo <dir>` for another checkout.
+Use the standalone `release:publish --dry-run` for an npm dry run; `release:start` intentionally
+does not accept `--yes`, `--force` or `--dry-run`.
+
 ### Code Quality
 
 ```bash
@@ -123,4 +154,3 @@ The following environment variables should be configured in `.env.local`:
 ## License
 
 See LICENSE file for details.
-
