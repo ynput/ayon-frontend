@@ -6,8 +6,12 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { AddonUser } from './scopes'
+import type { EntityLinkRef } from './entityLinks'
+import type { ViewerTarget } from './openInHost'
+import type { HostOpenContextMenu } from './useContextMenu'
 
 export type { AddonUser }
 
@@ -35,6 +39,8 @@ export interface HostComponents {
   EntityPicker: ComponentType<EntityPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
+  /** AYON's project table with the providers it needs (`EntityTable`); not in the dev shell */
+  EntityTable?: ComponentType<EntityTableProps>
 }
 
 export interface HostImplementation {
@@ -43,8 +49,19 @@ export interface HostImplementation {
   getUser?: () => AddonUser | undefined
   /** the dispatch of the host's store */
   dispatch?: AddonDispatch
-  /** goes to an AYON URL without reloading the page (`navigateToEntity`) */
+  /** goes to an AYON URL without reloading the page (`navigate`, `navigateToEntity`) */
   navigate?: (to: string) => void
+  /** opens AYON's viewer (`openViewer`) */
+  openViewer?: (target: ViewerTarget) => void
+  /**
+   * shows the details panel of the page that is open, if it has one (`openDetails`). Returns
+   * `false` when there is none, or it can't show these entities.
+   */
+  openDetails?: (entities: readonly EntityLinkRef[]) => boolean
+  /** closes that panel (`closeDetails`) */
+  closeDetails?: () => void
+  /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
+  useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
 }
 

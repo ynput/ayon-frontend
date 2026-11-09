@@ -21,9 +21,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.attributePutModel,
       }),
     }),
-    deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
-      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
-    }),
     patchAttributeConfig: build.mutation<
       PatchAttributeConfigApiResponse,
       PatchAttributeConfigApiArg
@@ -33,6 +30,9 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'PATCH',
         body: queryArg.attributePatchModel,
       }),
+    }),
+    deleteAttribute: build.mutation<DeleteAttributeApiResponse, DeleteAttributeApiArg>({
+      query: (queryArg) => ({ url: `/api/attributes/${queryArg.attributeName}`, method: 'DELETE' }),
     }),
   }),
   overrideExisting: false,
@@ -54,40 +54,42 @@ export type SetAttributeConfigApiArg = {
   attributeName: string
   attributePutModel: AttributePutModel
 }
-export type DeleteAttributeApiResponse = unknown
-export type DeleteAttributeApiArg = {
-  attributeName: string
-}
 export type PatchAttributeConfigApiResponse = unknown
 export type PatchAttributeConfigApiArg = {
   attributeName: string
   attributePatchModel: AttributePatchModel
 }
+export type DeleteAttributeApiResponse = unknown
+export type DeleteAttributeApiArg = {
+  attributeName: string
+}
 export type IconModel = {
   type?: 'material-symbols' | 'url'
   /** The name of the icon (for type material-symbols) */
-  name?: string
+  name?: string | null
   /** The color of the icon (for type material-symbols) */
-  color?: string
+  color?: string | null
   /** The URL of the icon (for type url) */
-  url?: string
+  url?: string | null
 }
 export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  description?: string
-  fulltext?: string[]
-  group?: string
+  description?: string | null
+  fulltext?: string[] | null
+  group?: string | null
   /** Icon name (material symbol) or IconModel object */
-  icon?: string | IconModel
-  color?: string
-  shortName?: string
+  icon?: string | IconModel | null
+  color?: string | null
+  shortName?: string | null
   /** Enum item is visible, but not selectable */
   disabled?: boolean
   /** Message to show when the option is disabled */
-  disabledMessage?: string
-  /** Enum item is not offered for selection, but resolves when already used */
+  disabledMessage?: string | null
+  /** Enum item is not visible in the dropdown */
   hidden?: boolean
+  /** Extra badge labels to display next to the item */
+  badges?: string[] | null
 }
 export type AttributeData = {
   /** Type of attribute value */
@@ -103,36 +105,40 @@ export type AttributeData = {
     | 'list_of_submodels'
     | 'dict'
   /** Nice, human readable title of the attribute */
-  title?: string
-  description?: string
+  title?: string | null
+  description?: string | null
   /** Example value of the field. */
   example?: any
   /** Default value for the attribute. Do not set for list types. */
   default?: any
-  gt?: number | number
-  ge?: number | number
-  lt?: number | number
-  le?: number | number
-  minLength?: number
-  maxLength?: number
+  gt?: number | number | null
+  ge?: number | number | null
+  lt?: number | number | null
+  le?: number | number | null
+  minLength?: number | null
+  maxLength?: number | null
   /** Minimum number of items in list type. */
-  minItems?: number
+  minItems?: number | null
   /** Only for list types. Maximum number of items in the list. */
-  maxItems?: number
+  maxItems?: number | null
   /** Only for string types. The value must match this regex. */
-  regex?: string
+  regex?: string | null
   /** List of enum items used for displaying select widgets */
-  enum?: EnumItem[]
+  enum?: EnumItem[] | null
   /** Name of the function that provides enum values dynamically. */
-  enumResolver?: string
+  enumResolver?: string | null
   /** Settings passed to the enum resolver function. */
-  enumResolverSettings?: object
+  enumResolverSettings?: {
+    [key: string]: any
+  } | null
   /** Inherit the attribute value from the parent entity. */
   inherit?: boolean
   /** Specific widget style this field should use. */
-  widget?: string
+  widget?: string | null
   /** Any additional config specific for the widget style.(Date formats, precision etc.) */
-  widgetSettings?: object
+  widgetSettings?: {
+    [key: string]: any
+  } | null
 }
 export type AttributeModel = {
   name: string
@@ -155,6 +161,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -177,12 +185,14 @@ export type AttributePutModel = {
 }
 export type AttributePatchModel = {
   /** Default order */
-  position?: number
+  position?: number | null
   /** List of entity types the attribute is available on */
-  scope?: (
-    | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
-    | ('project' | 'user')
-    | 'list'
-  )[]
-  data?: AttributeData
+  scope?:
+    | (
+        | ('folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile')
+        | ('project' | 'user')
+        | 'list'
+      )[]
+    | null
+  data?: AttributeData | null
 }

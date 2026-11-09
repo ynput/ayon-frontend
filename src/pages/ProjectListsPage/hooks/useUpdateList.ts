@@ -129,7 +129,7 @@ const useUpdateList = ({
       await Promise.all(
         listIds.map((listId) =>
           updateList({
-            listId,
+            entityListId: listId,
             projectName,
             entityListPatchModel: {
               entityListFolderId: (listFolderId ?? null) as unknown as string | undefined,

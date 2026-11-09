@@ -11,6 +11,8 @@ import {
   useSearchParams,
 } from 'react-router-dom'
 import { ToastContainer } from 'react-toastify'
+import { QueryParamProvider } from 'use-query-params'
+import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { createStandaloneStore, useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import {
@@ -183,17 +185,20 @@ export const Shell = ({ options, mode }: { options: ShellOptions; mode: 'live' |
     <Provider store={store}>
       <SplitterStyles />
       <BrowserRouter>
-        {mode === 'live' ? (
-          <SignedIn options={options}>
+        {/* as AYON's (app.tsx): useQueryParam from @ynput/ayon-addon reads it */}
+        <QueryParamProvider adapter={ReactRouter6Adapter} options={{ updateType: 'replaceIn' }}>
+          {mode === 'live' ? (
+            <SignedIn options={options}>
+              <AppProviders>
+                <Workbench options={options} mode={mode} />
+              </AppProviders>
+            </SignedIn>
+          ) : (
             <AppProviders>
               <Workbench options={options} mode={mode} />
             </AppProviders>
-          </SignedIn>
-        ) : (
-          <AppProviders>
-            <Workbench options={options} mode={mode} />
-          </AppProviders>
-        )}
+          )}
+        </QueryParamProvider>
         <ToastContainer position="bottom-right" theme="dark" />
       </BrowserRouter>
     </Provider>

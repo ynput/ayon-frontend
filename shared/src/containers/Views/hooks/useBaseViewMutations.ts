@@ -50,7 +50,7 @@ export const useBaseViewMutations = ({
         } as any
 
         const result = await createViewMutation({
-          payload: baseViewPayload,
+          genericViewPostModel: baseViewPayload,
           viewType: viewType as string,
           projectName: isStudioScope ? undefined : projectName,
         }).unwrap()
@@ -80,7 +80,7 @@ export const useBaseViewMutations = ({
           viewId: baseViewId,
           viewType: viewType as string,
           projectName: isStudioScope ? undefined : projectName,
-          payload: { settings },
+          genericViewPatchModel: { settings },
         }).unwrap()
 
         dispatch(
@@ -156,7 +156,7 @@ export const useBaseViewMutations = ({
           viewId: workingView.id,
           viewType: viewType as string,
           projectName,
-          payload: { settings: baseView.settings },
+          genericViewPatchModel: { settings: baseView.settings },
         }).unwrap()
 
         // Set the working view as the default view

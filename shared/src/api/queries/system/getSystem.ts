@@ -32,15 +32,16 @@ const getSystemApi = systemApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
     },
     listFrontendModules: {
       providesTags: ['info', 'frontendModules'],
-      // production addon versions can change without a server restart (bundle edits),
-      // so refetch on bundle events to pick up the new versions
+      // addon versions can change without a server restart (bundle edits), so refetch on bundle
+      // events to pick up the new versions. RemoteModulesProvider compares all of these with
+      // what the page loaded.
       async onCacheEntryAdded(_, { dispatch, cacheDataLoaded, cacheEntryRemoved }) {
         let token
         try {
           await cacheDataLoaded
 
           token = PubSub.subscribe('bundle', () => {
-            dispatch(getSystemApi.util.invalidateTags(['frontendModules']))
+            dispatch(getSystemApi.util.invalidateTags(['frontendModules', 'addonList', 'bundleList']))
           })
         } catch {
           // no-op in case `cacheEntryRemoved` resolves before `cacheDataLoaded`
