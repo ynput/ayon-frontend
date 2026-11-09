@@ -56,7 +56,8 @@ export const useProjectMentionSearch = ({
       const terms = query.search.split('/').filter(Boolean)
       const result = await searchEntities(
         { projectName, search: terms.join(' '), types, first: SEARCH_LIMIT },
-        true,
+        // new versions and tasks show up the next time, the picker debounces the requests
+        false,
       ).unwrap()
 
       const getType = (list: TypeIcon[] | undefined, name: string) =>

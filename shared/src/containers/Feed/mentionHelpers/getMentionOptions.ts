@@ -64,7 +64,7 @@ export const parseMentionPrefix = (search?: string) => {
 }
 
 // `threshold`: the worst match-sorter ranking kept (default: fuzzy matches)
-const getMentionOptions = (type, values = {}, search, threshold) => {
+const getMentionOptions = (type, values = {}, search?: string, threshold?: number) => {
   // values  = { users: function, tags: function }
 
   if (!(type in values)) return []

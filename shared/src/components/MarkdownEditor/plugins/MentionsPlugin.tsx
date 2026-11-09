@@ -30,6 +30,7 @@ import * as Styled from '../MarkdownEditor.styled'
 import SuggestionMenu from './SuggestionMenu'
 import { $isSelectionInCode } from './selectionHelpers'
 import { INSERT_MENTION_TRIGGER_COMMAND } from './MentionsPluginHelpers'
+import { getRequestErrorString } from '@shared/util'
 
 const ALL_TRIGGERS: MentionTrigger[] = ['@', '@@', '@@@']
 
@@ -125,17 +126,22 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
     search && !error && searchText.length >= MIN_SEARCH_LENGTH
       ? `${trigger}|${filter ?? ''}|${searchText}`
       : null
-  const [searchResult, setSearchResult] = useState<{ key: string; items: MentionItem[] } | null>(
-    null,
-  )
+  const [searchResult, setSearchResult] = useState<{
+    key: string
+    items: MentionItem[]
+    error?: string
+  } | null>(null)
 
   useEffect(() => {
     if (!search || !searchKey) return
     let cancelled = false
     const timer = setTimeout(() => {
       search({ trigger, search: searchText, filter })
-        .catch(() => [])
-        .then((items) => !cancelled && setSearchResult({ key: searchKey, items }))
+        .then(
+          (items) => ({ items }),
+          (err) => ({ items: [], error: getRequestErrorString(err) || 'Search failed' }),
+        )
+        .then((result) => !cancelled && setSearchResult({ key: searchKey, ...result }))
     }, SEARCH_DEBOUNCE_MS)
     return () => {
       cancelled = true
@@ -144,21 +150,20 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
   }, [search, searchKey, trigger, searchText, filter])
 
   const searchItems = searchResult?.key === searchKey ? searchResult.items : null
+  const searchError = searchResult?.key === searchKey ? searchResult.error : undefined
   const isSearching = !!searchKey && !searchItems
 
   const options = useMemo(() => {
     if (query === null || error) return []
     const given = source.getOptions({ trigger, search: searchText, filter })
-    // search results fill the limit after the given options, keeping at least `MIN_SEARCH_SLOTS`
-    const givenSlots = searchItems?.length
-      ? Math.max(limit - searchItems.length, limit - MIN_SEARCH_SLOTS)
+    // search results not given already fill the limit after the given options,
+    // keeping at least `MIN_SEARCH_SLOTS`
+    const listed = new Set(given.map(getItemKey))
+    const found = (searchItems ?? []).filter((item) => !listed.has(getItemKey(item)))
+    const givenSlots = found.length
+      ? Math.max(limit - found.length, limit - MIN_SEARCH_SLOTS)
       : limit
-    const items = given.slice(0, givenSlots)
-    if (searchItems) {
-      const listed = new Set(items.map(getItemKey))
-      const found = searchItems.filter((item) => !listed.has(getItemKey(item)))
-      items.push(...found.slice(0, limit - items.length))
-    }
+    const items = [...given.slice(0, givenSlots), ...found].slice(0, limit)
     return items.map((item, i) => new MentionMenuOption(item, i))
   }, [query, searchText, trigger, filter, source, limit, error, searchItems])
 
@@ -244,8 +249,10 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
         // no query: the trigger is gone. Typing fast can leave Lexical's menu open (its close
         // reads a stale state), but the query is already cleared.
         if (!anchor || query === null) return null
-        // nothing matches the search, get out of the way
-        if (!options.length && !error && !isSearching && (query || filter)) return null
+        // nothing matches the search, get out of the way. A filter keeps the menu, it is the
+        // only way to turn the filter off again.
+        if (!options.length && !error && !searchError && !isSearching && query && !filter)
+          return null
 
         return (
           <SuggestionMenu
@@ -280,7 +287,15 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
             optionClassName={({ item }) =>
               item.type === 'user' || item.type === 'team' ? undefined : 'square'
             }
-            emptyMessage={error || (isSearching ? 'Searching…' : `No ${config.noun}s found`)}
+            emptyMessage={
+              error ||
+              searchError ||
+              (isSearching
+                ? 'Searching…'
+                : search && filter && !searchText
+                ? 'Type to search'
+                : `No ${config.noun}s found`)
+            }
             renderOption={({ item }) => (
               <>
                 {source.renderOptionImage ? (

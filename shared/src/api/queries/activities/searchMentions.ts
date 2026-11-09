@@ -79,32 +79,28 @@ const nodes = <T>(connection?: { edges: { node: T }[] }) =>
 const injectedApi = gqlApi.injectEndpoints({
   endpoints: (build) => ({
     searchMentionEntities: build.query<MentionSearchResult, MentionSearchArgs>({
+      // the graphql base query, its errors keep the `{ status, data }` shape
       query: ({ projectName, search, types, first }) => ({
-        url: '/graphql',
-        method: 'POST',
-        body: {
-          query: SEARCH_MENTIONS_QUERY,
-          variables: {
-            projectName,
-            search,
-            first,
-            folders: types.includes('folder'),
-            tasks: types.includes('task'),
-            versions: types.includes('version'),
-          },
+        document: SEARCH_MENTIONS_QUERY,
+        variables: {
+          projectName,
+          search,
+          first,
+          folders: types.includes('folder'),
+          tasks: types.includes('task'),
+          versions: types.includes('version'),
         },
       }),
       transformResponse: (res: any) => {
-        if (res?.errors) throw new Error(res.errors[0].message)
-        const project = res?.data?.project
+        const project = res?.project
         return {
           folders: nodes(project?.folders),
           tasks: nodes(project?.tasks),
           versions: nodes(project?.versions),
         }
       },
-      // results go stale quickly, keep them only for the typing session
-      keepUnusedDataFor: 30,
+      // results go stale quickly, every search refetches
+      keepUnusedDataFor: 0,
     }),
   }),
 })
