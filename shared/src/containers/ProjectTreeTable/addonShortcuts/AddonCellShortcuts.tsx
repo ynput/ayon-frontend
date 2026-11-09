@@ -61,7 +61,10 @@ export const AddonCellShortcuts = ({ page, containerRef }: AddonCellShortcutsPro
           }
         }
 
-        const selected = [...selectedCells].flatMap((cellId) => parseCellId(cellId) || [])
+        // body cells only: row checkboxes are ignored, as in context menus
+        const selected = [...selectedCells]
+          .flatMap((cellId) => parseCellId(cellId) || [])
+          .filter(({ colId }) => colId !== ROW_SELECTION_COLUMN_ID)
         // the selected rows when the key was pressed in one of them, else the focused row
         const inSelection = selected.some(({ rowId }) => rowId === focused.rowId)
         const rowIds = inSelection

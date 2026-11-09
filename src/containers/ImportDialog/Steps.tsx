@@ -43,6 +43,8 @@ type Props = {
   importContext: ImportContext
   projectName?: string
   folderId?: string
+  // the list folder a list created by the import goes into
+  listFolderId?: string
   data: ImportData | null
   setData: Dispatch<SetStateAction<ImportData | null>>
   step: ImportStep
@@ -70,6 +72,7 @@ export default function ImportSteps({
   importContext,
   projectName,
   folderId,
+  listFolderId,
   data,
   setData,
   step,
@@ -153,6 +156,7 @@ export default function ImportSteps({
           importContext === 'hierarchy' && rowsEntityType !== 'column' ? rowsEntityType : undefined,
         newListLabel: creatingList ? newList.label.trim() : undefined,
         newListEntityType: creatingList ? newList.entityType : undefined,
+        newListFolderId: creatingList ? listFolderId : undefined,
         updateListedEntities:
           importContext === 'entity_list_item' ? updateListedEntities : undefined,
       })
@@ -168,6 +172,7 @@ export default function ImportSteps({
       rowsEntityType,
       creatingList,
       newList,
+      listFolderId,
     ],
   )
 

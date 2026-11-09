@@ -1,5 +1,5 @@
-import { useVersionUploadContext } from '@shared/components'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { useOptionalVersionUploadContext } from '@shared/components'
+import { useOptionalEntityListsContext } from '@pages/ProjectListsPage/context'
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
@@ -19,8 +19,8 @@ type OverviewContextMenuProps = {
 const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  // lists data
-  const { menuItems: menuItemsAddToList } = useEntityListsContext()
+  // lists data; absent in an addon's EntityTable, which has a menu of its own
+  const menuItemsAddToList = useOptionalEntityListsContext()?.menuItems
 
   const { folders } = useProjectFoldersContext()
   // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
@@ -39,13 +39,13 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     [updateGroupBy],
   )
 
-  const { onOpenVersionUpload } = useVersionUploadContext()
+  const onOpenVersionUpload = useOptionalVersionUploadContext()?.onOpenVersionUpload
   const handleVersionUpload = (cell: TableCellContextData) => {
     const folderId = cell.entityType === 'folder' ? cell.entityId : cell.parentId || ''
     const taskId = cell.entityType === 'task' ? cell.entityId : ''
 
     if (folderId) {
-      onOpenVersionUpload({ folderId, taskId })
+      onOpenVersionUpload?.({ folderId, taskId })
     } else {
       toast.error('No folder selected for version upload')
     }
@@ -135,7 +135,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     'rename',
     'open-viewer',
     'expand-collapse',
-    menuItemsAddToList(),
+    ...(menuItemsAddToList ? [menuItemsAddToList()] : []),
     unGroupTasksItem,
     'inherit',
     'export',
