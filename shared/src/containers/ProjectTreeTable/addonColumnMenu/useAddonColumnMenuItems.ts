@@ -16,15 +16,17 @@ import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
 
 export interface AddonMenuColumn {
   columnId: string
-  columnLabel: string
+  /** the column def's `header`: a string for most columns, a component for some (links) */
+  header: unknown
+  /** what "Group by" calls the column, when the table can group by it */
+  groupLabel?: string
   groupField?: string
 }
 
-/** The column's addon items; `isOpen` starts loading their code. */
-export type GetAddonColumnMenuItems = (
-  column: AddonMenuColumn,
-  isOpen: boolean,
-) => ColumnMenuItemType[]
+/** The column's addon items. */
+export type GetAddonColumnMenuItems = (column: AddonMenuColumn) => ColumnMenuItemType[]
+/** Starts loading the code of the column's addon items, when its menu opens. */
+export type PrefetchAddonColumnMenuItems = (column: AddonMenuColumn) => void
 
 export interface OpenAddonColumnMenuDialog {
   contribution: Contribution<'projectTable.columnMenuItem'>
@@ -42,6 +44,10 @@ export const matchesColumn = (patterns: string[] | undefined, columnId: string) 
 export const withColumnLabel = (text: string, columnLabel: string) =>
   text.replace(/\{column\}/g, columnLabel)
 
+// a header drawn by a component has no name to put in a label: no addon items there
+const columnLabelOf = ({ header, groupLabel, groupField }: AddonMenuColumn) =>
+  typeof header === 'string' && header ? header : groupField ? groupLabel : undefined
+
 export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
   const { contributions } = useContributions('projectTable.columnMenuItem')
   const { projectName } = useProjectContext()
@@ -54,49 +60,59 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
     [contributions, page],
   )
 
-  const getColumnMenuItems = useCallback<GetAddonColumnMenuItems>(
-    (column, isOpen) => {
-      if (!page) return []
-      return items
-        .filter(
-          (item) =>
-            matchesColumn(item.columns, column.columnId) &&
-            (!item.groupable || !!column.groupField),
-        )
-        .map((item) => {
-          if (isOpen) prefetchPiece(item.dialog || item.run)
-          const context: ProjectTableColumnMenuItemContext = {
-            projectName,
-            page,
-            columnId: column.columnId,
-            columnLabel: column.columnLabel,
-            groupField: column.groupField,
-            tableState,
-          }
-          const label = withColumnLabel(item.label, column.columnLabel)
-          return {
-            id: item.key,
-            label,
-            icon: item.icon,
-            onClick: () => {
-              if (!item.dialog) {
-                runContribution(item, context)
-                return
-              }
-              const close = () => setDialog(null)
-              setDialog({
-                contribution: item,
-                context: { ...context, close },
-                title: item.dialogTitle
-                  ? withColumnLabel(item.dialogTitle, column.columnLabel)
-                  : label,
-              })
-            },
-          }
-        })
-    },
-    [items, page, projectName, tableState],
+  const itemsFor = useCallback(
+    (column: AddonMenuColumn) =>
+      items.filter(
+        (item) =>
+          matchesColumn(item.columns, column.columnId) && (!item.groupable || !!column.groupField),
+      ),
+    [items],
   )
 
-  return { getColumnMenuItems: items.length ? getColumnMenuItems : undefined, dialog }
+  const prefetchColumnMenuItems = useCallback<PrefetchAddonColumnMenuItems>(
+    (column) => itemsFor(column).forEach((item) => prefetchPiece(item.dialog || item.run)),
+    [itemsFor],
+  )
+
+  const getColumnMenuItems = useCallback<GetAddonColumnMenuItems>(
+    (column) => {
+      const columnLabel = columnLabelOf(column)
+      if (!page || !columnLabel) return []
+      return itemsFor(column).map((item) => {
+        const context: ProjectTableColumnMenuItemContext = {
+          projectName,
+          page,
+          columnId: column.columnId,
+          columnLabel,
+          groupField: column.groupField,
+          tableState,
+        }
+        const label = withColumnLabel(item.label, columnLabel)
+        return {
+          id: item.key,
+          label,
+          icon: item.icon,
+          onClick: () => {
+            if (!item.dialog) {
+              runContribution(item, context)
+              return
+            }
+            const close = () => setDialog(null)
+            setDialog({
+              contribution: item,
+              context: { ...context, close },
+              title: item.dialogTitle ? withColumnLabel(item.dialogTitle, columnLabel) : label,
+            })
+          },
+        }
+      })
+    },
+    [itemsFor, page, projectName, tableState],
+  )
+
+  return {
+    getColumnMenuItems: items.length ? getColumnMenuItems : undefined,
+    prefetchColumnMenuItems: items.length ? prefetchColumnMenuItems : undefined,
+    dialog,
+  }
 }

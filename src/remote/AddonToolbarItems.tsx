@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import { useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 import { useProjectContext } from '@shared/context'
-import { useProjectTableState } from '@shared/containers/ProjectTreeTable/context/project-table-state'
+import { useProjectTableState } from '@shared/containers/ProjectTreeTable'
 import { AddonButton } from '@shared/components/AddonLayout/AddonButton'
 
 interface AddonToolbarItemsProps {

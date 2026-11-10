@@ -9,8 +9,8 @@ import {
   useProjectTableContext,
   getEntityViewierIds,
   useAddonEntityMenuItems,
-  useProjectTableState,
 } from '@shared/containers'
+import { useProjectTableState } from '@shared/containers/ProjectTreeTable'
 import { useVersionsDataContext } from '../context/vp-data'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'

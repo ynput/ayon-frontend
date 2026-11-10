@@ -228,14 +228,8 @@ export interface SlotMap {
   }
 }
 
-/** Description fields of a button the host draws (header and toolbar items). */
-export interface ButtonMeta {
-  /** a Material Symbols icon name; required unless the item is a `component` */
-  icon?: string
-  /** shown on hover; the label when not set */
-  tooltip?: string
-  /** navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) */
-  to?: string
+/** Description fields of the dialog the host opens for a `dialog` piece. */
+export interface DialogMeta {
   /** the `dialog`'s title; the label when not set */
   dialogTitle?: string
   /** the `dialog`'s size, `md` by default */
@@ -245,6 +239,16 @@ export interface ButtonMeta {
    * its own, with a close button calling `close`. Escape and a click outside still close it
    */
   dialogHeader?: boolean
+}
+
+/** Description fields of a button the host draws (header and toolbar items). */
+export interface ButtonMeta extends DialogMeta {
+  /** a Material Symbols icon name; required unless the item is a `component` */
+  icon?: string
+  /** shown on hover; the label when not set */
+  tooltip?: string
+  /** navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) */
+  to?: string
 }
 
 /** Context of a button's code (`run`, `dialog`, `menu`, `component`) besides the slot's own. */
@@ -307,7 +311,7 @@ export type MenuPiece<S extends SlotName> = (
 export interface ButtonPieces<S extends SlotName> {
   /** called on click with the context (it has `navigate`) */
   run?: Loader<RunPiece<S>>
-  /** the content of a dialog the host opens and closes: AYON's dialog with title and close button */
+  /** the content of a dialog the host opens and closes: AYON's dialog with title and close button, unless `dialogHeader: false` */
   dialog?: Loader<ComponentType<SlotProps<S> & DialogScope>>
   /** the items of a menu the host opens under the button, like the header's help menu */
   menu?: Loader<MenuPiece<S>>
@@ -490,7 +494,7 @@ export interface EntityMenuItemContext extends ProjectNameScope, ProjectTableSco
 export type ShortcutTable = ProjectTablePage | 'slicer' | 'projects' | 'listsPanel' | 'versionsPanel'
 
 /** Description of a `table.shortcut` contribution. */
-export interface TableShortcutMeta {
+export interface TableShortcutMeta extends DialogMeta {
   /** unique among the addon's shortcuts */
   id: string
   /** what it does, e.g. `Copy row as JSON`; the dialog's title when `dialogTitle` is not set */
@@ -506,15 +510,6 @@ export interface TableShortcutMeta {
    * tables), `slicer`, `projects`, `listsPanel`, `versionsPanel`
    */
   tables?: ShortcutTable[]
-  /** the `dialog`'s title; the label when not set */
-  dialogTitle?: string
-  /** the `dialog`'s size, `md` by default */
-  dialogSize?: 'sm' | 'md' | 'lg' | 'full'
-  /**
-   * `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws
-   * its own, with a close button calling `close`. Escape and a click outside still close it
-   */
-  dialogHeader?: boolean
 }
 
 /** A table row a shortcut acts on. */
@@ -555,7 +550,7 @@ export interface TableShortcutContext extends ProjectTableScope {
 export interface TableShortcutPieces {
   /** called with the context when the key is pressed */
   run?: Loader<RunPiece<'table.shortcut'>>
-  /** the content of a dialog the host opens: AYON's dialog with title and close button */
+  /** the content of a dialog the host opens: AYON's dialog with title and close button, unless `dialogHeader: false` */
   dialog?: Loader<ComponentType<SlotProps<'table.shortcut'> & DialogScope>>
 }
 
@@ -620,15 +615,9 @@ export interface ProjectTableToolbarItemContext
 }
 
 /** Description of a `projectTable.columnMenuItem` contribution. */
-export interface ProjectTableColumnMenuItemMeta {
-  /** unique among the addon's column menu items */
-  id: string
+export interface ProjectTableColumnMenuItemMeta extends Omit<MenuItemMeta, 'position'>, DialogMeta {
   /** the menu entry; `{column}` becomes the column's name, e.g. `Chart tasks by {column}` */
   label: string
-  /** a Material Symbols icon name */
-  icon: string
-  /** order among addon items, lowest first */
-  order?: number
   /** which tables' columns offer it; all (Overview, Products, Lists) when not set */
   pages?: ProjectTablePage[]
   /**
@@ -640,13 +629,6 @@ export interface ProjectTableColumnMenuItemMeta {
   groupable?: boolean
   /** the `dialog`'s title, `{column}` as in `label`; the label when not set */
   dialogTitle?: string
-  /** the `dialog`'s size, `md` by default */
-  dialogSize?: 'sm' | 'md' | 'lg' | 'full'
-  /**
-   * `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws
-   * its own, with a close button calling `close`. Escape and a click outside still close it
-   */
-  dialogHeader?: boolean
 }
 
 /** Context of a project table column menu item. */
@@ -667,7 +649,7 @@ export interface ProjectTableColumnMenuItemContext extends ProjectNameScope, Pro
 export interface ProjectTableColumnMenuItemPieces {
   /** called with the context on click */
   run?: Loader<RunPiece<'projectTable.columnMenuItem'>>
-  /** the content of a dialog the host opens: AYON's dialog with title and close button */
+  /** the content of a dialog the host opens: AYON's dialog with title and close button, unless `dialogHeader: false` */
   dialog?: Loader<ComponentType<SlotProps<'projectTable.columnMenuItem'> & DialogScope>>
 }
 

@@ -133,6 +133,7 @@ import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
 import {
   useAddonColumnMenuItems,
   type GetAddonColumnMenuItems,
+  type PrefetchAddonColumnMenuItems,
 } from './addonColumnMenu/useAddonColumnMenuItems'
 import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
@@ -162,6 +163,7 @@ declare module '@tanstack/react-table' {
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
     getAddonColumnMenuItems?: GetAddonColumnMenuItems
+    prefetchAddonColumnMenuItems?: PrefetchAddonColumnMenuItems
   }
 }
 
@@ -595,8 +597,11 @@ export const ProjectTreeTable = ({
     )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
-  const { getColumnMenuItems: getAddonColumnMenuItems, dialog: addonColumnMenuDialog } =
-    useAddonColumnMenuItems(addonPage)
+  const {
+    getColumnMenuItems: getAddonColumnMenuItems,
+    prefetchColumnMenuItems: prefetchAddonColumnMenuItems,
+    dialog: addonColumnMenuDialog,
+  } = useAddonColumnMenuItems(addonPage)
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -668,6 +673,7 @@ export const ProjectTreeTable = ({
       columnsConfig,
       loadingLinksEntityIds,
       getAddonColumnMenuItems,
+      prefetchAddonColumnMenuItems,
     },
   })
 

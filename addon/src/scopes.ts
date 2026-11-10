@@ -209,7 +209,7 @@ export interface ProjectPageMeta extends PageMeta {
 export interface QueryCondition {
   /** the field, e.g. `status`, `taskType`, `attrib.priority`, `tags` */
   key: string
-  value?: string | number | string[] | number[]
+  value?: string | number | boolean | null | string[] | number[]
   /** `eq` when not set */
   operator?:
     | 'eq'
@@ -261,7 +261,7 @@ export interface VersionQueryArgs {
 /** What a project table shows right now, as the host queries it. */
 export interface ProjectTableState {
   /** the rows: `task` on Overview, `version` on Products */
-  entityType: string
+  entityType: 'task' | 'version'
   /**
    * the filter bar and every slicer panel, one filter per entity, keys without a scope prefix and
    * relative dates resolved; an entity without conditions is left out
@@ -274,9 +274,15 @@ export interface ProjectTableState {
    * search), with all their descendants; can be thousands. `undefined`: no folder restriction
    */
   folderIds?: string[]
-  /** entities picked in a lists slicer panel, already narrowed to `folderIds` */
+  /**
+   * entities picked in a lists slicer panel, already narrowed to `folderIds`. Products sends
+   * `version` or `product`, not both, as its query does
+   */
   ids?: Partial<Record<'task' | 'product' | 'version', string[]>>
-  /** Overview: the folder tree. Products: products with their versions. False when flat or grouped */
+  /**
+   * Overview: the folder tree; false for a flat task list, the flat folder view and a grouping.
+   * Products: products with their versions
+   */
   showHierarchy: boolean
   /** the grouping; `undefined` when not grouped */
   groupBy?: TableGroupBy

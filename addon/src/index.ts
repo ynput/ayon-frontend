@@ -21,6 +21,7 @@ export type {
   MenuItemPosition,
   AddonMenuItem,
   ButtonMeta,
+  DialogMeta,
   ButtonPieces,
   ButtonScope,
   DialogScope,

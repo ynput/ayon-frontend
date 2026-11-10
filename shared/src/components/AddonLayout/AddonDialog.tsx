@@ -47,6 +47,8 @@ export const AddonDialog = <S extends SlotName>({
   return (
     <Styled.AddonDialog
       ref={dialogRef}
+      // page shortcuts must not act behind the dialog
+      className="block-shortcuts"
       isOpen
       header={showHeader ? title || String(any.dialogTitle || any.label || any.id) : undefined}
       hideCancelButton={!showHeader}

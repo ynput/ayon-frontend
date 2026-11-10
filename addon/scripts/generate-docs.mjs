@@ -240,7 +240,8 @@ context has \`columnId\` (\`status\`, \`subType\`, \`assignees\`, \`attrib_prior
 same key as \`tableState.groupBy.id\` (\`status\`, \`taskType\`, \`attrib.priority\`), and
 \`undefined\` when the table can't group by the column. Narrow where it shows in the description,
 so no code loads to decide: \`pages\`, \`columns\` (ids, \`attrib_*\` for every attribute) and
-\`groupable: true\` (only columns with a \`groupField\`).
+\`groupable: true\` (only columns with a \`groupField\`). Columns whose header has no plain name
+(link columns) get no addon items unless they are groupable.
 
 \`\`\`ts
 projectTableColumnMenuItem({

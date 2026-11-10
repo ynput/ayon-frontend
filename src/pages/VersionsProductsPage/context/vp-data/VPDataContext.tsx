@@ -38,7 +38,8 @@ import {
   ProjectTableStateContext,
   toTableStateFilters,
   nonEmptyIds,
-} from '@shared/containers/ProjectTreeTable/context/project-table-state'
+  useTableStateConsumers,
+} from '@shared/containers/ProjectTreeTable'
 import type { ProjectTableState, VersionQueryArgs } from '@ynput/ayon-addon'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -618,7 +619,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // what the table shows, for addon slots: the values the queries below are built from
   const groupByDesc = columns.groupBy?.desc ?? false
-  const tableState = useMemo<ProjectTableState>(() => {
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
     const versionArgs: VersionQueryArgs = {
       featuredOnly: featuredVersionFilter?.length
         ? (featuredVersionFilter as VersionQueryArgs['featuredOnly'])
@@ -626,10 +629,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       latestPerFolder: latestPerFolder || undefined,
       hasReviewables: hasReviewablesFilter,
     }
+    // the versions query uses version ids over product ids when a list panel gives both
+    const versionIds = nonEmptyIds(scopedVersionIds)
     const ids = {
       task: nonEmptyIds(scopedTaskIds),
-      product: nonEmptyIds(scopedProductIds),
-      version: nonEmptyIds(scopedVersionIds),
+      product: versionIds ? undefined : nonEmptyIds(scopedProductIds),
+      version: versionIds,
     }
     return {
       entityType: 'version',
@@ -650,6 +655,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         : undefined,
     }
   }, [
+    hasTableStateConsumers,
     combinedVersionFilter.filter,
     combinedProductFilter.filter,
     combinedTaskFilter.filter,
@@ -955,7 +961,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   return (
     <VersionsDataContext.Provider value={value}>
-      <ProjectTableStateContext.Provider value={tableState}>{children}</ProjectTableStateContext.Provider>
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
     </VersionsDataContext.Provider>
   )
 }

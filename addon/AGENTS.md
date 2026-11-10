@@ -127,7 +127,8 @@ context has `columnId` (`status`, `subType`, `assignees`, `attrib_priority`), `c
 same key as `tableState.groupBy.id` (`status`, `taskType`, `attrib.priority`), and
 `undefined` when the table can't group by the column. Narrow where it shows in the description,
 so no code loads to decide: `pages`, `columns` (ids, `attrib_*` for every attribute) and
-`groupable: true` (only columns with a `groupField`).
+`groupable: true` (only columns with a `groupField`). Columns whose header has no plain name
+(link columns) get no addon items unless they are groupable.
 
 ```ts
 projectTableColumnMenuItem({
@@ -542,14 +543,14 @@ An item in the "more" menu of a project table column's header (Overview, Product
 
 | Description field | Type | |
 |---|---|---|
-| `id` (required) | `string` | unique among the addon's column menu items |
 | `label` (required) | `string` | the menu entry; `{column}` becomes the column's name, e.g. `Chart tasks by {column}` |
-| `icon` (required) | `string` | a Material Symbols icon name |
-| `order` | `number \| undefined` | order among addon items, lowest first |
 | `pages` | `ProjectTablePage[] \| undefined` | which tables' columns offer it; all (Overview, Products, Lists) when not set |
 | `columns` | `string[] \| undefined` | column ids it shows for, e.g. `status`, `subType`, `assignees`; a trailing `*` matches a prefix (`attrib_*`). All columns when not set |
 | `groupable` | `boolean \| undefined` | only for columns the table can group by (`groupField` is set) |
 | `dialogTitle` | `string \| undefined` | the `dialog`'s title, `{column}` as in `label`; the label when not set |
+| `id` (required) | `string` | unique among the addon's items of the slot |
+| `icon` (required) | `string` | a Material Symbols icon name |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
 | `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
 | `dialogHeader` | `boolean \| undefined` | `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws its own, with a close button calling `close`. Escape and a click outside still close it |
 

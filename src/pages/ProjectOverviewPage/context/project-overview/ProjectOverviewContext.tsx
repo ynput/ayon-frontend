@@ -27,6 +27,7 @@ import {
   ProjectTableStateContext,
   toTableStateFilters,
   nonEmptyIds,
+  useTableStateConsumers,
 } from '@shared/containers/ProjectTreeTable'
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
@@ -287,8 +288,10 @@ export const ProjectOverviewProvider = ({
   )
 
   // what the table shows, for addon slots: the values the queries below are built from
-  const tableState = useMemo<ProjectTableState>(
-    () => ({
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    return {
       entityType: 'task',
       filters: toTableStateFilters({
         task: combinedTaskFilter.filter,
@@ -300,18 +303,18 @@ export const ProjectOverviewProvider = ({
       ids: selectedTaskIds.length ? { task: selectedTaskIds } : undefined,
       showHierarchy,
       groupBy: viewGroupByObj,
-    }),
-    [
-      combinedTaskFilter.filter,
-      combinedTaskFilter.search,
-      combinedFolderFilter.filter,
-      selectedFolders,
-      getChildFolderIds,
-      selectedTaskIds,
-      showHierarchy,
-      viewGroupByObj,
-    ],
-  )
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedTaskFilter.filter,
+    combinedTaskFilter.search,
+    combinedFolderFilter.filter,
+    selectedFolders,
+    getChildFolderIds,
+    selectedTaskIds,
+    showHierarchy,
+    viewGroupByObj,
+  ])
 
   const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
     openMoveDialog,
@@ -536,7 +539,9 @@ export const ProjectOverviewProvider = ({
         closeMoveDialog,
       }}
     >
-      <ProjectTableStateContext.Provider value={tableState}>{children}</ProjectTableStateContext.Provider>
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
     </ProjectOverviewContext.Provider>
   )
 }
