@@ -642,6 +642,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [rowVirtualizer],
   )
 
+  const lastScrollTopRef = useRef(0)
+
   // Handle scroll to bottom detection
   const handleScroll = useCallback(
     (event: React.UIEvent<HTMLDivElement>) => {
@@ -649,6 +651,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       const target = event.currentTarget
       const { scrollTop, scrollHeight, clientHeight } = target
+
+      // horizontal scroll must not load more rows
+      if (scrollTop === lastScrollTopRef.current) return
+      lastScrollTopRef.current = scrollTop
 
       // Check if we're near the bottom (within 100px)
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100
