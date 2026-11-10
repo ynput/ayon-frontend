@@ -5,7 +5,7 @@ export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'
 
 // a header cell after the last column holds the add column button (AddColumnButton finds it by
 // this attribute), so the button never covers a header
-export const ADD_COLUMN_BUTTON_SPACE = 56
+export const ADD_COLUMN_BUTTON_SPACE = 40
 export const ADD_COLUMN_SLOT_ATTRIBUTE = 'data-add-column-slot'
 // on the table container while columns scroll under that slot (a data attribute, not a class:
 // React rewrites className on renders and would drop it)
