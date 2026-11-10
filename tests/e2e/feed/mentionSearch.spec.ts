@@ -497,7 +497,7 @@ test.describe('pasted entity links', () => {
     })
   }
 
-  test('a pasted link being selected when its entity is found stays a link', async ({
+  test('a pasted link is a mention while its entity is looked up', async ({
     page,
     api,
     projectName,
@@ -509,15 +509,15 @@ test.describe('pasted entity links', () => {
     })
     const panel = await openFolder(page, projectName, data)
     await panel.openCommentBox()
-    const url = await pasteLink(
+    await pasteLink(
       page,
       panel.commentEditor,
       `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
     )
-    for (let i = 0; i < 3; i++) await panel.commentEditor.press('Shift+ArrowLeft')
-    await page.waitForTimeout(2500)
-    await expect(panel.commentEditor.getByRole('link', { name: url })).toBeVisible()
-    await expect(panel.commentEditor.locator('.mention')).toHaveCount(0)
+    const mention = panel.commentEditor.locator('.mention')
+    await expect(mention).toHaveText('@…')
+    await expect(panel.commentEditor.getByRole('link')).toHaveCount(0)
+    await expect(mention).toHaveText(`@${data.remote.name}/${data.remoteTask.name}`)
   })
 
   test('typing before a pasted link is found keeps the typing on undo', async ({
@@ -532,18 +532,17 @@ test.describe('pasted entity links', () => {
     })
     const panel = await openFolder(page, projectName, data)
     await panel.openCommentBox()
-    const url = await pasteLink(
+    await pasteLink(
       page,
       panel.commentEditor,
       `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
     )
-    await panel.commentEditor.pressSequentially(' ok')
+    await panel.commentEditor.pressSequentially('ok')
     const mention = `@${data.remote.name}/${data.remoteTask.name}`
     await expect(panel.commentEditor).toHaveText(`${mention} ok`)
-    // the mention is its own undo step, the typing stays
+    // the found label is its own undo step, the typing stays
     await panel.commentEditor.press('ControlOrMeta+z')
-    await expect(panel.commentEditor.getByRole('link', { name: url })).toBeVisible()
-    await expect(panel.commentEditor).toContainText(' ok')
+    await expect(panel.commentEditor).toHaveText('@… ok')
     await panel.commentEditor.press('ControlOrMeta+Shift+z')
     await expect(panel.commentEditor).toHaveText(`${mention} ok`)
   })
@@ -604,6 +603,46 @@ test.describe('entities dragged from the table', () => {
       `@${data.parent.name}`,
       `@${data.local.name}`,
     ])
+  })
+
+  test('rows checked in the selection column are not dragged', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    const panel = await openFolder(page, projectName, data)
+    const overview = new OverviewPage(page)
+    await overview.clickCell(data.local.name, 'name')
+    await overview.row(data.parent.name).locator('td.__row_selection__').click()
+    await expect(overview.row(data.parent.name).locator('td.__row_selection__')).toHaveClass(
+      /(^|\s)selected(\s|$)/,
+    )
+    await panel.openCommentBox()
+    await dragHandle(overview, data.local.name).dragTo(panel.commentEditor)
+    await expect(panel.commentEditor.locator('.mention')).toHaveText([`@${data.local.name}`])
+  })
+
+  test('a dropped entity shows its name while it is looked up', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    await routeMentionLookup(page, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue().catch(() => {})
+    })
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    const overview = new OverviewPage(page)
+    await dragHandle(overview, data.remoteParent.name).dragTo(panel.commentEditor, {
+      timeout: 1000,
+    })
+    await expect(panel.commentEditor.locator('.mention')).toHaveText(`@${data.remoteParent.name}`, {
+      timeout: 500,
+    })
+    await expect(panel.commentEditor.getByRole('link')).toHaveCount(0)
   })
 
   test('a drop on an empty line mentions there', async ({ page, api, projectName }) => {

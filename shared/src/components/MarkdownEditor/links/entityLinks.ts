@@ -61,19 +61,28 @@ export const getEntityLink = ({ projectName, type, id }: MentionEntityRef) => {
 // entities dragged from a table, an editor drops them as mentions
 export const ENTITY_DRAG_TYPE = 'application/x-ayon-entities'
 
-export const setEntityDragData = (dataTransfer: DataTransfer, refs: MentionEntityRef[]) => {
-  dataTransfer.setData(ENTITY_DRAG_TYPE, JSON.stringify(refs))
+// a dragged entity, with its name to show until the editor finds it
+export type DraggedEntity = MentionEntityRef & { label?: string }
+
+export const setEntityDragData = (dataTransfer: DataTransfer, entities: DraggedEntity[]) => {
+  dataTransfer.setData(ENTITY_DRAG_TYPE, JSON.stringify(entities))
   // other inputs and apps get the links
-  dataTransfer.setData('text/plain', refs.map(getEntityLink).filter(Boolean).join('\n'))
+  dataTransfer.setData('text/plain', entities.map(getEntityLink).filter(Boolean).join('\n'))
   dataTransfer.effectAllowed = 'copy'
 }
 
-export const getEntityDragData = (dataTransfer: DataTransfer | null): MentionEntityRef[] => {
+export const getEntityDragData = (dataTransfer: DataTransfer | null): DraggedEntity[] => {
   const data = dataTransfer?.getData(ENTITY_DRAG_TYPE)
   if (!data) return []
   try {
-    const refs: unknown = JSON.parse(data)
-    return Array.isArray(refs) ? refs.filter(isMentionRef) : []
+    const entities: unknown = JSON.parse(data)
+    if (!Array.isArray(entities)) return []
+    return entities.filter(isMentionRef).map(({ projectName, type, id, label }: DraggedEntity) => ({
+      projectName,
+      type,
+      id,
+      ...(typeof label === 'string' && label ? { label } : {}),
+    }))
   } catch {
     return []
   }

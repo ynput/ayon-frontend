@@ -28,11 +28,11 @@ import {
   type LexicalNode,
   type TextNode,
 } from 'lexical'
-import { $createLinkNode, $isLinkNode, type LinkNode } from '@lexical/link'
+import { $createLinkNode, $isLinkNode } from '@lexical/link'
 import { $findMatchingParent, mergeRegister } from '@lexical/utils'
 import { Icon } from '@ynput/ayon-react-components'
 import UserImage from '../../UserImage'
-import { $createMentionNode } from '../nodes/MentionNode'
+import { $createMentionNode, $isMentionNode, type MentionNode } from '../nodes/MentionNode'
 import type {
   MentionEntityRef,
   MentionItem,
@@ -86,19 +86,19 @@ const BROWSE_TYPE = '__browse'
 // mentions in place of the typed trigger (or at the caret), separated by spaces, then a space to
 // continue typing after, with the caret after it unless `select` is false
 const $insertMentions = (
-  items: MentionItem[],
+  items: Pick<MentionItem, 'type' | 'id' | 'label' | 'mentionLabel'>[],
   nodeToReplace: LexicalNode | null,
   { select = true } = {},
-) => {
+): MentionNode[] => {
   const nodes = items.map(({ type, id, label, mentionLabel }) =>
     $createMentionNode(type, id, mentionLabel || label),
   )
-  if (!nodes.length) return
+  if (!nodes.length) return []
   if (nodeToReplace) {
     nodeToReplace.replace(nodes[0])
   } else {
     const selection = $getSelection()
-    if (!$isRangeSelection(selection)) return
+    if (!$isRangeSelection(selection)) return []
     selection.insertNodes([nodes[0]])
   }
   let last = nodes[0]
@@ -117,77 +117,65 @@ const $insertMentions = (
     last.insertAfter(space)
     if (select) space.select(1, 1)
   }
+  return nodes
 }
 
-// where the selection is for a pasted link: `caret` in it or right after it (where it was
-// pasted), `selected` when a range starts or ends in it, `elsewhere` otherwise
-const $getLinkSelection = (link: LinkNode): 'caret' | 'selected' | 'elsewhere' => {
-  const selection = $getSelection()
-  if (!$isRangeSelection(selection)) return 'elsewhere'
-  const isIn = (node: LexicalNode) => node.is(link) || link.isParentOf(node)
-  if (!selection.isCollapsed()) {
-    return isIn(selection.anchor.getNode()) || isIn(selection.focus.getNode())
-      ? 'selected'
-      : 'elsewhere'
-  }
-  const { anchor } = selection
-  const node = anchor.getNode()
-  const isCaret =
-    isIn(node) ||
-    (anchor.type === 'text'
-      ? anchor.offset === 0 && !!node.getPreviousSibling()?.is(link)
-      : node.is(link.getParent()) && anchor.offset === link.getIndexWithinParent() + 1)
-  return isCaret ? 'caret' : 'elsewhere'
-}
+// the update that inserts entity mentions
+const ENTITY_MENTION_TAG = 'entity-mention-insert'
 
-// the update that inserts entity links
-const ENTITY_LINK_PASTE_TAG = 'entity-link-paste'
+// the label of a pasted entity until it is found
+const PENDING_MENTION_LABEL = '…'
 
 /**
- * Inserts links to entities at the selection, separated by spaces, each replaced with the
- * entity's mention once it is found. A link stays when its entity is not found (e.g. another
- * project), was edited meanwhile, or is being selected.
+ * Inserts mentions of entities at the selection, labelled with what is known until the entities
+ * are found: the name of a dragged entity, `…` for a pasted link. Each is then labelled as in the
+ * picker, or replaced with its link when its entity is not found (e.g. another project).
  */
-const $insertEntityLinks = (
+const $insertEntityMentions = (
   editor: LexicalEditor,
   resolve: NonNullable<MentionSource['resolve']>,
-  links: { ref: MentionEntityRef; url: string }[],
+  entities: { ref: MentionEntityRef; url: string; label?: string }[],
 ) => {
-  const selection = $getSelection()
-  if (!$isRangeSelection(selection)) return
-  $addUpdateTag(ENTITY_LINK_PASTE_TAG)
-  const linkNodes = links.map(({ url }) => $createLinkNode(url).append($createTextNode(url)))
-  selection.insertNodes(linkNodes.flatMap((node, i) => (i ? [$createTextNode(' '), node] : [node])))
-  const keys = linkNodes.map((node) => node.getKey())
+  $addUpdateTag(ENTITY_MENTION_TAG)
+  const nodes = $insertMentions(
+    entities.map(({ ref, label }) => ({
+      type: ref.type,
+      id: ref.id,
+      label: label || PENDING_MENTION_LABEL,
+    })),
+    null,
+  )
+  if (!nodes.length) return
+  const keys = nodes.map((node) => node.getKey())
 
-  // other edits before the entities are found make the mentions an undo step of their own
+  // other edits before the entities are found make the labels an undo step of their own
   let edited = false
   const stopWatching = editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
-    if (tags.has(ENTITY_LINK_PASTE_TAG)) return
+    if (tags.has(ENTITY_MENTION_TAG)) return
     if (dirtyElements.size || dirtyLeaves.size) edited = true
   })
 
-  resolve(links.map(({ ref }) => ref))
+  resolve(entities.map(({ ref }) => ref))
     .catch(() => [])
     .then((items) => {
       stopWatching()
-      if (!items.some(Boolean)) return
       editor.update(
         () => {
-          links.forEach(({ url }, i) => {
-            const item = items[i]
+          entities.forEach(({ url }, i) => {
             const node = $getNodeByKey(keys[i])
-            if (!item) return
-            // the link was changed or removed in the meantime
-            if (!$isLinkNode(node) || node.getURL() !== url || node.getTextContent() !== url) return
-            // the user is selecting the link, it stays a link
-            const linkSelection = $getLinkSelection(node)
-            if (linkSelection === 'selected') return
-            $insertMentions([item], node, { select: linkSelection === 'caret' })
+            // deleted in the meantime
+            if (!$isMentionNode(node) || !node.isAttached()) return
+            const item = items[i]
+            if (!item) {
+              node.replace($createLinkNode(url).append($createTextNode(url)))
+              return
+            }
+            const mention = $createMentionNode(item.type, item.id, item.mentionLabel || item.label)
+            if (mention.getTextContent() !== node.getTextContent()) node.replace(mention)
           })
         },
         // undo goes back to before the paste or drop
-        { tag: edited ? ENTITY_LINK_PASTE_TAG : [ENTITY_LINK_PASTE_TAG, HISTORY_MERGE_TAG] },
+        { tag: edited ? ENTITY_MENTION_TAG : [ENTITY_MENTION_TAG, HISTORY_MERGE_TAG] },
       )
     })
 }
@@ -444,7 +432,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
           if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
 
           event.preventDefault()
-          $insertEntityLinks(editor, resolve, [{ ref, url }])
+          $insertEntityMentions(editor, resolve, [{ ref, url }])
           return true
         },
         // before the rich text paste
@@ -464,14 +452,14 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
       editor.registerCommand(
         DROP_COMMAND,
         (event) => {
-          const links = getEntityDragData(event.dataTransfer).flatMap((ref) => {
+          const entities = getEntityDragData(event.dataTransfer).flatMap(({ label, ...ref }) => {
             const url = getEntityLink(ref)
-            return url ? [{ ref, url }] : []
+            return url ? [{ ref, url, label }] : []
           })
-          if (!links.length) return false
+          if (!entities.length) return false
           event.preventDefault()
           $selectDropPoint(editor, event)
-          $insertEntityLinks(editor, resolve, links)
+          $insertEntityMentions(editor, resolve, entities)
           // dropped from outside: the editor takes the focus to keep typing
           setTimeout(() => editor.focus())
           return true

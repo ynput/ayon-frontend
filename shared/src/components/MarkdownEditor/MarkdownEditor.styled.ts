@@ -479,6 +479,10 @@ export const Content = styled.div`
   .mention-team {
     cursor: default;
   }
+  /* a pasted entity until it is found */
+  .mention[data-mention-label='…'] {
+    color: var(--md-sys-color-outline);
+  }
   .md-activity-link {
     text-decoration: none;
   }
