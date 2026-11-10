@@ -165,8 +165,12 @@ export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
   .status-field.value {
     position: relative;
     left: 1px;
-    height: 28px;
-    padding-right: 8px;
+    /* the same size as the status pill in the tables and the attribute list; the component
+       sets its height inline */
+    height: 22px !important;
+    min-height: 0;
+    padding: 1px 6px 1px 4px;
+    font-size: 14px;
     width: calc(100% - 1px);
     margin-bottom: 2px;
     color: ${(props) => props.$textColor};
