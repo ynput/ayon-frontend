@@ -12,6 +12,7 @@ import { useTableExportContext } from '@shared/context'
 import clsx from 'clsx'
 import { omit } from 'lodash'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { readLocalStorage } from '@shared/hooks/useLocalStorage'
 import { useGetUserPoolsQuery } from '@shared/api'
 import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
@@ -30,13 +31,7 @@ const saveTableState = (state) => {
   }
 }
 
-const restoreTableState = () => {
-  try {
-    return omit(JSON.parse(localStorage.getItem(USERS_TABLE_STATE_KEY) || '{}'), 'selection')
-  } catch {
-    return {}
-  }
-}
+const restoreTableState = () => omit(readLocalStorage(USERS_TABLE_STATE_KEY, {}), 'selection')
 
 const StyledProfileRow = styled.div`
   display: flex;
