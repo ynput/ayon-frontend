@@ -23,7 +23,7 @@ const modeColorVariables = css`
   &.staging {
     --bg-color: var(--color-hl-staging-container);
     --bg-color-hover: var(--color-hl-staging-container-hover);
-    --text-color: var(--color-hl-staging);
+    --text-color: var(--color-hl-staging-text);
   }
 `
 

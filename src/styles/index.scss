@@ -70,9 +70,13 @@ strong {
   // staging colors
   --color-hl-staging-container: light-dark(hsl(21, 85%, 94%), hsl(21deg 83.13% 20.94%));
   --color-hl-staging-container-hover: light-dark(hsl(21, 85%, 90%), hsl(21deg 83.13% 23.94%));
-  --color-hl-staging: light-dark(#c8323c, hsl(357, 100%, 76%));
-  --color-hl-staging-hover: light-dark(#b42d36, hsl(357, 100%, 73%));
-  --color-hl-staging-active: light-dark(#a0282f, hsl(357, 100%, 70%));
+  // the fill of a staging badge: the same salmon on both themes, with dark text on it
+  --color-hl-staging: hsl(357, 100%, 76%);
+  --color-hl-staging-hover: hsl(357, 100%, 73%);
+  --color-hl-staging-active: hsl(357, 100%, 70%);
+  --color-on-hl-staging: black;
+  // staging as text or an icon on a pale container: darker in the light theme to stay readable
+  --color-hl-staging-text: light-dark(#c8323c, hsl(357, 100%, 76%));
 
   // text on a badge filled with --color-hl-production, -staging or -developer
   --color-on-hl: light-dark(white, black);

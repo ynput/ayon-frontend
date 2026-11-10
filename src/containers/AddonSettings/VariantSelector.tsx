@@ -17,7 +17,7 @@ const VARIANT_STYLES = {
   },
   staging: {
     backgroundColor: 'var(--color-hl-staging)',
-    color: 'var(--color-on-hl)',
+    color: 'var(--color-on-hl-staging)',
   },
   dev: {
     backgroundColor: 'var(--color-hl-developer)',

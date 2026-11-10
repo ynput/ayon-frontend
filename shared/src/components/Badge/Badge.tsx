@@ -21,7 +21,7 @@ const BaseBadge = styled.span`
 
 const WELL_KNOWN_BADGES = ['studio', 'project', 'production', 'staging', 'developer']
 // these are darker in the light theme, so they take white text there
-const THEMED_BADGES = ['staging', 'developer']
+const THEMED_BADGES = ['developer']
 
 interface BadgeProps {
   label?: string
@@ -52,6 +52,8 @@ export const Badge = (props: BadgeProps) => {
     ? 'light-dark(var(--md-sys-color-on-surface), #e0e0e0)'
     : wellKnown === 'production'
     ? 'var(--color-on-hl-production)'
+    : wellKnown === 'staging'
+    ? 'var(--color-on-hl-staging)'
     : wellKnown && THEMED_BADGES.includes(wellKnown)
     ? `light-dark(white, ${getTextColor(backgroundColor)})`
     : getTextColor(backgroundColor)

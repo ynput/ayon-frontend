@@ -20,7 +20,7 @@ const StyledDeveloperSwitch = styled.div`
   --color-background: var(--color-hl-developer-container);
   --color-background-hover: var(--color-hl-developer-container-hover);
   &.staging {
-    --color-hl: var(--color-hl-staging);
+    --color-hl: var(--color-hl-staging-text);
     --color-background: var(--color-hl-staging-container);
     --color-background-hover: var(--color-hl-staging-container-hover);
   }
