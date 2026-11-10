@@ -42,7 +42,8 @@ export const matchesColumn = (patterns: string[] | undefined, columnId: string) 
   )
 
 export const withColumnLabel = (text: string, columnLabel: string) =>
-  text.replace(/\{column\}/g, columnLabel)
+  // a function, so `$` patterns in the label stay literal
+  text.replace(/\{column\}/g, () => columnLabel)
 
 // a header drawn by a component has no name to put in a label: no addon items there
 const columnLabelOf = ({ header, groupLabel, groupField }: AddonMenuColumn) =>

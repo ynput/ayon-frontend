@@ -604,7 +604,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
         <AddonDialog
           contribution={contribution as unknown as Contribution<'projectTable.columnMenuItem'>}
           context={columnDialog as never}
-          title={(columnMeta.dialogTitle || columnMeta.label).replace(/\{column\}/g, column.columnLabel)}
+          title={(columnMeta.dialogTitle || columnMeta.label).replace(/\{column\}/g, () => column.columnLabel)}
         />
       )}
     </div>
