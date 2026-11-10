@@ -128,13 +128,13 @@ export const HeaderLabel = styled.span`
   min-width: 0;
 `
 
-// while columns are scrolled under the add column slot, a shadow on its left edge shows that the
-// cut off column continues; a gradient beside the cell rather than a blurred box-shadow, which
-// would bleed into the rows above and below
+// while header columns are scrolled under the add column slot, a soft shadow on its left edge shows
+// that the cut off column continues; a gradient beside the cell rather than a blurred box-shadow,
+// which would bleed into the rows below
 export const trailingSlotShadow = css`
-  --trailing-slot-shadow: 40%;
+  --trailing-slot-shadow: 28%;
   [data-theme='light'] & {
-    --trailing-slot-shadow: 16%;
+    --trailing-slot-shadow: 12%;
   }
 
   [${COLUMNS_UNDER_SLOT_ATTRIBUTE}] &::before {
@@ -154,8 +154,8 @@ export const trailingSlotShadow = css`
 `
 
 // pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
-// in its own space after the last column. Body and footer rows end with a TrailingCell of the
-// same width, so the columns that scroll under it are hidden in every row, not just the header.
+// in its own space after the last column. Only the header row is covered: body and footer rows
+// end with a plain TrailingCell of the same width, so every row is as wide as the header.
 // Above left pinned cells (z-index 100) for narrow tables.
 export const AddColumnSlot = styled.th`
   position: sticky;
@@ -172,14 +172,10 @@ export const AddColumnSlot = styled.th`
 
 // takes the row's background (TR hover rules apply to it as to any td)
 export const TrailingCell = styled.td`
-  position: sticky;
-  right: 0;
-  z-index: 101;
   flex-shrink: 0;
   padding: 0 !important;
   background-color: var(--color-table-row);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
-  ${trailingSlotShadow}
 
   &.expandable,
   &.group-header {

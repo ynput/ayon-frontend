@@ -1860,7 +1860,7 @@ const TableBodyRow = ({
   )
 }
 
-// under the header's add column slot: same width, row background
+// the space of the header's add column slot: same width, row background
 const TrailingCell = ({ row, rowHeight }: { row: Row<TableRow>; rowHeight: number }) => {
   const { isRowSelected } = useSelectedRowsContext()
   const isGroup = !!row.original.group

@@ -13,7 +13,6 @@ import {
 } from '../constants'
 import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
-import { trailingSlotShadow } from '../ProjectTreeTable.styled'
 
 const Footer = styled.tfoot`
   display: grid !important;
@@ -70,17 +69,13 @@ const FooterCell = styled.td`
   }
 `
 
-// under the header's add column slot, like the body rows' trailing cell
+// the space of the header's add column slot, like the body rows' trailing cell
 const FooterTrailingCell = styled.td`
-  position: sticky;
-  right: 0;
-  z-index: 101;
   flex-shrink: 0;
   height: 34px !important;
   padding: 0 !important;
   background-color: var(--md-sys-color-surface-container-lowest);
   box-shadow: inset 1px 1px 0 0 var(--md-sys-color-surface-container);
-  ${trailingSlotShadow}
 `
 
 const CellContent = styled.div`
