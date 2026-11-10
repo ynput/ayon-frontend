@@ -286,8 +286,11 @@ export interface ProjectTableState {
   showHierarchy: boolean
   /** the grouping; `undefined` when not grouped */
   groupBy?: TableGroupBy
-  /** Products only; `undefined` when none is set */
-  versionArgs?: VersionQueryArgs
+  /**
+   * query arguments that are not filter conditions, per entity like `filters`: Products sets
+   * `version`. `undefined` when none is set
+   */
+  queryArgs?: { version?: VersionQueryArgs }
 }
 
 /** Project table slots: what the table shows. */

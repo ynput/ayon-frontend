@@ -226,10 +226,10 @@ It is never in \`tableColumn\`, whose values would refetch on every filter chang
 | \`ids\` | \`task\` | \`task\`, \`product\`, \`version\` |
 | \`showHierarchy\` | the folder tree | products with their versions |
 | \`groupBy\` | task fields; \`folderType\` groups folders | version fields |
-| \`versionArgs\` | not set | \`featuredOnly\`, \`latestPerFolder\`, \`hasReviewables\` |
+| \`queryArgs\` | not set | \`version\`: \`featuredOnly\`, \`latestPerFolder\`, \`hasReviewables\` |
 
-\`versionArgs\` are filters the version query takes as arguments, not conditions. They are named like
-GraphQL \`versions\`. Send \`featuredOnlyEntityType: 'product'\` with \`featuredOnly\`.
+\`queryArgs\` are filters a query takes as arguments, not conditions, per entity like \`filters\`.
+\`queryArgs.version\` is named like GraphQL \`versions\` arguments. Send \`featuredOnlyEntityType: 'product'\` with \`featuredOnly\`.
 
 ## A column's menu: \`projectTable.columnMenuItem\`
 

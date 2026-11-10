@@ -650,8 +650,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       ids: ids.task || ids.product || ids.version ? ids : undefined,
       showHierarchy: !!showProducts,
       groupBy: groupBy ? { id: groupBy, desc: groupByDesc } : undefined,
-      versionArgs: Object.values(versionArgs).some((value) => value !== undefined)
-        ? versionArgs
+      queryArgs: Object.values(versionArgs).some((value) => value !== undefined)
+        ? { version: versionArgs }
         : undefined,
     }
   }, [
