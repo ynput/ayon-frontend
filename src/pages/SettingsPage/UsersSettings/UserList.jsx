@@ -115,22 +115,22 @@ const UserList = ({
   }
 
   const tableRef = useRef(null)
-  const anchorIndex = useRef(null)
+  const anchorName = useRef(null)
   const shiftRange = useRef(null)
 
   // With the virtual scroller the table only knows the rendered rows, so its own shift-click range
-  // is wrong or throws. Track the range here, by index in display order.
-  const onRowClick = ({ index, originalEvent }) => {
-    if (!originalEvent.shiftKey) shiftRange.current = null
-    // no anchor yet (or the rows changed since): select the clicked user only. The table keeps its
-    // own anchor across row changes, so its range would point at other rows.
-    else if (anchorIndex.current === null) shiftRange.current = [index, index]
-    else
-      shiftRange.current = [
-        Math.min(anchorIndex.current, index),
-        Math.max(anchorIndex.current, index),
-      ]
-    anchorIndex.current = index
+  // is wrong or throws. Track the range here, by index in display order. The anchor is a user name:
+  // the table's anchor is an index, which points at another user after a sort or reload.
+  const onRowClick = ({ data, index, originalEvent }) => {
+    shiftRange.current = null
+    if (originalEvent.shiftKey) {
+      const items = tableRef.current.getVirtualScroller().props.items
+      const anchor = items.findIndex((user) => user.name === anchorName.current)
+      // no anchor, or it's filtered out or deleted: select the clicked user only
+      shiftRange.current =
+        anchor === -1 ? [index, index] : [Math.min(anchor, index), Math.max(anchor, index)]
+    }
+    anchorName.current = data.name
   }
 
   const onSelectionChange = (e) => {
@@ -203,16 +203,9 @@ const UserList = ({
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
-  // row indexes point at other users once the rows change
-  useEffect(() => {
-    anchorIndex.current = null
-  }, [tableData])
-
   // The virtual scroller (primereact 9.6) doesn't follow row changes by itself:
-  // - it works out the new scroll height in an effect but only applies it on its next render, so the
-  //   list can't be scrolled past the old height. Render once more to apply it.
-  // - it keeps its first rendered row until the next scroll event, so a shorter list scrolled past
-  //   its end shows no rows. Scroll inside the new list to update it.
+  // - it applies a new scroll height only on its next render, so render once more.
+  // - it keeps its first rendered row until it scrolls, so scroll inside the new list.
   const [, rerender] = useReducer((n) => n + 1, 0)
   const prevUserList = useRef(userList)
   useEffect(() => {

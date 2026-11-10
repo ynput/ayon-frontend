@@ -221,7 +221,7 @@ test.describe('users settings', () => {
         await page.getByRole('row').filter({ hasText: 'bulk_' }).first().hover()
         await page.mouse.wheel(0, 50_000)
         await expect(users.row(last)).toBeVisible({ timeout: 500 })
-      }).toPass()
+      }).toPass({ intervals: [0] })
 
       // a shift click selects past the rendered rows, and the selection survives filtering
       await users.row(last).click({ modifiers: ['Shift'] })
@@ -229,9 +229,19 @@ test.describe('users settings', () => {
       await users.filter('bulk_029')
       await users.expectSelected(bulkName(290))
       await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+
+      // after a sort, a shift click range still starts at the clicked user
+      await users.filter('bulk_000')
+      await users.row(bulkName(2)).click()
+      const usernameHeader = page.getByRole('columnheader', { name: 'Username' })
+      await usernameHeader.click()
+      await usernameHeader.click()
+      await expect(usernameHeader).toHaveAttribute('aria-sort', 'descending')
+      await users.row(bulkName(4)).click({ modifiers: ['Shift'] })
+      await expect(page.getByText('3 Users Selected')).toBeVisible()
     })
 
-    test('deleting a user keeps the scroll position and shift click still works', async ({
+    test('deleting a user keeps the scroll position and the shift click anchor', async ({
       page,
     }) => {
       const users = new UsersSettingsPage(page)
@@ -245,7 +255,7 @@ test.describe('users settings', () => {
         // less than the rendered rows, so the target is never skipped
         await page.mouse.wheel(0, 1_500)
         await expect(users.row(target)).toBeVisible({ timeout: 300 })
-      }).toPass()
+      }).toPass({ intervals: [0] })
 
       // the table remembers this click as the start of a shift click range
       await users.row(bulkName(1499)).click()
@@ -260,10 +270,11 @@ test.describe('users settings', () => {
       await expect(users.row(bulkName(1499))).toBeVisible()
       await expect(users.row(bulkName(0))).toBeHidden()
 
-      // the rows changed, so a shift click selects only the clicked user
+      // a shift click range still starts at the user clicked before the list reloaded
       await users.row(bulkName(1502)).click({ modifiers: ['Shift'] })
+      await users.expectSelected(bulkName(1499))
       await users.expectSelected(bulkName(1502))
-      await expect(page.locator('tr.p-highlight')).toHaveCount(1)
+      await expect(page.getByText('3 Users Selected')).toBeVisible()
     })
   })
 })
