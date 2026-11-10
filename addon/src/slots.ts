@@ -3,6 +3,7 @@ import type {
   EntityRef,
   EntityScope,
   ProjectTablePage,
+  ProjectTableScope,
   PageMeta,
   ProjectPageMeta,
   ProjectFoldersScope,
@@ -128,6 +129,18 @@ export interface SlotMap {
     pieces: ButtonPieces<'projectTable.toolbarItem'>
   }
   /**
+   * An item in the "more" menu of a project table column's header (Overview, Products, Lists),
+   * after "Group by". It shows from the description; `{column}` in the label becomes the column's
+   * name (`Chart tasks by {column}`). Pressed, it runs code (`run`) or opens a dialog (`dialog`)
+   * with the column and what the table shows; set exactly one.
+   */
+  'projectTable.columnMenuItem': {
+    version: 1
+    meta: ProjectTableColumnMenuItemMeta
+    context: ProjectTableColumnMenuItemContext
+    pieces: ProjectTableColumnMenuItemPieces
+  }
+  /**
    * A section in the project tables' Customize panel (Overview, Products, Lists). The entry shows
    * from the description; `component` loads when the section is opened.
    */
@@ -227,6 +240,11 @@ export interface ButtonMeta {
   dialogTitle?: string
   /** the `dialog`'s size, `md` by default */
   dialogSize?: 'sm' | 'md' | 'lg' | 'full'
+  /**
+   * `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws
+   * its own, with a close button calling `close`. Escape and a click outside still close it
+   */
+  dialogHeader?: boolean
 }
 
 /** Context of a button's code (`run`, `dialog`, `menu`, `component`) besides the slot's own. */
@@ -458,7 +476,7 @@ export interface EntityMenuItemMeta extends MenuItemMeta {
 }
 
 /** Context of an entity menu item. */
-export interface EntityMenuItemContext extends ProjectNameScope {
+export interface EntityMenuItemContext extends ProjectNameScope, ProjectTableScope {
   page: ProjectTablePage
   /** the selected entities (not table rows: list items resolve to their entity) */
   entities: EntityRef[]
@@ -492,6 +510,11 @@ export interface TableShortcutMeta {
   dialogTitle?: string
   /** the `dialog`'s size, `md` by default */
   dialogSize?: 'sm' | 'md' | 'lg' | 'full'
+  /**
+   * `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws
+   * its own, with a close button calling `close`. Escape and a click outside still close it
+   */
+  dialogHeader?: boolean
 }
 
 /** A table row a shortcut acts on. */
@@ -510,7 +533,7 @@ export interface TableRowRef {
 }
 
 /** Context of a table shortcut. */
-export interface TableShortcutContext {
+export interface TableShortcutContext extends ProjectTableScope {
   /** the table the key was pressed in */
   table: ShortcutTable
   /** the open project; `null` in the project list */
@@ -587,10 +610,65 @@ export interface ProjectTableToolbarItemMeta extends ButtonMeta {
 }
 
 /** Context of a project table toolbar item. */
-export interface ProjectTableToolbarItemContext extends ProjectNameScope, ButtonScope {
+export interface ProjectTableToolbarItemContext
+  extends ProjectNameScope,
+    ButtonScope,
+    ProjectTableScope {
   page: ProjectTablePage
   /** on Lists: the open list */
   list?: { id: string; label: string; entityType: string }
+}
+
+/** Description of a `projectTable.columnMenuItem` contribution. */
+export interface ProjectTableColumnMenuItemMeta {
+  /** unique among the addon's column menu items */
+  id: string
+  /** the menu entry; `{column}` becomes the column's name, e.g. `Chart tasks by {column}` */
+  label: string
+  /** a Material Symbols icon name */
+  icon: string
+  /** order among addon items, lowest first */
+  order?: number
+  /** which tables' columns offer it; all (Overview, Products, Lists) when not set */
+  pages?: ProjectTablePage[]
+  /**
+   * column ids it shows for, e.g. `status`, `subType`, `assignees`; a trailing `*` matches a
+   * prefix (`attrib_*`). All columns when not set
+   */
+  columns?: string[]
+  /** only for columns the table can group by (`groupField` is set) */
+  groupable?: boolean
+  /** the `dialog`'s title, `{column}` as in `label`; the label when not set */
+  dialogTitle?: string
+  /** the `dialog`'s size, `md` by default */
+  dialogSize?: 'sm' | 'md' | 'lg' | 'full'
+  /**
+   * `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws
+   * its own, with a close button calling `close`. Escape and a click outside still close it
+   */
+  dialogHeader?: boolean
+}
+
+/** Context of a project table column menu item. */
+export interface ProjectTableColumnMenuItemContext extends ProjectNameScope, ProjectTableScope {
+  page: ProjectTablePage
+  /** the column's id: `status`, `subType`, `assignees`, `attrib_priority`, ... */
+  columnId: string
+  /** the column's name as its header shows it */
+  columnLabel: string
+  /**
+   * the field the table groups by for this column, as `TableGroupBy.id` (`status`, `taskType`,
+   * `attrib.priority`); `undefined` when the table cannot group by it
+   */
+  groupField?: string
+}
+
+/** The pieces of a column menu item: what pressing it does. Set exactly one. */
+export interface ProjectTableColumnMenuItemPieces {
+  /** called with the context on click */
+  run?: Loader<RunPiece<'projectTable.columnMenuItem'>>
+  /** the content of a dialog the host opens: AYON's dialog with title and close button */
+  dialog?: Loader<ComponentType<SlotProps<'projectTable.columnMenuItem'> & DialogScope>>
 }
 
 /** Which selections a user details contribution shows for. */
@@ -718,6 +796,10 @@ const selectionField = /^(single|multi)$/
 const BUTTON_ACTIONS = ['to', 'run', 'dialog', 'menu', 'popover', 'component'] as const
 const buttonPieces = ['run', 'dialog', 'menu', 'popover', 'component']
 const buttonFields = { to: /^\//, dialogSize: /^(sm|md|lg|full)$/ }
+const checkDialogHeader = (item: Readonly<Record<string, unknown>>) =>
+  item.dialogHeader !== undefined && typeof item.dialogHeader !== 'boolean'
+    ? 'dialogHeader must be true or false'
+    : undefined
 const checkButton = (item: Readonly<Record<string, unknown>>) => {
   const actions = BUTTON_ACTIONS.filter((action) => item[action] !== undefined)
   const clicks = item.popover !== undefined ? actions.filter((action) => action !== 'component') : actions
@@ -725,6 +807,7 @@ const checkButton = (item: Readonly<Record<string, unknown>>) => {
     return `set exactly one of ${BUTTON_ACTIONS.join(', ')} (it has ${actions.join(', ') || 'none'})`
   }
   if (item.component === undefined && typeof item.icon !== 'string') return 'missing icon'
+  return checkDialogHeader(item)
 }
 
 // table shortcuts: exactly one action, and keys that parse and aren't AYON's own
@@ -734,6 +817,19 @@ const checkShortcut = (item: Readonly<Record<string, unknown>>) => {
   const shortcut = parseShortcut(String(item.keys))
   if (!shortcut) return `keys "${item.keys}" is not a key combination, e.g. "g" or "shift+mod+c"`
   if (isReservedShortcut(shortcut)) return `keys "${item.keys}" is one of AYON's own table keys`
+  return checkDialogHeader(item)
+}
+
+// column menu items: exactly one action, column ids as a list of names
+const checkColumnMenuItem = (item: Readonly<Record<string, unknown>>) => {
+  const actions = ['run', 'dialog'].filter((action) => item[action] !== undefined)
+  if (actions.length !== 1) return `set exactly one of run, dialog (it has ${actions.join(', ') || 'none'})`
+  const { columns, groupable } = item
+  if (columns !== undefined && !(Array.isArray(columns) && columns.every((id) => typeof id === 'string' && id))) {
+    return "columns must be a list of column ids, e.g. ['status', 'attrib_*']"
+  }
+  if (groupable !== undefined && typeof groupable !== 'boolean') return 'groupable must be true or false'
+  return checkDialogHeader(item)
 }
 
 // table columns: a menu name or false, and tags (RTK Query's shape) only with values to refresh
@@ -800,6 +896,14 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     optionalPieces: buttonPieces,
     optional: buttonFields,
     check: checkButton,
+  },
+  'projectTable.columnMenuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: [],
+    optionalPieces: ['run', 'dialog'],
+    optional: { dialogSize: buttonFields.dialogSize },
+    check: checkColumnMenuItem,
   },
   'projectTable.customizeSection': {
     version: 1,

@@ -130,6 +130,11 @@ import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
 import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
+import {
+  useAddonColumnMenuItems,
+  type GetAddonColumnMenuItems,
+} from './addonColumnMenu/useAddonColumnMenuItems'
+import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -156,6 +161,7 @@ declare module '@tanstack/react-table' {
     selection?: string[]
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
+    getAddonColumnMenuItems?: GetAddonColumnMenuItems
   }
 }
 
@@ -589,6 +595,9 @@ export const ProjectTreeTable = ({
     )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
 
+  const { getColumnMenuItems: getAddonColumnMenuItems, dialog: addonColumnMenuDialog } =
+    useAddonColumnMenuItems(addonPage)
+
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
     columns,
@@ -658,6 +667,7 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
+      getAddonColumnMenuItems,
     },
   })
 
@@ -843,6 +853,13 @@ export const ProjectTreeTable = ({
     >
       {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}
       {addonPage && <AddonCellShortcuts page={addonPage} containerRef={tableContainerRef} />}
+      {addonColumnMenuDialog && (
+        <AddonDialog
+          contribution={addonColumnMenuDialog.contribution}
+          context={addonColumnMenuDialog.context}
+          title={addonColumnMenuDialog.title}
+        />
+      )}
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}

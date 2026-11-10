@@ -34,6 +34,12 @@ import {
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
+import {
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+} from '@shared/containers/ProjectTreeTable/context/project-table-state'
+import type { ProjectTableState, VersionQueryArgs } from '@ynput/ayon-addon'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -610,6 +616,58 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [resolveEntityArguments],
   )
 
+  // what the table shows, for addon slots: the values the queries below are built from
+  const groupByDesc = columns.groupBy?.desc ?? false
+  const tableState = useMemo<ProjectTableState>(() => {
+    const versionArgs: VersionQueryArgs = {
+      featuredOnly: featuredVersionFilter?.length
+        ? (featuredVersionFilter as VersionQueryArgs['featuredOnly'])
+        : undefined,
+      latestPerFolder: latestPerFolder || undefined,
+      hasReviewables: hasReviewablesFilter,
+    }
+    const ids = {
+      task: nonEmptyIds(scopedTaskIds),
+      product: nonEmptyIds(scopedProductIds),
+      version: nonEmptyIds(scopedVersionIds),
+    }
+    return {
+      entityType: 'version',
+      filters: toTableStateFilters({
+        version: combinedVersionFilter.filter,
+        product: combinedProductFilter.filter,
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+        representation: combinedRepresentationFilter.filter,
+      }),
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedSlicerFolderIds, true)),
+      ids: ids.task || ids.product || ids.version ? ids : undefined,
+      showHierarchy: !!showProducts,
+      groupBy: groupBy ? { id: groupBy, desc: groupByDesc } : undefined,
+      versionArgs: Object.values(versionArgs).some((value) => value !== undefined)
+        ? versionArgs
+        : undefined,
+    }
+  }, [
+    combinedVersionFilter.filter,
+    combinedProductFilter.filter,
+    combinedTaskFilter.filter,
+    combinedFolderFilter.filter,
+    combinedRepresentationFilter.filter,
+    selectedSlicerFolderIds,
+    getChildFolderIds,
+    scopedTaskIds,
+    scopedProductIds,
+    scopedVersionIds,
+    showProducts,
+    groupBy,
+    groupByDesc,
+    featuredVersionFilter,
+    latestPerFolder,
+    hasReviewablesFilter,
+  ])
+
   // QUERY: Get all products when showing products
   const {
     data: productsData,
@@ -895,5 +953,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     error,
   }
 
-  return <VersionsDataContext.Provider value={value}>{children}</VersionsDataContext.Provider>
+  return (
+    <VersionsDataContext.Provider value={value}>
+      <ProjectTableStateContext.Provider value={tableState}>{children}</ProjectTableStateContext.Provider>
+    </VersionsDataContext.Provider>
+  )
 }

@@ -9,6 +9,7 @@ import {
   useProjectTableContext,
   getEntityViewierIds,
   useAddonEntityMenuItems,
+  useProjectTableState,
 } from '@shared/containers'
 import { useVersionsDataContext } from '../context/vp-data'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
@@ -420,8 +421,9 @@ export const useVPContextMenu = (callbacks?: {
   )
 
   // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
-  const addonTopItems = useAddonEntityMenuItems('products', 'top')
-  const addonItems = useAddonEntityMenuItems('products')
+  const tableState = useProjectTableState()
+  const addonTopItems = useAddonEntityMenuItems('products', 'top', tableState)
+  const addonItems = useAddonEntityMenuItems('products', 'bottom', tableState)
 
   return {
     showDetailsItem,

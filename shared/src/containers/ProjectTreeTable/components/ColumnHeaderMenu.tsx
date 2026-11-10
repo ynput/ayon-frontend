@@ -145,6 +145,32 @@ export const ColumnHeaderMenu = ({
     })
   }
 
+  const getAddonItems = header.getContext().table.options.meta?.getAddonColumnMenuItems
+  const addonItems = getAddonItems
+    ? getAddonItems(
+        {
+          columnId,
+          columnLabel:
+            typeof column.columnDef.header === 'string'
+              ? column.columnDef.header
+              : canGroupThisColumn
+                ? groupLabel
+                : columnId,
+          groupField: canGroupThisColumn ? targetGroupById : undefined,
+        },
+        !!isOpen,
+      )
+    : []
+  for (const item of addonItems) {
+    menuItems.push({
+      ...item,
+      onClick: () => {
+        item.onClick?.()
+        handleMenuToggle(false)
+      },
+    })
+  }
+
   if (canHide) {
     menuItems.push({
       id: 'hide',
