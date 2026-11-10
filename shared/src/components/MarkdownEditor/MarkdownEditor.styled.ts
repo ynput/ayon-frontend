@@ -479,8 +479,8 @@ export const Content = styled.div`
   .mention-team {
     cursor: default;
   }
-  /* a pasted entity until it is found */
-  .mention[data-mention-label='…'] {
+  /* a pasted or dropped entity until it is found */
+  .mention-pending {
     color: var(--md-sys-color-outline);
   }
   .md-activity-link {

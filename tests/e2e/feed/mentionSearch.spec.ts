@@ -547,6 +547,62 @@ test.describe('pasted entity links', () => {
     await expect(panel.commentEditor).toHaveText(`${mention} ok`)
   })
 
+  test('a comment sent before a pasted link is found keeps the link', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    await routeMentionLookup(page, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 3000))
+      await route.continue().catch(() => {})
+    })
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    const url = await pasteLink(
+      page,
+      panel.commentEditor,
+      `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
+    )
+    await expect(panel.commentEditor.locator('.mention')).toHaveText('@…')
+    await panel.submitComment()
+    await expect
+      .poll(async () =>
+        (await api.listActivities(projectName, 'folder', data.local.id)).map((a) => a.body.trim()),
+      )
+      .toEqual([`[${url}](${url})`])
+  })
+
+  test('a pasted link undone before it is found is a mention when redone', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const data = await seed(api, projectName)
+    let looked = false
+    await routeMentionLookup(page, async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue().catch(() => {})
+      looked = true
+    })
+    const panel = await openFolder(page, projectName, data)
+    await panel.openCommentBox()
+    await pasteLink(
+      page,
+      panel.commentEditor,
+      `/projects/${projectName}/overview?project=${projectName}&type=task&id=${data.remoteTask.id}`,
+    )
+    await expect(panel.commentEditor.locator('.mention')).toHaveText('@…')
+    await panel.commentEditor.press('ControlOrMeta+z')
+    await expect(panel.commentEditor.locator('.mention')).toHaveCount(0)
+    await expect.poll(() => looked).toBe(true)
+    await page.waitForTimeout(200)
+    await panel.commentEditor.press('ControlOrMeta+Shift+z')
+    await expect(panel.commentEditor.locator('.mention')).toHaveText(
+      `@${data.remote.name}/${data.remoteTask.name}`,
+    )
+  })
+
   test('a pasted link to another project stays a link', async ({ page, api, projectName }) => {
     const data = await seed(api, projectName)
     const panel = await openFolder(page, projectName, data)

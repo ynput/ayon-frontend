@@ -26,13 +26,14 @@ import {
   type LexicalEditor,
   SKIP_DOM_SELECTION_TAG,
   type LexicalNode,
+  type NodeKey,
   type TextNode,
 } from 'lexical'
 import { $createLinkNode, $isLinkNode } from '@lexical/link'
 import { $findMatchingParent, mergeRegister } from '@lexical/utils'
 import { Icon } from '@ynput/ayon-react-components'
 import UserImage from '../../UserImage'
-import { $createMentionNode, $isMentionNode, type MentionNode } from '../nodes/MentionNode'
+import { $createMentionNode, $isMentionNode, MentionNode } from '../nodes/MentionNode'
 import type {
   MentionEntityRef,
   MentionItem,
@@ -86,19 +87,20 @@ const BROWSE_TYPE = '__browse'
 // mentions in place of the typed trigger (or at the caret), separated by spaces, then a space to
 // continue typing after, with the caret after it unless `select` is false
 const $insertMentions = (
-  items: Pick<MentionItem, 'type' | 'id' | 'label' | 'mentionLabel'>[],
+  // `url` makes a pending mention
+  items: (Pick<MentionItem, 'type' | 'id' | 'label' | 'mentionLabel'> & { url?: string })[],
   nodeToReplace: LexicalNode | null,
   { select = true } = {},
-): MentionNode[] => {
-  const nodes = items.map(({ type, id, label, mentionLabel }) =>
-    $createMentionNode(type, id, mentionLabel || label),
+) => {
+  const nodes = items.map(({ type, id, label, mentionLabel, url }) =>
+    $createMentionNode(type, id, mentionLabel || label, url),
   )
-  if (!nodes.length) return []
+  if (!nodes.length) return
   if (nodeToReplace) {
     nodeToReplace.replace(nodes[0])
   } else {
     const selection = $getSelection()
-    if (!$isRangeSelection(selection)) return []
+    if (!$isRangeSelection(selection)) return
     selection.insertNodes([nodes[0]])
   }
   let last = nodes[0]
@@ -117,68 +119,106 @@ const $insertMentions = (
     last.insertAfter(space)
     if (select) space.select(1, 1)
   }
-  return nodes
 }
 
-// the update that inserts entity mentions
-const ENTITY_MENTION_TAG = 'entity-mention-insert'
+// the updates that insert pending mentions and replace them once found
+const ENTITY_MENTION_TAG = 'entity-mention'
 
 // the label of a pasted entity until it is found
 const PENDING_MENTION_LABEL = '…'
 
-/**
- * Inserts mentions of entities at the selection, labelled with what is known until the entities
- * are found: the name of a dragged entity, `…` for a pasted link. Each is then labelled as in the
- * picker, or replaced with its link when its entity is not found (e.g. another project).
- */
-const $insertEntityMentions = (
-  editor: LexicalEditor,
-  resolve: NonNullable<MentionSource['resolve']>,
+// pending mentions of entities at the selection, labelled with what is known until they are
+// found: the name of a dragged entity, `…` for a pasted link
+const $insertPendingMentions = (
   entities: { ref: MentionEntityRef; url: string; label?: string }[],
 ) => {
   $addUpdateTag(ENTITY_MENTION_TAG)
-  const nodes = $insertMentions(
-    entities.map(({ ref, label }) => ({
+  $insertMentions(
+    entities.map(({ ref, url, label }) => ({
       type: ref.type,
       id: ref.id,
       label: label || PENDING_MENTION_LABEL,
+      url,
     })),
     null,
   )
-  if (!nodes.length) return
-  const keys = nodes.map((node) => node.getKey())
-
-  // other edits before the entities are found make the labels an undo step of their own
-  let edited = false
-  const stopWatching = editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
-    if (tags.has(ENTITY_MENTION_TAG)) return
-    if (dirtyElements.size || dirtyLeaves.size) edited = true
-  })
-
-  resolve(entities.map(({ ref }) => ref))
-    .catch(() => [])
-    .then((items) => {
-      stopWatching()
-      editor.update(
-        () => {
-          entities.forEach(({ url }, i) => {
-            const node = $getNodeByKey(keys[i])
-            // deleted in the meantime
-            if (!$isMentionNode(node) || !node.isAttached()) return
-            const item = items[i]
-            if (!item) {
-              node.replace($createLinkNode(url).append($createTextNode(url)))
-              return
-            }
-            const mention = $createMentionNode(item.type, item.id, item.mentionLabel || item.label)
-            if (mention.getTextContent() !== node.getTextContent()) node.replace(mention)
-          })
-        },
-        // undo goes back to before the paste or drop
-        { tag: edited ? ENTITY_MENTION_TAG : [ENTITY_MENTION_TAG, HISTORY_MERGE_TAG] },
-      )
-    })
 }
+
+// the lookup of a pending mention: found or not (`null`) once `done`, `applied` once replaced
+interface PendingLookup {
+  done: boolean
+  applied: boolean
+  item?: MentionItem | null
+}
+
+// a pending mention becomes the found mention, or its link when its entity is not found
+const $applyLookup = (key: NodeKey, lookup: PendingLookup | undefined) => {
+  const node = $getNodeByKey(key)
+  if (!lookup?.done || lookup.applied || !$isMentionNode(node) || !node.isAttached()) return
+  const url = node.getPendingURL()
+  if (!url) return
+  lookup.applied = true
+  const { item } = lookup
+  node.replace(
+    item
+      ? $createMentionNode(item.type, item.id, item.mentionLabel || item.label)
+      : $createLinkNode(url).append($createTextNode(url)),
+  )
+}
+
+/**
+ * Looks up pending mentions as they are added, one request per type, and replaces them. A
+ * pending mention restored by undo or redo is replaced when it was found but never replaced
+ * (undone before), and stays pending when its replacement was undone.
+ */
+const registerPendingMentions = (
+  editor: LexicalEditor,
+  resolve: NonNullable<MentionSource['resolve']>,
+  lookups: Map<NodeKey, PendingLookup>,
+) =>
+  editor.registerMutationListener(MentionNode, (mutations) => {
+    const pending = editor.getEditorState().read(() =>
+      Array.from(mutations).flatMap(([key, mutation]) => {
+        if (mutation !== 'created') return []
+        const node = $getNodeByKey(key)
+        const ref = parseEntityLink($isMentionNode(node) ? node.getPendingURL() : null)
+        return ref ? [{ key, ref }] : []
+      }),
+    )
+    // found before, never replaced
+    const found = pending.filter(({ key }) => {
+      const lookup = lookups.get(key)
+      return lookup?.done && !lookup.applied
+    })
+    if (found.length) {
+      editor.update(() => found.forEach(({ key }) => $applyLookup(key, lookups.get(key))), {
+        tag: [ENTITY_MENTION_TAG, HISTORY_MERGE_TAG],
+      })
+    }
+    const added = pending.filter(({ key }) => !lookups.has(key))
+    if (!added.length) return
+    added.forEach(({ key }) => lookups.set(key, { done: false, applied: false }))
+
+    // other edits before the entities are found make the mentions an undo step of their own
+    let edited = false
+    const stopWatching = editor.registerUpdateListener(({ dirtyElements, dirtyLeaves, tags }) => {
+      if (tags.has(ENTITY_MENTION_TAG)) return
+      if (dirtyElements.size || dirtyLeaves.size) edited = true
+    })
+    resolve(added.map(({ ref }) => ref))
+      .catch(() => [])
+      .then((items) => {
+        stopWatching()
+        added.forEach(({ key }, i) => {
+          const lookup = lookups.get(key)
+          if (lookup) Object.assign(lookup, { done: true, item: items[i] ?? null })
+        })
+        editor.update(() => added.forEach(({ key }) => $applyLookup(key, lookups.get(key))), {
+          // undo goes back to before the paste or drop
+          tag: edited ? ENTITY_MENTION_TAG : [ENTITY_MENTION_TAG, HISTORY_MERGE_TAG],
+        })
+      })
+  })
 
 // the caret where a drag is dropped, the end of the text when there is none
 const $selectDropPoint = (editor: LexicalEditor, event: DragEvent) => {
@@ -415,9 +455,11 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
 
   // a pasted link to a folder, task or version, or one dropped from a table, becomes its mention
   const resolve = source.resolve
+  const pendingLookups = useRef(new Map<NodeKey, PendingLookup>())
   useEffect(() => {
     if (!resolve) return
     return mergeRegister(
+      registerPendingMentions(editor, resolve, pendingLookups.current),
       editor.registerCommand(
         PASTE_COMMAND,
         (event) => {
@@ -432,7 +474,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
           if ($findMatchingParent(selection.anchor.getNode(), $isLinkNode)) return false
 
           event.preventDefault()
-          $insertEntityMentions(editor, resolve, [{ ref, url }])
+          $insertPendingMentions([{ ref, url }])
           return true
         },
         // before the rich text paste
@@ -459,7 +501,7 @@ const MentionsPlugin = ({ source, menuParent, placement = 'inline' }: MentionsPl
           if (!entities.length) return false
           event.preventDefault()
           $selectDropPoint(editor, event)
-          $insertEntityMentions(editor, resolve, entities)
+          $insertPendingMentions(entities)
           // dropped from outside: the editor takes the focus to keep typing
           setTimeout(() => editor.focus())
           return true
