@@ -21,6 +21,7 @@ const TABLE_PAGE: string[] = [
   'table.shortcut',
   'tableColumn',
   'projectTable.toolbarItem',
+  'projectTable.columnMenuItem',
   'projectTable.customizeSection',
 ]
 const RUN: string[] = [
@@ -28,6 +29,7 @@ const RUN: string[] = [
   'projectList.menuItem',
   'slicer.menuItem',
   'entityMenuItem',
+  'projectTable.columnMenuItem',
   'table.shortcut',
   'userDetails.menuItem',
 ]

@@ -36,7 +36,9 @@ export const PreviewStage = ({
   )
   const isPopup = slot === 'header.item' || slot === 'projectTable.toolbarItem'
   // a table shortcut with a dialog: its content, as for a page
-  const isDialog = slot === 'table.shortcut' && !!(contribution as { dialog?: unknown }).dialog
+  const isDialog =
+    (slot === 'table.shortcut' || slot === 'projectTable.columnMenuItem') &&
+    !!(contribution as { dialog?: unknown }).dialog
   const runs = isMenuSlot(slot) && !isDialog
 
   useEffect(() => {

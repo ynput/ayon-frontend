@@ -24,6 +24,10 @@ import {
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
   checkColumnVisibility,
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+  useTableStateConsumers,
 } from '@shared/containers/ProjectTreeTable'
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
@@ -40,6 +44,7 @@ import { useAppDispatch } from '@state/store'
 import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { getRequestErrorString } from '@shared/util'
+import type { ProjectTableState } from '@ynput/ayon-addon'
 
 export const ProjectOverviewProvider = ({
   children,
@@ -92,9 +97,6 @@ export const ProjectOverviewProvider = ({
   const closeMoveDialog = useCallback(() => {
     setMovingEntities(null)
   }, [])
-  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
-    openMoveDialog,
-  })
 
   // view context and update helper
   const { viewSettings, isLoadingViews } = useViewsContext()
@@ -284,6 +286,40 @@ export const ProjectOverviewProvider = ({
     () => scopeIdsToFolders(rawEntityIds.taskIds, parentMaps.taskFolderIds, folderScope),
     [rawEntityIds.taskIds, parentMaps, folderScope],
   )
+
+  // what the table shows, for addon slots: the values the queries below are built from
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    return {
+      entityType: 'task',
+      filters: toTableStateFilters({
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+      }),
+      search: combinedTaskFilter.search || undefined,
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedFolders, true)),
+      ids: selectedTaskIds.length ? { task: selectedTaskIds } : undefined,
+      showHierarchy,
+      groupBy: viewGroupByObj,
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedTaskFilter.filter,
+    combinedTaskFilter.search,
+    combinedFolderFilter.filter,
+    selectedFolders,
+    getChildFolderIds,
+    selectedTaskIds,
+    showHierarchy,
+    viewGroupByObj,
+  ])
+
+  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
+    openMoveDialog,
+    tableState,
+  })
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -503,7 +539,9 @@ export const ProjectOverviewProvider = ({
         closeMoveDialog,
       }}
     >
-      {children}
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
     </ProjectOverviewContext.Provider>
   )
 }

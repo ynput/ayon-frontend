@@ -68,6 +68,11 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     where: "an item in the project tables' toolbar, before Customize",
     loads: 'first click (component: with the page)',
   },
+  'projectTable.columnMenuItem': {
+    helper: 'projectTableColumnMenuItem',
+    where: "an item in a project table column header's more menu, after Group by",
+    loads: 'menu open / click',
+  },
   'projectTable.customizeSection': {
     helper: 'projectTableCustomizeSection',
     where: "a section in the project tables' Customize panel",
