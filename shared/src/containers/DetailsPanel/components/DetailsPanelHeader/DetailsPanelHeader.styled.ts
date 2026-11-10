@@ -234,6 +234,11 @@ export const PriorityEnumDropdown = styled(EnumDropdown)`
     & > div {
       justify-content: center;
     }
+
+    /* the same size as the status pill and the pills in the tables */
+    span:has(> .value-label) {
+      padding: 1px 6px 1px 4px;
+    }
   }
 
   button {
