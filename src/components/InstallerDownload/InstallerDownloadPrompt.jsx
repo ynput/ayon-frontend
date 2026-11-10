@@ -2,8 +2,10 @@ import React from 'react'
 import { useAfterStartup, useLocalStorage } from '@shared/hooks'
 import * as Styled from './InstallerDownloadPrompt.styled'
 import useGetInstallerDownload from './useGetInstallerDownload'
+import { useIsMobile } from '@hooks/useIsMobile'
 
 const InstallerDownloadPrompt = () => {
+  const isMobile = useIsMobile()
   const [installersDownloaded, setInstallersDownloaded] = useLocalStorage(
     'installers-downloaded',
     [],
@@ -34,8 +36,12 @@ const InstallerDownloadPrompt = () => {
   return (
     <Styled.Container>
       {directDownload && (
-        <Styled.DownloadButton icon={'install_desktop'} onClick={handleDirectDownload}>
-          Download launcher
+        <Styled.DownloadButton
+          icon={'install_desktop'}
+          onClick={handleDirectDownload}
+          {...(isMobile && { 'aria-label': 'Download launcher', 'data-tooltip': 'Download launcher' })}
+        >
+          {!isMobile && 'Download launcher'}
         </Styled.DownloadButton>
       )}
 

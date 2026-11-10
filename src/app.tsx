@@ -88,6 +88,7 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import MobileAppBar from '@containers/MobileShell/MobileAppBar'
 import type { DetailsPanelProviderProps } from '@shared/context'
 import { ImportDialogProvider } from '@containers/ImportDialog/context/ImportDialogProvider'
 import ImportDialog from '@containers/ImportDialog/ImportDialog'
@@ -272,6 +273,7 @@ const App = () => {
                                                 <ReleaseInstallerDialog />
                                                 <CompleteProfilePrompt />
                                                 <AppRoutes />
+                                                <MobileAppBar />
                                                 <DetailsPanelFloating />
                                                 <EntityLinksSlot />
                                                 <PowerpackDialog />

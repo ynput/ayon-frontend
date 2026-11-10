@@ -20,6 +20,14 @@ import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseIn
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
+import { MOBILE_MEDIA_QUERY, useIsMobile } from '@hooks/useIsMobile'
+import { Spacer } from '@ynput/ayon-react-components'
+import { HeaderViewsSlot } from '@containers/MobileShell/MobileShell.styled'
+import {
+  setHeaderPageActionsSlot,
+  setHeaderPageMainActionSlot,
+  setHeaderViewsSlot,
+} from '@containers/MobileShell/MobileShellHelpers'
 
 const FlexWrapper = styled.div`
   display: flex;
@@ -31,6 +39,11 @@ const FlexWrapperEnd = styled.div`
   gap: var(--base-gap-small);
   justify-content: end;
   align-items: center;
+
+  @media ${MOBILE_MEDIA_QUERY} {
+    flex: 1;
+    min-width: 0;
+  }
 `
 
 const ProjectsButton = styled(HeaderButton)`
@@ -52,6 +65,7 @@ const Header: React.FC = () => {
   // get user from redux store
   const user = useAppSelector((state) => state.user)
   const avatarKey = useAppSelector((state) => state.user.avatarKey)
+  const isMobile = useIsMobile()
 
   // restart server notification
   const { isSnoozing } = useRestart()
@@ -105,7 +119,8 @@ const Header: React.FC = () => {
         <Link to={'/dashboard/tasks'}>
           <HeaderButton
             icon="home"
-            label="Home"
+            label={isMobile ? undefined : 'Home'}
+            {...(isMobile && { 'aria-label': 'Home', 'data-tooltip': 'Home' })}
             variant="nav"
             className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
             id="home-button"
@@ -113,68 +128,86 @@ const Header: React.FC = () => {
           />
         </Link>
 
+        {isMobile && <HeaderViewsSlot ref={setHeaderPageMainActionSlot} />}
+
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </FlexWrapper>
 
-      <Breadcrumbs />
+      {!isMobile && <Breadcrumbs />}
       <FlexWrapperEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
-        <BundleModeSelector />
+        {!isMobile && <BundleModeSelector />}
 
         {!user.data.isGuest && (
           <>
             <AddonHeaderItems placement="right" />
-            <ChatBubbleButton />
 
-            {/* help icon and menu vvv */}
-            <HeaderButton
-              icon="help"
-              ref={helpButtonRef}
-              onClick={() => handleToggleMenu('help')}
-              className={clsx({ active: menuOpen === 'help' })}
-              variant="nav"
-            />
-            <MenuContainer id="help" target={helpButtonRef.current}>
-              <HelpMenu user={user} />
-            </MenuContainer>
-            {/* help icon and menu ^^^ */}
+            {!isMobile && (
+              <>
+                <ChatBubbleButton />
 
-            {/* Inbox icon */}
-            <InboxNotificationIcon />
+                {/* help icon and menu vvv */}
+                <HeaderButton
+                  icon="help"
+                  ref={helpButtonRef}
+                  onClick={() => handleToggleMenu('help')}
+                  className={clsx({ active: menuOpen === 'help' })}
+                  variant="nav"
+                />
+                <MenuContainer id="help" target={helpButtonRef.current}>
+                  <HelpMenu user={user} />
+                </MenuContainer>
+                {/* help icon and menu ^^^ */}
 
-            {/* App icon and menu vvv */}
-            <HeaderButton
-              icon="apps"
-              onClick={() => handleToggleMenu('app')}
-              ref={appButtonRef}
-              variant="nav"
-              className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-            />
+                {/* Inbox icon */}
+                <InboxNotificationIcon />
 
-            <MenuContainer id="app" target={appButtonRef.current}>
-              <AppMenu user={user} />
-            </MenuContainer>
+                {/* App icon and menu vvv */}
+                <HeaderButton
+                  icon="apps"
+                  onClick={() => handleToggleMenu('app')}
+                  ref={appButtonRef}
+                  variant="nav"
+                  className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
+                />
+
+                <MenuContainer id="app" target={appButtonRef.current}>
+                  <AppMenu user={user} />
+                </MenuContainer>
+              </>
+            )}
           </>
         )}
         {/* App icon and menu ^^^ */}
 
         {/* User icon and menu vvv */}
-        <UserButton
-          className={clsx({ active: menuOpen === 'user' })}
-          onClick={() => handleToggleMenu('user')}
-          aria-label="User menu"
-          ref={userButtonRef}
-          variant="nav"
-        >
-          <UserImage size={26} name={user?.name} imageKey={avatarKey} />
-        </UserButton>
-        <MenuContainer id="user" target={userButtonRef.current}>
-          <UserMenu user={user} />
-        </MenuContainer>
+        {!isMobile && (
+          <>
+            <UserButton
+              className={clsx({ active: menuOpen === 'user' })}
+              onClick={() => handleToggleMenu('user')}
+              aria-label="User menu"
+              ref={userButtonRef}
+              variant="nav"
+            >
+              <UserImage size={26} name={user?.name} imageKey={avatarKey} />
+            </UserButton>
+            <MenuContainer id="user" target={userButtonRef.current}>
+              <UserMenu user={user} />
+            </MenuContainer>
+          </>
+        )}
         {/* User icon and menu ^^^ */}
+        {isMobile && (
+          <>
+            <Spacer />
+            <HeaderViewsSlot ref={setHeaderPageActionsSlot} />
+            <HeaderViewsSlot ref={setHeaderViewsSlot} />
+          </>
+        )}
       </FlexWrapperEnd>
     </nav>
   )

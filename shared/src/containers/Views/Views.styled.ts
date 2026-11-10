@@ -1,5 +1,6 @@
 import { Button, Icon } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import { MOBILE_MEDIA_QUERY } from '@shared/util/breakpoints'
 
 export const ViewsButton = styled(Icon)`
   padding: var(--padding-s);
@@ -39,6 +40,14 @@ export const ViewsModal = styled.div`
   background-color: var(--md-sys-color-surface-overlay);
   border-radius: var(--border-radius-l);
   box-shadow: var(--md-sys-elevation-overlay);
+
+  @media ${MOBILE_MEDIA_QUERY} {
+    left: 8px !important;
+    right: 8px;
+    min-width: 0;
+    max-height: calc(100dvh - 120px);
+    overflow-y: auto;
+  }
 `
 export const ViewsMenuDivider = styled.li`
   height: 1px;

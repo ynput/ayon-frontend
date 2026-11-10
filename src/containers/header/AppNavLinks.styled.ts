@@ -1,6 +1,7 @@
 import styled from 'styled-components'
+import { MOBILE_MEDIA_QUERY } from '@hooks/useIsMobile'
 
-export const NavBar = styled.nav`
+export const NavBar = styled.nav<{ $hideOnMobile?: boolean }>`
   padding-right: 8px;
   /* the line the tabs stand on, the edge of the page */
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
@@ -61,6 +62,8 @@ export const NavBar = styled.nav`
       );
     }
   }
+
+  ${({ $hideOnMobile }) => $hideOnMobile && `@media ${MOBILE_MEDIA_QUERY} { display: none; }`}
 `
 
 export const NavItem = styled.li`
