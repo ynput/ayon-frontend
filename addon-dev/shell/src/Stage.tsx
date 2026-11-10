@@ -578,6 +578,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
             >
               <ShellTable
                 page={page}
+                tableState={tableState}
                 entities={entities}
                 selected={selected}
                 onSelect={setSelected}

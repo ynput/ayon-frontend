@@ -373,15 +373,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       value: scopedTaskIds,
     }
 
-    const existingFilter = combinedTaskFilter.filterString
-      ? JSON.parse(combinedTaskFilter.filterString)
-      : { conditions: [], operator: 'and' }
-
+    // nested, so an OR filter stays OR and is ANDed with the ids as a whole
+    const existingFilter = combinedTaskFilter.filter
     return JSON.stringify({
-      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      conditions: existingFilter?.conditions?.length
+        ? [existingFilter, taskIdCondition]
+        : [taskIdCondition],
       operator: 'and',
     })
-  }, [scopedTaskIds, combinedTaskFilter.filterString])
+  }, [scopedTaskIds, combinedTaskFilter.filter])
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -425,7 +425,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const countsTaskFilterString = scopedTaskIds.length
         ? JSON.stringify({
             conditions: [
-              ...(countsTaskFilter.filter?.conditions || []),
+              ...(countsTaskFilter.filter?.conditions?.length ? [countsTaskFilter.filter] : []),
               { key: 'id', operator: 'in', value: scopedTaskIds },
             ],
             operator: 'and',
