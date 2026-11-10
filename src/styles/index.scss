@@ -655,6 +655,27 @@ a {
   transform: none !important;
 }
 
+// the main action of a page or dialog: the primary blue, brighter on hover. The Create dropdown
+// in the tables (shared/src/containers/NewEntity) uses the same two colours.
+button.filled:not(:disabled) {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+
+  &:hover,
+  &:active {
+    background-color: color-mix(in srgb, var(--md-sys-color-primary) 82%, white);
+  }
+
+  &:focus-visible {
+    outline-color: var(--md-sys-color-on-surface-strong);
+  }
+
+  .shortcut {
+    background-color: var(--md-sys-color-on-primary);
+    color: var(--md-sys-color-primary);
+  }
+}
+
 // disabled filled buttons looked more clickable than enabled secondary ones
 button.filled:disabled,
 button.tonal:disabled,

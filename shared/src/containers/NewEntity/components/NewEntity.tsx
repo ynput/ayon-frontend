@@ -73,7 +73,7 @@ const StyledCreateButton = styled(Dropdown)`
     justify-content: center;
 
     &:hover {
-      background-color: var(--md-sys-color-primary-hover);
+      background-color: color-mix(in srgb, var(--md-sys-color-primary) 82%, white);
     }
   }
 `
