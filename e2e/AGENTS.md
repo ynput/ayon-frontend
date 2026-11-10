@@ -16,8 +16,8 @@ npx playwright install chromium
 import { ayonConfig } from '@ynput/ayon-e2e/config'
 
 export default ayonConfig(
-  // an ayon-frontend checkout to build AYON from (TEST_FRONTEND_DIR overrides it)
-  { addon: { name: 'my_addon' }, frontendDir: '../ayon-frontend' },
+  // AYON is built from the ayon-frontend checkout in TEST_FRONTEND_DIR (.env.test.local)
+  { addon: { name: 'my_addon' } },
   { globalTeardown: './tests/e2e/global.teardown.ts' },
 )
 ```
@@ -37,9 +37,11 @@ import { ayonTeardown } from '@ynput/ayon-e2e'
 export default ayonTeardown()
 ```
 
-`.env.test.local` next to the config (gitignored) holds the server and an admin account:
+`.env.test.local` next to the config (gitignored) holds the server, an admin account and, for an addon,
+the ayon-frontend checkout to build AYON from:
 
 ```
+TEST_FRONTEND_DIR=/absolute/path/to/ayon-frontend
 TEST_BACKEND_URL=http://localhost:5000
 TEST_USER_NAME=admin
 TEST_USER_PASSWORD=...
@@ -51,7 +53,8 @@ TEST_USER_PASSWORD=...
 projects by name, `use` key by key, web servers added.
 
 It starts the servers the tests need:
-- **AYON's frontend**, built from `frontendDir` (an ayon-frontend checkout) with `vite build` and served with
+- **AYON's frontend**, built from `TEST_FRONTEND_DIR` or `frontendDir` (an ayon-frontend checkout with its
+  dependencies installed) with `vite build` and served with
   `vite preview` on port 3100, proxied to `TEST_BACKEND_URL`. `TEST_DEV_SERVER=1` uses the vite dev server
   (slower with several workers, handy while writing tests). `TEST_SERVER_URL=https://...` tests a running
   frontend and starts nothing.
@@ -59,6 +62,10 @@ It starts the servers the tests need:
   Every page and signed-in context loads the addon from it instead of the installed version, and users from
   `createUser` get developer mode, which AYON requires for that. The addon's server code is not loaded from
   there: install that version on the server (`checkPrerequisites` says so when it is missing).
+
+An addon's suite stops with an error when it has no checkout to build from. Keep the checkout outside the
+addon's repo, and don't link it in: the addon's Biome, ESLint or tsc runs would reach into it, and
+`biome check --write` would rewrite its files.
 
 Locally a server already listening on those ports is reused, **and not rebuilt**: stop it after changing
 app code. `TEST_PORT`, `TEST_ADDON_PORT`, `TEST_WORKERS` change the defaults.

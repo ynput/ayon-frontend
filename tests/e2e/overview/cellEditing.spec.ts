@@ -1,6 +1,8 @@
+import { dialog } from '@ynput/ayon-e2e'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { OverviewPage } from '../pages/OverviewPage'
+import { holdFolderTasks } from '../support/holdFolderTasks'
 
 const createShot = async (api: AyonApi, projectName: string, tasks: string[]) => {
   const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
@@ -98,19 +100,31 @@ test.describe('overview cell editing', () => {
       .toEqual({ fps: 48, own: false })
   })
 
-  test('delete a task', async ({ page, api, projectName }) => {
+  test('delete a task while another folder is loading', async ({ page, api, projectName }) => {
     const { folder, tasks } = await createShot(api, projectName, ['keep', 'remove'])
+    const other = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
+    await api.createTask(projectName, { folderId: other.id, name: 'light', taskType: 'Generic' })
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
     await overview.expand('sh010')
+    await expect(overview.row('remove')).toBeVisible()
+    const pending = await holdFolderTasks(page, other.id)
+    await overview.expand('sh020')
+    await pending.responseCaptured
 
-    await overview.deleteRow('remove')
+    try {
+      await overview.deleteRow('remove')
 
+      await expect
+        .poll(async () => (await api.listTasks(projectName, folder.id)).map((t) => t.id))
+        .toEqual([tasks[0].id])
+    } finally {
+      pending.release()
+    }
+
+    await expect(overview.row('light')).toBeVisible()
     await expect(overview.row('remove')).toBeHidden()
     await expect(overview.row('keep')).toBeVisible()
-    await expect
-      .poll(async () => (await api.listTasks(projectName, folder.id)).map((t) => t.id))
-      .toEqual([tasks[0].id])
   })
 })
 
@@ -155,7 +169,9 @@ test.describe('overview tag and date cells', () => {
     await search.click()
     await expect(search).toBeFocused()
     await search.fill('adhoc')
+    // a new tag is created in the "Add tag" dialog, where it also gets a colour
     await search.press('Enter')
+    await dialog(page, 'Add tag').getByRole('button', { name: 'Add' }).click()
     await page.keyboard.press('Escape')
     await expect(page.locator('.options')).toBeHidden()
 
@@ -284,7 +300,7 @@ test.describe('overview tag and date cells', () => {
 
     await expect(overview.cell('anim', 'attrib_startDate')).toHaveText('15-11-2026')
     await expect
-      .poll(async () => (await api.getTask(projectName, tasks[0].id)).attrib.startDate)
-      .toBe('2026-11-15T00:00:00+00:00')
+      .poll(async () => Date.parse((await api.getTask(projectName, tasks[0].id)).attrib.startDate))
+      .toBe(Date.parse('2026-11-15T00:00:00Z'))
   })
 })

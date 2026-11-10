@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useMenuContext } from '@shared/context'
@@ -36,6 +37,20 @@ export const ColumnHeaderMenu = ({
 
   const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
     useColumnGroupBy(columnId)
+
+  const { getAddonColumnMenuItems: getAddonItems, prefetchAddonColumnMenuItems } =
+    header.getContext().table.options.meta ?? {}
+  const addonColumn = {
+    columnId,
+    header: column.columnDef.header,
+    groupLabel,
+    groupField: canGroupThisColumn ? targetGroupById : undefined,
+  }
+  // load the addon items' code once the menu opens, not with every header
+  useEffect(() => {
+    if (isOpen) prefetchAddonColumnMenuItems?.(addonColumn)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, prefetchAddonColumnMenuItems])
 
   // Hide the menu when resizing
   if (isResizing) {
@@ -140,6 +155,17 @@ export const ColumnHeaderMenu = ({
         } else {
           groupBySelectedColumn()
         }
+        handleMenuToggle(false)
+      },
+    })
+  }
+
+  const addonItems = getAddonItems?.(addonColumn) ?? []
+  for (const item of addonItems) {
+    menuItems.push({
+      ...item,
+      onClick: () => {
+        item.onClick?.()
         handleMenuToggle(false)
       },
     })

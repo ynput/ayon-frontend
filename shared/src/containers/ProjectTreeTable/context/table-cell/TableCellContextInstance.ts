@@ -5,7 +5,7 @@ import type { CellMark } from '../../types/table'
 // cell, read by CellWidget, so columns don't have to pass it on themselves
 export type TableCellContextValue = {
   mark?: CellMark // TableRow.cellMarks[column id]
-  isRowReadOnly?: boolean // TableRow.readOnly
+  isRowReadOnly?: boolean // TableRow.readOnly or the table's readOnly
 }
 
 export const TableCellContext = createContext<TableCellContextValue>({})

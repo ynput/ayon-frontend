@@ -6,8 +6,11 @@ import type {
   DetailsPanelTab,
   TabStateByScope,
 } from './DetailsPanelContext'
-import { useSessionStorage } from '@shared/hooks/useSessionStorage'
-import { readLocalStorage, writeLocalStorage } from '@shared/hooks/useLocalStorage'
+import {
+  readSessionStorage,
+  useSessionStorage,
+  writeSessionStorage,
+} from '@shared/hooks/useSessionStorage'
 
 // Create the context
 export const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
@@ -49,9 +52,10 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 
 export const TABS_BY_SCOPE_KEY = 'details/tabs-by-scope'
 
+// same storage as the useSessionStorage(TABS_BY_SCOPE_KEY) readers below and in DetailsPanelContext
 export const setDetailsPanelTabForScope = (scope: string, tab: DetailsPanelTab) => {
-  const current = readLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
-  writeLocalStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
+  const current = readSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
+  writeSessionStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
 }
 
 // Add a specialized hook for using a panel in a specific scope
@@ -60,7 +64,7 @@ export const useScopedDetailsPanel = (scope: string) => {
 
   const [tabsByScope, setTabsByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
-  // derived from localStorage state, which useSessionStorage keeps in sync across hook instances
+  // derived from sessionStorage state, which useSessionStorage keeps in sync across hook instances
   const storedTab = tabsByScope[scope]
   const currentTab = isDetailsPanelTab(storedTab) ? storedTab : getTabForScope(scope)
 

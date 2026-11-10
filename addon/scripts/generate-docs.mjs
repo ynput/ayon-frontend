@@ -146,9 +146,11 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   under AYON's providers, so hooks work. Clean up in its effects.
 - Globals are imports, never context: \`useUser\`, \`useNavigate\` and the other router hooks, \`Link\`,
   \`toast\`, the layout components (\`ProjectPageLayout\`, \`Slicer\`, \`StudioPageLayout\`,
-  \`ProjectList\`), \`MoreMenu\` (below). Data comes from \`@ynput/ayon-frontend-shared/api\`
-  (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
+  \`ProjectList\`), \`MoreMenu\` and \`useContextMenu\` (below). Data comes from
+  \`@ynput/ayon-frontend-shared/api\` (AYON's api and cache): components use its hooks, \`run\` and \`menu\` pieces
   \`dispatch(api.endpoints.x.initiate(args))\` with \`dispatch\` from this package (AYON's store).
+  Menu items (their context has no \`navigate\`, unlike buttons) open another AYON page with
+  \`navigate(to)\` from this package; it is the same as a button's \`context.navigate\`.
 - URL query params: \`useQueryParam\` / \`useQueryParams\` and the params (\`StringParam\`,
   \`withDefault\`, ...) from this package. They read the \`QueryParamProvider\` AYON renders around
   every slot: no provider or router adapter in the addon. A change replaces only that param in the
@@ -194,6 +196,73 @@ name (anything but letters and digits becomes \`_\`), then the contribution's id
 until the user adds them in Customize. Build the id with \`addonColumnId(addon, id)\` (\`ADDON_COLUMN_PREFIX\`
 is the \`addon__\` part) in tests and saved views; do not write it out by hand.
 
+## What a project table shows: \`tableState\`
+
+\`tableState\` is the table's filter as AYON queries it: the filter bar, every slicer panel, the
+search, the folders and the grouping. Use it to act on everything the table shows, not only the
+selection ("chart this", "export filtered"). The identity changes only when one of those changes.
+It is never in \`tableColumn\`, whose values would refetch on every filter change.
+
+- \`filters\`: one server \`QueryFilter\` per entity (\`folder\`, \`task\`, \`product\`, \`version\`,
+  \`representation\`), each applying to that entity. The filters are ANDed together. Keys have no
+  scope prefix and are the entity's own fields: \`status\`, \`tags\`, \`name\`, \`createdAt\`,
+  \`updatedAt\`, \`attrib.<name>\`, and per entity \`taskType\` and \`assignees\` (task),
+  \`folderType\` (folder), \`productType\` and \`productBaseType\` (product), \`author\` and
+  \`version\` (version). Relative dates are resolved. An entity without conditions is left out. To
+  filter tasks by their folder, prefix the folder keys (\`folder.status\`).
+- \`search\`: Overview's name search for tasks, comma-separated terms ORed. Products has none.
+- \`folderIds\`: the folders the rows are in, with all descendants. This can be thousands of ids;
+  send them as \`folder.id in [...]\` / \`folderIds\`, not one request each. \`undefined\`: the whole
+  project.
+- \`ids\`: the entities picked in a lists slicer panel, already inside \`folderIds\`. Only those rows show.
+- \`groupBy\`: \`{ id, desc }\`, the field the rows are grouped by (\`status\`, \`taskType\`,
+  \`assignees\`, \`attrib.<name>\`, ...). \`undefined\` when not grouped.
+
+| | Overview | Products |
+| --- | --- | --- |
+| \`entityType\` | \`task\` | \`version\` |
+| \`filters\` | \`task\`, \`folder\` | \`version\`, \`product\`, \`task\`, \`folder\`, \`representation\` (file extension as a \`path\` condition) |
+| \`search\` | task names | not set |
+| \`ids\` | \`task\` | \`task\`, \`product\`, \`version\` |
+| \`showHierarchy\` | the folder tree | products with their versions |
+| \`groupBy\` | task fields; \`folderType\` groups folders | version fields |
+| \`queryArgs\` | not set | \`version\`: \`featuredOnly\`, \`latestPerFolder\`, \`hasReviewables\` |
+
+\`queryArgs\` are filters a query takes as arguments, not conditions, per entity like \`filters\`.
+\`queryArgs.version\` is named like GraphQL \`versions\` arguments. Send \`featuredOnlyEntityType: 'product'\` with \`featuredOnly\`.
+
+## A column's menu: \`projectTable.columnMenuItem\`
+
+An item in the column header's more menu, after "Group by", for acting on one column: "Chart
+tasks by {column}". \`{column}\` in \`label\` and \`dialogTitle\` becomes the column's name. The
+context has \`columnId\` (\`status\`, \`subType\`, \`assignees\`, \`attrib_priority\`), \`columnLabel\`,
+\`groupField\` and \`tableState\`. \`groupField\` is what "Group by" on that column groups by, the
+same key as \`tableState.groupBy.id\` (\`status\`, \`taskType\`, \`attrib.priority\`), and
+\`undefined\` when the table can't group by the column. Narrow where it shows in the description,
+so no code loads to decide: \`pages\`, \`columns\` (ids, \`attrib_*\` for every attribute) and
+\`groupable: true\` (only columns with a \`groupField\`). Columns whose header has no plain name
+(link columns) get no addon items unless they are groupable.
+
+\`\`\`ts
+projectTableColumnMenuItem({
+  id: 'chartTasks',
+  label: 'Chart tasks by {column}',
+  icon: 'bar_chart',
+  pages: ['overview'],
+  groupable: true,
+  dialogHeader: false,
+  dialogSize: 'lg',
+  dialog: () => import('./ChartDialog'),
+})
+\`\`\`
+
+## Dialogs without AYON's header: \`dialogHeader: false\`
+
+A \`dialog\` piece (\`header.item\`, \`projectTable.toolbarItem\`, \`projectTable.columnMenuItem\`,
+\`table.shortcut\`) sits in AYON's dialog with a header: the title and a close button. With
+\`dialogHeader: false\` AYON draws no header and the piece draws its own toolbar, which must
+have a close button calling \`close\`. Escape and a click outside still close it.
+
 ## Common errors
 
 Look in the browser console first: every message starts with \`[addon <name>]\`.
@@ -211,6 +280,36 @@ Look in the browser console first: every message starts with \`[addon <name>]\`.
 | \`the file has no default export\` / \`"run" has no default export function\` | A piece's file must \`export default\` its component or function |
 | \`x (addon): <message>\` toast, and \`[addon <name>] … failed\` in the console | A \`run\`, \`menu\` or dialog piece threw. \`… crashed\` is a component that threw while rendering: it stays inside its own area |
 | \`<name> is not available in this AYON frontend\` | A layout component or picker this AYON version does not provide; update AYON or the SDK |
+
+## A table of entities: \`EntityTable\`
+
+AYON's project table as on Overview (columns, sorting, grouping, summaries row, loading on scroll)
+for the rows you give it, read-only. It loads the project's data itself: render it anywhere (a
+project page, a studio page, a dialog for another project). Give its parent a height.
+
+\`\`\`tsx
+import { EntityTable, type EntityTableSettings } from '@ynput/ayon-addon'
+
+const [settings, setSettings] = useState<EntityTableSettings>({})
+<EntityTable
+  projectName={projectName}
+  entityType="task"
+  filter={{ conditions: [{ key: 'status', operator: 'in', value: ['In progress'] }] }}
+  settings={settings}
+  onSettingsChange={setSettings}
+/>
+\`\`\`
+
+- \`entityType\`: \`task\` (the task list) or \`folder\` (folders, each expandable to its tasks).
+- Rows: \`filter\` in the Overview filter bar's format (a key without a prefix is about tasks,
+  \`folder_<key>\` about folders), \`ids\` of \`entityType\`, or both (rows match both). \`ids={[]}\`
+  shows no rows. Task and folder conditions are always joined by \`and\`: keep an \`or\` within one
+  of them. Every table request carries the ids, so keep them to a few thousand.
+- \`settings\` is what the user changes (columns, sorting, grouping, row height), the same keys as
+  AYON's saved views. Controlled when set; store it where you like (e.g. your page's view).
+- \`excludedColumns\`: column ids the table never shows and the user can't add.
+- Read-only: the right-click menu offers Open in overview, copy, the viewer, expand and export. A
+  single group opens expanded.
 
 ## Picking entities: \`EntityPicker\`
 
@@ -338,6 +437,33 @@ with a warning naming the addon to update. Additive context fields are a minor r
 package; a breaking change is a new slot version. To keep older contributions working through a
 transition, declare the new shape under a new slot name and keep the old slot for a while.
 
+## A right-click menu: \`useContextMenu\`
+
+AYON's right-click menu with the same items as \`MoreMenu\`. Don't import AYON's own context menu
+from \`@ynput/ayon-frontend-shared\`: its items have another shape and it needs AYON's provider.
+
+\`\`\`tsx
+import { useContextMenu } from '@ynput/ayon-addon'
+
+const openContextMenu = useContextMenu()
+
+<tr
+  onContextMenu={(event) =>
+    openContextMenu(event, [
+      { id: 'edit', label: 'Edit', icon: 'edit', onClick: () => edit(log) },
+      { divider: true },
+      { id: 'delete', label: 'Delete', icon: 'delete', danger: true, disabled: log.locked, onClick: () => askDelete(log) },
+    ])
+  }
+/>
+\`\`\`
+
+- The opener takes the mouse event and the items, built when the menu opens. It stops the browser's
+  own menu. Items as in \`MoreMenu\`; \`selected\` has no look in this menu.
+- To ask before a destructive item, open your own confirmation (AYON's \`Dialog\` from
+  \`@ynput/ayon-react-components\`) from its \`onClick\`. The \`confirmDelete\` of
+  \`@ynput/ayon-frontend-shared\` needs a dialog AYON doesn't render for addons.
+
 ## Slot contexts: one shape
 
 The same thing has the same name and type in every slot that has it:
@@ -355,6 +481,13 @@ The same thing has the same name and type in every slot that has it:
   one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
   tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
   entity: \`tableColumn\` has \`entity\`.
+- **\`users\`** (\`UserRef[]\`: \`name\`, \`fullName?\`, \`email?\`, \`active\` and the flags of
+  \`user\` without \`isDeveloper\`), in slots about other users: \`userDetails.section\` and
+  \`userDetails.menuItem\` (the users selected in Settings → Users). Not the signed-in user: that is
+  \`user\`.
+- **\`tableState\`** (\`ProjectTableState\`), in \`projectTable.toolbarItem\`,
+  \`projectTable.columnMenuItem\`, \`entityMenuItem\` and \`table.shortcut\`: what the project table shows. Set on Overview and Products; \`undefined\` on
+  Lists, in the panels' tables and on older hosts. See "What a project table shows".
 
 ## Slots
 
