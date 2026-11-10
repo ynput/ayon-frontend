@@ -6,6 +6,16 @@ const FormWrapper = styled.div<{ $currentSelection: string }>`
     background-color: light-dark(var(--md-sys-color-surface-container-high), rgba(0, 0, 0, 0.2));
   }
 
+  /* a selected section marks its header bar only: filling the whole section would merge its
+     sub-section rows into one block, unlike the same rows once the selection moves away */
+  .panel[data-fieldid='${(props) => props.$currentSelection}'] {
+    background-color: transparent;
+
+    > .panel-header {
+      background-color: var(--md-sys-color-surface-container-highest);
+    }
+  }
+
   .rjsf {
     flex-grow: 1;
     margin: 0;
