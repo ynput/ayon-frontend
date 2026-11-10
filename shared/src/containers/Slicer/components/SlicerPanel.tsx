@@ -66,10 +66,10 @@ const PanelHeader = styled(Header)`
     }
   }
 
-  /* the dimension name comes first: in a narrow panel the quick actions go, they are in the
-     more menu too */
+  /* the dimension name and the search come first: in a narrow panel the split button goes, then
+     the remove button; both are in the more menu too */
   @container (max-width: 240px) {
-    .slicer-search:not(.open) {
+    .split-action {
       display: none;
     }
   }
@@ -480,7 +480,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           {canSplit && isPrimary && !isSearching && (
             <HeaderButton
               icon="splitscreen_add"
-              className={clsx('quick-action', { 'power-feature': !powerLicense })}
+              className={clsx('split-action', { 'power-feature': !powerLicense })}
               data-tooltip={powerLicense ? 'Split slicer' : 'Power feature - Slicer'}
               data-tooltip-delay={0}
               onClick={handleSplit}
