@@ -182,7 +182,7 @@ const Attributes = () => {
               onClick={() => onDelete(selectedAttribute)}
             />
             <SearchInput
-              style={{ width: '200px' }}
+              style={{ flex: '0 1 320px', minWidth: 160 }}
               placeholder="Filter attributes"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
