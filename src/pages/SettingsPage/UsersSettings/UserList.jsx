@@ -5,7 +5,7 @@ import UserImage from '@shared/components/UserImage'
 
 import './users.scss'
 
-import { memo, useEffect, useMemo, useReducer, useRef } from 'react'
+import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableExportContext } from '@shared/context'
@@ -16,7 +16,8 @@ import { readLocalStorage } from '@shared/hooks/useLocalStorage'
 import { useGetUserPoolsQuery } from '@shared/api'
 import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
-import { getInvitationState } from './InvitationStatusHelpers'
+import { getInvitationState, getInvitationText } from './InvitationStatusHelpers'
+import { useStableColumnWidths } from './useStableColumnWidths'
 
 // fixed row height, needed by the virtual scroller
 const ROW_HEIGHT = 33
@@ -222,6 +223,40 @@ const UserList = ({
 
   const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
 
+  // the text of each column's cells, to size the columns to every user
+  const columnTexts = useMemo(
+    () => ({
+      name: (user) => user.name,
+      fullName: (user) => user.attrib?.fullName,
+      email: (user) => user.attrib?.email,
+      ...(userPools.length && {
+        userPool: (user) =>
+          user.userPool ? userPools.find((p) => p.id === user.userPool)?.label || 'Invalid' : '',
+      }),
+      accessLevel: getUserRole,
+      defaultAccessGroups: (user) => user.defaultAccessGroups?.join(', '),
+      hasPassword: (user) => (user.hasPassword ? 'yes' : 'no'),
+      active: (user) => (user.active ? 'yes' : ''),
+      invitation: getInvitationText,
+    }),
+    [userPools],
+  )
+  // Once the user resizes a column the table saves every column's width and keeps them, so the
+  // minimum widths go: they would stop a column from getting narrower.
+  const [resized, setResized] = useState(() => !!restoreTableState().columnWidths)
+  const columnWidths = useStableColumnWidths(
+    tableRef,
+    userList,
+    columnTexts,
+    !isLoading && !resized,
+  )
+  // min-width, as the table is wider than the page and the browser ignores a larger width. Only on
+  // the body cells: the table takes a header's min-width as the narrowest it can be resized to.
+  const columnProps = (key) => ({
+    className: `col-${key}`,
+    bodyStyle: resized ? undefined : { minWidth: columnWidths[key] },
+  })
+
   // Render
   return (
     <Section wrap>
@@ -238,6 +273,7 @@ const UserList = ({
           onRowClick={onRowClick}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
+          onColumnResizeEnd={() => setResized(true)}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
@@ -253,16 +289,24 @@ const UserList = ({
           <Column
             field="name"
             header="Username"
+            {...columnProps('name')}
             sortable
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             resizeable
           />
-          <Column field="attrib.fullName" header="Full name" sortable resizeable />
-          <Column field="attrib.email" header="Email" sortable />
+          <Column
+            field="attrib.fullName"
+            header="Full name"
+            sortable
+            resizeable
+            {...columnProps('fullName')}
+          />
+          <Column field="attrib.email" header="Email" sortable {...columnProps('email')} />
           {!!userPools.length && (
             <Column
               field="userPool"
               header="License"
+              {...columnProps('userPool')}
               body={(rowData) => {
                 const pool = findUserPool(rowData.userPool)
                 return (
@@ -279,6 +323,7 @@ const UserList = ({
           <Column
             field={'accessLevel'}
             header="Access level"
+            {...columnProps('accessLevel')}
             body={(rowData) => getUserRole(rowData)}
             sortFunction={sortFunctions.accessLevel}
             sortable
@@ -287,12 +332,14 @@ const UserList = ({
           <Column
             field="defaultAccessGroups"
             header="Default projects access"
+            {...columnProps('defaultAccessGroups')}
             sortable
             resizeable
             body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
             header="Has password"
+            {...columnProps('hasPassword')}
             body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
             field="hasPassword"
             sortable
@@ -300,6 +347,7 @@ const UserList = ({
           />
           <Column
             header="Active"
+            {...columnProps('active')}
             body={(rowData) => (rowData.active ? 'yes' : '')}
             field="active"
             sortable
@@ -307,6 +355,7 @@ const UserList = ({
           />
           <Column
             header="Invitation"
+            {...columnProps('invitation')}
             field="inviteSentAt"
             body={(rowData) => <InvitationStatus user={rowData} plain />}
             sortable
