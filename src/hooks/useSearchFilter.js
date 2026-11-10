@@ -94,10 +94,13 @@ const useSearchFilter = (fields = [], data = [], id) => {
     if (searchString === appliedSearch) return
     const timeout = setTimeout(() => {
       setAppliedSearch(searchString)
-      // writing the value the url already has doesn't change it, so there is nothing to wait for
-      if (id && searchString !== latestUrlSearch.current) {
-        pendingUrlSearches.current.push(searchString)
-        setUrlSearch(searchString)
+      // writing the value the url has, or will have once our last write lands, changes nothing
+      const pending = pendingUrlSearches.current
+      const lastWritten = pending.length ? pending[pending.length - 1] : latestUrlSearch.current
+      if (id && searchString !== lastWritten) {
+        pending.push(searchString)
+        // an empty search leaves the url, the param reads back as ''
+        setUrlSearch(searchString || undefined)
       }
     }, SEARCH_DEBOUNCE_MS)
     return () => clearTimeout(timeout)
