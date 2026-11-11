@@ -127,7 +127,6 @@ export const Facts = styled.dl`
     background-color: var(--md-sys-color-surface-container);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.1s;
 
     a {
       display: flex;
