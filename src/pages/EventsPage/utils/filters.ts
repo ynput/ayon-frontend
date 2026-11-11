@@ -23,6 +23,7 @@ export const getTopicPatterns = (filters: EventFilters): string[] | undefined =>
 export const buildGqlVariables = (filters: EventFilters) => {
   const topics = getTopicPatterns(filters)
   return {
+    ids: filters.ids?.length ? filters.ids : undefined,
     topics,
     includeLogs: !filters.hideLogs || !!topics,
     projects: filters.projects?.length ? filters.projects : undefined,
@@ -43,6 +44,7 @@ type QueryFilter = { conditions: (Condition | QueryFilter)[]; operator?: 'and' |
 /** The same filters expressed for the rest `/api/query` endpoint */
 export const buildQueryFilter = (filters: EventFilters): QueryFilter => {
   const conditions: QueryFilter['conditions'] = []
+  if (filters.ids?.length) conditions.push({ key: 'id', value: filters.ids, operator: 'in' })
   if (filters.entity) {
     conditions.push({
       operator: 'or',
@@ -105,6 +107,7 @@ export const matchesFilters = (event: EventItem, filters: EventFilters): boolean
     if (!topics.some((p) => patternToRegex(p).test(event.topic))) return false
   } else if (filters.hideLogs && getCategory(event.topic) === 'log') return false
 
+  if (filters.ids?.length && !filters.ids.includes(event.id)) return false
   if (filters.entity && !ENTITY_SUMMARY_KEYS.some((key) => event.summary[key] === filters.entity))
     return false
   if (filters.statuses?.length && !filters.statuses.includes(event.status)) return false

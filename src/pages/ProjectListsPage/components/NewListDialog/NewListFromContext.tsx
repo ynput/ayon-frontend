@@ -1,10 +1,16 @@
-import { FC, useLayoutEffect, useMemo, useState } from 'react'
+import { FC, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { NewListDialog } from './NewListDialog'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { listDefaultName, NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import { buildListFolderOptions } from '@pages/ProjectListsPage/util/listFolders'
 import { useGetEntityListFoldersQuery } from '@shared/api'
 import { usePowerpack } from '@shared/context'
+import { readDialogMemory, writeDialogMemory } from '@shared/util'
+
+// the list folder the last list or review session went into, per project and kind of list
+type FolderMemory = { entityListFolderId?: string }
+const folderMemoryKey = (isReview: boolean) =>
+  isReview ? 'new-review-session-folder' : 'new-list-folder'
 
 interface NewListFromContextProps {}
 
@@ -16,7 +22,11 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
   const [listForm, setListForm] = useState<NewListForm | null>(null)
 
   // list folders are a powerpack feature; same cache entry as the lists table, fetched once the dialog opens
-  const { data: listFolders = [] } = useGetEntityListFoldersQuery(
+  const {
+    data: listFolders = [],
+    isSuccess: foldersLoaded,
+    isError: foldersFailed,
+  } = useGetEntityListFoldersQuery(
     { projectName },
     { skip: !newListData || !powerLicense || !projectName },
   )
@@ -28,13 +38,15 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
 
   useLayoutEffect(() => {
     if (newListData) {
+      const isReviewList = newListData.entityListType === 'review-session'
+      const remembered = readDialogMemory<FolderMemory>(folderMemoryKey(isReviewList), projectName)
       setListForm({
         entityType: newListData.entityType,
         label: listDefaultName(
           newListData.entityListType === 'review-session' ? 'Review' : undefined,
         ),
         entityListType: newListData.entityListType,
-        entityListFolderId: newListData.entityListFolderId,
+        entityListFolderId: newListData.entityListFolderId ?? remembered.entityListFolderId,
       })
     } else {
       setListForm(null)
@@ -43,16 +55,55 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
     return () => {
       setListForm(null)
     }
-  }, [newListData])
+  }, [newListData, projectName])
 
-  const handleSubmit = () => {
-    if (!listForm) return
-    createNewList(listForm.label, {
-      // a folder that isn't offered (no license, other scope) is never sent
-      entityListFolderId: folderOptions.some((o) => o.value === listForm.entityListFolderId)
-        ? listForm.entityListFolderId
-        : undefined,
-    })
+  // a remembered folder that was deleted (or is not offered here) is dropped once folders load
+  useEffect(() => {
+    if (!foldersLoaded || !listForm?.entityListFolderId) return
+    if (!folderOptions.some((o) => o.value === listForm.entityListFolderId)) {
+      setListForm((prev) => prev && { ...prev, entityListFolderId: undefined })
+    }
+  }, [foldersLoaded, folderOptions, listForm?.entityListFolderId])
+
+  const [isCreating, setIsCreating] = useState(false)
+  // a chosen folder can only be checked once folders load; until then creating would drop it to the root.
+  // If they fail to load, the folder isn't offered and the list goes to the root instead of blocking.
+  const folderPending =
+    !!powerLicense &&
+    !!projectName &&
+    !!listForm?.entityListFolderId &&
+    !foldersLoaded &&
+    !foldersFailed
+
+  const handleSubmit = async (keepOpen?: boolean) => {
+    if (!listForm || folderPending) return
+    // a folder that isn't offered (no license, other scope) is never sent
+    const entityListFolderId = folderOptions.some((o) => o.value === listForm.entityListFolderId)
+      ? listForm.entityListFolderId || undefined
+      : undefined
+    if (powerLicense && foldersLoaded) {
+      writeDialogMemory<FolderMemory>(
+        folderMemoryKey(isReview),
+        { entityListFolderId },
+        projectName,
+      )
+    }
+    setIsCreating(true)
+    try {
+      await createNewList(listForm.label, { entityListFolderId, keepOpen })
+    } finally {
+      setIsCreating(false)
+    }
+    // the same entities and folder stay for the next list, only the label is fresh
+    if (keepOpen) {
+      setListForm(
+        (prev) =>
+          prev && {
+            ...prev,
+            label: listDefaultName(isReview ? 'Review' : undefined),
+          },
+      )
+    }
   }
 
   if (!listForm) return null
@@ -61,7 +112,10 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
     <NewListDialog
       form={listForm}
       onChange={setListForm}
-      onSubmit={handleSubmit}
+      // the context shows creation errors itself
+      onSubmit={() => handleSubmit().catch(() => {})}
+      onSubmitAndContinue={() => handleSubmit(true)}
+      submitLoading={isCreating || folderPending}
       onClose={closeCreateNewList}
       isOpen
       hidden={['entityType']}

@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { compareBuild } from 'semver'
 import { Dialog, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 import {
   FormLayout,
   FormRow,
@@ -329,6 +330,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       isOpen={true}
       header={isEditMode ? 'Edit service' : 'Spawn a new service'}
       onClose={onHide}
+      onKeyDown={getDialogKeyDown(submit, { onClose: onHide, disabled: !canSubmit || isLoading })}
       footer={footer}
       style={{ width: 550, maxHeight: '80vh', zIndex: 999 }}
       size="lg"

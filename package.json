@@ -65,7 +65,7 @@
     "@tanstack/react-virtual": "3.13.23",
     "@uiw/react-textarea-code-editor": "2.1.9",
     "@ynput/ayon-player": "^1.1.0",
-    "@ynput/ayon-react-components": "^1.25.1",
+    "@ynput/ayon-react-components": "^1.27.0",
     "axios": "1.20.0",
     "chart.js": "4.5.1",
     "clsx": "2.1.1",

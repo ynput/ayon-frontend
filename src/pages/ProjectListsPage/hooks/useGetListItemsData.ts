@@ -7,7 +7,7 @@ import {
   shouldSkipColumnStats,
   toListItemsStatsTargets,
   totalRowsFromStats,
-  useGetEntityLinksQuery,
+  useGetEntityLinksInBatchesQuery,
   useGetListItemsColumnStatsQuery,
   useGetListItemsInfiniteInfiniteQuery,
   SubTaskNode,
@@ -335,12 +335,10 @@ const useGetListItemsData = ({
       | 'representation'
       | 'workfile',
   }
-  const { data: linksData = [], isUninitialized: isLinksUninitialized } = useGetEntityLinksQuery(
-    linksArgs,
-    {
+  const { data: linksData = [], isUninitialized: isLinksUninitialized } =
+    useGetEntityLinksInBatchesQuery(linksArgs, {
       skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
-    },
-  )
+    })
 
   // Create a map of links by entity ID for efficient lookups
   const linksMap = useMemo(() => {

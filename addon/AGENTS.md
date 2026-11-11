@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 0.5.0
+# @ynput/ayon-addon 0.6.0
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
@@ -745,7 +745,7 @@ Pieces: `run`.
 
 ### `profile.section`: `profileSection`
 
-A section on the signed-in user's profile page (Account → Profile), below AYON's own forms. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
+A section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens). The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
 
 | Description field | Type | |
 |---|---|---|
