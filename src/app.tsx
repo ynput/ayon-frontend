@@ -385,7 +385,7 @@ const App = () => {
   }
 
   // Logged in and on the way back to the authorization server (see the effect above)
-  if (authReturn) return loadingComponent
+  if (user.name && authReturn) return loadingComponent
 
   // Trial has finished and it's a cloud-managed instance, show trial ended page
   if (isTrialing && left?.finished && ynputConnect?.managed) {
