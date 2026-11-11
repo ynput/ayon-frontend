@@ -1,6 +1,10 @@
 import { useCallback, useEffect, RefObject, useRef } from 'react'
 import { getCellId, parseCellId } from '@shared/containers/ProjectTreeTable/utils/cellUtils'
-import { getEntityViewierIds, useProjectTableContext } from '@shared/containers'
+import {
+  getEntitiesViewerIds,
+  getEntityViewierIds,
+  useProjectTableContext,
+} from '@shared/containers'
 
 interface UseGridKeyboardNavigationProps {
   gridData: Array<{ id: string; entityType: string }>
@@ -273,13 +277,24 @@ export const useGridKeyboardNavigation = ({
           }
           break
 
-        case ' ':
+        case ' ': {
           e.preventDefault()
 
           const entityId = gridData[currentIndex].id
+          // several selected items, this one among them: the viewer plays their versions in
+          // grid order on a timeline
+          const selectedIds = new Set(Array.from(selectedCells, (id) => parseCellId(id)?.rowId))
+          const selectedItems = gridData.filter((item) => selectedIds.has(item.id))
+          if (onOpenPlayer && selectedItems.length > 1 && selectedIds.has(entityId)) {
+            const entities = selectedItems.flatMap((item) => getEntityById(item.id) ?? [])
+            const targetIds = getEntitiesViewerIds(entities)
+            if (targetIds) onOpenPlayer(targetIds, { quickView: true })
+            break
+          }
           openPlayerWithId(entityId)
 
           break
+        }
 
         case 'Home':
           e.preventDefault()
@@ -304,6 +319,8 @@ export const useGridKeyboardNavigation = ({
       gridColumnId,
       rowSelectionColumnId,
       playerOpen,
+      onOpenPlayer,
+      getEntityById,
     ],
   )
 

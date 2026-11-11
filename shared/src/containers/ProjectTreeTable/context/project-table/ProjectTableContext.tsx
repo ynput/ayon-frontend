@@ -51,7 +51,7 @@ import {
 import { TableGroupBy, useColumnSettingsContext } from '../column-settings/ColumnSettingsContext'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import type { SubtasksManagerProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
-import { RowId } from '../../utils'
+import type { RowId, ViewerTargetIds } from '../../utils'
 import { ProjectTableContext } from './ProjectTableContextInstance'
 import { parseRowId } from './ProjectTableContextHelpers'
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
@@ -242,12 +242,7 @@ export interface ProjectTableProviderProps {
   // player
   playerOpen?: boolean
   onOpenPlayer?: (
-    targetIds: {
-      taskId?: string
-      folderId?: string
-      productId?: string
-      versionId?: string
-    },
+    targetIds: ViewerTargetIds,
     config?: { quickView?: boolean; goToPosition?: number; reviewableId?: string },
   ) => void
   // views

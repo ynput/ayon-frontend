@@ -6,7 +6,7 @@ import { parseCellId, getCellId } from '../utils/cellUtils'
 import { useProjectTableContext } from '../context/project-table'
 import { useProjectDataContext } from '../context/project-data'
 import { useDetailsPanelEntityContext } from '../context/details-panel-entity'
-import { getEntityViewierIds } from '../utils'
+import { getEntitiesViewerIds, getEntityViewierIds } from '../utils'
 import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
 
 export default function useKeyboardNavigation() {
@@ -15,8 +15,15 @@ export default function useKeyboardNavigation() {
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const canOpenRenameDialog = canWriteLabelPermission || canWriteNamePermission
 
-  const { focusedCellId, gridMap, selectCell, focusCell, clearSelection, setFocusedCellId } =
-    useSelectionCellsContext()
+  const {
+    focusedCellId,
+    selectedCells,
+    gridMap,
+    selectCell,
+    focusCell,
+    clearSelection,
+    setFocusedCellId,
+  } = useSelectionCellsContext()
 
   const { setEditingCellId, editingCellId } = useCellEditing()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
@@ -224,6 +231,23 @@ export default function useKeyboardNavigation() {
         }
         case ' ': {
           e.preventDefault()
+          // several selected rows, this one among them: the viewer plays their versions in
+          // table order on a timeline
+          const selectedRowIds = new Set<string>()
+          selectedCells.forEach((cellId) => {
+            const selectedRowId = parseCellId(cellId)?.rowId
+            if (selectedRowId && gridMap.rowIdToIndex.has(selectedRowId)) {
+              selectedRowIds.add(selectedRowId)
+            }
+          })
+          if (onOpenPlayer && selectedRowIds.size > 1 && selectedRowIds.has(rowId)) {
+            const entities = [...selectedRowIds]
+              .sort((a, b) => gridMap.rowIdToIndex.get(a)! - gridMap.rowIdToIndex.get(b)!)
+              .flatMap((selectedRowId) => getEntityById(selectedRowId) ?? [])
+            const targetIds = getEntitiesViewerIds(entities)
+            if (targetIds) onOpenPlayer(targetIds, { quickView: true })
+            break
+          }
           // attempt to open the player
           openPlayer(rowId)
           break
@@ -248,6 +272,7 @@ export default function useKeyboardNavigation() {
     },
     [
       focusedCellId,
+      selectedCells,
       gridMap,
       selectCell,
       focusCell,
@@ -256,6 +281,7 @@ export default function useKeyboardNavigation() {
       setEditingCellId,
       editingCellId,
       getEntityById,
+      onOpenPlayer,
       playerOpen,
       setSelectedEntity,
       canOpenRenameDialog,
