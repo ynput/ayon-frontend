@@ -245,6 +245,20 @@ export const EventDetails: FC<EventDetailsProps> = ({
               )}
             </Fact>
           )}
+          <Fact
+            label="ID"
+            action={
+              <Button
+                icon="content_copy"
+                variant="text"
+                onClick={() => copyToClipboard(event.id, true)}
+                data-tooltip="Copy event ID"
+                aria-label="Copy event ID"
+              />
+            }
+          >
+            <span className="mono">{event.id}</span>
+          </Fact>
         </Styled.Facts>
 
         {entity && (
