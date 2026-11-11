@@ -26,14 +26,23 @@ export type ViewerTargetIds = {
   versionIds?: string[]
 }
 
+// the version a selected entity plays on a timeline: a version itself, or a product's featured
+// version (products on the versions page carry it)
+const getPlayedVersion = (entity: EntityMap): ViewerTargetIds | undefined => {
+  if (entity.entityType === 'version') return getEntityViewierIds(entity)
+  if (entity.entityType !== 'product' || !('featuredVersion' in entity)) return undefined
+  const featured = entity.featuredVersion as { id?: string } | null | undefined
+  if (!featured?.id) return undefined
+  return { versionId: featured.id, productId: entity.entityId, folderId: entity.folderId }
+}
+
 /**
  * The viewer target for several entities, given in table order. With two or more versions among
- * them, those versions, which the viewer plays one after another on a timeline. Otherwise the
- * first entity.
+ * them (or products with a featured version), those versions, which the viewer plays one after
+ * another on a timeline. Otherwise the first entity.
  */
 export const getEntitiesViewerIds = (entities: EntityMap[]): ViewerTargetIds | undefined => {
-  const versions = entities.filter((entity) => entity.entityType === 'version')
+  const versions = entities.flatMap((entity) => getPlayedVersion(entity) ?? [])
   if (versions.length < 2) return entities[0] && getEntityViewierIds(entities[0])
-  const first: ViewerTargetIds = getEntityViewierIds(versions[0])
-  return { ...first, versionIds: versions.map((version) => version.entityId) }
+  return { ...versions[0], versionIds: versions.flatMap((version) => version.versionId ?? []) }
 }
