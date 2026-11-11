@@ -285,6 +285,8 @@ export default defineAddon({ slots, contributes: [...] }) // slots: from its con
 const buildSlotItems = useSlotMenuItems('example.cardMenuItem')
 // when the menu opens: a broken item is a toast, never a broken menu
 const { top, bottom } = buildSlotItems({ projectName, cards })
+// an entry runs with `command`; useContextMenu and MoreMenu items take `onClick`
+const items = [...top, ...bottom].map(({ command, ...item }) => ({ ...item, onClick: command }))
 ```
 
 When a contribution can narrow where it shows, give the slot a description field for it and pass
@@ -302,7 +304,9 @@ fails shows an error box sized for a panel; in an inline place (a badge, a heade
 `error={() => null}` to render nothing instead, or your own small fallback.
 
 A declaration has `name`, `version`, `required`, `pieces` and optionally `optionalPieces`,
-`optional`, `check` and `description`: what AYON checks for its own slots.
+`optional`, `check` and `description`: what AYON checks for its own slots. It may also have a
+`label`, a short title for people (`'Card menu item'`, a non-empty string): the dev shell lists the
+slot by it, else by the name after the dot in words.
 
 **Ownership.** The name is `<addon>.<name>`: the addon's name from `package.py`, a dot, then a letter
 followed by letters, digits and `_` (no more dots). Only that addon can declare it. A declaration with
@@ -324,6 +328,7 @@ contributor's.
     {
       name: 'example.cardMenuItem',
       version: 1,
+      label: 'Card menu item',
       description: 'an entry in the right-click menu of a card',
       required: ['label', 'icon'],
       pieces: ['run'],

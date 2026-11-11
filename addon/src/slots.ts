@@ -776,6 +776,11 @@ export interface SlotDefinition {
 export interface SlotDeclaration extends SlotDefinition {
   /** `<addon>.<name>`, the name without dots, e.g. `example.cardMenuItem` */
   name: string
+  /**
+   * a short title for people, e.g. `Card menu item`: what the dev shell lists the slot as. Without
+   * one, the name after the dot in words (`cardMenuItem`: "Card menu item")
+   */
+  label?: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
 }
