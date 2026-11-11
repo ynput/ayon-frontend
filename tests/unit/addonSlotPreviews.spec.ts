@@ -21,15 +21,8 @@ import {
   readContractSlots,
 } from '../../addon-dev/src/contractSlots'
 import { DEDUPE } from '../../addon-dev/src/packages'
-import {
-  buildContract,
-  contractAreas,
-  contractManifests,
-  noSceneNote,
-  sceneFor,
-  scenesOf,
-  slotLabel,
-} from '../../addon-dev/shell/src/contractModel'
+import { buildContract, contractManifests, noSceneNote, scenesOf, slotLabel } from '../../addon-dev/shell/src/contractModel'
+import { buildPlaces, normalizeParams } from '../../addon-dev/shell/src/places'
 import { provideHost } from '../../addon/src/hostBridge'
 import type { DevSlots } from '../../addon/src/hostBridge'
 import { checkSlotDeclarations } from '../../addon/src/validate'
@@ -304,11 +297,13 @@ test('the shell lists the scenes and finds the one for a contribution', async ()
   const [card] = contract.scenes
   expect(scenesOf('example.cardMenuItem', [contract])).toEqual([card])
   expect(scenesOf('example.boardDialog', [contract])).toEqual([])
-  // `ayon-addon open <slot> <id>`: the first scene that renders the slot
-  expect(sceneFor({ slot: 'example.cardBadge' }, [contract])).toBe(card)
-  expect(sceneFor({ scene: card.key }, [contract])).toBe(card)
-  expect(sceneFor({ slot: 'example.boardDialog' }, [contract])).toBeUndefined()
-  expect(sceneFor({ slot: 'header.item' }, [contract])).toBeUndefined()
+  // `ayon-addon open <slot> <id>`: the first place that renders the slot
+  const places = buildPlaces({ ayonSlots: ['header.item'], contracts: [contract] })
+  const surface = (search: string) => normalizeParams(search, places).get('surface')
+  expect(surface('?slot=example.cardBadge')).toBe(card.key)
+  expect(surface(`?scene=${encodeURIComponent(card.key)}`)).toBe(card.key)
+  expect(surface('?slot=example.boardDialog')).toBe('other')
+  expect(surface('?slot=header.item')).toBe('app-header')
 
   const dialog = contract.slots.find((slot) => slot.name === 'example.boardDialog')!
   expect(noSceneNote(dialog, contract)).toBe(
@@ -318,7 +313,7 @@ test('the shell lists the scenes and finds the one for a contribution', async ()
   expect(without.scenes).toEqual([])
   expect(noSceneNote(without.slots[0], without)).toContain('the package has no previews')
 
-  expect(contractAreas([contract])[0]).toMatchObject({ label: 'example', package: PACKAGE })
+  expect(places.find((place) => place.id === card.key)).toMatchObject({ label: card.label, source: PACKAGE })
 })
 
 test('broken previews are reported, their valid scenes still render', async () => {
@@ -425,7 +420,8 @@ test('a slot has a title for people: its label, or its name in words', async () 
     ['example.cardEndItem', 'Card end item'],
     ['example.boardDialog', 'Board dialog'],
   ])
-  expect(contractAreas([contract])[0].sections[0].slots[1]).toEqual({ slot: 'example.cardMenuItem', label: 'Card menu item' })
+  const [scene] = buildPlaces({ ayonSlots: [], contracts: [contract] })
+  expect(scene.slots[1]).toMatchObject({ slot: 'example.cardMenuItem', label: 'Card menu item' })
   expect(slotLabel('example.taskEventStart')).toBe('Task event start')
   expect(slotLabel('example.openURLItem')).toBe('Open url item')
   expect(slotLabel('example.end_item')).toBe('End item')
@@ -565,5 +561,24 @@ test.describe('Show slots (the dev shell only)', () => {
     // the shell's toggle is off: no placeholder
     provideHost({ devSlots: { Outlet, menuPlaceholder: () => undefined } })
     expect(menu('example.boardDialog')).toEqual({ top: [], bottom: [] })
+  })
+
+  test('with it, each contribution is wrapped with its key and menus report theirs', () => {
+    const built: unknown[] = []
+    const Item: DevSlots['Item'] = ({ contribution, children }) =>
+      createElement('b', { 'data-contribution': contribution }, children)
+    provideHost({
+      devSlots: {
+        Outlet,
+        Item,
+        menuPlaceholder: () => undefined,
+        menuBuilt: (slot, context, keys) => built.push([slot, context, keys]),
+      },
+    })
+    expect(outlet('example.cardBadge')).toBe(
+      '<i data-slot="example.cardBadge" data-count="1"><b data-contribution="contributor.timer">badge</b></i>',
+    )
+    expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
+    expect(built).toEqual([['example.cardMenuItem', {}, ['contributor.log']]])
   })
 })
