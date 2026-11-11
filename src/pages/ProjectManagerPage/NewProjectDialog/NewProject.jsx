@@ -146,7 +146,8 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   //
   const [deployProject, { isLoading }] = useDeployProjectMutation()
 
-  const validate = () => {
+  // name and code are passed in when Enter in the name field submits the name it just committed
+  const validate = ({ name, code }) => {
     const newErrors = {}
     if (!name) newErrors.name = 'Project name is required'
     else if (name.length < 3) newErrors.name = 'Project name must be at least 3 characters'
@@ -167,14 +168,15 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   }
 
   // keepOpen (Shift+Enter): create it and keep the dialog open for the next project
-  const handleSubmit = (keepOpen = false) => {
-    if (!validate()) return
+  const handleSubmit = (keepOpen = false, draft = { name, code }) => {
+    if (!validate(draft)) return
+    const { name: projectName, code: projectCode } = draft
 
     deployProject({
       deployProjectRequestModel: {
-        name,
+        name: projectName,
         label,
-        code,
+        code: projectCode,
         anatomy: isPlanningProject ? undefined : formData,
         library: isLibrary,
         skeleton: isPlanningProject,
@@ -184,7 +186,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
       .then(() => {
         toast.success(`Project ${label} created`)
         writeDialogMemory(PROJECT_MEMORY, { selectedPreset, projectState })
-        if (!keepOpen) return onHide(redirect ? name : undefined)
+        if (!keepOpen) return onHide(redirect ? projectName : undefined)
         setLabel('')
         setName('')
         setCode('')
@@ -228,14 +230,20 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     return camelCase(labelValue).replace(/[^a-zA-Z0-9_]/g, '')
   }
 
-  const handleNameChange = (newName) => {
+  // the name and the code that goes with it
+  const resolveNameAndCode = (newName) => {
     // replace spaces with underscores
     const nextName = newName.replace(/\s/g, '_')
-    setName(nextName)
-    if (!codeSet || code === '') {
-      const newCode = createCode(nextName, codeRegex)
-      setCode(newCode)
+    return {
+      name: nextName,
+      code: !codeSet || code === '' ? createCode(nextName, codeRegex) : code,
     }
+  }
+
+  const handleNameChange = (newName) => {
+    const next = resolveNameAndCode(newName)
+    setName(next.name)
+    setCode(next.code)
   }
 
   const handleCodeChange = (e) => {
@@ -252,8 +260,12 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     setFormData(originalAnatomy)
   }, [isPlanningProject, originalAnatomy])
 
-  const canSubmit =
-    label && name && code && (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
+  const getCanSubmit = (draft) =>
+    label &&
+    draft.name &&
+    draft.code &&
+    (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
+  const canSubmit = getCanSubmit({ name, code })
 
   const footer = (
     <Toolbar style={{}}>
@@ -278,17 +290,20 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     </Toolbar>
   )
 
-  const dialogKeyDown = getDialogKeyDown(() => handleSubmit(), {
-    onClose: () => onHide(),
-    disabled: !canSubmit || isLoading,
-    onContinue: () => handleSubmit(true),
-  })
+  const getKeyDown = (draft = { name, code }) =>
+    getDialogKeyDown(() => handleSubmit(false, draft), {
+      onClose: () => onHide(),
+      disabled: !getCanSubmit(draft) || isLoading,
+      onContinue: () => handleSubmit(true, draft),
+    })
   const handleKeyDown = (e) => {
     e.stopPropagation()
     // Enter in the anatomy editor confirms that field, not the whole project
     if (e.key === 'Enter' && anatomyRef.current?.contains(e.target)) return
-    dialogKeyDown(e)
+    getKeyDown()(e)
   }
+  // Enter in the name editor commits the name and, like any other field, creates the project with it
+  const handleNameEnter = (committedName, e) => getKeyDown(resolveNameAndCode(committedName))(e)
 
   const anatomyEditor = useMemo(() => {
     if (isPlanningProject) return null
@@ -335,6 +350,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
               labelLabel="Project label"
               nameValue={name}
               onNameChange={handleNameChange}
+              onNameEnter={handleNameEnter}
               nameError={errors.name}
               nameLabel="Project name"
               getGeneratedName={createName}
