@@ -19,8 +19,9 @@ import { JsonViewer } from '@ynput/ayon-frontend-shared/components'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { getUnmatched, onUnmatched } from './network'
 import { contractSlot, getContracts, sceneFor } from './contractModel'
-import type { Contract, Scene } from './contractModel'
+import type { Contract, ContractSlot, Scene } from './contractModel'
 import { SceneForm } from './scenes'
+import { highlightSlot, useSlotOverlay } from './slotOverlay'
 import { slotAreas } from './slotGroups'
 import type { SlotArea } from './slotGroups'
 import {
@@ -66,7 +67,7 @@ const Contribution = ({
 }: {
   contribution: AnyContribution
   selected: boolean
-  /** under a preview scene */
+  /** under a preview scene's slot */
   nested?: boolean
   onClick: () => void
 }) => {
@@ -74,7 +75,7 @@ const Contribution = ({
   const id = idOf(contribution)
   return (
     <button
-      className={`contribution${selected ? ' selected' : ''}${nested ? ' ayon-shell-nested' : ''}`}
+      className={`contribution${selected ? ' selected' : ''}${nested ? ' ayon-shell-nested-2' : ''}`}
       data-contribution={`${contribution.slot}:${id}`}
       title={id}
       onClick={onClick}
@@ -85,14 +86,57 @@ const Contribution = ({
   )
 }
 
-// another addon's slots: the scenes of its contract package, each with this addon's
-// contributions to the slots it renders; contributions no scene renders, with a note
+// a slot a scene renders: its title and name, then this addon's contributions to it. Hovering it
+// highlights the slot on the stage (Show slots), and the other way round.
+const SceneSlot = ({
+  slot,
+  contributions,
+  hovered,
+  isSelected,
+  onPick,
+}: {
+  slot: ContractSlot
+  contributions: AnyContribution[]
+  hovered: boolean
+  isSelected: (contribution: AnyContribution) => boolean
+  onPick: (contribution?: AnyContribution) => void
+}) => {
+  const menu = (slot.declaration.pieces as unknown[] | undefined)?.includes('run')
+  return (
+    <div
+      className={`ayon-shell-scene-slot${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}`}
+      data-shell-slot={slot.name}
+      onMouseEnter={() => highlightSlot(slot.name)}
+      onMouseLeave={() => highlightSlot(undefined)}
+    >
+      <button
+        className="contribution ayon-shell-nested ayon-shell-slot-row"
+        title={slot.description ? `${slot.label}: ${slot.description}` : slot.label}
+        onClick={() => onPick()}
+      >
+        <Icon icon={menu ? 'menu' : 'widgets'} />
+        <span className="ayon-shell-slot-title">
+          <span>{slot.label}</span>
+          <small>{slot.name}</small>
+        </span>
+      </button>
+      {contributions.map((c) => (
+        <Contribution key={c.key} contribution={c} nested selected={isSelected(c)} onClick={() => onPick(c)} />
+      ))}
+      {!contributions.length && <small className="ayon-shell-note ayon-shell-slot-empty">no contributions</small>}
+    </div>
+  )
+}
+
+// another addon's slots: the scenes of its contract package, each with the slots it renders and
+// this addon's contributions under each; contributions no scene renders, with a note
 const SceneArea = ({
   contract,
   selection,
   onChange,
 }: Pick<DevPanelProps, 'selection' | 'onChange'> & { contract: Contract }) => {
   const [collapsed, setCollapsed] = useState(false)
+  const { hovered } = useSlotOverlay()
   const slots = contract.slots.map((slot) => slot.name)
   const contributions = getRegistry().contributions.filter((c) => slots.includes(c.slot))
   if (!contract.scenes.length && !contributions.length) return null
@@ -124,39 +168,42 @@ const SceneArea = ({
       </button>
       {!collapsed && (
         <>
-          {contract.scenes.map((scene) => {
-            const inScene = contributions.filter((c) => scene.slots.includes(c.slot))
-            return (
-              <div key={scene.key} className="ayon-shell-slot">
-                <button
-                  className={`contribution ayon-shell-scene${onStage?.key === scene.key ? ' selected' : ''}`}
-                  data-shell-scene={scene.key}
-                  title={`${scene.description || scene.label}\nRenders ${scene.slots.join(', ')}`}
-                  onClick={() => pickScene(scene)}
-                >
-                  <Icon icon="preview" />
-                  <span>{scene.label}</span>
-                </button>
-                {inScene.map((c) => (
-                  <Contribution
-                    key={c.key}
-                    contribution={c}
-                    nested
-                    selected={onStage?.key === scene.key && selection.slot === c.slot && selection.id === idOf(c)}
-                    onClick={() => pickScene(scene, c)}
-                  />
-                ))}
-                {!inScene.length && (
-                  <small className="ayon-shell-note ayon-shell-nested">No contributions to its slots</small>
-                )}
-              </div>
-            )
-          })}
+          {contract.scenes.map((scene) => (
+            <div key={scene.key} className="ayon-shell-slot">
+              <button
+                className={`contribution ayon-shell-scene${onStage?.key === scene.key ? ' selected' : ''}`}
+                data-shell-scene={scene.key}
+                title={scene.description || scene.label}
+                onClick={() => pickScene(scene)}
+              >
+                <Icon icon="preview" />
+                <span>{scene.label}</span>
+              </button>
+              {scene.slots.flatMap((name) => {
+                const slot = contract.slots.find((s) => s.name === name)
+                return slot
+                  ? [
+                      <SceneSlot
+                        key={name}
+                        slot={slot}
+                        contributions={contributions.filter((c) => c.slot === name)}
+                        hovered={hovered === name}
+                        isSelected={(c) =>
+                          onStage?.key === scene.key && selection.slot === c.slot && selection.id === idOf(c)
+                        }
+                        onPick={(c) => pickScene(scene, c)}
+                      />,
+                    ]
+                  : []
+              })}
+            </div>
+          ))}
           {uncovered.length > 0 && (
             <div className="ayon-shell-slot">
               {[...new Set(uncovered.map((c) => c.slot))].map((slot) => (
                 <small key={slot} className="ayon-shell-note" data-shell-note="no-scene">
-                  No preview scene in {contract.package} renders {slot}
+                  No preview scene in {contract.package} renders{' '}
+                  {contract.slots.find((s) => s.name === slot)?.label || slot} (<code>{slot}</code>)
                 </small>
               ))}
               {uncovered.map((c) => (

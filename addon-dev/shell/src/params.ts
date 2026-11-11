@@ -15,6 +15,7 @@ export const PARAMS = {
   page: 'ctxPage',
   scene: 'scene',
   sceneValues: 'ctxValues',
+  showSlots: 'showSlots',
   preview: 'preview',
 } as const
 
@@ -50,6 +51,7 @@ export const readSelection = (search = window.location.search): ShellSelection =
     page: page && PAGES.includes(page) ? page : undefined,
     scene: params.get(PARAMS.scene) || undefined,
     sceneValues: decodeSceneValues(params.get(PARAMS.sceneValues)),
+    showSlots: params.get(PARAMS.showSlots) !== '0',
     preview: params.get(PARAMS.preview) || undefined,
   }
 }
@@ -67,6 +69,8 @@ export const writeSelection = (selection: ShellSelection) => {
   set(PARAMS.page, selection.page)
   set(PARAMS.scene, selection.scene)
   set(PARAMS.sceneValues, encodeSceneValues(selection.sceneValues))
+  // on unless turned off
+  set(PARAMS.showSlots, selection.showSlots === false ? '0' : undefined)
   set(
     PARAMS.entities,
     selection.entities.map((entity) => `${entity.entityType}:${entity.id}`).join(',') || undefined,

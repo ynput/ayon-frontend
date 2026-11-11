@@ -4,6 +4,7 @@ import { expect, test } from '@playwright/test'
 import { cpSync, mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
+import { createElement } from 'react'
 import { createServer } from 'vite'
 import {
   checkPreviews,
@@ -27,8 +28,11 @@ import {
   noSceneNote,
   sceneFor,
   scenesOf,
+  slotLabel,
 } from '../../addon-dev/shell/src/contractModel'
 import { provideHost } from '../../addon/src/hostBridge'
+import type { DevSlots } from '../../addon/src/hostBridge'
+import { checkSlotDeclarations } from '../../addon/src/validate'
 import * as sdk from '../../addon/src/index'
 import { loadPiece } from '../../addon/src/pieces'
 import {
@@ -44,7 +48,7 @@ const REPO = path.resolve(__dirname, '../..')
 const FIXTURE = path.join(__dirname, 'fixtures', 'addon-contract-example')
 const PREVIEWS = path.join(FIXTURE, 'previews.js')
 const PACKAGE = '@ynput/ayon-addon-example'
-const DECLARED = ['example.cardBadge', 'example.cardMenuItem', 'example.boardDialog']
+const DECLARED = ['example.cardBadge', 'example.cardMenuItem', 'example.cardEndItem', 'example.boardDialog']
 
 const packageDir = (name: string) => path.dirname(require.resolve(`${name}/package.json`))
 
@@ -109,7 +113,7 @@ test('check reports what is wrong in previews', () => {
     {
       scene: 'a',
       reason:
-        '"example.unknown" is not a slot of this package (it declares example.cardBadge, example.cardMenuItem, example.boardDialog)',
+        '"example.unknown" is not a slot of this package (it declares example.cardBadge, example.cardMenuItem, example.cardEndItem, example.boardDialog)',
     },
     { scene: 'a', reason: 'id is not unique' },
     { scene: 'a', reason: 'label must be a string' },
@@ -219,7 +223,13 @@ test('the CLI reads the scenes of the contract packages among the dependencies',
   expect(result.previews).toEqual([
     {
       package: PACKAGE,
-      scenes: [{ id: 'card', label: 'A card on the board', slots: ['example.cardBadge', 'example.cardMenuItem'] }],
+      scenes: [
+        {
+          id: 'card',
+          label: 'A card on the board',
+          slots: ['example.cardBadge', 'example.cardMenuItem', 'example.cardEndItem'],
+        },
+      ],
     },
     { package: 'broken', scenes: [] },
   ])
@@ -289,7 +299,7 @@ test('the shell lists the scenes and finds the one for a contribution', async ()
   expect(contract.problems).toEqual([])
   expect(contract.addons).toEqual(['example'])
   expect(contract.scenes.map((scene) => [scene.key, scene.slots])).toEqual([
-    [`${PACKAGE}:card`, ['example.cardBadge', 'example.cardMenuItem']],
+    [`${PACKAGE}:card`, ['example.cardBadge', 'example.cardMenuItem', 'example.cardEndItem']],
   ])
   const [card] = contract.scenes
   expect(scenesOf('example.cardMenuItem', [contract])).toEqual([card])
@@ -300,7 +310,7 @@ test('the shell lists the scenes and finds the one for a contribution', async ()
   expect(sceneFor({ slot: 'example.boardDialog' }, [contract])).toBeUndefined()
   expect(sceneFor({ slot: 'header.item' }, [contract])).toBeUndefined()
 
-  const [, , dialog] = contract.slots
+  const dialog = contract.slots.find((slot) => slot.name === 'example.boardDialog')!
   expect(noSceneNote(dialog, contract)).toBe(
     `No preview scene in ${PACKAGE} renders example.boardDialog: add one to ./previews.js in that package.`,
   )
@@ -404,5 +414,105 @@ test.describe('registry', () => {
     expect(html).toContain('data-example-card="c1"')
     expect(html).toContain('<strong>Layout</strong>badge:done')
     expect(contexts[0]).toMatchObject({ projectName: 'demo', card: { id: 'c1', title: 'Layout', status: 'done' } })
+  })
+})
+
+test('a slot has a title for people: its label, or its name in words', async () => {
+  const contract = await exampleContract()
+  expect(contract.slots.map((slot) => [slot.name, slot.label])).toEqual([
+    ['example.cardBadge', 'Card badge'],
+    ['example.cardMenuItem', 'Card menu item'],
+    ['example.cardEndItem', 'Card end item'],
+    ['example.boardDialog', 'Board dialog'],
+  ])
+  expect(contractAreas([contract])[0].sections[0].slots[1]).toEqual({ slot: 'example.cardMenuItem', label: 'Card menu item' })
+  expect(slotLabel('example.taskEventStart')).toBe('Task event start')
+  expect(slotLabel('example.openURLItem')).toBe('Open url item')
+  expect(slotLabel('example.end_item')).toBe('End item')
+  expect(slotLabel('example.cardBadge', '  ')).toBe('Card badge')
+  expect(slotLabel('example.cardBadge', 'Badge on a card')).toBe('Badge on a card')
+})
+
+test('a declaration may have a label, a non-empty string', () => {
+  const addon = { name: 'example', version: '1.0.0', remote: 'example' }
+  const declare = (label: unknown) =>
+    checkSlotDeclarations(addon, {
+      slots: [{ name: 'example.cardBadge', version: 1, label, required: [], pieces: ['component'] }],
+    })
+  expect(declare('Card badge').slots.map((slot) => slot.label)).toEqual(['Card badge'])
+  expect(declare(undefined).skipped).toEqual([])
+  for (const label of ['', '  ', 3, null]) {
+    expect(declare(label).skipped).toEqual([
+      { addon: 'example', slot: 'example.cardBadge', reason: 'label must be a non-empty string' },
+    ])
+  }
+})
+
+test.describe('Show slots (the dev shell only)', () => {
+  const contributor = { name: 'contributor', version: '1.0.0', remote: 'contributor' }
+  const SlotOutlet = toReactComponent(sdk.SlotOutlet)
+  const Outlet: DevSlots['Outlet'] = ({ slot, count, children }) =>
+    createElement('i', { 'data-slot': slot, 'data-count': count }, children)
+  const placeholder = { id: 'placeholder', label: 'No contributions', icon: 'extension', command: () => undefined }
+  const devSlots: DevSlots = { Outlet, menuPlaceholder: () => placeholder }
+
+  test.beforeEach(async () => {
+    setManifestsLoading(false)
+    provideHost({ getUser: () => ({ name: 'admin' }), useUser: () => ({ name: 'admin' }) } as never)
+    const component = () => Promise.resolve({ default: () => 'badge' })
+    await loadPiece(component)
+    registerManifests([
+      ...(contractManifests([await exampleContract()], contributor.name) as never[]),
+      {
+        addon: contributor,
+        manifest: {
+          contributes: [
+            { slot: 'example.cardBadge', slotVersion: 1, id: 'timer', label: 'Timer', component },
+            {
+              slot: 'example.cardMenuItem',
+              slotVersion: 1,
+              id: 'log',
+              label: 'Log',
+              icon: 'timer',
+              run: () => Promise.resolve({ default: () => undefined }),
+            },
+          ],
+        },
+      },
+    ])
+  })
+  test.afterEach(() => {
+    provideHost({ devSlots: undefined })
+    unregisterAddon('contributor')
+    unregisterAddon('example')
+  })
+
+  const outlet = (slot: string) => renderToHtml(SlotOutlet, { slot, context: {} })
+  const menu = (slot: string) => {
+    let items: unknown
+    renderToHtml(() => {
+      items = sdk.useSlotMenuItems(slot as never)({} as never)
+      return null
+    })
+    return items as { top: { id: string }[]; bottom: { id: string }[] }
+  }
+
+  test('without the dev shell, slots render only their contributions', () => {
+    expect(outlet('example.cardBadge')).toBe('badge')
+    expect(outlet('example.cardEndItem')).toBe('')
+    expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
+    expect(menu('example.boardDialog')).toEqual({ top: [], bottom: [] })
+  })
+
+  test('with it, every outlet is wrapped and an empty menu slot gets a placeholder', () => {
+    provideHost({ devSlots })
+    expect(outlet('example.cardBadge')).toBe('<i data-slot="example.cardBadge" data-count="1">badge</i>')
+    expect(outlet('example.cardEndItem')).toBe('<i data-slot="example.cardEndItem" data-count="0"></i>')
+    // a slot with items keeps them as they are
+    expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
+    expect(menu('example.boardDialog')).toEqual({ top: [placeholder], bottom: [] })
+    // the shell's toggle is off: no placeholder
+    provideHost({ devSlots: { Outlet, menuPlaceholder: () => undefined } })
+    expect(menu('example.boardDialog')).toEqual({ top: [], bottom: [] })
   })
 })

@@ -33,6 +33,8 @@ export interface ShellSelection {
   scene?: string
   /** the scene's values the developer changed (the rest are the fields' defaults) */
   sceneValues?: Record<string, unknown>
+  /** Show slots: outlines and placeholders of the slots on stage (on unless false) */
+  showSlots?: boolean
   /** a fixture name: preview mode, no server */
   preview?: string
 }

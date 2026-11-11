@@ -450,3 +450,113 @@ main.ayon-shell-stage {
   font-size: 12px;
   resize: vertical;
 }
+/* a preview scene's slots in the developer panel: title and name, the contributions under it */
+.ayon-shell-scene-slot {
+  display: flex;
+  flex-direction: column;
+}
+.ayon-shell-panel .contribution.ayon-shell-nested-2 {
+  padding-left: 82px;
+}
+.ayon-shell-panel .contribution.ayon-shell-slot-row {
+  height: 36px;
+}
+.ayon-shell-slot-title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+.ayon-shell-slot-title small {
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-panel .ayon-shell-slot-title span,
+.ayon-shell-panel .ayon-shell-slot-title small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-slot-empty {
+  padding: 0 8px 4px 82px;
+  font-size: 11px;
+}
+.ayon-shell-scene-slot.empty .ayon-shell-slot-title,
+.ayon-shell-scene-slot.empty > .contribution .icon {
+  opacity: 0.6;
+}
+.ayon-shell-scene-slot.hovered > .contribution.ayon-shell-slot-row {
+  background: var(--md-sys-color-surface-container-high);
+  box-shadow: inset 2px 0 0 var(--md-sys-color-tertiary);
+}
+.ayon-shell-toggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Show slots (slotOverlay.tsx): the outlets of the SDK's slots on the stage. The wrapper has no
+   box of its own, so the page lays out the contributions as it does without the outlines */
+.ayon-dev-slot {
+  display: contents;
+}
+.ayon-dev-slot > * {
+  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-tertiary) 70%, transparent);
+  outline-offset: 1px;
+}
+.ayon-dev-slot.active > * {
+  outline: 2px solid var(--md-sys-color-tertiary);
+}
+.ayon-dev-slot > .ayon-dev-slot-chip {
+  /* a flex item in a row, inline in text; block-level, so a long label is cut with … */
+  display: inline-block;
+  flex: 0 1 auto;
+  align-self: center;
+  vertical-align: middle;
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 160px;
+  height: 18px;
+  padding: 0 6px;
+  overflow: hidden;
+  outline: none;
+  border: 1px dashed var(--md-sys-color-tertiary);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: normal;
+  line-height: 16px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--md-sys-color-tertiary);
+  background: color-mix(in srgb, var(--md-sys-color-tertiary) 8%, transparent);
+  cursor: help;
+}
+.ayon-dev-slot.active > .ayon-dev-slot-chip {
+  border-style: solid;
+  color: var(--md-sys-color-on-tertiary);
+  background: var(--md-sys-color-tertiary);
+}
+.ayon-dev-slot-label {
+  position: fixed;
+  z-index: 10000;
+  padding: 0 6px;
+  transform: translateY(calc(-100% - 3px));
+  border-radius: 4px;
+  font-size: 10px;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+  color: var(--md-sys-color-on-tertiary);
+  background: var(--md-sys-color-tertiary);
+}

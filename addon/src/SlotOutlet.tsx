@@ -2,6 +2,7 @@ import { useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { ContributionView } from './ContributionView'
 import type { AnyContribution, Contribution } from './contributions'
+import { getHost } from './hostBridge'
 import { menuItemsAt } from './menus'
 import { prefetchPiece, runContribution } from './pieces'
 import { useContributions } from './registry'
@@ -25,19 +26,24 @@ export interface SlotOutletProps<S extends SlotName> {
  */
 export const SlotOutlet = <S extends SlotName>({ slot, context, piece, loading, error }: SlotOutletProps<S>) => {
   const { contributions } = useContributions(slot)
-  return (
-    <>
-      {contributions.map((contribution) => (
-        <ContributionView
-          key={(contribution as unknown as AnyContribution).key}
-          contribution={contribution}
-          context={context}
-          piece={piece}
-          loading={loading}
-          error={error}
-        />
-      ))}
-    </>
+  const views = contributions.map((contribution) => (
+    <ContributionView
+      key={(contribution as unknown as AnyContribution).key}
+      contribution={contribution}
+      context={context}
+      piece={piece}
+      loading={loading}
+      error={error}
+    />
+  ))
+  // the dev shell's outline of the slot; AYON has none, and renders the contributions alone
+  const DevOutlet = getHost().devSlots?.Outlet
+  return DevOutlet ? (
+    <DevOutlet slot={slot} count={contributions.length}>
+      {views}
+    </DevOutlet>
+  ) : (
+    <>{views}</>
   )
 }
 
@@ -77,8 +83,12 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
             command: () => void runContribution(item as unknown as Contribution<S>, context),
           }
         })
-      return { top: at('top'), bottom: at('bottom') }
+      const entries = { top: at('top'), bottom: at('bottom') }
+      // the dev shell shows where the slot's items would go; AYON has no placeholder
+      const placeholder =
+        !entries.top.length && !entries.bottom.length ? getHost().devSlots?.menuPlaceholder(slot) : undefined
+      return placeholder ? { ...entries, top: [placeholder] } : entries
     },
-    [contributions],
+    [contributions, slot],
   )
 }

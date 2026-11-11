@@ -27,6 +27,7 @@ import {
 } from '@ynput/ayon-frontend-shared/ProjectsTable'
 import { getProjectDisplayName } from '@ynput/ayon-frontend-shared/util'
 import { useShellMenu } from './menus'
+import { devSlots } from './slotOverlay'
 
 type UserData = { isAdmin?: boolean; isManager?: boolean; isGuest?: boolean; isService?: boolean }
 
@@ -167,6 +168,8 @@ export const provideShellHost = () =>
   provideHost({
     useUser,
     useContextMenu: useAddonContextMenu,
+    // Show slots: outlines and placeholders of the slots rendered with the SDK
+    devSlots,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,

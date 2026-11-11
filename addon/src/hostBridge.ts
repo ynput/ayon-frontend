@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import type {
   ProjectListProps,
   ProjectPageLayoutProps,
@@ -12,6 +12,7 @@ import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
 import type { HostOpenContextMenu } from './useContextMenu'
+import type { SlotMenuItem } from './SlotOutlet'
 
 export type { AddonUser }
 
@@ -43,6 +44,25 @@ export interface HostComponents {
   EntityTable?: ComponentType<EntityTableProps>
 }
 
+/** What `DevSlots.Outlet` gets: the slot, how many contributions it renders, and those. */
+export interface DevSlotOutletProps {
+  slot: string
+  count: number
+  children: ReactNode
+}
+
+/**
+ * Internal, for the standalone dev shell only: AYON never sets it. Shows where each slot sits:
+ * `SlotOutlet` renders its contributions inside `Outlet`, and `useSlotMenuItems` adds
+ * `menuPlaceholder` to a menu that has no items of the slot. Without it, both render exactly
+ * what they render in AYON.
+ */
+export interface DevSlots {
+  Outlet: ComponentType<DevSlotOutletProps>
+  /** the entry to show where a menu slot's items would go, or nothing */
+  menuPlaceholder: (slot: string) => SlotMenuItem | undefined
+}
+
 export interface HostImplementation {
   useUser?: () => AddonUser | undefined
   /** the same user outside React: `run` and `menu` pieces get it in their context */
@@ -63,6 +83,8 @@ export interface HostImplementation {
   /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
   useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
+  /** @internal the dev shell's slot outlines (`DevSlots`); never set by AYON */
+  devSlots?: DevSlots
 }
 
 let host: HostImplementation = {}

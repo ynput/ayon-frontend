@@ -20,6 +20,8 @@ export interface ContractSlot {
   /** the declaring addon: the name's prefix */
   addon: string
   package: string
+  /** for people: the declaration's `label`, else the name after the dot in words */
+  label: string
   description?: string
   declaration: Record<string, unknown>
 }
@@ -55,6 +57,22 @@ export interface Contract {
 
 export const sceneKey = (pkg: string, id: string) => `${pkg}:${id}`
 
+/**
+ * A slot's title for people: the declaration's `label`, else the name after the last dot in words
+ * (`example.cardMenuItem`: "Card menu item").
+ */
+export const slotLabel = (name: string, label?: unknown) => {
+  if (typeof label === 'string' && label.trim()) return label.trim()
+  const words = name
+    .slice(name.lastIndexOf('.') + 1)
+    .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z])([A-Z][a-z])/g, '$1 $2')
+    .replace(/_+/g, ' ')
+    .trim()
+    .toLowerCase()
+  return words.charAt(0).toUpperCase() + words.slice(1)
+}
+
 /** A contract package from its loaded modules (or the errors loading them). */
 export const buildContract = (
   module: Pick<ContractModule, 'package' | 'entries'>,
@@ -84,6 +102,7 @@ export const buildContract = (
       name: declaration.name as string,
       addon: (declaration.name as string).split('.')[0],
       package: name,
+      label: slotLabel(declaration.name as string, declaration.label),
       description: typeof declaration.description === 'string' ? declaration.description : undefined,
       declaration,
     }),
@@ -161,10 +180,7 @@ export const contractAreas = (list: readonly Contract[] = contracts) =>
     package: contract.package,
     sections: [
       {
-        slots: contract.slots.map((slot) => ({
-          slot: slot.name,
-          label: slot.name.slice(slot.addon.length + 1),
-        })),
+        slots: contract.slots.map((slot) => ({ slot: slot.name, label: slot.label })),
       },
     ],
   }))

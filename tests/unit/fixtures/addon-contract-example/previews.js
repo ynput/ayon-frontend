@@ -22,13 +22,19 @@ const Card = ({ values, setValues }) => {
       style: { display: 'flex', gap: 8, padding: 8, background: 'var(--md-sys-color-surface-container)' },
       onContextMenu: (event) => {
         const { top, bottom } = menuItems({ projectName: values.project, cards: [card] })
-        openContextMenu(event, [...top, ...bottom])
+        // the SDK's entries run with `command`, the menu's items with `onClick`
+        openContextMenu(
+          event,
+          [...top, ...bottom].map(({ command, ...item }) => ({ ...item, onClick: command })),
+        )
       },
       onDoubleClick: () => setValues({ status: 'done' }),
     },
     h('strong', null, card.title),
     // where the addon puts the badges
     h(SlotOutlet, { slot: 'example.cardBadge', context }),
+    // after the title, at the end of the card
+    h('span', { style: { marginLeft: 'auto', display: 'flex', gap: 4 } }, h(SlotOutlet, { slot: 'example.cardEndItem', context })),
   )
 }
 
@@ -37,7 +43,7 @@ export const previews = [
     id: 'card',
     label: 'A card on the board',
     description: 'A card as the board shows it: badges in its header, right-click for its menu',
-    slots: ['example.cardBadge', 'example.cardMenuItem'],
+    slots: ['example.cardBadge', 'example.cardMenuItem', 'example.cardEndItem'],
     fields: [
       { key: 'project', label: 'Project', type: 'project', optional: true },
       { key: 'title', label: 'Title', type: 'text', default: 'Layout' },

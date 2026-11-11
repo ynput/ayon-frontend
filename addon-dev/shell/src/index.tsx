@@ -9,6 +9,7 @@ import { provideShellHost } from './host'
 import { installNetwork, setFixture } from './network'
 import { readSelection, writeSelection } from './params'
 import { Shell } from './Shell'
+import { setShowSlots } from './slotOverlay'
 import type { Fixture, ShellOptions } from './types'
 import './shell.css'
 
@@ -47,7 +48,8 @@ const loadContracts = (modules: ContractModule[] = []) =>
   )
 
 export const startShell = async (options: ShellOptions) => {
-  const preview = readSelection().preview
+  const { preview, showSlots } = readSelection()
+  setShowSlots(showSlots !== false)
   const mode = preview ? 'preview' : 'live'
   installNetwork(mode)
   provideShellHost()

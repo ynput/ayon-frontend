@@ -42,6 +42,7 @@ import { readSelection, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
 import { sceneFor } from './contractModel'
+import { setShowSlots } from './slotOverlay'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -133,6 +134,7 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
   const [selection, setSelection] = useState<ShellSelection>(readSelection)
   const scene = mode === 'live' ? sceneFor(selection) : undefined
   useEffect(() => writeSelection(selection), [selection])
+  useEffect(() => setShowSlots(selection.showSlots !== false), [selection.showSlots])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
 
   return (
@@ -146,7 +148,12 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
           </StageBoundary>
         </SplitterPanel>
         <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <StageCaption mode={mode} selection={selection} />
+          <StageCaption
+            mode={mode}
+            addon={options.addon.name}
+            selection={selection}
+            onChange={setSelection}
+          />
           <ProjectProviders
             // preview renders the contribution alone: only the table columns need the project
             projectName={

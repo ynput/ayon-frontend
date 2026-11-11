@@ -116,7 +116,7 @@ of AYON:
 - Above the stage, a caption names the contribution, where AYON shows it and its slot.
 - The selection is in the URL
   (`?slot=…&contribution=…&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…`, and
-  `scene=<package>:<id>&ctxValues=<JSON>` for a preview scene).
+  `scene=<package>:<id>&ctxValues=<JSON>` for a preview scene, `showSlots=0` with *Show slots* off).
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
   key when there is one (no login page); without a key the page shows AYON's login. The key is read
   for every request (the workbench's `data/local-api-key` changes when its stack is reset), and a
@@ -158,11 +158,20 @@ contribution is developed without that addon installed:
 - The shell imports `slots.js` and `previews.js` of every contract package in the addon's
   `dependencies` and `devDependencies` (`"ayonAddon"` in their `package.json`), and registers the
   slots as if the declaring addon were installed.
-- The developer panel has an area per declaring addon: its scenes, each with the addon's
-  contributions to the scene's slots under it. Selecting a scene puts it on stage, full width, with
-  the shell's providers (right-click menus, the details panel, the user). Selecting a
-  contribution jumps to the first scene that renders its slot. A contribution no scene renders is
-  listed with "no preview scene in `<package>` renders `<slot>`".
+- The developer panel has an area per declaring addon: its scenes, under each the slots it renders
+  (the declaration's `label`, else the name in words, with the slot's name under it and its
+  `description` as the tooltip), and under each slot the addon's contributions to it. A slot without
+  any is listed dimmed, "no contributions". Selecting a scene or one of its slots puts the scene on
+  stage, full width, with the shell's providers (right-click menus, the details panel, the user).
+  Selecting a contribution jumps to the first scene that renders its slot. A contribution no scene
+  renders is listed with "no preview scene in `<package>` renders `<slot>`".
+- **Show slots** (the toggle above the stage, on unless turned off, in the URL): every slot on stage
+  rendered with `SlotOutlet` gets a dashed outline around each of its contributions, with the slot's
+  title while hovered; a slot without contributions gets a small dashed chip with its title where
+  they would go. A menu slot without items gets one disabled entry, "<title> — no contributions",
+  at the top of the menu. Hovering a slot in the developer panel highlights it on stage and the
+  other way round. The scenes need nothing for it: the shell hands the SDK an internal hook that
+  AYON never sets, so in AYON `SlotOutlet` and `useSlotMenuItems` render exactly the contributions.
 - The context panel shows the scene's fields as a form, *Reset*, and the values as JSON. The values
   changed from the defaults are in the URL (`ctxValues`), so a reload or a shared link keeps them.
 - `@ynput/ayon-addon` and `react` in a scene resolve to the contributing addon's copies, also when
@@ -197,7 +206,8 @@ const Card = ({ values, setValues }) => {
       style: { display: 'flex', gap: 8, padding: 8, background: 'var(--md-sys-color-surface-container)' },
       onContextMenu: (event) => {
         const { top, bottom } = menuItems({ projectName: values.project, cards: [card] })
-        openContextMenu(event, [...top, ...bottom])
+        // entries run with `command`, the menu's items with `onClick`
+        openContextMenu(event, [...top, ...bottom].map(({ command, ...item }) => ({ ...item, onClick: command })))
       },
       onDoubleClick: () => setValues({ status: 'done' }),
     },
