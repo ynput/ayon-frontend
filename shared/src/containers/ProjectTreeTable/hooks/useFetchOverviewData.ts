@@ -29,7 +29,6 @@ import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModu
 import { useGetEntityLinksQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce, isEqual } from 'lodash'
-import overviewApi from '@shared/api/queries/overview/getOverview'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
@@ -192,9 +191,14 @@ export const useFetchOverviewData = ({
     return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
   }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
+  // All expanded folders share one cache entry, and RTK Query starts no request for an entry while
+  // one runs. Folders expanded during a fetch are passed to the query once it is done, and the
+  // endpoint then loads only the ones it does not have yet.
+  const [queriedFolderIds, setQueriedFolderIds] = useState(visibleFolderIdsToQuery)
+
   const expandedFoldersTasksArgs = {
     projectName,
-    parentIds: visibleFolderIdsToQuery,
+    parentIds: queriedFolderIds,
     filter: taskFilters.filterString,
     folderFilter: folderFilters.filterString,
     search: taskFilters.search,
@@ -202,34 +206,23 @@ export const useFetchOverviewData = ({
   }
 
   // QUERY
-  const skipExpandedFoldersTasks =
-    isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView)
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
-    originalArgs: fetchedExpandedFoldersTasksArgs,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip: skipExpandedFoldersTasks,
+    skip: isLoadingViews || !queriedFolderIds.length || (!showHierarchy && !isFlatFolderView),
   })
 
-  // All expanded folders share one cache entry, and RTK Query starts no request for an entry while
-  // one runs: folders expanded during a fetch were never loaded. Once it is done, fetch them.
-  const hasMissedFolders =
-    !skipExpandedFoldersTasks &&
-    !isUninitializedExpandedFoldersTasks &&
-    !isFetchingExpandedFoldersTasks &&
-    !isEqual(fetchedExpandedFoldersTasksArgs?.parentIds, visibleFolderIdsToQuery)
   useEffect(() => {
-    if (!hasMissedFolders) return
-    dispatch(
-      overviewApi.endpoints.getOverviewTasksByFolders.initiate(expandedFoldersTasksArgs, {
-        subscribe: false,
-      }),
+    if (isFetchingExpandedFoldersTasks) return
+    // visibleFolderIdsToQuery is a new array on every render: keep the old one while it is equal
+    setQueriedFolderIds((prev) =>
+      isEqual(prev, visibleFolderIdsToQuery) ? prev : visibleFolderIdsToQuery,
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hasMissedFolders])
+  }, [isFetchingExpandedFoldersTasks, visibleFolderIdsToQuery])
+  const hasPendingFolders = !isEqual(queriedFolderIds, visibleFolderIdsToQuery)
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
@@ -419,14 +412,20 @@ export const useFetchOverviewData = ({
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
-    if (isFetchingExpandedFoldersTasks) {
+    if (isFetchingExpandedFoldersTasks || hasPendingFolders) {
       return determineLoadingTaskFolders({
         expandedFoldersTasks,
         expandedParentIds,
         foldersMap,
       })
     } else return {}
-  }, [isFetchingExpandedFoldersTasks, expandedFoldersTasks, expandedParentIds, foldersMap])
+  }, [
+    isFetchingExpandedFoldersTasks,
+    hasPendingFolders,
+    expandedFoldersTasks,
+    expandedParentIds,
+    foldersMap,
+  ])
 
   const [tasksListCursor, setTasksListCursor] = useState('')
 
