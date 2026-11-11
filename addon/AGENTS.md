@@ -352,6 +352,9 @@ contributor's.
   }
   export const exampleCardMenuItem = slotHelper('example.cardMenuItem')
   ```
+- optionally, previews for the dev shell: `"ayonAddon": { "previews": "./previews.js" }`, contexts to
+  render contributions with and a frame around the slot. See "Other addons' slots: previews" in
+  `@ynput/ayon-addon-dev`'s `AGENTS.md`.
 
 **Contributing.** Install the contract package and use its helper in the manifest:
 `exampleCardMenuItem({ id, label, icon, run: () => import('./openCard') })`. AYON registers each
