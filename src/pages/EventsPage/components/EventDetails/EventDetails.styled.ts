@@ -64,37 +64,62 @@ export const Description = styled.p`
 export const Facts = styled.dl`
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  column-gap: 12px;
-  row-gap: 6px;
-  margin: 0;
+  margin: 0 -6px;
+
+  /* one row per fact, a subgrid keeps the labels in one column */
+  .fact {
+    position: relative;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    column-gap: 16px;
+    align-items: baseline;
+    padding: 6px;
+    border-radius: var(--border-radius-m);
+
+    &:hover,
+    &:focus-within {
+      background-color: var(--md-sys-color-surface-container);
+
+      .actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  }
 
   dt {
     ${theme.labelMedium}
     color: var(--md-sys-color-on-surface-variant);
-    padding-top: 7px;
   }
 
   dd {
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 32px;
-    min-width: 0;
-  }
-
-  .value {
-    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    ${theme.bodyMedium}
     user-select: text;
     overflow-wrap: anywhere;
   }
 
+  .mono {
+    ${theme.bodySmall}
+    font-family: monospace;
+  }
+
+  /* shown on row hover, over the end of the value so it keeps the full width */
   .actions {
+    position: absolute;
+    top: 2px;
+    right: 2px;
     display: flex;
-    flex-shrink: 0;
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.1s;
   }
 
   .with-icon {
