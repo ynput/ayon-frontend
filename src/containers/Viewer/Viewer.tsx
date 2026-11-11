@@ -1,5 +1,5 @@
 import { compareDesc } from 'date-fns'
-import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -37,6 +37,9 @@ const sidebarPlugin: NonNullable<PlayerPlugins['Sidebar']> = {
   providers: ViewerSidebarProviders,
 }
 
+// the same panel beside the empty state, under the page's details panel provider
+const ViewerDetails = lazy(() => import('./ViewerDetails'))
+
 const playerRouter = { useLocation, useNavigate, useParams, useSearchParams }
 
 // the newest reviewable of a version, to pick the product with the latest review
@@ -66,8 +69,6 @@ const versionOptions = (versions: GetReviewablesResponse[]) =>
 
 const byVersionNumber = (a: GetReviewablesResponse, b: GetReviewablesResponse) =>
   parseInt(a.version, 10) - parseInt(b.version, 10)
-
-type CurrentClip = { slot: number; versionId: string; productId: string; label: string }
 
 const ViewerBody = ({
   onClose,
@@ -167,6 +168,8 @@ const ViewerBody = ({
   )
   // the reviewable shown per version, once the user picks another one
   const [timelineReviewables, setTimelineReviewables] = useState<Record<string, string>>({})
+  // the clips the player has now, see below
+  const shownClips = useRef<Clip[]>([])
 
   // ---- the clips ----
   const clipVersionIds = isTimeline ? versionIds : selectedVersion ? [selectedVersion.id] : []
@@ -194,6 +197,10 @@ const ViewerBody = ({
       return clip ? [clip] : []
     }
     const versions = new Map(timelineData.map((v) => [v.id, v]))
+    // Replacing a version refetches the timeline, and until then the data is the previous one's.
+    // Keep the clips shown meanwhile: without the new version's clip, the player would lose its
+    // place and fall back to the first clip.
+    if (isFetchingTimeline && versionIds.some((id) => !versions.has(id))) return shownClips.current
     return versionIds.flatMap((id, slot) => {
       const version = versions.get(id)
       const clip =
@@ -208,35 +215,36 @@ const ViewerBody = ({
     reviewableIds,
     details,
     timelineData,
+    isFetchingTimeline,
     versionIds,
     timelineReviewables,
   ])
+  useEffect(() => {
+    shownClips.current = clips
+  }, [clips])
 
   // ---- the clip on screen: what the header pickers act on ----
-  const [currentClip, setCurrentClip] = useState<CurrentClip | null>(null)
+  // Only its place: the version and reviewable in it come from the clips, which change when the
+  // user picks another reviewable without the player reporting a clip change.
+  const [currentSlot, setCurrentSlot] = useState<number | null>(null)
   const handleCurrentClipChange = useCallback((_index: number, clip?: Clip) => {
-    setCurrentClip(
-      clip
-        ? {
-            slot: parseInt(clip.listItemId, 10),
-            versionId: clip.context.versionId,
-            productId: clip.context.productId,
-            label: clip.label,
-          }
-        : null,
-    )
+    setCurrentSlot(clip ? parseInt(clip.listItemId, 10) : null)
   }, [])
+  const currentClip = isTimeline
+    ? clips.find((clip) => parseInt(clip.listItemId, 10) === currentSlot)
+    : clips[0]
 
   // on a timeline, the version picker lists the current clip's product's versions
+  const currentProductId = currentClip?.context.productId
   const { data: currentProductVersions = [] } = useGetViewerReviewablesQuery(
-    { projectName: projectName ?? '', productId: currentClip?.productId ?? '' },
-    { skip: !isTimeline || !projectName || !currentClip?.productId },
+    { projectName: projectName ?? '', productId: currentProductId ?? '' },
+    { skip: !isTimeline || !projectName || !currentProductId },
   )
   const pickerVersions = useMemo(
     () => (isTimeline ? [...currentProductVersions].sort(byVersionNumber) : versionsAndReviewables),
     [isTimeline, currentProductVersions, versionsAndReviewables],
   )
-  const pickerVersionId = isTimeline ? currentClip?.versionId : selectedVersion?.id
+  const pickerVersionId = isTimeline ? currentClip?.context.versionId : selectedVersion?.id
 
   const handleVersionChange = (versionId: string) => {
     const version = pickerVersions.find((v) => v.id === versionId)
@@ -247,10 +255,10 @@ const ViewerBody = ({
       dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [reviewableId || ''] }))
       return
     }
-    if (!currentClip) return
+    if (currentSlot === null) return
     // swap the version in the current clip's place on the timeline
     if (reviewableId) setTimelineReviewables((prev) => ({ ...prev, [versionId]: reviewableId }))
-    dispatch(updateSelection({ versionIds: versionIds.with(currentClip.slot, versionId) }))
+    dispatch(updateSelection({ versionIds: versionIds.with(currentSlot, versionId) }))
   }
 
   const handleProductChange = (productId: string) => {
@@ -407,20 +415,31 @@ const ViewerBody = ({
 
   if (isFetching || isLoadingDetails) return <Styled.Container ref={containerRef} />
 
+  // nothing to play: the version's details stay, e.g. to upload a reviewable or comment
+  const emptyVersionId = isTimeline ? versionIds[0] : selectedVersion?.id
   return (
     <Styled.Container ref={containerRef}>
       <Styled.EmptyHeader>
         {headerStart}
         {headerEnd}
       </Styled.EmptyHeader>
-      <ViewerEmpty
-        projectName={projectName ?? ''}
-        productId={productId}
-        versionId={selectedVersion?.id}
-        reviewables={selectedVersion?.reviewables ?? []}
-        noVersions={noVersions}
-        onUpload={handleUpload}
-      />
+      <Styled.EmptyBody>
+        <ViewerEmpty
+          projectName={projectName ?? ''}
+          productId={productId}
+          versionId={emptyVersionId}
+          reviewables={selectedVersion?.reviewables ?? []}
+          noVersions={noVersions}
+          onUpload={handleUpload}
+        />
+        {emptyVersionId && projectName && (
+          <Styled.EmptySidebar>
+            <Suspense>
+              <ViewerDetails projectName={projectName} versionId={emptyVersionId} />
+            </Suspense>
+          </Styled.EmptySidebar>
+        )}
+      </Styled.EmptyBody>
     </Styled.Container>
   )
 }
@@ -444,9 +463,16 @@ const ViewerWithPlugins = ({
   useReviewPlugins,
 }: ViewerProps & { useReviewPlugins: UseViewerPlayerPlugins }) => {
   const review = useReviewPlugins()
-  // the player's plugin set can't change once it is mounted
+  // the player's plugin set can't change once it is mounted: a licence change (site info
+  // refetched) mounts a new one
   if (review.isLoading) return null
-  return <ViewerBody onClose={onClose} reviewPlugins={review.plugins} />
+  return (
+    <ViewerBody
+      key={review.plugins ? 'review' : 'none'}
+      onClose={onClose}
+      reviewPlugins={review.plugins}
+    />
+  )
 }
 
 const Viewer = ({ onClose }: ViewerProps) => {

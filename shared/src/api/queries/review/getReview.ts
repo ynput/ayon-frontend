@@ -295,24 +295,33 @@ const getReviewApi = enhancedApi.injectEndpoints({
         ...(args.versionIds ?? []).map((id) => ({ type: 'viewer', id })),
       ],
       async onCacheEntryAdded(
-        { productId, taskId, folderId },
+        { productId, taskId, folderId, versionIds: requestedVersionIds },
         { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
         const mediaProcessingBatcher = createRealtimeBatcher(
           (messages: { message: any }[]) => {
-            const versionIds = new Set(getCacheEntry().data?.map((version) => version.id) || [])
+            const versionIds = new Set([
+              ...(getCacheEntry().data?.map((version) => version.id) || []),
+              ...(requestedVersionIds ?? []),
+            ])
             const entityId = productId || taskId || folderId
-            if (!entityId) return
+            if (!entityId && !requestedVersionIds?.length) return
 
             const shouldInvalidate = messages.some(
               ({ message }) =>
                 message.status === 'finished' &&
                 versionIds.has((message?.summary as Summary)?.versionId || ''),
             )
-            if (shouldInvalidate) {
-              dispatch(reviewablesApi.util.invalidateTags([{ type: 'review', id: entityId }]))
-            }
+            if (!shouldInvalidate) return
+            dispatch(
+              reviewablesApi.util.invalidateTags(
+                entityId
+                  ? [{ type: 'review', id: entityId }]
+                  : // several versions (a timeline) are tagged by each version
+                    (requestedVersionIds ?? []).map((id) => ({ type: 'viewer' as const, id })),
+              ),
+            )
           },
           ({ message }) => message?.summary?.versionId || message?.id || '',
         )

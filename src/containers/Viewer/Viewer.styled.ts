@@ -49,6 +49,18 @@ export const EmptyHeader = styled.div`
   padding: var(--padding-s);
 `
 
+export const EmptyBody = styled.div`
+  flex: 1;
+  display: flex;
+  min-height: 0;
+`
+
+export const EmptySidebar = styled.div`
+  width: 25%;
+  min-width: 320px;
+  padding: 0 var(--padding-s) var(--padding-s) 0;
+`
+
 export const Empty = styled.div`
   flex: 1;
   display: flex;
