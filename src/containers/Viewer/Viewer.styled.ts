@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Dropdown } from '@ynput/ayon-react-components'
 
 // the player fills the dialog and is the theatre/fullscreen target
 export const Container = styled.div`
@@ -11,27 +12,64 @@ export const Container = styled.div`
   background-color: var(--md-sys-color-surface-container-lowest);
 `
 
-// the host content in the player header: path, product and version pickers
+// The host content in the player header, the clip on screen: folder / product / version, with the
+// pickers. It looks like the comparison picker beside it when comparing (Review's), and like it,
+// the names shorten when the header is narrow.
 export const HeaderStart = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--base-gap-small);
+  gap: var(--padding-s);
   min-width: 0;
+  height: 32px;
+  padding: 2px var(--padding-s);
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-high);
+  white-space: nowrap;
 
-  .path {
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    color: var(--md-sys-color-on-surface-variant);
+  & > * {
+    flex-shrink: 0;
   }
 
-  .product-dropdown {
-    width: unset;
-    background-color: var(--md-sys-color-surface-container-highest);
+  .name {
+    flex-shrink: 1;
+    min-width: 2.5rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-highest-hover);
+  /* the player's header */
+  @container clip-header (max-width: 1100px) {
+    img {
+      display: none;
     }
+  }
+`
+
+export const HeaderDropdown = styled(Dropdown)`
+  flex-shrink: 1;
+  min-width: 3.5rem;
+  height: 24px;
+
+  & button {
+    background-color: var(--md-sys-color-surface-container-low);
+
+    & > div {
+      border-color: var(--md-sys-color-surface-container-low);
+      transition: none;
+    }
+  }
+
+  &:hover button {
+    background-color: var(--md-sys-color-surface-container);
+
+    & > div {
+      border-color: var(--md-sys-color-surface-container);
+    }
+  }
+
+  /* version names are short: the folder and product shorten instead */
+  &.version {
+    flex-shrink: 0;
   }
 `
 

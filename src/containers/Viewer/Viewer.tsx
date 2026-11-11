@@ -8,7 +8,6 @@ import { Player, ClipHeaderThumbnail, clearMemoizedPlayables } from '@ynput/ayon
 import type { PlayerInitialState, PlayerViewState } from '@ynput/ayon-player'
 import type { PlayerPlugins } from '@ynput/ayon-player/plugins'
 import type { Clip } from '@ynput/ayon-player/model'
-import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { updateSelection, updateProduct } from '@state/viewer'
 import ViewerEmpty from './ViewerEmpty'
 import ViewerSidebarProviders from './ViewerSidebarProviders'
@@ -337,26 +336,44 @@ const ViewerBody = ({
           src={`/api/projects/${projectName}/files/${currentFileId}/thumbnail`}
         />
       )}
-      {folderLabel && <span className="path">{folderLabel}</span>}
-      {!isTimeline && hasMultipleProducts && (
-        <ReviewVersionDropdown
+      {folderLabel && (
+        <>
+          <span className="name" data-tooltip={clipDetails?.folder?.path}>
+            {folderLabel}
+          </span>
+          /
+        </>
+      )}
+      {!isTimeline && hasMultipleProducts ? (
+        <Styled.HeaderDropdown
           options={productOptions}
+          value={selectedProductId ? [selectedProductId] : []}
+          onChange={([id]) => id && handleProductChange(id)}
           placeholder="Select a product"
-          prefix="Product: "
-          value={selectedProductId}
-          onChange={handleProductChange}
-          valueProps={{ className: 'product-dropdown' }}
-          tooltip="Select a product to view its versions reviewables"
-          valueIcon={selectedProduct?.icon || ''}
-          valueColor={selectedProduct?.color}
+          valueIcon={selectedProduct?.icon}
+          widthExpand
+          activateKeys={['Enter']}
+          data-tooltip="Product"
         />
+      ) : (
+        currentClip && <span className="name">{currentClip.context.productName}</span>
       )}
       {!!pickerVersions.length && (
-        <ReviewVersionDropdown
-          options={versionOptions(pickerVersions)}
-          value={pickerVersionId ?? null}
-          onChange={handleVersionChange}
-        />
+        <>
+          /
+          <Styled.HeaderDropdown
+            options={versionOptions(pickerVersions)}
+            value={pickerVersionId ? [pickerVersionId] : []}
+            onChange={([id]) => id && handleVersionChange(id)}
+            className="version"
+            placeholder="Select a version"
+            search={pickerVersions.length > 20}
+            searchFields={['label']}
+            widthExpand
+            activateKeys={['Enter']}
+            data-tooltip="Version"
+          />
+        </>
       )}
     </Styled.HeaderStart>
   )
