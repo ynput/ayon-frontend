@@ -44,6 +44,7 @@ export const SLOT_AREAS: SlotArea[] = [
         slots: [
           { slot: 'tableColumn', label: 'Columns' },
           { slot: 'entityMenuItem', label: 'Cell menu' },
+          { slot: 'projectTable.columnMenuItem', label: 'Column menu' },
           { slot: 'table.shortcut', label: 'Shortcuts' },
           { slot: 'projectTable.toolbarItem', label: 'Toolbar' },
           { slot: 'projectTable.customizeSection', label: 'Customize panel' },
@@ -62,6 +63,24 @@ export const SLOT_AREAS: SlotArea[] = [
         ],
       },
     ],
+  },
+  {
+    label: 'Settings',
+    icon: 'settings',
+    sections: [
+      {
+        label: 'User details',
+        slots: [
+          { slot: 'userDetails.section', label: 'Sections' },
+          { slot: 'userDetails.menuItem', label: 'More menu' },
+        ],
+      },
+    ],
+  },
+  {
+    label: 'Account',
+    icon: 'account_circle',
+    sections: [{ label: 'Profile', slots: [{ slot: 'profile.section', label: 'Sections' }] }],
   },
 ]
 

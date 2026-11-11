@@ -20,8 +20,13 @@ import { getRequestErrorString } from '@shared/util'
 import { updateUserAttribs, updateUserPreferences } from '@state/user'
 import { useDispatch } from 'react-redux'
 import { useNotifications } from '@context'
+import { usePowerpack } from '@shared/context'
+import { useContributions } from '@ynput/ayon-addon'
+import { AddonProfileSections } from '@shared/components'
+import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
 import { AvatarName } from './ProfilePage.styled'
+import { DividerSmallStyled } from '../SettingsPage/UsersSettings/UserAttribForm.styled'
 
 const FormsStyled = styled.section`
   flex: 1;
@@ -30,14 +35,46 @@ const FormsStyled = styled.section`
   gap: var(--base-gap-small);
   display: flex;
   flex-direction: column;
-  max-width: 600px;
-
-  & > *:last-child {
-    /* flex: 1; */
-  }
+  width: 100%;
+  /* two 600px columns and the gap between them */
+  max-width: 1232px;
 
   .label {
     min-width: 170px;
+  }
+
+  /* every card's header (AYON's profile and the addon sections) is as tall as a button, so the
+     columns line up whether or not a header has one */
+  .profile-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+    min-height: var(--base-input-size);
+  }
+`
+
+// the profile form, and next to it what addons add to the page; below it on narrow screens
+const ColumnsStyled = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: var(--base-gap-large) 32px;
+
+  && > * {
+    flex: 1 1 400px;
+    max-width: 600px;
+  }
+`
+
+const SideStyled = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--base-gap-large);
+
+  /* no addon sections and no preview: the form stays centred on its own */
+  &:empty {
+    display: none;
   }
 `
 
@@ -175,6 +212,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   }, [preferencesData, initPreferencesData])
 
   const { sendNotification } = useNotifications()
+  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
+  const { contributions: profileSections, isLoading: isLoadingSections } =
+    useContributions('profile.section')
+  const hasPersonalApiKeys = profileSections.some(
+    (section) => section.addon.name === 'powerpack' && section.id === 'personalApiKeys',
+  )
 
   const onSavePreferences = async () => {
     setPreferenceChanges(false)
@@ -236,61 +279,76 @@ const ProfilePage = ({ user = {}, isLoading }) => {
           <AvatarName className={clsx({ loading: !userName || isLoading }, 'shimmer-lightest')}>
             <span className={Type.headlineMedium}>{userName ? userName : 'User FullName'}</span>
           </AvatarName>
-          <Panel style={{ background: 'none' }}>
-            <FormRow label="Username" key="Username">
-              <InputText value={name} disabled />
-            </FormRow>
-            <UserAttribForm
-              formData={formData}
-              setFormData={setFormData}
-              attributes={attributes}
-              showAvatarUrl={false}
-            />
-
-            {!user?.data?.disablePasswordLogin && (
-              <FormRow label="Password" key="Password">
-                <LockedInput
-                  label="Password"
-                  value={password}
-                  type="password"
-                  onEdit={() => setShowSetPassword(true)}
+          <ColumnsStyled>
+            <Panel>
+              {/* saves this card only: addon sections save their own data */}
+              <header className="profile-card-header">
+                <b>Profile</b>
+                <SaveButton
+                  onClick={handleSaveAll}
+                  label="Save profile"
+                  active={changesMade || preferenceChanges}
+                  saving={isUpdatingUser || isUpdatingPreferences}
+                  style={{ marginLeft: 'auto' }}
                 />
+              </header>
+              <FormRow label="Username" key="Username">
+                <InputText value={name} disabled />
               </FormRow>
-            )}
+              <UserAttribForm
+                formData={formData}
+                setFormData={setFormData}
+                attributes={attributes}
+                showAvatarUrl={false}
+              />
 
-            <FormRow label="Desktop Notifications" key="notifications">
-              <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
-                <InputSwitch
-                  checked={preferencesData.notifications}
-                  id={'notifications'}
-                  onChange={handleChangePreferences}
-                  disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
-                />
-              </div>
-            </FormRow>
+              {!user?.data?.disablePasswordLogin && (
+                <FormRow label="Password" key="Password">
+                  <LockedInput
+                    label="Password"
+                    value={password}
+                    type="password"
+                    onEdit={() => setShowSetPassword(true)}
+                  />
+                </FormRow>
+              )}
 
-            <FormRow label="Notification Sound" key="notificationSound">
-              <div
-                data-tooltip="Get a little chime sound on new important notifications"
-                style={{ width: 'fit-content' }}
-              >
-                <InputSwitch
-                  checked={preferencesData.notificationSound}
-                  id={'notificationSound'}
-                  onChange={handleChangePreferences}
-                  disabled={isUpdatingPreferences || isLoading}
-                />
-              </div>
-            </FormRow>
+              <DividerSmallStyled />
+              <FormRow label="Desktop notifications" key="notifications">
+                <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
+                  <InputSwitch
+                    checked={preferencesData.notifications}
+                    id={'notifications'}
+                    onChange={handleChangePreferences}
+                    disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
+                  />
+                </div>
+              </FormRow>
 
-            <SaveButton
-              onClick={handleSaveAll}
-              label="Save profile"
-              active={changesMade || preferenceChanges}
-              saving={isUpdatingUser || isUpdatingPreferences}
-              style={{ padding: '6px 18px', marginLeft: 'auto' }}
-            />
-          </Panel>
+              <FormRow label="Notification sound" key="notificationSound">
+                <div
+                  data-tooltip="Get a little chime sound on new important notifications"
+                  style={{ width: 'fit-content' }}
+                >
+                  <InputSwitch
+                    checked={preferencesData.notificationSound}
+                    id={'notificationSound'}
+                    onChange={handleChangePreferences}
+                    disabled={isUpdatingPreferences || isLoading}
+                  />
+                </div>
+              </FormRow>
+            </Panel>
+            <SideStyled>
+              {/* what addons contribute to this page (profile.section slot, @ynput/ayon-addon) */}
+              <AddonProfileSections />
+              {!isLoadingLicense &&
+                !user?.data?.isGuest &&
+                (!powerLicense || (!isLoadingSections && !hasPersonalApiKeys)) && (
+                  <PersonalApiKeysPreview needsUpdate={powerLicense} />
+                )}
+            </SideStyled>
+          </ColumnsStyled>
         </FormsStyled>
       </Section>
       {showSetPassword && (

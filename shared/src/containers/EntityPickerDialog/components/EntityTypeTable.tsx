@@ -25,6 +25,7 @@ interface EntityTypeTableProps {
   isMultiSelect?: boolean // Whether to allow multiple selection
   onRowSubmit?: (id: string) => void // Callback when a row is submitted (e.g., double-clicked)
   onScrollBottom?: () => void // Callback when scrolled to the bottom of the table
+  scrollToRowId?: string // Row scrolled into view once, when it first shows
 }
 
 const EntityTypeTable: FC<EntityTypeTableProps> = ({
@@ -39,6 +40,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   isMultiSelect,
   onRowSubmit,
   onScrollBottom,
+  scrollToRowId,
 }) => {
   const tooltip = useRowTooltip(entityType, tableData)
 
@@ -70,6 +72,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
         imgPosition="end"
         isMultiSelect={isMultiSelect}
         onScrollBottom={onScrollBottom}
+        scrollToRowId={scrollToRowId}
         pt={{
           row: {
             onDoubleClick: handleDoubleClick,

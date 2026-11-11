@@ -9,6 +9,7 @@ import type {
   OnMoveComplete,
 } from '@shared/containers/MoveEntityDialog/types'
 import { useProjectFoldersContext } from '@shared/context'
+import { readSessionStorage, writeSessionStorage } from '@shared/hooks/useSessionStorage'
 import { getRequestErrorString } from '@shared/util'
 
 export type EntityType = 'folder' | 'task'
@@ -19,6 +20,10 @@ interface UseMoveEntitiesProps {
   onClose: () => void
   onMoveComplete?: OnMoveComplete
 }
+
+// the folder things were last moved to, per project, for the rest of the browser session:
+// moving several entities to the same place should not mean finding that folder each time
+const destinationKey = (projectName: string) => `dialog-memory:move-entity:${projectName}`
 
 export const useMoveEntities = ({
   projectName,
@@ -32,8 +37,11 @@ export const useMoveEntities = ({
   const projectTableContext = useOptionalProjectTableContext()
 
   // Get folder data to check hasVersions property
-  const { folders } = useProjectFoldersContext()
-  const tableData = projectTableContext?.tableData || []
+  const { folders, isLoading: isLoadingFolders, getChildFolderIds } = useProjectFoldersContext()
+  const tableData = useMemo(
+    () => projectTableContext?.tableData || [],
+    [projectTableContext?.tableData],
+  )
   const getEntityById = useCallback(
     (id: string) =>
       projectTableContext?.getEntityById(id) || folders.find((folder) => folder.id === id),
@@ -77,6 +85,7 @@ export const useMoveEntities = ({
           const errorDetails = failedOperations.map((op) => op.detail).join(', ')
           throw new Error(errorDetails || 'Some move operations failed')
         }
+        writeSessionStorage(destinationKey(projectName), targetFolderId)
         onMoveComplete?.(targetFolderId)
       } catch (error: any) {
         // Extract and improve error message
@@ -280,7 +289,26 @@ export const useMoveEntities = ({
     )
   }, [movingEntities])
 
+  // the last destination, when it is still a valid target for these entities.
+  // read on each opening (the dialog stays mounted while closed)
+  const lastDestinationId = useMemo(() => {
+    if (!movingEntities?.entities.length) return undefined
+    const id = readSessionStorage<string | null>(destinationKey(projectName), null)
+    // the folder may have been deleted since
+    if (!id || !folders.some((folder) => folder.id === id)) return undefined
+    // not a folder being moved or inside one, one that would clash by name, or where they already are
+    const movingFolderIds = movingEntities.entities
+      .filter((entity) => entity.entityType === 'folder')
+      .map((entity) => entity.entityId)
+    if (getChildFolderIds(movingFolderIds, true).includes(id)) return undefined
+    if (getDisabledFolderIds().includes(id)) return undefined
+    if (movingEntities.entities.some((entity) => entity.currentParentId === id)) return undefined
+    return id
+  }, [movingEntities, projectName, folders, getChildFolderIds, getDisabledFolderIds])
+
   return {
+    isLoadingFolders,
+    lastDestinationId,
     handleMoveSubmit,
     handleMoveToRoot,
     getDisabledFolderIds,

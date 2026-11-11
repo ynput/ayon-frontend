@@ -43,6 +43,8 @@ interface NewListData {
 
 export interface NewListOptions {
   entityListFolderId?: string
+  /** create another: keep the dialog open with the same entities and folder */
+  keepOpen?: boolean
 }
 
 export type { ListEntityInput, ListSubMenuItem }
@@ -376,8 +378,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           )
         }
 
-        // close the dialog
-        closeCreateNewList()
+        // close the dialog, unless the user is creating another list from the same entities
+        if (!options?.keepOpen) closeCreateNewList()
 
         // add list id to search params
         if (listId) {
