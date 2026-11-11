@@ -324,7 +324,13 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   }
 
   const handleSeqChange = (value: any) => {
-    setEntityForm({ ...entityForm, label: value.base, subType: value.type })
+    // the name is checked before creating, and a sequence has no name field to fill it
+    setEntityForm({
+      ...entityForm,
+      label: value.base,
+      name: parseAndFormatName(value.base, config),
+      subType: value.type,
+    })
     setSequenceForm({
       ...sequenceForm,
       increment: value.increment,
@@ -337,6 +343,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   //   refs
   const typeSelectRef = useRef<DropdownRef>(null)
   const labelRef = useRef<HTMLInputElement>(null)
+  const sequenceBaseRef = useRef<HTMLInputElement>(null)
 
   const handleClose = () => {
     // reset state
@@ -389,11 +396,10 @@ export const NewEntity: React.FC<NewEntityProps> = ({
           const noun = newEntityDefinitions[entityType].label.toLowerCase()
           toast.success(`${pluralize(created || 1, noun)} created`)
         }
-        // focus and select the label input
-        if (labelRef.current) {
-          labelRef.current.focus()
-          labelRef.current.select()
-        }
+        // focus and select the label input (the first name input of a sequence)
+        const input = sequenceForm.active ? sequenceBaseRef.current : labelRef.current
+        input?.focus()
+        input?.select()
         // clear the entity so the next one starts empty, but keep the type
         setEntityForm((prev) => ({ ...prev, label: '', name: '' }))
         setNameManuallyEdited(false)
@@ -604,6 +610,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
                 isRoot={isRoot}
                 // @ts-ignore
                 typeSelectRef={typeSelectRef}
+                baseInputRef={sequenceBaseRef}
                 // @ts-ignore
                 onLastInputKeydown={handleKeyDown}
                 folders={projectInfo?.folderTypes || []}
