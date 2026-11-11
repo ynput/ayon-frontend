@@ -2,6 +2,7 @@
 // `ayon-addon dev` serves (vite.ts). Not for addon code.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { registerManifest, registerManifests, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { buildContract, contractManifests, setContracts } from './contractModel'
 import type { ContractModule } from './contractModel'
@@ -9,7 +10,6 @@ import { provideShellHost } from './host'
 import { installNetwork, setFixture } from './network'
 import { readSelection, writeSelection } from './params'
 import { Shell } from './Shell'
-import { setShowSlots } from './slotOverlay'
 import type { Fixture, ShellOptions } from './types'
 import './shell.css'
 
@@ -47,11 +47,30 @@ const loadContracts = (modules: ContractModule[] = []) =>
     }),
   )
 
+/**
+ * A token stored on the page earlier (signed in by hand, then expired or the server reset) that
+ * the server rejects is dropped, so the dev server's API key signs in: the proxy adds the key only
+ * to requests without a token. Checked before anything queries, as AYON's client sends a 401 to
+ * the login page.
+ */
+const dropStaleToken = async () => {
+  const token = localStorage.getItem('accessToken')
+  if (!token && !/(?:^|;\s*)accessToken=/.test(document.cookie)) return
+  try {
+    const response = await fetch('/api/users/me', {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    })
+    if (response.status === 401) clearAccessToken()
+  } catch {
+    // the server can't be reached: the shell says so
+  }
+}
+
 export const startShell = async (options: ShellOptions) => {
-  const { preview, showSlots } = readSelection()
-  setShowSlots(showSlots !== false)
+  const { preview } = readSelection()
   const mode = preview ? 'preview' : 'live'
   installNetwork(mode)
+  if (mode === 'live' && options.signedInWithKey) await dropStaleToken()
   provideShellHost()
   // the slots of other addons, as if those addons were installed: contributions to them register
   const contracts = await loadContracts(options.contracts)
