@@ -225,8 +225,23 @@ const getReviewApi = enhancedApi.injectEndpoints({
     // utilizes getReviewablesForProduct, getReviewablesForTask, getReviewablesForFolder
     getViewerReviewables: build.query<GetReviewablesResponse[], GetViewerReviewablesParams>({
       keepUnusedDataFor: 5,
-      queryFn: async ({ productId, taskId, folderId, projectName }, { dispatch }) => {
+      queryFn: async ({ productId, taskId, folderId, versionIds, projectName }, { dispatch }) => {
         let query: any
+
+        if (versionIds?.length) {
+          const request = dispatch(
+            reviewablesApi.endpoints.getReviewablesForEntities.initiate({
+              projectName,
+              entityType: 'versions',
+              reviewablesRequestModel: { entityIds: versionIds },
+            }),
+          )
+          const result = await request
+          // a mutation used as a read: drop its entry from the mutations state
+          request.reset()
+          if ('error' in result) return { error: normalizeQueryError(result.error) }
+          return { data: result.data as GetReviewablesResponse[] }
+        }
 
         if (productId) {
           query = reviewablesApi.endpoints.getReviewablesForProduct.initiate(
@@ -275,7 +290,10 @@ const getReviewApi = enhancedApi.injectEndpoints({
           return { data }
         }
       },
-      providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, true),
+      providesTags: (result, _error, args) => [
+        ...getViewerReviewablesTags(result, args, true),
+        ...(args.versionIds ?? []).map((id) => ({ type: 'viewer', id })),
+      ],
       async onCacheEntryAdded(
         { productId, taskId, folderId },
         { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },

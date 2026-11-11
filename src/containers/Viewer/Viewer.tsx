@@ -1,44 +1,78 @@
 import { compareDesc } from 'date-fns'
-import { useCallback, useEffect, useMemo, useRef } from 'react'
+import { lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { useAppDispatch, useAppSelector } from '@state/store'
-import { useFullScreenHandle } from 'react-full-screen'
-import { Button } from '@ynput/ayon-react-components'
-import VersionSelectorTool from '@components/VersionSelectorTool/VersionSelectorTool'
-import useReviewShortcuts from '@components/VersionSelectorTool/hooks/useReviewShortcuts'
+import { Button, Icon } from '@ynput/ayon-react-components'
+import { Player, ClipHeaderThumbnail, clearMemoizedPlayables } from '@ynput/ayon-player'
+import type { PlayerInitialState, PlayerViewState } from '@ynput/ayon-player'
+import type { PlayerPlugins } from '@ynput/ayon-player/plugins'
+import type { Clip } from '@ynput/ayon-player/model'
 import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
-import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '@state/viewer'
-import ViewerComponent from './ViewerComponent'
-import ViewerDetailsPanel from './ViewerDetailsPanel'
+import { updateSelection, updateProduct } from '@state/viewer'
+import ViewerEmpty from './ViewerEmpty'
+import ViewerSidebarProviders from './ViewerSidebarProviders'
+import useViewerPlayerPlugins, { type UseViewerPlayerPlugins } from './useViewerPlayerPlugins'
+import { isPlayable, versionClip } from './viewerClips'
 import * as Styled from './Viewer.styled'
-import { AnnotationModules, useAnnotationModules, ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import {
-  getGroupedReviewables,
-  ReviewablesSelector,
-  type ReviewablesSelectorHandle,
-} from '@shared/components'
-import { useScopedDetailsPanel } from '@shared/context'
-import { ProjectContextProvider, useProjectContext } from '@shared/context'
-import {
-  useSessionStorage,
-  useReviewablesKeyboardNavigation,
-  useReviewablesLayout,
-} from '@shared/hooks'
-import clsx from 'clsx'
+  ProjectContextProvider,
+  usePowerpack,
+  useProjectContext,
+  useScopedDetailsPanel,
+} from '@shared/context'
+import { useLocalStorage } from '@shared/hooks'
 
 interface ViewerProps {
   onClose?: () => void
-  canOpenInNew?: boolean
 }
+
+// the details panel, as the player's Sidebar plugin (always the host's)
+const sidebarPlugin: NonNullable<PlayerPlugins['Sidebar']> = {
+  components: { Sidebar: lazy(() => import('./ViewerSidebar')) },
+  providers: ViewerSidebarProviders,
+}
+
+const playerRouter = { useLocation, useNavigate, useParams, useSearchParams }
+
+// the newest reviewable of a version, to pick the product with the latest review
+const latestReviewableDate = (version: GetReviewablesResponse) =>
+  (version.reviewables ?? []).reduce(
+    (latest, r) =>
+      compareDesc(latest, new Date(r.createdAt || 0)) === 1 ? new Date(r.createdAt || 0) : latest,
+    new Date(0),
+  )
+
+// the reviewable to show after switching to `version`: the one with the label shown now, else the first ready one
+const matchingReviewableId = (version: GetReviewablesResponse, label?: string | null) => {
+  const ready = version.reviewables?.filter((r) => r.availability === 'ready') ?? []
+  const lower = label?.toLowerCase()
+  return (ready.find((r) => r.label?.toLowerCase() === lower) ?? ready[0])?.fileId
+}
+
+// HERO first, then newest first
+const versionOptions = (versions: GetReviewablesResponse[]) =>
+  [...versions]
+    .sort((a, b) => {
+      if (a.name === 'HERO') return -1
+      if (b.name === 'HERO') return 1
+      return Number(b.version) - Number(a.version)
+    })
+    .map(({ id, name }) => ({ value: id, label: name }))
+
+const byVersionNumber = (a: GetReviewablesResponse, b: GetReviewablesResponse) =>
+  parseInt(a.version, 10) - parseInt(b.version, 10)
+
+type CurrentClip = { slot: number; versionId: string; productId: string; label: string }
 
 const ViewerBody = ({
   onClose,
-  annotationModules,
-}: ViewerProps & { annotationModules: AnnotationModules }) => {
-  const [theater, setTheater] = useSessionStorage('viewer-theater-mode', false)
+  reviewPlugins,
+}: ViewerProps & { reviewPlugins: PlayerPlugins | null }) => {
   const {
     productId,
     taskId,
@@ -46,113 +80,59 @@ const ViewerBody = ({
     projectName,
     versionIds = [],
     reviewableIds = [],
-    fullscreen,
-    quickView,
     selectedProductId,
   } = useAppSelector((state) => state.viewer)
-
+  const user = useAppSelector((state) => state.user)
   const project = useProjectContext()
   const dispatch = useAppDispatch()
+  const { setPowerpackDialog } = usePowerpack()
+  const containerRef = useRef<HTMLDivElement>(null)
 
-  // new query: returns all reviewables for a product
+  // several versions (e.g. rows selected in a table) play one after another on a timeline
+  const isTimeline = versionIds.length > 1
+
+  // ---- one target (product, task or folder): its versions, one at a time ----
   const { data: allVersionsAndReviewables = [], isFetching: isFetchingReviewables } =
     useGetViewerReviewablesQuery({ projectName, productId, taskId, folderId } as any, {
-      skip: !projectName || (!productId && !taskId && !folderId),
+      skip: isTimeline || !projectName || (!productId && !taskId && !folderId),
     })
 
-  // check if there are multiple products in the reviewables. At least one productId is different
-  const hasMultipleProducts = useMemo(() => {
-    const uniqueProductIds = new Set(allVersionsAndReviewables.map((v) => v.productId))
-    return uniqueProductIds.size > 1
-  }, [allVersionsAndReviewables])
-
-  // create a unique list of productIds
-  const uniqueProducts = useMemo(() => {
-    const uniqueProductIds = new Set(allVersionsAndReviewables.map((v) => v.productId))
-    return Array.from(uniqueProductIds)
-  }, [allVersionsAndReviewables])
-
   const productOptions = useMemo(() => {
-    return [...uniqueProducts]
-      .map((id) => {
-        const product = allVersionsAndReviewables.find((v) => v.productId === id)
-        return {
-          value: id,
-          label: product?.productName || 'Unknown product',
-          icon: product?.productType && project.getProductType(product.productType).icon,
-          color: product?.productType && project.getProductType(product.productType).color,
-        }
-      })
+    const products = new Map(allVersionsAndReviewables.map((v) => [v.productId, v]))
+    return [...products.values()]
+      .map((v) => ({
+        value: v.productId,
+        label: v.productName || 'Unknown product',
+        icon: v.productType ? project.getProductType(v.productType).icon : undefined,
+        color: v.productType ? project.getProductType(v.productType).color : undefined,
+      }))
       .sort((a, b) => a.label.localeCompare(b.label))
-  }, [uniqueProducts, allVersionsAndReviewables])
+  }, [allVersionsAndReviewables, project])
+  const hasMultipleProducts = productOptions.length > 1
+  const selectedProduct = productOptions.find((p) => p.value === selectedProductId)
 
-  const selectedProduct = useMemo(
-    () => productOptions.find((p) => p.value === selectedProductId),
-    [uniqueProducts, selectedProductId],
-  )
-
-  // sort all versions and reviewables by the latest reviewable createdAt date
-  const sortedVersionsReviewableDates = useMemo(
-    () =>
-      hasMultipleProducts
-        ? [...allVersionsAndReviewables].sort((a, b) => {
-            // Find the reviewable with the latest createdAt date in a
-            const aLatestReviewable = a.reviewables?.reduce((latest, current) => {
-              return compareDesc(
-                new Date(latest.createdAt || 0),
-                new Date(current.createdAt || 0),
-              ) === 1
-                ? latest
-                : current
-            }, a.reviewables[0])
-
-            // Find the reviewable with the latest createdAt date in b
-            const bLatestReviewable = b.reviewables?.reduce((latest, current) => {
-              return compareDesc(
-                new Date(latest.createdAt || 0),
-                new Date(current.createdAt || 0),
-              ) === 1
-                ? latest
-                : current
-            }, b.reviewables[0])
-
-            // Use compareDesc to compare the latest reviewables' createdAt dates
-            return compareDesc(
-              new Date(aLatestReviewable?.createdAt || 0),
-              new Date(bLatestReviewable?.createdAt || 0),
-            )
-          })
-        : allVersionsAndReviewables,
-    [allVersionsAndReviewables, hasMultipleProducts],
-  )
-
-  // check if a specific product is selected
-  const versionsAndReviewables: GetReviewablesResponse[] = useMemo(() => {
-    let filtered: GetReviewablesResponse[]
-    if (!hasMultipleProducts) filtered = allVersionsAndReviewables
-    else if (selectedProductId) {
-      // filter out the versions for the selected product
-      filtered = allVersionsAndReviewables.filter((v) => v.productId === selectedProductId)
-    } else {
-      // find the version (and therefor product) with the reviewable that was last createdAt
-      const latestProductId = sortedVersionsReviewableDates[0].productId
-      if (latestProductId) {
-        filtered = allVersionsAndReviewables.filter((v) => v.productId === latestProductId)
-      } else {
-        // return first product
-        const firstProduct = allVersionsAndReviewables[0]
-        filtered = allVersionsAndReviewables.filter((v) => v.productId === firstProduct.productId)
-      }
+  // the selected product's versions; without a selection, the product reviewed last
+  const versionsAndReviewables = useMemo(() => {
+    if (!allVersionsAndReviewables.length) return []
+    let shownProductId = allVersionsAndReviewables[0].productId
+    if (hasMultipleProducts) {
+      shownProductId =
+        selectedProductId ??
+        [...allVersionsAndReviewables].sort((a, b) =>
+          compareDesc(latestReviewableDate(a), latestReviewableDate(b)),
+        )[0].productId
     }
-    return [...filtered].sort((a, b) => parseInt(a.version, 10) - parseInt(b.version, 10))
-  }, [allVersionsAndReviewables, selectedProductId])
-  // if hasMultipleProducts and no selectedProductId, select the first product
+    return allVersionsAndReviewables
+      .filter((v) => v.productId === shownProductId)
+      .sort(byVersionNumber)
+  }, [allVersionsAndReviewables, hasMultipleProducts, selectedProductId])
+
   useEffect(() => {
-    if (hasMultipleProducts && !selectedProductId && !isFetchingReviewables) {
-      const firstProduct = versionsAndReviewables[0]
-      dispatch(updateProduct({ selectedProductId: firstProduct.productId }))
-    }
+    if (isTimeline || !hasMultipleProducts || selectedProductId || isFetchingReviewables) return
+    const firstProduct = versionsAndReviewables[0]
+    if (firstProduct) dispatch(updateProduct({ selectedProductId: firstProduct.productId }))
   }, [
+    isTimeline,
     hasMultipleProducts,
     selectedProductId,
     isFetchingReviewables,
@@ -160,335 +140,329 @@ const ViewerBody = ({
     dispatch,
   ])
 
-  // v003 or v004, etc
   const selectedVersion = useMemo(
-    () => versionsAndReviewables.find((v) => v.id === versionIds[0]),
-    [versionIds, versionsAndReviewables],
+    () => (isTimeline ? undefined : versionsAndReviewables.find((v) => v.id === versionIds[0])),
+    [isTimeline, versionIds, versionsAndReviewables],
   )
 
-  // Determine entity type and ID for the query
-  // Always prioritize version if available, as we need it to get the product name
-  const { entityType, entityId } = useMemo(() => {
-    if (versionIds[0]) {
-      return { entityType: 'version' as const, entityId: versionIds[0] }
-    } else if (taskId && !productId) {
-      return { entityType: 'task' as const, entityId: taskId }
-    } else if (folderId && !taskId && !productId) {
-      return { entityType: 'folder' as const, entityId: folderId }
-    }
-    return { entityType: null, entityId: null }
-  }, [folderId, taskId, productId, versionIds])
+  // no version picked (or not one of the product's): show the last one
+  useEffect(() => {
+    if (isTimeline || selectedVersion || isFetchingReviewables) return
+    const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
+    if (lastVersion) dispatch(updateSelection({ versionIds: [lastVersion.id] }))
+  }, [isTimeline, selectedVersion, isFetchingReviewables, versionsAndReviewables, dispatch])
 
-  // Fetch entity details to get folder, product, and version information
-  const { data: entityDetails = [] } = useGetEntitiesDetailsPanelQuery(
+  // no reviewable picked (or not one of the version's): show the first playable one
+  useEffect(() => {
+    if (!selectedVersion || isFetchingReviewables) return
+    const playable = selectedVersion.reviewables?.filter(isPlayable) ?? []
+    if (playable.some((r) => r.fileId === reviewableIds[0])) return
+    if (playable[0]) dispatch(updateSelection({ reviewableIds: [playable[0].fileId] }))
+  }, [selectedVersion, reviewableIds, isFetchingReviewables, dispatch])
+
+  // ---- several versions: a timeline ----
+  const { data: timelineData = [], isFetching: isFetchingTimeline } = useGetViewerReviewablesQuery(
+    { projectName: projectName ?? '', versionIds },
+    { skip: !isTimeline || !projectName },
+  )
+  // the reviewable shown per version, once the user picks another one
+  const [timelineReviewables, setTimelineReviewables] = useState<Record<string, string>>({})
+
+  // ---- the clips ----
+  const clipVersionIds = isTimeline ? versionIds : selectedVersion ? [selectedVersion.id] : []
+  const { data: details = [], isLoading: isLoadingDetails } = useGetEntitiesDetailsPanelQuery(
     {
-      entityType: entityType!,
-      entities: entityId && projectName ? [{ id: entityId, projectName }] : [],
+      entityType: 'version',
+      entities: clipVersionIds.map((id) => ({ id, projectName: projectName ?? '' })),
     },
-    { skip: !entityId || !projectName || !entityType },
+    { skip: !clipVersionIds.length || !projectName },
   )
 
-  const versionPath = useMemo(() => {
-    if (!entityDetails[0]) return ''
-
-    const entity = entityDetails[0]
-
-    // Get the immediate parent folder (last folder in the hierarchy)
-    const folderLabel = entity.folder?.label || entity.folder?.name || ''
-
-    // Get product and version names separately
-    const productName = entity.product?.name || ''
-    const versionName = entity.name || ''
-
-    // Build path: folder / product / version
-    return [folderLabel, productName, versionName].filter(Boolean).join(' / ')
-  }, [entityDetails])
-
-  // if no versionIds are provided, select the last version and update the state
-  useEffect(() => {
-    if ((!versionIds.length || !selectedVersion) && !isFetchingReviewables) {
-      const lastVersion = versionsAndReviewables[versionsAndReviewables.length - 1]
-      if (lastVersion) {
-        dispatch(updateSelection({ versionIds: [lastVersion.id] }))
-      }
+  const clips: Clip[] = useMemo(() => {
+    if (!projectName) return []
+    const detailsById = new Map(details.map((d) => [d.id, d]))
+    if (!isTimeline) {
+      if (!selectedVersion) return []
+      // the folder doesn't change between versions of a product: keep it while the new version's details load
+      const clip = versionClip(
+        projectName,
+        selectedVersion,
+        0,
+        reviewableIds[0],
+        detailsById.get(selectedVersion.id) ?? details[0],
+      )
+      return clip ? [clip] : []
     }
-  }, [versionIds, selectedVersion, isFetchingReviewables, versionsAndReviewables, dispatch])
+    const versions = new Map(timelineData.map((v) => [v.id, v]))
+    return versionIds.flatMap((id, slot) => {
+      const version = versions.get(id)
+      const clip =
+        version &&
+        versionClip(projectName, version, slot, timelineReviewables[id], detailsById.get(id))
+      return clip ? [clip] : []
+    })
+  }, [
+    projectName,
+    isTimeline,
+    selectedVersion,
+    reviewableIds,
+    details,
+    timelineData,
+    versionIds,
+    timelineReviewables,
+  ])
 
-  const versionReviewableIds = selectedVersion?.reviewables?.map((r) => r.fileId) || []
+  // ---- the clip on screen: what the header pickers act on ----
+  const [currentClip, setCurrentClip] = useState<CurrentClip | null>(null)
+  const handleCurrentClipChange = useCallback((_index: number, clip?: Clip) => {
+    setCurrentClip(
+      clip
+        ? {
+            slot: parseInt(clip.listItemId, 10),
+            versionId: clip.context.versionId,
+            productId: clip.context.productId,
+            label: clip.label,
+          }
+        : null,
+    )
+  }, [])
 
-  // if no reviewableIds are provided, select the first playable reviewable
-  useEffect(() => {
-    if (
-      (!reviewableIds.length ||
-        !reviewableIds.every((id: string) => versionReviewableIds.includes(id))) &&
-      !isFetchingReviewables &&
-      selectedVersion
-    ) {
-      const firstReviewableId = selectedVersion.reviewables?.find((r) =>
-        ['ready', 'conversionRecommended'].includes(r.availability || ''),
-      )?.fileId
-
-      if (firstReviewableId) {
-        dispatch(updateSelection({ reviewableIds: [firstReviewableId] }))
-      }
-    }
-  }, [reviewableIds, versionReviewableIds, isFetchingReviewables, selectedVersion, dispatch])
-
-  const selectedReviewable = useMemo(
-    // for now we only support one reviewable
-    () => selectedVersion?.reviewables?.find((r) => r.fileId === reviewableIds[0]),
-    [reviewableIds, selectedVersion],
+  // on a timeline, the version picker lists the current clip's product's versions
+  const { data: currentProductVersions = [] } = useGetViewerReviewablesQuery(
+    { projectName: projectName ?? '', productId: currentClip?.productId ?? '' },
+    { skip: !isTimeline || !projectName || !currentClip?.productId },
   )
+  const pickerVersions = useMemo(
+    () => (isTimeline ? [...currentProductVersions].sort(byVersionNumber) : versionsAndReviewables),
+    [isTimeline, currentProductVersions, versionsAndReviewables],
+  )
+  const pickerVersionId = isTimeline ? currentClip?.versionId : selectedVersion?.id
+
+  const handleVersionChange = (versionId: string) => {
+    const version = pickerVersions.find((v) => v.id === versionId)
+    if (!version) return
+    const reviewableId = matchingReviewableId(version, currentClip?.label)
+
+    if (!isTimeline) {
+      dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [reviewableId || ''] }))
+      return
+    }
+    if (!currentClip) return
+    // swap the version in the current clip's place on the timeline
+    if (reviewableId) setTimelineReviewables((prev) => ({ ...prev, [versionId]: reviewableId }))
+    dispatch(updateSelection({ versionIds: versionIds.with(currentClip.slot, versionId) }))
+  }
 
   const handleProductChange = (productId: string) => {
     dispatch(updateProduct({ selectedProductId: productId }))
   }
 
-  const handleVersionChange = (versionId: string) => {
-    // try and find a matching reviewable in the new version with the same label as the current reviewable
-    const currentLabel = selectedReviewable?.label?.toLowerCase()
-
-    const newVersion = versionsAndReviewables.find((v) => v.id === versionId)
-
-    // no version? that's weird
-    if (!newVersion) return console.error('No version found for id', versionId)
-
-    let newReviewableId = newVersion.reviewables?.find(
-      (r) => r.label?.toLowerCase() === currentLabel && r.availability === 'ready',
-    )?.fileId
-
-    // no matching reviewable? just pick the first ready one
-    if (!newReviewableId)
-      newReviewableId = newVersion.reviewables?.find((r) => r.availability === 'ready')?.fileId
-
-    dispatch(updateSelection({ versionIds: [versionId], reviewableIds: [newReviewableId || ''] }))
-  }
-
-  const handleReviewableChange = (reviewableId: string) => {
-    dispatch(updateSelection({ reviewableIds: [reviewableId] }))
-  }
-
-  const { setTab } = useScopedDetailsPanel('review')
-
-  const handleUploadAction =
-    (toggleNativeFileUpload = false) =>
-    () => {
-      // switch to files tab
-      setTab('files')
-      // open the file dialog
-      if (toggleNativeFileUpload) {
-        dispatch(toggleUpload(true))
+  // the player's reviewable picker: remember the pick so rebuilt clips keep it
+  const handleReviewableChange = useCallback(
+    async (updated: Clip[]) => {
+      // the player calls this while updating its own state: update ours after it
+      await Promise.resolve()
+      const shown = new Map(clips.map((clip) => [clip.listItemId, clip.fileId]))
+      const changed = updated.filter((clip) => shown.get(clip.listItemId) !== clip.fileId)
+      if (!changed.length) return
+      if (!isTimeline) {
+        dispatch(updateSelection({ reviewableIds: [changed[0].fileId] }))
+        return
       }
-    }
-
-  const handle = useFullScreenHandle()
-
-  useEffect(() => {
-    if (fullscreen) {
-      // check if it's already open
-      if (!handle.active) handle.enter()
-    } else {
-      if (handle.active) handle.exit()
-    }
-  }, [handle, fullscreen])
-
-  const fullScreenChange = (state: boolean) => {
-    // when closing, ensure the state is updated
-    if (!state && fullscreen) {
-      dispatch(toggleFullscreen({ fullscreen: false }))
-    }
-  }
-
-  const toggleTheater = useCallback(() => {
-    setTheater(!theater)
-  }, [theater, setTheater])
-
-  const cycleViewMode = useCallback(() => {
-    if (fullscreen) {
-      // Cycle: Fullscreen -> Default
-      dispatch(toggleFullscreen({ fullscreen: false }))
-      setTheater(false)
-    } else if (theater) {
-      // Cycle: Theater -> Fullscreen
-      setTheater(false)
-      dispatch(toggleFullscreen({ fullscreen: true }))
-    } else {
-      // Cycle: Default -> Theater
-      setTheater(true)
-    }
-  }, [fullscreen, theater, dispatch, setTheater])
-
-  // Handle keyboard shortcut for view mode cycle (F key)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // abort if modifier keys are pressed
-      if (e.ctrlKey || e.altKey || e.metaKey) return
-
-      // check shortcut isn't inside an input field
-      if (['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) return
-
-      // check shortcut isn't inside a contenteditable element
-      if ((e.target as HTMLElement).isContentEditable) return
-
-      // Cycle view mode on 'f' key
-      if (e.key.toLowerCase() === 'f') {
-        console.log('cycle mode')
-        cycleViewMode()
-      }
-    }
-
-    window.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [cycleViewMode])
-
-  const reviewables = selectedVersion?.reviewables || []
-
-  const { playable } = useMemo(() => getGroupedReviewables(reviewables as any), [reviewables])
-
-  // Lifted here so A/D/R/E/H keep working in theatre (VersionSelectorTool unmounts).
-  const projectStatuses = useMemo(
-    () => Object.fromEntries((project.statuses || []).map((status) => [status.name, status])),
-    [project.statuses],
+      setTimelineReviewables((prev) => ({
+        ...prev,
+        ...Object.fromEntries(changed.map((clip) => [clip.context.versionId, clip.fileId])),
+      }))
+    },
+    [clips, isTimeline, dispatch],
   )
-  const versionSelectorRef = useRef<HTMLDivElement>(null)
-  useReviewShortcuts({
-    versions: versionsAndReviewables,
-    selectedId: versionIds[0],
-    statuses: projectStatuses,
-    onChange: handleVersionChange,
-    toolsRef: versionSelectorRef,
-  })
 
-  // Keyboard nav lives here (not in ReviewablesSelector) so it keeps working
-  // in theatre mode, where the selector is unmounted.
-  const reviewablesSelectorRef = useRef<ReviewablesSelectorHandle>(null)
-  useReviewablesKeyboardNavigation({
-    reviewables: playable,
-    selected: reviewableIds,
-    onChange: handleReviewableChange,
-    onNavigate: (item) =>
-      reviewablesSelectorRef.current?.notifyNavigation({
-        fileId: item.fileId,
-        label: item.label ?? null,
-      }),
-  })
+  // after an upload, the details panel opens on the files
+  const { setTab } = useScopedDetailsPanel('review')
+  const handleUpload = () => setTab('files')
 
-  // put the annotation tools beside the reviewables when stacking would squash the reviewables
-  const rightToolBarRef = useRef<HTMLDivElement>(null)
-  const annotationToolsRef = useRef<HTMLDivElement>(null)
-  const rightToolBarLayout = useReviewablesLayout({
-    containerRef: rightToolBarRef,
-    toolsRef: annotationToolsRef,
-    reviewablesCount: playable.length,
-  })
+  // the player memoizes playables in module level maps: start and leave with them empty
+  useEffect(() => {
+    clearMemoizedPlayables()
+    return () => clearMemoizedPlayables()
+  }, [])
 
-  const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
+  // the user's layout (panels, time format), kept between viewer openings
+  const [savedView, setSavedView] = useLocalStorage<Partial<PlayerViewState>>(
+    'viewer-player-view',
+    {},
+  )
+  // a timeline opens in timeline view, a single version in clip view
+  const [initial] = useState<Partial<PlayerInitialState>>(() => ({
+    ...savedView,
+    clipView: !isTimeline,
+    audio: true,
+    loop: false,
+  }))
 
-  return (
-    <ViewerProvider selectedVersionId={selectedVersion?.id} annotationModules={annotationModules}>
-      <Styled.Container className={theater ? 'grid minimized' : 'grid'}>
-        {!theater && (
-          <Styled.PlayerToolbar>
-            <>
-              <VersionSelectorTool
-                ref={versionSelectorRef}
-                versions={versionsAndReviewables}
-                selected={versionIds[0]}
-                statuses={projectStatuses}
-                onChange={handleVersionChange}
-              />
-              {hasMultipleProducts && (
-                <ReviewVersionDropdown
-                  options={productOptions}
-                  placeholder="Select a product"
-                  prefix="Product: "
-                  value={selectedProductId}
-                  onChange={handleProductChange}
-                  valueProps={{ className: 'product-dropdown' }}
-                  tooltip="Select a product to view its versions reviewables"
-                  valueIcon={selectedProduct?.icon || ''}
-                  valueColor={selectedProduct?.color}
-                />
-              )}
-            </>
-          </Styled.PlayerToolbar>
-        )}
+  const playerContext = useMemo(
+    () => ({
+      router: playerRouter,
+      toast,
+      project,
+      projectName: projectName ?? '',
+      user: user as any,
+    }),
+    [project, projectName, user],
+  )
 
-        <Styled.MinimizedToolbar className={theater ? '' : 'minimized'}>
-          {theater && versionPath && <Styled.PathDisplay>{versionPath}</Styled.PathDisplay>}
-          <Styled.ButtonGroup>
-            <Button
-              icon={'aspect_ratio'}
-              data-tooltip={'Hide surrounding panels to maximize viewer size'}
-              data-tooltip-position="bottom"
-              data-shortcut={'F'}
-              onClick={toggleTheater}
-              selected={theater}
-            >
-              Theater
-            </Button>
-            {onClose && <Button onClick={onClose} icon={'close'} className="close" />}
-          </Styled.ButtonGroup>
-        </Styled.MinimizedToolbar>
+  const plugins: PlayerPlugins = useMemo(
+    () => ({ ...reviewPlugins, Sidebar: sidebarPlugin }),
+    [reviewPlugins],
+  )
 
-        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-          <ViewerComponent
-            projectName={projectName}
-            productId={productId}
-            reviewables={reviewables}
-            selectedReviewable={selectedReviewable}
-            versionIds={versionIds}
-            isFetchingReviewables={isFetchingReviewables}
-            noVersions={noVersions}
-            quickView={quickView}
-            onUpload={handleUploadAction}
-          />
-        </Styled.FullScreenWrapper>
+  // ---- header ----
+  const clipDetails = details.find((d) => d.id === pickerVersionId) ?? details[0]
+  const folderLabel = clipDetails?.folder?.label || clipDetails?.folder?.name
+  const currentFileId = clips.find((c) => c.context.versionId === pickerVersionId)?.fileId
 
-        <Styled.RightToolBar
-          ref={rightToolBarRef}
-          className={clsx(rightToolBarLayout, { hidden: theater })}
+  const headerStart = (
+    <Styled.HeaderStart>
+      {currentFileId && (
+        <ClipHeaderThumbnail
+          loading="lazy"
+          src={`/api/projects/${projectName}/files/${currentFileId}/thumbnail`}
+        />
+      )}
+      {folderLabel && <span className="path">{folderLabel}</span>}
+      {!isTimeline && hasMultipleProducts && (
+        <ReviewVersionDropdown
+          options={productOptions}
+          placeholder="Select a product"
+          prefix="Product: "
+          value={selectedProductId}
+          onChange={handleProductChange}
+          valueProps={{ className: 'product-dropdown' }}
+          tooltip="Select a product to view its versions reviewables"
+          valueIcon={selectedProduct?.icon || ''}
+          valueColor={selectedProduct?.color}
+        />
+      )}
+      {!!pickerVersions.length && (
+        <ReviewVersionDropdown
+          options={versionOptions(pickerVersions)}
+          value={pickerVersionId ?? null}
+          onChange={handleVersionChange}
+        />
+      )}
+    </Styled.HeaderStart>
+  )
+
+  const headerEnd = (
+    <Styled.HeaderEnd>
+      {!reviewPlugins?.Comparison && (
+        <Button
+          variant="surface"
+          icon="compare"
+          data-tooltip="Compare versions with the Review addon"
+          onClick={() => setPowerpackDialog({ addon: 'review', feature: 'compare' })}
         >
-          <ReviewablesSelector
-            ref={reviewablesSelectorRef}
-            reviewables={playable}
-            selected={reviewableIds}
-            onChange={handleReviewableChange}
-            projectName={projectName}
-            onUpload={handleUploadAction(true)}
-          />
-          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
-        </Styled.RightToolBar>
+          Compare
+          <Icon icon="bolt" />
+        </Button>
+      )}
+      {isTimeline && !reviewPlugins?.SessionTimeline && (
+        <Button
+          variant="surface"
+          icon="view_timeline"
+          data-tooltip={`Play all ${versionIds.length} versions on a timeline with the Review addon`}
+          onClick={() => setPowerpackDialog({ addon: 'review', feature: 'timeline' })}
+        >
+          Timeline
+          <Icon icon="bolt" />
+        </Button>
+      )}
+      {onClose && <Button onClick={onClose} icon="close" variant="text" data-tooltip="Close" />}
+    </Styled.HeaderEnd>
+  )
 
-        <ViewerDetailsPanel
-          versionIds={versionIds}
-          projectName={projectName}
-          noVersions={noVersions}
-          hidden={theater}
+  const isFetching = isTimeline ? isFetchingTimeline : isFetchingReviewables
+  const noVersions = !isTimeline && !versionsAndReviewables.length && !isFetchingReviewables
+
+  if (clips.length && !isLoadingDetails) {
+    return (
+      <Styled.Container ref={containerRef}>
+        <Player
+          clips={clips}
+          context={playerContext}
+          user={user as any}
+          theatreContainerRef={containerRef}
+          plugins={plugins}
+          isSubscribed={!!reviewPlugins}
+          onChangeReviewable={handleReviewableChange}
+          initial={initial}
+          onChangeView={setSavedView}
+          headerStart={headerStart}
+          headerEnd={headerEnd}
+          onCurrentClipChange={handleCurrentClipChange}
         />
       </Styled.Container>
-    </ViewerProvider>
+    )
+  }
+
+  if (isFetching || isLoadingDetails) return <Styled.Container ref={containerRef} />
+
+  return (
+    <Styled.Container ref={containerRef}>
+      <Styled.EmptyHeader>
+        {headerStart}
+        {headerEnd}
+      </Styled.EmptyHeader>
+      <ViewerEmpty
+        projectName={projectName ?? ''}
+        productId={productId}
+        versionId={selectedVersion?.id}
+        reviewables={selectedVersion?.reviewables ?? []}
+        noVersions={noVersions}
+        onUpload={handleUpload}
+      />
+    </Styled.Container>
   )
+}
+
+// The player decodes with WebCodecs and uses crypto.randomUUID, which browsers only
+// expose on HTTPS (or localhost).
+const InsecureContext = ({ onClose }: ViewerProps) => (
+  <Styled.Message>
+    <h2>The viewer needs a secure connection</h2>
+    <p>
+      Your browser only enables video playback over HTTPS. Open AYON with an https:// address, or
+      ask your administrator to set up HTTPS for this server.
+    </p>
+    {onClose && <Button onClick={onClose} label="Close" />}
+  </Styled.Message>
+)
+
+// Calls Review's plugins hook. It is set once (the module loaded or not), so the hook order holds.
+const ViewerWithPlugins = ({
+  onClose,
+  useReviewPlugins,
+}: ViewerProps & { useReviewPlugins: UseViewerPlayerPlugins }) => {
+  const review = useReviewPlugins()
+  // the player's plugin set can't change once it is mounted
+  if (review.isLoading) return null
+  return <ViewerBody onClose={onClose} reviewPlugins={review.plugins} />
 }
 
 const Viewer = ({ onClose }: ViewerProps) => {
   const { projectName } = useAppSelector((state) => state.viewer)
-  const annotationModules = useAnnotationModules()
+  const [useReviewPlugins, { isLoading }] = useViewerPlayerPlugins()
 
   if (!projectName) {
     console.error('No project name provided to Viewer')
     return null
   }
-
-  // the viewer mounts once its annotation modules are in (useAnnotationModules)
-  if (annotationModules.isLoading) return null
+  if (!window.isSecureContext) return <InsecureContext onClose={onClose} />
+  if (isLoading) return null
 
   return (
     <ProjectContextProvider projectName={projectName}>
-      <ViewerBody onClose={onClose} annotationModules={annotationModules} />
+      <ViewerWithPlugins onClose={onClose} useReviewPlugins={useReviewPlugins} />
     </ProjectContextProvider>
   )
 }

@@ -52,11 +52,13 @@ export const useLoadModule = <T>({
       return
     }
 
-    // check remote meets minimum version requirement
+    // check remote meets minimum version requirement. Without build metadata: an addon dev server
+    // (?addonDev=) reports its version as "<version>+dev".
+    const remoteVersion = initializedRemote.addonVersion.split('+')[0]
     if (
       minVersion &&
-      !semver.gte(initializedRemote.addonVersion, minVersion) &&
-      minVersion + '-dev' !== initializedRemote.addonVersion
+      !semver.gte(remoteVersion, minVersion) &&
+      minVersion + '-dev' !== remoteVersion
     ) {
       console.log('remote version does not meet minimum requirement', {
         addon,
