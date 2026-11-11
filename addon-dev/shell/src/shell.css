@@ -506,17 +506,23 @@ main.ayon-shell-stage {
   user-select: none;
 }
 
-/* Show slots (slotOverlay.tsx): the outlets of the SDK's slots on the stage. The wrapper has no
-   box of its own, so the page lays out the contributions as it does without the outlines */
+/* slotOverlay.tsx: a "+ label" placeholder where an unused slot's contributions would go; the
+   wrapper has no box of its own, so the page lays out the chip as it would a contribution */
 .ayon-dev-slot {
   display: contents;
 }
-.ayon-dev-slot > * {
-  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-tertiary) 70%, transparent);
+/* a contribution on stage: no decoration, except the focus outline and, while its slot's row in
+   Slots here is hovered, a dashed one */
+.ayon-dev-item {
+  display: contents;
+}
+.ayon-dev-item.hovered > * {
+  outline: 1px dashed var(--md-sys-color-tertiary);
   outline-offset: 1px;
 }
-.ayon-dev-slot.active > * {
+.ayon-dev-item.focused > * {
   outline: 2px solid var(--md-sys-color-tertiary);
+  outline-offset: 1px;
 }
 .ayon-dev-slot > .ayon-dev-slot-chip {
   /* a flex item in a row, inline in text; block-level, so a long label is cut with … */
@@ -559,4 +565,202 @@ main.ayon-shell-stage {
   pointer-events: none;
   color: var(--md-sys-color-on-tertiary);
   background: var(--md-sys-color-tertiary);
+}
+
+/* Places and Slots here */
+.ayon-shell-search {
+  width: 100%;
+}
+.ayon-shell-places {
+  display: flex;
+  flex-direction: column;
+}
+.ayon-shell-places .ayon-shell-slot-label {
+  padding-left: 8px;
+  cursor: default;
+}
+.ayon-shell-panel .contribution.ayon-shell-place {
+  padding-left: 8px;
+}
+.ayon-shell-panel .contribution.ayon-shell-place > span:not(.icon) {
+  flex: 1;
+}
+.ayon-shell-panel .contribution.ayon-shell-place > .icon {
+  flex-shrink: 0;
+}
+.ayon-shell-place > small,
+.ayon-shell-status {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-panel .contribution.selected > small {
+  color: inherit;
+}
+.ayon-shell-place.unused > span,
+.ayon-shell-place.unused > .icon {
+  opacity: 0.6;
+}
+.ayon-shell-panel .contribution.ayon-shell-slot-row {
+  padding-left: 8px;
+}
+.ayon-shell-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 0 8px 6px 16px;
+}
+.ayon-shell-contribution-chip {
+  max-width: 100%;
+  padding: 2px 8px;
+  overflow: hidden;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 12px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+.ayon-shell-contribution-chip:hover {
+  background: var(--md-sys-color-surface-container-high);
+}
+.ayon-shell-contribution-chip.selected {
+  border-color: transparent;
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+.ayon-shell-contribution-chip small {
+  color: var(--md-sys-color-outline);
+}
+/* the stage header's how-to line for a focus that isn't on screen yet */
+.ayon-shell-instruction {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ayon-shell-caption-text small.ayon-shell-instruction {
+  color: var(--md-sys-color-tertiary);
+}
+.ayon-shell-instruction .icon {
+  font-size: 14px;
+}
+.ayon-shell-caption-text .ayon-shell-chip {
+  margin-left: 6px;
+  padding: 0 6px;
+  font-size: 11px;
+}
+.ayon-shell-hint {
+  padding: 16px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-placeholder-cell {
+  width: 1px;
+  white-space: nowrap;
+}
+/* Other slots: a card per slot, without a preview */
+.ayon-shell-body.ayon-shell-other {
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+}
+.ayon-shell-no-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 720px;
+  padding: 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  color: var(--md-sys-color-on-surface);
+}
+.ayon-shell-no-preview.focused {
+  outline: 2px solid var(--md-sys-color-tertiary);
+}
+.ayon-shell-no-preview header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ayon-shell-no-preview p {
+  margin: 0;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-no-preview code {
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-snippet {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  align-self: stretch;
+}
+.ayon-shell-snippet pre {
+  flex: 1;
+  overflow: auto;
+  white-space: pre;
+  word-break: normal;
+}
+div.ayon-shell-no-preview[data-shell-surface='service'] {
+  margin: 16px;
+}
+/* Preview inputs: the drawer below the stage */
+.ayon-shell-inputs {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  max-height: 45%;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+.ayon-shell-inputs-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 32px;
+  padding: 0 12px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--md-sys-color-outline);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.ayon-shell-inputs-header .icon {
+  font-size: 18px;
+}
+.ayon-shell-inputs-body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 0 12px 12px;
+  overflow: auto;
+}
+.ayon-shell-inputs-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ayon-shell-disclosure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ayon-shell-disclosure .ayon-shell-subheader .label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.ayon-shell-inputs .ayon-shell-fixtures {
+  margin-top: 0;
 }

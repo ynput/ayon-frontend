@@ -1,342 +1,148 @@
-// The developer panel: the addon's contributions by where AYON shows them (top), and the context
-// the shell gives the one on stage (bottom), each half in its own scroll. The pickers are always
-// in the same order and place; what is on stage is said above the stage (StageCaption).
+// The developer panel: Places (top), every place of AYON and of the contract packages that has a
+// slot this addon uses (all of them with Show unused slots), and Slots here (bottom), the slots of
+// the selected place with this addon's contributions to each. A place opens the UI around its
+// slots on the stage; a slot or a contribution is a focus inside it. Each half scrolls on its own.
 // Everything here is also settable from the URL (params.ts), for `ayon-addon open`.
-import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { ReactNode } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { Button, Dialog, Dropdown, Icon, InputText } from '@ynput/ayon-react-components'
+import { Icon, InputSwitch, InputText } from '@ynput/ayon-react-components'
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
-import { SLOT_DOCS } from '@ynput/ayon-addon/check'
-import { EntityPicker } from '@ynput/ayon-addon'
-import type { AnyContribution, PickableEntityType, SlotName } from '@ynput/ayon-addon'
-import {
-  useGetCurrentUserQuery,
-  useGetEntitiesDetailsPanelQuery,
-  useListProjectsQuery,
-} from '@ynput/ayon-frontend-shared/api'
-import { JsonViewer } from '@ynput/ayon-frontend-shared/components'
+import type { AnyContribution, SlotName } from '@ynput/ayon-addon'
+import { useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
-import { getUnmatched, onUnmatched } from './network'
-import { contractSlot, getContracts, sceneFor } from './contractModel'
-import type { Contract, ContractSlot, Scene } from './contractModel'
-import { SceneForm } from './scenes'
+import { contributionsTo, getPlace, getPlaces, getUsedSlots, idOf } from './catalog'
+import { getContracts } from './contractModel'
+import { AYON_SOURCE, listedPlaces, listedSlots, placeSummary, searchPlaces } from './places'
+import type { Place, PlaceSlot } from './places'
+import { hiddenReason } from './slotNeeds'
 import { highlightSlot, useSlotOverlay } from './slotOverlay'
-import { slotAreas } from './slotGroups'
-import type { SlotArea } from './slotGroups'
-import {
-  ENTITY_TYPES,
-  isMenuSlot,
-  needsEntities,
-  needsProject,
-  needsProjects,
-  needsTablePage,
-} from './slotNeeds'
-import { getStageContext, subscribeStage } from './status'
 import type { ShellOptions, ShellSelection } from './types'
 
 interface DevPanelProps {
   options: ShellOptions
   mode: 'live' | 'preview'
   selection: ShellSelection
+  /** the search box, shared with the stage's Other slots */
+  search: string
+  onSearch: (search: string) => void
   onChange: (selection: ShellSelection) => void
 }
 
-const idOf = (contribution: AnyContribution) => (contribution as { id: string }).id
+const titles = (slot: string) => contributionsTo(slot).map((c) => contributionTitle(c))
 
-// functions and elements are shown by name, the rest as JSON
-const showContext = (context: Record<string, unknown> | undefined) =>
-  context
-    ? JSON.stringify(
-        context,
-        (_key, value) =>
-          typeof value === 'function'
-            ? `ƒ ${value.name || 'function'}`
-            : value instanceof Element
-            ? `<${value.tagName.toLowerCase()}>`
-            : value,
-        2,
-      )
-    : '—'
+/** The slots Slots here lists for a place: used ones, all with Show unused slots, those the search left. */
+export const slotsHere = (place: Place | undefined, selection: ShellSelection, search: string): PlaceSlot[] => {
+  if (!place) return []
+  const used = getUsedSlots()
+  const listed = listedSlots(place, used, !!selection.showUnused, selection.slot)
+  const found = searchPlaces([place], search, titles)[0]?.slots
+  return listed.filter((s) => s.slot === selection.slot || !found || found.includes(s))
+}
 
-const Contribution = ({
-  contribution,
+const PlaceRow = ({
+  place,
   selected,
-  nested,
+  used,
   onClick,
 }: {
-  contribution: AnyContribution
+  place: Place
   selected: boolean
-  /** under a preview scene's slot */
-  nested?: boolean
+  used: ReadonlySet<string>
   onClick: () => void
 }) => {
-  const { icon } = contribution as { icon?: string }
-  const id = idOf(contribution)
+  const summary = placeSummary(place, used, contributionsTo('app.service').length)
+  const unused = summary === 'Unused' || summary === 'No preview'
   return (
     <button
-      className={`contribution${selected ? ' selected' : ''}${nested ? ' ayon-shell-nested-2' : ''}`}
-      data-contribution={`${contribution.slot}:${id}`}
-      title={id}
+      className={`contribution ayon-shell-place${selected ? ' selected' : ''}${unused ? ' unused' : ''}`}
+      data-shell-place={place.id}
+      title={place.scene?.description || place.label}
       onClick={onClick}
     >
-      <Icon icon={(icon || 'extension') as never} />
-      <span>{contributionTitle(contribution)}</span>
+      <Icon icon={place.icon as never} />
+      <span>{place.label}</span>
+      <small>{summary}</small>
     </button>
   )
 }
 
-// a slot a scene renders: its title and name, then this addon's contributions to it. Hovering it
-// highlights the slot on the stage (Show slots), and the other way round.
-const SceneSlot = ({
-  slot,
-  contributions,
-  hovered,
-  isSelected,
-  onPick,
-}: {
-  slot: ContractSlot
-  contributions: AnyContribution[]
-  hovered: boolean
-  isSelected: (contribution: AnyContribution) => boolean
-  onPick: (contribution?: AnyContribution) => void
-}) => {
-  const menu = (slot.declaration.pieces as unknown[] | undefined)?.includes('run')
-  return (
-    <div
-      className={`ayon-shell-scene-slot${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}`}
-      data-shell-slot={slot.name}
-      onMouseEnter={() => highlightSlot(slot.name)}
-      onMouseLeave={() => highlightSlot(undefined)}
-    >
-      <button
-        className="contribution ayon-shell-nested ayon-shell-slot-row"
-        title={slot.description ? `${slot.label}: ${slot.description}` : slot.label}
-        onClick={() => onPick()}
-      >
-        <Icon icon={menu ? 'menu' : 'widgets'} />
-        <span className="ayon-shell-slot-title">
-          <span>{slot.label}</span>
-          <small>{slot.name}</small>
-        </span>
-      </button>
-      {contributions.map((c) => (
-        <Contribution key={c.key} contribution={c} nested selected={isSelected(c)} onClick={() => onPick(c)} />
-      ))}
-      {!contributions.length && <small className="ayon-shell-note ayon-shell-slot-empty">no contributions</small>}
-    </div>
-  )
-}
-
-// another addon's slots: the scenes of its contract package, each with the slots it renders and
-// this addon's contributions under each; contributions no scene renders, with a note
-const SceneArea = ({
-  contract,
-  selection,
-  onChange,
-}: Pick<DevPanelProps, 'selection' | 'onChange'> & { contract: Contract }) => {
-  const [collapsed, setCollapsed] = useState(false)
-  const { hovered } = useSlotOverlay()
-  const slots = contract.slots.map((slot) => slot.name)
-  const contributions = getRegistry().contributions.filter((c) => slots.includes(c.slot))
-  if (!contract.scenes.length && !contributions.length) return null
-  const onStage = sceneFor(selection)
-  const uncovered = contributions.filter((c) => !contract.scenes.some((scene) => scene.slots.includes(c.slot)))
-  const pickScene = (scene: Scene, contribution?: AnyContribution) => {
-    // a contribution the scene doesn't render is left: the stage shows the scene
-    const keep = !contribution && selection.slot && scene.slots.includes(selection.slot)
+const Places = ({ options, mode, selection, search, onSearch, onChange }: DevPanelProps) => {
+  const used = getUsedSlots()
+  const showUnused = !!selection.showUnused
+  const places = listedPlaces(getPlaces(), used, showUnused, selection.surface)
+  const found = searchPlaces(places, search, titles).map(({ place }) => place)
+  const sources = [...new Set(found.map((place) => place.source))]
+  const problems = [
+    ...(options.contractProblems || []),
+    ...getContracts().flatMap((contract) => contract.problems.map((problem) => `${contract.package}: ${problem}`)),
+    ...getRegistry().skipped.map((s) => `${s.slot} ${s.id}: ${s.reason}`),
+  ]
+  const nothingUsed = !getRegistry().contributions.length
+  const pick = (place: Place) =>
     onChange({
       ...selection,
-      scene: scene.key,
-      sceneValues: scene.key === onStage?.key ? selection.sceneValues : undefined,
-      slot: contribution ? (contribution.slot as SlotName) : keep ? selection.slot : undefined,
-      id: contribution ? idOf(contribution) : keep ? selection.id : undefined,
+      surface: place.id,
+      slot: undefined,
+      id: undefined,
+      // a scene's values are its own; AYON's places share the project and entities
+      sceneValues: place.scene && place.id === selection.surface ? selection.sceneValues : undefined,
     })
-  }
-  return (
-    <section className="ayon-shell-area" data-shell-contract={contract.package}>
-      <button
-        className="ayon-shell-area-header"
-        title={`Slots of another addon, from ${contract.package}`}
-        aria-expanded={!collapsed}
-        onClick={() => setCollapsed(!collapsed)}
-      >
-        <Icon icon="extension" />
-        <span>{contract.addons.join(', ') || contract.package}</span>
-        <small>{contributions.length}</small>
-        <Icon icon={collapsed ? 'expand_more' : 'expand_less'} className="toggle" />
-      </button>
-      {!collapsed && (
-        <>
-          {contract.scenes.map((scene) => (
-            <div key={scene.key} className="ayon-shell-slot">
-              <button
-                className={`contribution ayon-shell-scene${onStage?.key === scene.key ? ' selected' : ''}`}
-                data-shell-scene={scene.key}
-                title={scene.description || scene.label}
-                onClick={() => pickScene(scene)}
-              >
-                <Icon icon="preview" />
-                <span>{scene.label}</span>
-              </button>
-              {scene.slots.flatMap((name) => {
-                const slot = contract.slots.find((s) => s.name === name)
-                return slot
-                  ? [
-                      <SceneSlot
-                        key={name}
-                        slot={slot}
-                        contributions={contributions.filter((c) => c.slot === name)}
-                        hovered={hovered === name}
-                        isSelected={(c) =>
-                          onStage?.key === scene.key && selection.slot === c.slot && selection.id === idOf(c)
-                        }
-                        onPick={(c) => pickScene(scene, c)}
-                      />,
-                    ]
-                  : []
-              })}
-            </div>
-          ))}
-          {uncovered.length > 0 && (
-            <div className="ayon-shell-slot">
-              {[...new Set(uncovered.map((c) => c.slot))].map((slot) => (
-                <small key={slot} className="ayon-shell-note" data-shell-note="no-scene">
-                  No preview scene in {contract.package} renders{' '}
-                  {contract.slots.find((s) => s.name === slot)?.label || slot} (<code>{slot}</code>)
-                </small>
-              ))}
-              {uncovered.map((c) => (
-                <Contribution
-                  key={c.key}
-                  contribution={c}
-                  selected={!onStage && selection.slot === c.slot && selection.id === idOf(c)}
-                  onClick={() =>
-                    onChange({ ...selection, slot: c.slot as SlotName, id: idOf(c), scene: undefined, sceneValues: undefined })
-                  }
-                />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-    </section>
-  )
-}
-
-// by area of AYON, then by its part and slot; an area's single slot needs no label of its own
-// then the slots of other addons, an area per contract package
-const Contributions = ({
-  selection,
-  onChange,
-  contractProblems = [],
-}: Pick<DevPanelProps, 'selection' | 'onChange'> & { contractProblems?: string[] }) => {
-  const { contributions, skipped } = getRegistry()
-  const [collapsed, setCollapsed] = useState<string[]>([])
-  const known = slotAreas().flatMap((area) => area.sections.flatMap((s) => s.slots.map((x) => x.slot as string)))
-  const other = [...new Set(contributions.map((c) => c.slot))].filter((slot) => !known.includes(slot))
-  // AYON's areas; the slots of other addons are under their scenes (SceneAreas)
-  const ayonAreas = slotAreas().filter((area) => !area.package)
-  const areas: SlotArea[] = other.length
-    ? [
-        ...ayonAreas,
-        {
-          label: 'Other',
-          icon: 'extension',
-          sections: [{ label: undefined, slots: other.map((slot) => ({ slot, label: slot })) }],
-        },
-      ]
-    : ayonAreas
-  const problems = [
-    ...contractProblems,
-    ...getContracts().flatMap((contract) => contract.problems.map((problem) => `${contract.package}: ${problem}`)),
-  ]
-
   return (
     <>
-      {areas.map((area) => {
-        const slots = area.sections.flatMap((section) =>
-          section.slots
-            .map(({ slot, label }) => ({
-              slot,
-              label,
-              section: section.label,
-              items: contributions.filter((c) => c.slot === slot),
-            }))
-            .filter(({ items }) => items.length),
-        )
-        if (!slots.length) return null
-        const isCollapsed = collapsed.includes(area.label)
-        const count = slots.reduce((sum, { items }) => sum + items.length, 0)
-        const slotCount = area.sections.reduce((sum, section) => sum + section.slots.length, 0)
-        return (
-          <section key={area.label} className="ayon-shell-area">
-            <button
-              className="ayon-shell-area-header"
-              aria-expanded={!isCollapsed}
-              onClick={() =>
-                setCollapsed(
-                  isCollapsed ? collapsed.filter((g) => g !== area.label) : [...collapsed, area.label],
-                )
-              }
-            >
-              <Icon icon={area.icon as never} />
-              <span>{area.label}</span>
-              <small>{count}</small>
-              <Icon icon={isCollapsed ? 'expand_more' : 'expand_less'} className="toggle" />
-            </button>
-            {!isCollapsed &&
-              slots.map(({ slot, label, section, items }) => (
-                <div key={slot} className="ayon-shell-slot">
-                  {slotCount > 1 && (
-                    <div
-                      className="ayon-shell-slot-label"
-                      title={`${slot}: ${SLOT_DOCS[slot as SlotName]?.where || ''}`}
-                    >
-                      {section && <span>{section}</span>}
-                      {label}
-                    </div>
-                  )}
-                  {items.map((c) => (
-                    <Contribution
-                      key={c.key}
-                      contribution={c}
-                      selected={selection.slot === slot && selection.id === idOf(c)}
-                      onClick={() =>
-                        onChange({
-                          ...selection,
-                          slot: slot as SlotName,
-                          id: idOf(c),
-                          scene: undefined,
-                          sceneValues: undefined,
-                        })
-                      }
-                    />
-                  ))}
-                </div>
-              ))}
-          </section>
-        )
-      })}
-      {getContracts().map((contract) => (
-        <SceneArea key={contract.package} contract={contract} selection={selection} onChange={onChange} />
+      <h3>Places</h3>
+      <InputText
+        className="ayon-shell-search"
+        value={search}
+        placeholder="Search places or slots"
+        data-shell-search
+        onChange={(e) => onSearch(e.target.value)}
+      />
+      <label
+        className="ayon-shell-toggle"
+        data-shell-action="show-unused"
+        title="List unused slots and mark their locations in the preview."
+      >
+        <InputSwitch
+          checked={showUnused}
+          disabled={mode === 'preview'}
+          onChange={(e) => onChange({ ...selection, showUnused: (e.target as HTMLInputElement).checked })}
+        />
+        Show unused slots
+      </label>
+      {showUnused && (
+        <small className="ayon-shell-note">Includes AYON slots and slots declared by loaded packages.</small>
+      )}
+      {nothingUsed && !showUnused && !places.length && (
+        <small className="ayon-shell-note">
+          This addon has no contributions yet. Turn on Show unused slots to explore.
+        </small>
+      )}
+      {search && !found.length && <small className="ayon-shell-note">No places or slots match your search.</small>}
+      {sources.map((source) => (
+        <div key={source || 'other'} className="ayon-shell-places" data-shell-source={source}>
+          {sources.length > 1 && source && (
+            <div className="ayon-shell-slot-label" title={source === AYON_SOURCE ? undefined : `Slots of another addon, from ${source}`}>
+              {source}
+            </div>
+          )}
+          {found
+            .filter((place) => place.source === source)
+            .map((place) => (
+              <PlaceRow
+                key={place.id}
+                place={place}
+                used={used}
+                selected={place.id === selection.surface}
+                onClick={() => pick(place)}
+              />
+            ))}
+        </div>
       ))}
       {problems.length > 0 && (
         <section className="ayon-shell-area">
-          <div className="ayon-shell-slot-label">Contract packages</div>
+          <div className="ayon-shell-slot-label">Loading problems</div>
           {problems.map((problem) => (
             <div key={problem} className="ayon-addon-error" role="alert">
               {problem}
-            </div>
-          ))}
-        </section>
-      )}
-      {skipped.length > 0 && (
-        <section className="ayon-shell-area">
-          <div className="ayon-shell-slot-label">Skipped</div>
-          {skipped.map((s) => (
-            <div key={`${s.slot}:${s.id}`} className="ayon-addon-error" role="alert">
-              {s.slot} {s.id}: {s.reason}
             </div>
           ))}
         </section>
@@ -345,198 +151,100 @@ const Contributions = ({
   )
 }
 
-/** A picker's row: its label, then the control. */
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <div className="ayon-shell-field">
-    <label>{label}</label>
-    <div>{children}</div>
-  </div>
-)
-
-const ProjectPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
-  const { data: projects = [] } = useListProjectsQuery({ active: true })
-  // a project to start with
-  useEffect(() => {
-    if (!selection.projectName && projects.length) {
-      onChange({ ...selection, projectName: projects[0].name, entities: [] })
-    }
-  }, [projects, selection, onChange])
-
+const SlotRow = ({
+  place,
+  slot,
+  selection,
+  showStatus,
+  hovered,
+  onChange,
+}: {
+  place: Place
+  slot: PlaceSlot
+  selection: ShellSelection
+  showStatus: boolean
+  hovered: boolean
+  onChange: (selection: ShellSelection) => void
+}) => {
+  const contributions = contributionsTo(slot.slot)
+  const focused = selection.slot === slot.slot
+  const focus = (contribution?: AnyContribution) =>
+    onChange({ ...selection, slot: slot.slot as SlotName, id: contribution ? idOf(contribution) : undefined })
   return (
-    <Field label="Project">
-      <Dropdown
-        value={selection.projectName ? [selection.projectName] : []}
-        options={projects.map((p) => ({ value: p.name, label: p.name }))}
-        search
-        onChange={(added) => onChange({ ...selection, projectName: added[0], entities: [] })}
-      />
-    </Field>
-  )
-}
-
-// the studio's project selection: AYON's project list on a studio page shows the same one
-const ProjectsPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
-  const { data: projects = [] } = useListProjectsQuery({ active: true })
-  const value = selection.projectNames ?? (selection.projectName ? [selection.projectName] : [])
-  return (
-    <Field label="Projects">
-      <Dropdown
-        value={value}
-        options={projects.map((p) => ({ value: p.name, label: p.name }))}
-        multiSelect
-        search
-        placeholder="None selected"
-        onChange={(names) => onChange({ ...selection, projectNames: names })}
-      />
-    </Field>
-  )
-}
-
-const EntitiesPicker = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
-  const [picking, setPicking] = useState(false)
-  const entityType = selection.entityType || 'task'
-  const { projectName, entities } = selection
-  // names for the list (and the contexts: AYON passes them when it has them)
-  const { data: details = [] } = useGetEntitiesDetailsPanelQuery(
-    { entityType: entityType as never, entities: entities.map((e) => ({ id: e.id, projectName: e.projectName })) },
-    { skip: !entities.length || entities.some((e) => e.name) },
-  )
-  useEffect(() => {
-    if (!details.length) return
-    const named = entities.map((entity) => {
-      const found = (details as { id: string; name?: string; label?: string }[]).find(
-        (d) => d.id === entity.id,
-      )
-      return found ? { ...entity, name: found.name, label: found.label || undefined } : entity
-    })
-    onChange({ ...selection, entities: named })
-    // only when the details arrive
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [details])
-
-  if (!projectName) return null
-  return (
-    <Field label="Entities">
-      <div className="ayon-shell-entities">
-        <Dropdown
-          value={[entityType]}
-          options={ENTITY_TYPES.map((type) => ({ value: type, label: type }))}
-          onChange={(added) => onChange({ ...selection, entityType: added[0], entities: [] })}
-        />
-        <Button
-          icon="ads_click"
-          label={entities.length ? 'Change' : 'Pick'}
-          onClick={() => setPicking(true)}
-        />
-      </div>
-      {entities.map((entity) => (
-        <div key={entity.id} className="ayon-shell-entity">
-          <span>{entity.label || entity.name || entity.id}</span>
-          <Button
-            icon="close"
-            variant="text"
-            aria-label="Remove"
-            onClick={() =>
-              onChange({ ...selection, entities: entities.filter((e) => e.id !== entity.id) })
-            }
-          />
-        </div>
-      ))}
-      {picking && (
-        // the one addons get, as the shell's host provides it
-        <EntityPicker
-          projectName={projectName}
-          entityType={entityType as PickableEntityType}
-          multiSelect
-          initialSelection={entities}
-          onClose={() => setPicking(false)}
-          onSubmit={(picked) => {
-            setPicking(false)
-            onChange({ ...selection, entityType, entities: picked })
-          }}
-        />
-      )}
-    </Field>
-  )
-}
-
-const TablePage = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => (
-  <Field label="Table">
-    <Dropdown
-      value={[selection.page || 'overview']}
-      options={['overview', 'products', 'lists'].map((page) => ({ value: page, label: page }))}
-      onChange={(added) => onChange({ ...selection, page: added[0] as ShellSelection['page'] })}
-    />
-  </Field>
-)
-
-// save the live context and responses as a preview fixture, and open the saved ones
-const Fixtures = ({ mode, selection }: Pick<DevPanelProps, 'mode' | 'selection'>) => {
-  const [open, setOpen] = useState(mode === 'preview')
-  const [names, setNames] = useState<string[]>([])
-  const [name, setName] = useState('')
-  const [saved, setSaved] = useState<string>()
-  const list = () =>
-    fetch('/__ayon-addon/fixtures')
-      .then((response) => (response.ok ? response.json() : []))
-      .then(setNames)
-      .catch(() => setNames([]))
-  useEffect(() => {
-    list()
-  }, [])
-  const save = async () => {
-    const fixture = window.__AYON_ADDON_SHELL__?.fixture()
-    if (!fixture || !name) return
-    const response = await fetch(`/__ayon-addon/fixtures/${encodeURIComponent(name)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(fixture, null, 2),
-    })
-    setSaved(response.ok ? `Saved dev/fixtures/${name}.json` : `Failed: ${response.status}`)
-    list()
-  }
-  return (
-    <div className="ayon-shell-fixtures">
-      <button className="ayon-shell-subheader" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <span className="label">Preview fixtures</span>
-        <small>{names.length || ''}</small>
-        <Icon icon={open ? 'expand_less' : 'expand_more'} />
+    <div
+      className={`ayon-shell-scene-slot${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}`}
+      data-shell-slot={slot.slot}
+      onMouseEnter={() => highlightSlot(slot.slot)}
+      onMouseLeave={() => highlightSlot(undefined)}
+    >
+      <button
+        className={`contribution ayon-shell-slot-row${focused && !selection.id ? ' selected' : ''}`}
+        title={slot.description ? `${slot.label}: ${slot.description}` : slot.label}
+        onClick={() => focus()}
+      >
+        <span className="ayon-shell-slot-title">
+          <span>{slot.label}</span>
+          <small>{slot.slot}</small>
+        </span>
+        {showStatus && <small className="ayon-shell-status">{contributions.length ? 'Used' : 'Unused'}</small>}
       </button>
-      {open && (
+      {contributions.length > 0 && (
+        <div className="ayon-shell-chips">
+          {contributions.map((c) => {
+            const hidden = hiddenReason(c, place.id, selection)
+            return (
+              <button
+                key={c.key}
+                className={`ayon-shell-contribution-chip${focused && selection.id === idOf(c) ? ' selected' : ''}`}
+                data-contribution={`${c.slot}:${idOf(c)}`}
+                title={hidden ? `Not shown with these inputs. ${hidden}` : idOf(c)}
+                onClick={() => focus(c)}
+              >
+                {contributionTitle(c)}
+                {hidden && <small> · Not shown with these inputs.</small>}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const SlotsHere = ({ selection, search, onChange }: Pick<DevPanelProps, 'selection' | 'search' | 'onChange'>) => {
+  const { highlighted } = useSlotOverlay()
+  const place = getPlace(selection.surface)
+  const slots = slotsHere(place, selection, search)
+  return (
+    <>
+      <h3>Slots here</h3>
+      {!place ? (
+        <small className="ayon-shell-note">Select a place.</small>
+      ) : (
         <>
-          <small className="ayon-shell-note">
-            The context and server answers of a contribution, to render it without a server.
-          </small>
-          {mode === 'live' && selection.slot && selection.id && (
-            <div className="ayon-shell-entities">
-              <InputText
-                value={name}
-                placeholder={`${selection.id}`}
-                onChange={(e) => setName(e.target.value.replace(/[^\w-]/g, ''))}
-              />
-              <Button icon="save" label="Save" disabled={!name} onClick={save} />
-            </div>
-          )}
-          {saved && <small className="ayon-shell-note">{saved}</small>}
-          {names.map((fixture) => (
-            <a
-              key={fixture}
-              className={`ayon-shell-link${fixture === selection.preview ? ' selected' : ''}`}
-              href={`?preview=${encodeURIComponent(fixture)}`}
-            >
-              <Icon icon="description" />
-              {fixture}
-            </a>
+          {slots.map((slot) => (
+            <SlotRow
+              key={slot.slot}
+              place={place}
+              slot={slot}
+              selection={selection}
+              showStatus={!!selection.showUnused}
+              hovered={highlighted === slot.slot}
+              onChange={onChange}
+            />
           ))}
-          {selection.preview && (
-            <a className="ayon-shell-link" href="?">
-              <Icon icon="arrow_back" />
-              Back to live
-            </a>
+          {!slots.length && (
+            <small className="ayon-shell-note">
+              {search.trim()
+                ? 'No places or slots match your search.'
+                : place.slots.length
+                ? 'This addon uses none of these slots. Turn on Show unused slots to list them.'
+                : 'No slots here.'}
+            </small>
           )}
         </>
       )}
-    </div>
+    </>
   )
 }
 
@@ -567,120 +275,19 @@ const LiveStatus = ({ options }: { options: ShellOptions }) => {
   )
 }
 
-const NotInFixture = () => {
-  const unmatched = useSyncExternalStore(onUnmatched, () => getUnmatched().join('\n'))
-  if (!unmatched) return null
-  return (
-    <div className="ayon-shell-passed">
-      <div className="ayon-shell-subheader">
-        <span className="label">Not in the fixture</span>
-      </div>
-      <pre className="ayon-shell-code">{unmatched}</pre>
-    </div>
-  )
-}
-
-// the context passed to the contribution: a few lines, the whole of it in a dialog
-const ContextPreview = ({ label = 'Passed to the contribution' }: { label?: string }) => {
-  const context = useSyncExternalStore(subscribeStage, getStageContext)
-  const [open, setOpen] = useState(false)
-  const text = showContext(context)
-  return (
-    <div className="ayon-shell-passed">
-      <div className="ayon-shell-subheader">
-        <span className="label">{label}</span>
-        <Button
-          icon="open_in_full"
-          variant="text"
-          data-tooltip="Show the whole context"
-          aria-label="Show the whole context"
-          disabled={!context}
-          onClick={() => setOpen(true)}
-        />
-      </div>
-      <button
-        className="ayon-shell-context"
-        data-shell-context
-        title="Show the whole context"
-        disabled={!context}
-        onClick={() => setOpen(true)}
-      >
-        <pre className="ayon-shell-code">{text}</pre>
-      </button>
-      {open && context && (
-        <Dialog isOpen header="Context" size="lg" onClose={() => setOpen(false)}>
-          <JsonViewer value={JSON.parse(text)} wrap />
-        </Dialog>
-      )}
-    </div>
-  )
-}
-
-// the context the shell gives the contribution on stage: what it is picked from, in a fixed order
-const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'options'>) => {
-  const contribution = getRegistry().contributions.find(
-    (c) => c.slot === selection.slot && idOf(c) === selection.id,
-  )
-  const slot = contribution?.slot
-  const live = mode === 'live'
-  const scene = live ? sceneFor(selection) : undefined
-  const pickers = live && !!slot && (needsProject(slot) || needsProjects(slot) || needsEntities(slot))
-  if (scene) {
-    return (
-      <>
-        <h3>Context</h3>
-        <SceneForm scene={scene} selection={selection} onChange={onChange} />
-        <ContextPreview label="The scene's values" />
-      </>
-    )
-  }
-  return (
-    <>
-      <h3>Context</h3>
-      {!contribution ? (
-        <small className="ayon-shell-note">Pick a contribution.</small>
-      ) : (
-        <>
-          {contractSlot(slot) ? (
-            <small className="ayon-shell-note">No preview scene renders this slot.</small>
-          ) : pickers ? (
-            <div className="ayon-shell-fields">
-              {needsProject(slot) && <ProjectPicker selection={selection} onChange={onChange} />}
-              {needsProjects(slot) && <ProjectsPicker selection={selection} onChange={onChange} />}
-              {needsEntities(slot) && <EntitiesPicker selection={selection} onChange={onChange} />}
-              {needsTablePage(slot) && <TablePage selection={selection} onChange={onChange} />}
-            </div>
-          ) : (
-            <small className="ayon-shell-note">
-              {live ? 'Nothing to pick for this slot.' : 'From the fixture.'}
-            </small>
-          )}
-          {isMenuSlot(slot) && (
-            <Button
-              icon="play_arrow"
-              label={slot === 'table.shortcut' ? 'Press the shortcut' : 'Run the menu item'}
-              variant="filled"
-              data-shell-action="run"
-              onClick={() => window.__AYON_ADDON_SHELL__?.run()}
-            />
-          )}
-          <ContextPreview />
-          {!live && <NotInFixture />}
-        </>
-      )}
-      <Fixtures mode={mode} selection={selection} />
-    </>
-  )
-}
-
-export const DevPanel = ({ options, mode, selection, onChange }: DevPanelProps) => {
-  // a contribution to start with
-  useEffect(() => {
-    if (selection.slot || selection.scene) return
-    const first = getRegistry().contributions[0] as (AnyContribution & { id: string }) | undefined
-    if (first) onChange({ ...selection, slot: first.slot as SlotName, id: first.id })
-  }, [selection, onChange])
-
+export const DevPanel = (props: DevPanelProps) => {
+  const { options, mode, selection } = props
+  // in preview another place or focus opens live: the fixture is for one contribution
+  const onChange =
+    mode === 'preview'
+      ? (next: ShellSelection) => {
+          const params = new URLSearchParams()
+          if (next.surface) params.set('surface', next.surface)
+          if (next.slot) params.set('slot', next.slot)
+          if (next.slot && next.id) params.set('contribution', next.id)
+          window.location.href = `?${params}`
+        }
+      : props.onChange
   return (
     <aside className="ayon-shell-panel" data-shell-surface="dev-panel">
       <header className="ayon-shell-panel-header">
@@ -696,34 +303,18 @@ export const DevPanel = ({ options, mode, selection, onChange }: DevPanelProps) 
           )}
         </div>
       </header>
-      {/* two scrolls: the contributions and the context are always both in view */}
+      {/* two scrolls: the places and the selected place's slots are always both in view */}
       <Splitter
         layout="vertical"
         className="ayon-shell-panel-split"
-        stateKey="ayon-addon-shell-panel"
+        stateKey="ayon-addon-shell-places"
         stateStorage="local"
       >
-        <SplitterPanel size={55} minSize={10} className="ayon-shell-section">
-          <h3>Contributions</h3>
-          <Contributions
-            selection={selection}
-            contractProblems={options.contractProblems}
-            // in preview another contribution opens live: the fixture is for one contribution
-            onChange={
-              mode === 'preview'
-                ? (next) => {
-                    const params = new URLSearchParams()
-                    if (next.scene) params.set('scene', next.scene)
-                    if (next.slot && next.id) params.set('slot', next.slot)
-                    if (next.slot && next.id) params.set('contribution', next.id)
-                    window.location.href = `?${params}`
-                  }
-                : onChange
-            }
-          />
+        <SplitterPanel size={50} minSize={10} className="ayon-shell-section">
+          <Places {...props} onChange={onChange} />
         </SplitterPanel>
-        <SplitterPanel size={45} minSize={10} className="ayon-shell-section">
-          <ContextPanel mode={mode} selection={selection} onChange={onChange} />
+        <SplitterPanel size={50} minSize={10} className="ayon-shell-section">
+          <SlotsHere selection={selection} search={props.search} onChange={onChange} />
         </SplitterPanel>
       </Splitter>
     </aside>

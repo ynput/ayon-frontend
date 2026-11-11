@@ -11,6 +11,7 @@ import {
   useAddonTableColumns,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
+import { FocusFrame, Placeholder, usePlaceholderShown } from './slotOverlay'
 
 interface ShellRow {
   id: string
@@ -65,6 +66,8 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
   const buildAddonItems = useAddonEntityMenuItems(page, 'bottom', tableState)
   const [openMenu] = useCreateContextMenu([])
   const isSelected = (id: string) => selected.some((entity) => entity.id === id)
+  // a column for the "+ Column" placeholder, only while it shows
+  const placeholder = usePlaceholderShown('tableColumn')
 
   const onContextMenu = (e: MouseEvent, entity: EntityRef) => {
     e.preventDefault()
@@ -94,11 +97,28 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
       <thead>
         {table.getHeaderGroups().map((group) => (
           <tr key={group.id}>
-            {group.headers.map((header) => (
-              <th key={header.id} style={{ width: header.getSize() }}>
-                {flexRender(header.column.columnDef.header, header.getContext())}
+            {group.headers.map((header) => {
+              const content = flexRender(header.column.columnDef.header, header.getContext())
+              // an addon column: outlined while it is in focus in the developer panel
+              const key = (header.column.columnDef.meta as { addonColumn?: { contribution?: { key?: string } } } | undefined)
+                ?.addonColumn?.contribution?.key
+              return (
+                <th key={header.id} style={{ width: header.getSize() }}>
+                  {key ? (
+                    <FocusFrame slot="tableColumn" contribution={key}>
+                      <span>{content}</span>
+                    </FocusFrame>
+                  ) : (
+                    content
+                  )}
+                </th>
+              )
+            })}
+            {placeholder && (
+              <th className="ayon-shell-placeholder-cell">
+                <Placeholder slot="tableColumn" label="Column" />
               </th>
-            ))}
+            )}
           </tr>
         ))}
       </thead>
@@ -129,6 +149,7 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </td>
                 ))}
+                {placeholder && <td className="ayon-shell-placeholder-cell" />}
               </tr>
             )
           })}

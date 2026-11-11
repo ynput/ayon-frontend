@@ -1,6 +1,6 @@
 // Preview scenes of other addons' slots (contract packages' previews.js): the scene's component on
 // stage, full width, with the shell's providers around it (it renders its slots with the SDK, as
-// the declaring addon does in AYON), and its fields as a form in the context panel. The values
+// the declaring addon does in AYON), and its fields as a form in Preview inputs. The values
 // the developer changed are in the URL (ctxValues), the rest are the fields' defaults.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -95,7 +95,8 @@ export const SceneStage = ({
   onChange: OnChange
 }) => {
   const { values, setValues } = useSceneValues(scene, selection, onChange)
-  useEffect(() => setStage({ context: values, ready: true }), [values])
+  // ready as it renders; the focused contribution's context comes from its slot (slotOverlay.tsx)
+  useEffect(() => setStage({ ready: true }), [scene.key, selection.slot, selection.id])
   const Component = scene.component
   return (
     <div className="ayon-shell-body" data-shell-surface="scene" data-shell-scene={scene.key}>

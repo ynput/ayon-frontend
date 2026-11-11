@@ -1,7 +1,8 @@
-// The stage: the selected contribution where AYON shows it. AYON's own surfaces where they live
-// in @ynput/ayon-frontend-shared (details panel, slicer, Customize panel, the addon columns' cells
-// and data); plain stand-ins for what lives in the ayon-frontend app (the header, the project
-// list, the table around the columns). Pages render alone, without AYON's page tabs.
+// The stage: the selected place with this addon's contributions where AYON shows them, rendered
+// with or without a focus. AYON's own surfaces where they live in @ynput/ayon-frontend-shared
+// (details panel, slicer, Customize panel, the addon columns' cells and data); plain stand-ins for
+// what lives in the ayon-frontend app (the header, the table around the columns, user details,
+// profile, the dashboard's layout). Pages render alone, without AYON's page tabs.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Button, Dropdown } from '@ynput/ayon-react-components'
@@ -14,7 +15,7 @@ import type {
   ProjectTableState,
   TableShortcutContext,
 } from '@ynput/ayon-addon'
-import { getHost, getRegistry } from '@ynput/ayon-addon/host'
+import { contributionTitle, getHost } from '@ynput/ayon-addon/host'
 import {
   useGetProjectQuery,
   useGetUsersAssigneeQuery,
@@ -46,26 +47,31 @@ import {
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
-import { contractSlot, getContracts, noSceneNote, sceneFor } from './contractModel'
+import { contributionsTo, findContribution, getPlace, idOf, slotSnippet } from './catalog'
+import { contractSlot, getContracts, noSceneNote } from './contractModel'
 import { StudioSelectionProvider } from './host'
+import type { Place } from './places'
 import { SceneStage } from './scenes'
-import { needsProject } from './slotNeeds'
-import { ButtonItem, ServiceNote } from './parts'
+import { missingInputs } from './slotNeeds'
+import { FocusFrame, Placeholder, slotInfo, useSlotOverlay } from './slotOverlay'
+import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
 import { setStage } from './status'
 import type { ShellSelection } from './types'
 
 type Context = Record<string, unknown>
-type StageProps = { contribution: AnyContribution; selection: ShellSelection }
+type OnChange = (selection: ShellSelection) => void
+type StageProps = { selection: ShellSelection; focus?: AnyContribution; onChange: OnChange }
 
 const DETAILS_SCOPE = 'addon-dev'
 
-const idOf = (contribution: AnyContribution) => (contribution as { id: string }).id
-
-/** Reports the selected contribution's context (developer panel, `ayon-addon open`). */
+/**
+ * Reports the stage to the developer panel and `ayon-addon open`: the context the focused
+ * contribution gets (none without a focus), whether the stage is ready, and what Run does.
+ */
 const useReport = (
-  contribution: AnyContribution,
+  focus: AnyContribution | undefined,
   // slot contexts are interfaces (no index signature), the status page only reads them
   context: object | undefined,
   ready: boolean,
@@ -74,30 +80,63 @@ const useReport = (
 ) => {
   useEffect(() => {
     setStage({
-      context: context as Context | undefined,
+      context: focus ? (context as Context | undefined) : undefined,
       ready,
       run:
-        typeof run === 'function'
+        !focus || !run
+          ? undefined
+          : typeof run === 'function'
           ? run
-          : run && context
-          ? () => runContribution(contribution as never, context as never)
+          : context
+          ? () => runContribution(focus as never, context as never)
           : undefined,
     })
-  }, [contribution, context, ready, run])
+  }, [focus, context, ready, run])
 }
 
 const Hint = ({ children }: { children: ReactNode }) => (
-  <div style={{ padding: 16, color: 'var(--md-sys-color-outline)' }}>{children}</div>
+  <div className="ayon-shell-hint">{children}</div>
 )
 
+/** A page's tabs: this addon's pages of the slot, the focused one (else the first) on stage. */
+const PageTabs = ({
+  slot,
+  label,
+  current,
+  selection,
+  onChange,
+}: {
+  slot: 'project.page' | 'studio.page'
+  label: string
+  current?: AnyContribution
+  selection: ShellSelection
+  onChange: OnChange
+}) => {
+  const pages = contributionsTo(slot)
+  return (
+    <div className="ayon-shell-bar" data-shell-surface="page-tabs">
+      {pages.map((page) => (
+        <FocusFrame key={page.key} slot={slot} contribution={page.key}>
+          <Button
+            label={contributionTitle(page)}
+            variant="text"
+            selected={page === current}
+            onClick={() => onChange({ ...selection, slot: slot as never, id: idOf(page) })}
+          />
+        </FocusFrame>
+      ))}
+      <Placeholder slot={slot} label={label} />
+    </div>
+  )
+}
+
 // project.page: AYON's slicer state per page, the page decides where the slicer goes
-const ProjectPageBody = ({ contribution, selection }: StageProps) => {
-  const projectName = selection.projectName!
-  const context = useProjectPageSlotContext(projectName)
-  useReport(contribution, context, !!context.project)
+const ProjectPageBody = ({ page, focus, selection }: { page: AnyContribution; focus?: AnyContribution; selection: ShellSelection }) => {
+  const context = useProjectPageSlotContext(selection.projectName!)
+  useReport(focus, context, !!context.project)
   return (
     <div className="ayon-shell-body" data-shell-surface="project-page">
-      <ContributionView contribution={contribution as never} context={context as never} />
+      <ContributionView contribution={page as never} context={context as never} />
     </div>
   )
 }
@@ -141,23 +180,34 @@ const ProjectPageProviders = ({
   )
 }
 
-const ProjectPageStage = (props: StageProps) => (
-  <ProjectPageProviders
-    key={props.contribution.key}
-    page={idOf(props.contribution)}
-    projectName={props.selection.projectName!}
-    viewType={(props.contribution as { viewType?: string }).viewType}
-  >
-    <ProjectPageBody {...props} />
-  </ProjectPageProviders>
-)
-
-type OnChange = (selection: ShellSelection) => void
+const ProjectPagesStage = ({ selection, focus, onChange }: StageProps) => {
+  const page = focus?.slot === 'project.page' ? focus : contributionsTo('project.page')[0]
+  useEffect(() => {
+    if (!page) setStage({ ready: true })
+  }, [page])
+  return (
+    <div className="ayon-shell-stage" style={{ flex: 1 }}>
+      <PageTabs slot="project.page" label="Project page" current={page} selection={selection} onChange={onChange} />
+      {page ? (
+        <ProjectPageProviders
+          key={page.key}
+          page={idOf(page)}
+          projectName={selection.projectName!}
+          viewType={(page as { viewType?: string }).viewType}
+        >
+          <ProjectPageBody page={page} focus={focus} selection={selection} />
+        </ProjectPageProviders>
+      ) : (
+        <Hint>This addon has no project pages.</Hint>
+      )}
+    </div>
+  )
+}
 
 /**
- * The studio's project selection, set from the context panel; AYON's project list on a studio
- * page shows and changes the same one, as on AYON's dashboard. `ayon-addon open --project` gives
- * one project.
+ * The studio's project selection, set in Preview inputs; AYON's project list on a studio page
+ * shows and changes the same one, as on AYON's dashboard. `ayon-addon open --project` gives one
+ * project.
  */
 const useStudioSelection = (selection: ShellSelection, onChange: OnChange) => {
   const { projectNames, projectName } = selection
@@ -174,54 +224,74 @@ const useStudioSelection = (selection: ShellSelection, onChange: OnChange) => {
 
 // studio.page: the page with the studio's project selection
 const StudioPageBody = ({
-  contribution,
+  page,
+  focus,
   selectedProjects,
 }: {
-  contribution: StageProps['contribution']
+  page: AnyContribution
+  focus?: AnyContribution
   selectedProjects: string[]
 }) => {
   const context = useStudioPageSlotContext(selectedProjects)
-  useReport(contribution, context, true)
+  useReport(focus, context, true)
   return (
     <div className="ayon-shell-body" data-shell-surface="studio-page">
-      <ContributionView contribution={contribution as never} context={context as never} />
+      <ContributionView contribution={page as never} context={context as never} />
     </div>
   )
 }
 
 // what UserDashboardPage (ayon-frontend) puts around a studio page: WithViews, studio scoped
-const StudioPageStage = ({ contribution, selection, onChange }: StageProps & { onChange: OnChange }) => {
+const StudioPagesStage = ({ selection, focus, onChange }: StageProps) => {
   const dispatch = useDispatch()
   const studio = useStudioSelection(selection, onChange)
+  const page = focus?.slot === 'studio.page' ? focus : contributionsTo('studio.page')[0]
+  useEffect(() => {
+    if (!page) setStage({ ready: true })
+  }, [page])
   return (
-    <ViewsProvider
-      key={contribution.key}
-      viewType={(contribution as { viewType?: string }).viewType}
-      dispatch={dispatch}
-    >
-      <StudioSelectionProvider value={studio}>
-        <StudioPageBody contribution={contribution} selectedProjects={studio.selection} />
-      </StudioSelectionProvider>
-    </ViewsProvider>
+    <div className="ayon-shell-stage" style={{ flex: 1 }}>
+      <PageTabs slot="studio.page" label="Studio page" current={page} selection={selection} onChange={onChange} />
+      {page ? (
+        <ViewsProvider key={page.key} viewType={(page as { viewType?: string }).viewType} dispatch={dispatch}>
+          <StudioSelectionProvider value={studio}>
+            <StudioPageBody page={page} focus={focus} selectedProjects={studio.selection} />
+          </StudioSelectionProvider>
+        </ViewsProvider>
+      ) : (
+        <Hint>This addon has no studio pages.</Hint>
+      )}
+    </div>
   )
 }
 
 // app.service: mounted once by the shell (Shell.tsx), not per selection; the stage only says so
-const ServiceStage = ({ contribution, selection }: StageProps) => {
+const BackgroundStage = ({ selection, focus }: StageProps) => {
   const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
-  useReport(contribution, context, true)
-  return <ServiceNote />
+  useReport(focus, context, true)
+  const services = contributionsTo('app.service')
+  return (
+    <div className="ayon-shell-no-preview" data-shell-surface="service">
+      <strong>No visual preview</strong>
+      <p>This service runs throughout the dev shell. Selecting it does not start or restart it.</p>
+      {services.map((service) => (
+        <FocusFrame key={service.key} slot="app.service" contribution={service.key}>
+          <code>{idOf(service)}</code>
+        </FocusFrame>
+      ))}
+    </div>
+  )
 }
 
 // profile.section: a stand-in for Account → Profile (it lives in the ayon-frontend app), for the
 // signed-in user. The slot's context has nothing besides `user`.
 const PROFILE_CONTEXT = {}
-const ProfileStage = ({ contribution }: StageProps) => {
+const ProfileStage = ({ focus }: StageProps) => {
   const user = useUser()
   const { powerLicense, isLoading } = usePowerpack()
   const hidden =
-    !!(contribution as { powerFeature?: boolean }).powerFeature && (isLoading || !powerLicense)
-  useReport(contribution, PROFILE_CONTEXT, !!user && !hidden)
+    !!(focus as { powerFeature?: boolean } | undefined)?.powerFeature && (isLoading || !powerLicense)
+  useReport(focus, PROFILE_CONTEXT, !!user && !hidden)
   if (!user) return <Hint>Signing in…</Hint>
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'center' }}>
@@ -231,9 +301,11 @@ const ProfileStage = ({ contribution }: StageProps) => {
       >
         <div className="ayon-shell-bar">
           <strong>{user.fullName || user.name}</strong>
+          <span className="spacer" />
+          <Placeholder slot="profile.section" label="Profile section" />
         </div>
         {hidden && !isLoading && (
-          <Hint>A power feature: this section shows with a Power Pack licence only.</Hint>
+          <Hint>Not shown with these inputs. A power feature: this section shows with a Power Pack licence only.</Hint>
         )}
         <AddonProfileSections />
       </div>
@@ -244,7 +316,7 @@ const ProfileStage = ({ contribution }: StageProps) => {
 // userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
 // Settings → Users (it lives in the ayon-frontend app). The target user is picked here, apart from
 // the signed-in one: with an API key that is a service user, which most sections don't show for.
-const UserDetailsStage = ({ contribution }: StageProps) => {
+const UserDetailsStage = ({ focus }: StageProps) => {
   const signedIn = useUser()
   const { data: users = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
   const [picked, setPicked] = useState<string>()
@@ -258,8 +330,7 @@ const UserDetailsStage = ({ contribution }: StageProps) => {
   const target = (users as UserDetailsSource[]).find((u) => u.name === picked) ?? fallback
   const selected = useMemo(() => (target ? [target] : []), [target])
   const context = useUserDetailsSlotContext(selected, false)
-  const isMenuItem = contribution.slot === 'userDetails.menuItem'
-  useReport(contribution, context, !!target, isMenuItem)
+  useReport(focus, context, !!target, focus?.slot === 'userDetails.menuItem')
   const { topItems, items } = useAddonUserMenuItems(context)
   if (isLoading) return <Hint>Loading users…</Hint>
   if (!target) return <Hint>No users to show.</Hint>
@@ -282,44 +353,55 @@ const UserDetailsStage = ({ contribution }: StageProps) => {
           />
           <span className="spacer" />
           {[...topItems, ...items].map((item) => (
-            <Button
-              key={item.id}
-              icon={item.icon as never}
-              label={item.label as string}
-              variant="text"
-              onClick={() => (item.onClick as () => void)?.()}
-            />
+            <FocusFrame key={item.id} slot="userDetails.menuItem" contribution={item.id}>
+              <Button
+                icon={item.icon as never}
+                label={item.label as string}
+                variant="text"
+                onClick={() => (item.onClick as () => void)?.()}
+              />
+            </FocusFrame>
           ))}
+          <Placeholder slot="userDetails.menuItem" label="More menu item" />
         </div>
         <AddonUserDetailsSections context={context} />
+        <Placeholder slot="userDetails.section" label="Section" />
       </div>
     </div>
   )
 }
 
 // header.item: left after the dashboard button, right before chat and inbox
-const HeaderStage = ({ contribution, selection }: StageProps) => {
+const HeaderStage = ({ selection, focus }: StageProps) => {
   const { contributions } = useContributions('header.item')
-  const [context, setContext] = useState<Context>()
-  useReport(contribution, context, !!context)
+  const [popup, setPopup] = useState<{ key: string; context: Context }>()
   const base = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
+  const focusContext = focus && popup?.key === focus.key ? popup.context : undefined
+  useReport(focus, focusContext ?? base, true)
   const sorted = (placement: 'left' | 'right') =>
     contributions
       .filter((item) => item.placement === placement)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
-  const item = (header: Contribution<'header.item'>) => (
-    <ButtonItem
-      key={header.key}
-      contribution={header as unknown as AnyContribution}
-      context={base}
-      autoOpen={(header as unknown) === contribution}
-      onContext={(header as unknown) === contribution ? setContext : undefined}
-    />
-  )
+  const item = (header: Contribution<'header.item'>) => {
+    const any = header as unknown as AnyContribution
+    const focused = any === focus
+    return (
+      <FocusFrame key={`${any.key}${focused ? ':focus' : ''}`} slot="header.item" contribution={any.key}>
+        <ButtonItem
+          contribution={any}
+          context={base}
+          // focus opens its popover or dialog, as a click would
+          autoOpen={focused}
+          onContext={(context) => setPopup({ key: any.key, context })}
+        />
+      </FocusFrame>
+    )
+  }
   return (
     <div className="ayon-shell-bar" data-shell-surface="header">
       <Button icon="home" variant="text" disabled />
       {sorted('left').map(item)}
+      <Placeholder slot="header.item" label="Header item" />
       <span className="spacer" />
       {sorted('right').map(item)}
       <Button icon="forum" variant="text" disabled />
@@ -329,20 +411,20 @@ const HeaderStage = ({ contribution, selection }: StageProps) => {
 }
 
 // detailsPanel.tab and detailsPanel.menuItem: AYON's details panel for the picked entities
-const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
+const DetailsPanelStage = ({ selection, focus }: StageProps) => {
   const projectName = selection.projectName!
   const { entities, entityType = 'task' } = selection
   const { data: project } = useGetProjectQuery({ projectName })
   const { data: users = [] } = useGetUsersAssigneeQuery({ names: undefined, projectName })
   const { setTab } = useScopedDetailsPanel(DETAILS_SCOPE)
-  const isTab = contribution.slot === 'detailsPanel.tab'
+  const isTab = focus?.slot === 'detailsPanel.tab'
 
-  // open on the addon's tab
+  // a focused tab opens
   useEffect(() => {
-    if (isTab) setTab(contribution.key as never)
-    // once per contribution
+    if (isTab && focus) setTab(focus.key as never)
+    // once per focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contribution.key, isTab])
+  }, [focus?.key, isTab])
 
   const context = useMemo<Context>(
     () =>
@@ -351,9 +433,8 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
         : { projectName, entityType, entities },
     [isTab, projectName, entityType, entities],
   )
-  useReport(contribution, context, !!project && entities.length > 0, !isTab)
+  useReport(focus, context, !!project && entities.length > 0, !isTab)
 
-  if (!entities.length) return <Hint>Pick entities in the context panel.</Hint>
   if (!project) return <Hint>Loading {projectName}…</Hint>
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
@@ -376,7 +457,7 @@ const DetailsPanelStage = ({ contribution, selection }: StageProps) => {
 }
 
 // slicer.menuItem: AYON's slicer; the items are in its right-click menu and dropdown
-const SlicerBody = ({ contribution, selection }: StageProps) => {
+const SlicerBody = ({ selection, focus }: StageProps) => {
   const { rowSelection, sliceType } = useSlicerContext()
   const context = useMemo(() => {
     const ids = Object.keys(rowSelection).filter((id) => rowSelection[id])
@@ -400,7 +481,7 @@ const SlicerBody = ({ contribution, selection }: StageProps) => {
       menu: 'context',
     }
   }, [selection.projectName, selection.entities, sliceType, rowSelection])
-  useReport(contribution, context, true, true)
+  useReport(focus, context, true, true)
   return (
     // positioned: the slicer's Section fills its container (a splitter panel in AYON)
     <div style={{ position: 'relative', width: 360, height: '100%' }} data-shell-surface="slicer">
@@ -412,7 +493,7 @@ const SlicerBody = ({ contribution, selection }: StageProps) => {
 const SlicerStage = (props: StageProps) => (
   <div className="ayon-shell-body">
     <ProjectPageProviders
-      page={`addon-dev-${idOf(props.contribution)}`}
+      page="addon-dev-slicer"
       projectName={props.selection.projectName!}
       initialSelection={props.selection.entities.map((entity) => entity.id)}
     >
@@ -422,10 +503,10 @@ const SlicerStage = (props: StageProps) => (
 )
 
 // projectList.menuItem: AYON's project list with its right-click menu and dropdown
-const ProjectListStage = ({ contribution, selection, onChange }: StageProps & { onChange: OnChange }) => {
+const ProjectListStage = ({ selection, focus, onChange }: StageProps) => {
   const studio = useStudioSelection(selection, onChange)
   const context = useMemo(() => ({ projectNames: studio.selection, menu: 'context' }), [studio.selection])
-  useReport(contribution, context, true, true)
+  useReport(focus, context, true, true)
   const { ProjectList } = getHostComponents()
   return (
     <StudioSelectionProvider value={studio}>
@@ -455,16 +536,16 @@ const sampleTableState = (page: ProjectTablePage): ProjectTableState | undefined
 
 // the project table slots: a stand-in table with the real addon columns, menu, shortcuts, toolbar
 // items and Customize panel
-const TableStage = ({ contribution, selection }: StageProps) => {
+const TableStage = ({ selection, focus }: StageProps) => {
   const projectName = selection.projectName!
   const page = selection.page || 'overview'
   const { entities } = selection
   const [selected, setSelected] = useState<EntityRef[]>([])
-  const [popupContext, setPopupContext] = useState<Context>()
+  const [popup, setPopup] = useState<{ key: string; context: Context }>()
   const { contributions: toolbarItems } = useContributions('projectTable.toolbarItem')
   const sections = useAddonCustomizeSections(page)
   const { isPanelOpen, openPanel, selectSetting, closePanel } = useSettingsPanel()
-  const slot = contribution.slot
+  const slot = focus?.slot
   const tableState = useMemo(() => sampleTableState(page), [page])
 
   // projectTable.columnMenuItem: the column picked in the bar; a dialog opens on Run
@@ -476,30 +557,31 @@ const TableStage = ({ contribution, selection }: StageProps) => {
     () => ({ projectName, page, ...column, tableState }),
     [projectName, page, column, tableState],
   )
-  const columnMeta = contribution as unknown as { dialog?: unknown; label: string; dialogTitle?: string }
+  const columnMeta = focus as unknown as { dialog?: unknown; label: string; dialogTitle?: string } | undefined
+  const isColumnMenuItem = slot === 'projectTable.columnMenuItem'
   const openColumnDialog = useMemo(
     () =>
-      slot === 'projectTable.columnMenuItem' && columnMeta.dialog
+      isColumnMenuItem && columnMeta?.dialog
         ? async () => setColumnDialog({ ...columnContext, close: () => setColumnDialog(undefined) })
         : undefined,
-    [slot, columnMeta.dialog, columnContext],
+    [isColumnMenuItem, columnMeta?.dialog, columnContext],
   )
 
-  // open the Customize panel on the addon's section
+  // a focused Customize section opens the panel on it
   useEffect(() => {
-    if (slot !== 'projectTable.customizeSection') return
+    if (slot !== 'projectTable.customizeSection' || !focus) return
     openPanel()
-    selectSetting(`addon:${contribution.key}` as never)
-    // once per contribution
+    selectSetting(`addon:${focus.key}` as never)
+    // once per focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [contribution.key, slot])
+  }, [focus?.key, slot])
 
   // table.shortcut: the selected rows (else all of them) as AYON's table passes them, from the name
   // column; the keys work once the table has focus
-  const shortcuts = useAddonTableShortcuts(slot === 'table.shortcut' ? page : undefined)
+  const shortcuts = useAddonTableShortcuts(page)
   const shortcutContext = useMemo<TableShortcutContext | undefined>(() => {
     const targets = selected.length ? selected : entities
-    if (slot !== 'table.shortcut' || !targets.length) return undefined
+    if (!targets.length) return undefined
     const rows = targets.map(({ id, entityType, name, label }) => ({
       id,
       entityType,
@@ -516,14 +598,14 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       cells: rows.map((row) => ({ rowId: row.id, columnId: 'name' })),
       tableState,
     }
-  }, [slot, page, projectName, entities, selected, tableState])
+  }, [page, projectName, entities, selected, tableState])
   const { runShortcut } = shortcuts
   const pressShortcut = useMemo(
     () =>
-      shortcutContext &&
-      (async () =>
-        runShortcut(contribution as unknown as Contribution<'table.shortcut'>, shortcutContext)),
-    [runShortcut, contribution, shortcutContext],
+      slot === 'table.shortcut' && focus && shortcutContext
+        ? async () => runShortcut(focus as unknown as Contribution<'table.shortcut'>, shortcutContext)
+        : undefined,
+    [slot, runShortcut, focus, shortcutContext],
   )
 
   const context = useMemo<Context | undefined>(() => {
@@ -533,10 +615,14 @@ const TableStage = ({ contribution, selection }: StageProps) => {
     if (slot === 'table.shortcut') return shortcutContext as Context | undefined
     if (slot === 'projectTable.columnMenuItem') return columnContext
     if (slot === 'projectTable.customizeSection') return { projectName, page }
-    return popupContext
-  }, [slot, projectName, page, entities, selected, tableState, shortcutContext, columnContext, popupContext])
-  const isColumnMenuItem = slot === 'projectTable.columnMenuItem'
-  useReport(contribution, context, !!context, slot === 'entityMenuItem' || pressShortcut || openColumnDialog || isColumnMenuItem)
+    return focus && popup?.key === focus.key ? popup.context : undefined
+  }, [slot, focus, projectName, page, entities, selected, tableState, shortcutContext, columnContext, popup])
+  useReport(
+    focus,
+    context,
+    !focus || !!context,
+    slot === 'entityMenuItem' || pressShortcut || openColumnDialog || isColumnMenuItem,
+  )
 
   const base = useMemo(() => ({ projectName, page, tableState }), [projectName, page, tableState])
   const pageToolbarItems = toolbarItems.filter((item) => !item.pages?.length || item.pages.includes(page))
@@ -554,15 +640,21 @@ const TableStage = ({ contribution, selection }: StageProps) => {
           />
         )}
         <span className="spacer" />
-        {pageToolbarItems.map((item) => (
-          <ButtonItem
-            key={item.key}
-            contribution={item as unknown as AnyContribution}
-            context={base}
-            autoOpen={(item as unknown) === contribution}
-            onContext={(item as unknown) === contribution ? setPopupContext : undefined}
-          />
-        ))}
+        {pageToolbarItems.map((item) => {
+          const any = item as unknown as AnyContribution
+          const focused = any === focus
+          return (
+            <FocusFrame key={`${any.key}${focused ? ':focus' : ''}`} slot="projectTable.toolbarItem" contribution={any.key}>
+              <ButtonItem
+                contribution={any}
+                context={base}
+                autoOpen={focused}
+                onContext={(popupContext) => setPopup({ key: any.key, context: popupContext })}
+              />
+            </FocusFrame>
+          )
+        })}
+        <Placeholder slot="projectTable.toolbarItem" label="Toolbar item" />
         <Button
           icon="settings"
           label="Customize"
@@ -574,10 +666,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       <div className="ayon-shell-body">
         <div style={{ flex: 1, overflow: 'auto' }}>
           {entities.length ? (
-            <div
-              tabIndex={0}
-              onKeyDown={(e) => shortcuts.handleShortcut(e, () => shortcutContext)}
-            >
+            <div tabIndex={0} onKeyDown={(e) => shortcuts.handleShortcut(e, () => shortcutContext)}>
               <ShellTable
                 page={page}
                 tableState={tableState}
@@ -587,7 +676,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
               />
             </div>
           ) : (
-            <Hint>Pick entities in the context panel: they are the table&apos;s rows.</Hint>
+            <Hint>Choose a project and entities in Preview inputs: they are the table&apos;s rows.</Hint>
           )}
         </div>
         {isPanelOpen && (
@@ -602,12 +691,75 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       {shortcuts.dialog && (
         <AddonDialog contribution={shortcuts.dialog.contribution} context={shortcuts.dialog.context} />
       )}
-      {columnDialog && (
+      {columnDialog && focus && (
         <AddonDialog
-          contribution={contribution as unknown as Contribution<'projectTable.columnMenuItem'>}
+          contribution={focus as unknown as Contribution<'projectTable.columnMenuItem'>}
           context={columnDialog as never}
-          title={(columnMeta.dialogTitle || columnMeta.label).replace(/\{column\}/g, () => column.columnLabel)}
+          title={(columnMeta?.dialogTitle || columnMeta?.label || '').replace(/\{column\}/g, () => column.columnLabel)}
         />
+      )}
+    </div>
+  )
+}
+
+/** A slot without a preview: where it would show, and how to start a contribution to it. */
+const NoPreviewSlot = ({ slot, label, description }: { slot: string; label: string; description?: string }) => {
+  const overlay = useSlotOverlay()
+  const contributions = contributionsTo(slot)
+  const declared = contractSlot(slot)
+  const snippet = contributions.length ? undefined : slotSnippet(slot)
+  const [copied, setCopied] = useState(false)
+  const focused = overlay.focusSlot === slot
+  return (
+    <section
+      className={`ayon-shell-no-preview${focused ? ' focused' : ''}`}
+      data-shell-slot={slot}
+      ref={(element) => {
+        if (focused && element) element.scrollIntoView({ block: 'nearest' })
+      }}
+    >
+      <header>
+        <strong>{label}</strong>
+        <code>{slot}</code>
+      </header>
+      <strong>No preview available</strong>
+      <p>This slot has no preview in the dev shell.</p>
+      {description && <p>{description}</p>}
+      {declared && <p className="ayon-shell-note">{noSceneNote(declared, getContracts().find((c) => c.package === declared.package))}</p>}
+      {contributions.map((c) => (
+        <FocusFrame key={c.key} slot={slot} contribution={c.key}>
+          <span className="ayon-shell-chip">{contributionTitle(c)}</span>
+        </FocusFrame>
+      ))}
+      {snippet && (
+        <>
+          <strong>Add a contribution</strong>
+          <div className="ayon-shell-snippet">
+            <pre className="ayon-shell-code">{snippet}</pre>
+            <Button
+              icon={copied ? 'check' : 'content_copy'}
+              label="Copy"
+              variant="text"
+              onClick={() => {
+                navigator.clipboard?.writeText(snippet).then(() => setCopied(true), () => undefined)
+              }}
+            />
+          </div>
+        </>
+      )}
+    </section>
+  )
+}
+
+const OtherSlotsStage = ({ place, focus, slots }: { place: Place; focus?: AnyContribution; slots: Place['slots'] }) => {
+  useReport(focus, undefined, true)
+  return (
+    <div className="ayon-shell-body ayon-shell-other" data-shell-surface="other-slots">
+      {slots.map((s) => (
+        <NoPreviewSlot key={s.slot} slot={s.slot} label={s.label} description={s.description ?? slotInfo(s.slot).description} />
+      ))}
+      {!slots.length && (
+        <Hint>{place.slots.length ? 'This addon uses none of these slots.' : 'Every known slot has a preview in another place.'}</Hint>
       )}
     </div>
   )
@@ -620,98 +772,101 @@ const getHostComponents = () =>
 export const Stage = ({
   mode,
   selection,
+  listedSlots,
   onChange,
+  onOpenInputs,
 }: {
   mode: 'live' | 'preview'
   selection: ShellSelection
+  /** the slots "Slots here" lists (Other slots shows those) */
+  listedSlots: Place['slots']
   onChange: OnChange
+  onOpenInputs: () => void
 }) => {
-  const contribution = getRegistry().contributions.find(
-    (c) => c.slot === selection.slot && idOf(c) === selection.id,
-  )
-  // another addon's slots: a scene of its contract package, the contribution is in it
-  const scene = mode === 'live' ? sceneFor(selection) : undefined
-  useEffect(() => {
-    if (!contribution && !scene) setStage({ ready: false })
-  }, [contribution, scene])
+  const place = getPlace(selection.surface)
+  const focus = findContribution(selection.slot, selection.id)
 
-  if (scene) {
+  if (mode === 'preview') {
     return (
-      <main className="ayon-shell-stage" data-shell-scene={scene.key}>
-        <SceneStage scene={scene} selection={selection} onChange={onChange} />
+      <main className="ayon-shell-stage">
+        {focus ? (
+          <PreviewStage contribution={focus} selection={selection} />
+        ) : (
+          <Hint>{`No contribution "${selection.id}" in ${selection.slot}.`}</Hint>
+        )}
       </main>
     )
   }
-  if (!contribution) {
+  if (!place) return <NoPlace surface={selection.surface} />
+  if (place.scene) {
     return (
-      <main className="ayon-shell-stage">
+      <main className="ayon-shell-stage" data-shell-scene={place.scene.key}>
+        <SceneStage scene={place.scene} selection={selection} onChange={onChange} />
+      </main>
+    )
+  }
+  if (place.kind === 'other') {
+    return (
+      <main className="ayon-shell-stage" data-shell-place={place.id}>
+        <OtherSlotsStage place={place} focus={focus} slots={listedSlots} />
+      </main>
+    )
+  }
+  if (missingInputs(place.id, selection)) {
+    return (
+      <main className="ayon-shell-stage" data-shell-place={place.id}>
+        <NotReady />
         <Hint>
-          {selection.slot ? `No contribution "${selection.id}" in ${selection.slot}.` : 'Pick a contribution.'}
+          Choose a project and entities in Preview inputs.{' '}
+          <Button label="Preview inputs" variant="text" icon="tune" onClick={onOpenInputs} />
         </Hint>
       </main>
     )
   }
-  if (mode === 'preview') {
-    return (
-      <main className="ayon-shell-stage">
-        <PreviewStage contribution={contribution} selection={selection} />
-      </main>
-    )
-  }
-  const declared = contractSlot(contribution.slot)
-  if (declared) {
-    return (
-      <main className="ayon-shell-stage" data-shell-slot={contribution.slot}>
-        <Hint>{noSceneNote(declared, getContracts().find((c) => c.package === declared.package))}</Hint>
-      </main>
-    )
-  }
-  if (!selection.projectName && needsProject(contribution.slot)) {
-    return (
-      <main className="ayon-shell-stage">
-        <Hint>Pick a project in the context panel.</Hint>
-      </main>
-    )
-  }
 
-  const props = { contribution, selection }
+  const props = { selection, focus, onChange }
   const body = (() => {
-    switch (contribution.slot) {
-      case 'project.page':
-        return <ProjectPageStage {...props} />
-      case 'studio.page':
-        return <StudioPageStage {...props} onChange={onChange} />
-      case 'header.item':
+    switch (place.id) {
+      case 'app-header':
         return <HeaderStage {...props} />
-      case 'detailsPanel.tab':
-      case 'detailsPanel.menuItem':
+      case 'project-pages':
+        return <ProjectPagesStage {...props} />
+      case 'studio-pages':
+        return <StudioPagesStage {...props} />
+      case 'details-panel':
         return <DetailsPanelStage {...props} />
-      case 'slicer.menuItem':
+      case 'slicer':
         return <SlicerStage {...props} />
-      case 'projectList.menuItem':
-        return <ProjectListStage {...props} onChange={onChange} />
-      case 'tableColumn':
-      case 'entityMenuItem':
-      case 'table.shortcut':
-      case 'projectTable.toolbarItem':
-      case 'projectTable.columnMenuItem':
-      case 'projectTable.customizeSection':
+      case 'project-list':
+        return <ProjectListStage {...props} />
+      case 'project-tables':
         return <TableStage {...props} />
-      case 'app.service':
-        return <ServiceStage {...props} />
-      case 'userDetails.section':
-      case 'userDetails.menuItem':
+      case 'background':
+        return <BackgroundStage {...props} />
+      case 'user-details':
         return <UserDetailsStage {...props} />
-      case 'profile.section':
+      case 'profile':
         return <ProfileStage {...props} />
       default:
-        return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
+        return <Hint>The shell has no stage for {place.label} yet.</Hint>
     }
   })()
 
   return (
-    <main className="ayon-shell-stage" data-shell-slot={contribution.slot}>
+    <main className="ayon-shell-stage" data-shell-place={place.id}>
       {body}
     </main>
   )
 }
+
+const NotReady = () => {
+  useEffect(() => setStage({ ready: false }), [])
+  return null
+}
+
+const NoPlace = ({ surface }: { surface?: string }) => (
+  <main className="ayon-shell-stage">
+    <NotReady />
+    <Hint>{surface ? `No place "${surface}".` : 'Select a place.'}</Hint>
+  </main>
+)

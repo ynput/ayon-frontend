@@ -158,33 +158,6 @@ export const contractSlot = (slot?: string) =>
 export const scenesOf = (slot?: string, list: readonly Contract[] = contracts) =>
   slot ? list.flatMap((contract) => contract.scenes).filter((scene) => scene.slots.includes(slot)) : []
 
-/**
- * The scene on stage: the one in the selection, else the first that renders the selected
- * contribution's slot (`ayon-addon open <slot> <id>`). Undefined for AYON's slots.
- */
-export const sceneFor = (
-  selection: { scene?: string; slot?: string },
-  list: readonly Contract[] = contracts,
-) => {
-  const picked = list.flatMap((contract) => contract.scenes).find((scene) => scene.key === selection.scene)
-  const covering = scenesOf(selection.slot, list)
-  if (picked && (!covering.length || covering.includes(picked))) return picked
-  return covering[0]
-}
-
-/** The developer panel's areas for these slots: one per contract package, its slots by name. */
-export const contractAreas = (list: readonly Contract[] = contracts) =>
-  list.map((contract) => ({
-    label: contract.addons.join(', ') || contract.package,
-    icon: 'extension',
-    package: contract.package,
-    sections: [
-      {
-        slots: contract.slots.map((slot) => ({ slot: slot.name, label: slot.label })),
-      },
-    ],
-  }))
-
 /** What to tell the developer when no scene renders a slot: where to add one. */
 export const noSceneNote = (slot: ContractSlot, contract?: Contract) =>
   contract?.previewsEntry

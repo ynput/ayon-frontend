@@ -18,9 +18,14 @@ export interface ShellOptions {
 
 /** What the shell shows, kept in the URL so `ayon-addon open` and bookmarks can set it. */
 export interface ShellSelection {
+  /** the place on stage (places.ts): an AYON surface, a preview scene `<package>:<id>`, `other` */
+  surface?: string
+  /** the slot in focus */
   slot?: SlotName
-  /** the contribution's id in its slot */
+  /** the contribution in focus: its id in that slot */
   id?: string
+  /** Show unused slots: list them, their places, and mark where they would show */
+  showUnused?: boolean
   projectName?: string
   /** the studio's project selection (studio pages, the project list) */
   projectNames?: string[]
@@ -29,12 +34,8 @@ export interface ShellSelection {
   entities: EntityRef[]
   /** the project table page for the projectTable and table slots */
   page?: 'overview' | 'products' | 'lists'
-  /** another addon's slots: the preview scene on stage, `<package>:<id>` */
-  scene?: string
-  /** the scene's values the developer changed (the rest are the fields' defaults) */
+  /** a preview scene's values the developer changed (the rest are the fields' defaults) */
   sceneValues?: Record<string, unknown>
-  /** Show slots: outlines and placeholders of the slots on stage (on unless false) */
-  showSlots?: boolean
   /** a fixture name: preview mode, no server */
   preview?: string
 }
