@@ -73,7 +73,9 @@ export const Facts = styled.dl`
     grid-template-columns: subgrid;
     grid-column: 1 / -1;
     column-gap: 16px;
-    align-items: baseline;
+    /* label and the first value line share a 20px line, so a one line row is 32px */
+    align-items: start;
+    min-height: 32px;
     padding: 6px;
     border-radius: var(--border-radius-m);
 
@@ -90,6 +92,7 @@ export const Facts = styled.dl`
 
   dt {
     ${theme.labelMedium}
+    line-height: 20px;
     color: var(--md-sys-color-on-surface-variant);
   }
 
@@ -106,6 +109,7 @@ export const Facts = styled.dl`
 
   .mono {
     ${theme.bodySmall}
+    line-height: 20px;
     font-family: monospace;
   }
 
@@ -143,6 +147,12 @@ export const Facts = styled.dl`
     display: flex;
     align-items: center;
     gap: 6px;
+    height: 20px;
+
+    .icon {
+      font-size: 18px;
+      line-height: 1;
+    }
   }
 
   .dot {
@@ -152,9 +162,6 @@ export const Facts = styled.dl`
   }
 
   .status {
-    .icon {
-      font-size: 18px;
-    }
     &.failed {
       color: var(--md-sys-color-error);
     }
