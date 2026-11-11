@@ -35,6 +35,40 @@ export interface DeclarationCheck {
   skipped: SkippedDeclaration[]
 }
 
+/** The part of a slot name an addon chooses: `<addon>.<name>`, no further dots. */
+const LOCAL_SLOT_NAME = /^[A-Za-z][A-Za-z0-9_]*$/
+
+const prefixCache = new WeakMap<object, ReadonlySet<string>>()
+
+/**
+ * The first parts of AYON's own slot names (`project`, `studio`, `header`, ...): an addon with one
+ * of these names can't declare slots, so AYON can add slots there.
+ */
+export const reservedSlotPrefixes = (
+  builtIn: { readonly [slot: string]: SlotDefinition } = SLOTS,
+): ReadonlySet<string> => {
+  let prefixes = prefixCache.get(builtIn)
+  if (!prefixes) {
+    prefixes = new Set(Object.keys(builtIn).map((name) => name.split('.')[0]))
+    prefixCache.set(builtIn, prefixes)
+  }
+  return prefixes
+}
+
+/**
+ * The addon that may declare a slot of this name: everything before its last dot (addon names can
+ * have dots). Undefined for a name without a dot or under one of AYON's prefixes: AYON's own.
+ */
+export const slotNameOwner = (
+  name: string,
+  builtIn: { readonly [slot: string]: SlotDefinition } = SLOTS,
+): string | undefined => {
+  const dot = name.lastIndexOf('.')
+  if (dot < 1) return undefined
+  const owner = name.slice(0, dot)
+  return reservedSlotPrefixes(builtIn).has(owner) ? undefined : owner
+}
+
 const isStringList = (value: unknown) =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
 
@@ -57,8 +91,9 @@ const declarationProblem = (declaration: Record<string, unknown>) => {
 }
 
 /**
- * The slots a manifest declares. A name must start with the addon's own name, and may not be one of
- * AYON's slots or already declared: the rest is skipped, naming both addons where there are two.
+ * The slots a manifest declares. A name is `<addon>.<name>` with the addon's own name, and may not
+ * be one of AYON's slots or already declared: the rest is skipped, naming both addons where there
+ * are two. An addon named like the first part of AYON's slots (`project`, ...) can't declare any.
  */
 export const checkSlotDeclarations = (
   addon: AddonInfo,
@@ -76,22 +111,28 @@ export const checkSlotDeclarations = (
   }
 
   const prefix = `${addon.name}.`
+  const reserved = reservedSlotPrefixes(builtIn).has(addon.name)
   for (const item of list) {
     const declaration = (item || {}) as Record<string, unknown>
     const name = typeof declaration.name === 'string' ? declaration.name : undefined
     const skip = (reason: string) => skipped.push({ addon: addon.name, slot: name, reason })
 
-    if (!name || !/^[A-Za-z0-9_-]+(\.[A-Za-z][A-Za-z0-9_]*)+$/.test(name)) {
-      skip(`invalid name ${describe(declaration.name)}: use "${prefix}<name>"`)
-      continue
-    }
-    if (Object.prototype.hasOwnProperty.call(builtIn, name)) {
+    if (name && Object.prototype.hasOwnProperty.call(builtIn, name)) {
       skip("it is one of AYON's own slots")
       continue
     }
-    if (!name.startsWith(prefix)) {
+    if (reserved) {
+      skip(`slots named "${prefix}<name>" are AYON's: an addon named "${addon.name}" can't declare slots`)
+      continue
+    }
+    if (!name || !name.startsWith(prefix) || !LOCAL_SLOT_NAME.test(name.slice(prefix.length))) {
+      const owner = name ? slotNameOwner(name, builtIn) : undefined
       skip(
-        `only addon "${name.split('.')[0]}" can declare it: slots of addon "${addon.name}" start with "${prefix}"`,
+        owner && owner !== addon.name
+          ? `only addon "${owner}" can declare it: slots of addon "${addon.name}" are named "${prefix}<name>"`
+          : name && name.indexOf('.') > 0 && !owner
+          ? `names under "${name.slice(0, name.lastIndexOf('.'))}." are AYON's: slots of addon "${addon.name}" are named "${prefix}<name>"`
+          : `invalid name ${describe(declaration.name)}: use "${prefix}<name>", <name> a letter, then letters, digits and _`,
       )
       continue
     }
@@ -114,6 +155,9 @@ export const checkSlotDeclarations = (
 export const formatSkippedDeclaration = ({ addon, slot, reason }: SkippedDeclaration) =>
   `[addon ${addon}] skipped slot declaration${slot ? ` "${slot}"` : ''}: ${reason}`
 
+const sameAddon = (a: AddonInfo, b: AddonInfo) =>
+  a === b || (a.name === b.name && a.version === b.version && a.remote === b.remote)
+
 const describe = (value: unknown) => (typeof value === 'string' ? `"${value}"` : String(value))
 
 /**
@@ -125,6 +169,11 @@ export const checkManifest = (
   addon: AddonInfo,
   manifest: unknown,
   slots: { readonly [slot: string]: SlotDefinition } = SLOTS,
+  /**
+   * the contribution built from each manifest item last time: an unchanged item gets the same
+   * object back, so components that depend on it don't re-render (the registry keeps one)
+   */
+  built?: WeakMap<object, AnyContribution>,
 ): ManifestCheck => {
   const contributions: AnyContribution[] = []
   const skipped: SkippedContribution[] = []
@@ -144,14 +193,14 @@ export const checkManifest = (
     const idName = typeof id === 'string' ? id : undefined
 
     if (!slotName || !Object.prototype.hasOwnProperty.call(slots, slotName)) {
+      const declaringAddon = slotName && slotNameOwner(slotName)
       skip(
         !slotName
           ? `invalid slot ${describe(slot)}`
-          : slotName.includes('.')
-          ? `this AYON version has no such slot, and no addon in the bundle declares it (it would be addon "${
-              slotName.split('.')[0]
-            }")`
-          : 'this AYON version has no such slot',
+          : declaringAddon
+          ? `this AYON version has no such slot, and no addon in the bundle declares it (it would be addon "${declaringAddon}")`
+          : // AYON's own name (or no addon could declare it): a slot of a newer AYON
+            'this AYON version has no such slot',
         slotName,
         idName,
       )
@@ -159,7 +208,14 @@ export const checkManifest = (
     }
     const definition = slots[slotName]
     const owner = (definition as Partial<DeclaredSlot>).owner?.name
-    const { slotVersion } = item as { slotVersion?: unknown }
+    // a contribution to an addon's slot without slotVersion was built for its first version; one to
+    // AYON's slots without it isn't checked
+    const stamped = (item as { slotVersion?: unknown }).slotVersion
+    const slotVersion = stamped === undefined && owner ? 1 : stamped
+    const builtFor =
+      stamped === undefined
+        ? 'it has no slotVersion, so it counts as built for version 1 of the slot'
+        : `it was built for version ${slotVersion} of the slot`
     if (slotVersion !== undefined) {
       if (!Number.isInteger(slotVersion)) {
         skip(`invalid slotVersion ${describe(slotVersion)}`, slotName, idName)
@@ -167,7 +223,7 @@ export const checkManifest = (
       }
       if ((slotVersion as number) > definition.version) {
         skip(
-          `it was built for version ${slotVersion} of the slot, but ${
+          `${builtFor}, but ${
             owner ? `addon "${owner}"` : 'this AYON version'
           } has version ${definition.version}: update ${owner ? `addon "${owner}"` : 'AYON'}`,
           slotName,
@@ -178,7 +234,7 @@ export const checkManifest = (
       // a new version of an addon's slot is a breaking change: code built for an older one can't run
       if (owner && (slotVersion as number) < definition.version) {
         skip(
-          `it was built for version ${slotVersion} of the slot, but addon "${owner}" has version ${definition.version}, which is not compatible: update addon "${addon.name}"`,
+          `${builtFor}, but addon "${owner}" has version ${definition.version}, which is not compatible: update addon "${addon.name}"`,
           slotName,
           idName,
         )
@@ -249,11 +305,14 @@ export const checkManifest = (
     }
     seen.add(dedupeKey)
 
-    contributions.push({
-      ...(item as object),
-      key: `${addon.name}.${idName}`,
-      addon,
-    } as AnyContribution)
+    const key = `${addon.name}.${idName}`
+    const previous = built?.get(item as object)
+    const contribution =
+      previous && previous.key === key && sameAddon(previous.addon, addon)
+        ? previous
+        : ({ ...(item as object), key, addon } as AnyContribution)
+    built?.set(item as object, contribution)
+    contributions.push(contribution)
   }
 
   return { contributions, skipped }

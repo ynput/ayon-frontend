@@ -10,6 +10,7 @@ import {
   checkSlotDeclarations,
   formatSkipped,
   formatSkippedDeclaration,
+  slotNameOwner,
 } from './validate'
 import type { DeclaredSlot, SkippedContribution, SkippedDeclaration } from './validate'
 
@@ -41,6 +42,9 @@ let state: RegistryState = {
 // every manifest registered so far: the registry is computed from all of them, because a change to
 // one addon's declarations changes which contributions of the others apply
 let manifests: ManifestEntry[] = []
+// the contribution built from each manifest item, so re-checking every manifest when another one
+// arrives keeps the objects of unchanged contributions (useSlot, ContributionView depend on them)
+const built = new WeakMap<object, AnyContribution>()
 // the skipped contributions already in the console
 let warnedSkipped: SkippedContribution[] = []
 const listeners = new Set<() => void>()
@@ -72,10 +76,11 @@ const isKnownSlot = (slot: string) =>
   Object.prototype.hasOwnProperty.call(SLOTS, slot) || state.slots.some((s) => s.name === slot)
 
 // While manifests load, a contribution to an addon's slot nobody has declared may just have arrived
-// first: its warning waits until every manifest is in.
+// first: its warning waits until every manifest is in. A name under AYON's prefixes can't be
+// declared later, so that one warns at once.
 const warnSkipped = () => {
   const definite = state.skipped.filter(
-    ({ slot }) => !state.isLoading || !slot?.includes('.') || isKnownSlot(slot),
+    ({ slot }) => !state.isLoading || !slot || !slotNameOwner(slot) || isKnownSlot(slot),
   )
   warnNew(warnedSkipped, definite, formatSkipped)
   warnedSkipped = definite
@@ -97,7 +102,7 @@ const applyManifests = (next: ManifestEntry[]) => {
   const contributions: AnyContribution[] = []
   const skipped: SkippedContribution[] = []
   for (const { addon, manifest } of next) {
-    const result = checkManifest(addon, manifest, available)
+    const result = checkManifest(addon, manifest, available, built)
     contributions.push(...result.contributions)
     skipped.push(...result.skipped)
   }
@@ -111,11 +116,13 @@ const applyManifests = (next: ManifestEntry[]) => {
 /**
  * Registers the manifests of several addons at once, replacing what those addons registered
  * before. What the host can't use is skipped with a console warning naming it. The host calls this
- * each time a manifest arrives, with everything loaded so far in a fixed order.
+ * each time a manifest arrives, with everything loaded so far in a fixed order. Two entries of one
+ * addon (two of its remotes expose a manifest): the later one replaces the earlier.
  */
 export const registerManifests = (entries: readonly ManifestEntry[]) => {
-  const names = new Set(entries.map(({ addon }) => addon.name))
-  applyManifests([...manifests.filter(({ addon }) => !names.has(addon.name)), ...entries])
+  const latest = [...new Map(entries.map((entry) => [entry.addon.name, entry])).values()]
+  const names = new Set(latest.map(({ addon }) => addon.name))
+  applyManifests([...manifests.filter(({ addon }) => !names.has(addon.name)), ...latest])
 }
 
 /** Registers one addon's manifest, replacing what that addon registered before. */
