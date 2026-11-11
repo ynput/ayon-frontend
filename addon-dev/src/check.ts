@@ -5,7 +5,7 @@ import { existsSync, mkdirSync, writeFileSync } from 'fs'
 import { createRequire } from 'module'
 import path from 'path'
 import { pathToFileURL } from 'url'
-import { readContractSlots } from './contractSlots.js'
+import { readContractPreviews, readContractSlots } from './contractSlots.js'
 import { importFromProject, installedVersion, readAddonProject } from './project.js'
 
 export interface CheckResult {
@@ -17,6 +17,8 @@ export interface CheckResult {
   declares: { name: string; version: number }[]
   /** slots it can contribute to from its contract packages */
   contractSlots: { name: string; version: number; package: string }[]
+  /** the previews of those slots the dev shell renders contributions with, per contract package */
+  contractPreviews: { package: string; slots: { name: string; cases: number }[] }[]
   contributions: { slot: string; id: string; key: string; pieces: Record<string, string | null> }[]
   problems: { slot?: string; id?: string; reason: string }[]
   types?: { ok: boolean; errors: string[] }
@@ -116,6 +118,7 @@ export const checkAddon = async ({
     manifest,
     declares: [],
     contractSlots: [],
+    contractPreviews: [],
     contributions: [],
     problems: [],
   }
@@ -135,6 +138,9 @@ export const checkAddon = async ({
     version,
     package: from,
   }))
+  const previews = await readContractPreviews(root, contract.slots)
+  result.contractPreviews = previews.previews
+  result.problems.push(...previews.problems)
   if (loaded !== undefined) {
     const info = { name: project.name, version: project.version, remote: 'check' }
     const own = sdk.checkSlotDeclarations?.(info, loaded)
@@ -174,6 +180,12 @@ export const formatCheck = (result: CheckResult) => {
   const lines = [
     `${result.addon.name} ${result.addon.version}, ${result.manifest} (@ynput/ayon-addon ${result.sdkVersion})`,
     ...result.declares.map((s) => `  ok  ${s.name.padEnd(30)} declares this slot, version ${s.version}`),
+    ...result.contractPreviews.map(
+      (p) =>
+        `  ok  ${'previews'.padEnd(30)} ${p.package.padEnd(24)} ${
+          p.slots.map((s) => `${s.name} (${s.cases})`).join(', ') || 'none'
+        }`,
+    ),
     ...result.contributions.map(
       (c) => `  ok  ${c.slot.padEnd(30)} ${c.id.padEnd(24)} ${Object.values(c.pieces).filter(Boolean).join(', ')}`,
     ),
