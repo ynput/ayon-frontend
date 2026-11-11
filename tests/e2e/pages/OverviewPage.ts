@@ -399,10 +399,6 @@ export class OverviewPage {
     await this.filters.add(scope, field, value)
   }
 
-  filterChip(label: string) {
-    return this.filters.chip(label)
-  }
-
   async removeFilter(label: string) {
     await this.filters.remove(label)
   }
