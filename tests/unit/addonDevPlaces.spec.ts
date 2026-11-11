@@ -10,6 +10,8 @@ import {
   manifestSnippet,
   normalizeParams,
   OTHER_PLACE,
+  packageTitle,
+  panelListing,
   placeOfSlot,
   placeSummary,
   placeUsage,
@@ -115,6 +117,33 @@ test('search finds places by name or package, and slots by label, name or contri
   expect(ids('end item')).toEqual([[`${PACKAGE}:card`, ['example.cardEndItem']]])
   expect(ids('status light', (slot) => (slot === 'header.item' ? ['Status light'] : []))).toEqual([['app-header', ['header.item']]])
   expect(ids('  ')).toHaveLength(places.length)
+})
+
+test('a search lists what it matches, used or not; without one the panel follows Show unused slots', () => {
+  const used = usedSlots([{ slot: 'example.cardBadge' }])
+  const list = (query: string, showUnused = false, selected = {}) =>
+    panelListing(places, used, showUnused, query, undefined, selected).map(({ place, slots }) => [
+      place.id,
+      slots.map((s) => s.slot),
+    ])
+  expect(list('')).toEqual([[`${PACKAGE}:card`, ['example.cardBadge']]])
+  // an unused slot of a partly used place: the place and that slot, with the toggle off
+  expect(list('end item')).toEqual([[`${PACKAGE}:card`, ['example.cardEndItem']]])
+  // an unused place: listed too
+  expect(list('details panel')).toEqual([['details-panel', ['detailsPanel.tab', 'detailsPanel.menuItem']]])
+  // the selected place that doesn't match isn't listed; the focused slot of a matched place is
+  expect(list('end item', false, { surface: 'profile' }).map(([id]) => id)).toEqual([`${PACKAGE}:card`])
+  expect(list('end item', false, { slot: 'example.cardBadge' })).toEqual([
+    [`${PACKAGE}:card`, ['example.cardBadge', 'example.cardEndItem']],
+  ])
+  expect(list('nothing like it')).toEqual([])
+})
+
+test("a package's heading is its name for people", () => {
+  expect(packageTitle('@example/ayon-addon-board')).toBe('Board')
+  expect(packageTitle('@example/ayon-addon-example-board')).toBe('Example board')
+  expect(packageTitle('example_contract')).toBe('Example contract')
+  expect(packageTitle('@example/ayon-addon-')).toBe('@example/ayon-addon-')
 })
 
 test('old links are read as the place they meant', () => {
