@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { confirmDialog, menuItem, toast } from '@ynput/ayon-e2e'
+import { confirmDialog, dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 
@@ -38,6 +38,47 @@ test.describe('lists', () => {
     await expect
       .poll(async () => (await api.listEntityLists(projectName))[0].entityIds)
       .toEqual([task.id])
+  })
+
+  test('Shift+Enter creates another list from the selected folders', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const sh010 = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const sh020 = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.selectRow('sh010')
+    await overview.addRowToSelection('sh020')
+    await overview.nameCell('sh020').click({ button: 'right' })
+    await menuItem(page, 'Add to list').click()
+    const addDialog = dialog(page, 'Add to list')
+    await addDialog.getByRole('button', { name: 'add', exact: true }).click()
+
+    const newList = dialog(page, 'Create New List')
+    const label = newList.getByLabel('List label')
+    await label.fill('Monday picks')
+    await label.press('Shift+Enter')
+
+    // the dialog stays open with a fresh label, ready for the next list
+    await expect(label).toHaveValue(/^List /)
+    await expect(label).toBeFocused()
+    await label.fill('Tuesday picks')
+    await label.press('Enter')
+    await expect(newList).toBeHidden()
+
+    const folderIds = [sh010.id, sh020.id].sort()
+    await expect
+      .poll(async () =>
+        (await api.listEntityLists(projectName))
+          .map((l) => [l.label, [...l.entityIds].sort()])
+          .sort(),
+      )
+      .toEqual([
+        ['Monday picks', folderIds],
+        ['Tuesday picks', folderIds],
+      ])
   })
 
   test('delete a list', async ({ page, api, projectName }) => {
