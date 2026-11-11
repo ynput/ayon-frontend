@@ -11,7 +11,7 @@ import {
   useAddonTableColumns,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-import { FocusFrame, Placeholder, usePlaceholderShown } from './slotOverlay'
+import { devSlots, FocusFrame, Placeholder, usePlaceholderShown } from './slotOverlay'
 
 interface ShellRow {
   id: string
@@ -89,7 +89,10 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
       selectedFullRows: [],
       selectedGroups: [],
     }, {} as never)
-    if (Array.isArray(items) && items.length) openMenu(e, items as never)
+    // an unused slot: its marker, where the items would be (Show unused slots, or in focus)
+    const marker = devSlots.menuPlaceholder('entityMenuItem')
+    const shown = Array.isArray(items) && items.length ? items : marker ? [marker] : []
+    if (shown.length) openMenu(e, shown as never)
   }
 
   return (

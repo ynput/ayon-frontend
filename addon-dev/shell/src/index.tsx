@@ -53,14 +53,26 @@ const loadContracts = (modules: ContractModule[] = []) =>
  * to requests without a token. Checked before anything queries, as AYON's client sends a 401 to
  * the login page.
  */
+const storedTokens = () => {
+  let token: string | null = null
+  try {
+    token = localStorage.getItem('accessToken')
+  } catch {
+    // no storage: only the cookie
+  }
+  return { token, cookie: /(?:^|;\s*)accessToken=([^;]*)/.exec(document.cookie)?.[1] }
+}
+
 const dropStaleToken = async () => {
-  const token = localStorage.getItem('accessToken')
-  if (!token && !/(?:^|;\s*)accessToken=/.test(document.cookie)) return
+  const checked = storedTokens()
+  if (!checked.token && !checked.cookie) return
   try {
     const response = await fetch('/api/users/me', {
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: checked.token ? { Authorization: `Bearer ${checked.token}` } : {},
     })
-    if (response.status === 401) clearAccessToken()
+    // only the token that was checked: another tab may have signed in meanwhile
+    const now = storedTokens()
+    if (response.status === 401 && now.token === checked.token && now.cookie === checked.cookie) clearAccessToken()
   } catch {
     // the server can't be reached: the shell says so
   }

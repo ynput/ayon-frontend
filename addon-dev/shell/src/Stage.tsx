@@ -545,7 +545,9 @@ const TableStage = ({ selection, focus }: StageProps) => {
   const { contributions: toolbarItems } = useContributions('projectTable.toolbarItem')
   const sections = useAddonCustomizeSections(page)
   const { isPanelOpen, openPanel, selectSetting, closePanel } = useSettingsPanel()
-  const slot = focus?.slot
+  // the slot in focus shows where it is (the column picker, the Customize panel); its
+  // contribution, when one is in focus, is what the contexts and Run are for
+  const slot = selection.slot
   const tableState = useMemo(() => sampleTableState(page), [page])
 
   // projectTable.columnMenuItem: the column picked in the bar; a dialog opens on Run
@@ -567,11 +569,11 @@ const TableStage = ({ selection, focus }: StageProps) => {
     [isColumnMenuItem, columnMeta?.dialog, columnContext],
   )
 
-  // a focused Customize section opens the panel on it
+  // the focused Customize section slot opens the panel, on the focused section if there is one
   useEffect(() => {
-    if (slot !== 'projectTable.customizeSection' || !focus) return
+    if (slot !== 'projectTable.customizeSection') return
     openPanel()
-    selectSetting(`addon:${focus.key}` as never)
+    if (focus) selectSetting(`addon:${focus.key}` as never)
     // once per focus
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [focus?.key, slot])

@@ -258,6 +258,41 @@ export const searchPlaces = (
 }
 
 /**
+ * What the panel lists, places with their slots. Without a search: the places with a used slot
+ * and their used slots (all of them with Show unused slots), the selected place and the focused
+ * slot either way. With one: every place and slot the search matches, used or not (a place that
+ * matches by its name or package lists all its slots), and the focused slot of a matched place.
+ */
+export const panelListing = (
+  places: readonly Place[],
+  used: ReadonlySet<string>,
+  showUnused: boolean,
+  query: string,
+  titles?: (slot: string) => string[],
+  selected: { surface?: string; slot?: string } = {},
+) => {
+  if (!query.trim())
+    return listedPlaces(places, used, showUnused, selected.surface).map((place) => ({
+      place,
+      slots: listedSlots(place, used, showUnused, selected.slot),
+    }))
+  return searchPlaces(
+    places.filter((place) => place.slots.length),
+    query,
+    titles,
+  ).map(({ place, slots }) => ({
+    place,
+    slots: place.slots.filter((s) => slots.includes(s) || s.slot === selected.slot),
+  }))
+}
+
+/** A package's name for people: `@scope/ayon-addon-example-board` is "Example board". */
+export const packageTitle = (source: string) => {
+  const name = source.replace(/^@[^/]+\//, '').replace(/^ayon-addon-/, '').replace(/[-_]+/g, ' ').trim()
+  return name ? name.charAt(0).toUpperCase() + name.slice(1) : source
+}
+
+/**
  * Old links: `scene=<package>:<id>` (a scene), `slot=…&contribution=…` without `surface` (a
  * contribution, `ayon-addon open`), `showSlots` (the old outline toggle). Returns the parameters
  * with `surface` set from them; the rest stays.

@@ -39,12 +39,12 @@ import { StageBoundary } from './StageBoundary'
 import { PreviewInputs } from './PreviewInputs'
 import { setStatus } from './status'
 import type { ShellOptions, ShellSelection } from './types'
-import { navigationKey, readSelection, writeSelection } from './params'
+import { navigationKey, readSelection, rememberSceneValues, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
 import { findContribution, getPlace, getPlaces, getUsedSlots } from './catalog'
 import { listedPlaces } from './places'
-import { setOverlay } from './slotOverlay'
+import { FocusedMenuItemStyle, setOverlay } from './slotOverlay'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -178,6 +178,8 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     [selection.showUnused, selection.slot, focus?.key],
   )
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
+  // the inputs of each scene, for when the developer comes back to it
+  useEffect(() => rememberSceneValues(selection.surface, selection.sceneValues), [selection.surface, selection.sceneValues])
 
   // a project to start with
   const { data: projects = [] } = useListProjectsQuery({ active: true }, { skip: mode !== 'live' })
@@ -205,6 +207,7 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     <>
       {/* the addon's services, once for the whole shell as in AYON; not remounted per selection */}
       <AddonServices projectName={selection.projectName ?? null} />
+      <FocusedMenuItemStyle />
       <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
         <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
           <StageBoundary what="developer panel">

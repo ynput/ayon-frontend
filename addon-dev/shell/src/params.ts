@@ -98,3 +98,13 @@ export const writeSelection = (selection: ShellSelection, push = false) => {
   if (push) window.history.pushState(window.history.state, '', url)
   else window.history.replaceState(window.history.state, '', url)
 }
+
+// A scene's input values per place, for this visit: the URL holds the current place's only, so
+// going to another place and back finds them here.
+const sceneValuesByPlace = new Map<string, Record<string, unknown> | undefined>()
+
+export const rememberSceneValues = (surface: string | undefined, values?: Record<string, unknown>) => {
+  if (surface) sceneValuesByPlace.set(surface, values)
+}
+
+export const rememberedSceneValues = (surface: string) => sceneValuesByPlace.get(surface)

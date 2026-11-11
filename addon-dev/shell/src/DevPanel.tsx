@@ -11,8 +11,9 @@ import { useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { contributionsTo, getPlace, getPlaces, getUsedSlots, idOf } from './catalog'
 import { getContracts } from './contractModel'
-import { AYON_SOURCE, listedPlaces, listedSlots, placeSummary, searchPlaces } from './places'
+import { AYON_SOURCE, packageTitle, panelListing, placeSummary } from './places'
 import type { Place, PlaceSlot } from './places'
+import { rememberedSceneValues } from './params'
 import { hiddenReason } from './slotNeeds'
 import { highlightSlot, useSlotOverlay } from './slotOverlay'
 import type { ShellOptions, ShellSelection } from './types'
@@ -29,14 +30,13 @@ interface DevPanelProps {
 
 const titles = (slot: string) => contributionsTo(slot).map((c) => contributionTitle(c))
 
-/** The slots Slots here lists for a place: used ones, all with Show unused slots, those the search left. */
-export const slotsHere = (place: Place | undefined, selection: ShellSelection, search: string): PlaceSlot[] => {
-  if (!place) return []
-  const used = getUsedSlots()
-  const listed = listedSlots(place, used, !!selection.showUnused, selection.slot)
-  const found = searchPlaces([place], search, titles)[0]?.slots
-  return listed.filter((s) => s.slot === selection.slot || !found || found.includes(s))
-}
+/** What Places lists, with each place's slots (panelListing): the same rule for both halves. */
+const listing = (selection: ShellSelection, search: string) =>
+  panelListing(getPlaces(), getUsedSlots(), !!selection.showUnused, search, titles, selection)
+
+/** The slots Slots here lists for a place: those its row in Places stands for. */
+export const slotsHere = (place: Place | undefined, selection: ShellSelection, search: string): PlaceSlot[] =>
+  (place && listing(selection, search).find((listed) => listed.place.id === place.id)?.slots) || []
 
 const PlaceRow = ({
   place,
@@ -68,8 +68,7 @@ const PlaceRow = ({
 const Places = ({ options, mode, selection, search, onSearch, onChange }: DevPanelProps) => {
   const used = getUsedSlots()
   const showUnused = !!selection.showUnused
-  const places = listedPlaces(getPlaces(), used, showUnused, selection.surface)
-  const found = searchPlaces(places, search, titles).map(({ place }) => place)
+  const found = listing(selection, search).map(({ place }) => place)
   const sources = [...new Set(found.map((place) => place.source))]
   const problems = [
     ...(options.contractProblems || []),
@@ -83,8 +82,12 @@ const Places = ({ options, mode, selection, search, onSearch, onChange }: DevPan
       surface: place.id,
       slot: undefined,
       id: undefined,
-      // a scene's values are its own; AYON's places share the project and entities
-      sceneValues: place.scene && place.id === selection.surface ? selection.sceneValues : undefined,
+      // a scene's values are its own, as last set there; AYON's places share the project and entities
+      sceneValues: !place.scene
+        ? undefined
+        : place.id === selection.surface
+        ? selection.sceneValues
+        : rememberedSceneValues(place.id),
     })
   return (
     <>
@@ -111,7 +114,7 @@ const Places = ({ options, mode, selection, search, onSearch, onChange }: DevPan
       {showUnused && (
         <small className="ayon-shell-note">Includes AYON slots and slots declared by loaded packages.</small>
       )}
-      {nothingUsed && !showUnused && !places.length && (
+      {nothingUsed && !showUnused && !found.length && !search.trim() && (
         <small className="ayon-shell-note">
           This addon has no contributions yet. Turn on Show unused slots to explore.
         </small>
@@ -120,8 +123,11 @@ const Places = ({ options, mode, selection, search, onSearch, onChange }: DevPan
       {sources.map((source) => (
         <div key={source || 'other'} className="ayon-shell-places" data-shell-source={source}>
           {sources.length > 1 && source && (
-            <div className="ayon-shell-slot-label" title={source === AYON_SOURCE ? undefined : `Slots of another addon, from ${source}`}>
-              {source}
+            <div
+              className="ayon-shell-slot-label"
+              title={source === AYON_SOURCE ? undefined : `Slots of another addon, from ${source}`}
+            >
+              {source === AYON_SOURCE ? source : packageTitle(source)}
             </div>
           )}
           {found
@@ -168,17 +174,21 @@ const SlotRow = ({
 }) => {
   const contributions = contributionsTo(slot.slot)
   const focused = selection.slot === slot.slot
+  const slotSelected = focused && !selection.id
   const focus = (contribution?: AnyContribution) =>
     onChange({ ...selection, slot: slot.slot as SlotName, id: contribution ? idOf(contribution) : undefined })
   return (
     <div
-      className={`ayon-shell-scene-slot${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}`}
+      className={`ayon-shell-scene-slot${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}${
+        focused && selection.id ? ' parent-selected' : ''
+      }`}
       data-shell-slot={slot.slot}
       onMouseEnter={() => highlightSlot(slot.slot)}
       onMouseLeave={() => highlightSlot(undefined)}
     >
       <button
-        className={`contribution ayon-shell-slot-row${focused && !selection.id ? ' selected' : ''}`}
+        className={`contribution ayon-shell-slot-row${slotSelected ? ' selected' : ''}`}
+        aria-pressed={slotSelected}
         title={slot.description ? `${slot.label}: ${slot.description}` : slot.label}
         onClick={() => focus()}
       >
@@ -192,10 +202,12 @@ const SlotRow = ({
         <div className="ayon-shell-chips">
           {contributions.map((c) => {
             const hidden = hiddenReason(c, place.id, selection)
+            const selected = focused && selection.id === idOf(c)
             return (
               <button
                 key={c.key}
-                className={`ayon-shell-contribution-chip${focused && selection.id === idOf(c) ? ' selected' : ''}`}
+                className={`ayon-shell-contribution-chip${selected ? ' selected' : ''}`}
+                aria-pressed={selected}
                 data-contribution={`${c.slot}:${idOf(c)}`}
                 title={hidden ? `Not shown with these inputs. ${hidden}` : idOf(c)}
                 onClick={() => focus(c)}
@@ -218,6 +230,9 @@ const SlotsHere = ({ selection, search, onChange }: Pick<DevPanelProps, 'selecti
   return (
     <>
       <h3>Slots here</h3>
+      {place && slots.length > 0 && (
+        <small className="ayon-shell-note">Select a slot to locate it; select a contribution to inspect it.</small>
+      )}
       {!place ? (
         <small className="ayon-shell-note">Select a place.</small>
       ) : (
