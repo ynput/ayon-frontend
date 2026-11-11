@@ -1,5 +1,5 @@
 import { InputText } from '@ynput/ayon-react-components'
-import React, { KeyboardEvent, useId, useState, useRef } from 'react'
+import React, { useId, useState, useRef } from 'react'
 import styled from 'styled-components'
 import type { EntityForm } from '../context/new-entity'
 import { theme } from '@ynput/ayon-react-components'
@@ -54,7 +54,7 @@ type NewEntityFormProps = {
   entityForm: any
   labelRef: any
   setNameFocused: (focused: boolean) => void
-  handleKeyDown: (e: KeyboardEvent, isLabel: boolean) => void
+  handleKeyDown: (e: React.KeyboardEvent<HTMLElement>) => void
   nameInfo?: string
 }
 
@@ -102,10 +102,13 @@ export const NewEntityForm: React.FC<NewEntityFormProps> = ({
     }
 
     // submit the form on enter
-    handleKeyDown(e as unknown as KeyboardEvent, true)
+    handleKeyDown(e)
   }
 
   const handleNameKeydown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    // while the name is being edited, Enter and Shift+Enter bubble up to the dialog to create
+    if (e.key === 'Enter' && nameInputFocused) return
+
     if (e.key === 'Enter' || e.key === 'Escape' || (e.key === 'ArrowUp' && !e.altKey)) {
       // prevent propagation to avoid closing the dialog
       e.stopPropagation()

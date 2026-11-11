@@ -31,7 +31,7 @@ import clsx from 'clsx'
 import useRowKeydown, { RowKeyboardEvent } from './hooks/useRowKeydown'
 
 import { compareItems } from '@tanstack/match-sorter-utils'
-import { parseSearchQuery, matchSearchQuery } from '@shared/util'
+import { parseSearchQuery, matchSearchQuery, toSlicerSearchHaystack } from '@shared/util'
 import { useSimpleTableContext } from './context/simple-table'
 import { SimpleTableCellTemplate, SimpleTableCellTemplateProps } from './SimpleTableRowTemplate'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
@@ -69,8 +69,10 @@ const fuzzyFilter: FilterFn<any> = (row, columnId, searchValue: string[][], addM
 
   // combine label and parents into a single string for searching if columnId is 'label'
   if (columnId === 'label') {
-    searchString = [row.original.label, row.original.name, ...(row.original.parents || [])].join(
-      ' ',
+    searchString = toSlicerSearchHaystack(
+      row.original.label,
+      row.original.name,
+      row.original.parents,
     )
   }
 
@@ -515,7 +517,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
     data: tableData,
     columns,
     state: {
-      expanded,
+      // while searching, every folder is open so matches inside collapsed ones show
+      expanded: globalFilter ? true : expanded,
       rowSelection,
       globalFilter,
       rowPinning,
@@ -616,17 +619,26 @@ const SimpleTable: FC<SimpleTableProps> = ({
     if (index < 0) return
     scrolledToRowIdRef.current = scrollToRowId
     lastSelectedIdRef.current = scrollToRowId
-    rowVirtualizer.scrollToIndex(index, { align: 'center' })
-    // wait for the virtualizer to render the row
-    requestAnimationFrame(() =>
-      requestAnimationFrame(() => {
-        const rowElement = tableContainerRef.current?.querySelector(
-          `#${CSS.escape(toDomId(scrollToRowId))}`,
-        )
-        const cell = rowElement?.querySelector('[tabindex="0"]') as HTMLElement | null
-        cell?.focus({ preventScroll: true })
-      }),
-    )
+    // wait for the virtualizer to render the row. Scroll again until it does: a scroll requested
+    // while the table is still settling (a dialog opening, rows being measured) can be dropped
+    const scrollUntilRendered = (attemptsLeft: number) => {
+      rowVirtualizer.scrollToIndex(index, { align: 'center' })
+      requestAnimationFrame(() =>
+        requestAnimationFrame(() => {
+          const rowElement = tableContainerRef.current?.querySelector(
+            `#${CSS.escape(toDomId(scrollToRowId))}`,
+          )
+          if (!rowElement) {
+            // stop once the table is gone
+            if (attemptsLeft > 0 && tableContainerRef.current) scrollUntilRendered(attemptsLeft - 1)
+            return
+          }
+          const cell = rowElement.querySelector('[tabindex="0"]') as HTMLElement | null
+          cell?.focus({ preventScroll: true })
+        }),
+      )
+    }
+    scrollUntilRendered(10)
   }, [scrollToRowId, rows, rowVirtualizer])
 
   // Memoize the ref callback to prevent infinite re-renders
@@ -639,6 +651,8 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [rowVirtualizer],
   )
 
+  const lastScrollTopRef = useRef(0)
+
   // Handle scroll to bottom detection
   const handleScroll = useCallback(
     (event: React.UIEvent<HTMLDivElement>) => {
@@ -646,6 +660,10 @@ const SimpleTable: FC<SimpleTableProps> = ({
 
       const target = event.currentTarget
       const { scrollTop, scrollHeight, clientHeight } = target
+
+      // horizontal scroll must not load more rows
+      if (scrollTop === lastScrollTopRef.current) return
+      lastScrollTopRef.current = scrollTop
 
       // Check if we're near the bottom (within 100px)
       const isNearBottom = scrollHeight - scrollTop - clientHeight < 100

@@ -31,7 +31,8 @@ const useDuplicateList = ({
       for (const entityListId of listIds) {
         try {
           created.push(
-            await duplicateEntityList({ projectName, entityListId, payload: null }).unwrap(),
+            // an empty body takes the server's defaults; RTK Query throws on a null body
+            await duplicateEntityList({ projectName, entityListId, payload: {} }).unwrap(),
           )
         } catch (error) {
           failed.push(getRequestErrorString(error))

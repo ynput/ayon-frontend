@@ -4,18 +4,25 @@
 // list, the table around the columns). Pages render alone, without AYON's page tabs.
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import { Button } from '@ynput/ayon-react-components'
-import { ContributionView, runContribution, useContributions } from '@ynput/ayon-addon'
+import { Button, Dropdown } from '@ynput/ayon-react-components'
+import { ContributionView, runContribution, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
   Contribution,
   EntityRef,
+  ProjectTablePage,
+  ProjectTableState,
   TableShortcutContext,
 } from '@ynput/ayon-addon'
 import { getHost, getRegistry } from '@ynput/ayon-addon/host'
-import { useGetProjectQuery, useGetUsersAssigneeQuery } from '@ynput/ayon-frontend-shared/api'
+import {
+  useGetProjectQuery,
+  useGetUsersAssigneeQuery,
+  useGetUsersQuery,
+} from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
+  usePowerpack,
   useScopedDetailsPanel,
   useSettingsPanel,
 } from '@ynput/ayon-frontend-shared/context'
@@ -30,10 +37,15 @@ import {
   SlicerHost,
   useAddonCustomizeSections,
   useAddonTableShortcuts,
+  useAddonUserMenuItems,
+  useUserDetailsSlotContext,
+  AddonUserDetailsSections,
+  AddonProfileSections,
   shortcutEntities,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
+import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { StudioSelectionProvider } from './host'
 import { needsProject } from './slotNeeds'
 import { ButtonItem, ServiceNote } from './parts'
@@ -199,6 +211,90 @@ const ServiceStage = ({ contribution, selection }: StageProps) => {
   return <ServiceNote />
 }
 
+// profile.section: a stand-in for Account → Profile (it lives in the ayon-frontend app), for the
+// signed-in user. The slot's context has nothing besides `user`.
+const PROFILE_CONTEXT = {}
+const ProfileStage = ({ contribution }: StageProps) => {
+  const user = useUser()
+  const { powerLicense, isLoading } = usePowerpack()
+  const hidden =
+    !!(contribution as { powerFeature?: boolean }).powerFeature && (isLoading || !powerLicense)
+  useReport(contribution, PROFILE_CONTEXT, !!user && !hidden)
+  if (!user) return <Hint>Signing in…</Hint>
+  return (
+    <div className="ayon-shell-body" style={{ justifyContent: 'center' }}>
+      <div
+        style={{ width: 'min(600px, 100%)', display: 'flex', flexDirection: 'column', gap: 4 }}
+        data-shell-surface="profile"
+      >
+        <div className="ayon-shell-bar">
+          <strong>{user.fullName || user.name}</strong>
+        </div>
+        {hidden && !isLoading && (
+          <Hint>A power feature: this section shows with a Power Pack licence only.</Hint>
+        )}
+        <AddonProfileSections />
+      </div>
+    </div>
+  )
+}
+
+// userDetails.section and userDetails.menuItem: a stand-in for the user details panel of
+// Settings → Users (it lives in the ayon-frontend app). The target user is picked here, apart from
+// the signed-in one: with an API key that is a service user, which most sections don't show for.
+const UserDetailsStage = ({ contribution }: StageProps) => {
+  const signedIn = useUser()
+  const { data: users = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
+  const [picked, setPicked] = useState<string>()
+  // the signed-in user unless it is a service user, else the first active user
+  const fallback = useMemo(
+    () =>
+      (users as UserDetailsSource[]).find((u) => u.name === signedIn?.name && !u.isService) ??
+      (users as UserDetailsSource[]).find((u) => !u.isService && u.active !== false),
+    [users, signedIn?.name],
+  )
+  const target = (users as UserDetailsSource[]).find((u) => u.name === picked) ?? fallback
+  const selected = useMemo(() => (target ? [target] : []), [target])
+  const context = useUserDetailsSlotContext(selected, false)
+  const isMenuItem = contribution.slot === 'userDetails.menuItem'
+  useReport(contribution, context, !!target, isMenuItem)
+  const { topItems, items } = useAddonUserMenuItems(context)
+  if (isLoading) return <Hint>Loading users…</Hint>
+  if (!target) return <Hint>No users to show.</Hint>
+  return (
+    <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
+      <div
+        style={{ width: 'min(420px, 100%)', display: 'flex', flexDirection: 'column', gap: 4 }}
+        data-shell-surface="user-details"
+      >
+        <div className="ayon-shell-bar">
+          <Dropdown
+            value={[target.name]}
+            options={(users as UserDetailsSource[]).map((u) => ({
+              value: u.name,
+              label: u.isService ? `${u.name} (service)` : u.attrib?.fullName || u.name,
+            }))}
+            search
+            onChange={(names) => setPicked(names[0])}
+            style={{ minWidth: 200 }}
+          />
+          <span className="spacer" />
+          {[...topItems, ...items].map((item) => (
+            <Button
+              key={item.id}
+              icon={item.icon as never}
+              label={item.label as string}
+              variant="text"
+              onClick={() => (item.onClick as () => void)?.()}
+            />
+          ))}
+        </div>
+        <AddonUserDetailsSections context={context} />
+      </div>
+    </div>
+  )
+}
+
 // header.item: left after the dashboard button, right before chat and inbox
 const HeaderStage = ({ contribution, selection }: StageProps) => {
   const { contributions } = useContributions('header.item')
@@ -338,6 +434,23 @@ const ProjectListStage = ({ contribution, selection, onChange }: StageProps & { 
   )
 }
 
+// what a column menu item gets for some of AYON's columns; `subType` groups by the page's type
+const sampleColumns = (page: ProjectTablePage) => [
+  { columnId: 'status', columnLabel: 'Status', groupField: 'status' },
+  {
+    columnId: 'subType',
+    columnLabel: page === 'products' ? 'Product type' : 'Type',
+    groupField: page === 'products' ? 'productType' : 'taskType',
+  },
+  { columnId: 'assignees', columnLabel: 'Assignees', groupField: 'assignees' },
+  { columnId: 'tags', columnLabel: 'Tags', groupField: 'tags' },
+  { columnId: 'updatedAt', columnLabel: 'Updated at', groupField: undefined },
+]
+
+// an unfiltered table; AYON fills it from the page's filters, slicer and grouping
+const sampleTableState = (page: ProjectTablePage): ProjectTableState | undefined =>
+  page === 'lists' ? undefined : { entityType: page === 'products' ? 'version' : 'task', filters: {}, showHierarchy: true }
+
 // the project table slots: a stand-in table with the real addon columns, menu, shortcuts, toolbar
 // items and Customize panel
 const TableStage = ({ contribution, selection }: StageProps) => {
@@ -350,6 +463,25 @@ const TableStage = ({ contribution, selection }: StageProps) => {
   const sections = useAddonCustomizeSections(page)
   const { isPanelOpen, openPanel, selectSetting, closePanel } = useSettingsPanel()
   const slot = contribution.slot
+  const tableState = useMemo(() => sampleTableState(page), [page])
+
+  // projectTable.columnMenuItem: the column picked in the bar; a dialog opens on Run
+  const columns = useMemo(() => sampleColumns(page), [page])
+  const [columnId, setColumnId] = useState(columns[0].columnId)
+  const column = columns.find((c) => c.columnId === columnId) ?? columns[0]
+  const [columnDialog, setColumnDialog] = useState<Context>()
+  const columnContext = useMemo<Context>(
+    () => ({ projectName, page, ...column, tableState }),
+    [projectName, page, column, tableState],
+  )
+  const columnMeta = contribution as unknown as { dialog?: unknown; label: string; dialogTitle?: string }
+  const openColumnDialog = useMemo(
+    () =>
+      slot === 'projectTable.columnMenuItem' && columnMeta.dialog
+        ? async () => setColumnDialog({ ...columnContext, close: () => setColumnDialog(undefined) })
+        : undefined,
+    [slot, columnMeta.dialog, columnContext],
+  )
 
   // open the Customize panel on the addon's section
   useEffect(() => {
@@ -380,8 +512,9 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       entities: shortcutEntities(page, projectName, rows),
       focused: { rowId: rows[0].id, columnId: 'name' },
       cells: rows.map((row) => ({ rowId: row.id, columnId: 'name' })),
+      tableState,
     }
-  }, [slot, page, projectName, entities, selected])
+  }, [slot, page, projectName, entities, selected, tableState])
   const { runShortcut } = shortcuts
   const pressShortcut = useMemo(
     () =>
@@ -394,20 +527,30 @@ const TableStage = ({ contribution, selection }: StageProps) => {
   const context = useMemo<Context | undefined>(() => {
     if (slot === 'tableColumn') return { projectName, page, entities }
     if (slot === 'entityMenuItem')
-      return { projectName, page, entities: selected.length ? selected : entities }
+      return { projectName, page, entities: selected.length ? selected : entities, tableState }
     if (slot === 'table.shortcut') return shortcutContext as Context | undefined
+    if (slot === 'projectTable.columnMenuItem') return columnContext
     if (slot === 'projectTable.customizeSection') return { projectName, page }
     return popupContext
-  }, [slot, projectName, page, entities, selected, shortcutContext, popupContext])
-  useReport(contribution, context, !!context, slot === 'entityMenuItem' || pressShortcut)
+  }, [slot, projectName, page, entities, selected, tableState, shortcutContext, columnContext, popupContext])
+  const isColumnMenuItem = slot === 'projectTable.columnMenuItem'
+  useReport(contribution, context, !!context, slot === 'entityMenuItem' || pressShortcut || openColumnDialog || isColumnMenuItem)
 
-  const base = useMemo(() => ({ projectName, page }), [projectName, page])
+  const base = useMemo(() => ({ projectName, page, tableState }), [projectName, page, tableState])
   const pageToolbarItems = toolbarItems.filter((item) => !item.pages?.length || item.pages.includes(page))
 
   return (
     <div className="ayon-shell-stage" style={{ flex: 1 }}>
       <div className="ayon-shell-bar" data-shell-surface="table-toolbar">
         <span>{page}</span>
+        {isColumnMenuItem && (
+          <Dropdown
+            value={[column.columnId]}
+            options={columns.map((c) => ({ value: c.columnId, label: c.columnLabel }))}
+            onChange={(ids) => setColumnId(ids[0])}
+            style={{ minWidth: 160 }}
+          />
+        )}
         <span className="spacer" />
         {pageToolbarItems.map((item) => (
           <ButtonItem
@@ -435,6 +578,7 @@ const TableStage = ({ contribution, selection }: StageProps) => {
             >
               <ShellTable
                 page={page}
+                tableState={tableState}
                 entities={entities}
                 selected={selected}
                 onSelect={setSelected}
@@ -455,6 +599,13 @@ const TableStage = ({ contribution, selection }: StageProps) => {
       </div>
       {shortcuts.dialog && (
         <AddonDialog contribution={shortcuts.dialog.contribution} context={shortcuts.dialog.context} />
+      )}
+      {columnDialog && (
+        <AddonDialog
+          contribution={contribution as unknown as Contribution<'projectTable.columnMenuItem'>}
+          context={columnDialog as never}
+          title={(columnMeta.dialogTitle || columnMeta.label).replace(/\{column\}/g, () => column.columnLabel)}
+        />
       )}
     </div>
   )
@@ -524,10 +675,16 @@ export const Stage = ({
       case 'entityMenuItem':
       case 'table.shortcut':
       case 'projectTable.toolbarItem':
+      case 'projectTable.columnMenuItem':
       case 'projectTable.customizeSection':
         return <TableStage {...props} />
       case 'app.service':
         return <ServiceStage {...props} />
+      case 'userDetails.section':
+      case 'userDetails.menuItem':
+        return <UserDetailsStage {...props} />
+      case 'profile.section':
+        return <ProfileStage {...props} />
       default:
         return <Hint>The shell has no stage for {contribution.slot} yet.</Hint>
     }

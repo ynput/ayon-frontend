@@ -7,6 +7,7 @@ import type { SavedAnnotationMetadata } from '../../index'
 import { useFeedContext } from '../../context/feed'
 import { useDetailsPanelContext } from '@shared/context'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
+import { getVersionMediaStart } from '../../helpers/versionFrames'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
@@ -135,13 +136,15 @@ const FileUploadCard = ({
     }
 
     // undefined = origin version unknown, offset by the feed entity; null = origin has no frameStart
-    const frameStart =
-      annotationFrameStart === undefined ? firstEntity?.attrib?.frameStart : annotationFrameStart
-    if (!Number.isFinite(frameStart)) {
+    const mediaStart =
+      annotationFrameStart === undefined
+        ? getVersionMediaStart(firstEntity?.attrib?.frameStart, firstEntity?.attrib?.handleStart)
+        : annotationFrameStart
+    if (typeof mediaStart !== 'number' || !Number.isFinite(mediaStart)) {
       return someAnnotation.range
     }
 
-    return [frameStart - 1 + someAnnotation.range[0], frameStart - 1 + someAnnotation.range[1]]
+    return [mediaStart - 1 + someAnnotation.range[0], mediaStart - 1 + someAnnotation.range[1]]
   }, [someAnnotation, annotationFrameStart, firstEntity])
 
   return (

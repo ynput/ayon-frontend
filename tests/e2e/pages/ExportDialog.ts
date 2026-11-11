@@ -139,23 +139,29 @@ export const pick = (file: ExportedFile, headers: string[]) => {
 
 /**
  * The export's header starts with the table's column headers, left to right, without the ones the
- * export skips (thumbnails). Columns scrolled out of view are not rendered, so they are not compared.
+ * export skips (the row selection column, whose header is a select all icon, and thumbnails).
+ * Columns scrolled out of view are not rendered, so they are not compared.
  * FLAG: a sorted header also shows its sort icon and index, so only the first line is its label.
  */
 export const expectTableHeaders = async (file: ExportedFile, table: Locator) => {
-  const headers = (await table.locator('thead th[data-column-id]').allInnerTexts())
+  const headers = (
+    await table
+      .locator('thead th[data-column-id]:not([data-column-id="__row_selection__"])')
+      .allInnerTexts()
+  )
     .map((text) => text.split('\n')[0].trim())
     .filter((text) => text && text !== 'Thumbnail')
   expect(headers.length).toBeGreaterThan(1)
   expect(file.rows[0].slice(0, headers.length)).toEqual(headers)
 }
 
-/** `<project>-<table|selection>-<local date>.<extension>` */
+/** `<project>-<entity types>-<table|selection>-<local date>.<extension>` */
 export const exportFileName = (
   projectName: string,
+  entityTypes: string,
   scope: 'table' | 'selection',
   extension: 'xlsx' | 'csv' | 'tsv',
 ) => {
   const date = new Date().toLocaleDateString('sv')
-  return `${projectName}-${scope}-${date}.${extension}`
+  return `${projectName}-${entityTypes}-${scope}-${date}.${extension}`
 }

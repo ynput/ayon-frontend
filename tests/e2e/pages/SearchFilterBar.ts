@@ -36,9 +36,18 @@ export class SearchFilterBar {
     await this.page.keyboard.press('Enter')
   }
 
-  // FLAG: filter chips have no role or accessible name, so they are found by their CSS class
+  // FLAG: filter chips have no role or accessible name, so they are found by their CSS class.
+  // A full bar shows chips as icons only, without the label: their tooltip still names it.
   chip(label: string): Locator {
-    return this.root.locator('.search-filter-item').filter({ hasText: `${label}:` })
+    return this.root.locator(
+      `.search-filter-item:has-text("${label}:"), .search-filter-item[data-tooltip*="${label}:"]`,
+    )
+  }
+
+  /** the chip's tooltip lists its values, also when the chip shows icons only */
+  async expectChip(label: string, value: string) {
+    const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    await expect(this.chip(label)).toHaveAttribute('data-tooltip', new RegExp(escaped))
   }
 
   async remove(label: string) {

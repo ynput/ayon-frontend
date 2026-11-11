@@ -185,6 +185,6 @@ import { ayonAddonLint } from '@ynput/ayon-addon-dev/eslint'
 export default defineConfig([..., ...ayonAddonLint])
 ```
 
-Flags imports that bypass AYON's copies: `react-router-dom`, `react-router` and `react-toastify`
-(use `@ynput/ayon-addon`), `@ynput/ayon-addon/host`, and a manifest importing
+Flags imports that bypass AYON's copies: `react-router-dom`, `react-router`, `react-toastify` and
+`use-query-params` (use `@ynput/ayon-addon`), `@ynput/ayon-addon/host`, and a manifest importing
 `@ynput/ayon-addon` instead of `@ynput/ayon-addon/manifest`.

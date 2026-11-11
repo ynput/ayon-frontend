@@ -13,6 +13,8 @@ user's folder and attribute permissions. The host only says what the open table 
   row count, `getContent(scope, options)` (rows, columns and their labels) and `getSkippedColumns`.
 - `openExport(scope)` sets the `tableExport` URL search param. The App module renders the dialog while the param is set
   and there is a source, and removes it on close. Without a Power Pack license `openExport` opens the Power Pack dialog.
+  While the license is still being checked (just after a page load) it waits for the check, and the menus already
+  offer the Power Pack export.
 - The contract types (`TableExportContent`, `TableExportSource`, ...) are hand written in `TableExportContextInstance.ts`,
   the endpoint isn't in the server's OpenAPI. Changing them changes what the Power Pack module receives: keep both in step,
   add fields rather than rename them, an older Power Pack keeps reading the old ones.
@@ -36,6 +38,16 @@ user's folder and attribute permissions. The host only says what the open table 
 - Import CSV stops at a column it doesn't know. So that file only has the columns in Import CSV's field list
   (`GET /api/csv/export/hierarchy/fields`, fetched while the dialog is open), and `getSkippedColumns` lists the others
   with "(Import CSV can't read it)", e.g. the Folder column (the path already holds the parent).
+
+## Users
+- The Users settings table (`src/pages/SettingsPage/UsersSettings/UsersExportSource.tsx`) is not a project table: it
+  registers a source itself, with `users.names` in the table's order and an empty `projectName`. The Power Pack sends it
+  to `POST /api/addons/powerpack/{version}/export-users` (managers only), which adds license, access level and project
+  access columns.
+- The table is a PrimeReact DataTable: its sort and column order are read from its saved state (`USERS_TABLE_STATE_KEY`)
+  when exporting, and sorted with the table's own sort functions (`tableSorting.ts`).
+- Import CSV reads users back from name, active, attributes and the admin and developer flags (the import columns,
+  `importColumnsLabel`). `minPowerpackVersion` keeps an older Power Pack, without the endpoint, from opening the dialog.
 
 ## Adding export to a page
 1. Add the built-in `'export'` item to the context menu. With the Power Pack export available and a registered source it

@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo } from 'react'
+import { isFromOtherTable } from '../../utils/tableOwnership'
 
 // Contexts
 import { ROW_SELECTION_COLUMN_ID } from '../../constants'
@@ -65,7 +66,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   const { selectedCells, gridMap, focusedCellId } = useSelectionCellsContext()
   const { updateEntities, history } = useCellEditing()
   const { pasteTableLinks } = usePasteLinks()
-  const { getEntityById, attribFields, tableData, isRowReadOnly } = useProjectTableContext()
+  const { getEntityById, attribFields, tableData, isRowReadOnly, tableId } =
+    useProjectTableContext()
 
   const displayRowsById = useMemo(() => {
     const map = new Map<string, TableRow>()
@@ -1038,6 +1040,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   // Set up keyboard event listeners
   useEffect(() => {
     const handleKeyDown = async (e: KeyboardEvent) => {
+      if (isFromOtherTable(e, tableId)) return
       // Copy functionality (Ctrl+C or Command+C)
       if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
         const activeEl = document.activeElement as HTMLElement | null
@@ -1104,7 +1107,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
     return () => {
       window.removeEventListener('keydown', handleKeyDown)
     }
-  }, [copyToClipboard, pasteFromClipboard])
+  }, [copyToClipboard, pasteFromClipboard, tableId])
 
   const value = useMemo(
     () => ({

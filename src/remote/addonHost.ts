@@ -1,13 +1,15 @@
 import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser } from '@ynput/ayon-addon'
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useSyncExternalStore } from 'react'
 import { useNavigate } from 'react-router-dom'
-import store, { useAppSelector } from '@state/store'
+import store from '@state/store'
 import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
+import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
 import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { LazyEntityTable } from './EntityTable/LazyEntityTable'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -29,8 +31,10 @@ const toAddonUser = (user: UserState): AddonUser | undefined =>
       }
     : undefined
 
+// Reads the host's store, not the nearest redux Provider's: addons render host components inside
+// their own store (e.g. the review addon's session cards), which has no user.
 const useUser = (): AddonUser | undefined => {
-  const user = useAppSelector((state) => state.user)
+  const user = useSyncExternalStore(store.subscribe, () => store.getState().user)
   return useMemo(() => toAddonUser(user), [user])
 }
 
@@ -43,6 +47,7 @@ export const provideAddonHost = () =>
     openViewer: (target) => {
       store.dispatch(openViewer(target))
     },
+    useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
@@ -50,10 +55,11 @@ export const provideAddonHost = () =>
       ProjectList: ProjectListHost,
       EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
+      EntityTable: LazyEntityTable,
     },
   })
 
-// Gives the package the router's navigate (navigateToEntity). Render it inside <BrowserRouter>.
+// Gives the package the router's navigate (navigate, navigateToEntity). Render it inside <BrowserRouter>.
 export const AddonHostNavigation = () => {
   const navigate = useNavigate()
   useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])

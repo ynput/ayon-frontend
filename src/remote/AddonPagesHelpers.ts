@@ -19,7 +19,19 @@ const warned = new Set<string>()
 const warnOnce = (page: Contribution<PageSlot>, reason: string) => {
   if (warned.has(page.key)) return
   warned.add(page.key)
-  console.warn(`[addon ${page.addon.name}] page "${page.id}" (${page.slot}) is not shown: ${reason}`)
+  console.warn(
+    `[addon ${page.addon.name}] page "${page.id}" (${page.slot}) is not shown: ${reason}`,
+  )
+}
+
+/**
+ * A tab AYON always shows (e.g. the project page's Schedule, with a splash screen when the addon is
+ * missing) that one addon's page fills: its `id`, the page's `viewType` and the addon's name.
+ */
+export interface OwnedPage {
+  id: string
+  viewType?: string
+  addon: string
 }
 
 /**
@@ -31,17 +43,36 @@ export const useAddonPages = <S extends PageSlot>(
   reservedIds: string[],
   // view types of the legacy (keyword) pages; AYON's own are always reserved
   reservedViewTypes: (string | undefined)[] = [],
+  // AYON's tabs that one addon's page fills: that addon's page may use the reserved id and view type
+  ownedPages: OwnedPage[] = [],
 ): Contribution<S>[] => {
-  const reservedKey = `${reservedIds.join(',')}|${reservedViewTypes.join(',')}`
+  const reservedKey = [
+    reservedIds.join(','),
+    reservedViewTypes.join(','),
+    ownedPages.map((owned) => `${owned.id}:${owned.viewType}:${owned.addon}`).join(','),
+  ].join('|')
   return useMemo(() => {
     const takenIds = new Set(reservedIds)
     const takenViewTypes = new Set(reservedViewTypes.filter(Boolean))
+    const filledOwnedIds = new Set<string>()
     return contributions.filter((page) => {
+      const owned = ownedPages.find((owned) => owned.id === page.id)
+      if (
+        owned?.addon === page.addon.name &&
+        page.viewType === owned.viewType &&
+        !filledOwnedIds.has(page.id)
+      ) {
+        filledOwnedIds.add(page.id)
+        return true
+      }
       if (takenIds.has(page.id)) {
         warnOnce(page, 'a built-in page or another addon already uses that id')
         return false
       }
-      if (page.viewType && (isBuiltInViewType(page.viewType) || takenViewTypes.has(page.viewType))) {
+      if (
+        page.viewType &&
+        (isBuiltInViewType(page.viewType) || takenViewTypes.has(page.viewType))
+      ) {
         warnOnce(page, `AYON or another page already uses the view type "${page.viewType}"`)
         return false
       }
