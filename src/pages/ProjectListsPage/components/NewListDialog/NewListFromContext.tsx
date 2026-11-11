@@ -22,7 +22,11 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
   const [listForm, setListForm] = useState<NewListForm | null>(null)
 
   // list folders are a powerpack feature; same cache entry as the lists table, fetched once the dialog opens
-  const { data: listFolders = [], isSuccess: foldersLoaded } = useGetEntityListFoldersQuery(
+  const {
+    data: listFolders = [],
+    isSuccess: foldersLoaded,
+    isError: foldersFailed,
+  } = useGetEntityListFoldersQuery(
     { projectName },
     { skip: !newListData || !powerLicense || !projectName },
   )
@@ -61,8 +65,18 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
     }
   }, [foldersLoaded, folderOptions, listForm?.entityListFolderId])
 
-  const handleSubmit = () => {
-    if (!listForm) return
+  const [isCreating, setIsCreating] = useState(false)
+  // a chosen folder can only be checked once folders load; until then creating would drop it to the root.
+  // If they fail to load, the folder isn't offered and the list goes to the root instead of blocking.
+  const folderPending =
+    !!powerLicense &&
+    !!projectName &&
+    !!listForm?.entityListFolderId &&
+    !foldersLoaded &&
+    !foldersFailed
+
+  const handleSubmit = async (keepOpen?: boolean) => {
+    if (!listForm || folderPending) return
     // a folder that isn't offered (no license, other scope) is never sent
     const entityListFolderId = folderOptions.some((o) => o.value === listForm.entityListFolderId)
       ? listForm.entityListFolderId || undefined
@@ -74,7 +88,22 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
         projectName,
       )
     }
-    createNewList(listForm.label, { entityListFolderId })
+    setIsCreating(true)
+    try {
+      await createNewList(listForm.label, { entityListFolderId, keepOpen })
+    } finally {
+      setIsCreating(false)
+    }
+    // the same entities and folder stay for the next list, only the label is fresh
+    if (keepOpen) {
+      setListForm(
+        (prev) =>
+          prev && {
+            ...prev,
+            label: listDefaultName(isReview ? 'Review' : undefined),
+          },
+      )
+    }
   }
 
   if (!listForm) return null
@@ -83,7 +112,10 @@ const NewListFromContext: FC<NewListFromContextProps> = ({}) => {
     <NewListDialog
       form={listForm}
       onChange={setListForm}
-      onSubmit={handleSubmit}
+      // the context shows creation errors itself
+      onSubmit={() => handleSubmit().catch(() => {})}
+      onSubmitAndContinue={() => handleSubmit(true)}
+      submitLoading={isCreating || folderPending}
       onClose={closeCreateNewList}
       isOpen
       hidden={['entityType']}

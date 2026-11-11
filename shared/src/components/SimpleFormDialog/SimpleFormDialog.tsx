@@ -40,7 +40,16 @@ export const SimpleFormDialog = ({
   // errors show once a submit was blocked, then follow the values: fixing one clears it
   const [showErrors, setShowErrors] = useState(false)
 
-  if (!isOpen) return null
+  if (!isOpen) {
+    // SimpleForm unmounts while closed and reseeds on reopen: start that opening clean,
+    // without the last opening's values or its blocked submit
+    if (showErrors || Object.keys(formData).length || Object.keys(errors).length) {
+      setFormData({})
+      setErrors({})
+      setShowErrors(false)
+    }
+    return null
+  }
 
   const handleChange = (values: SimpleFormValueDict, valueErrors: SimpleFormErrors) => {
     setFormData(values)
