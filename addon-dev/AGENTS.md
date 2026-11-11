@@ -118,7 +118,10 @@ of AYON:
   (`?slot=…&contribution=…&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…`, and
   `scene=<package>:<id>&ctxValues=<JSON>` for a preview scene).
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
-  key when there is one (no login page); without a key the page shows AYON's login.
+  key when there is one (no login page); without a key the page shows AYON's login. The key is read
+  for every request (the workbench's `data/local-api-key` changes when its stack is reset), and a
+  request that is signed in already (you signed in on the page, or it sends its own key) goes
+  without it: the server checks the key first, so it would override your sign-in.
 - It needs a `@ynput/ayon-frontend-shared` build with the addon SDK (until one is released:
   `yarn copy-shared <ayon-frontend>` after `yarn build:shared` there).
 

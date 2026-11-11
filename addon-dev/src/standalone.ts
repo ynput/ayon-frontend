@@ -3,12 +3,12 @@
 // the dev server to the real server, signed in with the API key; preview fixtures are read and
 // written under dev/fixtures.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
-import type { IncomingMessage, ServerResponse } from 'http'
+import type { ClientRequest, IncomingMessage, ServerResponse } from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin, ProxyOptions } from 'vite'
 import { contractsCode } from './contractSlots.js'
-import { findConnection, findPackageDir } from './project.js'
+import { currentApiKey, findConnection, findPackageDir, proxyApiKey } from './project.js'
 import type { AddonProject } from './project.js'
 
 export const STANDALONE_ENV = 'AYON_ADDON_STANDALONE'
@@ -105,11 +105,22 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
     apply: (_config, { command }) => command === 'serve' && process.env[STANDALONE_ENV] === '1',
 
     config() {
-      const headers: Record<string, string> = connection.apiKey ? { 'x-api-key': connection.apiKey } : {}
+      const signIn = (proxyReq: ClientRequest, req: IncomingMessage) => {
+        const key = proxyApiKey(req.headers, () => currentApiKey(connection))
+        if (key) proxyReq.setHeader('x-api-key', key)
+      }
       const proxy: Record<string, ProxyOptions> = Object.fromEntries(
         PROXIED.map((prefix) => [
           prefix,
-          { target: connection.serverUrl, changeOrigin: true, ws: prefix === '/ws', headers },
+          {
+            target: connection.serverUrl,
+            changeOrigin: true,
+            ws: prefix === '/ws',
+            configure: (server) => {
+              server.on('proxyReq', signIn)
+              server.on('proxyReqWs', signIn)
+            },
+          },
         ]),
       )
       const sharedDir = findPackageDir(root, SHARED)

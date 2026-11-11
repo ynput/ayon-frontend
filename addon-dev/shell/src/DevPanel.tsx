@@ -495,11 +495,13 @@ const Fixtures = ({ mode, selection }: Pick<DevPanelProps, 'mode' | 'selection'>
 
 const LiveStatus = ({ options }: { options: ShellOptions }) => {
   const { data: user } = useGetCurrentUserQuery()
+  // signed in on the page: the dev server then sends no key (proxyApiKey)
+  const withKey = options.signedInWithKey && !localStorage.getItem('accessToken')
   return (
     <small title={`${user?.name} at ${options.serverUrl}`}>
       {user?.name} @ {options.serverUrl.replace(/^https?:\/\//, '')}
-      {options.signedInWithKey ? ' · API key' : ''}
-      {!options.signedInWithKey && (
+      {withKey ? ' · API key' : ''}
+      {!withKey && (
         <>
           {' · '}
           <a
