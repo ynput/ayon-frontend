@@ -108,6 +108,8 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   const namesRef = useRef(null)
   const anatomyRef = useRef(null)
   const [label, setLabel] = useState('')
+  // counts projects made with the dialog kept open, to start the label and name field over for each
+  const [createdCount, setCreatedCount] = useState(0)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [codeSet, setCodeSet] = useState(false)
@@ -188,6 +190,8 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         setCode('')
         setCodeSet(false)
         setErrors({})
+        // forget a name typed by hand, so the next name is generated from its label again
+        setCreatedCount((count) => count + 1)
         namesRef.current?.querySelector('input')?.focus()
       })
       .catch((error) => {
@@ -324,6 +328,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         <FormRow style={{ alignItems: 'flex-start' }}>
           <div ref={namesRef} style={{ flex: '1 1 320px', minWidth: 0 }}>
             <LabelWithNameField
+              key={createdCount}
               labelValue={label}
               onLabelChange={setLabel}
               labelError={errors.label}

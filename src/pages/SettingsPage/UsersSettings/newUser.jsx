@@ -16,10 +16,10 @@ import {
   writeDialogMemory,
 } from '@shared/util'
 
-// the access a new user gets, kept for the session: users are often added in batches with the same access
+// the access groups a new user gets, kept for the session: users are often added in batches with the same access.
+// never the user level: a remembered admin or manager level would make the next users admins or managers by accident
 const ACCESS_MEMORY = 'new-user-access'
-const pickAccess = ({ userLevel, accessGroups, defaultAccessGroups }) => ({
-  userLevel,
+const pickAccess = ({ accessGroups, defaultAccessGroups }) => ({
   accessGroups,
   defaultAccessGroups,
 })
@@ -47,7 +47,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   // start each new user with the access the last one got
   useEffect(() => {
-    if (open) setFormData({ ...initFormData, ...readDialogMemory(ACCESS_MEMORY) })
+    if (open) setFormData({ ...initFormData, ...pickAccess(readDialogMemory(ACCESS_MEMORY)) })
   }, [open])
 
   const resetFormData = ({ password, passwordConfirm, formData, addedUsers }) => {
