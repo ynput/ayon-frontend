@@ -2,7 +2,9 @@
 // `ayon-addon dev` serves (vite.ts). Not for addon code.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { registerManifest, registerManifests, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { buildContract, contractManifests, setContracts } from './contractModel'
+import type { ContractModule } from './contractModel'
 import { provideShellHost } from './host'
 import { installNetwork, setFixture } from './network'
 import { readSelection, writeSelection } from './params'
@@ -25,11 +27,34 @@ const loadFixture = async (name: string): Promise<Fixture | undefined> => {
   return fixture
 }
 
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
+
+// the declarations and previews of the contract packages (the dev server imports them)
+const loadContracts = (modules: ContractModule[] = []) =>
+  Promise.all(
+    modules.map(async (module) => {
+      const loaded: Parameters<typeof buildContract>[1] = {}
+      await module
+        .slots()
+        .then((m) => (loaded.slots = m.slots))
+        .catch((error) => (loaded.slotsError = message(error)))
+      await module
+        .previews?.()
+        .then((m) => (loaded.previews = m.previews))
+        .catch((error) => (loaded.previewsError = message(error)))
+      return buildContract(module, loaded)
+    }),
+  )
+
 export const startShell = async (options: ShellOptions) => {
   const preview = readSelection().preview
   const mode = preview ? 'preview' : 'live'
   installNetwork(mode)
   provideShellHost()
+  // the slots of other addons, as if those addons were installed: contributions to them register
+  const contracts = await loadContracts(options.contracts)
+  setContracts(contracts)
+  registerManifests(contractManifests(contracts, options.addon.name) as never)
   registerManifest(options.addon, options.manifest)
   setManifestsLoading(false)
 

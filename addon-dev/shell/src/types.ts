@@ -1,4 +1,5 @@
 import type { AddonInfo, EntityRef, SlotName } from '@ynput/ayon-addon'
+import type { ContractModule } from './contractModel'
 
 /** What the dev server's virtual entry passes to startShell. */
 export interface ShellOptions {
@@ -9,6 +10,10 @@ export interface ShellOptions {
   serverUrl: string
   /** the dev server sends AYON_API_KEY (or the workbench key) with every proxied request */
   signedInWithKey: boolean
+  /** the contract packages among the addon's dependencies: other addons' slots and their previews */
+  contracts?: ContractModule[]
+  /** contract packages the dev server couldn't read (their package.json) */
+  contractProblems?: string[]
 }
 
 /** What the shell shows, kept in the URL so `ayon-addon open` and bookmarks can set it. */
@@ -24,6 +29,8 @@ export interface ShellSelection {
   entities: EntityRef[]
   /** the project table page for the projectTable and table slots */
   page?: 'overview' | 'products' | 'lists'
+  /** another addon's slot: the preview case, by its index in the slot's cases */
+  previewCase?: number
   /** a fixture name: preview mode, no server */
   preview?: string
 }

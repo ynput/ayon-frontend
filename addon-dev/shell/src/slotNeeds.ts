@@ -1,4 +1,6 @@
-// what the developer panel asks for, per slot
+// what the developer panel asks for, per slot; other addons' slots take a preview case instead
+import { contractSlot } from './contractModel'
+
 const NO_PROJECT: string[] = [
   'studio.page',
   'header.item',
@@ -34,10 +36,12 @@ const RUN: string[] = [
   'userDetails.menuItem',
 ]
 
-export const needsProject = (slot?: string) => !!slot && !NO_PROJECT.includes(slot)
+export const needsProject = (slot?: string) =>
+  !!slot && !NO_PROJECT.includes(slot) && !contractSlot(slot)
 export const needsProjects = (slot?: string) => !!slot && PROJECTS.includes(slot)
 export const needsEntities = (slot?: string) => !!slot && ENTITIES.includes(slot)
 export const needsTablePage = (slot?: string) => !!slot && TABLE_PAGE.includes(slot)
-export const isMenuSlot = (slot?: string) => !!slot && RUN.includes(slot)
+export const isMenuSlot = (slot?: string) =>
+  !!slot && (RUN.includes(slot) || contractSlot(slot)?.kind === 'menu')
 
 export const ENTITY_TYPES = ['folder', 'task', 'product', 'version'] as const

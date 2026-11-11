@@ -414,3 +414,30 @@ main.ayon-shell-stage {
 .ayon-shell-table tr.selected td {
   background: var(--md-sys-color-primary-container);
 }
+/* another addon's slot without a frame in its previews: just its place */
+.ayon-shell-plain-frame {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: flex-start;
+  min-width: 240px;
+  max-width: 100%;
+  padding: 12px;
+  border: 1px dashed var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+}
+.ayon-shell-menu-target {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 4px;
+  color: var(--md-sys-color-outline);
+  background: var(--md-sys-color-surface-container);
+  cursor: context-menu;
+}
+.ayon-shell-body[data-shell-surface='contract-slot'] {
+  align-items: flex-start;
+  padding: 16px;
+  overflow: auto;
+}

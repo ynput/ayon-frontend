@@ -46,7 +46,11 @@ import {
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
+import type { SlotName } from '@ynput/ayon-addon'
+import { contractSlot, getContracts, noPreviewsNote } from './contractModel'
+import type { ContractSlot, PreviewFrame } from './contractModel'
 import { StudioSelectionProvider } from './host'
+import { useShellMenu } from './menus'
 import { needsProject } from './slotNeeds'
 import { ButtonItem, ServiceNote } from './parts'
 import { PreviewStage } from './PreviewStage'
@@ -611,6 +615,66 @@ const TableStage = ({ contribution, selection }: StageProps) => {
   )
 }
 
+// a frame for a slot whose previews have none: the slot's place, nothing of the addon's UI
+const PlainFrame: PreviewFrame = ({ children }) => (
+  <div className="ayon-shell-plain-frame">{children}</div>
+)
+
+// another addon's slot (from a contract package): the contribution with the picked preview case's
+// context, inside the frame the previews give (a stand-in of that addon's UI around the slot).
+// Components render in it; menu items are a right-click menu and a button, run like AYON runs them.
+const ContractSlotStage = ({
+  contribution,
+  selection,
+  slot,
+}: StageProps & { slot: ContractSlot }) => {
+  const cases = slot.preview?.cases || []
+  const picked = cases[selection.previewCase || 0] ?? cases[0]
+  const context = picked?.context
+  const isMenu = slot.kind === 'menu'
+  useReport(contribution, context, !!context && slot.kind !== 'other', isMenu)
+  const makeContext = useCallback(() => context || {}, [context])
+  const { openContextMenu } = useShellMenu(slot.name as SlotName, makeContext)
+
+  if (!picked) {
+    const contract = getContracts().find((c) => c.package === slot.package)
+    return <Hint>{noPreviewsNote(slot, contract)}</Hint>
+  }
+  if (slot.kind === 'other') {
+    return (
+      <Hint>
+        The shell renders slots with a component piece and runs those with a run piece; {slot.name} has{' '}
+        {slot.pieces.join(', ') || 'no pieces'}.
+      </Hint>
+    )
+  }
+  const Frame = slot.preview?.frame || PlainFrame
+  const item = contribution as { label?: string; icon?: string }
+  return (
+    <div className="ayon-shell-body" data-shell-surface="contract-slot">
+      <Frame context={context!}>
+        {isMenu ? (
+          <div
+            className="ayon-shell-menu-target"
+            data-shell-menu="context"
+            onContextMenu={(e) => openContextMenu(e)}
+          >
+            <span>Right-click for the {slot.addon} menu with this addon&apos;s items</span>
+            <Button
+              icon={item.icon as never}
+              label={item.label}
+              data-shell-action="run"
+              onClick={() => runContribution(contribution as never, context as never)}
+            />
+          </div>
+        ) : (
+          <ContributionView contribution={contribution as never} context={context as never} />
+        )}
+      </Frame>
+    </div>
+  )
+}
+
 // registered by the shell (host.tsx)
 const getHostComponents = () =>
   getHost().components as Required<NonNullable<ReturnType<typeof getHost>['components']>>
@@ -644,6 +708,14 @@ export const Stage = ({
     return (
       <main className="ayon-shell-stage">
         <PreviewStage contribution={contribution} selection={selection} />
+      </main>
+    )
+  }
+  const declared = contractSlot(contribution.slot)
+  if (declared) {
+    return (
+      <main className="ayon-shell-stage" data-shell-slot={contribution.slot}>
+        <ContractSlotStage contribution={contribution} selection={selection} slot={declared} />
       </main>
     )
   }

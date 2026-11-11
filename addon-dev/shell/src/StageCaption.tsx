@@ -4,6 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
 import { SLOT_DOCS } from '@ynput/ayon-addon/check'
 import type { SlotName } from '@ynput/ayon-addon'
+import { contractSlot } from './contractModel'
 import { slotIcon, slotPath } from './slotGroups'
 import type { ShellSelection } from './types'
 
@@ -32,7 +33,7 @@ export const StageCaption = ({
           </span>
         </div>
         <small>
-          {SLOT_DOCS[slot as SlotName]?.where} · <code>{slot}</code>
+          {SLOT_DOCS[slot as SlotName]?.where || contractSlot(slot)?.description} · <code>{slot}</code>
         </small>
       </div>
       <span className={`ayon-shell-chip ${mode}`}>

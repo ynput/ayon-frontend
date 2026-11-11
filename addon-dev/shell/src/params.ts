@@ -1,5 +1,5 @@
 import type { EntityRef, SlotName } from '@ynput/ayon-addon'
-import { isKnownSlot } from '@ynput/ayon-addon/host'
+import { getRegistry, isKnownSlot } from '@ynput/ayon-addon/host'
 import type { ShellSelection } from './types'
 
 // ?slot=detailsPanel.tab&contribution=comments&ctxProject=demo&ctxEntities=task:<id>,task:<id>
@@ -12,10 +12,14 @@ export const PARAMS = {
   entities: 'ctxEntities',
   entityType: 'ctxEntityType',
   page: 'ctxPage',
+  previewCase: 'ctxCase',
   preview: 'preview',
 } as const
 
 const PAGES = ['overview', 'products', 'lists'] as const
+
+// AYON's slots, and those addons declare (the addon itself, its contract packages)
+const isSlot = (slot: string) => isKnownSlot(slot) || getRegistry().slots.some((s) => s.name === slot)
 
 const parseEntities = (value: string | null, projectName?: string): EntityRef[] =>
   (value || '')
@@ -34,14 +38,16 @@ export const readSelection = (search = window.location.search): ShellSelection =
   const projectName = params.get(PARAMS.project) || undefined
   const page = params.get(PARAMS.page) as ShellSelection['page'] | null
   const entities = parseEntities(params.get(PARAMS.entities), projectName)
+  const previewCase = Number(params.get(PARAMS.previewCase))
   return {
-    slot: slot && isKnownSlot(slot) ? (slot as SlotName) : undefined,
+    slot: slot && isSlot(slot) ? (slot as SlotName) : undefined,
     id: params.get(PARAMS.id) || undefined,
     projectName,
     projectNames: params.get(PARAMS.projects)?.split(',').filter(Boolean),
     entityType: entities[0]?.entityType || params.get(PARAMS.entityType) || undefined,
     entities,
     page: page && PAGES.includes(page) ? page : undefined,
+    previewCase: Number.isInteger(previewCase) && previewCase > 0 ? previewCase : undefined,
     preview: params.get(PARAMS.preview) || undefined,
   }
 }
@@ -57,6 +63,7 @@ export const writeSelection = (selection: ShellSelection) => {
   set(PARAMS.project, selection.projectName)
   set(PARAMS.projects, selection.projectNames?.join(',') || undefined)
   set(PARAMS.page, selection.page)
+  set(PARAMS.previewCase, selection.previewCase ? String(selection.previewCase) : undefined)
   set(
     PARAMS.entities,
     selection.entities.map((entity) => `${entity.entityType}:${entity.id}`).join(',') || undefined,

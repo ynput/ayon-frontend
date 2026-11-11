@@ -18,7 +18,9 @@ import {
 import { JsonViewer } from '@ynput/ayon-frontend-shared/components'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { getUnmatched, onUnmatched } from './network'
-import { SLOT_AREAS } from './slotGroups'
+import { contractSlot, getContracts, noPreviewsNote } from './contractModel'
+import { slotAreas } from './slotGroups'
+import type { SlotArea } from './slotGroups'
 import {
   ENTITY_TYPES,
   isMenuSlot,
@@ -79,21 +81,30 @@ const Contribution = ({
 }
 
 // by area of AYON, then by its part and slot; an area's single slot needs no label of its own
-const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
+// then the slots of other addons, an area per contract package
+const Contributions = ({
+  selection,
+  onChange,
+  contractProblems = [],
+}: Pick<DevPanelProps, 'selection' | 'onChange'> & { contractProblems?: string[] }) => {
   const { contributions, skipped } = getRegistry()
   const [collapsed, setCollapsed] = useState<string[]>([])
-  const known = SLOT_AREAS.flatMap((area) => area.sections.flatMap((s) => s.slots.map((x) => x.slot as string)))
+  const known = slotAreas().flatMap((area) => area.sections.flatMap((s) => s.slots.map((x) => x.slot as string)))
   const other = [...new Set(contributions.map((c) => c.slot))].filter((slot) => !known.includes(slot))
-  const areas = other.length
+  const areas: SlotArea[] = other.length
     ? [
-        ...SLOT_AREAS,
+        ...slotAreas(),
         {
           label: 'Other',
           icon: 'extension',
           sections: [{ label: undefined, slots: other.map((slot) => ({ slot, label: slot })) }],
         },
       ]
-    : SLOT_AREAS
+    : slotAreas()
+  const problems = [
+    ...contractProblems,
+    ...getContracts().flatMap((contract) => contract.problems.map((problem) => `${contract.package}: ${problem}`)),
+  ]
 
   return (
     <>
@@ -116,6 +127,7 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
           <section key={area.label} className="ayon-shell-area">
             <button
               className="ayon-shell-area-header"
+              title={area.package ? `Slots of another addon, from ${area.package}` : undefined}
               aria-expanded={!isCollapsed}
               onClick={() =>
                 setCollapsed(
@@ -134,7 +146,7 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
                   {slotCount > 1 && (
                     <div
                       className="ayon-shell-slot-label"
-                      title={`${slot}: ${SLOT_DOCS[slot as SlotName]?.where || ''}`}
+                      title={`${slot}: ${SLOT_DOCS[slot as SlotName]?.where || contractSlot(slot)?.description || ''}`}
                     >
                       {section && <span>{section}</span>}
                       {label}
@@ -145,7 +157,9 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
                       key={c.key}
                       contribution={c}
                       selected={selection.slot === slot && selection.id === idOf(c)}
-                      onClick={() => onChange({ ...selection, slot: slot as SlotName, id: idOf(c) })}
+                      onClick={() =>
+                        onChange({ ...selection, slot: slot as SlotName, id: idOf(c), previewCase: undefined })
+                      }
                     />
                   ))}
                 </div>
@@ -153,6 +167,16 @@ const Contributions = ({ selection, onChange }: Pick<DevPanelProps, 'selection' 
           </section>
         )
       })}
+      {problems.length > 0 && (
+        <section className="ayon-shell-area">
+          <div className="ayon-shell-slot-label">Contract packages</div>
+          {problems.map((problem) => (
+            <div key={problem} className="ayon-addon-error" role="alert">
+              {problem}
+            </div>
+          ))}
+        </section>
+      )}
       {skipped.length > 0 && (
         <section className="ayon-shell-area">
           <div className="ayon-shell-slot-label">Skipped</div>
@@ -436,6 +460,33 @@ const ContextPreview = () => {
   )
 }
 
+// another addon's slot: the cases of its contract package's previews, else how to add some
+const PreviewCases = ({ selection, onChange }: Pick<DevPanelProps, 'selection' | 'onChange'>) => {
+  const slot = contractSlot(selection.slot)
+  if (!slot) return null
+  const cases = slot.preview?.cases || []
+  if (!cases.length) {
+    const contract = getContracts().find((c) => c.package === slot.package)
+    return (
+      <small className="ayon-shell-note" data-shell-note="no-previews">
+        {noPreviewsNote(slot, contract)}
+      </small>
+    )
+  }
+  return (
+    <div className="ayon-shell-fields">
+      <Field label="Case">
+        <Dropdown
+          value={[String(selection.previewCase || 0)]}
+          options={cases.map((c, index) => ({ value: String(index), label: c.label }))}
+          onChange={(picked) => onChange({ ...selection, previewCase: Number(picked[0]) || undefined })}
+        />
+      </Field>
+      <small className="ayon-shell-note">From {slot.package}: the context AYON&apos;s {slot.addon} addon passes.</small>
+    </div>
+  )
+}
+
 // the context the shell gives the contribution on stage: what it is picked from, in a fixed order
 const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'options'>) => {
   const contribution = getRegistry().contributions.find(
@@ -443,6 +494,7 @@ const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'option
   )
   const slot = contribution?.slot
   const live = mode === 'live'
+  const fromContract = live && !!contractSlot(slot)
   const pickers = live && !!slot && (needsProject(slot) || needsProjects(slot) || needsEntities(slot))
   return (
     <>
@@ -451,7 +503,9 @@ const ContextPanel = ({ mode, selection, onChange }: Omit<DevPanelProps, 'option
         <small className="ayon-shell-note">Pick a contribution.</small>
       ) : (
         <>
-          {pickers ? (
+          {fromContract ? (
+            <PreviewCases selection={selection} onChange={onChange} />
+          ) : pickers ? (
             <div className="ayon-shell-fields">
               {needsProject(slot) && <ProjectPicker selection={selection} onChange={onChange} />}
               {needsProjects(slot) && <ProjectsPicker selection={selection} onChange={onChange} />}
@@ -515,6 +569,7 @@ export const DevPanel = ({ options, mode, selection, onChange }: DevPanelProps) 
           <h3>Contributions</h3>
           <Contributions
             selection={selection}
+            contractProblems={options.contractProblems}
             // in preview another contribution opens live: the fixture is for one contribution
             onChange={
               mode === 'preview'

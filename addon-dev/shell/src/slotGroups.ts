@@ -1,16 +1,20 @@
 // The developer panel's contributions, by the area of AYON they show in, then by the part of that
 // area (the project's tables, the studio's project list), then by slot.
 import type { SlotName } from '@ynput/ayon-addon'
+import { contractAreas } from './contractModel'
 
 export interface SlotSection {
   /** the part of the area; none for the area's own slots */
   label?: string
-  slots: { slot: SlotName; label: string }[]
+  /** AYON's slots, or another addon's (`<addon>.<name>`) */
+  slots: { slot: SlotName | (string & {}); label: string }[]
 }
 
 export interface SlotArea {
   label: string
   icon: string
+  /** the contract package an area of another addon's slots comes from */
+  package?: string
   sections: SlotSection[]
 }
 
@@ -84,9 +88,12 @@ export const SLOT_AREAS: SlotArea[] = [
   },
 ]
 
+/** AYON's areas, then one per contract package (the slots of other addons). */
+export const slotAreas = (): SlotArea[] => [...SLOT_AREAS, ...contractAreas()]
+
 /** Where a slot is, as labels from its area down: Project › Tables › Cell menu. */
 export const slotPath = (slot: string): string[] => {
-  for (const area of SLOT_AREAS) {
+  for (const area of slotAreas()) {
     for (const section of area.sections) {
       const found = section.slots.find((s) => s.slot === slot)
       if (found) return [area.label, ...(section.label ? [section.label] : []), found.label]
@@ -98,5 +105,5 @@ export const slotPath = (slot: string): string[] => {
 
 /** The icon of a slot's area. */
 export const slotIcon = (slot: string) =>
-  SLOT_AREAS.find((area) => area.sections.some((s) => s.slots.some((x) => x.slot === slot)))?.icon ||
+  slotAreas().find((area) => area.sections.some((s) => s.slots.some((x) => x.slot === slot)))?.icon ||
   'extension'

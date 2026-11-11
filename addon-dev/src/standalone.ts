@@ -7,12 +7,15 @@ import type { IncomingMessage, ServerResponse } from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin, ProxyOptions } from 'vite'
+import { contractsCode } from './contractSlots.js'
 import { findConnection, findPackageDir } from './project.js'
 import type { AddonProject } from './project.js'
 
 export const STANDALONE_ENV = 'AYON_ADDON_STANDALONE'
 const ENTRY = '/@ayon-addon/shell-entry'
 const VIRTUAL_ENTRY = '\0ayon-addon-shell-entry'
+const CONTRACTS = '/@ayon-addon/contracts'
+const VIRTUAL_CONTRACTS = '\0ayon-addon-contracts'
 const FIXTURES_URL = '/__ayon-addon/fixtures'
 // what AYON serves itself: proxied to the server
 const PROXIED = ['/api', '/graphql', '/ws', '/addons', '/static', '/AYON.svg']
@@ -138,9 +141,11 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
 
     resolveId(id) {
       if (id === ENTRY) return VIRTUAL_ENTRY
+      if (id === CONTRACTS) return VIRTUAL_CONTRACTS
     },
 
     load(id) {
+      if (id === VIRTUAL_CONTRACTS) return contractsCode(root, project.name)
       if (id !== VIRTUAL_ENTRY) return
       const shellOptions = {
         addon: { name: project.name, version: project.version, remote },
@@ -151,8 +156,9 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
         ...globalStyles(root).map((css) => `import ${JSON.stringify(css)}`),
         `import '@ynput/ayon-addon-dev/shell/style.css'`,
         `import manifest from ${JSON.stringify(`/${manifest}`)}`,
+        `import { contracts, contractProblems } from ${JSON.stringify(CONTRACTS)}`,
         `import { startShell } from '@ynput/ayon-addon-dev/shell'`,
-        `startShell({ ...${JSON.stringify(shellOptions)}, manifest })`,
+        `startShell({ ...${JSON.stringify(shellOptions)}, manifest, contracts, contractProblems })`,
       ].join('\n')
     },
 
