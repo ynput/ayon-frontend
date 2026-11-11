@@ -6,7 +6,7 @@
 // its row in "Slots here" is hovered. Unused slots get a "+ label" placeholder where a
 // contribution would go, with Show unused slots on (or while focused).
 import { useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
-import type { ReactNode } from 'react'
+import type { ReactNode, RefObject } from 'react'
 import { createPortal } from 'react-dom'
 import { runContribution } from '@ynput/ayon-addon'
 import { getRegistry } from '@ynput/ayon-addon/host'
@@ -68,25 +68,108 @@ export const slotInfo = (slot: string) => {
 
 const isUsed = (slot: string) => getRegistry().contributions.some((c) => c.slot === slot)
 
-const PLACEHOLDER_TIP = 'Your contribution would appear here.'
-
 /** Whether a slot shows its placeholder: unused, with Show unused slots on or while focused. */
 export const usePlaceholderShown = (slot: string) => {
   const overlay = useSlotOverlay()
   return !isUsed(slot) && (overlay.showUnused || overlay.focusSlot === slot)
 }
 
-/** "+ label" where an unused slot's contributions would go; nothing for a used slot. */
+type At = { left: number; top: number }
+
+/**
+ * Where a placeholder sits when a box around it cuts it off (a narrow badge area, a cell):
+ * there, its label is drawn above the page instead, whole. Not when it is scrolled out of view.
+ */
+// the ancestors that can cut an element off (a display: contents box clips nothing)
+const clippingAncestors = (element: HTMLElement) => {
+  const found: HTMLElement[] = []
+  for (let parent = element.parentElement; parent && parent !== document.body; parent = parent.parentElement) {
+    const style = getComputedStyle(parent)
+    if (style.display === 'contents') continue
+    if (style.overflowX === 'visible' && style.overflowY === 'visible') continue
+    found.push(parent)
+  }
+  return found
+}
+
+const clippedAt = (element: HTMLElement): At | undefined => {
+  const rect = element.getBoundingClientRect()
+  if (!rect.width && !rect.height) return undefined
+  for (const parent of clippingAncestors(element)) {
+    const box = parent.getBoundingClientRect()
+    const outside = rect.right <= box.left || rect.left >= box.right || rect.bottom <= box.top || rect.top >= box.bottom
+    if (outside) return undefined
+    const cut = rect.left < box.left - 0.5 || rect.right > box.right + 0.5 || rect.top < box.top - 0.5 || rect.bottom > box.bottom + 0.5
+    if (cut) return { left: rect.left, top: rect.top }
+  }
+  return undefined
+}
+
+const useClippedAt = (ref: RefObject<HTMLElement | null>, shown: boolean) => {
+  const [at, setAt] = useState<At>()
+  useLayoutEffect(() => {
+    const element = ref.current
+    if (!shown || !element) {
+      setAt(undefined)
+      return
+    }
+    let frame = 0
+    const measure = () => {
+      cancelAnimationFrame(frame)
+      frame = requestAnimationFrame(() =>
+        setAt((current) => {
+          const next = clippedAt(element)
+          return next?.left === current?.left && next?.top === current?.top ? current : next
+        }),
+      )
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(element)
+    // a narrower container cuts the chip off without resizing it
+    for (const parent of clippingAncestors(element)) observer.observe(parent)
+    window.addEventListener('scroll', measure, true)
+    window.addEventListener('resize', measure)
+    return () => {
+      cancelAnimationFrame(frame)
+      observer.disconnect()
+      window.removeEventListener('scroll', measure, true)
+      window.removeEventListener('resize', measure)
+    }
+  }, [ref, shown])
+  return at
+}
+
+/**
+ * "+ label" where an unused slot's contributions would go; nothing for a used slot. Its whole
+ * label shows, also where the page has room for a badge only.
+ */
 export const Placeholder = ({ slot, label }: { slot: string; label?: string }) => {
   const overlay = useSlotOverlay()
   const shown = usePlaceholderShown(slot)
+  const chip = useRef<HTMLSpanElement>(null)
+  const at = useClippedAt(chip, shown)
   if (!shown) return null
+  const title = label || slotInfo(slot).label
+  const tip = `${title} — your contribution would appear here.`
   const active = overlay.focusSlot === slot || overlay.highlighted === slot
   return (
     <span className={`ayon-dev-slot${active ? ' active' : ''}`} data-ayon-dev-slot={slot}>
-      <span className="ayon-dev-slot-chip" title={PLACEHOLDER_TIP}>
-        + {label || slotInfo(slot).label}
+      <span ref={chip} className="ayon-dev-slot-chip" title={tip} style={at ? { visibility: 'hidden' } : undefined}>
+        + {title}
       </span>
+      {at &&
+        createPortal(
+          <span
+            className={`ayon-dev-slot-callout${active ? ' active' : ''}`}
+            data-ayon-dev-callout={slot}
+            title={tip}
+            style={{ left: at.left, top: at.top }}
+          >
+            + {title}
+          </span>,
+          document.body,
+        )}
     </span>
   )
 }
@@ -158,6 +241,23 @@ export const FocusFrame = ({
           document.body,
         )}
     </span>
+  )
+}
+
+/**
+ * The focused contribution's entry in an open menu, highlighted. AYON's menus give each addon
+ * item the contribution's key as its id (useSlotMenuItems, the shared menu builders).
+ */
+export const FocusedMenuItemStyle = () => {
+  const { focusKey } = useSlotOverlay()
+  if (!focusKey) return null
+  const id = focusKey.replace(/["\\]/g, '\\$&')
+  return (
+    <style>{`[role="menuitem"][id="${id}"] {
+  outline: 2px solid var(--md-sys-color-tertiary);
+  outline-offset: -2px;
+  background: color-mix(in srgb, var(--md-sys-color-tertiary) 12%, transparent);
+}`}</style>
   )
 }
 

@@ -356,11 +356,33 @@ main.ayon-shell-stage {
 .ayon-shell-caption-text code {
   font-size: 11px;
 }
-.ayon-shell-caption-path {
-  color: var(--md-sys-color-outline);
+.ayon-shell-caption-text > .ayon-shell-caption-title {
+  align-items: center;
+  gap: 4px;
 }
-.ayon-shell-caption-path span + span::before {
-  content: ' › ';
+.ayon-shell-caption-info {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+}
+.ayon-shell-caption-info .icon {
+  font-size: 16px;
+}
+.ayon-shell-caption-info[aria-expanded='true'] {
+  color: var(--md-sys-color-primary);
+}
+.ayon-shell-caption-text small.ayon-shell-caption-slot code {
+  font-size: 11px;
+}
+.ayon-shell-caption-about {
+  display: flex;
+  flex-direction: column;
+}
+.ayon-shell-caption-text .ayon-shell-caption-about small {
+  white-space: normal;
 }
 .ayon-shell-chip {
   flex-shrink: 0;
@@ -491,6 +513,11 @@ main.ayon-shell-stage {
 .ayon-shell-scene-slot.empty > .contribution .icon {
   opacity: 0.6;
 }
+/* the slot of the contribution in focus */
+.ayon-shell-scene-slot.parent-selected > .contribution.ayon-shell-slot-row {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 8%, transparent);
+  box-shadow: inset 2px 0 0 var(--md-sys-color-primary);
+}
 .ayon-shell-scene-slot.hovered > .contribution.ayon-shell-slot-row {
   background: var(--md-sys-color-surface-container-high);
   box-shadow: inset 2px 0 0 var(--md-sys-color-tertiary);
@@ -524,18 +551,17 @@ main.ayon-shell-stage {
   outline: 2px solid var(--md-sys-color-tertiary);
   outline-offset: 1px;
 }
-.ayon-dev-slot > .ayon-dev-slot-chip {
-  /* a flex item in a row, inline in text; block-level, so a long label is cut with … */
+.ayon-dev-slot > .ayon-dev-slot-chip,
+.ayon-dev-slot-callout {
+  /* a flex item in a row, inline in text; never shrunk or cut: a box too narrow for it gets the
+     callout instead (below) */
   display: inline-block;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   align-self: center;
   vertical-align: middle;
   box-sizing: border-box;
-  min-width: 0;
-  max-width: 160px;
   height: 18px;
   padding: 0 6px;
-  overflow: hidden;
   outline: none;
   border: 1px dashed var(--md-sys-color-tertiary);
   border-radius: 4px;
@@ -543,11 +569,18 @@ main.ayon-shell-stage {
   font-weight: normal;
   line-height: 16px;
   white-space: nowrap;
-  text-overflow: ellipsis;
   color: var(--md-sys-color-tertiary);
   background: color-mix(in srgb, var(--md-sys-color-tertiary) 8%, transparent);
   cursor: help;
 }
+/* the placeholder of a box that cuts it off, drawn above the page where it sits */
+.ayon-dev-slot-callout {
+  position: fixed;
+  z-index: 5;
+  background: var(--md-sys-color-surface-container);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+}
+.ayon-dev-slot-callout.active,
 .ayon-dev-slot.active > .ayon-dev-slot-chip {
   border-style: solid;
   color: var(--md-sys-color-on-tertiary);
@@ -638,10 +671,11 @@ main.ayon-shell-stage {
 /* the stage header's how-to line for a focus that isn't on screen yet */
 .ayon-shell-instruction {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 4px;
-}
-.ayon-shell-caption-text small.ayon-shell-instruction {
+  margin: 2px 0 0;
+  font-size: 12px;
+  white-space: normal;
   color: var(--md-sys-color-tertiary);
 }
 .ayon-shell-instruction .icon {
@@ -711,12 +745,27 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
 }
 /* Preview inputs: the drawer below the stage */
 .ayon-shell-inputs {
+  position: relative;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  max-height: 45%;
+  min-height: 0;
   border-top: 1px solid var(--md-sys-color-outline-variant);
   background: var(--md-sys-color-surface-container-low);
+}
+.ayon-shell-inputs-resize {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  right: 0;
+  z-index: 1;
+  height: 6px;
+  cursor: row-resize;
+  touch-action: none;
+}
+.ayon-shell-inputs-resize:hover,
+.ayon-shell-inputs-resize:active {
+  background: color-mix(in srgb, var(--md-sys-color-primary) 40%, transparent);
 }
 .ayon-shell-inputs-header {
   display: flex;
@@ -738,6 +787,9 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   font-size: 18px;
 }
 .ayon-shell-inputs-body {
+  flex: 1;
+  min-height: 0;
+  align-content: start;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;

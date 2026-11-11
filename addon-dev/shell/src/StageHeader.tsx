@@ -1,6 +1,7 @@
 // The lines above the stage: the place on it, how many of its slots this addon uses, and the
 // focus (a slot, or one of its contributions) with how to see it when it isn't on screen yet.
 // Everything under it is AYON (its surfaces, or stand-ins for the app's); the header is the shell's.
+import { useState } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { contributionTitle } from '@ynput/ayon-addon/host'
 import { contributionsTo, findContribution, getPlace, getUsedSlots, slotDeclaration } from './catalog'
@@ -47,11 +48,15 @@ export const StageHeader = ({
 }) => {
   const overlay = useSlotOverlay()
   const place = getPlace(selection.surface)
-  const chip = (
-    <span className={`ayon-shell-chip ${mode}`}>
-      {mode === 'live' ? 'Live data' : `Preview: ${selection.preview}`}
-    </span>
-  )
+  const [info, setInfo] = useState(false)
+  const chip =
+    mode === 'live' ? (
+      <span className="ayon-shell-chip live" title="Server data is live; preview inputs may be examples.">
+        Connected to AYON
+      </span>
+    ) : (
+      <span className="ayon-shell-chip preview">Preview: {selection.preview}</span>
+    )
   if (!place) {
     return (
       <header className="ayon-shell-caption" data-shell-surface="caption">
@@ -68,39 +73,62 @@ export const StageHeader = ({
     focus && overlay.emptyFocus === focus.key
       ? 'Not shown with these inputs.'
       : instruction(place, selection.slot, focus, overlay.mounted)
+  const summary =
+    place.kind === 'other'
+      ? 'No preview'
+      : placeSummary(place, used, contributionsTo('app.service').length).replace(/ used$/, ' slots used')
+  // where the place comes from and what it is: behind (i), not in the header's lines
+  const about = [
+    place.kind === 'scene' ? `Preview scene from ${place.source}` : undefined,
+    place.scene?.description,
+    place.simplified ? 'Simplified preview: some surrounding AYON controls are omitted.' : undefined,
+  ].filter(Boolean) as string[]
   return (
     <header className="ayon-shell-caption" data-shell-surface="caption">
       <Icon icon={place.icon as never} />
       <div className="ayon-shell-caption-text">
-        <div>
+        <div className="ayon-shell-caption-title">
           <strong>{place.label}</strong>
-          {place.kind === 'scene' && (
-            <span className="ayon-shell-caption-path" title={place.scene?.description}>
-              <span>Preview scene from {place.source}</span>
-            </span>
-          )}
-          {place.simplified && (
-            <span className="ayon-shell-chip" title="Some surrounding AYON controls are omitted.">
-              Simplified preview
-            </span>
+          {about.length > 0 && (
+            <button
+              className="ayon-shell-caption-info"
+              aria-label="About this place"
+              aria-expanded={info}
+              title={about.join('\n')}
+              data-shell-action="place-info"
+              onClick={() => setInfo(!info)}
+            >
+              <Icon icon="info" />
+            </button>
           )}
         </div>
-        <small>
-          {place.kind === 'other' ? 'No preview' : `${placeSummary(place, used, contributionsTo('app.service').length).replace(/ used$/, ' slots used')}`}
+        <small data-shell-summary>
+          {summary}
           {slot && (
             <>
               {' · Focus: '}
               <strong>{slot.label}</strong>
-              {focus && ` › ${contributionTitle(focus)}`} <code>{slot.slot}</code>
-              {unused && <span className="ayon-shell-chip">Unused</span>}
+              {focus && ` › ${contributionTitle(focus)}`}
+              {unused && summary !== 'Unused' && <span className="ayon-shell-chip">Unused</span>}
             </>
           )}
-          {!slot && place.scene?.description && ` · ${place.scene.description}`}
         </small>
-        {help && (
-          <small className="ayon-shell-instruction" data-shell-instruction>
-            <Icon icon="info" /> {help}
+        {slot && (
+          <small className="ayon-shell-caption-slot">
+            <code>{slot.slot}</code>
           </small>
+        )}
+        {info && (
+          <div className="ayon-shell-caption-about" data-shell-about>
+            {about.map((line) => (
+              <small key={line}>{line}</small>
+            ))}
+          </div>
+        )}
+        {help && (
+          <p className="ayon-shell-instruction" data-shell-instruction>
+            <Icon icon="info" /> {help}
+          </p>
         )}
       </div>
       {slot && (

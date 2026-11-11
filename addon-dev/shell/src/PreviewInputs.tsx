@@ -2,8 +2,8 @@
 // fields, or the project, the studio's projects, entities and table page for AYON's places), the
 // context the focused contribution received, and the saved examples (preview fixtures). The
 // inputs are the place's, not the focused contribution's: they stay when the focus changes.
-import { useEffect, useState, useSyncExternalStore } from 'react'
-import type { ReactNode } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import type { PointerEvent, ReactNode } from 'react'
 import { Button, Dialog, Dropdown, Icon, InputText } from '@ynput/ayon-react-components'
 import { EntityPicker } from '@ynput/ayon-addon'
 import type { PickableEntityType } from '@ynput/ayon-addon'
@@ -203,9 +203,12 @@ const Disclosure = ({
 // the context the focused contribution got: a few lines, the whole of it in a dialog
 const ContextReceived = ({ selection }: { selection: ShellSelection }) => {
   const context = useSyncExternalStore(subscribeStage, getStageContext)
-  const [open, setOpen] = useState(true)
-  const [dialog, setDialog] = useState(false)
   const focus = findContribution(selection.slot, selection.id)
+  // collapsed until a contribution is in focus: nothing to show before
+  const focusKey = focus?.key
+  const [open, setOpen] = useState(!!focusKey)
+  useEffect(() => setOpen(!!focusKey), [focusKey])
+  const [dialog, setDialog] = useState(false)
   const text = showContext(context)
   return (
     <Disclosure
@@ -321,6 +324,20 @@ const NotInFixture = () => {
   )
 }
 
+const INPUTS_HEIGHT = 'ayon-addon-shell-inputs-height'
+const MIN_HEIGHT = 0.12
+const MAX_HEIGHT = 0.8
+/** The drawer's height, a share of the stage column: about a quarter until resized. */
+const readHeight = () => {
+  try {
+    const stored = Number(localStorage.getItem(INPUTS_HEIGHT))
+    if (stored >= MIN_HEIGHT && stored <= MAX_HEIGHT) return stored
+  } catch {
+    // no storage: the default
+  }
+  return 0.28
+}
+
 export const PreviewInputs = ({
   mode,
   selection,
@@ -330,8 +347,48 @@ export const PreviewInputs = ({
 }: InputsProps & { mode: 'live' | 'preview'; open: boolean; onToggle: () => void }) => {
   const focus = findContribution(selection.slot, selection.id)
   const [valuesOpen, setValuesOpen] = useState(true)
+  const [height, setHeight] = useState(readHeight)
+  const section = useRef<HTMLElement>(null)
+  // drag the top edge: the drawer's share of the column it sits in, kept for the next visit
+  const resize = (e: PointerEvent<HTMLDivElement>) => {
+    const column = section.current?.parentElement
+    if (!column) return
+    e.preventDefault()
+    const { bottom, height: total } = column.getBoundingClientRect()
+    let next = height
+    const move = (event: globalThis.PointerEvent) => {
+      next = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, (bottom - event.clientY) / total))
+      setHeight(next)
+    }
+    const stop = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', stop)
+      try {
+        localStorage.setItem(INPUTS_HEIGHT, String(next))
+      } catch {
+        // a viewer convenience only
+      }
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', stop)
+  }
   return (
-    <section className={`ayon-shell-inputs${open ? ' open' : ''}`} data-shell-surface="preview-inputs">
+    <section
+      ref={section}
+      className={`ayon-shell-inputs${open ? ' open' : ''}`}
+      data-shell-surface="preview-inputs"
+      style={open ? { height: `${height * 100}%` } : undefined}
+    >
+      {open && (
+        <div
+          className="ayon-shell-inputs-resize"
+          role="separator"
+          aria-orientation="horizontal"
+          aria-label="Resize Preview inputs"
+          data-shell-action="resize-inputs"
+          onPointerDown={resize}
+        />
+      )}
       <button className="ayon-shell-inputs-header" aria-expanded={open} onClick={onToggle}>
         <Icon icon={open ? 'expand_more' : 'chevron_right'} />
         <span>Preview inputs</span>
