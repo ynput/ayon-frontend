@@ -112,14 +112,31 @@ export const Facts = styled.dl`
   /* shown on row hover, over the end of the value so it keeps the full width */
   .actions {
     position: absolute;
-    top: 2px;
-    right: 2px;
+    top: 0;
+    bottom: 0;
+    right: 0;
     display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 0 2px;
     border-radius: var(--border-radius-m);
     background-color: var(--md-sys-color-surface-container);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.1s;
+
+    a {
+      display: flex;
+    }
+
+    button {
+      max-height: 28px;
+      padding: 4px;
+
+      .icon {
+        font-size: 20px;
+      }
+    }
   }
 
   .with-icon {
