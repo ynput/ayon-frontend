@@ -110,7 +110,7 @@ test.describe('overview context menu', () => {
       .toBe(target.id)
 
     await overview.rowMenu('a_second', 'Move')
-    // FLAG: picker cells expose selection through a class rather than aria-selected
+    // the picker marks selected cells with a class, not aria-selected
     await expect(destination.locator('.selected')).toBeVisible()
     await expect(destination).toBeInViewport()
     const submit = picker.getByRole('button', { name: 'Select folder', exact: true })
