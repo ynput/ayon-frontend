@@ -48,19 +48,35 @@ export interface HostComponents {
 export interface DevSlotOutletProps {
   slot: string
   count: number
+  /** the context the outlet passes to its contributions */
+  context: unknown
+  children: ReactNode
+}
+
+/** What `DevSlots.Item` gets: one contribution of an outlet, by its key (`<addon>.<id>`). */
+export interface DevSlotItemProps {
+  slot: string
+  contribution: string
+  /** the context the contribution gets */
+  context: unknown
   children: ReactNode
 }
 
 /**
  * Internal, for the standalone dev shell only: AYON never sets it. Shows where each slot sits:
- * `SlotOutlet` renders its contributions inside `Outlet`, and `useSlotMenuItems` adds
- * `menuPlaceholder` to a menu that has no items of the slot. Without it, both render exactly
- * what they render in AYON.
+ * `SlotOutlet` renders its contributions inside `Outlet`, each in `Item` when it is set, and
+ * `useSlotMenuItems` adds `menuPlaceholder` to a menu that has no items of the slot and tells
+ * `menuBuilt` the context a menu was built for. Without it, both render exactly what they render
+ * in AYON.
  */
 export interface DevSlots {
   Outlet: ComponentType<DevSlotOutletProps>
+  /** wraps each contribution an outlet renders */
+  Item?: ComponentType<DevSlotItemProps>
   /** the entry to show where a menu slot's items would go, or nothing */
   menuPlaceholder: (slot: string) => SlotMenuItem | undefined
+  /** a menu of the slot was built (it opens): its context and the keys of its contributions */
+  menuBuilt?: (slot: string, context: unknown, contributions: string[]) => void
 }
 
 export interface HostImplementation {

@@ -26,22 +26,33 @@ export interface SlotOutletProps<S extends SlotName> {
  */
 export const SlotOutlet = <S extends SlotName>({ slot, context, piece, loading, error }: SlotOutletProps<S>) => {
   const { contributions } = useContributions(slot)
-  const views = contributions.map((contribution) => (
-    <ContributionView
-      key={(contribution as unknown as AnyContribution).key}
-      contribution={contribution}
-      context={context}
-      piece={piece}
-      loading={loading}
-      error={error}
-    />
-  ))
-  // the dev shell's outline of the slot; AYON has none, and renders the contributions alone
-  const DevOutlet = getHost().devSlots?.Outlet
-  return DevOutlet ? (
-    <DevOutlet slot={slot} count={contributions.length}>
+  // the dev shell's outline of the slot and its contributions; AYON has none, and renders the
+  // contributions alone
+  const dev = getHost().devSlots
+  const views = contributions.map((contribution) => {
+    const { key } = contribution as unknown as AnyContribution
+    const view = (
+      <ContributionView
+        key={key}
+        contribution={contribution}
+        context={context}
+        piece={piece}
+        loading={loading}
+        error={error}
+      />
+    )
+    return dev?.Item ? (
+      <dev.Item key={key} slot={slot} contribution={key} context={context}>
+        {view}
+      </dev.Item>
+    ) : (
+      view
+    )
+  })
+  return dev ? (
+    <dev.Outlet slot={slot} count={contributions.length} context={context}>
       {views}
-    </DevOutlet>
+    </dev.Outlet>
   ) : (
     <>{views}</>
   )
@@ -84,9 +95,12 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
           }
         })
       const entries = { top: at('top'), bottom: at('bottom') }
-      // the dev shell shows where the slot's items would go; AYON has no placeholder
-      const placeholder =
-        !entries.top.length && !entries.bottom.length ? getHost().devSlots?.menuPlaceholder(slot) : undefined
+      // the dev shell shows where the slot's items would go and the context they get; AYON has
+      // neither
+      const dev = getHost().devSlots
+      if (!dev) return entries
+      dev.menuBuilt?.(slot, context, items.map((item) => item.key))
+      const placeholder = !entries.top.length && !entries.bottom.length ? dev.menuPlaceholder(slot) : undefined
       return placeholder ? { ...entries, top: [placeholder] } : entries
     },
     [contributions, slot],
