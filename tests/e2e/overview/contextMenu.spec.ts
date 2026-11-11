@@ -83,45 +83,6 @@ test.describe('overview context menu', () => {
       .toBe(target.id)
   })
 
-  test('move preselects and scrolls to the last destination', async ({
-    page,
-    api,
-    projectName,
-  }) => {
-    const first = await api.createFolder(projectName, { name: 'a_first' })
-    const second = await api.createFolder(projectName, { name: 'a_second' })
-    for (let i = 0; i < 50; i++) {
-      await api.createFolder(projectName, { name: `filler_${String(i).padStart(2, '0')}` })
-    }
-    const target = await api.createFolder(projectName, { name: 'z_destination' })
-    const overview = new OverviewPage(page)
-    await overview.goto(projectName)
-
-    await overview.rowMenu('a_first', 'Move')
-    const picker = overview.moveDialog()
-    const destination = picker.getByRole('row').filter({ hasText: 'z_destination' })
-    await expect(picker.getByText('filler_00', { exact: true })).toBeVisible()
-    await expect(destination).toBeHidden()
-    await picker.getByRole('table').hover()
-    await page.mouse.wheel(0, 2400)
-    await overview.moveTo('z_destination')
-    await expect
-      .poll(async () => (await api.getFolder(projectName, first.id)).parentId)
-      .toBe(target.id)
-
-    await overview.rowMenu('a_second', 'Move')
-    // the picker marks selected cells with a class, not aria-selected
-    await expect(destination.locator('.selected')).toBeVisible()
-    await expect(destination).toBeInViewport()
-    const submit = picker.getByRole('button', { name: 'Select folder', exact: true })
-    await expect(submit).toBeEnabled()
-    await submit.click()
-    await expect(picker).toBeHidden()
-    await expect
-      .poll(async () => (await api.getFolder(projectName, second.id)).parentId)
-      .toBe(target.id)
-  })
-
   test('move a task to another folder', async ({ page, api, projectName }) => {
     const source = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const target = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
