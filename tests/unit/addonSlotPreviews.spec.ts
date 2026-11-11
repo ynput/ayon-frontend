@@ -1,51 +1,60 @@
-// Previews of other addons' slots: a contract package's previews.js, as `ayon-addon check` reads it
-// and the dev shell renders contributions with it.
+// Previews of other addons' slots: a contract package's previews.js (scenes), as `ayon-addon check`
+// reads it and the dev shell renders it.
 import { expect, test } from '@playwright/test'
-import { cpSync, mkdirSync, mkdtempSync, symlinkSync, writeFileSync } from 'fs'
+import { cpSync, mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { checkPreviews } from '../../addon-dev/src/contractPreviews'
+import { createServer } from 'vite'
+import {
+  checkPreviews,
+  decodeSceneValues,
+  encodeSceneValues,
+  sceneDefaults,
+  validScenes,
+} from '../../addon-dev/src/contractPreviews'
 import {
   contractsCode,
   findContractPackages,
+  loadPreviewsModule,
   readContractPreviews,
   readContractSlots,
 } from '../../addon-dev/src/contractSlots'
+import { DEDUPE } from '../../addon-dev/src/packages'
 import {
   buildContract,
   contractAreas,
   contractManifests,
-  noPreviewsNote,
+  noSceneNote,
+  sceneFor,
+  scenesOf,
 } from '../../addon-dev/shell/src/contractModel'
+import { provideHost } from '../../addon/src/hostBridge'
+import * as sdk from '../../addon/src/index'
+import { loadPiece } from '../../addon/src/pieces'
 import {
   getRegistry,
   registerManifests,
   setManifestsLoading,
   unregisterAddon,
 } from '../../addon/src/registry'
+import { renderToHtml, toReactComponent } from './support/render'
 import * as exampleSlots from './fixtures/addon-contract-example/slots.js'
-import * as examplePreviews from './fixtures/addon-contract-example/previews.js'
 
+const REPO = path.resolve(__dirname, '../..')
 const FIXTURE = path.join(__dirname, 'fixtures', 'addon-contract-example')
+const PREVIEWS = path.join(FIXTURE, 'previews.js')
 const PACKAGE = '@ynput/ayon-addon-example'
 const DECLARED = ['example.cardBadge', 'example.cardMenuItem', 'example.boardDialog']
 
-// an addon frontend with the example contract package and React installed (in node_modules:
-// Playwright compiles the files it loads from elsewhere to CommonJS)
+const packageDir = (name: string) => path.dirname(require.resolve(`${name}/package.json`))
+
+// an addon frontend with the example contract package, React and Vite installed
 const addonRoot = (extra: Record<string, Record<string, string>> = {}) => {
   const root = mkdtempSync(path.join(tmpdir(), 'addon-previews-'))
   const deps = Object.fromEntries([PACKAGE, ...Object.keys(extra)].map((name) => [name, '1']))
-  writeFileSync(
-    path.join(root, 'package.json'),
-    JSON.stringify({ name: 'contributor', devDependencies: deps }),
-  )
+  writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'contributor', devDependencies: deps }))
   cpSync(FIXTURE, path.join(root, 'node_modules', PACKAGE), { recursive: true })
-  symlinkSync(
-    path.dirname(require.resolve('react/package.json')),
-    path.join(root, 'node_modules', 'react'),
-  )
+  for (const name of ['react', 'vite']) symlinkSync(packageDir(name), path.join(root, 'node_modules', name))
   for (const [name, files] of Object.entries(extra)) {
     const dir = path.join(root, 'node_modules', name)
     mkdirSync(dir, { recursive: true })
@@ -54,50 +63,125 @@ const addonRoot = (extra: Record<string, Record<string, string>> = {}) => {
   return root
 }
 
-const loaded = () =>
+// the fixture in Node with a stand-in for the SDK, as `ayon-addon check` loads it
+const examplePreviews = async () => (await loadPreviewsModule(REPO, PREVIEWS)).previews as unknown[]
+
+const exampleContract = async () =>
   buildContract(
     { package: PACKAGE, entries: { slots: './slots.js', previews: './previews.js' } },
-    { slots: exampleSlots.slots, previews: examplePreviews.previews },
+    { slots: exampleSlots.slots, previews: await examplePreviews() },
   )
 
-test('valid previews have no problems', () => {
-  expect(checkPreviews(examplePreviews.previews, DECLARED)).toEqual([])
+test('valid previews have no problems', async () => {
+  expect(checkPreviews(await examplePreviews(), DECLARED)).toEqual([])
 })
 
 test('check reports what is wrong in previews', () => {
+  const component = () => null
   expect(checkPreviews(undefined, DECLARED, './previews.js')).toEqual([
     { reason: './previews.js does not export "previews"' },
   ])
-  expect(checkPreviews([], DECLARED)).toEqual([
-    { reason: '"previews" must be an object keyed by slot name, not a list' },
-  ])
+  expect(checkPreviews({}, DECLARED)).toEqual([{ reason: '"previews" must be a list of scenes, not object' }])
   const problems = checkPreviews(
-    {
-      'example.unknown': { cases: [{ label: 'x', context: {} }] },
-      'example.cardBadge': { frame: 'div', cases: [] },
-      'example.cardMenuItem': {
-        cases: [{ label: '', context: {} }, { label: 'ok', context: [] }, 3],
+    [
+      { id: 'a', label: 'A', slots: ['example.unknown'], fields: [], component },
+      { id: 'a', label: '', slots: [], fields: {}, component: 'div' },
+      3,
+      {
+        id: 'fields',
+        label: 'Fields',
+        slots: ['example.cardBadge'],
+        component,
+        fields: [
+          { key: 'n', label: 'N', type: 'number', default: '1' },
+          { key: 'n', label: 'N again', type: 'text' },
+          { key: 's', label: 'S', type: 'select', options: [], default: 'x' },
+          { key: 'p', label: 'P', type: 'project', default: null },
+          { key: 'e', label: 'E', type: 'entity', entityType: 'shot', project: 'n' },
+          { key: 'k', label: 'K', type: 'pick' },
+          { label: 'no key', type: 'color' },
+        ],
       },
-      'example.boardDialog': null,
-    },
+    ],
     DECLARED,
   )
   expect(problems).toEqual([
     {
-      slot: 'example.unknown',
+      scene: 'a',
       reason:
-        'not a slot of this package (it declares example.cardBadge, example.cardMenuItem, example.boardDialog)',
+        '"example.unknown" is not a slot of this package (it declares example.cardBadge, example.cardMenuItem, example.boardDialog)',
     },
-    { slot: 'example.cardBadge', reason: 'frame must be a component (a function), not string' },
-    { slot: 'example.cardBadge', reason: 'cases must be a list with at least one case' },
-    { slot: 'example.cardMenuItem', reason: 'case 1: label must be a string' },
-    { slot: 'example.cardMenuItem', reason: 'case 2: context must be an object, not a list' },
-    { slot: 'example.cardMenuItem', reason: 'case 3 must be an object, not number' },
-    { slot: 'example.boardDialog', reason: 'must be an object with "cases", not null' },
+    { scene: 'a', reason: 'id is not unique' },
+    { scene: 'a', reason: 'label must be a string' },
+    { scene: 'a', reason: 'slots must be a list of the slots it renders' },
+    { scene: 'a', reason: 'component must be a component (a function), not string' },
+    { scene: 'a', reason: 'fields must be a list (empty for none)' },
+    { scene: 'scene 3', reason: 'must be an object, not number' },
+    { scene: 'fields', reason: 'field "n": default must be a number, not string' },
+    { scene: 'fields', reason: 'field "n": key is not unique' },
+    { scene: 'fields', reason: 'field "s": options must be a list with at least one option' },
+    { scene: 'fields', reason: 'field "s": default "x" is not one of the options' },
+    { scene: 'fields', reason: 'field "p": default null ("No project") needs optional: true' },
+    { scene: 'fields', reason: 'field "e": entityType must be one of task, folder, product, version' },
+    { scene: 'fields', reason: 'field "e": project must be the key of a project field of the scene, not "n"' },
+    { scene: 'fields', reason: 'field "k": load must be a function, not undefined' },
+    { scene: 'fields', reason: 'field 7: key must be a string' },
+    {
+      scene: 'fields',
+      reason: 'field 7: type must be one of text, number, boolean, select, multiselect, json, project, entity, pick, not "color"',
+    },
   ])
+  // what still renders: the scenes with an id, a label, a component and slots of the package
+  const valid = validScenes(
+    [
+      { id: 'a', label: 'A', slots: ['example.cardBadge', 'example.unknown'], fields: [], component },
+      { id: 'b', label: 'B', slots: ['example.unknown'], fields: [], component },
+    ],
+    DECLARED,
+  )
+  expect(valid.map((scene) => [scene.id, scene.slots])).toEqual([['a', ['example.cardBadge']]])
 })
 
-test('the CLI reads the previews of the contract packages among the dependencies', async () => {
+test('values start from the defaults; the changed ones go in the URL', async () => {
+  const [scene] = validScenes(await examplePreviews(), DECLARED)
+  expect(scene.fields.map((field) => field.key)).toEqual([
+    'project',
+    'title',
+    'status',
+    'estimate',
+    'pinned',
+    'tags',
+    'attrib',
+    'task',
+    'card',
+  ])
+  expect(sceneDefaults(scene.fields, 'demo')).toEqual({
+    project: null, // optional, without a default
+    title: 'Layout',
+    status: 'in_progress',
+    estimate: null,
+    pinned: false,
+    tags: [],
+    attrib: { priority: 'high' },
+    task: null,
+    card: null,
+  })
+  // a project field that must have one starts with the shell's project
+  expect(sceneDefaults([{ key: 'p', label: 'P', type: 'project' }], 'demo')).toEqual({ p: 'demo' })
+  expect(sceneDefaults([{ key: 'p', label: 'P', type: 'project', default: 'other' }], 'demo')).toEqual({
+    p: 'other',
+  })
+
+  const changed = { project: 'demo', attrib: { priority: 'low', fps: 25 }, task: { id: 't1', name: 'comp' } }
+  const param = encodeSceneValues(changed)
+  expect(new URLSearchParams({ ctxValues: param! }).get('ctxValues')).toBe(param)
+  expect(decodeSceneValues(param)).toEqual(changed)
+  expect(encodeSceneValues({})).toBeUndefined()
+  expect(decodeSceneValues('[1]')).toBeUndefined()
+  expect(decodeSceneValues('{oops')).toBeUndefined()
+})
+
+test('the CLI reads the scenes of the contract packages among the dependencies', async () => {
   const root = addonRoot({
     broken: {
       'package.json': JSON.stringify({
@@ -106,22 +190,24 @@ test('the CLI reads the previews of the contract packages among the dependencies
         ayonAddon: { slots: './slots.js', previews: './previews.js' },
       }),
       'slots.js': `export const slots = [{ name: 'other.item', version: 1, required: [], pieces: ['run'] }]`,
-      'previews.js': `export const previews = { 'other.item': { cases: [] }, 'example.cardBadge': { cases: [] } }`,
+      'previews.js': `export const previews = [{ id: 'x', label: 'X', slots: ['example.cardBadge'], fields: [], component: () => null }]`,
+    },
+    syntax: {
+      'package.json': JSON.stringify({ name: 'syntax', type: 'module', ayonAddon: { slots: './slots.js', previews: './previews.js' } }),
+      'slots.js': `export const slots = []`,
+      'previews.js': `export const previews = [`,
     },
     missing: {
-      'package.json': JSON.stringify({
-        name: 'missing',
-        ayonAddon: { slots: './slots.js', previews: 1 },
-      }),
+      'package.json': JSON.stringify({ name: 'missing', ayonAddon: { slots: './slots.js', previews: 1 } }),
     },
   })
   const found = findContractPackages(root)
   expect(found.packages.map((p) => [p.name, p.entries])).toEqual([
     [PACKAGE, { slots: './slots.js', previews: './previews.js' }],
     ['broken', { slots: './slots.js', previews: './previews.js' }],
+    ['syntax', { slots: './slots.js', previews: './previews.js' }],
     ['missing', { slots: './slots.js' }],
   ])
-  expect(found.packages[0].previews).toBe(path.join(root, 'node_modules', PACKAGE, 'previews.js'))
   expect(found.problems).toEqual([
     { reason: 'missing: ./slots.js ("ayonAddon.slots") does not exist' },
     { reason: 'missing: "ayonAddon.previews" must be a path' },
@@ -129,24 +215,20 @@ test('the CLI reads the previews of the contract packages among the dependencies
 
   const { slots } = await readContractSlots(root)
   const result = await readContractPreviews(root, slots)
+  // the example's previews import @ynput/ayon-addon and React: they load in Node all the same
   expect(result.previews).toEqual([
     {
       package: PACKAGE,
-      slots: [
-        { name: 'example.cardBadge', cases: 2 },
-        { name: 'example.cardMenuItem', cases: 1 },
-      ],
+      scenes: [{ id: 'card', label: 'A card on the board', slots: ['example.cardBadge', 'example.cardMenuItem'] }],
     },
-    { package: 'broken', slots: [{ name: 'other.item', cases: 0 }] },
+    { package: 'broken', scenes: [] },
   ])
-  // a package may only give previews of the slots it declares
-  expect(result.problems).toEqual([
-    { slot: 'other.item', reason: 'broken previews: cases must be a list with at least one case' },
-    {
-      slot: 'example.cardBadge',
-      reason: 'broken previews: not a slot of this package (it declares other.item)',
-    },
-  ])
+  expect(result.problems).toHaveLength(2)
+  // a package may only render the slots it declares
+  expect(result.problems[0]).toEqual({
+    reason: 'broken previews, x: "example.cardBadge" is not a slot of this package (it declares other.item)',
+  })
+  expect(result.problems[1].reason).toMatch(/^syntax: its previews failed to load: /)
 })
 
 test('the dev server imports declarations and previews by file path', () => {
@@ -159,82 +241,101 @@ test('the dev server imports declarations and previews by file path', () => {
   expect(code).toContain('export const contractProblems = []')
 })
 
-test('the shell shows component slots in their frame, menu slots as menus', () => {
-  const contract = loaded()
+// The previews import the SDK from wherever the contract package really is: with `link:` that is
+// another repo, with its own node_modules. The addon's dev server must give them the addon's copy,
+// or they'd have a registry of their own without the addon's contributions.
+test("the dev server resolves a contract package's SDK and React to the addon's", async () => {
+  const fake = (dir: string, name: string) => {
+    mkdirSync(dir, { recursive: true })
+    writeFileSync(path.join(dir, 'package.json'), JSON.stringify({ name, type: 'module', main: 'index.js' }))
+    writeFileSync(path.join(dir, 'index.js'), 'export {}')
+  }
+  const root = mkdtempSync(path.join(tmpdir(), 'addon-dedupe-'))
+  writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'contributor' }))
+  // the contract package in another checkout, with its own SDK and React
+  const contract = mkdtempSync(path.join(tmpdir(), 'contract-checkout-'))
+  for (const name of ['@ynput/ayon-addon', 'react']) {
+    fake(path.join(root, 'node_modules', name), name)
+    fake(path.join(contract, 'node_modules', name), name)
+  }
+  writeFileSync(path.join(contract, 'previews.js'), `import '@ynput/ayon-addon'\nexport const previews = []`)
+  symlinkSync(contract, path.join(root, 'node_modules', PACKAGE))
+  const importer = path.join(realpathSync(contract), 'previews.js')
+
+  const resolveFrom = async (dedupe: string[]) => {
+    const server = await createServer({
+      root,
+      configFile: false,
+      logLevel: 'silent',
+      resolve: { dedupe },
+      server: { middlewareMode: true, ws: false },
+      optimizeDeps: { noDiscovery: true, include: [] },
+    })
+    try {
+      const resolve = async (id: string) => (await server.pluginContainer.resolveId(id, importer))?.id
+      return { sdk: await resolve('@ynput/ayon-addon'), react: await resolve('react') }
+    } finally {
+      await server.close()
+    }
+  }
+  const inRoot = (name: string) => path.join(realpathSync(root), 'node_modules', name, 'index.js')
+  expect(await resolveFrom(DEDUPE)).toEqual({ sdk: inRoot('@ynput/ayon-addon'), react: inRoot('react') })
+  // without it: the other checkout's copies
+  expect((await resolveFrom([])).sdk).toBe(path.join(realpathSync(contract), 'node_modules/@ynput/ayon-addon/index.js'))
+})
+
+test('the shell lists the scenes and finds the one for a contribution', async () => {
+  const contract = await exampleContract()
   expect(contract.problems).toEqual([])
   expect(contract.addons).toEqual(['example'])
-  const [badge, menuItem, dialog] = contract.slots
-  expect([badge.kind, menuItem.kind, dialog.kind]).toEqual(['component', 'menu', 'other'])
-  expect(badge.preview?.cases.map((c) => c.label)).toEqual([
-    'A card in progress',
-    'A finished card',
+  expect(contract.scenes.map((scene) => [scene.key, scene.slots])).toEqual([
+    [`${PACKAGE}:card`, ['example.cardBadge', 'example.cardMenuItem']],
   ])
-  expect(menuItem.preview?.frame).toBeUndefined()
-  expect(dialog.preview).toBeUndefined()
-  expect(noPreviewsNote(dialog, contract)).toBe(
-    `${PACKAGE} has no previews for example.boardDialog: add its cases to ./previews.js in that package.`,
-  )
+  const [card] = contract.scenes
+  expect(scenesOf('example.cardMenuItem', [contract])).toEqual([card])
+  expect(scenesOf('example.boardDialog', [contract])).toEqual([])
+  // `ayon-addon open <slot> <id>`: the first scene that renders the slot
+  expect(sceneFor({ slot: 'example.cardBadge' }, [contract])).toBe(card)
+  expect(sceneFor({ scene: card.key }, [contract])).toBe(card)
+  expect(sceneFor({ slot: 'example.boardDialog' }, [contract])).toBeUndefined()
+  expect(sceneFor({ slot: 'header.item' }, [contract])).toBeUndefined()
 
-  // the frame puts the contribution where the declaring addon would
-  const Frame = badge.preview!.frame!
-  const html = renderToStaticMarkup(
-    createElement(
-      Frame,
-      { context: badge.preview!.cases[0].context },
-      createElement('em', null, 'badge'),
-    ),
+  const [, , dialog] = contract.slots
+  expect(noSceneNote(dialog, contract)).toBe(
+    `No preview scene in ${PACKAGE} renders example.boardDialog: add one to ./previews.js in that package.`,
   )
-  expect(html).toContain('data-example-card="c1"')
-  expect(html).toContain('<strong>Layout</strong><em>badge</em>')
+  const without = buildContract({ package: PACKAGE, entries: { slots: './slots.js' } }, { slots: exampleSlots.slots })
+  expect(without.scenes).toEqual([])
+  expect(noSceneNote(without.slots[0], without)).toContain('the package has no previews')
 
-  expect(contractAreas([contract])).toEqual([
-    {
-      label: 'example',
-      icon: 'extension',
-      package: PACKAGE,
-      sections: [
-        {
-          slots: [
-            { slot: 'example.cardBadge', label: 'cardBadge' },
-            { slot: 'example.cardMenuItem', label: 'cardMenuItem' },
-            { slot: 'example.boardDialog', label: 'boardDialog' },
-          ],
-        },
-      ],
-    },
-  ])
+  expect(contractAreas([contract])[0]).toMatchObject({ label: 'example', package: PACKAGE })
 })
 
-test('a package without previews says how to add them', () => {
-  const contract = buildContract(
-    { package: PACKAGE, entries: { slots: './slots.js' } },
-    { slots: exampleSlots.slots },
-  )
-  expect(contract.slots.every((slot) => !slot.preview)).toBe(true)
-  expect(noPreviewsNote(contract.slots[0], contract)).toContain(
-    'add a previews.js with cases for example.cardBadge',
-  )
-})
-
-test('broken previews are reported, their valid cases still render', () => {
+test('broken previews are reported, their valid scenes still render', async () => {
   const contract = buildContract(
     { package: PACKAGE, entries: { slots: './slots.js', previews: './previews.js' } },
     {
       slots: exampleSlots.slots,
-      previews: {
-        'example.cardBadge': { frame: 1, cases: [{ label: 'ok', context: {} }, { label: 2 }] },
-      },
+      previews: [
+        {
+          id: 'ok',
+          label: 'OK',
+          slots: ['example.cardBadge'],
+          component: () => null,
+          fields: [
+            { key: 'a', label: 'A', type: 'text' },
+            { key: 'b', label: 'B', type: 'select', options: [] },
+          ],
+        },
+        { id: 'broken', label: 'Broken', slots: ['example.cardBadge'], fields: [] },
+      ],
     },
   )
   expect(contract.problems).toEqual([
-    'example.cardBadge: frame must be a component (a function), not number',
-    'example.cardBadge: case 2: label must be a string',
-    'example.cardBadge: case 2: context must be an object, not undefined',
+    'ok: field "b": options must be a list with at least one option',
+    'broken: component must be a component (a function), not undefined',
   ])
-  expect(contract.slots[0].preview).toEqual({
-    frame: undefined,
-    cases: [{ label: 'ok', context: {} }],
-  })
+  expect(contract.scenes.map((scene) => [scene.id, scene.fields.map((f) => f.key)])).toEqual([['ok', ['a']]])
 
   const failed = buildContract(
     { package: PACKAGE, entries: { slots: './slots.js', previews: './previews.js' } },
@@ -244,36 +345,64 @@ test('broken previews are reported, their valid cases still render', () => {
 })
 
 test.describe('registry', () => {
+  const contributor = { name: 'contributor', version: '1.0.0', remote: 'contributor' }
   test.afterEach(() => {
     unregisterAddon('contributor')
     unregisterAddon('example')
   })
 
-  test("the shell registers the declaring addon's slots, so contributions to them apply", () => {
+  test("the shell registers the declaring addon's slots, so contributions to them apply", async () => {
     setManifestsLoading(false)
-    const contributor = { name: 'contributor', version: '1.0.0', remote: 'contributor' }
     const run = () => Promise.resolve({ default: () => undefined })
     const manifest = {
-      contributes: [
-        {
-          slot: 'example.cardMenuItem',
-          slotVersion: 1,
-          id: 'log',
-          label: 'Log',
-          icon: 'timer',
-          run,
-        },
-      ],
+      contributes: [{ slot: 'example.cardMenuItem', slotVersion: 1, id: 'log', label: 'Log', icon: 'timer', run }],
     }
     registerManifests([
-      ...(contractManifests([loaded()], contributor.name) as never[]),
+      ...(contractManifests([await exampleContract()], contributor.name) as never[]),
       { addon: contributor, manifest },
     ])
     expect(getRegistry().contributions.map((c) => c.key)).toEqual(['contributor.log'])
-    expect(getRegistry().slots.map((s) => [s.name, s.owner.name])).toEqual(
-      DECLARED.map((name) => [name, 'example']),
-    )
+    expect(getRegistry().slots.map((s) => [s.name, s.owner.name])).toEqual(DECLARED.map((name) => [name, 'example']))
     // the declaring addon's own shell: its manifest declares them
-    expect(contractManifests([loaded()], 'example')).toEqual([])
+    expect(contractManifests([await exampleContract()], 'example')).toEqual([])
+  })
+
+  test("a scene renders the addon's contributions to its slots, with contexts from its values", async () => {
+    setManifestsLoading(false)
+    provideHost({ getUser: () => ({ name: 'admin' }), useUser: () => ({ name: 'admin' }) } as never)
+    const contexts: unknown[] = []
+    const Badge = (props: { card: { status: string } }) => {
+      contexts.push(props)
+      return `badge:${props.card.status}`
+    }
+    const component = () => Promise.resolve({ default: Badge })
+    await loadPiece(component)
+    registerManifests([
+      ...(contractManifests([await exampleContract()], contributor.name) as never[]),
+      {
+        addon: contributor,
+        manifest: {
+          contributes: [{ slot: 'example.cardBadge', slotVersion: 1, id: 'timer', label: 'Timer', component }],
+        },
+      },
+    ])
+    // the scene with the SDK the addon uses (the dev server dedupes it to the addon's copy)
+    const { previews } = await loadPreviewsModule(REPO, PREVIEWS, {
+      '@ynput/ayon-addon': {
+        ...sdk,
+        SlotOutlet: toReactComponent(sdk.SlotOutlet),
+        useContextMenu: () => () => undefined,
+      },
+    })
+    const contract = buildContract(
+      { package: PACKAGE, entries: { slots: './slots.js', previews: './previews.js' } },
+      { slots: exampleSlots.slots, previews },
+    )
+    const [scene] = contract.scenes
+    const values = { ...sceneDefaults(scene.fields, 'demo'), project: 'demo', status: 'done' }
+    const html = renderToHtml(scene.component as never, { values, setValues: () => undefined })
+    expect(html).toContain('data-example-card="c1"')
+    expect(html).toContain('<strong>Layout</strong>badge:done')
+    expect(contexts[0]).toMatchObject({ projectName: 'demo', card: { id: 'c1', title: 'Layout', status: 'done' } })
   })
 })

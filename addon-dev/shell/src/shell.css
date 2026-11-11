@@ -414,30 +414,39 @@ main.ayon-shell-stage {
 .ayon-shell-table tr.selected td {
   background: var(--md-sys-color-primary-container);
 }
-/* another addon's slot without a frame in its previews: just its place */
-.ayon-shell-plain-frame {
-  display: flex;
+/* another addon's slots: a scene of its contract package, the contributions in it below it */
+.ayon-shell-panel .contribution.ayon-shell-nested {
+  padding-left: 58px;
+}
+.ayon-shell-panel small.ayon-shell-nested {
+  padding: 4px 8px 4px 58px;
+}
+.ayon-shell-slot > small[data-shell-note='no-scene'] {
+  padding: 4px 8px 0 34px;
+}
+.ayon-shell-body[data-shell-surface='scene'] {
   flex-direction: column;
-  gap: 8px;
-  align-self: flex-start;
-  min-width: 240px;
-  max-width: 100%;
-  padding: 12px;
-  border: 1px dashed var(--md-sys-color-outline-variant);
-  border-radius: 8px;
-}
-.ayon-shell-menu-target {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  border-radius: 4px;
-  color: var(--md-sys-color-outline);
-  background: var(--md-sys-color-surface-container);
-  cursor: context-menu;
-}
-.ayon-shell-body[data-shell-surface='contract-slot'] {
-  align-items: flex-start;
   padding: 16px;
   overflow: auto;
+}
+/* the scene's fields: longer labels than the context pickers */
+.ayon-shell-scene-fields .ayon-shell-field {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+.ayon-shell-scene-fields .ayon-shell-field > label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-entity-value {
+  align-self: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-json {
+  width: 100%;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
 }

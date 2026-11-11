@@ -41,6 +41,7 @@ import type { ShellOptions, ShellSelection } from './types'
 import { readSelection, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
+import { sceneFor } from './contractModel'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -130,6 +131,7 @@ const ProjectProviders = ({
 
 const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'preview' }) => {
   const [selection, setSelection] = useState<ShellSelection>(readSelection)
+  const scene = mode === 'live' ? sceneFor(selection) : undefined
   useEffect(() => writeSelection(selection), [selection])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
 
@@ -152,10 +154,11 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
             }
             light={mode === 'preview'}
           >
-            <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
+            {/* a scene stays mounted while the contributions in it are picked */}
+            <StageBoundary key={scene ? `scene:${scene.key}` : `${selection.projectName}:${selection.slot}:${selection.id}`}>
               {/* remounts per project: the project contexts and the slicer start fresh */}
               <Stage
-                key={selection.projectName || ''}
+                key={scene ? '' : selection.projectName || ''}
                 mode={mode}
                 selection={selection}
                 onChange={setSelection}

@@ -29,8 +29,10 @@ export interface ShellSelection {
   entities: EntityRef[]
   /** the project table page for the projectTable and table slots */
   page?: 'overview' | 'products' | 'lists'
-  /** another addon's slot: the preview case, by its index in the slot's cases */
-  previewCase?: number
+  /** another addon's slots: the preview scene on stage, `<package>:<id>` */
+  scene?: string
+  /** the scene's values the developer changed (the rest are the fields' defaults) */
+  sceneValues?: Record<string, unknown>
   /** a fixture name: preview mode, no server */
   preview?: string
 }

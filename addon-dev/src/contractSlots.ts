@@ -1,13 +1,14 @@
 // Slots of other addons: their contract packages (@ynput/ayon-addon-<addon>) mark themselves in
 // their package.json with `"ayonAddon": { "slots": "./slots.js", "previews": "./previews.js" }`.
 // `slots` is a plain JS module that exports the declarations as `slots`; `previews` (optional) one
-// that exports `previews`, the contexts the dev shell renders contributions with (contractPreviews.ts).
+// that exports `previews`, the scenes the dev shell renders the slots in (contractPreviews.ts).
 // `check` and `slots` read those of the addon's own dependencies, the dev shell imports them.
 import { readFileSync, realpathSync } from 'fs'
+import { createRequire } from 'module'
 import path from 'path'
 import { pathToFileURL } from 'url'
-import { checkPreviews } from './contractPreviews.js'
-import { findPackageDir } from './project.js'
+import { checkPreviews, validScenes } from './contractPreviews.js'
+import { findPackageDir, importFromProject } from './project.js'
 
 export interface ContractSlot {
   name: string
@@ -116,16 +117,61 @@ export const readContractSlots = async (root: string): Promise<ContractSlots> =>
 }
 
 export interface ContractPreviews {
-  /** per contract package with previews: the slots that have some, and their number of cases */
-  previews: { package: string; slots: { name: string; cases: number }[] }[]
-  problems: { slot?: string; reason: string }[]
+  /** per contract package with previews: its scenes, and the slots each renders */
+  previews: { package: string; scenes: { id: string; label: string; slots: string[] }[] }[]
+  problems: { reason: string }[]
 }
 
+// what a previews module gets for `@ynput/ayon-addon` in Node: the SDK needs a browser (and its
+// CommonJS dependencies don't load as ES modules), the scenes only use it when they render
+const SDK_STAND_IN = new Proxy({}, { get: (_target, key) => (key === '__esModule' ? true : undefined) })
+
 /**
- * The previews of the contract packages, checked against the slots each one declares. Loaded in
- * Node: a previews module may import React (resolved from where the package is), nothing that
- * needs a browser.
+ * A previews module in Node, for `ayon-addon check`: bundled with Vite (its own relative imports
+ * included) to CommonJS, and run with `provided` for the packages named there (by default a
+ * stand-in for `@ynput/ayon-addon` and its entries). Other packages are required from where the
+ * module is, else from the addon.
  */
+export const loadPreviewsModule = async (
+  root: string,
+  file: string,
+  provided: Record<string, unknown> = { '@ynput/ayon-addon': SDK_STAND_IN },
+): Promise<{ previews?: unknown }> => {
+  const vite = await importFromProject<typeof import('vite')>(root, 'vite')
+  const isPackage = (id: string) => !id.startsWith('.') && !path.isAbsolute(id) && !id.startsWith('\0')
+  const output = await vite.build({
+    root: path.dirname(file),
+    configFile: false,
+    logLevel: 'silent',
+    build: {
+      ssr: file,
+      write: false,
+      minify: false,
+      rollupOptions: { external: isPackage, output: { format: 'cjs', exports: 'named' } },
+    },
+  })
+  const outputs = (Array.isArray(output) ? output : [output]) as {
+    output: { type: string; isEntry?: boolean; code?: string }[]
+  }[]
+  const code = outputs.flatMap((o) => o.output).find((chunk) => chunk.type === 'chunk' && chunk.isEntry)?.code
+  if (code === undefined) throw new Error(`could not build ${file}`)
+  const fromModule = createRequire(file)
+  const fromAddon = createRequire(path.join(root, 'package.json'))
+  const require = (id: string) => {
+    const name = Object.keys(provided).find((pkg) => id === pkg || id.startsWith(`${pkg}/`))
+    if (name) return provided[name]
+    try {
+      return fromModule(id)
+    } catch {
+      return fromAddon(id)
+    }
+  }
+  const module = { exports: {} as Record<string, unknown> }
+  new Function('require', 'module', 'exports', code)(require, module, module.exports)
+  return module.exports
+}
+
+/** The previews of the contract packages, checked against the slots each one declares. */
 export const readContractPreviews = async (
   root: string,
   slots: readonly ContractSlot[],
@@ -135,7 +181,7 @@ export const readContractPreviews = async (
     if (!contract.previews) continue
     let module: { previews?: unknown }
     try {
-      module = await import(pathToFileURL(contract.previews).href)
+      module = await loadPreviewsModule(root, contract.previews)
     } catch (error) {
       result.problems.push({
         reason: `${contract.name}: its previews failed to load: ${(error as Error).message}`,
@@ -145,18 +191,17 @@ export const readContractPreviews = async (
     const declared = slots.filter((slot) => slot.package === contract.name).map((slot) => slot.name)
     const problems = checkPreviews(module.previews, declared, contract.entries.previews)
     result.problems.push(
-      ...problems.map(({ slot, reason }) => ({ slot, reason: `${contract.name} previews: ${reason}` })),
+      ...problems.map(({ scene, reason }) => ({
+        reason: `${contract.name} previews${scene ? `, ${scene}` : ''}: ${reason}`,
+      })),
     )
-    const previews = (module.previews || {}) as Record<string, { cases?: unknown }>
-    if (typeof previews !== 'object') continue
     result.previews.push({
       package: contract.name,
-      slots: Object.entries(previews)
-        .filter(([name]) => declared.includes(name))
-        .map(([name, preview]) => ({
-          name,
-          cases: Array.isArray(preview?.cases) ? preview.cases.length : 0,
-        })),
+      scenes: validScenes(module.previews, declared).map(({ id, label, slots: rendered }) => ({
+        id,
+        label,
+        slots: rendered,
+      })),
     })
   }
   return result

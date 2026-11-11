@@ -17,10 +17,12 @@ export interface CheckResult {
   declares: { name: string; version: number }[]
   /** slots it can contribute to from its contract packages */
   contractSlots: { name: string; version: number; package: string }[]
-  /** the previews of those slots the dev shell renders contributions with, per contract package */
-  contractPreviews: { package: string; slots: { name: string; cases: number }[] }[]
+  /** the scenes the dev shell renders those slots in, per contract package with previews */
+  contractPreviews: { package: string; scenes: { id: string; label: string; slots: string[] }[] }[]
   contributions: { slot: string; id: string; key: string; pieces: Record<string, string | null> }[]
   problems: { slot?: string; id?: string; reason: string }[]
+  /** worth knowing, not a failure: contributions no preview scene renders */
+  notes: { slot?: string; id?: string; reason: string }[]
   types?: { ok: boolean; errors: string[] }
 }
 
@@ -121,6 +123,7 @@ export const checkAddon = async ({
     contractPreviews: [],
     contributions: [],
     problems: [],
+    notes: [],
   }
   const sdk = await importFromProject<CheckModule>(root, '@ynput/ayon-addon/check')
   result.sdkVersion = installedVersion(root, '@ynput/ayon-addon')
@@ -169,6 +172,15 @@ export const checkAddon = async ({
         }
       }
       result.contributions.push({ slot: contribution.slot, id: contribution.id, key: contribution.key, pieces })
+      const from = contract.slots.find((slot) => slot.name === contribution.slot)?.package
+      const scenes = result.contractPreviews.find((p) => p.package === from)?.scenes || []
+      if (from && !scenes.some((scene) => scene.slots.includes(contribution.slot))) {
+        result.notes.push({
+          slot: contribution.slot,
+          id: contribution.id,
+          reason: `no preview scene in ${from} renders ${contribution.slot}`,
+        })
+      }
     }
   }
   if (types) result.types = typeCheck(root)
@@ -180,15 +192,17 @@ export const formatCheck = (result: CheckResult) => {
   const lines = [
     `${result.addon.name} ${result.addon.version}, ${result.manifest} (@ynput/ayon-addon ${result.sdkVersion})`,
     ...result.declares.map((s) => `  ok  ${s.name.padEnd(30)} declares this slot, version ${s.version}`),
-    ...result.contractPreviews.map(
-      (p) =>
-        `  ok  ${'previews'.padEnd(30)} ${p.package.padEnd(24)} ${
-          p.slots.map((s) => `${s.name} (${s.cases})`).join(', ') || 'none'
-        }`,
+    ...result.contractPreviews.flatMap((p) =>
+      p.scenes.length
+        ? p.scenes.map(
+            (scene) => `  ok  ${`${p.package} previews`.padEnd(30)} ${scene.id.padEnd(24)} ${scene.slots.join(', ')}`,
+          )
+        : [`  ok  ${`${p.package} previews`.padEnd(30)} ${'no scenes'.padEnd(24)}`],
     ),
     ...result.contributions.map(
       (c) => `  ok  ${c.slot.padEnd(30)} ${c.id.padEnd(24)} ${Object.values(c.pieces).filter(Boolean).join(', ')}`,
     ),
+    ...result.notes.map((n) => `  --  ${(n.slot || '').padEnd(30)} ${(n.id || '').padEnd(24)} ${n.reason}`),
     ...result.problems.map((p) => `  !!  ${(p.slot || '').padEnd(30)} ${(p.id || '').padEnd(24)} ${p.reason}`),
   ]
   if (result.types) {

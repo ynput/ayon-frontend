@@ -1,5 +1,6 @@
 import type { EntityRef, SlotName } from '@ynput/ayon-addon'
 import { getRegistry, isKnownSlot } from '@ynput/ayon-addon/host'
+import { decodeSceneValues, encodeSceneValues } from '../../src/contractPreviews'
 import type { ShellSelection } from './types'
 
 // ?slot=detailsPanel.tab&contribution=comments&ctxProject=demo&ctxEntities=task:<id>,task:<id>
@@ -12,7 +13,8 @@ export const PARAMS = {
   entities: 'ctxEntities',
   entityType: 'ctxEntityType',
   page: 'ctxPage',
-  previewCase: 'ctxCase',
+  scene: 'scene',
+  sceneValues: 'ctxValues',
   preview: 'preview',
 } as const
 
@@ -38,7 +40,6 @@ export const readSelection = (search = window.location.search): ShellSelection =
   const projectName = params.get(PARAMS.project) || undefined
   const page = params.get(PARAMS.page) as ShellSelection['page'] | null
   const entities = parseEntities(params.get(PARAMS.entities), projectName)
-  const previewCase = Number(params.get(PARAMS.previewCase))
   return {
     slot: slot && isSlot(slot) ? (slot as SlotName) : undefined,
     id: params.get(PARAMS.id) || undefined,
@@ -47,7 +48,8 @@ export const readSelection = (search = window.location.search): ShellSelection =
     entityType: entities[0]?.entityType || params.get(PARAMS.entityType) || undefined,
     entities,
     page: page && PAGES.includes(page) ? page : undefined,
-    previewCase: Number.isInteger(previewCase) && previewCase > 0 ? previewCase : undefined,
+    scene: params.get(PARAMS.scene) || undefined,
+    sceneValues: decodeSceneValues(params.get(PARAMS.sceneValues)),
     preview: params.get(PARAMS.preview) || undefined,
   }
 }
@@ -63,7 +65,8 @@ export const writeSelection = (selection: ShellSelection) => {
   set(PARAMS.project, selection.projectName)
   set(PARAMS.projects, selection.projectNames?.join(',') || undefined)
   set(PARAMS.page, selection.page)
-  set(PARAMS.previewCase, selection.previewCase ? String(selection.previewCase) : undefined)
+  set(PARAMS.scene, selection.scene)
+  set(PARAMS.sceneValues, encodeSceneValues(selection.sceneValues))
   set(
     PARAMS.entities,
     selection.entities.map((entity) => `${entity.entityType}:${entity.id}`).join(',') || undefined,
