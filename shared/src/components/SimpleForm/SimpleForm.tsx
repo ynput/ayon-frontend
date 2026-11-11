@@ -63,10 +63,15 @@ export const SimpleForm = ({
 }: SimpleFormProps) => {
   const { formData, patches, resolvedOptions, errors, setFieldValue } = useFormState(fields, values)
 
+  // errors get a new identity with every new `fields` array (equal fields included), so
+  // notify on their content: a parent passing fresh equal fields and storing what onChange
+  // gives it would otherwise re-render itself forever
+  const errorsKey = JSON.stringify(errors)
+
   useEffect(() => {
     if (formData) onChange?.(formData, errors)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [formData, errors])
+  }, [formData, errorsKey])
 
   if (!formData) return null
 
