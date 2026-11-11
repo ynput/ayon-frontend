@@ -13,7 +13,8 @@ export type ManifestRemote = {
 // contributions' code loads when their slot needs it.
 // Each manifest registers as it arrives, so a slow one only delays its own addon. The registry gets
 // everything loaded so far in the order of `remotes`, so the order of contributions doesn't depend
-// on which manifest resolved first.
+// on which manifest resolved first. An addon with two remotes that both expose a manifest
+// registers once: the later remote's replaces the earlier's (registerManifests).
 // Returns the addons whose manifest failed.
 export const loadManifests = async (
   remotes: ManifestRemote[],

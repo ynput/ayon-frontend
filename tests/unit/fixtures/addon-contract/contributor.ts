@@ -1,38 +1,44 @@
 // Compiled by addonDeclaredSlots.spec.ts against addon/dist/types: an unused @ts-expect-error fails.
-import './plannerContract'
-import './reviewContract'
+import './exampleContract'
+import './anotherContract'
 import { useSlot } from '@ynput/ayon-addon'
 import type { Contribution, EntityRef, SlotName, SlotProps } from '@ynput/ayon-addon'
 import { contribute, defineAddon } from '@ynput/ayon-addon/manifest'
 
 const run = () => Promise.resolve({ default: (context: { entities: EntityRef[] }) => void context.entities })
+const component = () =>
+  Promise.resolve({ default: ({ projectName }: SlotProps<'example.panel'>) => projectName })
 
 export const manifest = defineAddon({
   contributes: [
-    contribute('planner.eventMenuItem', { id: 'a', label: 'A', icon: 'x', run }),
-    contribute('review.cardMenuItem', {
+    contribute('example.itemMenuItem', { id: 'a', label: 'A', icon: 'x', run }),
+    contribute('another.cardMenuItem', {
       id: 'b',
       label: 'B',
       icon: 'x',
       run: () => Promise.resolve({ default: (context: { cardId: string }) => void context.cardId }),
     }),
+    contribute('example.panel', { id: 'c', title: 'C', component }),
     contribute('project.page', { id: 'p', title: 'P', component: () => Promise.resolve({ default: () => null }) }),
   ],
 })
 
-export const names: SlotName[] = ['planner.eventMenuItem', 'review.cardMenuItem', 'project.page']
-export type PlannerEntities = SlotProps<'planner.eventMenuItem'>['entities']
-export type ReviewCard = SlotProps<'review.cardMenuItem'>['cardId']
-export type PlannerRun = Contribution<'planner.eventMenuItem'>['run']
-export const useEntities = () => useSlot('planner.eventMenuItem').entities
+export const names: SlotName[] = ['example.itemMenuItem', 'another.cardMenuItem', 'example.panel', 'project.page']
+export type ExampleEntities = SlotProps<'example.itemMenuItem'>['entities']
+export type AnotherCard = SlotProps<'another.cardMenuItem'>['cardId']
+export type ExampleRun = Contribution<'example.itemMenuItem'>['run']
+export type PanelId = Contribution<'example.panel'>['id']
+export const useEntities = () => useSlot('example.itemMenuItem').entities
 
 // @ts-expect-error a slot in neither package
 export const unknownName: SlotName = 'nope.slot'
 // @ts-expect-error a slot in neither package
 contribute('nope.slot', { id: 'a' })
 // @ts-expect-error missing label
-contribute('planner.eventMenuItem', { id: 'a', icon: 'x', run })
-contribute('planner.eventMenuItem', {
+contribute('example.itemMenuItem', { id: 'a', icon: 'x', run })
+// @ts-expect-error missing id, though the slot's meta doesn't list it
+contribute('example.panel', { title: 'C', component })
+contribute('example.itemMenuItem', {
   id: 'a',
   label: 'A',
   icon: 'x',

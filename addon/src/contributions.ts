@@ -1,11 +1,15 @@
 import type { SlotDeclaration, SlotMap, SlotName } from './slots'
 
-/** The fields of a contribution to slot `S`: its description and its pieces. */
-export type ContributionFields<S extends SlotName> = SlotMap[S]['meta'] & SlotMap[S]['pieces']
+/**
+ * The fields of a contribution to slot `S`: its `id` (every contribution has one, so a slot's
+ * `meta` needn't repeat it), its description and its pieces.
+ */
+export type ContributionFields<S extends SlotName> = { id: string } & SlotMap[S]['meta'] &
+  SlotMap[S]['pieces']
 
 /** What an addon writes for a contribution to slot `S`: the slot, its description and pieces. */
 export type ContributionInput<S extends SlotName = SlotName> = S extends SlotName
-  ? { slot: S; slotVersion?: number } & SlotMap[S]['meta'] & SlotMap[S]['pieces']
+  ? { slot: S; slotVersion?: number } & ContributionFields<S>
   : never
 
 /** The addon a contribution came from. */
