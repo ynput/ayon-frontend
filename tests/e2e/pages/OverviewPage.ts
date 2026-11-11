@@ -96,7 +96,7 @@ export class OverviewPage {
     await createDialog.getByLabel('Label', { exact: true }).fill(label)
   }
 
-  private async pickCreateDialogType(type: string) {
+  async pickCreateDialogType(type: string) {
     // the dialog opens the type dropdown by itself shortly after it appears (NewEntity handleShow)
     const option = this.page.locator(`.options [data-value="${type}"]`)
     await option.waitFor({ timeout: 2_000 }).catch(async () => {
