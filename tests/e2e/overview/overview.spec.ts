@@ -114,6 +114,31 @@ test.describe('project overview', () => {
       .toEqual(['sh010', 'sh020', 'sh030', 'sh040'])
   })
 
+  test('folders keep the order they were created in, also after a reload', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const created = ['sq030', 'sq010', 'assets', 'sq020']
+    const parents: Record<string, string> = {}
+    for (const name of created) parents[name] = (await api.createFolder(projectName, { name })).id
+    for (const name of ['sh030', 'sh010', 'sh020']) {
+      await api.createFolder(projectName, { name, parentId: parents.sq010 })
+    }
+    const expected = ['sq030', 'sq010', 'sh030', 'sh010', 'sh020', 'assets', 'sq020'].map(
+      (name) => new RegExp(`${name}$`),
+    )
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.expand('sq010')
+
+    await expect(overview.nameCells()).toHaveText(expected)
+
+    await page.reload()
+    await overview.expand('sq010')
+    await expect(overview.nameCells()).toHaveText(expected)
+  })
+
   test('rename a folder', async ({ page, api, projectName }) => {
     const folder = await api.createFolder(projectName, { name: 'old_name' })
     const overview = new OverviewPage(page)

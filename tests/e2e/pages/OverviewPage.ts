@@ -176,13 +176,19 @@ export class OverviewPage {
     await confirmDeleteEntities(this.page, label)
   }
 
-  async clickCell(label: string, columnId: string, { shift = false } = {}) {
+  /** `shift` selects the range from the last selected cell, `add` adds the cell to the selection */
+  async clickCell(label: string, columnId: string, { shift = false, add = false } = {}) {
     // click the left edge: the chevron on the right of enum cells opens their dropdown straight away
     await this.cell(label, columnId).click({
       position: { x: 4, y: 4 },
-      modifiers: shift ? ['Shift'] : [],
+      modifiers: shift ? ['Shift'] : add ? ['ControlOrMeta'] : [],
     })
     await expect(this.cell(label, columnId)).toHaveClass(/selected/)
+  }
+
+  /** Clear the selected cells with the Delete key: attributes go back to the inherited value */
+  async clearSelectedCells() {
+    await this.page.keyboard.press('Delete')
   }
 
   async pickForSelectedCells(value: string) {
