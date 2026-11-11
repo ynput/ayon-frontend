@@ -30,7 +30,7 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 | `ayon-addon dev [--port 5174]` | The dev shell (below): the addon in AYON's surfaces, without AYON, with hot reload |
 | `ayon-addon dev --ayon [--port 5173] [--open] [--frontend <url>]` | Builds on every change and serves the build with CORS. Checks what AYON's dev override needs on the server, then prints (`--open`: opens) the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
 | `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads. Then the slots of the addon's contract packages (dependencies with `"ayonAddon": { "slots": ... }` in their `package.json`), as "from `<package>`" |
-| `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc`. Contributions are checked against AYON's slots, those of the addon's contract packages and those it declares itself |
+| `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc`. Contributions are checked against AYON's slots, those of the addon's contract packages and those it declares itself. The contract packages' previews are checked too (below) |
 | `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
 | `ayon-addon preview <slot> <id> --fixture name [--run] [--prune] [--screenshot file]` | The same from `dev/fixtures/<name>.json`, without a server. `--prune` drops the answers it didn't use |
 | `ayon-addon generate-rest [--schema file] [--hooks]` | The addon's server endpoints as RTK Query endpoints in AYON's api (below) |
@@ -111,9 +111,12 @@ of AYON:
   project selection (also what a studio page's project list shows), an entity picker (AYON's) for
   the slots about entities, the table page, *Run* for menu items, a few lines of the context the
   contribution gets (click for all of it), and the preview fixtures.
+- **Other addons' slots**: contributions to the slots of the addon's contract packages, under an
+  area per declaring addon, rendered with the cases of the package's previews (below).
 - Above the stage, a caption names the contribution, where AYON shows it and its slot.
 - The selection is in the URL
-  (`?slot=…&contribution=…&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…`).
+  (`?slot=…&contribution=…&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…`, `ctxCase=<n>` for
+  a preview case).
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
   key when there is one (no login page); without a key the page shows AYON's login.
 - It needs a `@ynput/ayon-frontend-shared` build with the addon SDK (until one is released:
@@ -140,6 +143,71 @@ answers of `dev/fixtures/<name>.json`, and no server:
 - Record one from a live server: *Save* in the developer panel, or `ayon-addon open … --save-fixture
   <name>`; then `ayon-addon preview … --fixture <name> --prune`. A recording holds the server's real
   data: check it before committing it (project names, users, comment text).
+
+### Other addons' slots: previews
+
+A contribution to another addon's slot (from its contract package, `@ynput/ayon-addon-<addon>`)
+needs that addon's UI around it and the context it passes. The dev shell has neither, so the
+contract package brings both as previews, and the contribution is developed without that addon
+installed:
+
+- The shell imports `slots.js` and `previews.js` of every contract package in the addon's
+  `dependencies` and `devDependencies` (`"ayonAddon"` in their `package.json`), and registers the
+  slots as if the declaring addon were installed.
+- The developer panel lists the contributions to them under an area named after the declaring
+  addon. The context panel picks a **case**: a slot with a `component` piece renders inside the
+  previews' `frame` (a dashed box when there is none); one with a `run` piece is a right-click menu
+  with the addon's items for the slot and a button, and *Run* runs it, as AYON does.
+- A slot without previews says so, naming the package. Files that fail to load and invalid
+  previews are listed under *Contract packages*; `ayon-addon check` reports the same.
+- A new or changed `"ayonAddon"` in a contract package's `package.json` needs a restart of
+  `ayon-addon dev`.
+
+**Adding previews to a contract package** (for the declaring addon's developers):
+
+```json
+// package.json
+"ayonAddon": { "slots": "./slots.js", "previews": "./previews.js" },
+"files": ["...", "previews.js"],
+"peerDependencies": { "react": ">=18" }
+```
+
+```js
+// previews.js: plain JS, shipped as is (no JSX, no build step)
+import { createElement as h } from 'react'
+
+// the declaring addon's UI around the slot: only its layout, with AYON's CSS variables
+const CardHeader = ({ context, children }) =>
+  h('div', { style: { display: 'flex', gap: 8, padding: 8, background: 'var(--md-sys-color-surface-container)' } },
+    h('strong', null, context.card.title),
+    children, // where the slot's contributions go
+  )
+
+export const previews = {
+  'example.cardBadge': {
+    frame: CardHeader,
+    cases: [
+      { label: 'A card in progress', context: { card: { id: 'c1', title: 'Layout', status: 'in_progress' } } },
+      { label: 'A finished card', context: { card: { id: 'c2', title: 'Lighting', status: 'done' } } },
+    ],
+  },
+  // menu items: cases only, the shell draws the menu
+  'example.cardMenuItem': { cases: [{ label: 'One card', context: { cards: [{ id: 'c1' }] } }] },
+}
+```
+
+- Keys are slots the package declares. Each has `cases` (at least one: a `label` and a `context`
+  object, exactly what the addon passes to the slot) and optionally a `frame`, a component that
+  gets `{ context, children }` and puts `children` where the contributions go. Menu slots normally
+  have no frame.
+- Cover what contributors must handle: several entities, missing labels, no project, each kind of
+  thing the slot shows for. Ids in the format the addon uses; no real studio data.
+- A frame copies only the layout around the slot, close enough to size and place a contribution.
+  It never imports the addon's own components or code (the package ships none of it), only React.
+  AYON's CSS variables (`--md-sys-color-*`, `--base-gap-*`, `--padding-*`) are on the page; data
+  colours (a status colour) can be literals.
+- `ayon-addon check` in a contributing addon validates them: keys that are slots of the package,
+  non-empty `cases`, each with a string `label` and an object `context`, `frame` a function.
 
 ## Server endpoints: `ayon-addon generate-rest`
 
