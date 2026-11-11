@@ -79,6 +79,16 @@ export const buildEventFilterOptions = (data: OptionsData): Option[] => [
     singleSelect: true,
     values: getDateOptions(),
   },
+  {
+    id: 'id',
+    label: 'Event ID',
+    icon: 'fingerprint',
+    type: 'list_of_strings',
+    operator: 'OR',
+    allowsCustomValues: true,
+    values: [],
+    tooltip: 'Type or paste an event id',
+  },
   ...(data.canFilterByEntity
     ? [
         {
@@ -102,6 +112,13 @@ export const buildEventFilterOptions = (data: OptionsData): Option[] => [
     values: [],
   },
 ]
+
+// uuid hex, with or without dashes
+const EVENT_ID_REGEX = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i
+
+export const isEventId = (value: string) => EVENT_ID_REGEX.test(value.trim())
+
+const normalizeId = (value: string) => value.trim().replace(/-/g, '').toLowerCase()
 
 const formatDate = (iso: string) => format(new Date(iso), 'd MMM HH:mm')
 
@@ -155,6 +172,7 @@ export const eventFiltersToClientFilters = (
     ...chip('topic', filters.topics),
     ...chip('project', filters.projects),
     ...chip('user', filters.users),
+    ...chip('id', filters.ids),
   ]
 
   if (filters.datePreset || filters.newerThan || filters.olderThan) {
@@ -215,8 +233,16 @@ export const clientFiltersToEventFilters = (clientFilters: Filter[]): EventFilte
     | undefined
   const datePreset = isDatePreset(date?.id) ? date?.id : undefined
 
+  // a search term that is an event id becomes an id filter
+  const searchTerms = (values(SEARCH_FILTER_ID) ?? [])
+    .flatMap((v) => v.split(/\s+/))
+    .filter(Boolean)
+  const ids = [...(values('id') ?? []), ...searchTerms.filter(isEventId)].map(normalizeId)
+  const search = searchTerms.filter((t) => !isEventId(t)).join(' ')
+
   return {
-    search: values(SEARCH_FILTER_ID)?.join(' '),
+    search: search || undefined,
+    ids: ids.length ? [...new Set(ids)] : undefined,
     types: values('type'),
     severities: values('severity') as Severity[] | undefined,
     statuses: values('status'),
