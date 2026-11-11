@@ -1,0 +1,13 @@
+{
+  "name": "@ynput/ayon-addon-example",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "ayonAddon": {
+    "slots": "./slots.js",
+    "previews": "./previews.js"
+  },
+  "peerDependencies": {
+    "react": ">=18"
+  }
+}
