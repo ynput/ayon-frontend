@@ -8,6 +8,7 @@ import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin, ProxyOptions } from 'vite'
 import { contractsCode } from './contractSlots.js'
+import { HOST_PACKAGES } from './packages.js'
 import { currentApiKey, findConnection, findPackageDir, proxyApiKey } from './project.js'
 import type { AddonProject } from './project.js'
 
@@ -144,7 +145,14 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
           exclude: LINKED,
           // all known up front: a dependency found while the page loads re-optimizes and reloads
           // it. The addon's are found by scanning from its manifest (pieces are imports of it).
-          include: [...new Set([...sharedEntries, ...shellImports(root)])],
+          // AYON's packages too: a contract package's previews may be a build that imports them
+          include: [
+            ...new Set([
+              ...sharedEntries,
+              ...shellImports(root),
+              ...HOST_PACKAGES.filter((pkg) => findPackageDir(root, pkg)),
+            ]),
+          ],
           entries: [manifest],
         },
       }

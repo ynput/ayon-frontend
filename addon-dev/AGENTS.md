@@ -261,13 +261,19 @@ A scene is `{ id, label, description?, slots, fields, component }`:
   null when the addon isn't installed there.
 - Cover what contributors must handle with fields, not more scenes: several entities, missing
   labels, no project. Ids in the format the addon uses; no real studio data.
-- A scene copies only the layout around the slots, close enough to size and place a contribution.
-  It never imports the addon's own components or code (the package ships none of it), only React
-  and the SDK. AYON's CSS variables (`--md-sys-color-*`, `--base-gap-*`, `--padding-*`) are on the
-  page; data colours (a status colour) can be literals.
+- A scene shows the layout around the slots, close enough to size and place a contribution: a
+  plain JS mock that imports only React and the SDK, or a build of the addon's own components
+  (Vite library mode, one file, with `react`, `react-dom`, `react/jsx-runtime`, `@ynput/ayon-addon`,
+  `@ynput/ayon-react-components`, `styled-components` and `@ynput/ayon-frontend-shared` external).
+  The shell gives those imports the contributing addon's copies, as AYON gives them to addons.
+  AYON's CSS variables (`--md-sys-color-*`, `--base-gap-*`, `--padding-*`) are on the page; data
+  colours (a status colour) can be literals.
 - `ayon-addon check` in a contributing addon validates them: `previews` is a list, ids are unique,
   each scene has a label, slots of the package, well-formed fields and a function `component`. A
-  contribution to a slot no scene renders is a note, not a failure.
+  contribution to a slot no scene renders is a note, not a failure. It runs `previews.js` in Node
+  without rendering it: the SDK, AYON's components, `styled-components`, `react-dom` and packages
+  that aren't installed or don't load in Node get stand-ins, so work at the top of the module
+  (`styled.div` templates, contexts) runs, but don't compute the scenes' list from them.
 
 ## Server endpoints: `ayon-addon generate-rest`
 

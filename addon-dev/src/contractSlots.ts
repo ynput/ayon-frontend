@@ -122,20 +122,56 @@ export interface ContractPreviews {
   problems: { reason: string }[]
 }
 
-// what a previews module gets for `@ynput/ayon-addon` in Node: the SDK needs a browser (and its
-// CommonJS dependencies don't load as ES modules), the scenes only use it when they render
-const SDK_STAND_IN = new Proxy({}, { get: (_target, key) => (key === '__esModule' ? true : undefined) })
+/**
+ * A stand-in for a package `check` can't or needn't run in Node: every property, call, `new` and
+ * tagged template gives another stand-in, so what a module does with it at the top (`styled.div`
+ * with a template, `styled(Button)`, `class X extends Component`) works, and the scenes' metadata
+ * comes out. Only rendering would need the real thing, and `check` renders nothing.
+ */
+export const stubModule = (): unknown => {
+  const children = new Map<PropertyKey, unknown>()
+  const stub: unknown = new Proxy(function () {}, {
+    get: (target, key) => {
+      if (key === '__esModule') return true
+      // not a promise, and no primitive value: `${stub}` is ''
+      if (key === 'then' || typeof key === 'symbol') return undefined
+      if (key === 'toString' || key === 'valueOf') return () => ''
+      if (key === 'prototype') return Reflect.get(target, key)
+      if (!children.has(key)) children.set(key, stubModule())
+      return children.get(key)
+    },
+    apply: () => stubModule(),
+    construct: () => stubModule() as object,
+  })
+  return stub
+}
+
+/**
+ * The packages a previews module may import (as a contract package's peers or a bundle's
+ * externals) that `check` stands in for in Node: the SDK, AYON's components and styles and the
+ * DOM need a browser, and their CommonJS or ES builds don't all load here. React itself is
+ * the real one, from where the module or the addon has it.
+ */
+export const BROWSER_PACKAGES = [
+  '@ynput/ayon-addon',
+  '@ynput/ayon-frontend-shared',
+  '@ynput/ayon-react-components',
+  'styled-components',
+  'react-dom',
+]
 
 /**
  * A previews module in Node, for `ayon-addon check`: bundled with Vite (its own relative imports
- * included) to CommonJS, and run with `provided` for the packages named there (by default a
- * stand-in for `@ynput/ayon-addon` and its entries). Other packages are required from where the
- * module is, else from the addon.
+ * included, in one chunk) to CommonJS, and run with `provided` for the packages named there (by
+ * default stand-ins for `BROWSER_PACKAGES`, entries included). Other packages are required from
+ * where the module is, else from the addon; one that isn't installed or doesn't load in Node gets
+ * a stand-in too. A previews.js that is itself a build of the declaring addon's components, with
+ * React, the SDK, AYON's components and styled-components as externals, loads the same way.
  */
 export const loadPreviewsModule = async (
   root: string,
   file: string,
-  provided: Record<string, unknown> = { '@ynput/ayon-addon': SDK_STAND_IN },
+  provided: Record<string, unknown> = Object.fromEntries(BROWSER_PACKAGES.map((pkg) => [pkg, stubModule()])),
 ): Promise<{ previews?: unknown }> => {
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
   const isPackage = (id: string) => !id.startsWith('.') && !path.isAbsolute(id) && !id.startsWith('\0')
@@ -147,7 +183,11 @@ export const loadPreviewsModule = async (
       ssr: file,
       write: false,
       minify: false,
-      rollupOptions: { external: isPackage, output: { format: 'cjs', exports: 'named' } },
+      rollupOptions: {
+        external: isPackage,
+        // a bundle's lazy chunks too: one module to run
+        output: { format: 'cjs', exports: 'named', inlineDynamicImports: true },
+      },
     },
   })
   const outputs = (Array.isArray(output) ? output : [output]) as {
@@ -157,13 +197,20 @@ export const loadPreviewsModule = async (
   if (code === undefined) throw new Error(`could not build ${file}`)
   const fromModule = createRequire(file)
   const fromAddon = createRequire(path.join(root, 'package.json'))
+  const stubs = new Map<string, unknown>()
   const require = (id: string) => {
     const name = Object.keys(provided).find((pkg) => id === pkg || id.startsWith(`${pkg}/`))
     if (name) return provided[name]
     try {
       return fromModule(id)
     } catch {
-      return fromAddon(id)
+      try {
+        return fromAddon(id)
+      } catch {
+        // not installed here, or needs a browser: the scenes' metadata doesn't depend on it
+        if (!stubs.has(id)) stubs.set(id, stubModule())
+        return stubs.get(id)
+      }
     }
   }
   const module = { exports: {} as Record<string, unknown> }

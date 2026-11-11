@@ -448,6 +448,57 @@ test('a declaration may have a label, a non-empty string', () => {
   }
 })
 
+// A contract package may ship previews.js as a build of the declaring addon's own components,
+// with React, the SDK, AYON's components, styled-components and the DOM as externals. `check` only
+// needs the scenes' metadata: it stands in for what Node can't run or the addon hasn't installed.
+test('check reads the scenes of a previews.js built with externals', async () => {
+  const root = addonRoot()
+  const dir = path.join(root, 'node_modules', PACKAGE)
+  writeFileSync(path.join(dir, 'previews.css'), '.bar { color: red }')
+  writeFileSync(
+    path.join(dir, 'chunk-bar.js'),
+    `import styled from 'styled-components'
+export const Bar = styled.div\`display: flex;\``,
+  )
+  writeFileSync(
+    path.join(dir, 'previews.js'),
+    `import './previews.css'
+import { jsx } from 'react/jsx-runtime'
+import { createContext, Component } from 'react'
+import { createPortal } from 'react-dom'
+import { createRoot } from 'react-dom/client'
+import styled, { css, createGlobalStyle } from 'styled-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
+import { useGetProjectQuery } from '@ynput/ayon-frontend-shared/api'
+import * as ayonAddon from '@ynput/ayon-addon'
+import { format } from 'not-installed-date-lib'
+import { Bar } from './chunk-bar.js'
+
+const Theme = createContext(null)
+const Global = createGlobalStyle\`body { margin: 0 }\`
+const Title = styled(Button)\`\${css\`color: red;\`}\`
+class Boundary extends Component {}
+const Lazy = () => import('./chunk-bar.js')
+const Outlet = ayonAddon.SlotOutlet ?? (() => null)
+export const previews = [
+  {
+    id: 'bar',
+    label: \`A bar \${format}\`,
+    slots: ['example.cardBadge', 'example.cardEndItem'],
+    fields: [],
+    component: (props) => jsx(Bar, { children: [jsx(Title, {}), jsx(Outlet, props)] }),
+  },
+]
+export const unused = [Theme, Global, Boundary, Lazy, createPortal, createRoot, Icon, useGetProjectQuery]`,
+  )
+  const { slots } = await readContractSlots(root)
+  const result = await readContractPreviews(root, slots)
+  expect(result.problems).toEqual([])
+  expect(result.previews).toEqual([
+    { package: PACKAGE, scenes: [{ id: 'bar', label: 'A bar ', slots: ['example.cardBadge', 'example.cardEndItem'] }] },
+  ])
+})
+
 test.describe('Show slots (the dev shell only)', () => {
   const contributor = { name: 'contributor', version: '1.0.0', remote: 'contributor' }
   const SlotOutlet = toReactComponent(sdk.SlotOutlet)
