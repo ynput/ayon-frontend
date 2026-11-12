@@ -102,7 +102,6 @@ main.center {
 .ayon-shell-panel h3 {
   margin: 4px 0 0;
   font-size: 12px;
-  text-transform: uppercase;
   color: var(--md-sys-color-outline);
 }
 .ayon-shell-panel code {
@@ -548,7 +547,7 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   font-weight: 600;
 }
 
-/* the panels: "," folds the developer panel away, "/" Preview inputs down to its header */
+/* the panels: "," folds the developer panel away, "/" Context down to its header */
 .ayon-shell.left-collapsed > .p-splitter-panel:first-child {
   flex: 0 0 0 !important;
   overflow: hidden;
@@ -955,7 +954,7 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   border-top: 1px solid var(--md-sys-color-outline-variant);
 }
 
-/* Preview inputs: the lower panel of the stage's splitter */
+/* Context: the lower panel of the stage's splitter */
 .ayon-shell-inputs {
   display: flex;
   flex-direction: column;
@@ -967,16 +966,14 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
 .ayon-shell-inputs-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 4px;
+  gap: 8px;
   box-sizing: border-box;
-  height: 32px;
-  padding: 0 4px 0 12px;
+  height: 36px;
+  padding: 0 12px 0 8px;
   flex-shrink: 0;
   color: var(--md-sys-color-outline);
   font-size: 12px;
   font-weight: 600;
-  text-transform: uppercase;
 }
 .ayon-shell-disclosure .ayon-shell-subheader code {
   margin-left: 4px;

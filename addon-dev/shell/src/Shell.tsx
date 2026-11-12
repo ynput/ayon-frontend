@@ -211,7 +211,7 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
   // the inputs of each scene, for when the developer comes back to it
   useEffect(() => rememberSceneValues(selection.surface, selection.sceneValues), [selection.surface, selection.sceneValues])
 
-  // "," toggles the developer panel, "/" Preview inputs, unless typing
+  // "," toggles the developer panel, "/" Context, unless typing
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || isTyping(e.target)) return

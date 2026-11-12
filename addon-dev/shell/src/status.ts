@@ -1,4 +1,4 @@
-// What the stage reports: the context each slot of the place passes (Preview inputs shows them, per
+// What the stage reports: the context each slot of the place passes (Context shows them, per
 // slot) and whether it is ready; and window.__AYON_ADDON_SHELL__, what `ayon-addon open | preview`
 // reads from the page.
 import { useEffect } from 'react'
@@ -42,7 +42,7 @@ const jsonSafe = (value: Context) =>
   ) as Context
 
 const listeners = new Set<() => void>()
-/** Preview inputs shows what the slots got. */
+/** Context shows what the slots got. */
 export const subscribeReports = (listener: () => void) => {
   listeners.add(listener)
   return () => {
@@ -100,7 +100,7 @@ export const clearMenus = () => {
   rebuild(new Map(mountedReports))
 }
 
-/** The first report of a slot: what Preview inputs shows and a fixture is made of. */
+/** The first report of a slot: what Context shows and a fixture is made of. */
 export const slotReport = (slot: string) => reports.get(slot)?.[0]
 
 /** A preview fixture of a contribution: its slot's context and the answers recorded since. */

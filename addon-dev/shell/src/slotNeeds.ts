@@ -1,4 +1,4 @@
-// What Preview inputs asks for, per place of AYON (places.ts); a preview scene takes its own
+// What Context asks for, per place of AYON (places.ts); a preview scene takes its own
 // fields instead. And which slots are menus (a preview runs their item).
 import type { AnyContribution } from '@ynput/ayon-addon'
 import type { ShellSelection } from './types'

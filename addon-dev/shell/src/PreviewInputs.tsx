@@ -1,4 +1,4 @@
-// Preview inputs: the drawer below the stage. What the place is rendered with (a preview scene's
+// Context: the drawer below the stage. What the place is rendered with (a preview scene's
 // fields, or the project, the studio's projects, entities, table page and user for AYON's places),
 // the context each of its slots passes, and the saved examples (preview fixtures). Its height is
 // the stage column's splitter (Shell.tsx); collapsed, only its header shows.
@@ -388,17 +388,17 @@ export const PreviewInputs = ({
   return (
     <section className={`ayon-shell-inputs${open ? ' open' : ''}`} data-shell-surface="preview-inputs">
       <div className="ayon-shell-inputs-header">
-        <span>Preview inputs</span>
         <Button
           icon={open ? 'bottom_panel_close' : 'bottom_panel_open'}
           variant="text"
           className="ayon-shell-icon-button"
           aria-expanded={open}
-          aria-label={open ? 'Hide Preview inputs (/)' : 'Show Preview inputs (/)'}
-          data-tooltip={open ? 'Hide inputs /' : 'Show inputs /'}
+          aria-label={open ? 'Hide Context (/)' : 'Show Context (/)'}
+          data-tooltip={open ? 'Hide context /' : 'Show context /'}
           data-shell-action="toggle-inputs"
           onClick={onToggle}
         />
+        <span>Context</span>
       </div>
       {open && (
         <div className="ayon-shell-inputs-body">

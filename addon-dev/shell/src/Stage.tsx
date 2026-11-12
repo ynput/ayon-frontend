@@ -3,7 +3,7 @@
 // panel, slicer, Customize panel, the addon columns' cells and data); replicas of what lives in the
 // ayon-frontend app (the header, the project table around the columns, the user details panel,
 // the account page, the dashboard's layout). Pages render alone, without AYON's page tabs. Each
-// slot reports the context it passes (Preview inputs shows it).
+// slot reports the context it passes (Context shows it).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
@@ -194,7 +194,7 @@ const ProjectPagesStage = ({ selection }: StageProps) => {
 }
 
 /**
- * The studio's project selection, set in Preview inputs; AYON's project list on a studio page
+ * The studio's project selection, set in Context; AYON's project list on a studio page
  * shows and changes the same one, as on AYON's dashboard. `ayon-addon open --project` gives one
  * project.
  */
@@ -383,7 +383,7 @@ const UserDetailsHeader = ({ user, menuItems, onMenuOpen }: { user: ShellUser; m
 
 // userDetails.section and userDetails.menuItem: a replica of the user details panel of Settings >
 // Users (UserDetail in the ayon-frontend app), next to a list of the users to pick from (also in
-// Preview inputs). Only the header and the addon sections: AYON's own forms are left out.
+// Context). Only the header and the addon sections: AYON's own forms are left out.
 const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   const signedIn = useUser()
   const { data = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
@@ -694,7 +694,7 @@ const TableStage = ({ selection }: StageProps) => {
               />
             </div>
           ) : (
-            <Hint>Choose a project and entities in Preview inputs: they are the table&apos;s rows.</Hint>
+            <Hint>Choose a project and entities in Context: they are the table&apos;s rows.</Hint>
           )}
         </div>
         {isPanelOpen && (
@@ -820,8 +820,8 @@ export const Stage = ({
       <main className="ayon-shell-stage" data-shell-place={place.id}>
         <NotReady />
         <Hint>
-          Choose a project and entities in Preview inputs.{' '}
-          <Button label="Preview inputs" variant="text" icon="tune" onClick={onOpenInputs} />
+          Choose a project and entities in Context.{' '}
+          <Button label="Context" variant="text" icon="tune" onClick={onOpenInputs} />
         </Hint>
       </main>
     )

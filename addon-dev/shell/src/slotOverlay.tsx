@@ -143,7 +143,7 @@ const Outlet = ({ slot, count, context, children }: DevSlotOutletProps) => {
     mount(slot)
     return () => unmount(slot)
   }, [slot])
-  // what the slot passes here, also with no contributions yet: Preview inputs shows it
+  // what the slot passes here, also with no contributions yet: Context shows it
   useSlotReport(slot, (context as object | undefined) ?? NO_CONTEXT)
   return count ? <>{children}</> : <Placeholder slot={slot} />
 }

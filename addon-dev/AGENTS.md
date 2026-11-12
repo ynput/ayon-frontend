@@ -135,8 +135,8 @@ of AYON:
   items, the addon's columns as real columns; sorting, grouping and hiding do nothing), User
   details (Settings > Users: the users, the details panel with its more menu) and Account (the
   profile page). They show a subset of AYON's fields and save nothing.
-- **Preview inputs**, under the stage in a second splitter (drag the edge between them; the button
-  in its header or "/" folds it to its header). *Input values*: a project switcher, the studio's
+- **Context** (the preview inputs), under the stage in a second splitter (drag the edge between them;
+  the button at the left of its header or "/" folds it to its header). *Input values*: a project switcher, the studio's
   project selection, an entity picker (AYON's) for the slots about entities, the table page, a
   scene's form. *Context received*: one collapsible section per slot of the place, with the
   context it passes (a menu's once it opened; click for all of it). *Saved examples*: the preview
@@ -180,7 +180,7 @@ answers of `dev/fixtures/<name>.json`, and no server:
   count). A request without an answer gets a 404 and fails the preview (`not in the fixture`).
 - The user, the site info, the project list and the cloud status are answered by the shell (an
   admin "preview" user): fixtures leave them out.
-- Record one from a live server: *Saved examples* in Preview inputs, or `ayon-addon open … --save-fixture
+- Record one from a live server: *Saved examples* in Context, or `ayon-addon open … --save-fixture
   <name>`; then `ayon-addon preview … --fixture <name> --prune`. A recording holds the server's real
   data: check it before committing it (project names, users, comment text).
 

@@ -1,6 +1,6 @@
 // Preview scenes of other addons' slots (contract packages' previews.js): the scene's component on
 // stage, full width, with the shell's providers around it (it renders its slots with the SDK, as
-// the declaring addon does in AYON), and its fields as a form in Preview inputs. The values
+// the declaring addon does in AYON), and its fields as a form in Context. The values
 // the developer changed are in the URL (ctxValues), the rest are the fields' defaults.
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
