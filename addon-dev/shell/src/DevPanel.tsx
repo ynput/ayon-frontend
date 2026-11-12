@@ -190,12 +190,10 @@ const Places = ({ options, selection, search, onSearch, onChange, onPick }: DevP
         const areas = source === AYON_SOURCE ? AYON_AREAS.filter((area) => inSource.some((p) => p.area === area)) : []
         return (
           <div key={source || 'other'} className="ayon-shell-places" data-shell-source={source}>
-            {sources.length > 1 && source && (
-              <div
-                className="ayon-shell-slot-label"
-                title={source === AYON_SOURCE ? undefined : `Slots of another addon, from ${source}`}
-              >
-                {source === AYON_SOURCE ? source : packageTitle(source)}
+            {/* AYON's places need no heading: their areas (Studio, Project, ...) head them */}
+            {source && source !== AYON_SOURCE && (
+              <div className="ayon-shell-slot-label" title={`Slots of another addon, from ${source}`}>
+                {packageTitle(source)}
               </div>
             )}
             {areas.length
