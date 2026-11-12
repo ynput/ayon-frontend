@@ -2,7 +2,7 @@
 // from SlotMap in src/slots.ts, so what agents read matches the installed version.
 //   node scripts/generate-docs.mjs          write both
 //   node scripts/generate-docs.mjs --check  fail when AGENTS.md is out of date
-/* global process, console */
+/* global process, console, Buffer */
 import ts from 'typescript'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
@@ -60,6 +60,15 @@ ts.forEachChild(slotDocsFile, function visit(node) {
   ts.forEachChild(node, visit)
 })
 
+// each slot's example (src/slotExamples.ts), run on its own: it imports types only
+const examplesSource = readFileSync(path.join(root, 'src/slotExamples.ts'), 'utf8')
+const examplesModule = ts.transpileModule(examplesSource, {
+  compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ESNext },
+}).outputText
+const { SLOT_EXAMPLES, exampleSnippet } = await import(
+  `data:text/javascript;base64,${Buffer.from(examplesModule).toString('base64')}`
+)
+
 const slots = []
 ts.forEachChild(slotsFile, (node) => {
   if (!ts.isInterfaceDeclaration(node) || node.name.text !== 'SlotMap') return
@@ -80,6 +89,8 @@ ts.forEachChild(slotsFile, (node) => {
         ...fields(parts.context.type),
       ],
       pieces,
+      // complete: every required field and piece is in it
+      example: exampleSnippet(name, { required: [], pieces: [], example: SLOT_EXAMPLES[name] }, slotDocs[name]?.helper),
     })
   }
 })
@@ -107,7 +118,13 @@ ${table(s.meta, 'Description field')}
 
 ${table(s.context, 'Context (props, `useSlot`)')}
 
-Pieces: ${s.pieces.map((p) => `\`${p.name}\`${p.optional ? ' (optional)' : ''}`).join(', ')}.`,
+Pieces: ${s.pieces.map((p) => `\`${p.name}\`${p.optional ? ' (optional)' : ''}`).join(', ')}.
+
+Example (what developer mode's Show slots renders here):
+
+\`\`\`ts
+${s.example}
+\`\`\``,
   )
   .join('\n\n')
 
@@ -419,7 +436,14 @@ fails shows an error box sized for a panel; in an inline place (a badge, a heade
 A declaration has \`name\`, \`version\`, \`required\`, \`pieces\` and optionally \`optionalPieces\`,
 \`optional\`, \`check\` and \`description\`: what AYON checks for its own slots. It may also have a
 \`label\`, a short title for people (\`'Card menu item'\`, a non-empty string): the dev shell lists the
-slot by it, else by the name after the dot in words.
+slot by it, else by the name after the dot in words. And an \`example\`: a contribution of the slot's
+shape without \`id\` (\`{ label: 'Example card action', icon: 'extension' }\`), which AYON's developer
+mode shows in the slot with Show slots on, owned by the declaring addon and after the real
+contributions. It is filled in where it leaves something out: each required field gets the slot's
+label (\`icon\` an icon), \`run\` says it was used, any other piece shows the slot and its context
+(\`ExampleView\`). A piece of its own is a dynamic import in the contract package, which may render
+\`ExampleView\` from \`@ynput/ayon-addon\` inside its own markup (a badge's size, a button's look).
+Using an example never changes anything.
 
 **Ownership.** The name is \`<addon>.<name>\`: the addon's name from \`package.py\`, a dot, then a letter
 followed by letters, digits and \`_\` (no more dots). Only that addon can declare it. A declaration with

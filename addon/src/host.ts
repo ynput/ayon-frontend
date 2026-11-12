@@ -5,14 +5,20 @@
 export const MANIFEST_MODULE = 'manifest'
 
 export {
+  contributionTags,
   getContributions,
   getRegistry,
+  isExample,
   registerManifest,
   registerManifests,
+  setContributionTags,
   setManifestsLoading,
+  setSlotExamples,
+  subscribeRegistry,
   unregisterAddon,
+  useContributionTagging,
 } from './registry'
-export type { ManifestEntry } from './registry'
+export type { ContributionTags, ManifestEntry } from './registry'
 export {
   checkManifest,
   checkSlotDeclarations,
@@ -28,9 +34,9 @@ export type {
   SkippedDeclaration,
 } from './validate'
 export { isKnownSlot, SLOTS } from './slots'
-export type { SlotDeclaration, SlotDefinition } from './slots'
+export type { SlotDeclaration, SlotDefinition, SlotExample } from './slots'
 export { getHost, provideHost } from './hostBridge'
-export type { DevSlotItemProps, DevSlotOutletProps, DevSlots, HostComponents, HostImplementation } from './hostBridge'
+export type { DevSlots, HostComponents, HostImplementation } from './hostBridge'
 export type { HostMoreMenuProps } from './MoreMenu'
 export type { HostOpenContextMenu } from './useContextMenu'
 export { contributionTitle, loadPiece, pieceContext, reportContributionError, usePiece } from './pieces'

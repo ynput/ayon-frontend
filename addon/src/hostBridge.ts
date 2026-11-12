@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType } from 'react'
 import type {
   ProjectListProps,
   ProjectPageLayoutProps,
@@ -12,7 +12,6 @@ import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
 import type { HostOpenContextMenu } from './useContextMenu'
-import type { SlotMenuItem } from './SlotOutlet'
 
 export type { AddonUser }
 
@@ -44,41 +43,17 @@ export interface HostComponents {
   EntityTable?: ComponentType<EntityTableProps>
 }
 
-/** What `DevSlots.Outlet` gets: the slot, how many contributions it renders, and those. */
-export interface DevSlotOutletProps {
-  slot: string
-  count: number
-  /** the context the outlet passes to its contributions */
-  context: unknown
-  children: ReactNode
-}
-
-/** What `DevSlots.Item` gets: one contribution of an outlet, by its key (`<addon>.<id>`). */
-export interface DevSlotItemProps {
-  slot: string
-  contribution: string
-  /** the context the contribution gets */
-  context: unknown
-  children: ReactNode
-}
-
 /**
- * Internal, for the standalone dev shell only: AYON never sets it. Shows where each slot sits:
- * `SlotOutlet` renders its contributions inside `Outlet`, each in `Item` when it is set, and
- * `useSlotMenuItems` passes each entry through `menuItem`, adds `menuPlaceholder` to a menu that has
- * no items of the slot and tells `menuBuilt` the context a menu was built for. Without it, both render exactly what they render
- * in AYON.
+ * Internal, for the standalone dev shell only: AYON never sets it. Tells the shell the context each
+ * slot passes, for its Context panel: `SlotOutlet` calls `useOutletReport` (a hook) on every render,
+ * `useSlotMenuItems` calls `menuBuilt` when a menu of the slot is built (it opens). Without it,
+ * both work exactly as in AYON.
  */
 export interface DevSlots {
-  Outlet: ComponentType<DevSlotOutletProps>
-  /** wraps each contribution an outlet renders */
-  Item?: ComponentType<DevSlotItemProps>
-  /** the entry to show where a menu slot's items would go, or nothing */
-  menuPlaceholder: (slot: string) => SlotMenuItem | undefined
+  /** a `SlotOutlet` of the slot renders with this context */
+  useOutletReport?: (slot: string, context: unknown) => void
   /** a menu of the slot was built (it opens): its context and the keys of its contributions */
   menuBuilt?: (slot: string, context: unknown, contributions: string[]) => void
-  /** each entry of the slot's menu passes through it (the shell tags it to outline it) */
-  menuItem?: (slot: string, item: SlotMenuItem) => SlotMenuItem
 }
 
 export interface HostImplementation {
@@ -101,7 +76,7 @@ export interface HostImplementation {
   /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
   useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
-  /** @internal the dev shell's slot outlines (`DevSlots`); never set by AYON */
+  /** @internal the dev shell's slot reports (`DevSlots`); never set by AYON */
   devSlots?: DevSlots
 }
 

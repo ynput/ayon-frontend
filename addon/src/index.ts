@@ -9,6 +9,7 @@ export type {
   SlotContext,
   SlotDeclaration,
   SlotDefinition,
+  SlotExample,
   SlotMap,
   SlotName,
   SlotProps,
@@ -109,6 +110,8 @@ export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
 export { SlotOutlet, useSlotMenuItems } from './SlotOutlet'
+export { ExampleView } from './ExampleViewLazy'
+export type { ExampleViewProps } from './ExampleView'
 export type { SlotMenuItem, SlotMenuItems, SlotOutletProps } from './SlotOutlet'
 export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
 export { entityUrl, navigateToEntity } from './entityLinks'

@@ -306,7 +306,14 @@ fails shows an error box sized for a panel; in an inline place (a badge, a heade
 A declaration has `name`, `version`, `required`, `pieces` and optionally `optionalPieces`,
 `optional`, `check` and `description`: what AYON checks for its own slots. It may also have a
 `label`, a short title for people (`'Card menu item'`, a non-empty string): the dev shell lists the
-slot by it, else by the name after the dot in words.
+slot by it, else by the name after the dot in words. And an `example`: a contribution of the slot's
+shape without `id` (`{ label: 'Example card action', icon: 'extension' }`), which AYON's developer
+mode shows in the slot with Show slots on, owned by the declaring addon and after the real
+contributions. It is filled in where it leaves something out: each required field gets the slot's
+label (`icon` an icon), `run` says it was used, any other piece shows the slot and its context
+(`ExampleView`). A piece of its own is a dynamic import in the contract package, which may render
+`ExampleView` from `@ynput/ayon-addon` inside its own markup (a badge's size, a button's look).
+Using an example never changes anything.
 
 **Ownership.** The name is `<addon>.<name>`: the addon's name from `package.py`, a dot, then a letter
 followed by letters, digits and `_` (no more dots). Only that addon can declare it. A declaration with
@@ -469,6 +476,16 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 
 Pieces: `component`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectPage({
+  id: 'example',
+  title: 'Example page',
+  component: () => import('./Component'),
+})
+```
+
 ### `studio.page`: `studioPage`
 
 A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from the description; `component` loads when the page is first opened. Loads: first shown.
@@ -488,6 +505,16 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 | `views` (required) | `PageViews \| undefined` | `undefined` when the page's description has no `viewType` |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+studioPage({
+  id: 'example',
+  title: 'Example page',
+  component: () => import('./Component'),
+})
+```
 
 ### `header.item`: `headerItem`
 
@@ -515,6 +542,18 @@ A button in the main header, drawn by the host like its own buttons. What a clic
 
 Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+headerItem({
+  id: 'example',
+  label: 'Example header item',
+  icon: 'extension',
+  placement: 'right',
+  run: () => import('./Run'),
+})
+```
+
 ### `detailsPanel.tab`: `detailsPanelTab`
 
 A tab in the details panel. The tab button shows from the description, for `entityTypes`; `component` loads when the tab is first opened. Loads: first shown.
@@ -536,6 +575,17 @@ A tab in the details panel. The tab button shows from the description, for `enti
 | `entities` (required) | `EntityRef[]` | the entities the slot is about, e.g. the ones the details panel shows |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+detailsPanelTab({
+  id: 'example',
+  label: 'Example tab',
+  icon: 'extension',
+  component: () => import('./Component'),
+})
+```
 
 ### `detailsPanel.menuItem`: `detailsPanelMenuItem`
 
@@ -561,6 +611,17 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+detailsPanelMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `projectList.menuItem`: `projectListMenuItem`
 
 An item in the project list's menus (dashboard, project menu, studio pages' ProjectList): the right-click menu, the "more" dropdown, or both (`in`). It acts on the selected projects. Loads: menu open / click.
@@ -582,6 +643,17 @@ An item in the project list's menus (dashboard, project menu, studio pages' Proj
 | `menu` (required) | `MenuKind` |  |
 
 Pieces: `run`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectListMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `slicer.menuItem`: `slicerMenuItem`
 
@@ -609,6 +681,17 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+slicerMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `entityMenuItem`: `entityMenuItem`
 
 An item in the right-click menu of the project tables' cells, for the selected entities. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
@@ -634,6 +717,17 @@ An item in the right-click menu of the project tables' cells, for the selected e
 | `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+entityMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `projectTable.toolbarItem`: `projectTableToolbarItem`
 
@@ -662,6 +756,17 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableToolbarItem({
+  id: 'example',
+  label: 'Example',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `projectTable.columnMenuItem`: `projectTableColumnMenuItem`
 
@@ -693,6 +798,17 @@ An item in the "more" menu of a project table column's header (Overview, Product
 
 Pieces: `run` (optional), `dialog` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableColumnMenuItem({
+  id: 'example',
+  label: 'Example for {column}',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `projectTable.customizeSection`: `projectTableCustomizeSection`
 
 A section in the project tables' Customize panel (Overview, Products, Lists). The entry shows from the description; `component` loads when the section is opened. Loads: first shown.
@@ -712,6 +828,17 @@ A section in the project tables' Customize panel (Overview, Products, Lists). Th
 | `projectName` (required) | `string` |  |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableCustomizeSection({
+  id: 'example',
+  title: 'Example section',
+  icon: 'extension',
+  component: () => import('./Component'),
+})
+```
 
 ### `tableColumn`: `tableColumn`
 
@@ -738,6 +865,17 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `projectName` (required) | `string` |  |
 
 Pieces: `cell`, `fetchValues` (optional).
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+tableColumn({
+  id: 'example',
+  label: 'Example column',
+  icon: 'extension',
+  cell: () => import('./Cell'),
+})
+```
 
 ### `table.shortcut`: `tableShortcut`
 
@@ -767,6 +905,17 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 
 Pieces: `run` (optional), `dialog` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+tableShortcut({
+  id: 'example',
+  label: 'Example shortcut',
+  keys: 'alt+shift+e',
+  run: () => import('./Run'),
+})
+```
+
 ### `userDetails.section`: `userDetailsSection`
 
 A section in the user details panel (Settings → Users), below AYON's own forms, for the selected users. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's Save button doesn't see it. Loads: first shown.
@@ -787,6 +936,17 @@ A section in the user details panel (Settings → Users), below AYON's own forms
 | `users` (required) | `UserRef[]` | the users the slot is about, e.g. the ones selected in Settings → Users |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+userDetailsSection({
+  id: 'example',
+  title: 'Example section',
+  serviceUsers: true,
+  component: () => import('./Component'),
+})
+```
 
 ### `userDetails.menuItem`: `userDetailsMenuItem`
 
@@ -810,6 +970,17 @@ An item in the user details panel's "more" menu (Settings → Users), for the se
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+userDetailsMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `profile.section`: `profileSection`
 
 A section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens). The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
@@ -828,6 +999,16 @@ A section on the signed-in user's profile page (Account → Profile), next to AY
 
 Pieces: `component`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+profileSection({
+  id: 'example',
+  title: 'Example section',
+  component: () => import('./Component'),
+})
+```
+
 ### `app.service`: `appService`
 
 Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.
@@ -843,3 +1024,12 @@ Code with no UI that runs while AYON is open, whatever the page: keeping a state
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+appService({
+  id: 'example',
+  component: () => import('./Component'),
+})
+```

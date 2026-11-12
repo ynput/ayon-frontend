@@ -783,7 +783,20 @@ export interface SlotDeclaration extends SlotDefinition {
   label?: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
+  /**
+   * a contribution of the slot's shape that AYON shows with Show slots on (developer mode), after
+   * the slot's real contributions: its description fields and, optionally, its pieces. A required
+   * field or piece left out is filled in: the label, and a piece that shows the slot and its
+   * context (`ExampleView`) or, for `run`, says it was used. Example code never changes anything
+   */
+  example?: SlotExample
 }
+
+/**
+ * A slot's example contribution: the fields of a contribution to the slot, without `id` (AYON
+ * gives it one). Pieces are optional loaders, like a contribution's.
+ */
+export type SlotExample = { readonly [field: string]: unknown }
 
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
