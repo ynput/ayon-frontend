@@ -1,12 +1,14 @@
 // Developer mode's slot inspector in the header: Show slots, Highlight contributions and the
 // addons' colours. AYON's header shows it while developer mode is on; the addon dev shell's top bar
-// shows the same menu. Internal, like slotInspector.
+// shows the same menu. It also renders the card of the contribution under the pointer
+// (SlotInspectorCard). Internal, like slotInspector.
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
 import { useMenuContext } from '@shared/context'
 import { MenuContainer } from '../Menu/MenuContainer'
 import * as MenuStyled from '../Menu/Menu.styled'
 import { HeaderButton } from '../HeaderButton'
+import { SlotInspectorCard } from './SlotInspectorCard'
 import { SlotInspectorControls } from './SlotInspectorControls'
 import { setSlotInspectorAvailable, useSlotInspector } from './slotInspector'
 
@@ -40,6 +42,7 @@ export const SlotInspectorMenu = () => {
           <SlotInspectorControls />
         </MenuStyled.Section>
       </MenuContainer>
+      <SlotInspectorCard />
     </>
   )
 }

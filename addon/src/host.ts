@@ -36,6 +36,8 @@ export type {
 export { isKnownSlot, SLOTS } from './slots'
 export type { SlotDeclaration, SlotDefinition, SlotExample } from './slots'
 export { getHost, provideHost } from './hostBridge'
+export { slotInfo } from './slotInfo'
+export type { SlotInfo } from './slotInfo'
 export type { DevSlots, HostComponents, HostImplementation } from './hostBridge'
 export type { HostMoreMenuProps } from './MoreMenu'
 export type { HostOpenContextMenu } from './useContextMenu'

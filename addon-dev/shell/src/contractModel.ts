@@ -59,7 +59,8 @@ export const sceneKey = (pkg: string, id: string) => `${pkg}:${id}`
 
 /**
  * A slot's title for people: the declaration's `label`, else the name after the last dot in words
- * (`example.cardMenuItem`: "Card menu item").
+ * (`example.cardMenuItem`: "Card menu item"). The same words as the SDK's `slotInfo`, which this
+ * module can't import (no package imports).
  */
 export const slotLabel = (name: string, label?: unknown) => {
   if (typeof label === 'string' && label.trim()) return label.trim()

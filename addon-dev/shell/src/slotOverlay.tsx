@@ -4,21 +4,8 @@
 // scenes need no code for it: each slot reports the context it passes, which the Context panel
 // shows. What marks slots on stage is AYON's slot inspector (`slotInspector` in the shared
 // package): Show slots adds every slot's example, Highlight contributions outlines them.
-import { getRegistry } from '@ynput/ayon-addon/host'
 import type { DevSlots } from '@ynput/ayon-addon/host'
-import type { SlotName } from '@ynput/ayon-addon'
-import { SLOT_DOCS } from '@ynput/ayon-addon/check'
-import { slotLabel } from './contractModel'
 import { reportMenu, useSlotReport } from './status'
-
-/** A slot's title and where it shows: its declaration's, or AYON's docs for AYON's slots. */
-export const slotInfo = (slot: string) => {
-  const declared = getRegistry().slots.find((s) => s.name === slot)
-  return {
-    label: slotLabel(slot, declared?.label),
-    description: declared?.description || SLOT_DOCS[slot as SlotName]?.where,
-  }
-}
 
 const NO_CONTEXT = {}
 

@@ -3,7 +3,8 @@
 // them where the slot's real ones go); Highlight contributions outlines every rendered
 // contribution in its addon's colour. While either is on, rendered contributions carry
 // `data-ayon-addon`, `data-ayon-slot` and `data-ayon-contribution` (the SDK's `contributionTags`)
-// and hovering one shows a tooltip with all three; with both off, AYON's DOM has none.
+// and hovering one shows a card with what it is (SlotInspectorCard); with both off, AYON's DOM has
+// none.
 //
 // Internal: AYON's header (developer mode) and the addon dev shell drive it, not addons. The
 // switches and the legend are kept in session storage.
@@ -120,22 +121,8 @@ const hoveredStyles = (slot: string) => {
 }`
 }
 
-const TOOLTIP_STYLE = `
-.ayon-slot-inspector-tooltip {
-  position: fixed;
-  z-index: 100000;
-  pointer-events: none;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background: var(--md-sys-color-inverse-surface);
-  color: var(--md-sys-color-inverse-on-surface);
-  font: 12px/16px monospace;
-  white-space: pre;
-}`
-
 // the rules, in the document once the inspector was first used
 let styles: { outlines: HTMLStyleElement; hovered: HTMLStyleElement } | undefined
-let tooltip: HTMLDivElement | undefined
 const styleElement = (name: string, css: string) => {
   const element = document.createElement('style')
   element.dataset.ayonSlotInspector = name
@@ -144,50 +131,50 @@ const styleElement = (name: string, css: string) => {
   return element
 }
 
-const tooltipText = (element: Element) => {
-  const addon = element.getAttribute('data-ayon-addon')
-  const slot = element.getAttribute('data-ayon-slot')
-  if (addon) return `${addon} · ${slot}\n${element.getAttribute('data-ayon-contribution')}`
-  return `${slot}\n${element.getAttribute('data-ayon-addons')}`
+// The tagged element the card is about: the one under the pointer, kept a moment after the pointer
+// leaves it so it can move onto the card (and while it is on the card).
+let inspected: Element | undefined
+let hideTimer: ReturnType<typeof setTimeout> | undefined
+const inspectedListeners = new Set<() => void>()
+const inspect = (element?: Element) => {
+  clearTimeout(hideTimer)
+  const addon = element?.getAttribute('data-ayon-addon')
+  const next = addon && state.hiddenAddons.includes(addon) ? undefined : element
+  if (next === inspected) return
+  inspected = next
+  inspectedListeners.forEach((listener) => listener())
+  if (state.hovered !== (next?.getAttribute('data-ayon-slot') || undefined))
+    setHighlightedSlot(next?.getAttribute('data-ayon-slot') || undefined)
 }
-
-const hideTooltip = () => {
-  if (tooltip) tooltip.hidden = true
-}
-
-const showTooltip = (element: Element, event: PointerEvent) => {
-  const addon = element.getAttribute('data-ayon-addon')
-  if (addon && state.hiddenAddons.includes(addon)) return hideTooltip()
-  if (!tooltip) {
-    styleElement('tooltip', TOOLTIP_STYLE)
-    tooltip = document.createElement('div')
-    tooltip.className = 'ayon-slot-inspector-tooltip'
-    document.body.appendChild(tooltip)
+const subscribeInspected = (listener: () => void) => {
+  inspectedListeners.add(listener)
+  return () => {
+    inspectedListeners.delete(listener)
   }
-  tooltip.textContent = tooltipText(element)
-  tooltip.hidden = false
-  const { innerWidth, innerHeight } = window
-  tooltip.style.left = `${Math.min(event.clientX + 12, innerWidth - tooltip.offsetWidth - 4)}px`
-  tooltip.style.top = `${Math.min(event.clientY + 16, innerHeight - tooltip.offsetHeight - 4)}px`
+}
+const getInspected = () => inspected
+/** The tagged element under the pointer (or the card), re-rendering on changes. */
+export const useInspectedElement = () => useSyncExternalStore(subscribeInspected, getInspected, getInspected)
+/** The pointer is on the card: keep it. */
+export const holdInspected = () => clearTimeout(hideTimer)
+/** The pointer left the element or the card: drop it after a moment, unless it comes back. */
+export const releaseInspected = (delay = 200) => {
+  clearTimeout(hideTimer)
+  hideTimer = setTimeout(() => inspect(undefined), delay)
 }
 
-// a tagged element under the pointer singles out its slot and shows what it is
-let pointed: Element | undefined
 const TAGGED = '[data-ayon-contribution], [data-ayon-trigger]'
+let pointed: Element | undefined
 const onPointerOver = (event: PointerEvent) => {
   const element = (event.target as Element | null)?.closest?.(TAGGED)
   if (!element) return
-  showTooltip(element, event)
-  if (element === pointed) return
   pointed = element
-  setHighlightedSlot(element.getAttribute('data-ayon-slot') || undefined)
+  inspect(element)
 }
 const onPointerOut = (event: PointerEvent) => {
   if (!pointed || pointed.contains(event.relatedTarget as Node | null)) return
-  const slot = pointed.getAttribute('data-ayon-slot')
   pointed = undefined
-  hideTooltip()
-  if (state.hovered === slot) setHighlightedSlot(undefined)
+  releaseInspected()
 }
 
 let listening = false
@@ -205,7 +192,7 @@ const syncDocument = () => {
       document.removeEventListener('pointerover', onPointerOver)
       document.removeEventListener('pointerout', onPointerOut)
       pointed = undefined
-      hideTooltip()
+      inspect(undefined)
     }
   }
   if (tagsOn() && !styles) {

@@ -24,7 +24,7 @@ import type {
   ProjectTableState,
   TableShortcutContext,
 } from '@ynput/ayon-addon'
-import { contributionTags, contributionTitle, getHost } from '@ynput/ayon-addon/host'
+import { contributionTags, contributionTitle, getHost, slotInfo } from '@ynput/ayon-addon/host'
 import {
   useGetCurrentUserQuery,
   useGetProjectQuery,
@@ -64,7 +64,6 @@ import { contractSlot, getContracts, noSceneNote } from './contractModel'
 import type { Place } from './places'
 import { SceneStage } from './scenes'
 import { missingInputs } from './slotNeeds'
-import { slotInfo } from './slotOverlay'
 import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
