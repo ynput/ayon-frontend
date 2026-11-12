@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { getReadableColor, getTextColor } from '@ynput/ayon-react-components'
+import { getTextColor } from '@ynput/ayon-react-components'
 
 export const Reference = styled.span<{
   $variant: 'surface' | 'filled' | 'text'
@@ -21,8 +21,7 @@ export const Reference = styled.span<{
 
   &,
   .icon {
-    color: ${({ $categoryPrimary }) =>
-      getReadableColor($categoryPrimary) || 'var(--md-sys-color-primary)'};
+    color: ${({ $categoryPrimary }) => $categoryPrimary || 'var(--md-sys-color-primary)'};
   }
 
   .icon {

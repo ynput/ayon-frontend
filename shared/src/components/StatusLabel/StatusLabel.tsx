@@ -11,7 +11,6 @@ export interface StatusLabelStatus {
   shortName?: string
   icon?: string
   color?: string
-  colorLight?: string | null
 }
 
 export interface StatusLabelProps extends React.HTMLAttributes<HTMLSpanElement> {
@@ -66,11 +65,7 @@ export const StatusLabel = ({
       <Fragment key={index}>
         {index > 0 && <Icon icon={arrowIcon} className={clsx('arrow', arrowClassName)} />}
         <span className="status">
-          <Styled.Square
-            style={
-              status.color ? getPillColors({ ...status, color: status.color }, 'filled') : undefined
-            }
-          >
+          <Styled.Square style={status.color ? getPillColors(status.color, 'filled') : undefined}>
             <Icon icon={status.icon || 'fiber_manual_record'} />
           </Styled.Square>
           {as !== 'icon' && (

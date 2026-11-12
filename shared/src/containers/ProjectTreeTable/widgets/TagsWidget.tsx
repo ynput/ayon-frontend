@@ -1,9 +1,4 @@
-import {
-  DropdownRef,
-  TagsSelect,
-  type DropdownProps,
-  type UserColor,
-} from '@ynput/ayon-react-components'
+import { DropdownRef, TagsSelect, type DropdownProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
@@ -28,7 +23,7 @@ export interface TagsWidgetProps
     WidgetBaseProps {
   value: (string | number | boolean)[]
   // the anatomy tags
-  options: (EnumItem & UserColor)[]
+  options: EnumItem[]
   projectName?: string
   placeholder?: string
   align?: 'left' | 'right'
@@ -64,10 +59,10 @@ export const TagsWidget = ({
   )
   // the anatomy tags with their colours, then the values that are not in the anatomy
   const tags = useMemo(() => {
-    const result: Record<string, { name: string; color: string; colorLight?: string }> = {}
+    const result: Record<string, { name: string; color: string }> = {}
     for (const option of options) {
       const name = option.value.toString()
-      result[name] = { name, color: option.color || '', colorLight: option.colorLight || undefined }
+      result[name] = { name, color: option.color || '' }
     }
     for (const name of values) if (!result[name]) result[name] = { name, color: '' }
     return result

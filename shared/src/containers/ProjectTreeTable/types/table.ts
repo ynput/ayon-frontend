@@ -44,7 +44,6 @@ export interface BaseEntityData {
   label?: string
   icon?: string | null
   color?: string | null
-  colorLight?: string | null
   path?: string | null
   img?: string | null
   hasReviewables?: boolean

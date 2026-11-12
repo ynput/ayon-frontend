@@ -1,5 +1,4 @@
 import { useCallback } from 'react'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { useGetProjectQuery, useGetProjectAnatomyQuery } from '@shared/api'
 import { getEntityTypeIcon } from '@shared/util'
 
@@ -11,14 +10,13 @@ import type {
   Anatomy,
   ProductType,
   ProductTypesList,
-  DefaultProductBaseType,
 } from '@shared/api'
 import { useGetProductTypesQuery } from '@shared/api/queries/products/getProduct'
 import { ProjectContext } from './ProjectContextInstance'
 
 export type ProjectModelWithProducts = ProjectModel & {
   // Extend project with product types
-  productTypes: (ProductTypeListItem & UserColor)[]
+  productTypes: ProductTypeListItem[]
 }
 
 const emptyProject: ProjectModelWithProducts = {
@@ -44,10 +42,10 @@ function getProductTypesData(sourceData: ProductTypesList | undefined) {
   if (!sourceData) {
     return { productTypes: [], productBaseTypes: [] }
   }
-  const productTypes: (ProductTypeListItem & UserColor)[] = sourceData.productTypes || []
+  const productTypes = sourceData.productTypes || []
 
   // Create unique base types by mapping and filtering duplicates
-  const baseTypesMap = new Map<string, ProductType & UserColor>()
+  const baseTypesMap = new Map<string, ProductType>()
 
   productTypes.forEach((item: any) => {
     if (!baseTypesMap.has(item.baseType)) {
@@ -55,7 +53,6 @@ function getProductTypesData(sourceData: ProductTypesList | undefined) {
         name: item.baseType,
         icon: item.icon,
         color: item.color,
-        colorLight: item.colorLight,
       })
     }
   })
@@ -73,23 +70,16 @@ export interface ProjectContextValue extends ProjectModelWithProducts {
   isUninitialized: boolean
   error: any
   anatomy: Anatomy
-  productBaseTypes: (ProductType & UserColor)[]
+  productBaseTypes: ProductType[]
 
   refetch: () => void
   getProductType: (productType: string) => {
     icon: string
     color: string | undefined
-    colorLight: string | null | undefined
   }
   getFolderType: (name: string) => FolderType | undefined
   getTaskType: (name: string) => TaskType | undefined
-  getProductTypeOptions: () => {
-    value: string
-    label: string
-    icon?: string
-    color?: string
-    colorLight?: string | null
-  }[]
+  getProductTypeOptions: () => { value: string; label: string; icon?: string; color?: string }[]
 }
 
 //
@@ -124,8 +114,7 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
   // Shorthands to access project data and type casting
   // (we're referencing nested objects. no need to use useMemo for these)
 
-  const defaultProductType: (DefaultProductBaseType & UserColor) | undefined =
-    anatomy.product_base_types?.['default']
+  const defaultProductType = anatomy.product_base_types?.['default']
 
   const { data: productTypesAll } = useGetProductTypesQuery(
     { projectName: projectName },
@@ -163,7 +152,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
       return {
         icon: type?.icon || defaultProductType?.icon || getEntityTypeIcon('product'),
         color: type?.color || defaultProductType?.color,
-        colorLight: type?.color ? type.colorLight : defaultProductType?.colorLight,
       }
     },
     [productTypes, defaultProductType],
@@ -180,7 +168,6 @@ export const ProjectContextProvider: React.FC<ProjectProviderProps> = ({
       label: type.name,
       icon: type.icon || defaultProductType?.icon || getEntityTypeIcon('product'),
       color: type.color || defaultProductType?.color || '',
-      colorLight: type.color ? type.colorLight : defaultProductType?.colorLight,
     }))
     return result
   }, [productTypes, defaultProductType])

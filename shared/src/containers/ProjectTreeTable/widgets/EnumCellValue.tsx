@@ -1,5 +1,5 @@
 import type { EnumItem } from '@shared/api'
-import { getReadableColor, getTagColors, Icon, IconProps } from '@ynput/ayon-react-components'
+import { getTagColors, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
@@ -232,7 +232,7 @@ export const EnumCellValue = ({
         {selectedOptions.map((option, i) => {
           const pill =
             pillStyle && option.color && !isMultiSelect && !iconOnlyColor
-              ? getPillColors({ ...option, color: option.color }, pillStyle)
+              ? getPillColors(option.color, pillStyle)
               : undefined
           return (
             <StyledValueWrapper
@@ -252,7 +252,7 @@ export const EnumCellValue = ({
                 <Icon
                   icon={option.icon}
                   style={{
-                    color: pill ? pill.color : getReadableColor(option),
+                    color: pill ? pill.color : option.color ?? undefined,
                     ...iconStyle,
                   }}
                   className={iconClassName}
@@ -309,7 +309,7 @@ const getValueColors = (
   iconOnlyColor: boolean,
 ): React.CSSProperties => {
   if (isChip && option.color) {
-    const colors = getTagColors(option)
+    const colors = getTagColors(option.color)
     return {
       color: colors.text,
       backgroundColor: colors.background,
@@ -318,7 +318,7 @@ const getValueColors = (
   }
   if (isChip) return { backgroundColor: 'var(--md-sys-color-surface-container)' }
   return {
-    color: iconOnlyColor && option.icon ? undefined : getReadableColor(option),
+    color: iconOnlyColor && option.icon ? undefined : option.color ?? undefined,
     backgroundColor: 'transparent',
   }
 }

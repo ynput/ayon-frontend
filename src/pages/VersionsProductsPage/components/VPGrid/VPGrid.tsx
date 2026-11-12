@@ -432,7 +432,6 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
                 value={groupValue}
                 icon={group.icon}
                 color={group.color}
-                colorLight={group.colorLight}
                 pill={groupBy === 'status' ? 'filled' : 'tinted'}
                 count={groupBy !== 'taskType' ? group.count : undefined} // taskType group counts are unreliable as they use counts from tasks
                 isExpanded={isExpanded}

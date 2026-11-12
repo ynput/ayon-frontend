@@ -4,12 +4,7 @@
 import type { LinkEntity } from '@shared/components/LinksManager/LinksManager'
 import { getLinkKey } from '../buildTreeTableColumns'
 import { EntityLink } from '@shared/api'
-import {
-  getEntityColor,
-  getEntityColorLight,
-  getEntityIcon,
-  IconAnatomy,
-} from '@shared/util/iconUtils'
+import { getEntityColor, getEntityIcon, IconAnatomy } from '@shared/util/iconUtils'
 
 export type LinkId = string
 export type LinkValue = LinkEntity[]
@@ -59,7 +54,6 @@ export const linksToTableData = (
       entityType: linkEntityType,
       icon: getEntityIcon(linkEntityType, node.subType, anatomy),
       color: getEntityColor(linkEntityType, node.subType, anatomy),
-      colorLight: getEntityColorLight(linkEntityType, node.subType, anatomy),
     }
 
     // we must build the entity link type name based on the direction and entity types

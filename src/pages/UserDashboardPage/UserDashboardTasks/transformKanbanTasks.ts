@@ -3,7 +3,6 @@
 // add thumbnailUrl
 
 import type { GetKanbanResponse, KanbanNode, Status, TaskType, EnumItem } from '@shared/api'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { $Any } from '@/types'
 import { getEntityFilmstripUrl, getEntityThumbnailUrl } from '@shared/util'
 
@@ -15,7 +14,7 @@ type ExtraInfo = {
   taskInfo: TaskType
   statusInfo: Status
   priorityInfo: EnumItem | undefined
-  tagsInfo: (EnumItem & UserColor)[]
+  tagsInfo: EnumItem[]
 }
 
 export interface TransformedKanbanTask extends KanbanNode, ExtraInfo {
@@ -51,14 +50,9 @@ const transformKanbanTasks = (
       (priorityItem) => priorityItem.value === task.priority,
     )
 
-    const tagsInfo: (EnumItem & UserColor)[] = (task.tags || []).map((tag) => {
+    const tagsInfo: EnumItem[] = (task.tags || []).map((tag) => {
       const tagAnatomy = projectInfo?.tags?.find((tagItem: $Any) => tagItem.name === tag)
-      return {
-        value: tag,
-        label: tag,
-        color: tagAnatomy?.color,
-        colorLight: tagAnatomy?.colorLight,
-      }
+      return { value: tag, label: tag, color: tagAnatomy?.color }
     })
 
     const pathParts = task.folderPath?.split('/').filter(Boolean) || []

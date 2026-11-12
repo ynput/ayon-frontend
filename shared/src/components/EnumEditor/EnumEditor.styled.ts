@@ -187,10 +187,3 @@ export const ColorPicker = styled(Placeholder)`
     visibility: hidden;
   }
 `
-
-export const Fix = styled(Button)`
-  &,
-  .icon {
-    color: var(--md-sys-color-warning);
-  }
-`

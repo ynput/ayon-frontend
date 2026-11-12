@@ -7,7 +7,6 @@ export interface ValuePillProps extends React.HTMLAttributes<HTMLSpanElement> {
   label: string
   icon?: string
   color?: string
-  colorLight?: string | null
   // filled for statuses, tinted for tags and other coloured values (see getPillColors)
   variant: PillStyle
 }
@@ -17,13 +16,12 @@ export const ValuePill = ({
   label,
   icon,
   color,
-  colorLight,
   variant,
   className,
   style,
   ...props
 }: ValuePillProps) => {
-  const colors = color ? getPillColors({ color, colorLight }, variant) : undefined
+  const colors = color ? getPillColors(color, variant) : undefined
 
   return (
     <Styled.Pill
