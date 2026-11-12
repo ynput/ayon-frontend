@@ -786,8 +786,9 @@ export interface SlotDeclaration extends SlotDefinition {
   /**
    * a contribution of the slot's shape that AYON shows with Show slots on (developer mode), after
    * the slot's real contributions: its description fields and, optionally, its pieces. A required
-   * field or piece left out is filled in: the label, and a piece that shows the slot and its
-   * context (`ExampleView`) or, for `run`, says it was used. Example code never changes anything
+   * field or piece left out is filled in: the label, and a piece that shows it in one line, with
+   * the slot and its context in its tooltip (`ExampleInline`), or, for `run`, says it was used.
+   * Example code never changes anything
    */
   example?: SlotExample
 }

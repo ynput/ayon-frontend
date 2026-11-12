@@ -17,7 +17,7 @@ import {
   subscribeRegistry,
   unregisterAddon,
 } from '../../addon/src/registry'
-import { exampleFields, exampleRun, exampleSnippet, exampleView, SLOT_EXAMPLES } from '../../addon/src/slotExamples'
+import { exampleFields, exampleInline, exampleRun, exampleSnippet, SLOT_EXAMPLES } from '../../addon/src/slotExamples'
 import { SLOT_DOCS } from '../../addon/src/slotDocs'
 import { SLOTS } from '../../addon/src/slots'
 import type { SlotName } from '../../addon/src/slots'
@@ -48,7 +48,7 @@ test('a declared slot example is filled in with what it leaves out', () => {
     label: 'Card menu item',
     example: { label: 'Open the card' },
   })
-  expect(fields).toEqual({ id: 'example', label: 'Open the card', icon: 'extension', run: exampleRun, component: exampleView })
+  expect(fields).toEqual({ id: 'example', label: 'Open the card', icon: 'extension', run: exampleRun, component: exampleInline })
   expect(exampleFields({ required: ['label'], pieces: [] })).toEqual({ id: 'example', label: 'Example' })
 })
 

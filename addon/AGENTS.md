@@ -310,8 +310,8 @@ slot by it, else by the name after the dot in words. And an `example`: a contrib
 shape without `id` (`{ label: 'Example card action', icon: 'extension' }`), which AYON's developer
 mode shows in the slot with Show slots on, owned by the declaring addon and after the real
 contributions. It is filled in where it leaves something out: each required field gets the slot's
-label (`icon` an icon), `run` says it was used, any other piece shows the slot and its context
-(`ExampleView`). A piece of its own is a dynamic import in the contract package, which may render
+label (`icon` an icon), `run` says it was used, any other piece shows the label in one line,
+with the slot and its context in its tooltip (`ExampleInline`). A piece of its own is a dynamic import in the contract package, which may render
 `ExampleView` from `@ynput/ayon-addon` inside its own markup (a badge's size, a button's look).
 Using an example never changes anything.
 

@@ -49,7 +49,8 @@ export interface ExampleSource {
 /**
  * A slot's example as contribution fields, with the id `example`: what its owner wrote, plus each
  * required field it left out (the slot's label, an icon) and each required piece (`run` says it
- * was used, any other shows the slot and its context).
+ * was used, any other is the one-line `ExampleInline`: AYON doesn't know how big a declared slot
+ * is, and the full `ExampleView` breaks a badge or a button's place).
  */
 export const exampleFields = (source: ExampleSource): Record<string, unknown> => {
   const fields: Record<string, unknown> = { id: 'example', ...source.example }
@@ -57,7 +58,7 @@ export const exampleFields = (source: ExampleSource): Record<string, unknown> =>
     if (typeof fields[field] !== 'string') fields[field] = field === 'icon' ? icon : source.label || 'Example'
   }
   for (const piece of source.pieces) {
-    if (typeof fields[piece] !== 'function') fields[piece] = piece === 'run' ? exampleRun : exampleView
+    if (typeof fields[piece] !== 'function') fields[piece] = piece === 'run' ? exampleRun : exampleInline
   }
   return fields
 }
