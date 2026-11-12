@@ -146,6 +146,14 @@ const StatusStyled = styled.div`
       span {
         margin: auto;
       }
+
+      /* the icon alone: a square block with even padding */
+      .status-texticon {
+        margin: auto;
+        padding: 2px;
+        aspect-ratio: 1;
+        justify-content: center;
+      }
     `}
 `
 
