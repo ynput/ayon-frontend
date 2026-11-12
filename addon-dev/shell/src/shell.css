@@ -566,7 +566,7 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   flex: 1 1 0 !important;
 }
 .ayon-shell-column.inputs-collapsed > .p-splitter-panel:last-child {
-  flex: 0 0 33px !important;
+  flex: 0 0 37px !important; /* the header (36px) and its top border */
 }
 .ayon-shell-column.inputs-collapsed > .p-splitter-gutter {
   display: none;
