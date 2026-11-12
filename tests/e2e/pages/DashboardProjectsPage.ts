@@ -28,9 +28,10 @@ export class DashboardProjectsPage {
     return this.page.locator('tr.table-list-row').filter({ hasText: name })
   }
 
-  // FLAG: ListTable rows have no aria-selected; selection is the `selected` class
   async expectSelection(selected: string[], notSelected: string[] = []) {
-    for (const name of selected) await expect(this.row(name)).toHaveClass(/\bselected\b/)
-    for (const name of notSelected) await expect(this.row(name)).not.toHaveClass(/\bselected\b/)
+    for (const name of selected)
+      await expect(this.row(name)).toHaveAttribute('aria-selected', 'true')
+    for (const name of notSelected)
+      await expect(this.row(name)).toHaveAttribute('aria-selected', 'false')
   }
 }

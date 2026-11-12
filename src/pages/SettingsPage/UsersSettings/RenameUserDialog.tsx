@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { InputText, FormLayout, FormRow, Dialog, SaveButton } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 import { useUpdateUserNameMutation } from '@shared/api'
 import { InfoMessage } from '@shared/components'
 
@@ -45,6 +46,7 @@ const RenameUserDialog = ({ onHide, selectedUsers, onSuccess }: RenameUserDialog
       footer={<SaveButton label="Rename" onClick={onSubmit} active={!!newName} />}
       isOpen={true}
       onClose={onHide}
+      onKeyDown={getDialogKeyDown(onSubmit, { onClose: onHide, disabled: !newName })}
     >
       <FormLayout>
         <FormRow label="New name">

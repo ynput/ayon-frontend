@@ -83,6 +83,15 @@ const openInBundleMode = async (
     await route.fulfill({ response, json: data })
   })
 
+  // the server may have no staging bundle (it then sends no modules), so staging gets the
+  // production modules; the developer variant already falls back to production on the server
+  await page.route(isPath('/api/frontendModules'), async (route) => {
+    const url = new URL(route.request().url())
+    if (url.searchParams.get('variant') !== 'staging') return route.continue()
+    url.searchParams.set('variant', 'production')
+    await route.continue({ url: url.toString() })
+  })
+
   await page.goto(`/projects/${projectName}/overview`)
 }
 

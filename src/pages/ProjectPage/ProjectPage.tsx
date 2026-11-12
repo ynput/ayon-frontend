@@ -72,19 +72,16 @@ const BUILT_IN_MODULES = [
   'lists',
   'reviews',
   'workfiles',
-  'reports',
 ]
 
-// Addon modules that are always shown in the nav.
-// When the addon remote page is available it is used; otherwise the Splash is shown.
 // Tabs AYON always shows for an addon: its project.page with this id (or its legacy remote) fills
-// the tab, and without the addon the tab shows the splash
+// the tab and sets who sees it; without one the tab shows the Fallback
 interface AddonPageConfig {
   name: string
   module: string
   viewType?: string
   addon: string
-  Splash: React.ComponentType
+  Fallback: React.ComponentType<{ projectName: string }>
 }
 
 const ADDON_PAGES: AddonPageConfig[] = [
@@ -93,7 +90,15 @@ const ADDON_PAGES: AddonPageConfig[] = [
     module: 'scheduler',
     viewType: 'scheduler',
     addon: 'planner',
-    Splash: SchedulerSplashscreen,
+    Fallback: SchedulerSplashscreen,
+  },
+  {
+    name: 'Reports',
+    module: 'reports',
+    viewType: 'reports',
+    addon: 'reports',
+    // an older reports addon has only the legacy page
+    Fallback: ProjectReportsPage,
   },
 ]
 
@@ -251,7 +256,6 @@ const ProjectPageInner = () => {
     { skip: !projectName || addonsListLoading },
   )
   const hasReview = !!getBundleAddonVersion('review')
-  const hasReports = !!getBundleAddonVersion('reports')
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -342,24 +346,17 @@ const ProjectPageInner = () => {
         path: `/projects/${projectName}/${addonModule}`,
         module: addonModule,
         viewType,
+        // a restricted addon page hides the tab, else the user lands on an empty page
+        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === addonModule)?.access),
         startContent: (
           <RemotePageBundleDot
             bundle={
               remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
-              (addonPages.some((page) => page.id === addonModule)
-                ? getAddonBundle(addon)
-                : undefined)
+              getAddonBundle(addon)
             }
           />
         ),
       })),
-      {
-        name: 'Reports',
-        path: `/projects/${projectName}/reports`,
-        module: 'reports',
-        viewType: 'reports',
-        startContent: <RemotePageBundleDot bundle={getAddonBundle('reports')} />,
-      },
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -376,7 +373,7 @@ const ProjectPageInner = () => {
           startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
         })),
       ...addonPages
-        .filter((page) => !ADDON_PAGES.some((p) => p.module === page.id))
+        .filter((page) => !OWNED_PAGES.some((p) => p.id === page.id))
         .map((page) => ({
           name: page.title,
           module: page.id,
@@ -465,14 +462,6 @@ const ProjectPageInner = () => {
       )
     } else if (module === 'workfiles') {
       component = <WorkfilesPage />
-    } else if (module === 'reports') {
-      component = (
-        <ProjectReportsPage
-          projectName={projectName}
-          isLoadingAccess={addonsListLoading}
-          hasReportsAddon={hasReports}
-        />
-      )
     } else if (foundAddon) {
       component = (
         <ProjectAddon
@@ -513,10 +502,9 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
-      // If this is a known addon page but the remote page isn't loaded, show its splash
       const addonPage = ADDON_PAGES.find((p) => p.module === module)
       if (addonPage) {
-        component = <addonPage.Splash />
+        component = <addonPage.Fallback projectName={projectName} />
       } else {
         console.log('addon not found, redirecting to overview')
         // Fallback to versions page if no addon matches addonName

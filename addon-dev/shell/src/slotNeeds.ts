@@ -1,5 +1,13 @@
 // what the developer panel asks for, per slot
-const NO_PROJECT: string[] = ['studio.page', 'header.item', 'projectList.menuItem', 'app.service']
+const NO_PROJECT: string[] = [
+  'studio.page',
+  'header.item',
+  'projectList.menuItem',
+  'app.service',
+  'userDetails.section',
+  'userDetails.menuItem',
+  'profile.section',
+]
 const PROJECTS: string[] = ['studio.page', 'projectList.menuItem']
 const ENTITIES: string[] = [
   'detailsPanel.tab',
@@ -13,6 +21,7 @@ const TABLE_PAGE: string[] = [
   'table.shortcut',
   'tableColumn',
   'projectTable.toolbarItem',
+  'projectTable.columnMenuItem',
   'projectTable.customizeSection',
 ]
 const RUN: string[] = [
@@ -20,7 +29,9 @@ const RUN: string[] = [
   'projectList.menuItem',
   'slicer.menuItem',
   'entityMenuItem',
+  'projectTable.columnMenuItem',
   'table.shortcut',
+  'userDetails.menuItem',
 ]
 
 export const needsProject = (slot?: string) => !!slot && !NO_PROJECT.includes(slot)

@@ -102,6 +102,17 @@ export const refetchOverviewTasksForCacheEntry = async ({
   cacheEntry,
 }: RefetchOverviewTasksForCacheEntryArgs): Promise<any[] | null> => {
   try {
+    // Folder queries merge a snapshot taken before their requests. Let that merge
+    // finish before correcting tasks changed while the query was in flight.
+    const waitForPendingFolderQuery = () =>
+      dispatch(
+        getOverviewApi.util.getRunningQueryThunk(
+          'getOverviewTasksByFolders',
+          cacheEntry.originalArgs,
+        ),
+      )
+    await waitForPendingFolderQuery()
+
     // Build query params for this specific cache's filters
     const queryParams: any = {
       projectName,
@@ -125,6 +136,9 @@ export const refetchOverviewTasksForCacheEntry = async ({
 
     const fetchedTasks = result.data.tasks
     const fetchedTasksMap = new Map(fetchedTasks.map((t) => [t.id, t]))
+
+    // A folder expansion may also have started while the task refetch was running.
+    await waitForPendingFolderQuery()
 
     // Update this specific cache entry with filtered results
     dispatch(

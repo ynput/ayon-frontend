@@ -5,6 +5,7 @@ import clsx from 'clsx'
 import { useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 import { useProjectContext } from '@shared/context'
+import { useProjectTableState } from '@shared/containers/ProjectTreeTable'
 import { AddonButton } from '@shared/components/AddonLayout/AddonButton'
 
 interface AddonToolbarItemsProps {
@@ -18,6 +19,7 @@ interface AddonToolbarItemsProps {
 // AddonButton does what the item asks on click, or renders the addon's own component.
 const AddonToolbarItems = ({ page, list }: AddonToolbarItemsProps) => {
   const { projectName } = useProjectContext()
+  const tableState = useProjectTableState()
   const { contributions } = useContributions('projectTable.toolbarItem')
   const items = useMemo(
     () => contributions.filter((item) => !item.pages?.length || item.pages.includes(page)),
@@ -32,8 +34,9 @@ const AddonToolbarItems = ({ page, list }: AddonToolbarItemsProps) => {
         listId && listLabel !== undefined && listEntityType
           ? { id: listId, label: listLabel, entityType: listEntityType }
           : undefined,
+      tableState,
     }),
-    [projectName, page, listId, listLabel, listEntityType],
+    [projectName, page, listId, listLabel, listEntityType, tableState],
   )
 
   return (

@@ -36,7 +36,7 @@ test.describe('products representation filter', () => {
 
     await products.filters.addText('Representation', 'Name', 'beauty')
 
-    await expect(products.filters.chip('Representation Name')).toContainText('beauty')
+    await products.filters.expectChip('Representation Name', 'beauty')
     await expect(products.row('modelMain - v001')).toBeHidden()
     await expect(products.row('layoutMain - v001')).toBeHidden()
     await expect(products.row('renderMain - v001')).toBeVisible()
@@ -53,7 +53,7 @@ test.describe('products representation filter', () => {
 
     await products.filters.addText('Representation', 'File Extension', 'abc')
 
-    await expect(products.filters.chip('Representation File Extension')).toContainText('abc')
+    await products.filters.expectChip('Representation File Extension', 'abc')
     await expect(products.row('renderMain - v001')).toBeHidden()
     await expect(products.row('layoutMain - v001')).toBeHidden()
     await expect(products.row('modelMain - v001')).toBeVisible()
@@ -71,7 +71,7 @@ test.describe('products representation filter', () => {
 
     await products.filters.addText('Representation', 'Name', 'beauty')
 
-    await expect(products.filters.chip('Representation Name')).toContainText('beauty')
+    await products.filters.expectChip('Representation Name', 'beauty')
     await expect(products.row('modelMain')).toBeHidden()
     await expect(products.row('layoutMain')).toBeHidden()
     await expect(products.row('renderMain')).toBeVisible()

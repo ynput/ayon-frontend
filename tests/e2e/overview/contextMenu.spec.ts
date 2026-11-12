@@ -1,6 +1,7 @@
 import { expect, test } from '../fixtures'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'
+import { holdFolderTasks } from '../support/holdFolderTasks'
 
 test.describe('overview context menu', () => {
   test('create a child folder from a folder row', async ({ page, api, projectName }) => {
@@ -83,7 +84,7 @@ test.describe('overview context menu', () => {
       .toBe(target.id)
   })
 
-  test('move a task to another folder', async ({ page, api, projectName }) => {
+  test('move a task while its destination folder is loading', async ({ page, api, projectName }) => {
     const source = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
     const target = await api.createFolder(projectName, { name: 'sh020', folderType: 'Shot' })
     const task = await api.createTask(projectName, {
@@ -91,17 +92,28 @@ test.describe('overview context menu', () => {
       name: 'comp',
       taskType: 'Compositing',
     })
+    await api.createTask(projectName, { folderId: target.id, name: 'light', taskType: 'Generic' })
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
     await overview.expand('sh010')
+    await expect(overview.row('comp')).toBeVisible()
+    const pending = await holdFolderTasks(page, target.id)
+    await overview.expand('sh020')
+    await pending.responseCaptured
 
-    await overview.rowMenu('comp', 'Move')
-    await overview.moveTo('sh020')
+    try {
+      await overview.rowMenu('comp', 'Move')
+      await overview.moveTo('sh020')
 
-    await expect
-      .poll(async () => (await api.getTask(projectName, task.id)).folderId)
-      .toBe(target.id)
-    await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/, /comp$/])
+      await expect
+        .poll(async () => (await api.getTask(projectName, task.id)).folderId)
+        .toBe(target.id)
+    } finally {
+      pending.release()
+    }
+
+    await expect(overview.row('light')).toBeVisible()
+    await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/, /comp$/, /light$/])
   })
 
   test('find the target folder by searching for all words of any comma separated part', async ({
