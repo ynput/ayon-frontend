@@ -33,6 +33,7 @@ import { useContext } from 'react'
 import { useFetchAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import { useGlobalContext } from '@shared/context'
 import { ProjectDataContext } from '@shared/containers/ProjectTreeTable/context/project-data'
+import { resolveFilterKeyScope } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 
 type ScopeType = 'folder' | 'product' | 'task' | 'user' | 'version' | 'representation'
 type Scope = ScopeType | ScopeType[]
@@ -1370,26 +1371,6 @@ export const splitFiltersByScope = (
     return result
   }
 
-  // Helper to extract scope prefix from an ID
-  const extractScopeAndRemovePrefix = (
-    id: string,
-  ): { scope: ScopeType | null; cleanId: string } => {
-    // Check if ID starts with any scope prefix
-    const scopeMatch = scopes.find((scope) => id.startsWith(`${scope}_`))
-
-    if (scopeMatch) {
-      // Remove scope prefix
-      const cleanId = id.substring(`${scopeMatch}_`.length)
-      return { scope: scopeMatch, cleanId }
-    } else if (config?.fallbackScope) {
-      // fallback to a default scope if provided in config
-      return { scope: config.fallbackScope, cleanId: id }
-    }
-
-    // If no scope prefix, return null scope (shouldn't happen in multi-scope scenario)
-    return { scope: null, cleanId: id }
-  }
-
   // Helper to process a filter recursively and return results by scope
   const processFilter = (filter: any): Record<ScopeType | 'unscoped', any[]> => {
     const localResults: Record<ScopeType | 'unscoped', any[]> = {
@@ -1426,7 +1407,12 @@ export const splitFiltersByScope = (
       })
     } else if ('key' in filter) {
       // QueryCondition
-      const { scope, cleanId } = extractScopeAndRemovePrefix(filter.key)
+      // without a scope prefix the key belongs to the fallback scope, if the page has one
+      const { scope, key: cleanId } = resolveFilterKeyScope(
+        filter.key,
+        scopes,
+        config?.fallbackScope,
+      )
 
       if (scope) {
         localResults[scope].push({ ...filter, key: cleanId })
