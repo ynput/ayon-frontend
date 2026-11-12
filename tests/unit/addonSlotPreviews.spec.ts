@@ -4,7 +4,6 @@ import { expect, test } from '@playwright/test'
 import { cpSync, mkdirSync, mkdtempSync, realpathSync, symlinkSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
 import path from 'path'
-import { createElement } from 'react'
 import { createServer } from 'vite'
 import {
   checkPreviews,
@@ -24,16 +23,21 @@ import { DEDUPE } from '../../addon-dev/src/packages'
 import { buildContract, contractManifests, noSceneNote, scenesOf, slotLabel } from '../../addon-dev/shell/src/contractModel'
 import { buildPlaces, normalizeParams } from '../../addon-dev/shell/src/places'
 import { provideHost } from '../../addon/src/hostBridge'
-import type { DevSlots } from '../../addon/src/hostBridge'
 import { checkSlotDeclarations } from '../../addon/src/validate'
 import * as sdk from '../../addon/src/index'
 import { loadPiece } from '../../addon/src/pieces'
 import {
   getRegistry,
+  isExample,
+  provideExamples,
   registerManifests,
+  setContributionTags,
   setManifestsLoading,
+  setSlotExamples,
+  subscribeRegistry,
   unregisterAddon,
 } from '../../addon/src/registry'
+import * as examplesModule from '../../addon/src/examples'
 import { renderToHtml, toReactComponent } from './support/render'
 import * as exampleSlots from './fixtures/addon-contract-example/slots.js'
 
@@ -495,13 +499,9 @@ export const unused = [Theme, Global, Boundary, Lazy, createPortal, createRoot, 
   ])
 })
 
-test.describe('Show slots (the dev shell only)', () => {
+test.describe("the dev shell's hooks and Show slots", () => {
   const contributor = { name: 'contributor', version: '1.0.0', remote: 'contributor' }
   const SlotOutlet = toReactComponent(sdk.SlotOutlet)
-  const Outlet: DevSlots['Outlet'] = ({ slot, count, children }) =>
-    createElement('i', { 'data-slot': slot, 'data-count': count }, children)
-  const placeholder = { id: 'placeholder', label: 'No contributions', icon: 'extension', command: () => undefined }
-  const devSlots: DevSlots = { Outlet, menuPlaceholder: () => placeholder }
 
   test.beforeEach(async () => {
     setManifestsLoading(false)
@@ -530,6 +530,8 @@ test.describe('Show slots (the dev shell only)', () => {
   })
   test.afterEach(() => {
     provideHost({ devSlots: undefined })
+    setSlotExamples(false)
+    setContributionTags(false)
     unregisterAddon('contributor')
     unregisterAddon('example')
   })
@@ -543,57 +545,59 @@ test.describe('Show slots (the dev shell only)', () => {
     })
     return items as { top: { id: string }[]; bottom: { id: string }[] }
   }
+  const examplesLoaded = () =>
+    new Promise<void>((resolve) => {
+      if (getRegistry().contributions.some(isExample)) return resolve()
+      const unsubscribe = subscribeRegistry(() => {
+        if (!getRegistry().contributions.some(isExample)) return
+        unsubscribe()
+        resolve()
+      })
+    })
 
-  test('without the dev shell, slots render only their contributions', () => {
+  test('slots render only their contributions, with or without the hooks', () => {
     expect(outlet('example.cardBadge')).toBe('badge')
     expect(outlet('example.cardEndItem')).toBe('')
     expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
     expect(menu('example.boardDialog')).toEqual({ top: [], bottom: [] })
-  })
-
-  test('with it, every outlet is wrapped and an empty menu slot gets a placeholder', () => {
-    provideHost({ devSlots })
-    expect(outlet('example.cardBadge')).toBe('<i data-slot="example.cardBadge" data-count="1">badge</i>')
-    expect(outlet('example.cardEndItem')).toBe('<i data-slot="example.cardEndItem" data-count="0"></i>')
-    // a slot with items keeps them as they are
-    expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
-    expect(menu('example.boardDialog')).toEqual({ top: [placeholder], bottom: [] })
-    // the shell's toggle is off: no placeholder
-    provideHost({ devSlots: { Outlet, menuPlaceholder: () => undefined } })
+    provideHost({ devSlots: { useOutletReport: () => undefined, menuBuilt: () => undefined } })
+    expect(outlet('example.cardBadge')).toBe('badge')
+    expect(outlet('example.cardEndItem')).toBe('')
     expect(menu('example.boardDialog')).toEqual({ top: [], bottom: [] })
   })
 
-  test('with it, each contribution is wrapped with its key and menus report theirs', () => {
+  test('outlets and menus report the context they pass', () => {
+    const reported: unknown[] = []
     const built: unknown[] = []
-    const Item: DevSlots['Item'] = ({ contribution, children }) =>
-      createElement('b', { 'data-contribution': contribution }, children)
     provideHost({
       devSlots: {
-        Outlet,
-        Item,
-        menuPlaceholder: () => undefined,
+        useOutletReport: (slot, context) => reported.push([slot, context]),
         menuBuilt: (slot, context, keys) => built.push([slot, context, keys]),
       },
     })
-    expect(outlet('example.cardBadge')).toBe(
-      '<i data-slot="example.cardBadge" data-count="1"><b data-contribution="contributor.timer">badge</b></i>',
-    )
-    expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
+    outlet('example.cardEndItem')
+    expect(reported).toEqual([['example.cardEndItem', {}]])
+    menu('example.cardMenuItem')
     expect(built).toEqual([['example.cardMenuItem', {}, ['contributor.log']]])
   })
 
-  test('with it, every menu entry passes through menuItem, the placeholder too', () => {
-    provideHost({
-      devSlots: {
-        Outlet,
-        menuPlaceholder: () => placeholder,
-        menuItem: (slot, item) => ({ ...item, slot }) as never,
-      },
-    })
+  test("with Show slots, each slot gets its owner's example after the real contributions", async () => {
+    provideExamples(examplesModule)
+    setSlotExamples(true)
+    await examplesLoaded()
     expect(menu('example.cardMenuItem')).toMatchObject({
       top: [],
-      bottom: [{ id: 'contributor.log', slot: 'example.cardMenuItem' }],
+      bottom: [{ id: 'contributor.log' }, { id: 'example.example_example_cardMenuItem', label: 'Card menu item' }],
     })
-    expect(menu('example.boardDialog')).toEqual({ top: [{ ...placeholder, slot: 'example.boardDialog' }], bottom: [] })
+    expect(menu('example.boardDialog').bottom).toMatchObject([{ id: 'example.example_example_boardDialog' }])
+    // tagged for the inspector: the addon that owns each entry
+    setContributionTags(true)
+    expect(menu('example.cardMenuItem').bottom).toMatchObject([
+      { 'data-ayon-addon': 'contributor', 'data-ayon-contribution': 'contributor.log' },
+      { 'data-ayon-addon': 'example', 'data-ayon-slot': 'example.cardMenuItem' },
+    ])
+    expect(outlet('example.cardBadge')).toContain(
+      '<div style="display:contents" data-ayon-wrap="" data-ayon-addon="contributor" data-ayon-slot="example.cardBadge" data-ayon-contribution="contributor.timer">badge</div>',
+    )
   })
 })
