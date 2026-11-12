@@ -681,9 +681,6 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
 .ayon-slot-inspector .ayon-shell-tree-table th .actions:has([data-ayon-trigger]) {
   display: flex;
 }
-.ayon-shell-inspector {
-  margin: 0 -4px 8px;
-}
 
 /* the project table: AYON's (ProjectTreeTable) */
 .ayon-shell-table-scroll {

@@ -265,8 +265,9 @@ export const setSlotInspectorAvailable = (
   available: boolean,
   defaults?: Partial<Pick<SlotInspectorState, 'showSlots' | 'highlight'>>,
 ) => {
+  // only a call with defaults uses them up: the header menu's own call may come first
   const patch = !storedAtLoad && defaults ? defaults : {}
-  storedAtLoad = true
+  if (defaults) storedAtLoad = true
   update({ ...patch, available })
 }
 /** Show slots: every slot shows its example contribution. */

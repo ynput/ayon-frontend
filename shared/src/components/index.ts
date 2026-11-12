@@ -54,6 +54,8 @@ export * from './AddonLayout/useAddonTableShortcuts'
 // internal: AYON's developer mode and the addon dev shell, not for addons
 export * from './AddonLayout/slotInspector'
 export * from './AddonLayout/SlotInspectorControls'
+export * from './AddonLayout/SlotInspectorMenu'
+export * from './HeaderButton'
 export * from './ReviewableCard'
 export * from './ReviewableProgressCard'
 export * from './ReviewablesList'

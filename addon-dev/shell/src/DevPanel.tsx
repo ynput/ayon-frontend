@@ -1,8 +1,8 @@
 // The developer panel: Places (top), every place of AYON (by area) and of the contract packages
 // that has a slot this addon uses (all of them with Show all), and Slots (bottom), a read-only
 // overview of the selected place's slots with this addon's contributions to each. A place opens
-// the UI around all its slots on the stage; the slot inspector's switches (AYON's, as in its
-// developer mode) show the slots' examples and outline contributions there. Each half scrolls on
+// the UI around all its slots on the stage; the slot inspector's switches (AYON's developer mode
+// menu, in the top bar) show the slots' examples and outline contributions there. Each half scrolls on
 // its own. Everything here is also settable from the URL (params.ts).
 import { useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -12,7 +12,6 @@ import { useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
 import {
   setHighlightedSlot,
-  SlotInspectorControls,
   useSlotInspector,
 } from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, getPlace, getPlaces, getUsedSlots } from './catalog'
@@ -277,7 +276,6 @@ const Slots = ({ selection, search }: Pick<DevPanelProps, 'selection' | 'search'
       <div className="ayon-shell-section-header">
         <h3>Slots</h3>
       </div>
-      <SlotInspectorControls className="ayon-shell-inspector" />
       {!place ? (
         <small className="ayon-shell-note">Select a place.</small>
       ) : (

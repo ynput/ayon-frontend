@@ -3,7 +3,7 @@ import type { IconType } from '@ynput/ayon-react-components'
 import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
 import { useMemo } from 'react'
-import HeaderButton from './HeaderButton'
+import { HeaderButton } from '@shared/components'
 import { AddonButton } from '@shared/components/AddonLayout/AddonButton'
 
 // Items addons contribute to the header (header.item slot, @ynput/ayon-addon). Left items

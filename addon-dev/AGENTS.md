@@ -121,8 +121,9 @@ of AYON:
     not: places (name, package) and slots (label, name, the titles of the addon's
     contributions). A package's heading is its name for people (`@scope/ayon-addon-board` is
     "Board"), with the full name as the tooltip.
-  - **Show slots**, **Highlight contributions** and the legend of addons, under the Slots heading:
-    AYON's developer mode switches (below). Off, the stage looks as in AYON.
+  - **Show slots**, **Highlight contributions** and the legend of addons are not in the panel: they
+    are in the slot menu at the right of the top bar, AYON's developer mode menu (below). Off, the
+    stage looks as in AYON.
   - **Slots**: a read-only overview of the place's slots (label, with the name muted under it),
     and under each the addon's contributions with an icon, with the ones AYON would skip and why.
     Hovering a slot's row outlines it on stage, and hovering a contribution on stage (with a
@@ -206,8 +207,8 @@ contribution is developed without that addon installed:
   tooltip), and under each slot the addon's contributions to it. Selecting it puts the scene on
   stage, full width, with the shell's providers (right-click menus, the details panel, the user).
   A contract slot no scene renders is under Other slots.
-- **Show slots** and **Highlight contributions** (under the Slots heading) are AYON's developer mode
-  switches, the same component, state and rendering (`slotInspector` in the shared package, see
+- **Show slots** and **Highlight contributions** (the slot menu at the right of the top bar) are AYON's
+  developer mode menu, the same header button, dropdown, state and rendering (`slotInspector` in the shared package, see
   `src/remote/AGENTS.md`), kept in session storage. Show slots adds every slot's example
   contribution after the real ones: AYON's for its slots, the contract package's `example` for an
   addon's (a menu gets an entry, an outlet the example's component). Using one only shows "Example

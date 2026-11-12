@@ -1,9 +1,10 @@
 // The line above the stage: the place on it, with where it comes from behind (i), and a warning
 // when the stage isn't showing a server's live data. One fixed height: nothing in it changes the
 // stage's size. Everything under it is AYON (its surfaces, or stand-ins for the app's); the
-// header is the shell's.
+// header is the shell's, except the slot menu on the right, which is AYON's header menu.
 import { useEffect, useRef, useState } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
+import { SlotInspectorMenu } from '@ynput/ayon-frontend-shared/components'
 import { getPlace } from './catalog'
 import type { ShellSelection } from './types'
 
@@ -88,6 +89,8 @@ export const StageHeader = ({
           Preview: {selection.preview}, not live
         </span>
       )}
+      {/* developer mode's slot menu from AYON's header */}
+      <SlotInspectorMenu />
     </header>
   )
 }
