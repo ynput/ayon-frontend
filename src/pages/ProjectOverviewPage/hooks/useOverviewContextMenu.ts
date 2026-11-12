@@ -1,5 +1,5 @@
-import { useVersionUploadContext } from '@shared/components'
-import { useEntityListsContext } from '@pages/ProjectListsPage/context'
+import { useOptionalVersionUploadContext } from '@shared/components'
+import { useOptionalEntityListsContext } from '@pages/ProjectListsPage/context'
 import {
   ContextMenuItemConstructor,
   ContextMenuItemConstructors,
@@ -11,21 +11,23 @@ import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { useProjectFoldersContext } from '@shared/context'
 import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
+import type { ProjectTableState } from '@ynput/ayon-addon'
 
 type OverviewContextMenuProps = {
   openMoveDialog: OpenMoveDialog
+  tableState?: ProjectTableState
 }
 
-const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({ openMoveDialog, tableState }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
-  // lists data
-  const { menuItems: menuItemsAddToList } = useEntityListsContext()
+  // lists data; absent in an addon's EntityTable, which has a menu of its own
+  const menuItemsAddToList = useOptionalEntityListsContext()?.menuItems
 
   const { folders } = useProjectFoldersContext()
   // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
-  const addonTopItems = useAddonEntityMenuItems('overview', 'top')
-  const addonItems = useAddonEntityMenuItems('overview')
+  const addonTopItems = useAddonEntityMenuItems('overview', 'top', tableState)
+  const addonItems = useAddonEntityMenuItems('overview', 'bottom', tableState)
 
   // right click on a group header to un group the tasks
   const unGroupTasksItem: ContextMenuItemConstructor = useCallback(
@@ -39,13 +41,13 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     [updateGroupBy],
   )
 
-  const { onOpenVersionUpload } = useVersionUploadContext()
+  const onOpenVersionUpload = useOptionalVersionUploadContext()?.onOpenVersionUpload
   const handleVersionUpload = (cell: TableCellContextData) => {
     const folderId = cell.entityType === 'folder' ? cell.entityId : cell.parentId || ''
     const taskId = cell.entityType === 'task' ? cell.entityId : ''
 
     if (folderId) {
-      onOpenVersionUpload({ folderId, taskId })
+      onOpenVersionUpload?.({ folderId, taskId })
     } else {
       toast.error('No folder selected for version upload')
     }
@@ -135,7 +137,7 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
     'rename',
     'open-viewer',
     'expand-collapse',
-    menuItemsAddToList(),
+    ...(menuItemsAddToList ? [menuItemsAddToList()] : []),
     unGroupTasksItem,
     'inherit',
     'export',

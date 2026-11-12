@@ -75,7 +75,10 @@ export class ContributionErrorBoundary extends Component<BoundaryProps, { error:
     const { error } = this.state
     if (!error) return this.props.children
     return (
-      this.props.fallback?.(error) ?? (
+      // a fallback may return null to show nothing: the error box is only for no fallback
+      this.props.fallback ? (
+        this.props.fallback(error)
+      ) : (
         <ContributionError contribution={this.props.contribution} error={error} />
       )
     )
@@ -106,9 +109,13 @@ const Piece = ({ loader, props, contribution, loading, error }: PieceProps) => {
   const { value, error: loadError, isLoading } = usePiece(loader)
   if (loadError) {
     return (
-      error?.(loadError) ?? (
-        <ContributionError contribution={contribution} error={loadError} phase="failed to load" />
-      )
+      <>
+        {error ? (
+          error(loadError)
+        ) : (
+          <ContributionError contribution={contribution} error={loadError} phase="failed to load" />
+        )}
+      </>
     )
   }
   if (isLoading || !value) return <>{loading}</>

@@ -42,3 +42,13 @@ test('the host shares the react-router API addons render their routes with', asy
   const missing = used.filter((name) => !(routerExports as Record<string, unknown>)[name])
   expect(missing).toEqual([])
 })
+
+// Libraries read the data router contexts with useContext and expect null under a declarative
+// router (use-query-params' react-router-6 adapter). Left out, they are undefined in an addon that
+// shares the router, and useContext(undefined) crashes the page.
+test('the host shares the data router contexts libraries read', async () => {
+  const { routerExports } = await import('../../src/remote/hostRouterExports')
+  const exports = routerExports as Record<string, unknown>
+  expect(exports.UNSAFE_DataRouterContext).toBeDefined()
+  expect(exports.UNSAFE_DataRouterStateContext).toBeDefined()
+})

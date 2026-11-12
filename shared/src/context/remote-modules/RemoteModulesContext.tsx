@@ -1,6 +1,6 @@
 import { ReactNode, useEffect, useMemo, useState } from 'react'
 import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime'
-import { MANIFEST_MODULE, registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { setManifestsLoading } from '@ynput/ayon-addon/host'
 import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListAddonsQuery, useListBundlesQuery, useListFrontendModulesQuery } from '@shared/api'
@@ -14,6 +14,7 @@ import type { BundleAddons } from './bundleAddons'
 import { addonDevUserProblem, fetchAddonDevInfo, readAddonDevRequest } from './addonDevOverride'
 import type { AddonDevInfo, AddonDevOverride } from './addonDevOverride'
 import { AddonDevBanner } from './AddonDevBanner'
+import { loadManifests } from './loadManifests'
 
 type Module = {
   remote: string
@@ -51,36 +52,6 @@ type Registered = {
 type Props = {
   children: ReactNode
   skip?: boolean
-}
-
-// Addons that list a `manifest` module declare their contributions to slots in it
-// (@ynput/ayon-addon). It holds descriptions only, so every manifest loads at startup; the
-// contributions' code loads when their slot needs it.
-// Returns the addons whose manifest failed.
-const loadManifests = async (remotes: Module[]) => {
-  const failed: Record<string, string> = {}
-  await Promise.all(
-    remotes
-      .filter((r) => r.modules.includes(MANIFEST_MODULE))
-      .map(async (r) => {
-        try {
-          const manifest = await loadRemote<{ default: unknown }>(
-            `${r.remote}/${MANIFEST_MODULE}`,
-            { from: 'runtime' },
-          )
-          const definition = manifest?.default as { contributes?: unknown } | undefined
-          if (!Array.isArray(definition?.contributes)) {
-            throw new Error('the manifest has no "contributes" list: export default defineAddon({ contributes })')
-          }
-          registerManifest({ name: r.addon, version: r.version, remote: r.remote }, manifest?.default)
-        } catch (error) {
-          console.error(`[addon ${r.addon}] its manifest failed to load`, error)
-          failed[r.addon] = String(error)
-        }
-      }),
-  )
-  setManifestsLoading(false)
-  return failed
 }
 
 export const RemoteModulesProvider = ({ children, skip }: Props) => {
@@ -276,7 +247,9 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
     )
 
     setRemotesInitialized(true)
-    loadManifests(allRemotes).then((failed) => {
+    loadManifests(allRemotes, (id) =>
+      loadRemote<{ default: unknown }>(id, { from: 'runtime' }),
+    ).then((failed) => {
       const devError = devAddon && failed[devAddon.override.addon]
       if (devError)
         setAddonDev({ ...devAddon, error: `its manifest failed to load (${devError})` })

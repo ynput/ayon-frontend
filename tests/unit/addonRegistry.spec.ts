@@ -49,7 +49,7 @@ test('a contribution to an unknown slot is skipped and named', () => {
   expect(contributions.map((c) => c.key)).toEqual(['my-addon.budget'])
   expect(skipped).toHaveLength(1)
   expect(formatSkipped(skipped[0])).toBe(
-    '[addon my-addon] skipped contribution "later" for slot "future.slot": this AYON version has no such slot',
+    '[addon my-addon] skipped contribution "later" for slot "future.slot": this AYON version has no such slot, and no addon in the bundle declares it (it would be addon "future")',
   )
 })
 
@@ -179,6 +179,56 @@ test('a service has an id and a component', () => {
     ['noComponent', "component must be a loader: () => import('./File')"],
     ['timer', 'duplicate id in slot "app.service"'],
   ])
+})
+
+test('user details sections and menu items check their selection and flags', () => {
+  const section = { slot: 'userDetails.section', title: 'Rates', component: loader }
+  const item = { slot: 'userDetails.menuItem', label: 'Send', icon: 'send', run: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...section, id: 'rates' },
+      { ...section, id: 'single', selection: 'single', serviceUsers: true },
+      { ...section, id: 'noTitle', title: undefined },
+      { ...section, id: 'badSelection', selection: 'some' },
+      { ...section, id: 'badService', serviceUsers: 'yes' },
+      { ...item, id: 'send', position: 'top', selection: 'multi' },
+      { ...item, id: 'noIcon', icon: undefined },
+      { ...item, id: 'badPosition', position: 'middle' },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual([
+    'my-addon.rates',
+    'my-addon.single',
+    'my-addon.send',
+  ])
+  expect(skipped.map((s) => s.id)).toEqual([
+    'noTitle',
+    'badSelection',
+    'badService',
+    'noIcon',
+    'badPosition',
+  ])
+  expect(skipped.find((s) => s.id === 'badService')?.reason).toBe(
+    'serviceUsers must be true or false',
+  )
+})
+
+test('profile sections need a title and check powerFeature', () => {
+  const section = { slot: 'profile.section', title: 'API keys', component: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...section, id: 'keys', order: 2 },
+      { ...section, id: 'power', powerFeature: true },
+      { ...section, id: 'noTitle', title: undefined },
+      { ...section, id: 'badPower', powerFeature: 'yes' },
+      { ...section, id: 'noComponent', component: undefined },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.keys', 'my-addon.power'])
+  expect(skipped.map((s) => s.id)).toEqual(['noTitle', 'badPower', 'noComponent'])
+  expect(skipped.find((s) => s.id === 'badPower')?.reason).toBe(
+    'powerFeature must be true or false',
+  )
 })
 
 test("table shortcuts have one action and keys that parse and aren't the table's own", () => {

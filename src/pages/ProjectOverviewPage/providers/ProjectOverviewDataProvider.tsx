@@ -1,5 +1,6 @@
-import { FC } from 'react'
+import { FC, ReactNode } from 'react'
 import { ColumnSettingsProvider, ColumnDndProvider } from '@shared/containers/ProjectTreeTable'
+import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 import { useGroupByRemoteModules } from '@shared/hooks'
 import { SettingsPanelProvider } from '@shared/context'
 import { ProjectOverviewProvider } from '../context/project-overview'
@@ -14,7 +15,22 @@ const DEFAULT_COLUMN_VISIBILITY = {
   entityType: true,
 }
 
-const ProjectOverviewDataProvider: FC = () => {
+type Props = {
+  // the table instead of the whole page, e.g. an addon's EntityTable
+  children?: ReactNode
+  readOnly?: boolean
+  // keys the expanded rows; the Overview page's by default
+  page?: string
+  // replaces the Overview's right-click menu
+  contextMenuItems?: ContextMenuItemConstructors
+}
+
+const ProjectOverviewDataProvider: FC<Props> = ({
+  children,
+  readOnly,
+  page,
+  contextMenuItems,
+}) => {
   // view context and update helper
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -32,9 +48,15 @@ const ProjectOverviewDataProvider: FC = () => {
       defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
     >
       <ColumnDndProvider>
-        <ProjectOverviewProvider modules={modules}>
+        <ProjectOverviewProvider modules={modules} page={page}>
           <SettingsPanelProvider>
-            <ProjectOverviewTableProvider modules={modules} />
+            <ProjectOverviewTableProvider
+              modules={modules}
+              readOnly={readOnly}
+              contextMenuItems={contextMenuItems}
+            >
+              {children}
+            </ProjectOverviewTableProvider>
           </SettingsPanelProvider>
         </ProjectOverviewProvider>
       </ColumnDndProvider>

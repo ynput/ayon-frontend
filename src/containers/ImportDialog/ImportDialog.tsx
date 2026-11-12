@@ -27,6 +27,7 @@ export default function ImportDialog() {
     importing: importContext,
     folderId,
     folderLabel,
+    listFolderId,
     projectName,
     close,
   } = useImportDialogContext()
@@ -91,6 +92,7 @@ export default function ImportDialog() {
             importContext={importContext}
             projectName={projectName}
             folderId={folderId}
+            listFolderId={listFolderId}
             data={data}
             setData={setData}
             step={step}

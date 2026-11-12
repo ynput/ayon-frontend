@@ -343,6 +343,8 @@ const EntityPickerDialogContent: FC<EntityPickerDialogProps> = ({
               isMultiSelect={tableEntityType === entityType ? !!isMultiSelect : true}
               onRowSubmit={(id) => (tableEntityType === entityType ? submit([id]) : undefined)}
               onScrollBottom={() => handleFetchNextPage(tableEntityType)}
+              // bring a preselected row into view, it can be far down a long list
+              scrollToRowId={Object.keys(initSelectionState[tableEntityType])[0]}
             />
           </SimpleTableProvider>
         ))}

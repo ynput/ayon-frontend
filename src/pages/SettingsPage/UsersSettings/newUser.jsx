@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { toast } from 'react-toastify'
 import { Button, Divider, SaveButton, Section, Dialog } from '@ynput/ayon-react-components'
 import { useAddUserMutation } from '@shared/api'
@@ -8,9 +8,21 @@ import UserAccessForm from './UserAccessForm'
 
 import styled from 'styled-components'
 import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
-import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
-import { getRequestErrorString } from '@shared/util'
+import {
+  getDialogKeyDown,
+  getRequestErrorString,
+  readDialogMemory,
+  writeDialogMemory,
+} from '@shared/util'
+
+// the access groups a new user gets, kept for the session: users are often added in batches with the same access.
+// never the user level: a remembered admin or manager level would make the next users admins or managers by accident
+const ACCESS_MEMORY = 'new-user-access'
+const pickAccess = ({ accessGroups, defaultAccessGroups }) => ({
+  accessGroups,
+  defaultAccessGroups,
+})
 
 const DividerSmallStyled = styled(Divider)`
   margin: 8px 0;
@@ -32,6 +44,11 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
   const usernameRef = useRef()
 
   const attributes = ayonClient.getAttribsByScope('user')
+
+  // start each new user with the access the last one got
+  useEffect(() => {
+    if (open) setFormData({ ...initFormData, ...pickAccess(readDialogMemory(ACCESS_MEMORY)) })
+  }, [open])
 
   const resetFormData = ({ password, passwordConfirm, formData, addedUsers }) => {
     setPassword(password)
@@ -90,13 +107,12 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
         user: preparePayload(formData, attributes, password),
       }).unwrap()
       toast.success('User created')
+      writeDialogMemory(ACCESS_MEMORY, pickAccess(formData))
 
       resetFormData({
         password: '',
         passwordConfirm: '',
-        formData: (fd) => {
-          return { accessGroups: fd.accessGroups, userLevel: fd.userLevel }
-        },
+        formData: (fd) => ({ ...initFormData, ...pickAccess(fd) }),
         addedUsers: [...addedUsers, formData.Username],
       })
 
@@ -125,9 +141,11 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
 
   return (
     <Dialog
-      onKeyDown={(e) =>
-        callbackOnKeyDown(e, { validationPassed: formData.Username, callback: handleSubmit })
-      }
+      onKeyDown={getDialogKeyDown(() => handleSubmit(true), {
+        onClose: handleClose,
+        disabled: !formData.Username || isCreatingUser,
+        onContinue: () => handleSubmit(false),
+      })}
       isOpen
       size="full"
       style={{
@@ -150,7 +168,7 @@ const NewUser = ({ onHide, open, onSuccess, accessGroupsData }) => {
             label="Create and close"
             disabled={!formData.Username}
             saving={isCreatingUser}
-            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
+            data-shortcut="Enter"
           />
         </>
       }

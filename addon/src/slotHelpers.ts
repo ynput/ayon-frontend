@@ -36,6 +36,11 @@ export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
 export const projectTableToolbarItem = (item: ContributionFields<'projectTable.toolbarItem'>) =>
   contribute('projectTable.toolbarItem', item)
 
+/** An item in a project table column's "more" menu: runs code or opens a dialog for the column. */
+export const projectTableColumnMenuItem = (
+  item: ContributionFields<'projectTable.columnMenuItem'>,
+) => contribute('projectTable.columnMenuItem', item)
+
 /** A section in the project tables' Customize panel. */
 export const projectTableCustomizeSection = (
   section: ContributionFields<'projectTable.customizeSection'>,
@@ -60,3 +65,15 @@ export const tableShortcut = (shortcut: ContributionFields<'table.shortcut'>) =>
 /** Code with no UI that runs while AYON is open: a component mounted once for the whole app. */
 export const appService = (service: ContributionFields<'app.service'>) =>
   contribute('app.service', service)
+
+/** A section in the user details panel (Settings → Users), for the selected users. */
+export const userDetailsSection = (section: ContributionFields<'userDetails.section'>) =>
+  contribute('userDetails.section', section)
+
+/** An item in the user details panel's "more" menu (Settings → Users), for the selected users. */
+export const userDetailsMenuItem = (item: ContributionFields<'userDetails.menuItem'>) =>
+  contribute('userDetails.menuItem', item)
+
+/** A section on the signed-in user's profile page (Account → Profile). */
+export const profileSection = (section: ContributionFields<'profile.section'>) =>
+  contribute('profile.section', section)

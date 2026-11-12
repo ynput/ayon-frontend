@@ -13,6 +13,7 @@ import { createReadStream, existsSync, readdirSync, readFileSync, statSync } fro
 import { createServer, type Server } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
+import { readContractSlots } from './contractSlots.js'
 import { checkAddon, formatCheck } from './check.js'
 import { checkDevRequirements, formatChecks } from './devChecks.js'
 import {
@@ -201,11 +202,23 @@ const slots = async () => {
   const pkgDir = findPackageDir(root, '@ynput/ayon-addon')
   if (!pkgDir) throw new Error('@ynput/ayon-addon is not installed here')
   const data = JSON.parse(readFileSync(path.join(pkgDir, 'dist', 'slots.json'), 'utf8'))
+  const contract = await readContractSlots(root)
+  contract.problems.forEach(({ reason }) => console.warn(reason))
+  data.addonSlots = contract.slots.map(({ name, version, description, package: from }) => ({
+    name,
+    version,
+    description,
+    package: from,
+  }))
   const text = [
     `@ynput/ayon-addon ${data.version}: ${data.slots.length} slots (details: node_modules/@ynput/ayon-addon/AGENTS.md)`,
     ...data.slots.map(
       (s: { name: string; helper: string; loads: string; where: string }) =>
         `  ${s.name.padEnd(30)} ${s.helper.padEnd(28)} ${s.loads.padEnd(18)} ${s.where}`,
+    ),
+    ...contract.slots.map(
+      (s) =>
+        `  ${s.name.padEnd(30)} from ${s.package}, version ${s.version}${s.description ? `: ${s.description}` : ''}`,
     ),
   ].join('\n')
   print(data, text)
