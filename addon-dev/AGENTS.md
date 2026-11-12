@@ -100,8 +100,9 @@ of AYON:
 
 - **Real AYON surfaces** from `@ynput/ayon-frontend-shared`: the details panel, the slicer, the
   Customize panel, and the addon columns' cells and `fetchValues`, in AYON's providers (store, api,
-  contexts). AYON's project list table, with only the addon's items in its menus (AYON's own,
-  such as open, pin and folders, need the app). Plain stand-ins for what lives in the AYON app: the header and the
+  contexts). AYON's project list (shared `ProjectsList`) and the studio pages' splitter, with
+  AYON's menus minus what needs the app (open, manage, new project) or changes projects and
+  folders on the server (archive, delete, labels, folders). Plain stand-ins for what lives in the AYON app: the header and the
   table around the columns (its rows are the picked entities, its right-click menu has the
   `entityMenuItem` items, and once clicked it takes the `table.shortcut` keys). Pages render alone, without AYON's page tabs.
 - **Developer panel** on the left, in two halves that scroll on their own. It sits in a splitter
