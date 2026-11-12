@@ -694,3 +694,19 @@ button.tertiary:disabled {
     color: var(--md-sys-color-surface-container-highest);
   }
 }
+
+// phones: iOS zooms into any field with text under 16px when it gets focus, so fields stay at 16px
+// (same width as MOBILE_MEDIA_QUERY in shared/src/util/breakpoints.ts)
+@media (max-width: 600px) {
+  // no breadcrumbs in the middle on phones: the right controls take the rest of the bar
+  nav.primary {
+    grid-template-columns: max-content minmax(0, 1fr);
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable='true'] {
+    font-size: 16px !important;
+  }
+}

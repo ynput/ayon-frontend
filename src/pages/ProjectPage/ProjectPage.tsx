@@ -60,6 +60,8 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { ProjectNewEntityHost } from './ProjectNewEntityHost'
+import ProjectMobileNav from './mobile/ProjectMobileNav'
+import { useIsMobile } from '@hooks/useIsMobile'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -237,6 +239,7 @@ const ProjectPageInner = () => {
   const dispatch = useAppDispatch()
   const { onOpenImage, onGoToFrame, onOpenViewer, onUpdateEntity } = useDetailsPanelContext()
   const { trackCurrentTab } = useProjectDefaultTab()
+  const isMobile = useIsMobile()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
   // addons in the bundle the user's addon modules come from (production, staging or dev)
@@ -592,7 +595,12 @@ const ProjectPageInner = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      <AppNavLinks links={links} currentModule={module} projectName={projectName} />
+      <AppNavLinks
+        links={links}
+        currentModule={module}
+        projectName={projectName}
+        hideOnMobile
+      />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}
@@ -612,6 +620,7 @@ const ProjectPageInner = () => {
                 </ProjectSlicerWithViews>
               </EntityUpdatesProvider>
             </WithViews>
+            {isMobile && <ProjectMobileNav links={links} currentModule={addonName || module} />}
           </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>

@@ -5,6 +5,7 @@ import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 import { useListInstallersQuery } from '@queries/installers/getInstallers'
 import { useListDependencyPackagesQuery } from '@queries/dependencyPackages/getDependencyPackages'
+import { useIsMobile } from '@hooks/useIsMobile'
 
 type Props = {
   isAdmin: boolean
@@ -12,6 +13,7 @@ type Props = {
 
 const ReleaseInstallerPrompt = ({ isAdmin }: Props) => {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const dispatch = useAppDispatch()
 
   const [showPrompt, setShowPrompt] = useSessionStorage<boolean>('releaseInstallPrompt', true)
@@ -52,8 +54,12 @@ const ReleaseInstallerPrompt = ({ isAdmin }: Props) => {
 
   return (
     <Styled.Container>
-      <Styled.DownloadButton icon={'valve'} onClick={handleOpen}>
-        Setup pipeline
+      <Styled.DownloadButton
+        icon={'valve'}
+        onClick={handleOpen}
+        {...(isMobile && { 'aria-label': 'Setup pipeline', 'data-tooltip': 'Setup pipeline' })}
+      >
+        {!isMobile && 'Setup pipeline'}
       </Styled.DownloadButton>
 
       <Styled.CloseButton icon="close" onClick={() => setShowPrompt(false)} />

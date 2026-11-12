@@ -8,6 +8,7 @@ import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
 import { useURIContext } from '@shared/context'
+import { useIsMobile } from '@hooks/useIsMobile'
 
 export interface NavLinkItem {
   name?: string
@@ -30,9 +31,12 @@ interface AppNavLinksProps {
   links?: NavLinkItem[]
   currentModule?: string
   projectName?: string
+  hideOnMobile?: boolean
 }
 
-const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
+const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], hideOnMobile }) => {
+  const isMobile = useIsMobile()
+  const showViews = !(hideOnMobile && isMobile)
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
@@ -161,7 +165,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
                   <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
                 )}
                 {endContent && endContent}
-                {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
+                {viewType && showViews && <Styled.Views id={getViewsPortalId(viewType as any)} />}
               </Button>
             </NavLink>
           </Styled.NavItem>
@@ -170,7 +174,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     )
 
   return (
-    <Styled.NavBar className="secondary">
+    <Styled.NavBar className="secondary" $hideOnMobile={hideOnMobile}>
       <ul
         ref={tabsRef}
         className={clsx('tabs', {

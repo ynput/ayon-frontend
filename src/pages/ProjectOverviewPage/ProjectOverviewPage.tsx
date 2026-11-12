@@ -16,7 +16,8 @@ import {
 import { Section, SortingDropdown, Toolbar } from '@ynput/ayon-react-components'
 import SearchFilterWrapper from './containers/SearchFilterWrapper'
 import ProjectOverviewTable from './containers/ProjectOverviewTable'
-import { CustomizeButton, SyncButton, buildScopes } from '@shared/components'
+import { CustomizeButton, SyncButton } from '@shared/components'
+import { OVERVIEW_FILTER_SCOPES } from './ProjectOverviewPageHelpers'
 import AddonToolbarItems from '@/remote/AddonToolbarItems'
 import ProjectOverviewDetailsPanel from './containers/ProjectOverviewDetailsPanel'
 import { ProjectNewEntityHost } from '../ProjectPage/ProjectNewEntityHost'
@@ -46,10 +47,6 @@ import type { OnAddToList } from '@shared/containers/Slicer'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { MoveEntityDialog } from '@shared/containers/MoveEntityDialog'
 import type { OnMoveComplete } from '@shared/containers/MoveEntityDialog'
-
-// the tasks resolver task filter does not whitelist folder_type — use the
-// folder-scope folderType chip instead (goes through folderFilter)
-const SCOPES = buildScopes(['task', 'folder'], { task: ['folderType'] })
 
 const GroupByDropdown = styled(SortingDropdown)<{
   $disableSortOrder?: boolean
@@ -256,7 +253,7 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
-                scopes={SCOPES}
+                scopes={OVERVIEW_FILTER_SCOPES}
                 projectNames={projectName ? [projectName] : []}
                 // @ts-expect-error: projectInfo is never matching, whatever
                 projectInfo={projectInfo}

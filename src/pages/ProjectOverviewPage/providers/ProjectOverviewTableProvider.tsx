@@ -14,6 +14,8 @@ import { useSlicerContext } from '@shared/containers'
 import { useProjectOverviewContext } from '../context/project-overview'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
+import MobileOverview from '../mobile/MobileOverview'
+import { useIsMobile } from '@hooks/useIsMobile'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
@@ -89,6 +91,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
 
   const dispatch = useAppDispatch()
   const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
+  const isMobile = useIsMobile()
   const handleOpenPlayer = useTableOpenViewer({ projectName: props.projectName })
 
   return (
@@ -118,7 +121,7 @@ const ProjectOverviewTableProvider: FC<{ modules: ProjectTableModulesType }> = (
         <SelectionCellsProvider>
           <SelectedRowsProvider>
             <CellEditingProvider>
-              <ProjectOverviewPage />
+              {isMobile ? <MobileOverview /> : <ProjectOverviewPage />}
             </CellEditingProvider>
           </SelectedRowsProvider>
         </SelectionCellsProvider>
