@@ -9,6 +9,7 @@ import {
   setSlotInspectorAvailable,
   useSlotInspector,
 } from '@shared/components'
+import * as MenuStyled from '@shared/components/Menu/Menu.styled'
 import HeaderButton from '../HeaderButton'
 
 const MENU_ID = 'slot-inspector'
@@ -36,7 +37,10 @@ export const SlotInspectorMenu = () => {
         onClick={() => toggleMenuOpen(MENU_ID)}
       />
       <MenuContainer id={MENU_ID} target={buttonRef.current}>
-        <SlotInspectorControls />
+        {/* the surface of AYON's other header menus */}
+        <MenuStyled.Section>
+          <SlotInspectorControls />
+        </MenuStyled.Section>
       </MenuContainer>
     </>
   )
