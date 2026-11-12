@@ -3,6 +3,7 @@ import { ListEntityType } from '../components/NewListDialog/NewListDialog'
 import { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import { EntityList } from '@shared/api'
 import { toast } from 'react-toastify'
+import { openReviewSession as openReviewSessionAction } from '../util/openReviewSession'
 
 const MIN_REVIEW_ACTIONS_VERSION = '0.5.0'
 
@@ -78,7 +79,6 @@ export const useBuildListMenuItems = ({
       const hasAnyNonReviewable =
         entityType === 'version' ? entities.some((v) => v.hasReviewables === false) : false
 
-      const OPEN_REVIEW_SESSION_ACTION_ID_BASE = 'review-create-session-from'
       const openReviewSession = async () => {
         if (!reviewAddonVersion) return toast.error('Review addon not available')
 
@@ -89,44 +89,13 @@ export const useBuildListMenuItems = ({
           return
         }
 
-        const loadingToast = toast.loading('Opening review session...')
-        try {
-          const result = await executeAction({
-            identifier: `${OPEN_REVIEW_SESSION_ACTION_ID_BASE}-${entityType}s`,
-            actionContext: {
-              projectName,
-              entityType,
-              entityIds: entities.map((v) => v.entityId),
-            },
-            addonName: 'review',
-            addonVersion: reviewAddonVersion,
-          }).unwrap()
-          const payload = result.payload as { uri?: string; new_tab?: boolean } | undefined
-          if (result.success && result?.type === 'redirect' && payload?.uri) {
-            toast.update(loadingToast, {
-              render: 'Review session created, redirecting...',
-              type: 'success',
-              isLoading: false,
-              autoClose: 3000,
-            })
-            window.open(payload.uri, '_blank')
-          } else {
-            toast.update(loadingToast, {
-              render: 'Unexpected response from review addon',
-              type: 'error',
-              isLoading: false,
-              autoClose: 5000,
-            })
-          }
-        } catch (error) {
-          console.error('Error creating review session', error)
-          toast.update(loadingToast, {
-            render: 'Error creating review session',
-            type: 'error',
-            isLoading: false,
-            autoClose: 5000,
-          })
-        }
+        await openReviewSessionAction({
+          executeAction,
+          projectName,
+          reviewAddonVersion,
+          entityType,
+          entityIds: entities.map((v) => v.entityId),
+        })
       }
 
       const menu: any[] = [buildAddToListItem(entityType, entities, label, filter)]

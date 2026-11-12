@@ -77,6 +77,8 @@ export const HeaderEnd = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
+  /* at the right end: Review's compare plugin puts it after its selector, aligned to the start */
+  margin-left: auto;
 `
 
 // shown instead of the player when there is nothing it can play

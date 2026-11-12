@@ -17,7 +17,11 @@ import { isPlayable, versionClip } from './viewerClips'
 import * as Styled from './Viewer.styled'
 
 // shared
-import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
+import {
+  useGetViewerReviewablesQuery,
+  useGetEntitiesDetailsPanelQuery,
+  useExecuteActionMutation,
+} from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import {
   ProjectContextProvider,
@@ -25,7 +29,8 @@ import {
   useProjectContext,
   useScopedDetailsPanel,
 } from '@shared/context'
-import { useLocalStorage } from '@shared/hooks'
+import { useGetBundleAddon, useLocalStorage } from '@shared/hooks'
+import { openReviewSession } from '@pages/ProjectListsPage/util/openReviewSession'
 
 interface ViewerProps {
   onClose?: () => void
@@ -324,6 +329,21 @@ const ViewerBody = ({
     [reviewPlugins],
   )
 
+  // the clips' versions in an unsaved review session, like "Open in review" in the tables
+  const { getBundleAddonVersion } = useGetBundleAddon()
+  const reviewAddonVersion = getBundleAddonVersion('review')
+  const [executeAction] = useExecuteActionMutation()
+  const handleCreateReview = () => {
+    if (!reviewAddonVersion || !projectName) return
+    openReviewSession({
+      executeAction,
+      projectName,
+      reviewAddonVersion,
+      entityType: 'version',
+      entityIds: [...new Set(clips.map((clip) => clip.context.versionId))],
+    })
+  }
+
   // ---- header ----
   const clipDetails = details.find((d) => d.id === pickerVersionId) ?? details[0]
   const folderLabel = clipDetails?.folder?.label || clipDetails?.folder?.name
@@ -402,6 +422,16 @@ const ViewerBody = ({
         >
           Timeline
           <Icon icon="bolt" />
+        </Button>
+      )}
+      {reviewAddonVersion && !!clips.length && (
+        <Button
+          variant="surface"
+          icon="subscriptions"
+          data-tooltip="Open these versions in a new review session"
+          onClick={handleCreateReview}
+        >
+          Create review
         </Button>
       )}
       {showClose && onClose && (
