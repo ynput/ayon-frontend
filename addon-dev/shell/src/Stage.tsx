@@ -8,9 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Button,
-  FormLayout,
   FormRow,
-  Icon,
   InputSwitch,
   InputText,
   LockedInput,
@@ -18,7 +16,6 @@ import {
   SaveButton,
   UserImagesStacked,
 } from '@ynput/ayon-react-components'
-import { SelectButton } from 'primereact/selectbutton'
 import { ContributionView, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
@@ -338,12 +335,7 @@ const AccountStage = () => {
 }
 
 type ShellUser = UserDetailsSource & {
-  hasPassword?: boolean
-  isDeveloper?: boolean
-  isStagingAllowed?: boolean
-  disablePasswordLogin?: boolean
   accessGroups?: Record<string, string[]>
-  defaultAccessGroups?: string[]
 }
 
 /** The user's level as Settings > Users shows it. */
@@ -391,7 +383,7 @@ const UserDetailsHeader = ({ user, menuItems, onMenuOpen }: { user: ShellUser; m
 
 // userDetails.section and userDetails.menuItem: a replica of the user details panel of Settings >
 // Users (UserDetail in the ayon-frontend app), next to a list of the users to pick from (also in
-// Preview inputs). The forms show the user's values and save nothing.
+// Preview inputs). Only the header and the addon sections: AYON's own forms are left out.
 const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   const signedIn = useUser()
   const { data = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
@@ -419,7 +411,6 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   ]
   if (isLoading) return <Hint>Loading users…</Hint>
   if (!target) return <Hint>No users to show.</Hint>
-  const level = userLevel(target)
   return (
     <div className="ayon-shell-body ayon-shell-users" data-shell-surface="user-details">
       <table className="ayon-shell-table ayon-shell-users-list">
@@ -459,63 +450,6 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
       <section className="ayon-shell-user-detail">
         <UserDetailsHeader user={target} menuItems={menuItems} onMenuOpen={addonMenu.prefetch} />
         <div className="ayon-shell-user-forms">
-          <Panel>
-            <FormRow label="Username">
-              <LockedInput value={target.name} onEdit={() => undefined} />
-            </FormRow>
-            <FormRow label="Password">
-              <LockedInput label="Password" value={target.hasPassword ? '1234567890' : ''} type="password" onEdit={() => undefined} />
-            </FormRow>
-            <FormRow label="Full name">
-              <InputText value={target.attrib?.fullName || ''} readOnly />
-            </FormRow>
-            <FormRow label="Email">
-              <InputText value={target.attrib?.email || ''} readOnly />
-            </FormRow>
-          </Panel>
-          <Panel>
-            <b>Login control</b>
-            <FormLayout>
-              <FormRow label="User active">
-                <InputSwitch checked={target.active !== false} readOnly />
-              </FormRow>
-            </FormLayout>
-          </Panel>
-          <Panel>
-            <b>Access</b>
-            <FormLayout>
-              <FormRow label="Disable password">
-                <InputSwitch checked={!!target.disablePasswordLogin} readOnly />
-              </FormRow>
-              <FormRow label="Developer">
-                <InputSwitch checked={!!target.isDeveloper} readOnly />
-              </FormRow>
-              <FormRow label="Staging access">
-                <InputSwitch checked={!!target.isStagingAllowed} readOnly />
-              </FormRow>
-              <FormRow label="Access level">
-                <SelectButton
-                  unselectable={false}
-                  value={level}
-                  options={[
-                    { label: 'User', value: 'user' },
-                    { label: 'Manager', value: 'manager' },
-                    { label: 'Admin', value: 'admin' },
-                  ]}
-                />
-              </FormRow>
-              {level === 'user' ? (
-                <FormRow label="Default projects access">
-                  <InputText value={(target.defaultAccessGroups || []).join(', ')} readOnly />
-                </FormRow>
-              ) : (
-                <span className="ayon-shell-user-note">
-                  <Icon icon="info" />
-                  Admins, managers and services have full access to all projects.
-                </span>
-              )}
-            </FormLayout>
-          </Panel>
           <SlotFrame slot="userDetails.section">
             <AddonUserDetailsSections context={context} />
           </SlotFrame>
