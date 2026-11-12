@@ -80,3 +80,4 @@ export * from './ColumnHeaderMenuUI.styled'
 
 // re-export prime-react ConfirmDialog
 export * from 'primereact/confirmdialog'
+export * from './UserDetailsHeader'
