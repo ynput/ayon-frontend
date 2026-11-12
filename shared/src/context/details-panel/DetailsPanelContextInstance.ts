@@ -1,20 +1,31 @@
 import { createContext, useCallback, useContext } from 'react'
 import type {
+  AddonDetailsPanelTab,
   CommentFrameLink,
   DetailsPanelContextType,
   DetailsPanelTab,
   TabStateByScope,
 } from './DetailsPanelContext'
-import { useSessionStorage } from '@shared/hooks/useSessionStorage'
-import { readLocalStorage, writeLocalStorage } from '@shared/hooks/useLocalStorage'
+import {
+  readSessionStorage,
+  useSessionStorage,
+  writeSessionStorage,
+} from '@shared/hooks/useSessionStorage'
 
 // Create the context
 export const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
 
 const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+// an addon tab: the contribution key, <addon>.<id>
+const ADDON_TAB = /^[^.\s]+\.[A-Za-z][A-Za-z0-9_]*$/
 
+export const isAddonDetailsPanelTab = (tab: unknown): tab is AddonDetailsPanelTab =>
+  typeof tab === 'string' && ADDON_TAB.test(tab)
+
+// a stored addon tab whose addon is gone falls back in DetailsPanel, once manifests have loaded
 export const isDetailsPanelTab = (tab: unknown): tab is DetailsPanelTab =>
-  typeof tab === 'string' && DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab)
+  typeof tab === 'string' &&
+  (DETAILS_PANEL_TABS.includes(tab as DetailsPanelTab) || isAddonDetailsPanelTab(tab))
 
 // the frame link stored on a comment's data, if it has one
 export const getActivityFrameLink = (activity: {
@@ -41,9 +52,10 @@ export const useDetailsPanelContext = (): DetailsPanelContextType => {
 
 export const TABS_BY_SCOPE_KEY = 'details/tabs-by-scope'
 
+// same storage as the useSessionStorage(TABS_BY_SCOPE_KEY) readers below and in DetailsPanelContext
 export const setDetailsPanelTabForScope = (scope: string, tab: DetailsPanelTab) => {
-  const current = readLocalStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
-  writeLocalStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
+  const current = readSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
+  writeSessionStorage(TABS_BY_SCOPE_KEY, { ...current, [scope]: tab })
 }
 
 // Add a specialized hook for using a panel in a specific scope
@@ -52,7 +64,7 @@ export const useScopedDetailsPanel = (scope: string) => {
 
   const [tabsByScope, setTabsByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
-  // derived from localStorage state, which useSessionStorage keeps in sync across hook instances
+  // derived from sessionStorage state, which useSessionStorage keeps in sync across hook instances
   const storedTab = tabsByScope[scope]
   const currentTab = isDetailsPanelTab(storedTab) ? storedTab : getTabForScope(scope)
 

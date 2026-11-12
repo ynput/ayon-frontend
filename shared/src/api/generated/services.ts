@@ -62,15 +62,17 @@ export type RegistryAuth = {
   password: string
 }
 export type ServiceDataModel = {
-  volumes?: string[]
-  ports?: string[]
-  memLimit?: string
-  user?: string
-  env?: object
-  storagePath?: string
-  registryAuth?: RegistryAuth
-  image?: string
-  error?: string
+  volumes?: string[] | null
+  ports?: string[] | null
+  memLimit?: string | null
+  user?: string | null
+  env?: {
+    [key: string]: any
+  }
+  storagePath?: string | null
+  registryAuth?: RegistryAuth | null
+  image?: string | null
+  error?: string | null
 }
 export type ServiceModel = {
   name: string
@@ -80,8 +82,8 @@ export type ServiceModel = {
   service: string
   shouldRun: boolean
   isRunning: boolean
-  lastSeen?: string
-  lastSeenDelta?: number
+  lastSeen?: string | null
+  lastSeenDelta?: number | null
   data?: ServiceDataModel
 }
 export type ServiceListModel = {
@@ -91,18 +93,22 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
 export type ServiceConfigModel = {
-  volumes?: string[]
-  ports?: string[]
-  memLimit?: string
-  user?: string
-  env?: object
-  storagePath?: string
-  registryAuth?: RegistryAuth
+  volumes?: string[] | null
+  ports?: string[] | null
+  memLimit?: string | null
+  user?: string | null
+  env?: {
+    [key: string]: any
+  }
+  storagePath?: string | null
+  registryAuth?: RegistryAuth | null
 }
 export type SpawnServiceRequestModel = {
   addonName: string
@@ -112,18 +118,20 @@ export type SpawnServiceRequestModel = {
   config?: ServiceConfigModel
 }
 export type PatchServiceRequestModel = {
-  volumes?: string[]
-  ports?: string[]
-  memLimit?: string
-  user?: string
-  env?: object
-  storagePath?: string
-  registryAuth?: RegistryAuth
-  shouldRun?: boolean
-  error?: string
-  hostname?: string
+  volumes?: string[] | null
+  ports?: string[] | null
+  memLimit?: string | null
+  user?: string | null
+  env?: {
+    [key: string]: any
+  }
+  storagePath?: string | null
+  registryAuth?: RegistryAuth | null
+  shouldRun?: boolean | null
+  error?: string | null
+  hostname?: string | null
   /** Deprecated, use top level fields instead */
-  config?: ServiceConfigModel
+  config?: ServiceConfigModel | null
 }
 export type HostHealthModel = {
   cpu?: number

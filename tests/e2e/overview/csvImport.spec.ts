@@ -3,6 +3,8 @@ import { expect, test } from '../fixtures'
 import { OverviewPage } from '../pages/OverviewPage'
 
 const HIERARCHY_CSV = path.join(__dirname, 'fixtures/hierarchy.csv')
+// one folder_or_task_type column instead of folder_type and task_type, as a raw table export writes it
+const COMBINED_TYPE_CSV = path.join(__dirname, 'fixtures/hierarchyCombinedType.csv')
 
 test.describe('overview CSV import', () => {
   test('import folders and a task from a CSV file', async ({ page, api, projectName }) => {
@@ -35,6 +37,26 @@ test.describe('overview CSV import', () => {
     await overview.expand('sh110')
     await expect(overview.cell('sh110', 'status')).toContainText('In progress')
     await expect(overview.cell('layout', 'status')).toContainText('Approved')
+  })
+
+  test('import a CSV with one folder or task type column', async ({ page, api, projectName }) => {
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.importCsv(COMBINED_TYPE_CSV, { created: 3 })
+
+    await expect
+      .poll(async () =>
+        (await api.listFolders(projectName)).map((f) => [f.path, f.folderType, f.status]),
+      )
+      .toEqual([
+        ['sq100', 'Sequence', 'Not ready'],
+        ['sq100/sh110', 'Shot', 'In progress'],
+      ])
+    const shot = (await api.listFolders(projectName)).find((f) => f.name === 'sh110')
+    expect(
+      (await api.listTasks(projectName, shot.id)).map((t) => [t.name, t.taskType, t.status]),
+    ).toEqual([['layout', 'Layout', 'Approved']])
   })
 
   // FLAG (app bug): imported folders and tasks only show in the open overview after a reload

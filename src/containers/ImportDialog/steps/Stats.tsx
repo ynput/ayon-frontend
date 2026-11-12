@@ -1,5 +1,6 @@
 import { Icon, IconProps } from "@ynput/ayon-react-components"
 import clsx from "clsx"
+import { ReactNode } from "react"
 import {
   StatsWrapper,
   StatsPanel,
@@ -10,7 +11,7 @@ import {
   StatsRemove,
 } from "./Stats.styled"
 
-type StatsItem = {
+export type StatsItem = {
   text: string
   icon: IconProps["icon"]
   rotated?: boolean
@@ -20,7 +21,7 @@ type StatsItem = {
 
 type Props = {
   heading: string
-  subtitle?: string
+  subtitle?: ReactNode
   size: string,
   items: StatsItem[]
   onClose?: () => void

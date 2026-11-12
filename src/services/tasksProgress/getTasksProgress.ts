@@ -14,7 +14,15 @@ import {
 import { gqlApi } from '@shared/api'
 import { GetProgressTaskQuery, GetTasksProgressQuery } from '@shared/api'
 
-export type ProgressTask = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
+type ProgressTaskNode = GetTasksProgressQuery['project']['tasks']['edges'][0]['node']
+type ProgressTaskAttrib = {
+  priority: string | null
+  endDate: unknown
+  resolutionHeight: number | null
+  resolutionWidth: number | null
+  fps: number | null
+}
+export type ProgressTask = Omit<ProgressTaskNode, 'attrib'> & { attrib: ProgressTaskAttrib }
 
 export type ProgressTaskFolder = ProgressTask['folder']
 export interface FolderGroup extends ProgressTaskFolder {
@@ -43,6 +51,7 @@ const transformTasksProgress = (data: GetTasksProgressQuery): GetTasksProgressRe
     }
     groupedTasks[folder.id].tasks.push({
       ...edge.node,
+      attrib: edge.node.attrib as ProgressTaskAttrib,
     })
   })
 
@@ -109,13 +118,8 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
               return
             }
 
-            const isCreated = topic === 'entity.task.created'
-            if (!isCreated && !cachedTaskIds.has(taskId)) return
-
-            if (isCreated) {
-              taskIdsToFetch.add(taskId)
-              return
-            }
+            // new tasks are not streamed in, they show after a sync (#2160)
+            if (!cachedTaskIds.has(taskId)) return
 
             const field = topic.split('.')[2]?.replace('_changed', '')
             const patch = getSupportedEntityPatch(
@@ -250,7 +254,13 @@ const enhancedEndpoints = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>(
     // GetProgressTask: a single task for the tasks progress table
     // used mainly for realtime updates to patch the task in the cache
     GetProgressTask: {
-      transformResponse: (result: GetProgressTaskQuery) => result.project.task,
+      transformResponse: (result: GetProgressTaskQuery): GetProgressTaskResult =>
+        result.project.task
+          ? {
+              ...result.project.task,
+              attrib: result.project.task.attrib as ProgressTaskAttrib,
+            }
+          : result.project.task,
     },
   },
 })

@@ -1,9 +1,11 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { isFromOtherTable } from '../../utils/tableOwnership'
 import { CellId, getTypeDefaultValue, parseCellId } from '../../utils'
 import useHistory from '../../hooks/useHistory'
 import { useSelectionCellsContext } from '../selection-cells/SelectionCellsContext'
 import useUpdateTableData, {
   EntityUpdate,
+  InheritFromParent,
   InheritFromParentEntity,
   UpdateTableEntities,
 } from '../../hooks/useUpdateTableData'
@@ -49,18 +51,31 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     pushHistory,
     removeHistoryEntries,
   })
-  const { attribFields, getEntityById } = useProjectTableContext()
+  const { attribFields, getEntityById, isRowReadOnly, tableId } = useProjectTableContext()
   const { projectName } = useProjectContext()
   const [updateSubtasks] = useUpdateSubtasksMutation()
 
+  // Every edit (typing, multi-cell, paste, clear, undo) comes through here, so read-only rows
+  // are dropped once for all of them
+  const withoutReadOnlyRows = useCallback(
+    <T extends { rowId: string }>(entities: T[]) => {
+      const editable = entities.filter((entity) => !isRowReadOnly(entity.rowId))
+      if (entities.length && !editable.length) toast.warn('These rows are read-only')
+      return editable
+    },
+    [isRowReadOnly],
+  )
+
   const handleUpdateEntities: UpdateTableEntities = useCallback(
     async (entities = [], pushToHistory = true) => {
+      const editable = withoutReadOnlyRows(entities)
+      if (!editable.length) return
       try {
         // validate the entities before updating
-        validateUpdateEntities(entities, attribFields)
+        validateUpdateEntities(editable, attribFields)
 
         // if validation passes, update the entities
-        return await updateOverviewEntities(entities, pushToHistory)
+        return await updateOverviewEntities(editable, pushToHistory)
       } catch (error: any) {
         // if validation fails, show a toast and return
         toast.error(error.message)
@@ -68,7 +83,16 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         return Promise.reject(error)
       }
     },
-    [updateOverviewEntities, attribFields],
+    [updateOverviewEntities, attribFields, withoutReadOnlyRows],
+  )
+
+  const handleInheritFromParent: InheritFromParent = useCallback(
+    async (entities = [], pushToHistory = true) => {
+      const editable = withoutReadOnlyRows(entities)
+      if (!editable.length) return
+      return inheritFromParent(editable, pushToHistory)
+    },
+    [inheritFromParent, withoutReadOnlyRows],
   )
 
   // Handle undo
@@ -84,7 +108,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
     if (entitiesToInherit && entitiesToInherit.length > 0) {
       try {
-        await inheritFromParent(entitiesToInherit, false)
+        await handleInheritFromParent(entitiesToInherit, false)
       } catch (error) {
         toast.error('Failed to inherit changes')
       }
@@ -114,7 +138,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
     }
     if (entitiesToInherit && entitiesToInherit.length > 0) {
       try {
-        await inheritFromParent(entitiesToInherit, false)
+        await handleInheritFromParent(entitiesToInherit, false)
       } catch (error) {
         toast.error('Failed to inherit changes')
       }
@@ -147,6 +171,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
           console.warn(`Invalid cellId: ${cellId}`)
           continue
         }
+        if (isRowReadOnly(rowId)) continue
 
         // get the entity from the rowId
         const entity = getEntityById(rowId)
@@ -246,7 +271,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       // if we have inheritable attributes, call inheritFromParent
       if (entityInheriting.length > 0) {
         try {
-          await inheritFromParent(entityInheriting, true)
+          await handleInheritFromParent(entityInheriting, true)
         } catch (error) {
           toast.error('Failed to inherit parent values for cleared cells')
         }
@@ -291,7 +316,16 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
         toast.warn('No valid cells selected to clear')
       }
     },
-    [attribFields, updateOverviewEntities, projectName, updateSubtasks, pushHistory, getEntityById],
+    [
+      attribFields,
+      handleUpdateEntities,
+      handleInheritFromParent,
+      isRowReadOnly,
+      projectName,
+      updateSubtasks,
+      pushHistory,
+      getEntityById,
+    ],
   )
 
   const value = useMemo(
@@ -300,7 +334,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       setEditingCellId,
       isEditing,
       updateEntities: handleUpdateEntities,
-      inheritFromParent,
+      inheritFromParent: handleInheritFromParent,
       undo: handleUndo,
       redo: handleRedo,
       history,
@@ -311,7 +345,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
       editingCellId,
       isEditing,
       handleUpdateEntities,
-      inheritFromParent,
+      handleInheritFromParent,
       handleUndo,
       handleRedo,
       history,
@@ -326,6 +360,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
   // clear - backspace or delete
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (isFromOtherTable(e, tableId)) return
       const target = e.target as HTMLElement
       if (
         target.tagName === 'INPUT' ||
@@ -392,7 +427,7 @@ export const CellEditingProvider: React.FC<{ children: ReactNode }> = ({ childre
 
     document.addEventListener('keydown', onKeyDown)
     return () => document.removeEventListener('keydown', onKeyDown)
-  }, [canUndo, canRedo, handleUndo, handleRedo, selectedCells, handleClear])
+  }, [canUndo, canRedo, handleUndo, handleRedo, selectedCells, handleClear, tableId])
 
   return <CellEditingContext.Provider value={value}>{children}</CellEditingContext.Provider>
 }

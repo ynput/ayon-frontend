@@ -10,11 +10,6 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
-    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
-      }),
-    }),
     deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
@@ -25,6 +20,11 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'HEAD',
+      }),
+    }),
+    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
       }),
     }),
     getProjectFileInfo: build.query<GetProjectFileInfoApiResponse, GetProjectFileInfoApiArg>({
@@ -46,6 +46,28 @@ const injectedRtkApi = api.injectEndpoints({
     >({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/thumbnail`,
+      }),
+    }),
+    getProjectFileFilmstrip: build.query<
+      GetProjectFileFilmstripApiResponse,
+      GetProjectFileFilmstripApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
+        },
+      }),
+    }),
+    getProjectFileFilmstripPayload: build.query<
+      GetProjectFileFilmstripPayloadApiResponse,
+      GetProjectFileFilmstripPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/filmstrip/payload`,
+        params: {
+          v: queryArg.v,
+        },
       }),
     }),
     getProjectFileStill: build.query<GetProjectFileStillApiResponse, GetProjectFileStillApiArg>({
@@ -86,15 +108,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.projectFolderPostModel,
       }),
     }),
-    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
-      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
-    }),
     updateProjectFolder: build.mutation<UpdateProjectFolderApiResponse, UpdateProjectFolderApiArg>({
       query: (queryArg) => ({
         url: `/api/projectFolders/${queryArg.folderId}`,
         method: 'PATCH',
         body: queryArg.projectFolderPatchModel,
       }),
+    }),
+    deleteProjectFolder: build.mutation<DeleteProjectFolderApiResponse, DeleteProjectFolderApiArg>({
+      query: (queryArg) => ({ url: `/api/projectFolders/${queryArg.folderId}`, method: 'DELETE' }),
     }),
     getProjectAnatomy: build.query<GetProjectAnatomyApiResponse, GetProjectAnatomyApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/anatomy` }),
@@ -111,14 +133,6 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/bundles`,
         method: 'POST',
         body: queryArg.projectBundleModel,
-      }),
-    }),
-    getProjectBundleInfo: build.query<GetProjectBundleInfoApiResponse, GetProjectBundleInfoApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/bundle`,
-        params: {
-          variant: queryArg.variant,
-        },
       }),
     }),
     setProjectBundle: build.mutation<SetProjectBundleApiResponse, SetProjectBundleApiArg>({
@@ -140,6 +154,21 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getProjectBundleInfo: build.query<GetProjectBundleInfoApiResponse, GetProjectBundleInfoApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/bundle`,
+        params: {
+          variant: queryArg.variant,
+        },
+      }),
+    }),
+    deployProject: build.mutation<DeployProjectApiResponse, DeployProjectApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects`,
+        method: 'POST',
+        body: queryArg.deployProjectRequestModel,
+      }),
+    }),
     listProjects: build.query<ListProjectsApiResponse, ListProjectsApiArg>({
       query: (queryArg) => ({
         url: `/api/projects`,
@@ -153,13 +182,6 @@ const injectedRtkApi = api.injectEndpoints({
           desc: queryArg.desc,
           name: queryArg.name,
         },
-      }),
-    }),
-    deployProject: build.mutation<DeployProjectApiResponse, DeployProjectApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects`,
-        method: 'POST',
-        body: queryArg.deployProjectRequestModel,
       }),
     }),
     listGuestUsers: build.query<ListGuestUsersApiResponse, ListGuestUsersApiArg>({
@@ -178,6 +200,13 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'DELETE',
       }),
     }),
+    patchGuestUser: build.mutation<PatchGuestUserApiResponse, PatchGuestUserApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/guests/${queryArg.email}`,
+        method: 'PATCH',
+        body: queryArg.guestUserPatchModel,
+      }),
+    }),
     getProductTypes: build.query<GetProductTypesApiResponse, GetProductTypesApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/productTypes` }),
     }),
@@ -191,15 +220,15 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.projectPostModel,
       }),
     }),
-    deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
-      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}`, method: 'DELETE' }),
-    }),
     updateProject: build.mutation<UpdateProjectApiResponse, UpdateProjectApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}`,
         method: 'PATCH',
         body: queryArg.projectPatchModel,
       }),
+    }),
+    deleteProject: build.mutation<DeleteProjectApiResponse, DeleteProjectApiArg>({
+      query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}`, method: 'DELETE' }),
     }),
     getProjectStats: build.query<GetProjectStatsApiResponse, GetProjectStatsApiArg>({
       query: (queryArg) => ({ url: `/api/projects/${queryArg.projectName}/stats` }),
@@ -251,15 +280,6 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.accessGroups,
       }),
     }),
-    getProjectThumbnail: build.query<GetProjectThumbnailApiResponse, GetProjectThumbnailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/thumbnail`,
-        params: {
-          placeholder: queryArg.placeholder,
-          original: queryArg.original,
-        },
-      }),
-    }),
     createProjectThumbnail: build.mutation<
       CreateProjectThumbnailApiResponse,
       CreateProjectThumbnailApiArg
@@ -269,6 +289,15 @@ const injectedRtkApi = api.injectEndpoints({
         method: 'POST',
         headers: {
           'content-type': queryArg['content-type'],
+        },
+      }),
+    }),
+    getProjectThumbnail: build.query<GetProjectThumbnailApiResponse, GetProjectThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
         },
       }),
     }),
@@ -291,11 +320,6 @@ export type DeleteProjectActivityApiArg = {
   projectName: string
   activityId: string
 }
-export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
-export type GetProjectFileApiArg = {
-  projectName: string
-  fileId: string
-}
 export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectFileApiArg = {
   projectName: string
@@ -303,6 +327,11 @@ export type DeleteProjectFileApiArg = {
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
+  projectName: string
+  fileId: string
+}
+export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileApiArg = {
   projectName: string
   fileId: string
 }
@@ -320,6 +349,19 @@ export type GetProjectFileThumbnailApiResponse = /** status 200 Successful Respo
 export type GetProjectFileThumbnailApiArg = {
   projectName: string
   fileId: string
+}
+export type GetProjectFileFilmstripApiResponse =
+  /** status 200 Successful Response */ FilmstripModel
+export type GetProjectFileFilmstripApiArg = {
+  projectName: string
+  fileId: string
+  placeholder?: 'empty' | 'none'
+}
+export type GetProjectFileFilmstripPayloadApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileFilmstripPayloadApiArg = {
+  projectName: string
+  fileId: string
+  v?: string | null
 }
 export type GetProjectFileStillApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileStillApiArg = {
@@ -354,14 +396,14 @@ export type CreateProjectFolderApiResponse = /** status 200 Successful Response 
 export type CreateProjectFolderApiArg = {
   projectFolderPostModel: ProjectFolderPostModel
 }
-export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
-export type DeleteProjectFolderApiArg = {
-  folderId: string
-}
 export type UpdateProjectFolderApiResponse = /** status 200 Successful Response */ any
 export type UpdateProjectFolderApiArg = {
   folderId: string
   projectFolderPatchModel: ProjectFolderPatchModel
+}
+export type DeleteProjectFolderApiResponse = /** status 200 Successful Response */ any
+export type DeleteProjectFolderApiArg = {
+  folderId: string
 }
 export type GetProjectAnatomyApiResponse = /** status 200 Successful Response */ Anatomy
 export type GetProjectAnatomyApiArg = {
@@ -377,11 +419,6 @@ export type SetProjectBundlesApiArg = {
   projectName: string
   projectBundleModel: ProjectBundleModel
 }
-export type GetProjectBundleInfoApiResponse = /** status 200 Successful Response */ ProjectBundle
-export type GetProjectBundleInfoApiArg = {
-  projectName: string
-  variant?: 'production' | 'staging'
-}
 export type SetProjectBundleApiResponse = /** status 200 Successful Response */ any
 export type SetProjectBundleApiArg = {
   projectName: string
@@ -393,28 +430,33 @@ export type UnsetProjectBundleApiArg = {
   projectName: string
   variant?: 'production' | 'staging'
 }
+export type GetProjectBundleInfoApiResponse = /** status 200 Successful Response */ ProjectBundle
+export type GetProjectBundleInfoApiArg = {
+  projectName: string
+  variant?: 'production' | 'staging'
+}
+export type DeployProjectApiResponse = /** status 201 Successful Response */ any
+export type DeployProjectApiArg = {
+  deployProjectRequestModel: DeployProjectRequestModel
+}
 export type ListProjectsApiResponse =
   /** status 200 Successful Response */ ListProjectsResponseModel
 export type ListProjectsApiArg = {
   /** Page number, starting from 1 */
   page?: number
   /** If not provided, the result will not be limited */
-  length?: number
+  length?: number | null
   /** If not provided, return projects regardless the flag */
-  library?: boolean
+  library?: boolean | null
   /** If not provided, return projects regardless the flag */
-  active?: boolean
+  active?: boolean | null
   skeleton?: boolean
   /** Attribute to order the list by */
-  order?: 'name' | 'createdAt' | 'updatedAt'
+  order?: ('name' | 'createdAt' | 'updatedAt') | null
   desc?: boolean
   /** Limit the result to project with the matching name,
             or its part. % character may be used as a wildcard */
-  name?: string
-}
-export type DeployProjectApiResponse = /** status 201 Successful Response */ any
-export type DeployProjectApiArg = {
-  deployProjectRequestModel: DeployProjectRequestModel
+  name?: string | null
 }
 export type ListGuestUsersApiResponse = /** status 200 Successful Response */ GuestUsersListModel
 export type ListGuestUsersApiArg = {
@@ -430,6 +472,12 @@ export type RemoveGuestUserApiArg = {
   email: string
   projectName: string
 }
+export type PatchGuestUserApiResponse = /** status 200 Successful Response */ any
+export type PatchGuestUserApiArg = {
+  email: string
+  projectName: string
+  guestUserPatchModel: GuestUserPatchModel
+}
 export type GetProductTypesApiResponse = /** status 200 Successful Response */ ProductTypesList
 export type GetProductTypesApiArg = {
   projectName: string
@@ -443,14 +491,14 @@ export type CreateProjectApiArg = {
   projectName: string
   projectPostModel: ProjectPostModel
 }
-export type DeleteProjectApiResponse = unknown
-export type DeleteProjectApiArg = {
-  projectName: string
-}
 export type UpdateProjectApiResponse = unknown
 export type UpdateProjectApiArg = {
   projectName: string
   projectPatchModel: ProjectPatchModel
+}
+export type DeleteProjectApiResponse = unknown
+export type DeleteProjectApiArg = {
+  projectName: string
 }
 export type GetProjectStatsApiResponse = /** status 200 Successful Response */ any
 export type GetProjectStatsApiArg = {
@@ -474,7 +522,7 @@ export type SetProjectRootsOverridesApiArg = {
   siteId: string
   projectName: string
   payload: {
-    [key: string]: string
+    [key: string]: string | null
   }
 }
 export type GetProjectSiteRootsApiResponse = /** status 200 Successful Response */ {
@@ -482,9 +530,9 @@ export type GetProjectSiteRootsApiResponse = /** status 200 Successful Response 
 }
 export type GetProjectSiteRootsApiArg = {
   projectName: string
-  platform?: 'windows' | 'linux' | 'darwin'
+  platform?: ('windows' | 'linux' | 'darwin') | null
   /** Site ID may be specified either as a query parameter (`site_id` or `site`) or in a header. */
-  'x-ayon-site-id'?: string
+  'x-ayon-site-id'?: string | null
 }
 export type GetProjectTagsApiResponse = /** status 200 Successful Response */ ProjectTagsModel
 export type GetProjectTagsApiArg = {
@@ -504,17 +552,17 @@ export type UpdateProjectUserApiArg = {
   userName: string
   accessGroups: string[]
 }
+export type CreateProjectThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateProjectThumbnailApiArg = {
+  projectName: string
+  'content-type'?: string | null
+}
 export type GetProjectThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetProjectThumbnailApiArg = {
   projectName: string
   placeholder?: 'empty' | 'none'
   original?: boolean
-}
-export type CreateProjectThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateProjectThumbnailApiArg = {
-  projectName: string
-  'content-type'?: string
 }
 export type GetProjectEntityUrisApiResponse = /** status 200 Successful Response */ GetUrisResponse
 export type GetProjectEntityUrisApiArg = {
@@ -525,6 +573,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -533,6 +583,17 @@ export type FileInfo = {
   size: number
   filename?: string
   contentType?: string
+  mediaInfo?: {
+    [key: string]: any
+  } | null
+}
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }
 export type EntityCounts = {
   /** Number of folders */
@@ -602,14 +663,14 @@ export type ProjectTeamsResponseModel = {
 }
 export type ProjectFolderData = {
   /** Hex color code */
-  color?: string
+  color?: string | null
   /** Icon name */
-  icon?: string
+  icon?: string | null
 }
 export type ProjectFolderModel = {
   id: string
   label: string
-  parentId?: string
+  parentId?: string | null
   position?: number
   isEmpty?: boolean
   data?: ProjectFolderData
@@ -622,15 +683,15 @@ export type EntityIdResponse = {
   id: string
 }
 export type ProjectFolderPostModel = {
-  id?: string
+  id?: string | null
   label: string
-  parentId?: string
+  parentId?: string | null
   data?: ProjectFolderData
 }
 export type ProjectFolderPatchModel = {
-  label?: string
-  parentId?: string
-  data?: ProjectFolderData
+  label?: string | null
+  parentId?: string | null
+  data?: ProjectFolderData | null
 }
 export type EntityNaming = {
   /** How to capitalize the entity names */
@@ -684,38 +745,16 @@ export type Templates = {
   staging?: StagingDirectory[]
   others?: CustomTemplate[]
 }
-export type ProjectAttribModel = {
-  priority?: 'urgent' | 'high' | 'normal' | 'low'
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  /** Date and time when the project or task or asset was started */
-  startDate?: string
-  /** Deadline date and time */
-  endDate?: string
-  /** Textual description of the entity */
-  description?: string
-}
 export type FolderType = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   color?: string
   icon?: string
 }
 export type TaskType = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   color?: string
   icon?: string
@@ -724,22 +763,22 @@ export type LinkType = {
   link_type: string
   input_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   output_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
-  color?: string
+  color?: string | null
   style?: 'solid' | 'dashed'
 }
 export type Status = {
   name: string
-  original_name?: string
+  original_name?: string | null
   shortName?: string
   state?: 'not_started' | 'in_progress' | 'done' | 'blocked'
   icon?: string
   color?: string
   /** Limit the status to specific entity types. */
-  scope?: string[]
+  scope?: string[] | null
 }
 export type Tag = {
   name: string
-  original_name?: string
+  original_name?: string | null
   color?: string
 }
 export type DefaultProductBaseType = {
@@ -764,7 +803,9 @@ export type Anatomy = {
   /** Path templates configuration */
   templates?: Templates
   /** Attributes configuration */
-  attributes?: ProjectAttribModel
+  attributes?: {
+    [key: string]: any
+  }
   /** Folder types configuration */
   folder_types?: FolderType[]
   /** Task types configuration */
@@ -778,32 +819,36 @@ export type Anatomy = {
   product_base_types?: ProductBaseTypes
 }
 export type ProjectBundleModel = {
-  production?: string
-  staging?: string
+  production?: string | null
+  staging?: string | null
 }
 export type IconModel = {
   type?: 'material-symbols' | 'url'
   /** The name of the icon (for type material-symbols) */
-  name?: string
+  name?: string | null
   /** The color of the icon (for type material-symbols) */
-  color?: string
+  color?: string | null
   /** The URL of the icon (for type url) */
-  url?: string
+  url?: string | null
 }
 export type EnumItem = {
   value: string | number | number | boolean
   label: string
-  description?: string
-  fulltext?: string[]
-  group?: string
+  description?: string | null
+  fulltext?: string[] | null
+  group?: string | null
   /** Icon name (material symbol) or IconModel object */
-  icon?: string | IconModel
-  color?: string
-  shortName?: string
+  icon?: string | IconModel | null
+  color?: string | null
+  shortName?: string | null
   /** Enum item is visible, but not selectable */
   disabled?: boolean
   /** Message to show when the option is disabled */
-  disabledMessage?: string
+  disabledMessage?: string | null
+  /** Enum item is not visible in the dropdown */
+  hidden?: boolean
+  /** Extra badge labels to display next to the item */
+  badges?: string[] | null
 }
 export type AddonMetadata = {
   name: string
@@ -813,28 +858,43 @@ export type AddonMetadata = {
 export type ProjectBundle = {
   /** Dictionary of addon names and their versions. Use `null` to disable an addon. */
   addons: {
-    [key: string]: string
+    [key: string]: string | null
   }
-  installerVersion?: string
+  installerVersion?: string | null
   dependencyPackages?: {
-    [key: string]: string
-  }
+    [key: string]: string | null
+  } | null
   addonMetadata?: AddonMetadata[]
   installerOptions?: string[]
   dependencyPackageOptions?: {
     [key: string]: string[]
   }
 }
+export type DeployProjectRequestModel = {
+  name: string
+  code: string
+  label?: string | null
+  /** Hex color code for the project highlight (e.g. #ff0000) */
+  color?: string | null
+  anatomy?: Anatomy | null
+  /** Anatomy preset to use instead of providing anatomy */
+  anatomyPreset?: string | null
+  library?: boolean
+  /** Assign default users to the project */
+  assignUsers?: boolean
+  /** Create a project skeleton instead of a full project */
+  skeleton?: boolean
+}
 export type ListProjectsItemModel = {
   name: string
   code: string
-  label?: string
-  color?: string
+  label?: string | null
+  color?: string | null
   active?: boolean
   library?: boolean
   skeleton?: boolean
   pinned?: boolean
-  projectFolder?: string
+  projectFolder?: string | null
   createdAt: string
   updatedAt: string
 }
@@ -845,24 +905,9 @@ export type ListProjectsResponseModel = {
   /** List of projects */
   projects?: ListProjectsItemModel[]
 }
-export type DeployProjectRequestModel = {
-  name: string
-  code: string
-  label?: string
-  /** Hex color code for the project highlight (e.g. #ff0000) */
-  color?: string
-  anatomy?: Anatomy
-  /** Anatomy preset to use instead of providing anatomy */
-  anatomyPreset?: string
-  library?: boolean
-  /** Assign default users to the project */
-  assignUsers?: boolean
-  /** Create a project skeleton instead of a full project */
-  skeleton?: boolean
-}
 export type GuestUserModel = {
   email: string
-  fullName?: string
+  fullName?: string | null
   status?: 'pending' | 'active'
 }
 export type GuestUsersListModel = {
@@ -870,13 +915,19 @@ export type GuestUsersListModel = {
 }
 export type AddGuestUserModel = {
   email: string
-  fullName?: string
+  fullName?: string | null
+}
+export type GuestUserPatchModel = {
+  email?: string | null
+  avatarUrl?: string | null
+  fullName?: string | null
+  status?: ('pending' | 'active') | null
 }
 export type ProductTypeListItem = {
   name: string
-  baseType?: string
-  color?: string
-  icon?: string
+  baseType?: string | null
+  color?: string | null
+  icon?: string | null
 }
 export type DefaultProductType = {
   color: string
@@ -896,47 +947,35 @@ export type LinkTypeModel = {
   /** Output entity type */
   outputType: string
   /** Additional link type data */
-  data?: object
-}
-export type ProjectAttribModel2 = {
-  priority?: 'urgent' | 'high' | 'normal' | 'low'
-  /** Frame rate */
-  fps?: number
-  /** Horizontal resolution */
-  resolutionWidth?: number
-  /** Vertical resolution */
-  resolutionHeight?: number
-  pixelAspect?: number
-  clipIn?: number
-  clipOut?: number
-  frameStart?: number
-  frameEnd?: number
-  handleStart?: number
-  handleEnd?: number
-  /** Date and time when the project or task or asset was started */
-  startDate?: string
-  /** Deadline date and time */
-  endDate?: string
-  /** Textual description of the entity */
-  description?: string
+  data?: {
+    [key: string]: any
+  }
 }
 export type ProjectModel = {
-  /** Name is an unique id of the {entity_name} */
+  /** Unique name of the project */
   name: string
   code: string
-  label?: string
+  label?: string | null
   library?: boolean
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
   linkTypes?: LinkTypeModel[]
   statuses?: Status[]
   tags?: Tag[]
-  config?: object
-  skeleton?: boolean
-  attrib?: ProjectAttribModel2
-  data?: object
-  /** Whether the project is active */
+  config?: {
+    [key: string]: any
+  }
+  skeleton?: boolean | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
   /** Time of creation */
   createdAt?: string
@@ -945,38 +984,52 @@ export type ProjectModel = {
 }
 export type ProjectPostModel = {
   code: string
-  label?: string
+  label?: string | null
   library?: boolean
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
   linkTypes?: LinkTypeModel[]
   statuses?: Status[]
   tags?: Tag[]
-  config?: object
-  attrib?: ProjectAttribModel2
-  data?: object
-  /** Whether the project is active */
+  config?: {
+    [key: string]: any
+  }
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
 }
 export type ProjectPatchModel = {
-  code?: string
-  label?: string
-  library?: boolean
+  code?: string | null
+  label?: string | null
+  library?: boolean | null
   folderTypes?: FolderType[]
   taskTypes?: TaskType[]
-  linkTypes?: LinkTypeModel[]
+  linkTypes?: LinkTypeModel[] | null
   statuses?: Status[]
   tags?: Tag[]
-  config?: object
-  attrib?: ProjectAttribModel2
-  data?: object
-  /** Whether the project is active */
-  active?: boolean
+  config?: {
+    [key: string]: any
+  } | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type RenameProjectRequestModel = {
   name: string
   /** If not provided, the code will remain unchanged. */
-  code?: string
+  code?: string | null
 }
 export type ProjectTagsModel = {
   folders?: string[]
@@ -986,8 +1039,15 @@ export type ProjectTagsModel = {
   representations?: string[]
   workfiles?: string[]
 }
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
+}
 export type CreateThumbnailResponseModel = {
   id: string
+  affectedEntities?: AffectedEntity[] | null
 }
 export type UriResponseItem = {
   id: string

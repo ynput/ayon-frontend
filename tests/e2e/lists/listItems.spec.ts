@@ -2,8 +2,9 @@ import { expect, test } from '../fixtures'
 import { addToList, ListsPage } from '../pages/ListsPage'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
+import { dialog, menuItem } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { dialog, menuItem } from '../support/ui'
+import { readBreakdown, readMainCount } from '../support/summary'
 
 const seedTaskList = async (api: AyonApi, projectName: string) => {
   const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
@@ -168,5 +169,83 @@ test.describe('list items', () => {
     await expect
       .poll(async () => (await api.listEntityLists(projectName))[0].entityIds)
       .toEqual([shot.id])
+  })
+  test('searching for several terms lists the items matching any of them', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const listId = await api.createEntityList(projectName, { label: 'Dailies' })
+    for (const [name, taskType] of [
+      ['anim', 'Animation'],
+      ['comp', 'Compositing'],
+      ['fx', 'FX'],
+    ]) {
+      const task = await api.createTask(projectName, { folderId: folder.id, name, taskType })
+      await api.addEntityListItem(projectName, listId, task.id)
+    }
+    // one search chip with two values, as the search bar saves "anim, comp"
+    await api.setWorkingViewSettings('lists', projectName, {
+      filter: {
+        operator: 'and',
+        conditions: [
+          {
+            operator: 'or',
+            conditions: [
+              { key: '--search--', value: 'anim', operator: 'like' },
+              { key: '--search--', value: 'comp', operator: 'like' },
+            ],
+          },
+        ],
+      },
+    })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+
+    await lists.openList('Dailies')
+
+    await expect(lists.itemNameCells()).toHaveText([/anim$/, /comp$/])
+  })
+
+  test('version list keeps its status summary with the product type summary on', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const listId = await api.createEntityList(projectName, {
+      label: 'Dailies',
+      entityType: 'version',
+    })
+    for (const [name, productType, status] of [
+      ['renderMain', 'render', 'Approved'],
+      ['renderAlt', 'render', 'Not ready'],
+      ['modelMain', 'model', 'Not ready'],
+      ['plateMain', 'plate', 'Not ready'],
+    ]) {
+      const product = await api.createProduct(projectName, {
+        folderId: shot.id,
+        name,
+        productType,
+      })
+      const version = await api.createVersion(projectName, { productId: product.id, status })
+      await api.addEntityListItem(projectName, listId, version.id)
+    }
+    await api.setWorkingViewSettings('lists', projectName, {
+      columns: [
+        { name: 'name', visible: true, summary: 'breakdown', summaryScope: 'all' },
+        { name: 'product_subType', visible: true, summary: 'values', summaryScope: 'all' },
+        { name: 'status', visible: true, summary: 'values', summaryScope: 'all' },
+      ],
+    })
+    const lists = new ListsPage(page)
+    await lists.goto(projectName)
+    await lists.openList('Dailies')
+
+    await expect.poll(() => readMainCount(lists.itemsTable)).toEqual({ version: 4 })
+    const status = await readBreakdown(lists.itemsTable, 'status')
+    await expect(status).toContainText(/Approved\s*1/)
+    await expect(status).toContainText(/Not ready\s*3/)
   })
 })

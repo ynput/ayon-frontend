@@ -1,8 +1,10 @@
+import { useEffect } from 'react'
 import { Header } from '@tanstack/react-table'
 import type { TableRow } from '../types/table'
 import { useMenuContext } from '@shared/context'
 import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
+import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 interface ColumnHeaderMenuProps {
@@ -14,6 +16,7 @@ interface ColumnHeaderMenuProps {
   className?: string
   menuId?: string
   isOpen?: boolean
+  extraMenuItems?: ColumnMenuItemType[]
 }
 
 export const ColumnHeaderMenu = ({
@@ -25,14 +28,29 @@ export const ColumnHeaderMenu = ({
   className,
   menuId,
   isOpen,
+  extraMenuItems,
 }: ColumnHeaderMenuProps) => {
   const { column } = header
   const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
-  const { updateGroupBy, groupBy } = useColumnSettingsContext()
+  const { updateGroupBy, groupBy, sorting } = useColumnSettingsContext()
 
   const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
     useColumnGroupBy(columnId)
+
+  const { getAddonColumnMenuItems: getAddonItems, prefetchAddonColumnMenuItems } =
+    header.getContext().table.options.meta ?? {}
+  const addonColumn = {
+    columnId,
+    header: column.columnDef.header,
+    groupLabel,
+    groupField: canGroupThisColumn ? targetGroupById : undefined,
+  }
+  // load the addon items' code once the menu opens, not with every header
+  useEffect(() => {
+    if (isOpen) prefetchAddonColumnMenuItems?.(addonColumn)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, prefetchAddonColumnMenuItems])
 
   // Hide the menu when resizing
   if (isResizing) {
@@ -47,6 +65,8 @@ export const ColumnHeaderMenu = ({
   const isPinned = column.getIsPinned()
   const isVisible = column.getIsVisible()
   const isSorted = column.getIsSorted()
+  // keep the other sort keys when this column is one of several
+  const isMultiSorted = !!isSorted && sorting.length > 1
 
   const menuItems: ColumnMenuItemType[] = []
 
@@ -83,7 +103,7 @@ export const ColumnHeaderMenu = ({
       className: 'sort-asc-icon',
       selected: isSorted === 'asc',
       onClick: () => {
-        column.toggleSorting(false)
+        column.toggleSorting(false, isMultiSorted)
         handleMenuToggle(false)
       },
     })
@@ -95,10 +115,23 @@ export const ColumnHeaderMenu = ({
       className: 'sort-desc-icon',
       selected: isSorted === 'desc',
       onClick: () => {
-        column.toggleSorting(true)
+        column.toggleSorting(true, isMultiSorted)
         handleMenuToggle(false)
       },
     })
+
+    // another column is sorted already, offer this one as the next sort key
+    if (!isSorted && sorting.length > 0 && sorting.length < MAX_SORT_KEYS) {
+      menuItems.push({
+        id: 'sort-add',
+        label: 'Add to sort',
+        icon: 'add',
+        onClick: () => {
+          column.toggleSorting(false, true)
+          handleMenuToggle(false)
+        },
+      })
+    }
   }
 
   if (canSort && canHide) {
@@ -127,6 +160,17 @@ export const ColumnHeaderMenu = ({
     })
   }
 
+  const addonItems = getAddonItems?.(addonColumn) ?? []
+  for (const item of addonItems) {
+    menuItems.push({
+      ...item,
+      onClick: () => {
+        item.onClick?.()
+        handleMenuToggle(false)
+      },
+    })
+  }
+
   if (canHide) {
     menuItems.push({
       id: 'hide',
@@ -137,6 +181,21 @@ export const ColumnHeaderMenu = ({
         handleMenuToggle(false)
       },
     })
+  }
+
+  if (extraMenuItems?.length) {
+    if (menuItems.length) menuItems.push({ id: 'divider', type: 'divider' })
+    for (const item of extraMenuItems) {
+      menuItems.push({
+        ...item,
+        onClick: item.onClick
+          ? () => {
+              item.onClick?.()
+              handleMenuToggle(false)
+            }
+          : undefined,
+      })
+    }
   }
 
   if (menuItems.length === 0) {

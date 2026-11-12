@@ -6,12 +6,12 @@
 // Components state should not be directly synced to the URI, they should only read the URI on mount to set initial state
 
 import { useEffect, ReactNode, FC, useCallback, useState } from 'react'
-import { buildEntityUri, parseUri } from '../../util'
+import { buildEntityUri, consumeUriHandoff, parseUri } from '../../util'
 import { useResolveUrisMutation } from '@shared/api'
 import type { ResolvedUriModel } from '@shared/api'
 import { URIContext } from './UriContextInstance'
 
-export const URL_PARAM_ID = 'uri'
+export { URL_PARAM_ID } from '../../util'
 
 type SetEntityUriFunc = ({
   projectName,
@@ -61,10 +61,10 @@ interface URIProviderProps {
 const URIProvider: FC<URIProviderProps> = ({ children }) => {
   const pathname = location.pathname
 
-  const [uri, setUri] = useState('')
+  const [uri, setUri] = useState(consumeUriHandoff)
 
   // when the scope is outside settings and project, set uri to null
-  const scopes = ['projects', 'settings', 'dashboard/tasks']
+  const scopes = ['projects', 'settings', 'manageProjects', 'dashboard/tasks']
   useEffect(() => {
     const matchingScope = scopes.some((scope) => pathname.startsWith(`/${scope}`))
 

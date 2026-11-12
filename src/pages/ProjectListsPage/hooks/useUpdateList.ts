@@ -35,7 +35,7 @@ export interface UseUpdateListReturn {
     payload: Omit<EntityListFolderData, 'id'> & { label: string },
     listIds?: string[],
     parentIds?: string[],
-  ) => Promise<void>
+  ) => Promise<string[]> // ids of the folders created
   onUpdateListFolder: (folderId: string, data: EntityListFolderPatchModel) => Promise<void>
   onDeleteListFolders: (folderIds: string[]) => Promise<void>
   onPutFoldersInFolder: (folderIds: string[], parentFolderId: string) => Promise<void>
@@ -129,7 +129,7 @@ const useUpdateList = ({
       await Promise.all(
         listIds.map((listId) =>
           updateList({
-            listId,
+            entityListId: listId,
             projectName,
             entityListPatchModel: {
               entityListFolderId: (listFolderId ?? null) as unknown as string | undefined,
@@ -170,7 +170,7 @@ const useUpdateList = ({
   ) => {
     if (!powerLicense) {
       setPowerpackDialog('listFolders')
-      return
+      return []
     }
 
     try {
@@ -207,6 +207,7 @@ const useUpdateList = ({
       if (resIds.length && onCreatedFolders) {
         onCreatedFolders(resIds, !!listIds?.length, parentIds)
       }
+      return resIds as string[]
     } catch (error) {
       throw getErrorMessage(error, 'Failed to create folder')
     }

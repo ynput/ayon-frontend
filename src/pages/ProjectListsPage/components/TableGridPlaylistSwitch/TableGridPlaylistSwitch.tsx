@@ -22,9 +22,11 @@ export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlayl
         ) {
           return
         }
+        // leave copy/paste and other shortcuts alone
+        if (event.ctrlKey || event.metaKey || event.altKey) return
         if (event.key.toLowerCase() === 't') {
           onChange("table")
-        } else if (event.key.toLowerCase() === 'g') {
+        } else if (event.key.toLowerCase() === 'c') {
           onChange("cards")
         } else if (event.key.toLowerCase() === 'p') {
           onChange("playlist")
@@ -59,7 +61,7 @@ export const TableGridPlaylistSwitch = forwardRef<HTMLDivElement, TableGridPlayl
           onClick={() => onChange("cards")}
           variant="text"
           data-tooltip="Cards"
-          data-shortcut="G"
+          data-shortcut="C"
         />
       </Styled.ButtonsContainer>
     )

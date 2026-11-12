@@ -1,7 +1,7 @@
 import { expect, test } from '../fixtures'
-import { AyonApi } from '../support/api'
+import { signInAs } from '@ynput/ayon-e2e'
+import { apiAs, AyonApi } from '../support/api'
 import { InboxPage } from '../pages/InboxPage'
-import { apiAs, signInAs } from '../support/session'
 
 const createArtist = async (
   createUser: AyonApi['createUser'],
@@ -153,6 +153,46 @@ test.describe('inbox', () => {
       await expect(inbox.messages).toHaveCount(2, { timeout: 30_000 })
     } finally {
       await artistApi.dispose()
+      await context.close()
+    }
+  })
+
+  test('search for all words of any comma separated part', async ({
+    api,
+    projectName,
+    createUser,
+    accessGroup,
+    browser,
+  }) => {
+    const artist = await createArtist(createUser, projectName, accessGroup)
+    const folder = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    // one task per comment: messages about the same task are grouped
+    for (const [name, taskType, text] of [
+      ['anim', 'Animation', 'Shadow on the car is too hard'],
+      ['comp', 'Compositing', 'Car paint is too red'],
+      ['lighting', 'Lighting', 'Sky is flat'],
+    ]) {
+      const task = await api.createTask(projectName, { folderId: folder.id, name, taskType })
+      await api.createComment(
+        projectName,
+        'task',
+        task.id,
+        `[Inbox Artist](user:${artist.name}) ${text}`,
+      )
+    }
+
+    const { context, page } = await signInAs(browser, artist.name, artist.password)
+    try {
+      const inbox = new InboxPage(page)
+      await inbox.goto('important', projectName)
+      await expect(inbox.messages).toHaveCount(3, { timeout: 30_000 })
+
+      await inbox.search('car red, sky')
+
+      await expect(inbox.message('Shadow on the car is too hard')).toBeHidden()
+      await expect(inbox.message('Car paint is too red')).toBeVisible()
+      await expect(inbox.message('Sky is flat')).toBeVisible()
+    } finally {
       await context.close()
     }
   })

@@ -19,7 +19,7 @@
  * The context also provides utility functions for entity relationships, expansion state
  * management, filtering,  and folder inheritance operations.
  */
-import { ReactNode, useCallback, useMemo } from 'react'
+import { ReactNode, useCallback, useId, useMemo } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import useBuildProjectDataTable from '../../hooks/useBuildProjectDataTable'
@@ -80,6 +80,9 @@ export interface ProjectTableContextType {
   fetchNextPage: ProjectTableProviderProps['fetchNextPage']
   onSyncData: ProjectTableProviderProps['onSyncData']
   getEntityById: (id: string, field?: string) => EntityMap | undefined // if the entity is not found, we explicity search for the field
+  isRowReadOnly: (rowId: string) => boolean // TableRow.readOnly or the table's readOnly: no cell of the row can be edited
+  readOnly?: boolean // the whole table: nothing can be edited
+  tableId: string // marks the table's container, so its key handlers skip other tables' keys
   loadingLinksEntityIds?: Set<string>
 
   // grouping
@@ -130,6 +133,9 @@ export interface ProjectTableContextType {
 
   // Views
   onResetView?: () => void
+
+  // lists not shown in the list columns, e.g. the list being viewed
+  hiddenListIds?: string[]
 
   // router hooks
   useParams?: typeof useParams
@@ -217,6 +223,8 @@ export interface ProjectTableProviderProps {
 
   groupByConfig?: {
     entityType?: GroupByEntityType
+    // drops empty groups whatever the user setting, when a filter already decides the groups
+    hideEmpty?: boolean
   }
 
   // Custom hierarchy-like options for the group-by settings panel
@@ -240,10 +248,13 @@ export interface ProjectTableProviderProps {
       productId?: string
       versionId?: string
     },
-    config?: { quickView?: boolean },
+    config?: { quickView?: boolean; goToPosition?: number; reviewableId?: string },
   ) => void
   // views
   onResetView?: () => void
+  hiddenListIds?: string[]
+  // no row can be edited
+  readOnly?: boolean
   // router hooks
   useParams?: typeof useParams
   useNavigate?: typeof useNavigate
@@ -299,6 +310,8 @@ export const ProjectTableProvider = ({
   onOpenPlayer,
   // views
   onResetView,
+  hiddenListIds,
+  readOnly,
   useParams,
   useNavigate,
   useLocation,
@@ -337,7 +350,7 @@ export const ProjectTableProvider = ({
     entityType: groupByConfig?.entityType || 'unknown',
     groups: groups,
     attribFields,
-    showEmpty: showEmptyGroups,
+    showEmpty: showEmptyGroups && !groupByConfig?.hideEmpty,
     groupRowFunc,
     groupCounts,
     groupCountsComplete,
@@ -386,6 +399,25 @@ export const ProjectTableProvider = ({
       return undefined
     },
     [foldersMap, tasksMap, entitiesMap],
+  )
+
+  // rows marked read-only (TableRow.readOnly, or all with readOnly): every edit path skips them
+  const readOnlyRowIds = useMemo(() => {
+    const ids = new Set<string>()
+    const walk = (rows: TableRow[]) => {
+      for (const row of rows) {
+        if (row.readOnly) ids.add(row.id)
+        if (row.subRows?.length) walk(row.subRows)
+      }
+    }
+    walk(tableData)
+    return ids
+  }, [tableData])
+  const tableId = useId()
+
+  const isRowReadOnly = useCallback(
+    (rowId: string) => !!readOnly || readOnlyRowIds.has(rowId),
+    [readOnly, readOnlyRowIds],
   )
 
   // get folder relationship functions
@@ -495,6 +527,9 @@ export const ProjectTableProvider = ({
         toggleExpandAll,
         toggleExpands,
         getEntityById,
+        isRowReadOnly,
+        readOnly,
+        tableId,
         // folder relationships
         getInheritedDependents,
         findInheritedValueFromAncestors,
@@ -512,6 +547,7 @@ export const ProjectTableProvider = ({
         onOpenPlayer,
         // views
         onResetView,
+        hiddenListIds,
         // router hooks
         useParams,
         useNavigate,

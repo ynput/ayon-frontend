@@ -1,5 +1,13 @@
-import { FC, useState, useCallback, useEffect } from 'react'
+import { FC, useState, useCallback, useEffect, useRef } from 'react'
 import { Dialog, Button, Spacer, SaveButton } from '@ynput/ayon-react-components'
+import { toast } from 'react-toastify'
+import {
+  getCreateAnotherTooltip,
+  getDialogKeyDown,
+  readDialogMemory,
+  writeDialogMemory,
+} from '@shared/util'
+import { useProjectContext } from '@shared/context'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { FolderForm, FolderFormData } from '@shared/components/FolderForm'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
@@ -11,9 +19,15 @@ export interface ListFolderFormData extends FolderFormData {
 
 interface ListFolderFormDialogProps {}
 
+// Where the last folder went, and the folders made there. A new folder is selected once it is
+// made, so without this the next one would be created inside it instead of next to it.
+type ParentMemory = { parentIds: string[]; createdIds: string[] }
+const parentMemoryKey = (isReview?: boolean) =>
+  isReview ? 'review-list-folder-parent' : 'list-folder-parent'
+
 export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const {
-    listFolderOpen: { isOpen, initial, folderId, parentId },
+    listFolderOpen: { isOpen, initial, folderId, parentId, rowIds },
     setListFolderOpen,
     onCreateListFolder,
     onUpdateListFolder,
@@ -22,7 +36,9 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     isReview,
   } = useListsContext()
 
-  const { listFolders } = useListsDataContext()
+  const { listFolders, listsMap } = useListsDataContext()
+  const { projectName } = useProjectContext()
+  const formRef = useRef<HTMLDivElement>(null)
 
   const mode = folderId ? 'edit' : 'create'
 
@@ -36,22 +52,34 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // when creating a folder, we need to derive the context from the selection
-  const selectedListIds = selectedRows.filter((id) => !parseListFolderRowId(id))
-  const selectedFolderIds = selectedRows
+  // when creating a folder, we need to derive the context from the selection, or from the rows
+  // of the context menu that opened the dialog
+  const targetRows = rowIds ?? selectedRows
+  const selectedListIds = targetRows.filter((id) => !parseListFolderRowId(id))
+  const selectedFolderIds = targetRows
     .map((id) => parseListFolderRowId(id))
     .filter((id): id is string => !!id)
+  const targetList = rowIds ? listsMap.get(selectedListIds[0]) : selectedList
 
   const listIdsToAdd =
     mode === 'create' && !parentId && selectedFolderIds.length === 0 ? selectedListIds : []
+  // the selection is just the folders this dialog made last time: create next to them again
+  const rememberedParent = readDialogMemory<ParentMemory>(parentMemoryKey(isReview), projectName)
+  const selectionIsLastCreated =
+    !parentId &&
+    selectedListIds.length === 0 &&
+    selectedFolderIds.length > 0 &&
+    selectedFolderIds.every((id) => rememberedParent.createdIds?.includes(id))
   const parentIdsToCreateIn =
     mode === 'create'
       ? parentId
         ? [parentId]
+        : selectionIsLastCreated
+        ? (rememberedParent.parentIds || []).filter((id) => listFolders?.some((f) => f.id === id))
         : selectedFolderIds.length > 0
         ? selectedFolderIds
-        : selectedList?.entityListFolderId
-        ? [selectedList.entityListFolderId]
+        : targetList?.entityListFolderId
+        ? [targetList.entityListFolderId]
         : []
       : []
 
@@ -78,62 +106,69 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
     setIsSaving(false)
   }
 
-  const handleSave = useCallback(async () => {
-    if (!folderForm.label.trim()) {
-      setError('Folder label is required')
-      return
-    }
-
-    setIsSaving(true)
-    setError(null)
-
-    const label = folderForm.label.trim()
-    const { color, icon, scope, parentId } = folderForm
-
-    try {
-      if (mode === 'edit' && folderId) {
-        await onUpdateListFolder(folderId, {
-          label,
-          parentId: parentId,
-          data: { color, icon, scope },
-        })
-      } else {
-        await onCreateListFolder(
-          {
-            label: label,
-            icon: icon,
-            color: color,
-            scope: scope,
-          },
-          listIdsToAdd,
-          parentIdsToCreateIn,
-        )
+  // keepOpen (Shift+Enter): create the folder and keep the dialog open for the next one
+  const handleSave = useCallback(
+    async (keepOpen = false) => {
+      if (!folderForm.label.trim()) {
+        setError('Folder label is required')
+        return
       }
-    } catch (error) {
-      setError(`Failed to ${mode} folder`)
-    } finally {
-      handleClose()
-    }
-  }, [
-    folderForm,
-    onCreateListFolder,
-    mode,
-    listIdsToAdd,
-    parentIdsToCreateIn,
-    onUpdateListFolder,
-    folderId,
-    handleClose,
-  ])
 
-  const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        handleSave()
-      } else if (e.key === 'Escape') {
+      setIsSaving(true)
+      setError(null)
+
+      const label = folderForm.label.trim()
+      const { color, icon, scope, parentId } = folderForm
+
+      try {
+        if (mode === 'edit' && folderId) {
+          await onUpdateListFolder(folderId, {
+            label,
+            parentId: parentId,
+            data: { color, icon, scope },
+          })
+        } else {
+          const createdIds = await onCreateListFolder(
+            {
+              label: label,
+              icon: icon,
+              color: color,
+              scope: scope,
+            },
+            listIdsToAdd,
+            parentIdsToCreateIn,
+          )
+          writeDialogMemory<ParentMemory>(
+            parentMemoryKey(isReview),
+            { parentIds: parentIdsToCreateIn, createdIds },
+            projectName,
+          )
+          if (keepOpen && createdIds.length) {
+            toast.success(`Folder "${label}" created`)
+            setFolderForm((prev) => ({ ...prev, label: '' }))
+            setIsSaving(false)
+            formRef.current?.querySelector('input')?.focus()
+            return
+          }
+        }
         handleClose()
+      } catch (error) {
+        setError(`Failed to ${mode} folder`)
+        setIsSaving(false)
       }
     },
-    [handleSave, handleClose],
+    [
+      isReview,
+      projectName,
+      folderForm,
+      onCreateListFolder,
+      mode,
+      listIdsToAdd,
+      parentIdsToCreateIn,
+      onUpdateListFolder,
+      folderId,
+      handleClose,
+    ],
   )
 
   const handleFieldChange = useCallback(
@@ -148,6 +183,12 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
   )
 
   const isValid = folderForm.label.trim()
+
+  const handleKeyDown = getDialogKeyDown(() => handleSave(), {
+    onClose: handleClose,
+    disabled: !isValid || isSaving,
+    onContinue: mode === 'create' ? () => handleSave(true) : undefined,
+  })
 
   const getDialogHeader = () => {
     if (mode === 'edit') {
@@ -182,10 +223,11 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           </Button>
           <Spacer />
           <SaveButton
-            onClick={handleSave}
+            onClick={() => handleSave()}
             disabled={!isValid || isSaving}
             saving={isSaving}
             icon={mode === 'edit' ? 'check' : 'add'}
+            {...(mode === 'create' ? getCreateAnotherTooltip() : { 'data-shortcut': 'Enter' })}
           >
             {mode === 'edit' ? 'Save folder' : 'Create folder'}
           </SaveButton>
@@ -197,18 +239,20 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           This folder will be assigned to {listCount} selected lists.
         </p>
       )}
-      <FolderForm
-        data={folderForm}
-        onChange={handleFieldChange}
-        autoFocus={true}
-        scopeConfig={{
-          options: [
-            { value: 'generic', label: 'Lists' },
-            { value: 'review-session', label: 'Review Sessions' },
-          ],
-          filter: isReview ? ['review-session'] : ['generic'],
-        }}
-      />
+      <div ref={formRef}>
+        <FolderForm
+          data={folderForm}
+          onChange={handleFieldChange}
+          autoFocus={true}
+          scopeConfig={{
+            options: [
+              { value: 'generic', label: 'Lists' },
+              { value: 'review-session', label: 'Review Sessions' },
+            ],
+            filter: isReview ? ['review-session'] : ['generic'],
+          }}
+        />
+      </div>
       {error && <span style={{ color: 'var(--color-hl-error)', fontSize: '14px' }}>{error}</span>}
     </Dialog>
   )

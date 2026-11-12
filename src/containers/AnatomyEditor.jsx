@@ -10,7 +10,6 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react'
 import { useDispatch } from 'react-redux'
-import { toast } from 'react-toastify'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 
 import { useGetProjectAnatomyQuery } from '@shared/api'
@@ -18,14 +17,11 @@ import { isEqual } from 'lodash'
 
 import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
-import { getValueByPath, setValueByPath, sameKeysStructure } from '@containers/AddonSettings/utils'
-import { cloneDeep } from 'lodash'
-import { usePaste } from '@context'
+import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 
 const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
   const [originalData, setOriginalData] = useState(null)
   const handledSaveRef = useRef(null)
-  const { requestPaste } = usePaste()
   const { data: schema } = useGetAnatomySchemaQuery()
 
   const { data: anatomyPresetData, isLoading: presetLoading } = useGetAnatomyPresetQuery(
@@ -77,35 +73,7 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     setIsChanged(!isEqual(originalData, formData))
   }, [formData, originalData, setIsChanged])
 
-  const onPasteValue = async (path) => {
-    const pastedContent = await requestPaste()
-    if (!pastedContent) {
-      toast.error('No content to paste')
-      return
-    }
-    let value
-    try {
-      value = JSON.parse(pastedContent)
-    } catch (e) {
-      toast.error('Invalid JSON')
-      return
-    }
-    const oldValue = path.length === 0 ? formData : getValueByPath(formData, path)
-    if (oldValue === undefined) {
-      toast.error('No data to paste')
-      return
-    }
-    if (!sameKeysStructure(oldValue, value)) {
-      toast.error('Incompatible data structure')
-      console.log('oldValue', oldValue)
-      console.log('value', value)
-      return
-    }
-
-    let newData = cloneDeep(formData)
-    newData = setValueByPath(newData, path, value)
-    setFormData(newData)
-  }
+  const onPasteValue = useSettingsPaste(formData, setFormData)
 
   const editor = useMemo(() => {
     if (isLoading) {

@@ -50,6 +50,7 @@ import type { DetailsPanelEntityType, FeedActivity } from '@shared/api'
 import { VersionReviewPill } from './VersionReviewPill'
 import { VersionReviewFeedback, type CommentDuplicate } from './types'
 import { parseFrameRange } from './parseFrameRange'
+import { formatVersionFrame, toStoredFrameRange } from '../../helpers/versionFrames'
 import { cloneProjectFile } from './cloneProjectFile'
 
 type UploadingFile = {
@@ -62,6 +63,7 @@ type UploadingFile = {
 interface CommentInputProps {
   initValue: string | null
   initFiles?: any[]
+  annotationFrameStart?: number | null
   initCategory?: string | null
   data?: any
   activityId?: string
@@ -99,6 +101,7 @@ const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: strin
 const CommentInput: FC<CommentInputProps> = ({
   initValue,
   initFiles = [],
+  annotationFrameStart,
   initCategory = null,
   data = {},
   activityId,
@@ -191,7 +194,16 @@ const CommentInput: FC<CommentInputProps> = ({
   const showFrameLink = isEditing
     ? !!frameLinkEntity || !!currentManualFrameLink
     : !!commentFrameLink && !!frameLinkEntity
-  const formatFrame = commentFrameLink?.formatFrame ?? String
+  const hostFormatFrame = commentFrameLink?.formatFrame
+  const formatFrame =
+    hostFormatFrame ?? ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
+  // typed frames are shown with the version offset, store them relative again.
+  // The offset can put the first media frame at zero or below, so accept signed frames here
+  // and let toStoredFrameRange reject anything before the first stored frame.
+  const parseFrameInput = (value: string) =>
+    hostFormatFrame
+      ? parseFrameRange(value)
+      : toStoredFrameRange(parseFrameRange(value, { signed: true }), annotationFrameStart)
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
@@ -217,7 +229,7 @@ const CommentInput: FC<CommentInputProps> = ({
 
   const handleFrameInputChange = (value: string) => {
     setFrameInput(value)
-    const range = parseFrameRange(value)
+    const range = parseFrameInput(value)
     if (range) setFrameLinkPreview(range)
   }
 
@@ -240,7 +252,7 @@ const CommentInput: FC<CommentInputProps> = ({
       setFrameInputOpen(false)
       return
     }
-    const range = parseFrameRange(frameInput)
+    const range = parseFrameInput(frameInput)
     if (range) {
       setManualFrameLink(range)
       setFrameLinkPreview(range)
@@ -326,8 +338,17 @@ const CommentInput: FC<CommentInputProps> = ({
   // REFS
   const editorRef = useRef<MarkdownEditorHandle>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
+const isEmpty =
+    !hasText &&
+    !files.length &&
+    !filesUploading.length &&
+    !inlineUploads &&
+    !uploadedAnnotations.length &&
+    !annotations.length &&
+    !isSubmitting
 
   // the checklists filter starts a new comment with a checklist item
   const isChecklistsFilter = !!feedFilter?.conditions?.some(
@@ -379,9 +400,18 @@ const CommentInput: FC<CommentInputProps> = ({
     setRefTooltip({ id, name: id, type, label, pos: { left: x + width / 2, top: y } })
   }
 
+  // Only focus the editor when the user opened it. It also opens on its own (a new
+  // annotation, a restored draft), and taking focus then would swallow the keys meant
+  // for the player, e.g. a shortcut typed into the comment instead.
+  const [openedByUser, setOpenedByUser] = useState(false)
+  useEffect(() => {
+    if (!isOpen) setOpenedByUser(false)
+  }, [isOpen])
+
   const handleOpenClick = () => {
     if (isOpen || disabled) return
 
+    setOpenedByUser(true)
     onOpen && onOpen()
   }
 
@@ -395,6 +425,9 @@ const CommentInput: FC<CommentInputProps> = ({
 
     // always close editor
     onClose && onClose()
+
+    // the editor unmounts, keep the focus in the viewer so its keys keep working
+    containerRef.current?.closest<HTMLElement>('#viewer-dialog')?.focus()
   }
 
   const handleFileUploaded = ({ file, data }: any, isAnnotationLayer = false) => {
@@ -623,6 +656,7 @@ const CommentInput: FC<CommentInputProps> = ({
   useEffect(() => {
     if (!duplicate || handledDuplicate.current === duplicate.key) return
     handledDuplicate.current = duplicate.key
+    setOpenedByUser(true)
     onDuplicateHandled?.()
     insertDuplicate(duplicate)
   }, [duplicate?.key])
@@ -772,7 +806,11 @@ const CommentInput: FC<CommentInputProps> = ({
     <ActivityCategorySelect
       value={category}
       categories={categoryOptions}
-      onChange={(c) => setCategory(c)}
+      onChange={(c) => {
+        setCategory(c)
+        // back to typing; after the dropdown has closed, it focuses its own button
+        requestAnimationFrame(() => editorRef.current?.focus())
+      }}
       isCompact={isEditing}
       hasPowerpack={hasLicense}
       onPowerFeature={onPowerFeature}
@@ -803,21 +841,27 @@ const CommentInput: FC<CommentInputProps> = ({
     </>
   )
 
-  // don't take focus from an annotation that opened the input
-  const autoFocus = !(annotations.length > 0 && files.length === 0)
+  const autoFocus = isEditing || openedByUser
   const frameValueText = frameInputOpen ? frameInput || 'Frame or range' : frameLinkLabel || ''
   const frameValueWidth = `calc(${Math.max(frameValueText.length, 1) + 2}ch + 16px)`
 
   return (
     <>
       <Styled.AutoHeight
+        ref={containerRef}
         // the mention picker spans the whole input, above it
         className={clsx('comment-container', 'md-mention-anchor', { isOpen, isEditing })}
         onDragOver={handleDragOver}
         onDragLeave={() => setIsDropping(false)}
         onDrop={handleDrop}
         onClick={() => setIsDropping(false)}
-        onKeyDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => {
+          // an empty new comment lets up/down through, so they move the selection behind the viewer
+          const isRowNavKey = e.key === 'ArrowUp' || e.key === 'ArrowDown'
+          const fromEditor = (e.target as HTMLElement).isContentEditable
+          if (isRowNavKey && fromEditor && isEmpty && !isEditing) return
+          e.stopPropagation()
+        }}
       >
         {versionReview && lastOwnVersionReview && (
           <VersionReviewPill lastOwnVersionReview={lastOwnVersionReview} />
@@ -854,6 +898,7 @@ const CommentInput: FC<CommentInputProps> = ({
               isEditing
               pt={{
                 file: {
+                  annotationFrameStart,
                   style: {
                     height: isEditing ? 70 : undefined,
                   },

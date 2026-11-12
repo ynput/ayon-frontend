@@ -3,6 +3,7 @@ import { RowSelectionState, ExpandedState } from '@tanstack/react-table'
 import type { UseNewListReturn } from '../../hooks/useNewList'
 import type { UseDeleteListReturn } from '../../hooks/useDeleteList'
 import type { UseUpdateListReturn } from '../../hooks/useUpdateList'
+import type { UseDuplicateListReturn } from '../../hooks/useDuplicateList'
 import { EntityList } from '@shared/api'
 import { ListFolderFormData } from '../../components/ListFolderFormDialog'
 
@@ -10,10 +11,15 @@ export type ListDetailsOpenState = {
   isOpen: boolean
   folderId?: string // id of folder being edited, undefined for create
   parentId?: string // parent folder to create the new folder inside (create mode)
+  rowIds?: string[] // rows to create the folder for (create mode), the selection when not set
   initial?: Partial<ListFolderFormData>
 }
 
-export type OnOpenFolderListParams = (params: { folderId?: string; parentId?: string }) => void
+export type OnOpenFolderListParams = (params: {
+  folderId?: string
+  parentId?: string
+  rowIds?: string[]
+}) => void
 
 export type MoveToFolderState = {
   moving: 'lists' | 'folders'
@@ -53,6 +59,8 @@ export interface ListsContextType {
   onRemoveFoldersFromFolder: UseUpdateListReturn['onRemoveFoldersFromFolder']
   // Deleting lists
   deleteLists: UseDeleteListReturn['deleteLists']
+  // Duplicating lists (copies metadata and items)
+  duplicateLists: UseDuplicateListReturn['duplicateLists']
   // Info dialog
   listDetailsOpen: boolean
   setListDetailsOpen: (open: boolean) => void

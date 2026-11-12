@@ -155,6 +155,15 @@ test.describe('viewer', () => {
     await page.keyboard.press('l')
     await viewer.expectFrame(104)
 
+    await viewer.goToFrameAndPress(120, 'ArrowRight')
+    await viewer.expectFrame(121)
+    await viewer.goToFrameAndPress(100, 'l')
+    await viewer.expectFrame(105)
+    await viewer.goToFrameAndPress(120, 'D', true)
+    await viewer.expectFrame(MEDIA.navyVideo.frames!)
+    await viewer.goToFrameAndPress(120, 'A', true)
+    await viewer.expectFrame(1)
+
     await page.keyboard.press('k')
     await expect(viewer.control('pause')).toBeVisible()
     await expect.poll(async () => (await viewer.videoState()).paused).toBe(false)

@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import type { SliceType } from '../../types'
@@ -14,7 +15,8 @@ import { readSessionStorage, useSessionStorage } from '@shared/hooks/useSessionS
 import type { ProjectModel, Assignees, AttributeModel, ProductType } from '@shared/api'
 import { SlicerDropdownFallbackProps } from '../../components/SlicerDropdownFallback'
 import { DropdownRef } from '@ynput/ayon-react-components'
-import { PinnedSlice, SlicePanel, SlicerViewSettings, SliceTypeField } from '../../types'
+import { PinnedSlice, SlicePanel, SlicerViewSettings, SliceSort, SliceTypeField } from '../../types'
+import { resolveSliceSort } from '../../util/sliceSort'
 import type { ViewSettings } from '@shared/containers/Views/context'
 import type { UpdateViewSettingsFn } from '@shared/containers/Views/utils/viewUpdateHelper'
 import { SlicerContext } from './SlicerContextInstance'
@@ -68,6 +70,16 @@ export interface SlicerContextValue {
   setPanelExpanded: (panelId: string, expanded: React.SetStateAction<ExpandedState>) => void
   collapsedPanels: string[]
   togglePanelCollapsed: (panelId: string) => void
+  // per panel search text: undefined is a closed search box, '' an open and empty one.
+  // Every panel's search also narrows the table (useSlicerPanelSelections).
+  searchByPanel: Record<string, string | undefined>
+  setSearchByPanel: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+  // ids of the rows a value panel's search leaves, as if they were all selected. Only set
+  // while that panel searches; the hierarchy panel matches against all folders instead.
+  searchMatchesByPanel: Record<string, string[]>
+  setSearchMatchesByPanel: React.Dispatch<React.SetStateAction<Record<string, string[]>>>
+  getSliceSort: (sliceType: SliceType) => SliceSort
+  setSliceSort: (sliceType: SliceType, sort: SliceSort) => void
   isViewSyncPending: boolean
   pinnedSlice: PinnedSlice | null
   setPinnedSlice: React.Dispatch<React.SetStateAction<PinnedSlice | null>>
@@ -197,6 +209,19 @@ export const SlicerProvider = ({
       )
     },
     [updateViewSettings, collapsedPanels],
+  )
+
+  const sliceSorts = slicerViewSettings?.sliceSorts
+  const getSliceSort = useCallback(
+    (type: SliceType) => resolveSliceSort(type, sliceSorts?.[type]),
+    [sliceSorts],
+  )
+  const setSliceSort = useCallback(
+    (type: SliceType, sort: SliceSort) => {
+      const noOp = () => {}
+      updateViewSettings({ sliceSorts: { ...sliceSorts, [type]: sort } }, noOp, noOp, {})
+    },
+    [updateViewSettings, sliceSorts],
   )
 
   const togglePanelCollapsed = useCallback(
@@ -376,6 +401,9 @@ export const SlicerProvider = ({
     [setExpanded],
   )
 
+  const [searchByPanel, setSearchByPanel] = useState<Record<string, string | undefined>>({})
+  const [searchMatchesByPanel, setSearchMatchesByPanel] = useState<Record<string, string[]>>({})
+
   // extra slices are loaded from the powerpack remote module, with a fallback to default empty functions
   const { useExtraSlices, isLoadingExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
@@ -400,6 +428,12 @@ export const SlicerProvider = ({
       setPanelExpanded,
       collapsedPanels,
       togglePanelCollapsed,
+      searchByPanel,
+      setSearchByPanel,
+      searchMatchesByPanel,
+      setSearchMatchesByPanel,
+      getSliceSort,
+      setSliceSort,
       // ROW SELECTION
       rowSelection,
       onRowSelectionChange,
@@ -423,6 +457,10 @@ export const SlicerProvider = ({
       slices,
       collapsedPanels,
       togglePanelCollapsed,
+      searchByPanel,
+      searchMatchesByPanel,
+      getSliceSort,
+      setSliceSort,
       addSlicePanel,
       removeSlicePanel,
       setPanelSliceType,

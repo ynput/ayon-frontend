@@ -1,6 +1,7 @@
 // @ts-nocheck
 
 import { matchSorter } from 'match-sorter'
+import { parseSearchQuery } from '@shared/util/searchTerms'
 import { isBefore, isValid } from 'date-fns'
 import { isSameMinute } from 'date-fns'
 
@@ -83,14 +84,23 @@ const getMentionOptions = (type, values = {}, search) => {
     ? allOptions.filter((opt) => opt.type === typeFilter)
     : allOptions
 
-  if (!actualSearch) return filteredByType.sort(baseSort)
+  const parts = parseSearchQuery(actualSearch || '')
+  if (!parts.length) return filteredByType.sort(baseSort)
 
-  const filteredOptions = matchSorter(filteredByType, actualSearch, {
-    keys: ['label', 'context', 'keywords'],
-    baseSort: baseSort,
-  })
+  const match = (options, term) =>
+    matchSorter(options, term, {
+      keys: ['label', 'context', 'keywords'],
+      baseSort: baseSort,
+    })
 
-  return filteredOptions
+  // the best match of each comma separated part first, then the second best of each, ...
+  const partMatches = parts.map((words) => words.reduce(match, filteredByType))
+  const merged = new Set()
+  const longest = Math.max(...partMatches.map((options) => options.length))
+  for (let i = 0; i < longest; i++)
+    partMatches.forEach((options) => options[i] && merged.add(options[i]))
+
+  return [...merged]
 }
 
 export default getMentionOptions

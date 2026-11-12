@@ -7,12 +7,13 @@ import {
   useUpdateEntityListItemsMutation,
   EntityList,
   useCreateEntityListMutation,
+  useUpdateEntityListMutation,
   useExecuteActionMutation,
   entityListsQueriesGql,
 } from '@shared/api'
 import { upperFirst } from 'lodash'
 import { useSearchParams } from 'react-router-dom'
-import { useGetProductionAddon } from '@shared/hooks'
+import { useGetBundleAddon } from '@shared/hooks'
 import { useAppDispatch } from '@state/store'
 import { getRequestErrorString } from '@shared/util'
 
@@ -36,11 +37,20 @@ interface NewListData {
   entityType: ListEntityType
   selectedEntities: ListEntityInput[]
   entityListType?: string
+  // folder the dialog starts with (e.g. the folder selected in the list picker)
+  entityListFolderId?: string
+}
+
+export interface NewListOptions {
+  entityListFolderId?: string
+  /** create another: keep the dialog open with the same entities and folder */
+  keepOpen?: boolean
 }
 
 export type { ListEntityInput, ListSubMenuItem }
 
 export interface EntityListsContextType {
+  projectName: string
   hasReviewAddon: boolean
   addToList: (
     listId: string,
@@ -61,10 +71,11 @@ export interface EntityListsContextType {
     entityType: ListEntityType,
     selectedEntities: ListEntityInput[],
     entityListType?: string,
+    options?: NewListOptions,
   ) => void
   closeCreateNewList: () => void
   // Remove entities parameter as it will be stored in newListData
-  createNewList: (label: string) => Promise<void>
+  createNewList: (label: string, options?: NewListOptions) => Promise<void>
   newListErrorMessage?: string
   // Build the full ["Add to list", "Review"] top-level menu items
   buildReviewContextMenu: (
@@ -83,13 +94,13 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const dispatch = useAppDispatch()
   const [, setSearchParams] = useSearchParams()
 
-  const { getProductionAddon } = useGetProductionAddon()
+  const { getBundleAddonVersion } = useGetBundleAddon()
 
-  const hasReviewAddon = !!getProductionAddon('review', { minVersion: MIN_REVIEW_VERSION })
-  const hasReviewActionsVersion = !!getProductionAddon('review', {
+  const hasReviewAddon = !!getBundleAddonVersion('review', { minVersion: MIN_REVIEW_VERSION })
+  const hasReviewActionsVersion = !!getBundleAddonVersion('review', {
     minVersion: MIN_REVIEW_ACTIONS_VERSION,
   })
-  const reviewAddonVersion = getProductionAddon('review')?.productionVersion
+  const reviewAddonVersion = getBundleAddonVersion('review')
 
   const [updateEntityListItems] = useUpdateEntityListItemsMutation()
   const [executeAction] = useExecuteActionMutation()
@@ -236,18 +247,25 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
   const [newListData, setNewListData] = useState<NewListData | null>(null)
 
   // Update openCreateNewList to store selected entities
-  const openCreateNewList = useCallback(
-    (entityType: ListEntityType, selectedEntities: ListEntityInput[], entityListType?: string) =>
-      setNewListData({ entityType, selectedEntities, entityListType }),
+  const openCreateNewList: EntityListsContextType['openCreateNewList'] = useCallback(
+    (entityType, selectedEntities, entityListType, options) =>
+      setNewListData({
+        entityType,
+        selectedEntities,
+        entityListType,
+        entityListFolderId: options?.entityListFolderId,
+      }),
     [setNewListData],
   )
   const closeCreateNewList = useCallback(() => setNewListData(null), [setNewListData])
 
   const [createNewListMutation, { error: newListError }] = useCreateEntityListMutation()
+  const [updateEntityListMutation] = useUpdateEntityListMutation()
   const newListErrorMessage = getRequestErrorString(newListError)
   // Update createNewList to use entities from newListData state
   const createNewList: EntityListsContextType['createNewList'] = useCallback(
-    async (label) => {
+    async (label, options) => {
+      const entityListFolderId = options?.entityListFolderId || undefined
       try {
         // Get entities from newListData state
         if (!newListData) {
@@ -305,6 +323,27 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           // Try to extract created ID if provided, though standard behavior might vary
           listId = payloadData?.id
 
+          // the review action takes no folder, so move the new session into it afterwards
+          if (entityListFolderId) {
+            if (!listId) {
+              toast.warn(`Review session ${label} was created outside the folder`)
+            } else {
+              try {
+                await updateEntityListMutation({
+                  projectName,
+                  entityListId: listId,
+                  entityListPatchModel: { entityListFolderId },
+                }).unwrap()
+              } catch (error) {
+                toast.warn(
+                  `Review session ${label} was created but not moved to the folder: ${getRequestErrorString(
+                    error,
+                  )}`,
+                )
+              }
+            }
+          }
+
           // 'LIST' invalidates getListsInfinite — a new list id matches no existing cache tag
           const tags = [
             { type: 'entityList', id: 'LIST' },
@@ -326,6 +365,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
               label,
               entityType,
               entityListType,
+              entityListFolderId,
               items: entitiesToAdd,
             },
           }).unwrap()
@@ -338,8 +378,8 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
           )
         }
 
-        // close the dialog
-        closeCreateNewList()
+        // close the dialog, unless the user is creating another list from the same entities
+        if (!options?.keepOpen) closeCreateNewList()
 
         // add list id to search params
         if (listId) {
@@ -360,6 +400,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       newListData,
       setSearchParams,
       createNewListMutation,
+      updateEntityListMutation,
       executeAction,
       reviewAddonVersion,
       hasReviewActionsVersion,
@@ -378,6 +419,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
 
   const value = useMemo(
     () => ({
+      projectName,
       hasReviewAddon,
       addToList,
       openAddToListDialog,
@@ -390,6 +432,7 @@ export const EntityListsProvider = ({ children, projectName }: EntityListsProvid
       buildReviewContextMenu,
     }),
     [
+      projectName,
       hasReviewAddon,
       addToList,
       openAddToListDialog,

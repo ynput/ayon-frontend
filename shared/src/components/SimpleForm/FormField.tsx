@@ -12,7 +12,7 @@ import { FormFileUpload, FormFileDownload, type FormFileData } from './FormFile'
 import type { FormOptionItem, SimpleFormField } from '@shared/api'
 import type { SimpleFormValue } from './types'
 
-const DropdownItemTemplate = (option: FormOptionItem) => {
+const DropdownItemTemplate = (option: FormOptionItem, _isActive: boolean, isSelected: boolean) => {
   const endContent = (
     <>
       <div style={{ flex: 1 }} />
@@ -25,6 +25,7 @@ const DropdownItemTemplate = (option: FormOptionItem) => {
       dataKey={'value'}
       labelKey={'label'}
       value={[`${option.value}`]}
+      selected={isSelected ? [`${option.value}`] : []}
       endContent={endContent}
     />
   )
@@ -41,6 +42,8 @@ export interface FormFieldProps {
   field: SimpleFormField
   value: SimpleFormValue
   onChange: (value: SimpleFormValue) => void
+  /** a constraint the value breaks: the input shows it as invalid */
+  error?: string
 }
 
 /**
@@ -49,8 +52,10 @@ export interface FormFieldProps {
  * rule's patch (readOnly/disabled/hidden/options/...) merged on top - SimpleForm
  * does that merging, this component just renders whatever it's handed.
  */
-export const FormField = ({ field, value, onChange }: FormFieldProps) => {
+export const FormField = ({ field, value, onChange, error }: FormFieldProps) => {
   const isDisabled = !!(field.disabled || field.readOnly)
+  // the ARC inputs draw an error border for this class
+  const inputClassName = error ? 'error' : undefined
 
   if (field.type === 'text') {
     const parsedValue = typeof value === 'string' ? value : ''
@@ -61,6 +66,7 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
           onChange={(e) => onChange(e.target.value)}
           placeholder={field.placeholder || ''}
           disabled={isDisabled}
+          className={inputClassName}
         />
       )
     }
@@ -70,6 +76,7 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
         onChange={(e) => onChange(e.target.value)}
         placeholder={field.placeholder || ''}
         disabled={isDisabled}
+        className={inputClassName}
       />
     )
   }
@@ -96,6 +103,7 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
         onChange={(e) => onChange(parseInt(e.target.value))}
         placeholder={field.placeholder || ''}
         disabled={isDisabled}
+        className={inputClassName}
       />
     )
   }
@@ -108,6 +116,7 @@ export const FormField = ({ field, value, onChange }: FormFieldProps) => {
         onChange={(e) => onChange(parseFloat(e.target.value))}
         placeholder={field.placeholder || ''}
         disabled={isDisabled}
+        className={inputClassName}
       />
     )
   }

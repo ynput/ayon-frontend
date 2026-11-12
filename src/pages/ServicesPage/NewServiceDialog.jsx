@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import { compareBuild } from 'semver'
 import { Dialog, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 import {
   FormLayout,
   FormRow,
@@ -62,6 +63,24 @@ const sanitizeServiceName = (name) => {
   sanitized = sanitized.replace(/\.{2,}/g, '.')
 
   return sanitized
+}
+
+// Environment variables and ports defined in addon package.py
+// (docker-compose style: environment as a dict or a list of KEY=VALUE)
+const getServiceDefaults = (serviceDef) => {
+  const { environment, ports } = serviceDef || {}
+
+  let envLines = []
+  if (Array.isArray(environment)) {
+    envLines = environment.map((item) => String(item))
+  } else if (environment && typeof environment === 'object') {
+    envLines = Object.entries(environment).map(([key, value]) => `${key}=${value ?? ''}`)
+  }
+
+  return {
+    envVars: envLines.join('\n'),
+    ports: Array.isArray(ports) ? ports.map((p) => String(p)).join('\n') : '',
+  }
 }
 
 const ServiceDialog = ({ onHide, editService = null }) => {
@@ -192,10 +211,6 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       user: null,
       env: {},
     }
-    if (settingsVariant !== 'production') {
-      serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
-    }
-
     if (storages) {
       serviceConfig.volumes = storages.split('\n').map((s) => s.trim())
     }
@@ -206,12 +221,20 @@ const ServiceDialog = ({ onHide, editService = null }) => {
 
     if (envVars) {
       serviceConfig.env = envVars.split('\n').reduce((acc, line) => {
-        const [key, value] = line.split('=')
-        if (key && value) {
-          acc[key.trim()] = value.trim()
+        const separatorIndex = line.indexOf('=')
+        if (separatorIndex === -1) return acc
+        const key = line.slice(0, separatorIndex).trim()
+        const value = line.slice(separatorIndex + 1).trim()
+        if (key) {
+          acc[key] = value
         }
         return acc
       }, {})
+    }
+
+    // after parsing env vars so the variant is not overwritten by them
+    if (settingsVariant !== 'production') {
+      serviceConfig.env.AYON_DEFAULT_SETTINGS_VARIANT = settingsVariant
     }
 
     serviceConfig.registryAuth = useRegistryAuth
@@ -307,6 +330,7 @@ const ServiceDialog = ({ onHide, editService = null }) => {
       isOpen={true}
       header={isEditMode ? 'Edit service' : 'Spawn a new service'}
       onClose={onHide}
+      onKeyDown={getDialogKeyDown(submit, { onClose: onHide, disabled: !canSubmit || isLoading })}
       footer={footer}
       style={{ width: 550, maxHeight: '80vh', zIndex: 999 }}
       size="lg"
@@ -353,6 +377,11 @@ const ServiceDialog = ({ onHide, editService = null }) => {
                 onChange={(e) => {
                   setSelectedService(e[0])
                   setServiceName(sanitizeServiceName(e[0]))
+                  // pre-fill environment and ports defined in addon package.py
+                  const serviceDef = selectedAddon?.versions[selectedVersion]?.services?.[e[0]]
+                  const defaults = getServiceDefaults(serviceDef)
+                  setPorts(defaults.ports)
+                  setEnvVars(defaults.envVars)
                 }}
                 disabled={!selectedVersion}
                 placeholder="Select a service..."

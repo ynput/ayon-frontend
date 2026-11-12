@@ -1,5 +1,5 @@
 import { expect, Page } from '@playwright/test'
-import { confirmDialog, dialog, menuItem, toast } from '../support/ui'
+import { confirmDialog, dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { ProjectsList } from './ProjectsList'
 import { SettingsEditor } from './SettingsEditor'
 
@@ -32,7 +32,7 @@ export class ProjectsManagerPage {
     await expect(createDialog.getByRole('heading', { name: 'Entity Naming' })).toBeVisible()
     await createDialog.getByRole('button', { name: 'Create Project' }).click()
     // deploying a project creates a database schema, which can take a while on a busy server
-    await expect(toast(this.page, 'Project created')).toBeVisible({ timeout: 30_000 })
+    await expect(toast(this.page, `Project ${label} created`)).toBeVisible({ timeout: 30_000 })
     await expect(createDialog).toBeHidden()
   }
 
@@ -93,8 +93,29 @@ export class ProjectsManagerPage {
     return this.accessUsersTable.getByRole('row').filter({ hasText: user })
   }
 
-  async addProjectAccess(user: string, accessGroup: string) {
+  // FLAG: primereact DataTable rows do not set aria-selected, selection is only the `p-highlight` class
+  async expectAccessUserSelected(user: string, selected = true) {
+    if (selected) await expect(this.accessUserRow(user)).toHaveClass(/\bp-highlight\b/)
+    else await expect(this.accessUserRow(user)).not.toHaveClass(/\bp-highlight\b/)
+  }
+
+  async selectAccessUser(user: string) {
+    await this.accessUserRow(user).click()
+    await this.expectAccessUserSelected(user)
+  }
+
+  async openAccessUserMenu(user: string) {
     await this.accessUserRow(user).click({ button: 'right' })
+    await expect(menuItem(this.page, 'Add access')).toBeVisible()
+  }
+
+  async addProjectAccess(user: string, accessGroup: string) {
+    await this.openAccessUserMenu(user)
+    await this.addProjectAccessFromMenu(user, accessGroup)
+  }
+
+  /** "Add access" in the open context menu of `user` */
+  async addProjectAccessFromMenu(user: string, accessGroup: string) {
     await menuItem(this.page, 'Add access').click()
     const addAccess = dialog(this.page, `Add access for ${user}`)
     await expect(addAccess).toBeVisible()

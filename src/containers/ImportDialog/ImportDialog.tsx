@@ -1,6 +1,6 @@
 import { DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
-import { DialogContainer, DialogHeading, ImportContextWrapper, TemplatesSelector } from "./ImportDialog.styled";
+import { DialogContainer, DialogHeading, ImportContextWrapper, ImportTarget, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
 import { contextLabelForImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
 import clsx from "clsx";
@@ -26,6 +26,8 @@ export default function ImportDialog() {
   const {
     importing: importContext,
     folderId,
+    folderLabel,
+    listFolderId,
     projectName,
     close,
   } = useImportDialogContext()
@@ -50,6 +52,7 @@ export default function ImportDialog() {
         header={(
           <DialogHeading>
             Import {itemsLabelForImportContext[importContext]}
+            {folderLabel && <>{" into "}<ImportTarget>{folderLabel}</ImportTarget></>}
             <TemplatesSelector
               className={clsx({ shown: step > ImportStep.UPLOAD && step < ImportStep.PREVIEW })}
             >
@@ -59,7 +62,7 @@ export default function ImportDialog() {
               {contextLabelForImportContext[importContext]}
               {
                 data
-                  ? ` - ${data.fileName}`
+                  ? ` - ${data.fileName}${data.sheetName ? `, ${data.sheetName}` : ''}`
                   : ''
               }
             </ImportContextWrapper>
@@ -89,6 +92,7 @@ export default function ImportDialog() {
             importContext={importContext}
             projectName={projectName}
             folderId={folderId}
+            listFolderId={listFolderId}
             data={data}
             setData={setData}
             step={step}

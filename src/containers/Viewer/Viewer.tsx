@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context'
+import { AnnotationModules, useAnnotationModules, ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -22,7 +22,11 @@ import {
 } from '@shared/components'
 import { useScopedDetailsPanel } from '@shared/context'
 import { ProjectContextProvider, useProjectContext } from '@shared/context'
-import { useSessionStorage, useReviewablesKeyboardNavigation } from '@shared/hooks'
+import {
+  useSessionStorage,
+  useReviewablesKeyboardNavigation,
+  useReviewablesLayout,
+} from '@shared/hooks'
 import clsx from 'clsx'
 
 interface ViewerProps {
@@ -30,7 +34,10 @@ interface ViewerProps {
   canOpenInNew?: boolean
 }
 
-const ViewerBody = ({ onClose }: ViewerProps) => {
+const ViewerBody = ({
+  onClose,
+  annotationModules,
+}: ViewerProps & { annotationModules: AnnotationModules }) => {
   const [theater, setTheater] = useSessionStorage('viewer-theater-mode', false)
   const {
     productId,
@@ -369,10 +376,19 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
       }),
   })
 
+  // put the annotation tools beside the reviewables when stacking would squash the reviewables
+  const rightToolBarRef = useRef<HTMLDivElement>(null)
+  const annotationToolsRef = useRef<HTMLDivElement>(null)
+  const rightToolBarLayout = useReviewablesLayout({
+    containerRef: rightToolBarRef,
+    toolsRef: annotationToolsRef,
+    reviewablesCount: playable.length,
+  })
+
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
-    <ViewerProvider selectedVersionId={selectedVersion?.id}>
+    <ViewerProvider selectedVersionId={selectedVersion?.id} annotationModules={annotationModules}>
       <Styled.Container className={theater ? 'grid minimized' : 'grid'}>
         {!theater && (
           <Styled.PlayerToolbar>
@@ -432,7 +448,10 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           />
         </Styled.FullScreenWrapper>
 
-        <Styled.RightToolBar className={clsx({ hidden: theater })}>
+        <Styled.RightToolBar
+          ref={rightToolBarRef}
+          className={clsx(rightToolBarLayout, { hidden: theater })}
+        >
           <ReviewablesSelector
             ref={reviewablesSelectorRef}
             reviewables={playable}
@@ -441,7 +460,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
             projectName={projectName}
             onUpload={handleUploadAction(true)}
           />
-          <div id="annotation-tools" style={{ position: 'relative' }}></div>
+          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
         </Styled.RightToolBar>
 
         <ViewerDetailsPanel
@@ -457,15 +476,19 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
 const Viewer = ({ onClose }: ViewerProps) => {
   const { projectName } = useAppSelector((state) => state.viewer)
+  const annotationModules = useAnnotationModules()
 
   if (!projectName) {
     console.error('No project name provided to Viewer')
     return null
   }
 
+  // the viewer mounts once its annotation modules are in (useAnnotationModules)
+  if (annotationModules.isLoading) return null
+
   return (
     <ProjectContextProvider projectName={projectName}>
-      <ViewerBody onClose={onClose} />
+      <ViewerBody onClose={onClose} annotationModules={annotationModules} />
     </ProjectContextProvider>
   )
 }

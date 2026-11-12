@@ -9,6 +9,7 @@ import { buildFolderMap, wouldCreateCircularDependency } from '../util/listFolde
 import { EntityListFolderModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { usePowerpack, useProjectContext } from '@shared/context'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import {
   canEditList,
   canEditAllLists,
@@ -41,6 +42,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     openRenameList,
     setListDetailsOpen,
     deleteLists,
+    duplicateLists,
     createReviewSessionList,
     isReview,
     onOpenFolderList,
@@ -49,8 +51,10 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
     onRemoveFoldersFromFolder,
     openMoveToFolder,
     selectAllLists,
+    setRowSelection,
   } = useListsContext()
   const { powerLicense } = usePowerpack()
+  const { openForContext: openImportDialog } = useImportDialogContext()
 
   // Create user permissions object for access control checks
   const userPermissions: UserPermissions = {
@@ -73,7 +77,11 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
 
   const buildContextMenu = useCallback(
     (_e: React.MouseEvent<HTMLTableRowElement>, context: ListRowContextMenuContext) => {
-      const { selectedRows } = context
+      const { selectedRows, rowId, isSelected } = context
+      const extraItems = extraBuilders.flatMap((builder) => {
+        const items = builder(_e, context)
+        return !items ? [] : Array.isArray(items) ? items : [items]
+      })
 
       const newSelectedLists = listsData.filter((list) =>
         selectedRows.some((selected) => list?.id === selected),
@@ -190,6 +198,13 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !allSelectedRowsAreLists || isReview || !createReviewSessionList,
         },
         {
+          label: 'Duplicate',
+          icon: 'content_copy',
+          command: () => duplicateLists(selectedListIds),
+          // review sessions carry review addon data, only plain lists are copied
+          hidden: !allSelectedRowsAreLists || isReview,
+        },
+        {
           label: 'Edit folder',
           icon: FOLDER_ICON_EDIT,
           command: () => {
@@ -213,11 +228,26 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !isSelectedRowFolder,
           disabled: selectedFolderIds.length > 1,
         },
+        {
+          label: 'Create list from CSV',
+          icon: 'upload_file',
+          command: () =>
+            selectedFolder &&
+            openImportDialog(
+              'entity_list_item',
+              projectName,
+              undefined,
+              selectedFolder.label,
+              selectedFolder.id,
+            ),
+          hidden: !isSelectedRowFolder || isReview,
+          disabled: selectedFolderIds.length > 1,
+        },
         // Root level Create folder (lists selection) / gated if no power license
         {
           label: 'Create folder',
           icon: FOLDER_ICON_ADD,
-          command: () => onOpenFolderList({}),
+          command: () => onOpenFolderList({ rowIds: selectedRows }),
           shortcut: 'F',
           hidden: !allSelectedRowsAreLists,
           powerFeature: powerLicense ? undefined : 'listFolders',
@@ -241,10 +271,14 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           hidden: !selectedFolderIds.length, // hide if no folders selected per spec
           command: () => selectAllLists({ rowIds: selectedRows }),
         },
+        ...extraItems,
         {
           label: 'Details',
           icon: 'info',
-          command: () => setListDetailsOpen(true),
+          command: () => {
+            if (!isSelected) setRowSelection({ [rowId]: true })
+            setListDetailsOpen(true)
+          },
           disabled: multipleSelected,
           hidden: !allSelectedRowsAreLists,
           shortcut: 'Double click',
@@ -290,7 +324,9 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       listFolders,
       openRenameList,
       setListDetailsOpen,
+      setRowSelection,
       deleteLists,
+      duplicateLists,
       createReviewSessionList,
       onOpenFolderList,
       onDeleteListFolders,
@@ -301,13 +337,13 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       clearListItems,
       isReview,
       powerLicense,
+      extraBuilders,
+      openImportDialog,
+      projectName,
     ],
   )
 
-  return useMemo(
-    () => (enabled ? [buildContextMenu, ...extraBuilders] : []),
-    [enabled, buildContextMenu, extraBuilders],
-  )
+  return useMemo(() => (enabled ? [buildContextMenu] : []), [enabled, buildContextMenu])
 }
 
 export default useListContextMenu

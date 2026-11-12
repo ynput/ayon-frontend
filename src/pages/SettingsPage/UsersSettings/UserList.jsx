@@ -5,25 +5,34 @@ import UserImage from '@shared/components/UserImage'
 
 import './users.scss'
 
-import { useMemo } from 'react'
+import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useTableExportContext } from '@shared/context'
 import clsx from 'clsx'
+import { omit } from 'lodash'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { readLocalStorage } from '@shared/hooks/useLocalStorage'
 import { useGetUserPoolsQuery } from '@shared/api'
-import { accessGroupsSortFunction, userPoolSortFunction } from './tableSorting'
+import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
-import { getInvitationState } from './InvitationStatusHelpers'
+import { getInvitationState, getInvitationText } from './InvitationStatusHelpers'
+import { useStableColumnWidths } from './useStableColumnWidths'
 
-const INVITE_SORT_RANK = { none: 0, expired: 1, pending: 2, accepted: 3 }
+// fixed row height, needed by the virtual scroller
+const ROW_HEIGHT = 33
 
-const inviteStatusSortFunction = (event) => {
-  const { data, order } = event
-  return [...data].sort((a, b) => {
-    const diff = INVITE_SORT_RANK[getInvitationState(a)] - INVITE_SORT_RANK[getInvitationState(b)]
-    return order === 1 ? diff : -diff
-  })
+// Save sort, column widths and order only. Left to itself the table also saves every selected user
+// object, on every render, and selects them again on mount.
+const saveTableState = (state) => {
+  try {
+    localStorage.setItem(USERS_TABLE_STATE_KEY, JSON.stringify(omit(state, 'selection')))
+  } catch {
+    // storage full or blocked: the table works without it
+  }
 }
+
+const restoreTableState = () => omit(readLocalStorage(USERS_TABLE_STATE_KEY, {}), 'selection')
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -38,9 +47,9 @@ const StyledLicenseRow = styled.div`
 `
 
 export const ProfileRow = ({ rowData }) => {
-  const { name, self, isMissing } = rowData
+  const { name, self, isMissing, missingReason } = rowData
   return (
-    <StyledProfileRow>
+    <StyledProfileRow data-tooltip={missingReason}>
       <UserImage
         name={name}
         size={25}
@@ -87,31 +96,61 @@ const UserList = ({
 }) => {
   // GET LICENSE USER POOLS
   const { data: userPools = [] } = useGetUserPoolsQuery()
+  const sortFunctions = getUserSortFunctions(userPools)
+  const tableExport = useTableExportContext()
 
   // Selection
   const selection = useMemo(() => {
-    return userList.filter((user) => selectedUsers.includes(user.name))
+    const selected = new Set(selectedUsers)
+    return userList.filter((user) => selected.has(user.name))
   }, [selectedUsers, selectedProjects, userList])
 
   const onContextMenu = (e) => {
-    let newSelectedUsers = [...selectedUsers]
-    if (!selectedUsers.includes(e.data.name)) {
-      newSelectedUsers = [e.data.name]
-    }
-    onSelectUsers(newSelectedUsers)
+    const newSelectedUsers = selectedUsers.includes(e.data.name) ? selectedUsers : [e.data.name]
     ctxMenuShow(e.originalEvent, ctxMenuItems(newSelectedUsers))
+  }
+
+  const tableRef = useRef(null)
+  const anchorName = useRef(null)
+  const shiftRange = useRef(null)
+
+  // With the virtual scroller the table only knows the rendered rows, so its own shift-click range
+  // is wrong or throws. Track the range here, by index in display order. The anchor is a user name:
+  // the table's anchor is an index, which points at another user after a sort or reload.
+  const onRowClick = ({ data, index, originalEvent }) => {
+    shiftRange.current = null
+    if (originalEvent.shiftKey) {
+      const items = tableRef.current.getVirtualScroller().props.items
+      const anchor = items.findIndex((user) => user.name === anchorName.current)
+      // no anchor, or it's filtered out or deleted: select the clicked user only
+      shiftRange.current =
+        anchor === -1 ? [index, index] : [Math.min(anchor, index), Math.max(anchor, index)]
+    }
+    anchorName.current = data.name
   }
 
   const onSelectionChange = (e) => {
     if (!onSelectUsers) return
+    // the scroller's items are the rows in display order: filtered and sorted
+    const users = shiftRange.current
+      ? tableRef.current
+          .getVirtualScroller()
+          .props.items.slice(shiftRange.current[0], shiftRange.current[1] + 1)
+      : e.value
+    shiftRange.current = null
     let result = []
-    for (const user of e.value) result.push(user.name)
+    for (const user of users) if (user) result.push(user.name)
     onSelectUsers(result)
   }
 
   // IDEA: Can these go into the details panel as well?
-  // built from the right-clicked selection, the `selection` state is not updated yet at this point
+  // built from the right-clicked selection; the dialogs act on the selected users, so an action
+  // selects a right-clicked user that is not selected yet
   const ctxMenuItems = (newSelectedUsers) => {
+    const withSelection = (open) => () => {
+      if (newSelectedUsers !== selectedUsers) onSelectUsers(newSelectedUsers)
+      open()
+    }
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
     const ctxSelfSelected = newSelectedUsers.includes(selfName)
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
@@ -124,25 +163,32 @@ const UserList = ({
       {
         label: 'Set username',
         disabled: ctxSelection.length !== 1,
-        command: () => setShowRenameUser(true),
+        command: withSelection(() => setShowRenameUser(true)),
         icon: 'edit',
       },
       {
         label: 'Set password',
         disabled: ctxSelection.length !== 1,
-        command: () => setShowSetPassword(true),
+        command: withSelection(() => setShowSetPassword(true)),
         icon: 'key',
       },
       {
         label: inviteLabel,
         disabled: !ctxHasInvitable || managerDisabled,
-        command: () => setShowInviteUser(true),
+        command: withSelection(() => setShowInviteUser(true)),
         icon: 'mail',
+      },
+      {
+        label: 'Export',
+        icon: 'download',
+        powerFeature: 'tableExport',
+        disabled: !ctxSelection.length,
+        command: withSelection(() => tableExport?.openExport('selection')),
       },
       {
         label: 'Delete selected',
         disabled: !ctxSelection.length || ctxSelfSelected,
-        command: () => setShowDeleteUser(newSelectedUsers),
+        command: withSelection(() => setShowDeleteUser(newSelectedUsers)),
         icon: 'delete',
         danger: true,
       },
@@ -153,13 +199,70 @@ const UserList = ({
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
+  // The virtual scroller (primereact 9.6) doesn't follow row changes by itself:
+  // - it applies a new scroll height only on its next render, so render once more.
+  // - it keeps its first rendered row until it scrolls, so scroll inside the new list.
+  const [, rerender] = useReducer((n) => n + 1, 0)
+  const prevUserList = useRef(userList)
+  useEffect(() => {
+    const scroller = tableRef.current?.getVirtualScroller()
+    const element = scroller?.getElementRef().current
+    if (element) {
+      if (prevUserList.current === userList) {
+        // same users, so the search changed: show the results from the top
+        if (element.scrollTop > 0) scroller.scrollTo({ top: 0 })
+      } else {
+        // users were added, deleted or reloaded: stay where we were
+        const maxTop = Math.max(0, tableData.length * ROW_HEIGHT - element.clientHeight)
+        if (element.scrollTop > maxTop) scroller.scrollTo({ top: maxTop })
+      }
+    }
+    prevUserList.current = userList
+    rerender()
+  }, [tableData, userList])
+
   const findUserPool = (poolId) => userPools.find((p) => p.id === poolId)
+
+  // the text of each column's cells, to size the columns to every user
+  const columnTexts = useMemo(
+    () => ({
+      name: (user) => user.name,
+      fullName: (user) => user.attrib?.fullName,
+      email: (user) => user.attrib?.email,
+      ...(userPools.length && {
+        userPool: (user) =>
+          user.userPool ? userPools.find((p) => p.id === user.userPool)?.label || 'Invalid' : '',
+      }),
+      accessLevel: getUserRole,
+      defaultAccessGroups: (user) => user.defaultAccessGroups?.join(', '),
+      hasPassword: (user) => (user.hasPassword ? 'yes' : 'no'),
+      active: (user) => (user.active ? 'yes' : ''),
+      invitation: getInvitationText,
+    }),
+    [userPools],
+  )
+  // Once the user resizes a column the table saves every column's width and keeps them, so the
+  // minimum widths go: they would stop a column from getting narrower.
+  const [resized, setResized] = useState(() => !!restoreTableState().columnWidths)
+  const columnWidths = useStableColumnWidths(
+    tableRef,
+    userList,
+    columnTexts,
+    !isLoading && !resized,
+  )
+  // min-width, as the table is wider than the page and the browser ignores a larger width. Only on
+  // the body cells: the table takes a header's min-width as the narrowest it can be resized to.
+  const columnProps = (key) => ({
+    className: `col-${key}`,
+    bodyStyle: resized ? undefined : { minWidth: columnWidths[key] },
+  })
 
   // Render
   return (
     <Section wrap>
       <TablePanel>
         <DataTable
+          ref={tableRef}
           value={tableData}
           scrollable="true"
           scrollHeight="flex"
@@ -167,29 +270,43 @@ const UserList = ({
           selectionMode="multiple"
           className={clsx('user-list-table', { loading: isLoading })}
           rowClassName={(rowData) => clsx({ inactive: !rowData.active, loading: isLoading })}
+          onRowClick={onRowClick}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
+          onColumnResizeEnd={() => setResized(true)}
           selection={selection}
           columnResizeMode="expand"
           resizableColumns
           responsive="true"
-          stateKey="users-datatable"
-          stateStorage={'local'}
+          stateStorage="custom"
+          customSaveState={saveTableState}
+          customRestoreState={restoreTableState}
           reorderableColumns
+          // render only the visible rows: thousands of users otherwise means thousands of rows
+          // and avatar requests
+          virtualScrollerOptions={{ itemSize: ROW_HEIGHT }}
         >
           <Column
             field="name"
             header="Username"
+            {...columnProps('name')}
             sortable
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
             resizeable
           />
-          <Column field="attrib.fullName" header="Full name" sortable resizeable />
-          <Column field="attrib.email" header="Email" sortable />
+          <Column
+            field="attrib.fullName"
+            header="Full name"
+            sortable
+            resizeable
+            {...columnProps('fullName')}
+          />
+          <Column field="attrib.email" header="Email" sortable {...columnProps('email')} />
           {!!userPools.length && (
             <Column
               field="userPool"
               header="License"
+              {...columnProps('userPool')}
               body={(rowData) => {
                 const pool = findUserPool(rowData.userPool)
                 return (
@@ -199,27 +316,30 @@ const UserList = ({
                 )
               }}
               sortable
-              sortFunction={(event) => userPoolSortFunction(event, userPools)}
+              sortFunction={sortFunctions.userPool}
               resizeable
             />
           )}
           <Column
             field={'accessLevel'}
             header="Access level"
+            {...columnProps('accessLevel')}
             body={(rowData) => getUserRole(rowData)}
-            sortFunction={accessGroupsSortFunction}
+            sortFunction={sortFunctions.accessLevel}
             sortable
             resizeable
           />
           <Column
             field="defaultAccessGroups"
             header="Default projects access"
+            {...columnProps('defaultAccessGroups')}
             sortable
             resizeable
             body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
             header="Has password"
+            {...columnProps('hasPassword')}
             body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
             field="hasPassword"
             sortable
@@ -227,6 +347,7 @@ const UserList = ({
           />
           <Column
             header="Active"
+            {...columnProps('active')}
             body={(rowData) => (rowData.active ? 'yes' : '')}
             field="active"
             sortable
@@ -234,10 +355,11 @@ const UserList = ({
           />
           <Column
             header="Invitation"
+            {...columnProps('invitation')}
             field="inviteSentAt"
             body={(rowData) => <InvitationStatus user={rowData} plain />}
             sortable
-            sortFunction={inviteStatusSortFunction}
+            sortFunction={sortFunctions.inviteSentAt}
             resizeable
           />
         </DataTable>
@@ -246,4 +368,5 @@ const UserList = ({
   )
 }
 
-export default UserList
+// memo: typing in the search box re-renders the page, the table only changes with the results
+export default memo(UserList)

@@ -1,5 +1,6 @@
 import { expect, test } from '../fixtures'
-import { OverviewPage } from '../pages/OverviewPage'
+import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
+import { dialog, toast } from '@ynput/ayon-e2e'
 
 test.describe('project overview', () => {
   test('create a root folder', async ({ page, api, projectName }) => {
@@ -75,6 +76,44 @@ test.describe('project overview', () => {
       ])
   })
 
+  test('Shift+Enter creates a sequence and keeps the dialog open for another', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const parent = await api.createFolder(projectName, { name: 'sq030', folderType: 'Sequence' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.selectRow('sq030')
+
+    await overview.openCreate('sequence')
+    const createDialog = overview.createDialog()
+    await expect(createDialog).toBeVisible()
+    await overview.pickCreateDialogType('Shot')
+    // FLAG: the folder sequence form's labels are not associated with their inputs
+    const base = createDialog.locator('input#base')
+    await base.fill('sh010')
+    await createDialog.locator('input#length').fill('2')
+    await base.press('Shift+Enter')
+
+    await expect(toast(page, '2 folders created')).toBeVisible()
+    await expect(base).toBeFocused()
+    await base.fill('sh030')
+    await base.press('Enter')
+    await expect(createDialog).toBeHidden()
+
+    await expect
+      .poll(async () =>
+        (
+          await api.listFolders(projectName)
+        )
+          .filter((f) => f.parentId === parent.id)
+          .map((f) => f.name)
+          .sort(),
+      )
+      .toEqual(['sh010', 'sh020', 'sh030', 'sh040'])
+  })
+
   test('rename a folder', async ({ page, api, projectName }) => {
     const folder = await api.createFolder(projectName, { name: 'old_name' })
     const overview = new OverviewPage(page)
@@ -117,6 +156,37 @@ test.describe('project overview', () => {
 
     await expect(overview.row('delete_me')).toBeHidden()
     await expect(overview.row('keep_me')).toBeVisible()
+    await expect
+      .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
+      .not.toContain(doomed.id)
+  })
+
+  test('force deleting a folder with published versions asks to type it', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const doomed = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const product = await api.createProduct(projectName, {
+      folderId: doomed.id,
+      name: 'renderMain',
+    })
+    await api.createVersion(projectName, { productId: product.id, version: 1 })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.selectRow('sh010')
+    await overview.rowMenu('sh010', 'Delete')
+    await confirmDeleteCounts(page, /^Delete forever/, { folder: 1, product: 1, version: 1 })
+
+    const force = dialog(page, /^Force delete/)
+    await expect(force).toBeVisible()
+    const submit = force.getByTestId('delete-confirm-submit')
+    await expect(submit).toBeDisabled()
+    await force.getByTestId('delete-confirm-name-input').fill('force delete')
+    await submit.click()
+
+    await expect(overview.row('sh010')).toBeHidden()
     await expect
       .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
       .not.toContain(doomed.id)

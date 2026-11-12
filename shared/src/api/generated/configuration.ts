@@ -17,6 +17,9 @@ const injectedRtkApi = api.injectEndpoints({
         body: queryArg.serverConfigModel,
       }),
     }),
+    updateServerConfig: build.mutation<UpdateServerConfigApiResponse, UpdateServerConfigApiArg>({
+      query: (queryArg) => ({ url: `/api/config`, method: 'PATCH', body: queryArg.payload }),
+    }),
     getServerConfigOverrides: build.query<
       GetServerConfigOverridesApiResponse,
       GetServerConfigOverridesApiArg
@@ -25,9 +28,6 @@ const injectedRtkApi = api.injectEndpoints({
     }),
     getConfigValue: build.query<GetConfigValueApiResponse, GetConfigValueApiArg>({
       query: (queryArg) => ({ url: `/api/config/value/${queryArg.key}` }),
-    }),
-    getServerConfigFile: build.query<GetServerConfigFileApiResponse, GetServerConfigFileApiArg>({
-      query: (queryArg) => ({ url: `/api/config/files/${queryArg.fileType}` }),
     }),
     uploadServerConfigFile: build.mutation<
       UploadServerConfigFileApiResponse,
@@ -42,11 +42,16 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getServerConfigFile: build.query<GetServerConfigFileApiResponse, GetServerConfigFileApiArg>({
+      query: (queryArg) => ({ url: `/api/config/files/${queryArg.fileType}` }),
+    }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
-export type GetServerConfigSchemaApiResponse = /** status 200 Successful Response */ object
+export type GetServerConfigSchemaApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetServerConfigSchemaApiArg = void
 export type GetServerConfigApiResponse = /** status 200 Successful Response */ ServerConfigModel
 export type GetServerConfigApiArg = void
@@ -54,16 +59,20 @@ export type SetServerConfigApiResponse = /** status 200 Successful Response */ a
 export type SetServerConfigApiArg = {
   serverConfigModel: ServerConfigModel
 }
-export type GetServerConfigOverridesApiResponse = /** status 200 Successful Response */ object
+export type UpdateServerConfigApiResponse = unknown
+export type UpdateServerConfigApiArg = {
+  payload: {
+    [key: string]: any
+  }
+}
+export type GetServerConfigOverridesApiResponse = /** status 200 Successful Response */ {
+  [key: string]: any
+}
 export type GetServerConfigOverridesApiArg = void
 export type GetConfigValueApiResponse = /** status 200 Successful Response */ any
 export type GetConfigValueApiArg = {
   /** The key of the configuration value to retrieve */
   key: string
-}
-export type GetServerConfigFileApiResponse = /** status 200 Successful Response */ any
-export type GetServerConfigFileApiArg = {
-  fileType: 'login_background' | 'studio_logo'
 }
 export type UploadServerConfigFileApiResponse = /** status 200 Successful Response */ any
 export type UploadServerConfigFileApiArg = {
@@ -73,9 +82,13 @@ export type UploadServerConfigFileApiArg = {
   'x-file-name': string
   'content-type': string
 }
+export type GetServerConfigFileApiResponse = /** status 200 Successful Response */ any
+export type GetServerConfigFileApiArg = {
+  fileType: 'login_background' | 'studio_logo'
+}
 export type CustomizationModel = {
-  login_background?: string
-  studio_logo?: string
+  login_background?: string | null
+  studio_logo?: string | null
   /** The message that is displayed to users on the login page. Markdown syntax is supported. */
   motd?: string
   /** A list of flags that will be passed to the frontend. These can be used to enable or disable frontend features. */
@@ -93,9 +106,14 @@ export type ChangelogSettingsModel = {
   /** If enabled, the changelog will be shown to normal users. */
   show_changelog_to_users?: boolean
 }
+export type CdnSettingsModel = {
+  default_cdn_resolver_url?: string
+}
 export type ServerConfigModel = {
   /** The name of the studio */
   studio_name?: string
+  /** Public URL of the server, used in links sent by email. Set automatically when an administrator first opens the web interface. */
+  server_url?: string
   /** Customization options for the web interface */
   customization?: CustomizationModel
   /** Settings related to user authentication */
@@ -103,11 +121,15 @@ export type ServerConfigModel = {
   project_options?: ProjectOptionsModel
   /** Settings for the changelog feature */
   changelog?: ChangelogSettingsModel
+  /** Settings for the CDN resolver */
+  cdn?: CdnSettingsModel
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]

@@ -6,7 +6,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
   endpoints: {
     createView: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled, getState }) => {
-        const { payload } = arg
+        const payload = arg.genericViewPostModel
         const state = getState()
         // @ts-expect-error - user is not typed in the state
         const user = state.user?.name
@@ -125,14 +125,14 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
         }
       },
       // updates the view list cache for a specific view type and project
-      invalidatesTags: (_r, _e, { viewType, projectName, payload }) => [
-        { type: 'view', id: payload.id },
+      invalidatesTags: (_r, _e, { viewType, projectName, genericViewPostModel }) => [
+        { type: 'view', id: genericViewPostModel.id },
         getScopeTag(viewType, projectName),
       ],
     },
     updateView: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
-        const { viewId, payload, viewType, projectName } = arg
+        const { viewId, genericViewPatchModel: payload, viewType, projectName } = arg
 
         const patches: any[] = []
 
@@ -199,7 +199,7 @@ const updateViewsApi = getViewsApi.enhanceEndpoints({
           patches.forEach((patch) => patch.undo())
         }
       },
-      invalidatesTags: (_r, _e, { viewType, projectName, viewId, payload }) => {
+      invalidatesTags: (_r, _e, { viewType, projectName, viewId, genericViewPatchModel: payload }) => {
         const tags: any[] = []
 
         // Only invalidate when metadata fields (label, owner, etc.) change.

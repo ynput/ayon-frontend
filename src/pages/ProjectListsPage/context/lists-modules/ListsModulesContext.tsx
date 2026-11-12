@@ -1,8 +1,10 @@
 import { useLoadModule } from '@shared/hooks'
-import React, { ReactNode, FC } from 'react'
+import { afterStartup } from '@shared/util'
+import React, { ReactNode, FC, useCallback, useEffect, useState } from 'react'
 import type { ListsAttributesContextValue } from '../lists-attributes/ListsAttributesContext'
 import { ConfirmDeleteOptions } from '@shared/util'
 import { TableSettingsFallback } from '@shared/components'
+import { Button } from '@ynput/ayon-react-components'
 import { GuestAccessFallback, ListAccessFallback } from '../../components/ListAccessForm'
 import { ListsModuleContext } from './ListsModulesContextInstance'
 
@@ -31,6 +33,12 @@ const ListsAttributeSettingsFallback: FC<ListsAttributeSettingsFallbackProps> = 
   />
 )
 
+// Until the module has loaded. The fallback's button opens the Power Pack dialog, also for users
+// with a license, whose module just hasn't arrived yet.
+const ListsAttributeSettingsLoading: FC<ListsAttributeSettingsFallbackProps> = () => (
+  <Button icon="add" label="Add attribute" variant="filled" disabled style={{ width: '100%' }} />
+)
+
 export interface ListsModuleContextType {
   ListsAttributesSettings: typeof ListsAttributeSettingsFallback
   ListAccess: typeof ListAccessFallback
@@ -44,6 +52,8 @@ export interface ListsModuleContextType {
     access: boolean
     guestAccess: boolean
   }
+  // load the modules now (they are otherwise loaded once the page has loaded)
+  requestModules: () => void
 }
 
 interface ListsModuleProviderProps {
@@ -51,12 +61,26 @@ interface ListsModuleProviderProps {
 }
 
 export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ children }) => {
-  const [ListsAttributesSettings, { outdated: attributeSettingsOutdated }] = useLoadModule({
+  // the modules are only used in the access and settings panels, and the review module is large,
+  // so they load once the page has loaded, or as soon as a panel that uses them mounts
+  const [shouldLoad, setShouldLoad] = useState(false)
+  const requestModules = useCallback(() => setShouldLoad(true), [])
+  useEffect(() => {
+    if (shouldLoad) return
+    return afterStartup(requestModules)
+  }, [shouldLoad, requestModules])
+  const defer = !shouldLoad
+
+  const [
+    ListsAttributesSettings,
+    { outdated: attributeSettingsOutdated, isLoading: isLoadingAttributeSettings },
+  ] = useLoadModule({
     addon: 'powerpack',
     remote: 'slicer',
     module: 'ListsAttributesSettings',
     fallback: ListsAttributeSettingsFallback,
     minVersion: '1.0.5',
+    defer,
   })
 
   const [ListAccess, { outdated: accessOutdated, isLoading: isLoadingAccess }] = useLoadModule({
@@ -65,6 +89,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
     module: 'ListAccess',
     fallback: ListAccessFallback,
     minVersion: '1.2.4',
+    defer,
   })
 
   const [GuestAccess, { outdated: guestAccessOutdated, isLoading: isLoadingGuestAccess }] =
@@ -74,10 +99,13 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       module: 'GuestAccess',
       fallback: GuestAccessFallback,
       minVersion: '0.0.8',
+      defer,
     })
 
   const value = {
-    ListsAttributesSettings,
+    ListsAttributesSettings: isLoadingAttributeSettings
+      ? ListsAttributeSettingsLoading
+      : ListsAttributesSettings,
     ListAccess,
     GuestAccess,
     requiredVersion: {
@@ -89,6 +117,7 @@ export const ListsModuleProvider: React.FC<ListsModuleProviderProps> = ({ childr
       access: isLoadingAccess,
       guestAccess: isLoadingGuestAccess,
     },
+    requestModules,
   }
 
   return <ListsModuleContext.Provider value={value}>{children}</ListsModuleContext.Provider>

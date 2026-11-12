@@ -13,8 +13,9 @@ import {
   ProductNodeExtended,
   determineLoadingVP,
   extractFilters,
+  resolveExtensionFilter,
 } from '../../util'
-import { getRequestErrorString } from '@shared/util'
+import { buildSortArgs, getRequestErrorString } from '@shared/util'
 
 const getQueryErrorMessage = (error: unknown): string => {
   return getRequestErrorString(error)
@@ -29,9 +30,17 @@ import {
   useQueryFilters,
   buildQueryFilters,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
+import {
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+  useTableStateConsumers,
+} from '@shared/containers/ProjectTreeTable'
+import type { ProjectTableState, VersionQueryArgs } from '@ynput/ayon-addon'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -44,7 +53,11 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
-import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
+import {
+  refreshActiveAndPurgeOthers,
+  refreshListsMembership,
+  refreshOtherActiveQueries,
+} from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
   FEATURED_VERSION_TYPES,
@@ -66,10 +79,10 @@ const SORT_BY_FIELD_MAP: Record<string, string> = {
   product: 'productName',
 }
 
-// Define which sort fields are excluded for each entity type
+// Sort keys (as sent to the API) that an entity type can't be sorted by
 const EXCLUDED_SORT_FIELDS: Record<'version' | 'product', string[]> = {
   version: [],
-  product: ['author', 'product', 'name'],
+  product: ['author', 'productName'],
 }
 
 export type VersionMap = Map<string, VersionNodeExtended>
@@ -83,6 +96,9 @@ export interface VersionsDataContextValue {
   // separate filters
   versionFilter: QueryFilter
   productFilter: QueryFilter
+  // arguments of the table's own products and versions queries, for exports
+  productArguments: QueryArguments & { featuredVersionOrder?: string[] }
+  versionArguments: QueryArguments
   // combined filter strings (incl. slicer + entity-list selection) for the
   // column-summary stats queries
   columnStatsArgs: {
@@ -91,6 +107,7 @@ export interface VersionsDataContextValue {
     versionFilter?: string
     taskFilter?: string
     folderFilter?: string
+    representationFilter?: string
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
@@ -106,6 +123,7 @@ export interface VersionsDataContextValue {
     versionFilter?: string
     taskFilter?: string
     folderFilter?: string
+    representationFilter?: string
     folderIds?: string[]
     versionIds?: string[]
     productIds?: string[]
@@ -145,7 +163,8 @@ export type QueryArguments = {
   productFilter?: string
   taskFilter?: string
   folderFilter?: string
-  sortBy?: string
+  representationFilter?: string
+  sortBy?: string | string[]
   desc: boolean
   featuredOnly?: string[]
   featuredOnlyEntityType?: string
@@ -171,8 +190,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const {
     filters,
     showProducts,
-    sortBy,
-    sortDesc,
+    sorting,
     featuredVersionOrder,
     latestPerFolder,
     groupBy,
@@ -213,16 +231,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     }
   }, [filters])
 
-  // Separate the combined filters into version and product filters
+  // Separate the combined filters into one filter per entity scope
   const {
     version: versionFilter = EMPTY_FILTER,
     product: productFilter = EMPTY_FILTER,
     task: taskFilter = EMPTY_FILTER,
     folder: folderFilter = EMPTY_FILTER,
+    representation: representationFilter = EMPTY_FILTER,
   } = useMemo(() => {
-    return splitFiltersByScope(filtersWithoutExtracted, ['version', 'product', 'task', 'folder'], {
-      fallbackScope: 'version',
-    })
+    return splitFiltersByScope(
+      filtersWithoutExtracted,
+      ['version', 'product', 'task', 'folder', 'representation'],
+      { fallbackScope: 'version' },
+    )
   }, [filtersWithoutExtracted])
 
   const { updateExpanded, expandedIds } = useExpandedState({
@@ -232,7 +253,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -288,6 +315,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
   const slicerFolderIds = useMemo(
     () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
@@ -321,10 +349,18 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     queryFilters: taskFilter,
     sliceFilters: slicerTaskFilters,
   })
+  // folder names stay filter conditions: products and versions have no folder text search
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
     sliceFilters: slicerFolderFilters,
-    config: { searchKey: 'name' },
+  })
+  // no slicer panel is representation scoped, so this is the filter bar's conditions only
+  const resolvedRepresentationFilter = useMemo(
+    () => resolveExtensionFilter(representationFilter),
+    [representationFilter],
+  )
+  const combinedRepresentationFilter = useQueryFilters({
+    queryFilters: resolvedRepresentationFilter,
   })
 
   // When entity list has task IDs, merge them into the task filter
@@ -337,15 +373,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       value: scopedTaskIds,
     }
 
-    const existingFilter = combinedTaskFilter.filterString
-      ? JSON.parse(combinedTaskFilter.filterString)
-      : { conditions: [], operator: 'and' }
-
+    // nested, so an OR filter stays OR and is ANDed with the ids as a whole
+    const existingFilter = combinedTaskFilter.filter
     return JSON.stringify({
-      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      conditions: existingFilter?.conditions?.length
+        ? [existingFilter, taskIdCondition]
+        : [taskIdCondition],
       operator: 'and',
     })
-  }, [scopedTaskIds, combinedTaskFilter.filterString])
+  }, [scopedTaskIds, combinedTaskFilter.filter])
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -384,25 +420,38 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
-        config: { searchKey: 'name' },
       })
       // a task-list panel narrows via task ids, like entityListTaskFilterString
       const countsTaskFilterString = scopedTaskIds.length
         ? JSON.stringify({
             conditions: [
-              ...(countsTaskFilter.filter?.conditions || []),
+              ...(countsTaskFilter.filter?.conditions?.length ? [countsTaskFilter.filter] : []),
               { key: 'id', operator: 'in', value: scopedTaskIds },
             ],
             operator: 'and',
           })
         : countsTaskFilter.filterString
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolderIds =
+        countsSearchFolderIds === searchFolderIds
+          ? slicerFolderIds
+          : getFolderIdsWithoutChildren(
+              resolveSlicerFolders(
+                sliceSelections,
+                entityIds.folderIds,
+                getChildFolderIds,
+                countsSearchFolderIds,
+              ).selectedFolders,
+            )
       return {
         projectName,
         versionFilter: countsVersionFilter.filterString,
         productFilter: countsProductFilter.filterString,
         taskFilter: countsTaskFilterString,
         folderFilter: countsFolderFilter.filterString,
-        folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+        representationFilter: combinedRepresentationFilter.filterString,
+        folderIds: countsFolderIds.length ? countsFolderIds : undefined,
         versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
         productIds: scopedProductIds.length ? scopedProductIds : undefined,
         latestPerFolder,
@@ -415,23 +464,40 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter,
       taskFilter,
       folderFilter,
+      combinedRepresentationFilter.filterString,
       projectName,
       slicerFolderIds,
       scopedVersionIds,
       scopedProductIds,
       scopedTaskIds,
       latestPerFolder,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
+      getFolderIdsWithoutChildren,
     ],
   )
 
-  const resolvedSortBy = useMemo(
-    // saved views can hold a non-string sortBy (e.g. from an older server); ignore it instead of crashing
-    () =>
-      typeof sortBy === 'string' && sortBy
-        ? SORT_BY_FIELD_MAP[sortBy] || getColumnSortKey(sortBy, true, 'product')
-        : undefined,
-    [sortBy],
-  )
+  // products can't be sorted by every key, so each entity type gets its own sort arguments
+  const sortArgs = useMemo(() => {
+    const resolve = (entityType: 'version' | 'product') =>
+      buildSortArgs(
+        sorting
+          // saved views can hold a non-string sort id (e.g. from an older server); skip it instead of crashing
+          .filter((sort) => typeof sort.id === 'string' && sort.id)
+          .map((sort) => {
+            const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
+            const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
+            return {
+              key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
+              desc: sort.desc,
+            }
+          }),
+      )
+    return { version: resolve('version'), product: resolve('product') }
+  }, [sorting])
   const queryArgs = useMemo(
     () => ({
       projectName,
@@ -439,11 +505,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter: combinedProductFilter.filterString,
       taskFilter: entityListTaskFilterString,
       folderFilter: combinedFolderFilter.filterString,
+      representationFilter: combinedRepresentationFilter.filterString,
       folderIds: slicerFolderIds,
       versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
       productIds: scopedProductIds.length ? scopedProductIds : undefined,
-      sortBy: resolvedSortBy,
-      desc: sortDesc,
+      sortBy: sortArgs.version.sortBy,
+      desc: sortArgs.version.desc,
       showComments,
     }),
     [
@@ -452,11 +519,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       combinedProductFilter.filterString,
       entityListTaskFilterString,
       combinedFolderFilter.filterString,
+      combinedRepresentationFilter.filterString,
       slicerFolderIds,
       scopedVersionIds,
       scopedProductIds,
-      resolvedSortBy,
-      sortDesc,
+      sortArgs,
       showComments,
     ],
   )
@@ -475,28 +542,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     versionFilter: combinedVersionFilter.filterString,
     taskFilter: entityListTaskFilterString,
     folderFilter: combinedFolderFilter.filterString,
+    representationFilter: combinedRepresentationFilter.filterString,
     folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
     versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
     productIds: scopedProductIds.length ? scopedProductIds : undefined,
     featuredOnly: featuredVersionFilter,
     featuredOnlyEntityType: featuredVersionFilter?.length ? 'product' : undefined,
     latestPerFolder,
+    hasReviewables: hasReviewablesFilter,
+    showProducts,
   })
 
   const resolveEntityArguments = useCallback(
     (entityType: 'version' | 'product'): QueryArguments => {
-      // remove sortBy based on excluded
-      const excludedFields = EXCLUDED_SORT_FIELDS[entityType]
-      let modifiedSortBy =
-        resolvedSortBy && excludedFields.some((field) => resolvedSortBy.includes(field))
-          ? undefined
-          : resolvedSortBy
-
-      if (modifiedSortBy?.startsWith('attrib_')) {
-        // replace _ with .
-        modifiedSortBy = modifiedSortBy.replace('attrib_', 'attrib.')
-      }
-
       const modifiedFeaturedVersionOrder = featuredVersionOrder?.length
         ? featuredVersionOrder
         : DEFAULT_FEATURED_ORDER
@@ -504,7 +562,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const { versionIds, productIds, ...restQueryArgs } = queryArgs
       const args: any = {
         ...restQueryArgs,
-        sortBy: modifiedSortBy,
+        ...sortArgs[entityType],
       }
 
       if (entityType === 'version') {
@@ -544,7 +602,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     },
     [
       queryArgs,
-      resolvedSortBy,
+      sortArgs,
       featuredVersionOrder,
       featuredVersionFilter,
       latestPerFolder,
@@ -562,6 +620,63 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [resolveEntityArguments],
   )
 
+  // what the table shows, for addon slots: the values the queries below are built from
+  const groupByDesc = columns.groupBy?.desc ?? false
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    const versionArgs: VersionQueryArgs = {
+      featuredOnly: featuredVersionFilter?.length
+        ? (featuredVersionFilter as VersionQueryArgs['featuredOnly'])
+        : undefined,
+      latestPerFolder: latestPerFolder || undefined,
+      hasReviewables: hasReviewablesFilter,
+    }
+    // the versions query uses version ids over product ids when a list panel gives both
+    const versionIds = nonEmptyIds(scopedVersionIds)
+    const ids = {
+      task: nonEmptyIds(scopedTaskIds),
+      product: versionIds ? undefined : nonEmptyIds(scopedProductIds),
+      version: versionIds,
+    }
+    return {
+      entityType: 'version',
+      filters: toTableStateFilters({
+        version: combinedVersionFilter.filter,
+        product: combinedProductFilter.filter,
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+        representation: combinedRepresentationFilter.filter,
+      }),
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedSlicerFolderIds, true)),
+      ids: ids.task || ids.product || ids.version ? ids : undefined,
+      showHierarchy: !!showProducts,
+      groupBy: groupBy ? { id: groupBy, desc: groupByDesc } : undefined,
+      queryArgs: Object.values(versionArgs).some((value) => value !== undefined)
+        ? { version: versionArgs }
+        : undefined,
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedVersionFilter.filter,
+    combinedProductFilter.filter,
+    combinedTaskFilter.filter,
+    combinedFolderFilter.filter,
+    combinedRepresentationFilter.filter,
+    selectedSlicerFolderIds,
+    getChildFolderIds,
+    scopedTaskIds,
+    scopedProductIds,
+    scopedVersionIds,
+    showProducts,
+    groupBy,
+    groupByDesc,
+    featuredVersionFilter,
+    latestPerFolder,
+    hasReviewablesFilter,
+  ])
+
   // QUERY: Get all products when showing products
   const {
     data: productsData,
@@ -569,13 +684,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
     skip: !showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
-      desc: sortDesc,
+      desc: sortArgs.product.desc,
     },
   })
 
@@ -586,13 +702,14 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isLoading: isLoadingVersions,
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
     skip: showProducts || isLoadingSlicerData,
     initialPageParam: {
       cursor: '',
-      desc: sortDesc,
+      desc: sortArgs.version.desc,
     },
   })
 
@@ -600,22 +717,29 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
+    folderIds: slicerFolderIds,
     modules,
     versionArguments,
     expanded,
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
+  const isLoadingQueryArgs = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
+  // switching grouping keeps the query args, so cover the source that just became active
+  const isLoadingTable =
+    isLoadingQueryArgs ||
+    (groupBy ? isLoadingGroups : showProducts ? isLoadingProducts : isLoadingVersions)
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
@@ -630,6 +754,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     productIds: expandedIds,
     versionFilter: combinedVersionFilter.filterString,
     folderFilter: combinedFolderFilter.filterString,
+    representationFilter: versionArguments.representationFilter,
     sortBy: versionArguments.sortBy,
     desc: versionArguments.desc,
     featuredOnly: versionArguments.featuredOnly,
@@ -768,15 +893,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
     }
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      dispatch(refreshListsMembership(projectName)),
+    ])
 
     await Promise.all(
       queriesToRefresh.map(({ endpointName, args }) =>
@@ -788,12 +915,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const value: VersionsDataContextValue = {
     versionFilter,
     productFilter,
+    productArguments,
+    versionArguments,
     columnStatsArgs: {
       projectName,
       productFilter: combinedProductFilter.filterString,
       versionFilter: combinedVersionFilter.filterString,
       taskFilter: entityListTaskFilterString,
       folderFilter: combinedFolderFilter.filterString,
+      representationFilter: combinedRepresentationFilter.filterString,
       // empty array means "match nothing" backend-side — omit when no slice
       folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
       versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
@@ -832,5 +962,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     error,
   }
 
-  return <VersionsDataContext.Provider value={value}>{children}</VersionsDataContext.Provider>
+  return (
+    <VersionsDataContext.Provider value={value}>
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
+    </VersionsDataContext.Provider>
+  )
 }

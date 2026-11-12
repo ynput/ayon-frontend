@@ -4,12 +4,12 @@ const updateListAttributes = getListsAttributes.enhanceEndpoints({
   endpoints: {
     setEntityListAttributesDefinition: {
       onQueryStarted: async (arg, { dispatch, queryFulfilled }) => {
-        const { listId, projectName, payload } = arg
+        const { entityListId, projectName, payload } = arg
 
         const patchResult = dispatch(
           getListsAttributes.util.updateQueryData(
             'getEntityListAttributesDefinition',
-            { listId, projectName },
+            { entityListId, projectName },
             (draft) => payload,
           ),
         )
@@ -20,7 +20,9 @@ const updateListAttributes = getListsAttributes.enhanceEndpoints({
           patchResult.undo()
         }
       },
-      invalidatesTags: (_r, _e, { listId }) => [{ type: 'entityListAttribute', id: listId }],
+      invalidatesTags: (_r, _e, { entityListId }) => [
+        { type: 'entityListAttribute', id: entityListId },
+      ],
     },
   },
 })

@@ -93,6 +93,7 @@ export const useEntityFields = ({
         data: {
           type: 'list_of_strings',
           title: 'Tags',
+          widget: 'tags',
           enum: tags.map((tag) => ({
             value: tag.name,
             label: tag.name,
@@ -155,7 +156,15 @@ export const useEntityFields = ({
       readonly: true,
       data: {
         type: 'string',
-        title: upperFirst(field as string),
+        title:
+          (
+            {
+              createdAt: 'Created at',
+              createdBy: 'Created by',
+              updatedAt: 'Updated at',
+              updatedBy: 'Updated by',
+            } as Record<string, string>
+          )[field] || upperFirst(field as string),
       },
     }))
 

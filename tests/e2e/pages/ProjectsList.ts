@@ -16,8 +16,20 @@ export class ProjectsList {
     await input.fill(text)
   }
 
-  row(name: string) {
-    return this.page.getByRole('row').filter({ hasText: name })
+  row(name: string, { exact = false } = {}) {
+    return this.page
+      .getByRole('row')
+      .filter(exact ? { has: this.page.getByText(name, { exact: true }) } : { hasText: name })
+  }
+
+  // FLAG: SimpleTable rows have no aria-selected; being selected is a class of the cell content
+  async expectSelection(selected: string[], notSelected: string[] = []) {
+    for (const name of selected) {
+      await expect(this.row(name, { exact: true }).locator('.selected')).toBeVisible()
+    }
+    for (const name of notSelected) {
+      await expect(this.row(name, { exact: true }).locator('.selected')).toBeHidden()
+    }
   }
 
   async select(name: string) {

@@ -45,7 +45,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
 
   const { data: listAttributesData = [], isFetching } = useGetEntityListAttributesDefinitionQuery(
     {
-      listId: selectedList?.id || '',
+      entityListId: selectedList?.id || '',
       projectName,
     },
     { skip: !selectedList?.id },
@@ -84,7 +84,7 @@ export const ListsAttributesProvider = ({ children }: ListsAttributesProviderPro
   const updateAttributesHelper = useCallback(
     async (attributes: EntityListAttributeDefinition[]) => {
       return await updateAttributes({
-        listId: selectedList?.id || '',
+        entityListId: selectedList?.id || '',
         projectName,
         payload: attributes,
       }).unwrap()

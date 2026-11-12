@@ -84,6 +84,8 @@ export interface ViewsContextValue {
 
   // Actions (shared)
   resetWorkingView: () => Promise<void>
+  // set with `controlled`: hands the changed settings to the caller instead of saving a view
+  updateControlledSettings?: (updated: ViewSettings) => void
 
   // api
   api: typeof viewsQueries
@@ -92,25 +94,47 @@ export interface ViewsContextValue {
 
 const DEFAULT_VIEW_ALIAS = 'view'
 
+// Stable empty list, so skipped queries do not hand consumers a new array on every render
+const NO_VIEWS: ViewListItemModel[] = []
+
 export interface ViewsProviderProps {
   children: ReactNode
   viewType?: string
   viewAlias?: string
   projectName?: string
   dispatch?: any
+  // Opt out of loading data the consumer does not use. Both default to true.
+  // The default and working views are always loaded.
+  include?: {
+    viewsList?: boolean // every view of the type, for the views menu
+    baseViews?: boolean // project and studio base views
+  }
   debug?: {
     powerLicense?: boolean
+  }
+  // Settings held by the caller instead of a saved view: no view loads, viewType is ignored.
+  // onChange gets only the changed keys; the caller merges them.
+  controlled?: {
+    settings: ViewSettings | undefined
+    onChange: (changed: ViewSettings) => void
   }
 }
 
 export const ViewsProvider: FC<ViewsProviderProps> = ({
   children,
-  viewType,
+  viewType: viewTypeProp,
   viewAlias = DEFAULT_VIEW_ALIAS,
   projectName,
   dispatch,
+  include,
   debug,
+  controlled,
 }) => {
+  // controlled settings never load or save a view
+  const viewType = controlled ? undefined : viewTypeProp
+  const includeViewsList = include?.viewsList ?? true
+  const includeBaseViews = include?.baseViews ?? true
+
   let { powerLicense } = usePowerpack()
   if (debug?.powerLicense !== undefined) {
     console.warn('Using debug power license:', debug.powerLicense)
@@ -158,9 +182,9 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   })
 
   // Fetch views data and filter out base views
-  const { currentData: viewsListRaw = [], isLoading: isLoadingViewsList } = useListViewsQuery(
+  const { currentData: viewsListRaw = NO_VIEWS, isLoading: isLoadingViewsList } = useListViewsQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeViewsList },
   )
 
   // Filter out base views from the list
@@ -194,11 +218,11 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // Fetch both project and studio base views
   const { currentData: projectBaseView, isLoading: isLoadingProjectBaseView } = useGetBaseViewQuery(
     { projectName: projectName, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
   const { currentData: studioBaseView, isLoading: isLoadingStudioBaseView } = useGetBaseViewQuery(
     { projectName: undefined, viewType: viewType as string },
-    { skip: !viewType },
+    { skip: !viewType || !includeBaseViews },
   )
 
   // isLoadingViews is true ONLY on the very first fetch (no cached data yet).
@@ -214,8 +238,12 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   const workingSettings = workingView?.settings
 
   //   which settings to use for the view
-  const viewSettings =
-    selectedView?.id === WORKING_VIEW_ID ? workingSettings : selectedView?.settings
+  const viewSettings = controlled
+    ? controlled.settings
+    : selectedView?.id === WORKING_VIEW_ID
+    ? workingSettings
+    : selectedView?.settings
+  const updateControlledSettings = controlled?.onChange
 
   // is the working view selected?
   const isViewWorking = selectedView?.id === workingView?.id
@@ -278,6 +306,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
+    // the caller holds the settings: there is no working view to reset
+    if (updateControlledSettings) return
     try {
       await onResetWorkingView({
         existingWorkingViewId: workingView?.id,
@@ -289,7 +319,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     } catch (error) {
       console.error('Failed to reset view:', error)
     }
-  }, [workingView, onResetWorkingView, selectedView, setSelectedView, setViewSettingsChanged])
+  }, [
+    updateControlledSettings,
+    workingView,
+    onResetWorkingView,
+    selectedView,
+    setSelectedView,
+    setViewSettingsChanged,
+  ])
 
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
@@ -357,6 +394,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     onDeleteView,
     // shared actions
     resetWorkingView,
+    updateControlledSettings,
     // api
     api: viewsQueries,
     dispatch,

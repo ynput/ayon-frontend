@@ -323,6 +323,7 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           seekToFrame={seekToFrame}
           frameCount={frameCount}
           currentFrame={currentFrame}
+          getCurrentFrame={() => Math.round((videoRef.current?.currentTime ?? 0) * frameRate)}
           setMuted={handleMuteToggle}
           {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
         />

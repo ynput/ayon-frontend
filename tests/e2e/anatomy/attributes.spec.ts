@@ -1,7 +1,8 @@
 import { Page } from '@playwright/test'
 import { expect, test } from '../fixtures'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
-import { menuItem, toast } from '../support/ui'
+import { AttributesPage } from '../pages/AttributesPage'
 import { DetailsPanel } from '../pages/DetailsPanel'
 import { OverviewPage } from '../pages/OverviewPage'
 import { ProductsPage } from '../pages/ProductsPage'
@@ -59,28 +60,45 @@ test.describe('project anatomy: attributes and roots', () => {
     ).toBeVisible()
   })
 
-  // FLAG (backend bug): saving project attributes leaves the cached folder list (attrib=true) stale
-  // fixed in ynput/ayon-backend#1169, switch back to test() once it is merged
-  test.fixme(
-    'folders inherit a project attribute changed in the anatomy',
-    async ({ page, api, projectName }) => {
-      const { folder } = await seedShot(api, projectName)
-      const manager = new ProjectsManagerPage(page)
+  test('folders at every level inherit a project attribute changed in the anatomy', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { folder } = await seedShot(api, projectName)
+    const child = await api.createFolder(projectName, { name: 'fg', parentId: folder.id })
+    const overridden = await api.createFolder(projectName, {
+      name: 'bg',
+      parentId: folder.id,
+      attrib: { resolutionWidth: 1280 },
+    })
+    const manager = new ProjectsManagerPage(page)
 
-      await setResolutionWidth(manager, projectName, 4096)
+    await setResolutionWidth(manager, projectName, 4096)
 
-      await expect
-        .poll(async () => (await api.getFolder(projectName, folder.id)).attrib.resolutionWidth)
-        .toBe(4096)
-      const list = await api.get(`/api/projects/${projectName}/folders`, { attrib: true })
-      expect(list.folders[0].attrib.resolutionWidth).toBe(4096)
-      const overview = await openOverviewWithWidth(page, api, projectName)
-      await expect(overview.cell('sh010', 'attrib_resolutionWidth')).toHaveText('4096')
+    await expect
+      .poll(async () =>
+        (
+          await Promise.all(
+            [folder, child, overridden].map((f) => api.getFolder(projectName, f.id)),
+          )
+        ).map((f) => f.attrib.resolutionWidth),
+      )
+      .toEqual([4096, 4096, 1280])
+    const list = await api.get(`/api/projects/${projectName}/folders`, { attrib: true })
+    expect(
+      Object.fromEntries(list.folders.map((f: any) => [f.name, f.attrib.resolutionWidth])),
+    ).toEqual({ sh010: 4096, fg: 4096, bg: 1280 })
+    const overview = await openOverviewWithWidth(page, api, projectName)
+    for (const name of ['sh010', 'fg']) {
+      await expect(overview.cell(name, 'attrib_resolutionWidth')).toHaveText('4096')
       await expect(
-        overview.cell('sh010', 'attrib_resolutionWidth').locator('.inherited'),
+        overview.cell(name, 'attrib_resolutionWidth').locator('.inherited'),
       ).toBeVisible()
-    },
-  )
+    }
+    await expect(overview.cell('bg', 'attrib_resolutionWidth')).toHaveText('1280')
+    await expect(overview.cell('bg', 'attrib_resolutionWidth').locator('.inherited')).toHaveCount(0)
+  })
 
   test('a folder created in the overview starts with the project attribute values', async ({
     page,
@@ -151,5 +169,32 @@ test.describe('project anatomy: attributes and roots', () => {
     const path = '/mnt/e2e/projects/shots/sh010/plate.exr'
     await expect(toast(page, `Copied To Clipboard: ${path}`)).toBeVisible()
     expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(path)
+  })
+})
+
+test.describe('attribute library', () => {
+  test('edit an attribute that is not selected from its context menu', async ({ page, api }) => {
+    const { attributes } = await api.get('/api/attributes')
+    const titleOf = (name: string) => attributes.find((a: any) => a.name === name).data.title
+    const library = new AttributesPage(page)
+    await library.goto()
+    await library.filter('resolution')
+    await library.select('resolutionHeight')
+
+    await library.row('resolutionWidth').click({ button: 'right' })
+
+    await expect(menuItem(page, 'Edit')).toBeVisible()
+    await library.expectSelected('resolutionHeight')
+    await library.expectSelected('resolutionWidth', false)
+
+    await menuItem(page, 'Edit').click()
+
+    const editor = dialog(page, titleOf('resolutionWidth'))
+    await expect(editor).toBeVisible()
+    await expect(editor.getByRole('textbox').first()).toHaveValue(titleOf('resolutionWidth'))
+    await expect(dialog(page, titleOf('resolutionHeight'))).toBeHidden()
+    await editor.getByRole('button', { name: 'close', exact: true }).click()
+    await expect(editor).toBeHidden()
+    await expect(page.getByText('Unsaved Changes')).toBeHidden()
   })
 })

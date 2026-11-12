@@ -53,6 +53,26 @@ test.describe('markdown in comments', () => {
       ])
   })
 
+  test('a link to a page on this server opens it without reloading the app', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const { task } = await setup(api, projectName)
+    const url = `/projects/${projectName}/products`
+    await api.createComment(projectName, 'task', task.id, `Compare with [the products](${url})`)
+    const panel = await openTask(page, projectName)
+    const link = panel.comment('Compare with').getByRole('link', { name: 'the products' })
+    await expect(link).toHaveAttribute('href', url)
+    // a full page load would lose this marker
+    await page.evaluate(() => ((window as any).e2eSamePage = true))
+
+    await link.click()
+
+    await expect(page).toHaveURL(url)
+    expect(await page.evaluate(() => (window as any).e2eSamePage)).toBe(true)
+  })
+
   test('editing a comment keeps its formatting', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
     const body = 'Before delivery:\n\n- Bump **exposure** by one stop\n- Run `denoise` again'

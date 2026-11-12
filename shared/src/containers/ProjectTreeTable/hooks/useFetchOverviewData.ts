@@ -13,6 +13,7 @@ import type {
 } from '@shared/api'
 import { useGroupedPagination } from '@shared/hooks/useGroupedPagination'
 import { getGroupByDataType } from '@shared/util'
+import { buildSortArgs } from '@shared/util/sortingHelpers'
 import { EditorTaskNode, FolderNodeMap, MatchingFolder, TaskNodeMap } from '../types/table'
 import { useEffect, useMemo, useState } from 'react'
 import { ExpandedState, SortingState } from '@tanstack/react-table'
@@ -25,10 +26,14 @@ import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
-import { useGetEntityLinksQuery } from '@shared/api'
+import { useGetEntityLinksInBatchesQuery } from '@shared/api'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
-import { refreshActiveAndPurgeOthers, refreshOtherActiveQueries } from '@shared/api'
+import {
+  refreshActiveAndPurgeOthers,
+  refreshListsMembership,
+  refreshOtherActiveQueries,
+} from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
 
@@ -86,6 +91,15 @@ type Params = {
   taskStatsUninitialized?: boolean
   dispatch: ThunkDispatch<any, any, UnknownAction>
 }
+
+// sortBy and desc of the overview's task list queries
+export const getTasksSortArgs = (sorting: SortingState, showHierarchy: boolean) =>
+  buildSortArgs(
+    sorting.map((sort) => ({
+      key: getColumnSortKey(sort.id, showHierarchy, 'task')?.replace('_', '.'),
+      desc: sort.desc,
+    })),
+  )
 
 export const useFetchOverviewData = ({
   projectName,
@@ -279,11 +293,15 @@ export const useFetchOverviewData = ({
     data: foldersLinks = [],
     isUninitialized: isUninitializedFoldersLinks,
     isFetching: isFetchingFoldersLinks,
-  } = useGetEntityLinksQuery(foldersLinksArgs, { skip: isLoadingViews || skipLinks })
+  } = useGetEntityLinksInBatchesQuery(foldersLinksArgs, {
+    skip: isLoadingViews || skipLinks,
+    priorityIds: debouncedVisibleEntityIds,
+  })
 
   // create a map of folders by id for efficient lookups
   const foldersMap: FolderNodeMap = useMemo(() => {
     const map = new Map()
+    const linksById = new Map(foldersLinks.map((entity) => [entity.id, entity.links]))
 
     const addExtraDataToFolder = (folder: FolderListItem) => {
       // add any extra data to folder
@@ -291,7 +309,7 @@ export const useFetchOverviewData = ({
         ...folder,
         entityId: folder.id,
         entityType: 'folder',
-        links: foldersLinks?.find((link) => link.id === folder.id)?.links || [],
+        links: linksById.get(folder.id) || [],
       }
       return folderWithExtraData
     }
@@ -402,8 +420,7 @@ export const useFetchOverviewData = ({
   }, [sorting, tasksListCursor])
 
   // Create sort params for infinite query
-  const singleSort = { ...sorting[0] }
-  const taskSortId = getColumnSortKey(singleSort?.id, showHierarchy, 'task')
+  const { sortBy: tasksSortBy, desc: tasksSortDesc } = getTasksSortArgs(sorting, showHierarchy)
   const tasksFolderIdsParams = selectedFolders.length
     ? Array.from(
         new Set([...foldersMap.keys(), ...(excludeSelectedFolders ? selectedFolders : [])]),
@@ -439,8 +456,8 @@ export const useFetchOverviewData = ({
     search: taskFilters.search,
     folderIds: getTasksListFolderIds(),
     taskIds: taskIds?.length ? taskIds : undefined,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     showComments,
     includeFolderChildren: !getTasksDirectlyUnderFolder,
   }
@@ -463,7 +480,7 @@ export const useFetchOverviewData = ({
       (((showHierarchy && !getTasksDirectlyUnderFolder) || isFlatFolderView) && !taskIds?.length),
     initialPageParam: {
       cursor: '',
-      desc: !!singleSort?.desc,
+      desc: tasksSortDesc,
     },
   })
 
@@ -516,8 +533,8 @@ export const useFetchOverviewData = ({
   const groupTasksArgs: GetGroupedTasksListArgs = {
     projectName,
     groups: groupQueries,
-    sortBy: taskSortId ? taskSortId.replace('_', '.') : undefined,
-    desc: !!singleSort?.desc,
+    sortBy: tasksSortBy,
+    desc: tasksSortDesc,
     search: taskFilters.search,
     folderFilter: folderFilters.filterString,
     folderIds: tasksFolderIdsParams,
@@ -573,8 +590,9 @@ export const useFetchOverviewData = ({
     data: tasksLinks = [],
     isUninitialized: isUninitializedTasksLinks,
     isFetching: isFetchingTasksLinks,
-  } = useGetEntityLinksQuery(tasksLinksArgs, {
+  } = useGetEntityLinksInBatchesQuery(tasksLinksArgs, {
     skip: isLoadingViews || visibleTasks.size === 0 || skipLinks,
+    priorityIds: debouncedVisibleEntityIds,
   })
 
   // Compute entity IDs whose links are currently loading (in query but not yet in the cache result)
@@ -622,17 +640,17 @@ export const useFetchOverviewData = ({
   const { tasksMap, tasksByFolderMap } = useMemo(() => {
     const tasksMap: TaskNodeMap = new Map()
     const tasksByFolderMap: TasksByFolderMap = new Map()
+    const linksById = new Map(tasksLinks.map((entity) => [entity.id, entity.links]))
 
     const addExtraDataToTask = (task: EditorTaskNode) => ({
       ...task,
       entityId: task.id,
       entityType: 'task' as const,
-      links: tasksLinks?.find((link) => link.id === task.id)?.links || [],
+      links: linksById.get(task.id) || [],
     })
 
     for (const task of resolvedTasks) {
       const taskId = task.id as string
-      const folderId = task.folderId as string
 
       if (tasksMap.has(taskId)) {
         // merge specific data if the task already exists
@@ -648,15 +666,16 @@ export const useFetchOverviewData = ({
       } else {
         tasksMap.set(taskId, addExtraDataToTask(task))
       }
+    }
 
-      if (tasksByFolderMap.has(folderId)) {
-        // dedup like tasksMap — resolvedTasks can contain the same task twice
-        // (overlapping infinite-query pages, or a task in multiple groups)
-        const folderTaskIds = tasksByFolderMap.get(folderId)!
-        if (!folderTaskIds.includes(taskId)) folderTaskIds.push(taskId)
-      } else {
-        tasksByFolderMap.set(folderId, [taskId])
-      }
+    // A task goes under the folder of its merged data only. resolvedTasks can contain the same task
+    // twice, from sources that briefly disagree on its folder (e.g. right after a move), and two
+    // rows with the same id would leave one behind in the table.
+    for (const [taskId, task] of tasksMap) {
+      const folderId = task.folderId as string
+      const folderTaskIds = tasksByFolderMap.get(folderId)
+      if (folderTaskIds) folderTaskIds.push(taskId)
+      else tasksByFolderMap.set(folderId, [taskId])
     }
 
     return { tasksMap, tasksByFolderMap }
@@ -740,15 +759,17 @@ export const useFetchOverviewData = ({
     }
 
     // refresh the active queries
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
+    await Promise.all([
+      ...queriesToRefresh.map(({ endpointName, args }) =>
         dispatch(
           refreshActiveAndPurgeOthers(endpointName, args, {
             refreshOtherActiveQueries: false,
           }),
         ).unwrap(),
       ),
-    )
+      // the Lists and Review sessions columns
+      isFullSync && dispatch(refreshListsMembership(projectName)),
+    ])
 
     // then later on refresh any other caches
     queriesToRefresh.map(({ endpointName, args }) =>

@@ -60,19 +60,19 @@ export type YnputCloudSubscriptionModel = {
   /** Type of the subscription */
   productType: string
   /** End date of the trial */
-  trialEnd?: string
+  trialEnd?: string | null
 }
 export type YnputCloudInfoModel = {
   /** Ynput cloud instance ID */
   instanceId: string
   /** Name of the instance */
-  instanceName?: string
+  instanceName?: string | null
   /** Organization ID */
-  orgId?: string
+  orgId?: string | null
   /** Name of the organization */
-  orgName?: string
+  orgName?: string | null
   /** Name of the organization */
-  orgTitle?: string
+  orgTitle?: string | null
   /** Is the instance managed by Ynput Cloud? */
   managed?: boolean
   /** Collect saturated metrics */
@@ -81,11 +81,17 @@ export type YnputCloudInfoModel = {
   subscriptions?: YnputCloudSubscriptionModel[]
   /** Is the instance connected to Ynput Cloud? */
   connected?: boolean
+  /** Public URL of the instance known to Ynput Cloud */
+  serverUrl?: string | null
+  /** AYON is in offline mode */
+  offlineMode?: boolean
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -96,6 +102,8 @@ export type YnputConnectRequestModel = {
 }
 export type UserVerificationResponse = {
   available?: boolean
-  detail?: string
-  data?: Record<string, any>
+  detail?: string | null
+  data?: {
+    [key: string]: any
+  } | null
 }

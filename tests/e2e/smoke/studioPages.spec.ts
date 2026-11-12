@@ -2,9 +2,8 @@ import { AccountPage } from '../pages/AccountPage'
 import { AnatomyPresetsPage } from '../pages/AnatomyPresetsPage'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { InboxPage } from '../pages/InboxPage'
-import { adminCredentials } from '../support/env'
+import { adminCredentials, signInAs } from '@ynput/ayon-e2e'
 import { watchPageHealth } from '../support/pageHealth'
-import { signInAs } from '../support/session'
 import { button, column, defineRouteTests, expect, heading, test, visible } from './smokeFixtures'
 
 const manager = (tab: string) => (d: { projectName: string }) =>
@@ -36,11 +35,7 @@ test.describe('smoke: dashboard', () => {
     {
       name: 'projects',
       path: () => '/dashboard/projects',
-      ready: (page) =>
-        visible(
-          button(page, 'Create new project'),
-          page.getByRole('button', { name: 'Label / Name', exact: true }),
-        ),
+      ready: (page) => visible(button(page, 'Create new project'), column(page, 'Label / Name')),
     },
   ])
 })
@@ -181,7 +176,7 @@ test.describe('smoke: studio pages', () => {
     {
       name: 'events',
       path: () => '/events',
-      ready: (page) => visible(heading(page, 'Events Overview'), column(page, 'Topic')),
+      ready: (page) => visible(button(page, 'Table'), button(page, 'Timeline')),
     },
     {
       name: 'services',

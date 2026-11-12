@@ -1,5 +1,5 @@
 import { expect, test } from '../fixtures'
-import { uniqueName } from '../support/names'
+import { uniqueName } from '@ynput/ayon-e2e'
 import { SecretsPage } from '../pages/SecretsPage'
 
 test.describe('secrets', () => {

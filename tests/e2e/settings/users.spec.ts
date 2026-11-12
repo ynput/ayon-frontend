@@ -1,8 +1,8 @@
 import { expect, test } from '../fixtures'
-import { uniqueName } from '../support/names'
+import { signInAs, uniqueName } from '@ynput/ayon-e2e'
+import { apiAs } from '../support/api'
 import { UsersSettingsPage } from '../pages/UsersSettingsPage'
 import { LoginPage } from '../pages/LoginPage'
-import { apiAs, signInAs } from '../support/session'
 import { randomBytes } from 'crypto'
 
 test.describe('users settings', () => {
@@ -32,15 +32,28 @@ test.describe('users settings', () => {
     }
   })
 
-  test('delete a user', async ({ page, api, createUser }) => {
-    const { name } = await createUser()
+  test('delete a user that is not selected from its context menu', async ({
+    page,
+    api,
+    createUser,
+  }) => {
+    const keep = await createUser()
+    const target = await createUser()
     const users = new UsersSettingsPage(page)
     await users.goto()
+    await users.select(keep.name)
 
-    await users.deleteUser(name)
+    await users.openContextMenu(target.name)
 
-    await expect(users.row(name)).toBeHidden()
-    await expect.poll(() => api.userExists(name)).toBe(false)
+    await users.expectSelected(keep.name)
+    await users.expectSelected(target.name, false)
+
+    await users.deleteUserFromMenu(target.name)
+
+    await expect(users.row(target.name)).toBeHidden()
+    await expect(users.row(keep.name)).toBeVisible()
+    await expect.poll(() => api.userExists(target.name)).toBe(false)
+    expect(await api.userExists(keep.name)).toBe(true)
   })
 
   test('delete several users at once', async ({ page, api, createUser }) => {
@@ -75,6 +88,12 @@ test.describe('users settings', () => {
     await users.goto()
     await users.select(selectedA.name)
     await users.addToSelection(selectedB.name)
+
+    await users.openContextMenu(target.name)
+
+    await users.expectSelected(selectedA.name)
+    await users.expectSelected(selectedB.name)
+    await users.expectSelected(target.name, false)
 
     await users.setPasswordFromMenu(target.name, newPassword)
 
@@ -132,5 +151,130 @@ test.describe('users settings', () => {
     await expect.poll(async () => (await api.getUser(user.name)).data.isManager).toBe(true)
     expect((await api.getUser(user.name)).data.isAdmin).toBeFalsy()
     await expect(users.row(user.name)).toContainText('Manager')
+  })
+
+  test('typing in the filter keeps unsaved changes in the user panel', async ({
+    page,
+    createUser,
+  }) => {
+    const user = await createUser()
+    const users = new UsersSettingsPage(page)
+    await users.goto()
+    await users.select(user.name)
+    await users.setActive(false)
+
+    await users.filter(user.name)
+    await expect(users.row(user.name)).toBeVisible()
+    await expect(users.activeRow.getByRole('checkbox')).not.toBeChecked()
+  })
+
+  test.describe('with thousands of users', () => {
+    const COUNT = 3000
+    const bulkName = (i: number) => `bulk_${String(i).padStart(4, '0')}`
+    const last = bulkName(COUNT - 1)
+
+    test.beforeEach(async ({ page }) => {
+      // the real users plus mocked ones: creating this many would take minutes
+      let bulk = Array.from({ length: COUNT }, (_, i) => ({
+        node: {
+          name: bulkName(i),
+          active: true,
+          accessGroups: '{}',
+          defaultAccessGroups: [],
+          allAttrib: JSON.stringify({ fullName: `Bulk ${i}`, email: `${bulkName(i)}@example.com` }),
+        },
+      }))
+      await page.route('**/graphql', async (route) => {
+        if (!/query UserList\s*\{/.test(route.request().postData() ?? '')) return route.continue()
+        const response = await route.fetch()
+        const json = await response.json()
+        json.data.users.edges.push(...bulk)
+        await route.fulfill({ response, json })
+      })
+      // deleting a mocked user only removes it from the mocked list
+      await page.route('**/api/users/bulk_*', (route) => {
+        if (route.request().method() !== 'DELETE') return route.continue()
+        const name = new URL(route.request().url()).pathname.split('/').pop()
+        bulk = bulk.filter((edge) => edge.node.name !== name)
+        return route.fulfill({ status: 204 })
+      })
+    })
+
+    test('filter, scroll and shift select', async ({ page }) => {
+      const users = new UsersSettingsPage(page)
+      await users.goto({ filter: '' })
+      await expect(users.row(bulkName(0))).toBeVisible()
+      const input = page.getByPlaceholder('Filter users...')
+
+      // every typed character is kept, and the list follows
+      await input.click()
+      await page.keyboard.type('bulk_029', { delay: 30 })
+      await expect(input).toHaveValue('bulk_029')
+      await expect(page).toHaveURL(/search-users=bulk_029/)
+      await expect(users.row(bulkName(290))).toBeVisible()
+      await expect(page.getByRole('row').filter({ hasText: 'bulk_' })).toHaveCount(10)
+
+      // after clearing, the list scrolls to the end again
+      await users.filter('')
+      await users.row(bulkName(1)).click()
+      await expect(async () => {
+        await page.getByRole('row').filter({ hasText: 'bulk_' }).first().hover()
+        await page.mouse.wheel(0, 50_000)
+        await expect(users.row(last)).toBeVisible({ timeout: 500 })
+      }).toPass({ intervals: [0] })
+
+      // a shift click selects past the rendered rows, and the selection survives filtering
+      await users.row(last).click({ modifiers: ['Shift'] })
+      await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+      await users.filter('bulk_029')
+      await users.expectSelected(bulkName(290))
+      await expect(page.getByText(`${COUNT - 1} Users Selected`)).toBeVisible()
+
+      // after a sort, a shift click range still starts at the clicked user
+      await users.filter('bulk_000')
+      await users.row(bulkName(2)).click()
+      const usernameHeader = page.getByRole('columnheader', { name: 'Username' })
+      await usernameHeader.click()
+      await usernameHeader.click()
+      await expect(usernameHeader).toHaveAttribute('aria-sort', 'descending')
+      await users.row(bulkName(4)).click({ modifiers: ['Shift'] })
+      await expect(page.getByText('3 Users Selected')).toBeVisible()
+    })
+
+    test('deleting a user keeps the scroll position and the shift click anchor', async ({
+      page,
+    }) => {
+      const users = new UsersSettingsPage(page)
+      await users.goto({ filter: '' })
+      await expect(users.row(bulkName(0))).toBeVisible()
+
+      const target = bulkName(1500)
+      // hovering a row in the loop would scroll it back into view
+      await users.row(bulkName(0)).hover()
+      await expect(async () => {
+        // less than the rendered rows, so the target is never skipped
+        await page.mouse.wheel(0, 1_500)
+        await expect(users.row(target)).toBeVisible({ timeout: 300 })
+      }).toPass({ intervals: [0] })
+
+      // the table remembers this click as the start of a shift click range
+      await users.row(bulkName(1499)).click()
+      const reloaded = page.waitForResponse((response) =>
+        /query UserList\s*\{/.test(response.request().postData() ?? ''),
+      )
+      await users.openContextMenu(target)
+      await users.deleteUserFromMenu(target)
+      await reloaded
+
+      await expect(users.row(target)).toBeHidden()
+      await expect(users.row(bulkName(1499))).toBeVisible()
+      await expect(users.row(bulkName(0))).toBeHidden()
+
+      // a shift click range still starts at the user clicked before the list reloaded
+      await users.row(bulkName(1502)).click({ modifiers: ['Shift'] })
+      await users.expectSelected(bulkName(1499))
+      await users.expectSelected(bulkName(1502))
+      await expect(page.getByText('3 Users Selected')).toBeVisible()
+    })
   })
 })

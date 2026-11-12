@@ -4,10 +4,10 @@ import { entityListsApi } from '@shared/api/generated'
 const getListsRestApiEnhanced = entityListsApi.enhanceEndpoints({
   endpoints: {
     getEntityListAttributesDefinition: {
-      providesTags: (result, _e, { listId }) =>
+      providesTags: (result, _e, { entityListId }) =>
         result
           ? [
-              { type: 'entityListAttribute', id: listId },
+              { type: 'entityListAttribute', id: entityListId },
               ...result.map((a) => ({ type: 'entityListAttribute', id: a.name })),
             ]
           : [{ type: 'entityListAttribute', id: 'LIST' }],

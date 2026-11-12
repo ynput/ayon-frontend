@@ -6,16 +6,11 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/files`,
         method: 'POST',
         headers: {
-          'x-file-id': queryArg['x-file-id'],
+          'X-File-ID': queryArg['X-File-ID'],
+          'X-Activity-ID': queryArg['X-Activity-ID'],
           'x-file-name': queryArg['x-file-name'],
-          'x-activity-id': queryArg['x-activity-id'],
           'content-type': queryArg['content-type'],
         },
-      }),
-    }),
-    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
       }),
     }),
     deleteProjectFile: build.mutation<DeleteProjectFileApiResponse, DeleteProjectFileApiArg>({
@@ -28,6 +23,11 @@ const injectedRtkApi = api.injectEndpoints({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
         method: 'HEAD',
+      }),
+    }),
+    getProjectFile: build.query<GetProjectFileApiResponse, GetProjectFileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}`,
       }),
     }),
     getProjectFileInfo: build.query<GetProjectFileInfoApiResponse, GetProjectFileInfoApiArg>({
@@ -51,6 +51,28 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/thumbnail`,
       }),
     }),
+    getProjectFileFilmstrip: build.query<
+      GetProjectFileFilmstripApiResponse,
+      GetProjectFileFilmstripApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/filmstrip`,
+        params: {
+          placeholder: queryArg.placeholder,
+        },
+      }),
+    }),
+    getProjectFileFilmstripPayload: build.query<
+      GetProjectFileFilmstripPayloadApiResponse,
+      GetProjectFileFilmstripPayloadApiArg
+    >({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/filmstrip/payload`,
+        params: {
+          v: queryArg.v,
+        },
+      }),
+    }),
     getProjectFileStill: build.query<GetProjectFileStillApiResponse, GetProjectFileStillApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/files/${queryArg.fileId}/still`,
@@ -67,15 +89,10 @@ export type UploadProjectFileApiResponse =
   /** status 201 Successful Response */ CreateFileResponseModel
 export type UploadProjectFileApiArg = {
   projectName: string
-  'x-file-id'?: string
+  'X-File-ID'?: string | null
+  'X-Activity-ID'?: string | null
   'x-file-name': string
-  'x-activity-id'?: string
   'content-type': string
-}
-export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
-export type GetProjectFileApiArg = {
-  projectName: string
-  fileId: string
 }
 export type DeleteProjectFileApiResponse = /** status 200 Successful Response */ any
 export type DeleteProjectFileApiArg = {
@@ -84,6 +101,11 @@ export type DeleteProjectFileApiArg = {
 }
 export type GetProjectFileHeadApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileHeadApiArg = {
+  projectName: string
+  fileId: string
+}
+export type GetProjectFileApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileApiArg = {
   projectName: string
   fileId: string
 }
@@ -102,6 +124,19 @@ export type GetProjectFileThumbnailApiArg = {
   projectName: string
   fileId: string
 }
+export type GetProjectFileFilmstripApiResponse =
+  /** status 200 Successful Response */ FilmstripModel
+export type GetProjectFileFilmstripApiArg = {
+  projectName: string
+  fileId: string
+  placeholder?: 'empty' | 'none'
+}
+export type GetProjectFileFilmstripPayloadApiResponse = /** status 200 Successful Response */ any
+export type GetProjectFileFilmstripPayloadApiArg = {
+  projectName: string
+  fileId: string
+  v?: string | null
+}
 export type GetProjectFileStillApiResponse = /** status 200 Successful Response */ any
 export type GetProjectFileStillApiArg = {
   projectName: string
@@ -115,6 +150,8 @@ export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
@@ -123,4 +160,15 @@ export type FileInfo = {
   size: number
   filename?: string
   contentType?: string
+  mediaInfo?: {
+    [key: string]: any
+  } | null
+}
+export type FilmstripModel = {
+  fileId: string
+  url: string
+  frames: number
+  columns: number
+  frameWidth: number
+  frameHeight: number
 }

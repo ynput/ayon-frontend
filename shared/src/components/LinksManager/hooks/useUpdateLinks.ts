@@ -1,5 +1,5 @@
 import { useCreateEntityLinkMutation, useDeleteEntityLinkMutation } from '@shared/api'
-import { useCellEditing } from '@shared/containers/ProjectTreeTable/context/cell-editing'
+import { useOptionalCellEditing } from '@shared/containers/ProjectTreeTable/context/cell-editing'
 import { useCallback } from 'react'
 import {
   addMultipleLinks,
@@ -36,7 +36,8 @@ const useUpdateLinks = ({
   targetEntityType,
   linkType,
 }: Props) => {
-  const { history } = useCellEditing()
+  // undo history only exists inside the project table
+  const history = useOptionalCellEditing()?.history
 
   const [deleteLink] = useDeleteEntityLinkMutation()
   const [addLink] = useCreateEntityLinkMutation()

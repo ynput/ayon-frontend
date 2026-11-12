@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test'
-import { dialog, menuItem, toast } from '../support/ui'
+import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { DetailsPanel } from './DetailsPanel'
+import { SearchFilterBar } from './SearchFilterBar'
 
 /**
  * /projects/:project/overview — the folder/task tree table.
@@ -9,8 +10,10 @@ import { DetailsPanel } from './DetailsPanel'
 export class OverviewPage {
   /** the main tree table (the hierarchy slicer on the left is a separate table) */
   readonly table: Locator
+  readonly filters: SearchFilterBar
 
   constructor(readonly page: Page) {
+    this.filters = new SearchFilterBar(page)
     this.table = page
       .getByRole('table')
       .filter({ has: page.getByRole('columnheader', { name: 'Folder / Task' }) })
@@ -93,7 +96,7 @@ export class OverviewPage {
     await createDialog.getByLabel('Label', { exact: true }).fill(label)
   }
 
-  private async pickCreateDialogType(type: string) {
+  async pickCreateDialogType(type: string) {
     // the dialog opens the type dropdown by itself shortly after it appears (NewEntity handleShow)
     const option = this.page.locator(`.options [data-value="${type}"]`)
     await option.waitFor({ timeout: 2_000 }).catch(async () => {
@@ -144,6 +147,28 @@ export class OverviewPage {
     await this.page.locator(`.options [data-value="${value}"]`).first().click()
   }
 
+  /** Toggle values in a multi-select enum cell (tags, assignees, ...), then close it by clicking another cell (the row's name by default) */
+  async toggleEnumCellValues(
+    label: string,
+    columnId: string,
+    values: string[],
+    closeBy: Locator = this.nameCell(label),
+  ) {
+    await this.cell(label, columnId).dblclick()
+    const options = this.page.locator('.options')
+    for (const value of values) {
+      const option = options.locator(`[data-value="${value}"]`).first()
+      // single-value items are marked `.selected`, multi-select lists (assignees) show a ticked checkbox
+      const marker = option.locator('.selected, .checkbox-icon.all')
+      const isSelected = async () => (await marker.count()) > 0
+      const wasSelected = await isSelected()
+      await option.click()
+      await expect.poll(isSelected).toBe(!wasSelected)
+    }
+    await closeBy.click()
+    await expect(options).toBeHidden()
+  }
+
   async deleteRow(label: string) {
     await this.selectRow(label)
     await this.nameCell(label).click({ button: 'right' })
@@ -151,13 +176,19 @@ export class OverviewPage {
     await confirmDeleteEntities(this.page, label)
   }
 
-  async clickCell(label: string, columnId: string, { shift = false } = {}) {
+  /** `shift` selects the range from the last selected cell, `add` adds the cell to the selection */
+  async clickCell(label: string, columnId: string, { shift = false, add = false } = {}) {
     // click the left edge: the chevron on the right of enum cells opens their dropdown straight away
     await this.cell(label, columnId).click({
       position: { x: 4, y: 4 },
-      modifiers: shift ? ['Shift'] : [],
+      modifiers: shift ? ['Shift'] : add ? ['ControlOrMeta'] : [],
     })
     await expect(this.cell(label, columnId)).toHaveClass(/selected/)
+  }
+
+  /** Clear the selected cells with the Delete key: attributes go back to the inherited value */
+  async clearSelectedCells() {
+    await this.page.keyboard.press('Delete')
   }
 
   async pickForSelectedCells(value: string) {
@@ -209,6 +240,21 @@ export class OverviewPage {
     return ids.filter((id) => id !== '__row_selection__')
   }
 
+  /** Drags the column's resize handle (shown while the header is hovered) by `delta` pixels */
+  async resizeColumn(columnId: string, delta: number) {
+    const header = this.columnHeader(columnId)
+    await header.hover()
+    const handle = header.locator('.resize-handle')
+    const box = await handle.boundingBox()
+    if (!box) throw new Error(`column ${columnId} has no resize handle`)
+    const x = box.x + box.width / 2
+    const y = box.y + box.height / 2
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x + delta, y, { steps: 10 })
+    await this.page.mouse.up()
+  }
+
   async columnMenu(columnId: string, item: string) {
     const header = this.columnHeader(columnId)
     await header.hover()
@@ -239,10 +285,69 @@ export class OverviewPage {
   }
 
   // FLAG: the sort button is icon-only and only shows while the header is hovered
-  async toggleSort(columnId: string) {
+  async toggleSort(columnId: string, { shift = false } = {}) {
     const header = this.columnHeader(columnId)
     await header.hover()
-    await header.getByRole('button', { name: 'sort', exact: true }).click()
+    await header
+      .getByRole('button', { name: 'sort', exact: true })
+      .click({ modifiers: shift ? ['Shift'] : [] })
+  }
+
+  /** position of a column in a multi-key sort, shown next to its sort button */
+  sortIndex(columnId: string) {
+    return this.columnHeader(columnId).locator('.sort-index')
+  }
+
+  async openSortSettings() {
+    await this.page.getByRole('button', { name: 'settings Customize', exact: true }).click()
+    await this.page.locator('.setting-option').filter({ hasText: 'Sort' }).click()
+    await expect(this.page.locator('.sort-settings')).toBeVisible()
+  }
+
+  /** the active sort keys of the sort settings, in order */
+  sortKeys() {
+    return this.page.locator('.sort-settings .sorted [data-sort-id]')
+  }
+
+  sortKey(columnId: string) {
+    return this.page.locator(`.sort-settings .sorted [data-sort-id="${columnId}"]`)
+  }
+
+  async sortKeyIds() {
+    return this.sortKeys().evaluateAll((rows) =>
+      rows.map((row) => row.getAttribute('data-sort-id')),
+    )
+  }
+
+  async addSortKey(columnId: string) {
+    await this.page.locator(`.sort-settings .available [data-sort-id="${columnId}"]`).click()
+    await expect(this.sortKey(columnId)).toBeVisible()
+  }
+
+  async flipSortKey(columnId: string) {
+    await this.sortKey(columnId)
+      .getByRole('button', { name: /^arrow_(up|down)ward$/ })
+      .click()
+  }
+
+  async removeSortKey(columnId: string) {
+    await this.sortKey(columnId).getByRole('button', { name: 'close', exact: true }).click()
+    await expect(this.sortKey(columnId)).toBeHidden()
+  }
+
+  // dnd-kit only starts a drag after the pointer moved 5px, so nudge it before heading to the target
+  async dragSortKey(columnId: string, ontoColumnId: string) {
+    const from = await this.sortKey(columnId).locator('.drag-handle').boundingBox()
+    const to = await this.sortKey(ontoColumnId).boundingBox()
+    if (!from || !to) throw new Error('sort keys are not visible')
+    const x = from.x + from.width / 2
+    const y = from.y + from.height / 2
+    const direction = to.y < from.y ? -1 : 1
+    await this.page.mouse.move(x, y)
+    await this.page.mouse.down()
+    await this.page.mouse.move(x, y + 10 * direction, { steps: 5 })
+    await this.page.mouse.move(x, to.y + to.height / 2, { steps: 10 })
+    await this.page.mouse.up()
   }
 
   nameCells() {
@@ -269,6 +374,12 @@ export class OverviewPage {
     return dialog(this.page, /^Select Folder/)
   }
 
+  async searchMoveDialog(text: string) {
+    const picker = this.moveDialog()
+    await picker.getByRole('button', { name: 'search', exact: true }).click()
+    await picker.getByPlaceholder('Search', { exact: true }).fill(text)
+  }
+
   async moveTo(folderLabel: string) {
     const picker = this.moveDialog()
     await expect(picker).toBeVisible()
@@ -287,32 +398,15 @@ export class OverviewPage {
   }
 
   searchFilter() {
-    return this.page.locator('.search-filter')
+    return this.filters.root
   }
 
-  // FLAG: the "Search and filter" dropdown is a plain list without menu roles, so items are found by label
   async addFilter(scope: 'Task' | 'Folder', field: string, value: string) {
-    // the "Search and filter" placeholder is gone once a filter is applied
-    await this.searchFilter().getByRole('textbox').click()
-    for (const label of [scope, field, value]) {
-      await this.searchFilter()
-        .getByRole('listitem')
-        .filter({ has: this.page.getByText(label, { exact: true }) })
-        .first()
-        .click()
-    }
-  }
-
-  // FLAG: filter chips have no role or accessible name, so they are found by their CSS class
-  filterChip(label: string) {
-    return this.searchFilter()
-      .locator('.search-filter-item')
-      .filter({ hasText: `${label}:` })
+    await this.filters.add(scope, field, value)
   }
 
   async removeFilter(label: string) {
-    await this.filterChip(label).getByRole('button', { name: 'close', exact: true }).click()
-    await expect(this.filterChip(label)).toBeHidden()
+    await this.filters.remove(label)
   }
 
   sidebar() {
@@ -329,7 +423,8 @@ export class OverviewPage {
 
   // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
   async importCsv(filePath: string, { created }: { created: number }) {
-    await this.page.getByRole('button', { name: 'Import CSV' }).click()
+    await this.page.getByTestId('table-import-export').click()
+    await this.page.getByTestId('import-file').click()
     const wizard = this.importDialog()
     await expect(wizard).toBeVisible()
     await wizard.locator('input[type="file"]').setInputFiles(filePath)

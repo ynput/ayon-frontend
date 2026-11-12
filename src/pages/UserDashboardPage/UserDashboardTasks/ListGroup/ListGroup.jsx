@@ -8,6 +8,7 @@ import ListItem from '@components/ListItem/ListItem'
 import { InView } from 'react-intersection-observer'
 import { useScopedDetailsPanel } from '@shared/context'
 import { useNavigate } from 'react-router-dom'
+import { entityUrl } from '@ynput/ayon-addon'
 
 const ListGroup = ({
   tasks = [],
@@ -31,7 +32,7 @@ const ListGroup = ({
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const openInOverview = (task) => {
-    navigate(`/projects/${task.projectName}/overview?project=${task.projectName}&type=task&id=${task.id}`)
+    navigate(entityUrl({ projectName: task.projectName, entityType: 'task', id: task.id }))
   }
   const column = groups[id] || {}
 

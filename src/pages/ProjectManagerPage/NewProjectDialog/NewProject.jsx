@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { Dialog } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
 import styled from 'styled-components'
@@ -17,6 +17,13 @@ import { LabelWithNameField } from '@components/LabelWithNameField'
 import { useGetAnatomyPresetQuery, useGetAnatomySchemaQuery } from '@queries/anatomy/getAnatomy'
 import { useDeployProjectMutation } from '@shared/api'
 import { useGetConfigValueQuery } from '@shared/api'
+import {
+  getCreateAnotherTooltip,
+  getDialogKeyDown,
+  getRequestErrorString,
+  readDialogMemory,
+  writeDialogMemory,
+} from '@shared/util'
 import { camelCase } from 'lodash'
 
 // allow only alphanumeric and underscorer,
@@ -47,6 +54,10 @@ const matchProjectCode = (value, pattern) => {
     .replaceAll(' ', '')
     .replace(/^_+|_+$/g, '')
 }
+
+// the preset and state of the last project, kept for the session (not the library flag: most
+// projects are not libraries, so carrying it over would make one by mistake)
+const PROJECT_MEMORY = 'new-project'
 
 const DialogContent = styled.div`
   width: 100%;
@@ -93,15 +104,24 @@ const AnatomyEditorSection = styled.div`
 `
 
 const NewProjectDialog = ({ onHide, redirect = true }) => {
+  const [remembered] = useState(() => readDialogMemory(PROJECT_MEMORY))
+  const namesRef = useRef(null)
+  const anatomyRef = useRef(null)
   const [label, setLabel] = useState('')
+  // counts projects made with the dialog kept open, to start the label and name field over for each
+  const [createdCount, setCreatedCount] = useState(0)
   const [name, setName] = useState('')
   const [code, setCode] = useState('')
   const [codeSet, setCodeSet] = useState(false)
   const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState(null)
-  const [selectedPreset, setSelectedPreset] = useState(null)
+  const [selectedPreset, setSelectedPreset] = useState(remembered.selectedPreset || null)
   const [isLibrary, setIsLibrary] = useState(false)
-  const [projectState, setProjectState] = useState('production')
+  const [projectState, setProjectState] = useState(
+    PROJECT_STATES.some((s) => s.value === remembered.projectState)
+      ? remembered.projectState
+      : 'production',
+  )
   const isPlanningProject = projectState === 'planning'
   const isProductionProject = projectState === 'production'
 
@@ -126,7 +146,8 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
   //
   const [deployProject, { isLoading }] = useDeployProjectMutation()
 
-  const validate = () => {
+  // name and code are passed in when Enter in the name field submits the name it just committed
+  const validate = ({ name, code }) => {
     const newErrors = {}
     if (!name) newErrors.name = 'Project name is required'
     else if (name.length < 3) newErrors.name = 'Project name must be at least 3 characters'
@@ -146,14 +167,16 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = () => {
-    if (!validate()) return
+  // keepOpen (Shift+Enter): create it and keep the dialog open for the next project
+  const handleSubmit = (keepOpen = false, draft = { name, code }) => {
+    if (!validate(draft)) return
+    const { name: projectName, code: projectCode } = draft
 
     deployProject({
       deployProjectRequestModel: {
-        name,
+        name: projectName,
         label,
-        code,
+        code: projectCode,
         anatomy: isPlanningProject ? undefined : formData,
         library: isLibrary,
         skeleton: isPlanningProject,
@@ -161,12 +184,20 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     })
       .unwrap()
       .then(() => {
-        toast.success('Project created')
-        onHide(redirect ? name : undefined)
+        toast.success(`Project ${label} created`)
+        writeDialogMemory(PROJECT_MEMORY, { selectedPreset, projectState })
+        if (!keepOpen) return onHide(redirect ? projectName : undefined)
+        setLabel('')
+        setName('')
+        setCode('')
+        setCodeSet(false)
+        setErrors({})
+        // forget a name typed by hand, so the next name is generated from its label again
+        setCreatedCount((count) => count + 1)
+        namesRef.current?.querySelector('input')?.focus()
       })
       .catch((error) => {
-        // log
-        toast.error(`Unable to create project ${error}`)
+        toast.error(`Unable to create project: ${getRequestErrorString(error)}`)
       })
   }
 
@@ -199,14 +230,20 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     return camelCase(labelValue).replace(/[^a-zA-Z0-9_]/g, '')
   }
 
-  const handleNameChange = (newName) => {
+  // the name and the code that goes with it
+  const resolveNameAndCode = (newName) => {
     // replace spaces with underscores
     const nextName = newName.replace(/\s/g, '_')
-    setName(nextName)
-    if (!codeSet || code === '') {
-      const newCode = createCode(nextName, codeRegex)
-      setCode(newCode)
+    return {
+      name: nextName,
+      code: !codeSet || code === '' ? createCode(nextName, codeRegex) : code,
     }
+  }
+
+  const handleNameChange = (newName) => {
+    const next = resolveNameAndCode(newName)
+    setName(next.name)
+    setCode(next.code)
   }
 
   const handleCodeChange = (e) => {
@@ -223,6 +260,13 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
     setFormData(originalAnatomy)
   }, [isPlanningProject, originalAnatomy])
 
+  const getCanSubmit = (draft) =>
+    label &&
+    draft.name &&
+    draft.code &&
+    (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
+  const canSubmit = getCanSubmit({ name, code })
+
   const footer = (
     <Toolbar style={{}}>
       {isProductionProject && (
@@ -238,28 +282,28 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
       <Spacer />
       <SaveButton
         label="Create Project"
-        onClick={handleSubmit}
-        active={
-          label &&
-          name &&
-          code &&
-          (isPlanningProject || (!isOriginalAnatomyLoading && !isSchemaLoading))
-        }
+        onClick={() => handleSubmit()}
+        active={canSubmit}
         saving={isLoading}
+        {...getCreateAnotherTooltip()}
       />
     </Toolbar>
   )
 
+  const getKeyDown = (draft = { name, code }) =>
+    getDialogKeyDown(() => handleSubmit(false, draft), {
+      onClose: () => onHide(),
+      disabled: !getCanSubmit(draft) || isLoading,
+      onContinue: () => handleSubmit(true, draft),
+    })
   const handleKeyDown = (e) => {
-    e?.stopPropagation()
-    const enter = e.key === 'Enter'
-    const ctrlMeta = e.ctrlKey || e.metakey
-    const shift = e.shiftKey
-    const esc = e.key === 'Escape'
-
-    if (enter && (ctrlMeta || shift)) handleSubmit()
-    if (esc) onHide()
+    e.stopPropagation()
+    // Enter in the anatomy editor confirms that field, not the whole project
+    if (e.key === 'Enter' && anatomyRef.current?.contains(e.target)) return
+    getKeyDown()(e)
   }
+  // Enter in the name editor commits the name and, like any other field, creates the project with it
+  const handleNameEnter = (committedName, e) => getKeyDown(resolveNameAndCode(committedName))(e)
 
   const anatomyEditor = useMemo(() => {
     if (isPlanningProject) return null
@@ -297,14 +341,16 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         </FormRow>
 
         <FormRow style={{ alignItems: 'flex-start' }}>
-          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+          <div ref={namesRef} style={{ flex: '1 1 320px', minWidth: 0 }}>
             <LabelWithNameField
+              key={createdCount}
               labelValue={label}
               onLabelChange={setLabel}
               labelError={errors.label}
               labelLabel="Project label"
               nameValue={name}
               onNameChange={handleNameChange}
+              onNameEnter={handleNameEnter}
               nameError={errors.name}
               nameLabel="Project name"
               getGeneratedName={createName}
@@ -326,7 +372,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
         </FormRow>
 
         {!isPlanningProject && (
-          <AnatomySection>
+          <AnatomySection ref={anatomyRef}>
             <FieldGroup style={{ flex: '0 0 auto' }}>
               <FieldLabel>Project anatomy preset</FieldLabel>
               <AnatomyPresetDropdown

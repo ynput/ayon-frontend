@@ -38,6 +38,8 @@ export type DetailsPanelEntityData = {
   status: string
   updatedAt: string
   createdAt: string
+  createdBy?: string | null
+  updatedBy?: string | null
   thumbnailHash: string
   attrib: Record<string, string | number>
   hasReviewables?: boolean
@@ -78,6 +80,8 @@ export const transformDetailsPanelQueriesData = ({
         status: task.status,
         updatedAt: task.updatedAt as string,
         createdAt: task.createdAt as string,
+        createdBy: task.createdBy,
+        updatedBy: task.updatedBy,
         thumbnailHash: task.thumbnailHash,
         attrib: parseJSONField(task.allAttrib),
         hasReviewables: task.hasReviewables,
@@ -110,6 +114,8 @@ export const transformDetailsPanelQueriesData = ({
         status: version.status,
         updatedAt: version.updatedAt as string,
         createdAt: version.createdAt as string,
+        createdBy: version.createdBy,
+        updatedBy: version.updatedBy,
         thumbnailHash: version.thumbnailHash,
         attrib: parseJSONField(version.allAttrib),
         hasReviewables: version.hasReviewables,
@@ -150,6 +156,8 @@ export const transformDetailsPanelQueriesData = ({
         status: folder.status,
         updatedAt: folder.updatedAt as string,
         createdAt: folder.createdAt as string,
+        createdBy: folder.createdBy,
+        updatedBy: folder.updatedBy,
         thumbnailHash: folder.thumbnailHash,
         attrib: parseJSONField(folder.allAttrib),
         hasReviewables: folder.hasReviewables,

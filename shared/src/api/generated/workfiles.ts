@@ -1,15 +1,6 @@
 import { api } from '@shared/api/base'
 const injectedRtkApi = api.injectEndpoints({
   endpoints: (build) => ({
-    getWorkfileThumbnail: build.query<GetWorkfileThumbnailApiResponse, GetWorkfileThumbnailApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
-        params: {
-          placeholder: queryArg.placeholder,
-          original: queryArg.original,
-        },
-      }),
-    }),
     createWorkfileThumbnail: build.mutation<
       CreateWorkfileThumbnailApiResponse,
       CreateWorkfileThumbnailApiArg
@@ -22,19 +13,18 @@ const injectedRtkApi = api.injectEndpoints({
         },
       }),
     }),
+    getWorkfileThumbnail: build.query<GetWorkfileThumbnailApiResponse, GetWorkfileThumbnailApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}/thumbnail`,
+        params: {
+          placeholder: queryArg.placeholder,
+          original: queryArg.original,
+        },
+      }),
+    }),
     getWorkfile: build.query<GetWorkfileApiResponse, GetWorkfileApiArg>({
       query: (queryArg) => ({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
-      }),
-    }),
-    deleteWorkfile: build.mutation<DeleteWorkfileApiResponse, DeleteWorkfileApiArg>({
-      query: (queryArg) => ({
-        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
-        method: 'DELETE',
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
     updateWorkfile: build.mutation<UpdateWorkfileApiResponse, UpdateWorkfileApiArg>({
@@ -42,10 +32,12 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
         method: 'PATCH',
         body: queryArg.workfilePatchModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
+      }),
+    }),
+    deleteWorkfile: build.mutation<DeleteWorkfileApiResponse, DeleteWorkfileApiArg>({
+      query: (queryArg) => ({
+        url: `/api/projects/${queryArg.projectName}/workfiles/${queryArg.workfileId}`,
+        method: 'DELETE',
       }),
     }),
     createWorkfile: build.mutation<CreateWorkfileApiResponse, CreateWorkfileApiArg>({
@@ -53,16 +45,19 @@ const injectedRtkApi = api.injectEndpoints({
         url: `/api/projects/${queryArg.projectName}/workfiles`,
         method: 'POST',
         body: queryArg.workfilePostModel,
-        headers: {
-          'x-sender': queryArg['x-sender'],
-          'x-sender-type': queryArg['x-sender-type'],
-        },
       }),
     }),
   }),
   overrideExisting: false,
 })
 export { injectedRtkApi as api }
+export type CreateWorkfileThumbnailApiResponse =
+  /** status 200 Successful Response */ CreateThumbnailResponseModel
+export type CreateWorkfileThumbnailApiArg = {
+  projectName: string
+  workfileId: string
+  'content-type'?: string | null
+}
 export type GetWorkfileThumbnailApiResponse = /** status 200 Successful Response */ any
 export type GetWorkfileThumbnailApiArg = {
   projectName: string
@@ -70,76 +65,73 @@ export type GetWorkfileThumbnailApiArg = {
   placeholder?: 'empty' | 'none'
   original?: boolean
 }
-export type CreateWorkfileThumbnailApiResponse =
-  /** status 201 Successful Response */ CreateThumbnailResponseModel
-export type CreateWorkfileThumbnailApiArg = {
-  projectName: string
-  workfileId: string
-  'content-type'?: string
-}
 export type GetWorkfileApiResponse = /** status 200 Successful Response */ WorkfileModel
 export type GetWorkfileApiArg = {
   projectName: string
   workfileId: string
 }
-export type DeleteWorkfileApiResponse = unknown
-export type DeleteWorkfileApiArg = {
-  projectName: string
-  workfileId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
-}
 export type UpdateWorkfileApiResponse = unknown
 export type UpdateWorkfileApiArg = {
   projectName: string
   workfileId: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   workfilePatchModel: WorkfilePatchModel
+}
+export type DeleteWorkfileApiResponse = unknown
+export type DeleteWorkfileApiArg = {
+  projectName: string
+  workfileId: string
 }
 export type CreateWorkfileApiResponse = /** status 201 Successful Response */ EntityIdResponse
 export type CreateWorkfileApiArg = {
   projectName: string
-  'x-sender'?: string
-  'x-sender-type'?: string
   workfilePostModel: WorkfilePostModel
+}
+export type AffectedEntity = {
+  entityType: string
+  entityId: string
+  thumbnailHash: string
+  thumbnailId?: string | null
+}
+export type CreateThumbnailResponseModel = {
+  id: string
+  affectedEntities?: AffectedEntity[] | null
 }
 export type ValidationError = {
   loc: (string | number)[]
   msg: string
   type: string
+  input?: any
+  ctx?: object
 }
 export type HttpValidationError = {
   detail?: ValidationError[]
 }
-export type CreateThumbnailResponseModel = {
-  id: string
-}
-export type WorkfileAttribModel = {
-  extension?: string
-  /** Textual description of the entity */
-  description?: string
-}
 export type WorkfileModel = {
-  /** Unique identifier of the {entity_name} */
+  /** Unique identifier of the entity */
   id?: string
   /** Path to the workfile */
   path: string
   /** ID of the parent task */
   taskId: string
-  thumbnailId?: string
-  /** Who created the workfile */
-  createdBy?: string
-  /** Who last updated the workfile */
-  updatedBy?: string
-  attrib?: WorkfileAttribModel
-  data?: Record<string, any>
-  /** Whether the workfile is active */
+  thumbnailId?: string | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
+  /** List of attributes explicitly set on the entity itself (not inherited) */
   ownAttrib?: string[]
-  /** Status of the workfile */
-  status?: string
-  /** Tags assigned to the the workfile */
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
   /** Time of creation */
   createdAt?: string
@@ -148,45 +140,55 @@ export type WorkfileModel = {
 }
 export type WorkfilePatchModel = {
   /** Path to the workfile */
-  path?: string
+  path?: string | null
   /** ID of the parent task */
-  taskId?: string
-  thumbnailId?: string
-  /** Who created the workfile */
-  createdBy?: string
-  /** Who last updated the workfile */
-  updatedBy?: string
-  /** Status of the workfile */
-  status?: string
-  /** Tags assigned to the the workfile */
-  tags?: string[]
-  attrib?: WorkfileAttribModel
-  data?: Record<string, any>
-  /** Whether the workfile is active */
-  active?: boolean
+  taskId?: string | null
+  thumbnailId?: string | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
+  tags?: string[] | null
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  } | null
+  /** Whether the entity is active */
+  active?: boolean | null
 }
 export type EntityIdResponse = {
   /** Entity ID */
   id: string
 }
 export type WorkfilePostModel = {
-  /** Explicitly set the ID of the entity */
+  /** Unique identifier of the entity */
   id?: string
   /** Path to the workfile */
   path: string
   /** ID of the parent task */
   taskId: string
-  thumbnailId?: string
-  /** Who created the workfile */
-  createdBy?: string
-  /** Who last updated the workfile */
-  updatedBy?: string
-  /** Status of the workfile */
-  status?: string
-  /** Tags assigned to the the workfile */
+  thumbnailId?: string | null
+  /** Who created the entity */
+  createdBy?: string | null
+  /** Who last updated the entity */
+  updatedBy?: string | null
+  /** Status of the entity */
+  status?: string | null
+  /** Tags assigned to the entity */
   tags?: string[]
-  attrib?: WorkfileAttribModel
-  data?: Record<string, any>
-  /** Whether the workfile is active */
+  /** Attribute values of the entity */
+  attrib?: {
+    [key: string]: any
+  }
+  data?: {
+    [key: string]: any
+  }
+  /** Whether the entity is active */
   active?: boolean
 }

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'react-toastify'
 import PropTypes from 'prop-types'
 import { Dialog, SaveButton } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 
 import { InputPassword, FormLayout, FormRow } from '@ynput/ayon-react-components'
 
@@ -45,6 +46,10 @@ const SetPasswordDialog = ({ onHide, selectedUsers }) => {
       header={`Set password for: ${name}`}
       isOpen={true}
       onClose={onHide}
+      onKeyDown={getDialogKeyDown(onSubmit, {
+        onClose: onHide,
+        disabled: !(password && passwordConfirm),
+      })}
       footer={
         <SaveButton label="Set Password" onClick={onSubmit} active={password && passwordConfirm} />
       }

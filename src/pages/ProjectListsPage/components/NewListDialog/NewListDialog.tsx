@@ -9,9 +9,10 @@ import {
 import { forwardRef, useEffect, useRef } from 'react'
 import type { NewListForm } from '@pages/ProjectListsPage/hooks/useNewList'
 import * as Styled from './NewListDialog.styled'
-import { getEntityTypeIcon } from '@shared/util'
+import { getCreateAnotherTooltip, getDialogKeyDown, getEntityTypeIcon } from '@shared/util'
 import { Error } from '@containers/ReleaseInstallerDialog/ReleaseInstaller.styled'
 import { entityTypeOptions } from './NewListDialogHelpers'
+import type { ListFolderOption } from '@pages/ProjectListsPage/util/listFolders'
 
 export type { ListEntityType } from './NewListDialogHelpers'
 
@@ -19,14 +20,19 @@ interface NewListDialogProps extends Omit<DialogProps, 'onChange' | 'hidden'> {
   form?: NewListForm | null
   onChange: (value: NewListForm) => void
   onSubmit?: () => void
+  /** Shift+Enter: create the list and keep the dialog open for the next one */
+  onSubmitAndContinue?: () => Promise<unknown> | void
   submitLoading?: boolean
   error?: string
   hidden?: ('label' | 'entityType')[]
+  // folders the list can be created in; the folder field shows when there are any
+  folderOptions?: ListFolderOption[]
   // customization props
   dialogTitle?: string
   labels?: {
     listLabel?: string
     entityType?: string
+    folder?: string
     createButton?: string
     cancelButton?: string
   }
@@ -38,14 +44,17 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       form = { label: '', entityListType: 'generic', entityType: 'folder', access: {} },
       onChange,
       onSubmit,
+      onSubmitAndContinue,
       submitLoading,
       error,
       hidden,
+      folderOptions,
       // New customization props with defaults
       dialogTitle = 'Create New List',
       labels = {
         listLabel: 'List label',
         entityType: 'Entity type',
+        folder: 'Folder',
         createButton: 'Create list',
         cancelButton: 'Cancel',
       },
@@ -73,6 +82,21 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
       : labels
 
     if (!form) return null
+
+    const handleContinue = async () => {
+      try {
+        await onSubmitAndContinue?.()
+      } catch {
+        // the error is shown by whoever created the list; keep the label as it was
+        return
+      }
+      // after the fresh label renders: select it, ready to type the next name
+      setTimeout(() => {
+        inputRef.current?.focus()
+        inputRef.current?.select()
+      }, 0)
+    }
+
     const handleChange = <K extends keyof NewListForm>(value: NewListForm[K], field: K) => {
       onChange({
         ...form,
@@ -101,6 +125,7 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
               onClick={() => onSubmit?.()}
               disabled={!form.label || submitLoading}
               saving={submitLoading}
+              {...(onSubmitAndContinue ? getCreateAnotherTooltip() : { 'data-shortcut': 'Enter' })}
             />
           </Styled.Footer>
         }
@@ -109,15 +134,11 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
           onSubmit={(e) => {
             e.preventDefault()
           }}
-          onKeyDown={(e) => {
-            if (
-              e.nativeEvent instanceof KeyboardEvent &&
-              (e.nativeEvent.metaKey || e.nativeEvent.ctrlKey) &&
-              e.nativeEvent.key === 'Enter'
-            ) {
-              onSubmit?.()
-            }
-          }}
+          // the same conditions as the create button
+          onKeyDown={getDialogKeyDown(() => onSubmit?.(), {
+            disabled: !form.label || submitLoading,
+            onContinue: onSubmitAndContinue && handleContinue,
+          })}
         >
           {!hidden?.includes('label') && (
             <Styled.Row>
@@ -142,6 +163,22 @@ export const NewListDialog = forwardRef<HTMLDivElement, NewListDialogProps>(
                 onChange={(e) => handleChange(e[0] as NewListForm['entityType'], 'entityType')}
                 options={entityTypeOptions}
                 valueIcon={getEntityTypeIcon(form.entityType)}
+              />
+            </Styled.Row>
+          )}
+          {!!folderOptions?.length && (
+            <Styled.Row>
+              <label htmlFor="entityListFolderId">{effectiveLabels.folder || 'Folder'}</label>
+              <Dropdown
+                id="entityListFolderId"
+                value={form.entityListFolderId ? [form.entityListFolderId] : []}
+                onChange={(e) => handleChange(e[0] || undefined, 'entityListFolderId')}
+                onClear={() => handleChange(undefined, 'entityListFolderId')}
+                clearTooltip="No folder"
+                options={folderOptions}
+                placeholder="No folder"
+                search={folderOptions.length > 10}
+                searchFields={['label']}
               />
             </Styled.Row>
           )}

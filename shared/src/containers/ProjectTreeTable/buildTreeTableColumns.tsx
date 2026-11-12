@@ -25,12 +25,14 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { ROW_SELECTION_COLUMN_ID } from './constants'
+import { LISTS_COLUMN_ID, REVIEW_SESSIONS_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import type { AttributeData, LinkTypeModel } from '@shared/api'
 import { LinkWidgetData } from './widgets/LinksWidget'
 import { SubtasksWidgetData } from './widgets/SubtasksWidget'
+import { ListsWidgetData } from './widgets/ListsWidget'
+import { LIST_COLUMN_IDS, LIST_COLUMNS, isListColumnEntityType } from './utils/listColumns'
 import { Icon } from '@ynput/ayon-react-components'
 import {
   getAttributeIcon,
@@ -42,6 +44,7 @@ import type { NameWidgetData } from '@shared/components/RenameForm/RenameForm'
 import { isEntityRestricted, READ_ONLY } from './utils/restrictedEntity'
 import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
+import { getFolderColumnEntity, getFolderColumnValue } from './utils/folderColumn'
 import { upperFirst } from 'lodash'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
@@ -77,9 +80,13 @@ export const COLUMN_LABELS: Record<string, string> = {
   folderType: 'Folder type',
   tags: 'Tags',
   createdAt: 'Created at',
+  createdBy: 'Created by',
   updatedAt: 'Updated at',
+  updatedBy: 'Updated by',
   subtasks: 'Subtasks',
   comments: 'Latest comments',
+  [LISTS_COLUMN_ID]: LIST_COLUMNS[LISTS_COLUMN_ID].label,
+  [REVIEW_SESSIONS_COLUMN_ID]: LIST_COLUMNS[REVIEW_SESSIONS_COLUMN_ID].label,
 }
 
 export const getColumnLabel = (columnId: string, scopes: string[] = []) => {
@@ -103,9 +110,13 @@ export const COLUMN_ICONS: Record<string, string> = {
   task_entity: getEntityTypeIcon('task'),
   version_entity: getEntityTypeIcon('version'),
   createdAt: getAttributeIcon('createdAt', 'datetime'),
+  createdBy: 'person',
   updatedAt: getAttributeIcon('updatedAt', 'datetime'),
+  updatedBy: 'person',
   subtasks: 'checklist',
   comments: getAttributeIcon('comment'),
+  [LISTS_COLUMN_ID]: LIST_COLUMNS[LISTS_COLUMN_ID].icon,
+  [REVIEW_SESSIONS_COLUMN_ID]: LIST_COLUMNS[REVIEW_SESSIONS_COLUMN_ID].icon,
 }
 
 export const getColumnIcon = (columnId: string) => {
@@ -199,9 +210,13 @@ export const COLUMN_SORT_CONFIG: Record<string, ColumnSortConfig> = {
   },
   tags: { sortKey: 'tags', enabled: true, label: COLUMN_LABELS.tags },
   createdAt: { sortKey: 'createdAt', enabled: true, label: COLUMN_LABELS.createdAt },
+  createdBy: { sortKey: 'createdBy', enabled: true, label: COLUMN_LABELS.createdBy },
   updatedAt: { sortKey: 'updatedAt', enabled: true, label: COLUMN_LABELS.updatedAt },
+  updatedBy: { sortKey: 'updatedBy', enabled: true, label: COLUMN_LABELS.updatedBy },
   subtasks: { enabled: false, label: COLUMN_LABELS.subtasks },
   comments: { enabled: false, label: COLUMN_LABELS.comments },
+  [LISTS_COLUMN_ID]: { enabled: false, label: COLUMN_LABELS[LISTS_COLUMN_ID] },
+  [REVIEW_SESSIONS_COLUMN_ID]: { enabled: false, label: COLUMN_LABELS[REVIEW_SESSIONS_COLUMN_ID] },
 }
 
 type SortColumnLabel = { value: string; label: string }
@@ -255,10 +270,19 @@ const withLoadingStateSort = (sortFn: SortingFn<any>): SortingFn<any> => {
 
 const naturalSortCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
+// With several sort keys a tie has to fall through to the next key, so only the
+// last key breaks ties by name. A sorting function isn't given the table, it is
+// reached through a cell and only when there is a tie.
+const isLastSortKey = (row: Row<any>, columnId: string) => {
+  const sorting = row.getAllCells()[0]?.getContext().table.getState().sorting
+  return !sorting?.length || sorting[sorting.length - 1].id === columnId
+}
+
 const withNameTieBreaker = (sortFn: SortingFn<any>): SortingFn<any> => {
   return (rowA, rowB, ...args) => {
     const result = sortFn(rowA, rowB, ...args)
     if (result !== 0) return result
+    if (!isLastSortKey(rowA, args[0])) return 0
     const labelA = rowA.original.primary.label || rowA.original.primary.name || ''
     const labelB = rowB.original.primary.label || rowB.original.primary.name || ''
     return naturalSortCollator.compare(labelA, labelB)
@@ -363,10 +387,20 @@ export type DefaultColumns =
   | 'assignees'
   | 'tags'
   | 'createdAt'
+  | 'createdBy'
   | 'updatedAt'
+  | 'updatedBy'
   | 'comments'
+  | typeof LISTS_COLUMN_ID
+  | typeof REVIEW_SESSIONS_COLUMN_ID
 
-export type TreeTableExtraColumn = { column: ColumnDef<TableRow>; position?: number }
+export type TreeTableExtraColumn = {
+  column: ColumnDef<TableRow>
+  position?: number
+  // id of the column this one is placed right after (also in a saved column order);
+  // such a column is always shown and not saved in the column settings
+  after?: string
+}
 
 export type BuildTreeTableColumnsProps = {
   scopes: string[]
@@ -385,7 +419,8 @@ export type BuildTreeTableColumnsProps = {
   parentColumns?: ParentColumnDefinition[]
 }
 
-const getScopedHeader = (scope: EntityScope, header: string) =>
+// the column header and its settings item both use this, so they always read the same
+export const getScopedHeader = (scope: EntityScope, header: string) =>
   scope === 'primary' ? header : `${upperFirst(scope)} ${header}`
 
 const createEntityColumn = (
@@ -794,7 +829,7 @@ const buildTreeTableColumns = ({
                     pt: {
                       icon: {
                         style: {
-                          fontVariationSettings: "'FILL' 1, 'wght' 200, 'GRAD' 200, 'opsz' 20",
+                          fontVariationSettings: "'FILL' 1",
                         },
                       },
                     },
@@ -952,10 +987,10 @@ const buildTreeTableColumns = ({
             attributeData={{ type: 'list_of_strings' }}
             options={meta?.options?.assignee}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -979,8 +1014,7 @@ const buildTreeTableColumns = ({
   if (isIncluded(ENTITY_COLUMN_IDS.folder)) {
     staticColumns.push({
       id: ENTITY_COLUMN_IDS.folder,
-      accessorFn: (row) =>
-        row.group ? undefined : row.parents?.folder?.label || row.parents?.folder?.name,
+      accessorFn: (row) => getFolderColumnValue(row),
       header: getColumnLabel(ENTITY_COLUMN_IDS.folder),
       minSize: COLUMN_MIN_SIZE,
       sortDescFirst: COLUMN_SORT_CONFIG.folder_entity.sortDescFirst,
@@ -990,8 +1024,8 @@ const buildTreeTableColumns = ({
       enablePinning: true,
       enableHiding: true,
       cell: ({ row, column, table }) => {
-        const folder = row.original.parents?.folder
-        if (!folder || row.original.group || row.original.metaType) return null
+        const folder = getFolderColumnEntity(row.original)
+        if (!folder) return null
 
         return (
           <EntityWidget
@@ -1214,13 +1248,13 @@ const buildTreeTableColumns = ({
             className={clsx('tags', { loading: row.original.isLoading })}
             columnId={column.id}
             value={value}
-            attributeData={{ type: 'list_of_strings' }}
+            attributeData={{ type: 'list_of_strings', widget: 'tags' }}
             options={meta?.options?.tag}
             isCollapsed={!!row.original.childOnlyMatch}
-            onChange={(value) =>
+            onChange={(value, _key, listChange) =>
               meta?.updateEntities?.(
                 { field: column.id, value, type, rowId: row.id },
-                { selection: meta?.selection },
+                { selection: meta?.selection, listChange },
               )
             }
             isReadOnly={
@@ -1289,6 +1323,49 @@ const buildTreeTableColumns = ({
             isCollapsed={!!row.original.childOnlyMatch}
             isReadOnly={true}
             pt={{ date: { showTime: true } }}
+          />
+        )
+      },
+    })
+  }
+
+  for (const field of ['createdBy', 'updatedBy'] as const) {
+    if (!isIncluded(field)) continue
+    staticColumns.push({
+      id: field,
+      accessorFn: (row) => getScopedValue(row, 'primary', field),
+      header: getColumnLabel(field),
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: canSort(field),
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      sortingFn: withLoadingStateSort(withNameTieBreaker(sortingFns.alphanumeric)),
+      cell: ({ row, column, table }) => {
+        const { value, id, type } = getValueIdType(row, column.id)
+        if (['group', NEXT_PAGE_ID].includes(type) || row.original.metaType) return null
+        const assignees = table.options.meta?.options?.assignee || []
+        const options =
+          value && !assignees.some((option) => option.value === value)
+            ? [
+                ...assignees,
+                {
+                  value,
+                  label: value,
+                  icon: `/api/users/${encodeURIComponent(value)}/avatar`,
+                },
+              ]
+            : assignees
+        return (
+          <CellWidget
+            rowId={id}
+            className={clsx(field, { loading: row.original.isLoading })}
+            columnId={column.id}
+            value={value ? [value] : []}
+            attributeData={{ type: 'list_of_strings' }}
+            options={options}
+            isCollapsed={!!row.original.childOnlyMatch}
+            isReadOnly
           />
         )
       },
@@ -1386,6 +1463,47 @@ const buildTreeTableColumns = ({
     })
   }
 
+  for (const listColumnId of LIST_COLUMN_IDS) {
+    if (
+      !isIncluded(listColumnId) ||
+      !scopes.some((scope) => isListColumnEntityType(listColumnId, scope))
+    )
+      continue
+
+    staticColumns.push({
+      id: listColumnId,
+      header: getColumnLabel(listColumnId),
+      minSize: COLUMN_MIN_SIZE,
+      enableSorting: false,
+      enableResizing: true,
+      enablePinning: true,
+      enableHiding: true,
+      cell: ({ row, column }) => {
+        const { group, metaType, isLoading, primary } = row.original
+        if (group || metaType) return null
+        if (!isLoading && !isListColumnEntityType(column.id, primary.entityType))
+          return <div className="readonly"></div>
+
+        const listsData: ListsWidgetData | undefined =
+          !isLoading && isListColumnEntityType(column.id, primary.entityType)
+            ? { entityId: primary.id, entityType: primary.entityType, columnId: column.id }
+            : undefined
+
+        return (
+          <CellWidget
+            rowId={row.id}
+            className={clsx('lists', { loading: isLoading })}
+            columnId={column.id}
+            value={''}
+            valueData={listsData}
+            attributeData={{ type: 'lists' }}
+            isReadOnly
+          />
+        )
+      },
+    })
+  }
+
   const attributeColumns: ColumnDef<TableRow>[] = attribs
     .filter((attrib) => {
       // filter out attributes that are out of scope
@@ -1461,7 +1579,7 @@ const buildTreeTableColumns = ({
                 ) ||
                 parseScopedColumnId(column.id).scope !== 'primary'
               }
-              onChange={(value) =>
+              onChange={(value, _key, listChange) =>
                 meta?.updateEntities?.(
                   {
                     field: columnIdParsed,
@@ -1477,6 +1595,7 @@ const buildTreeTableColumns = ({
                       entity === row.original.primary && supportsMultiCellEdit(attrib.data)
                         ? meta?.selection
                         : undefined,
+                    listChange,
                   },
                 )
               }
@@ -1566,7 +1685,9 @@ const buildTreeTableColumns = ({
     'version',
     'tags',
     'createdAt',
+    'createdBy',
     'updatedAt',
+    'updatedBy',
   ])
   const configuredParentFields = new Set(
     parentColumnDefinitions.map((definition) => `${definition.scope}:${definition.field}`),
@@ -1620,8 +1741,11 @@ const buildTreeTableColumns = ({
 
   // Add extra columns if provided
   if (extraColumns) {
-    extraColumns.forEach(({ column, position = -1 }) => {
-      if (position >= 0 && position < allColumns.length) {
+    extraColumns.forEach(({ column, position = -1, after }) => {
+      const afterIndex = after ? allColumns.findIndex((c) => c.id === after) : -1
+      if (afterIndex >= 0) {
+        allColumns.splice(afterIndex + 1, 0, column)
+      } else if (position >= 0 && position < allColumns.length) {
         allColumns.splice(position, 0, column)
       } else {
         allColumns.push(column)

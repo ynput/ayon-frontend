@@ -15,8 +15,9 @@ import { GROUP_BY_ID } from './useBuildGroupByTableData'
 import { ColumnDef } from '@tanstack/react-table'
 import { EntityMap, getEntityViewierIds } from '../utils'
 import { isEntityRestricted } from '../utils/restrictedEntity'
+import { CSV_DELIMITERS } from '../../TableExport/csvFile'
 import { useMemo } from 'react'
-import { useProjectContext } from '@shared/context'
+import { useProjectContext, useTableExportContext } from '@shared/context'
 import { useHierarchySelection } from '@shared/containers/Slicer/hooks/useHierarchySelection'
 import {
   newEntityDefinitions,
@@ -59,6 +60,7 @@ export type ContextMenuItemConstructor = (
   selectedCells: TableCellContextData[],
   meta: {
     selectedCells: string[] // minus row selection cells
+    scopedCells: string[] // the menu's whole selection, incl. the checkbox cells when opened from one
     selectedRows: string[]
     selectedColumns: string[]
     selectedFullRows: string[] // if the full row is selected
@@ -95,6 +97,7 @@ const useCellContextMenu = ({
     contextMenuItems: contextContextMenuItems = [],
     powerpack,
     onOpenPlayer,
+    isRowReadOnly,
   } = useProjectTableContext()
 
   // Merge context menu items from props and context
@@ -106,7 +109,8 @@ const useCellContextMenu = ({
   const hasSlicerFolder = Object.values(slicerSelection || {}).some(Boolean)
   const { canWriteLabelPermission, canWriteNamePermission } = useProjectDataContext()
   const { copyToClipboard, exportCSV, pasteFromClipboard } = useClipboard()
-  const { selectedCells, clearSelection, selectCell, focusCell } = useSelectionCellsContext()
+  const { selectedCells, setSelectedCells, clearSelection, selectCell, focusCell } =
+    useSelectionCellsContext()
   const { inheritFromParent, history, setEditingCellId } = useCellEditing()
 
   // update entity context
@@ -184,7 +188,11 @@ const useCellContextMenu = ({
         icon: 'content_paste',
         shortcut: getPlatformShortcutKey('v', [KeyMode.Ctrl]),
         command: () => pasteFromClipboard(meta.selectedCells),
-        hidden: cell.columnId === 'name' || cell.columnId === 'thumbnail' || cell.isGroup,
+        hidden:
+          cell.columnId === 'name' ||
+          cell.columnId === 'thumbnail' ||
+          cell.isGroup ||
+          isRowReadOnly(parseCellId(cell.cellId)?.rowId ?? ''),
         disabled: cell.attribField?.readOnly,
       },
     ]
@@ -206,7 +214,7 @@ const useCellContextMenu = ({
       isEntityRestricted(cell.entityType),
   })
 
-  const openViewerItem: ContextMenuItemConstructor = (e, cell, selected, meta) => ({
+  const openViewerItem: ContextMenuItemConstructor = (e, cell) => ({
     label: 'Open in viewer',
     icon: 'play_circle',
     shortcut: 'Spacebar',
@@ -284,7 +292,6 @@ const useCellContextMenu = ({
     const entitiesToInherit = getEntitiesToInherit(meta.selectedCells)
     const canInheritFromParent =
       entitiesToInherit.length > 0 &&
-      showHierarchy &&
       !(meta.selectedRows.length > 1 && meta.selectedColumns.length > 1)
 
     return {
@@ -295,12 +302,29 @@ const useCellContextMenu = ({
     }
   }
 
-  const exportItem: ContextMenuItemConstructor = (e, cell) => ({
-    label: 'Export selection',
-    icon: 'download',
-    command: () => exportCSV(Array.from(selectedCells), projectName),
-    hidden: cell.isGroup,
-  })
+  const tableExport = useTableExportContext()
+  // the Power Pack export when the table registered what it exports, else the cells as shown
+  const exportItem: ContextMenuItemConstructor = (e, cell, _selected, meta) =>
+    tableExport?.isAvailable && tableExport.source
+      ? {
+          label: 'Export',
+          icon: 'download',
+          command: () => {
+            // the export reads the table selection: narrow it to the cells the menu acted on
+            setSelectedCells(new Set(meta.scopedCells))
+            tableExport.openExport('selection')
+          },
+          hidden: cell.isGroup,
+        }
+      : {
+          label: 'Export selection',
+          icon: 'download',
+          items: CSV_DELIMITERS.map(({ value, label }) => ({
+            label: `${label} separated (${value === '\t' ? '.tsv' : '.csv'})`,
+            command: () => exportCSV(meta.scopedCells, projectName, value),
+          })),
+          hidden: cell.isGroup,
+        }
 
   // null lets the dialog run its own fallback chain
   const getSelectedParentFolderIds = (
@@ -423,8 +447,8 @@ const useCellContextMenu = ({
   const handleTableBodyContextMenu = (e: ContextEvent) => {
     const target = e.target as HTMLElement
     const tdEl = target.closest('td')
-    // get id of first child of td
-    const cellId = tdEl?.firstElementChild?.id
+    // the cell is the td's first child with an id (a highlight tint comes before it)
+    const cellId = tdEl?.querySelector(':scope > [id]')?.id
 
     if (!cellId) return
 
@@ -432,20 +456,18 @@ const useCellContextMenu = ({
 
     if (!cellData) return
 
+    // The menu acts on the selected body cells only: checkbox (row selection) cells are ignored,
+    // so a row that is both ticked and cell selected is not counted twice.
+    const isRowSelectionCell = parseCellId(cellId)?.colId === ROW_SELECTION_COLUMN_ID
     let currentSelectedCells = Array.from(selectedCells)
-    const selectedRowCellIds = currentSelectedCells.filter(
-      (selectedCellId) => parseCellId(selectedCellId)?.colId === ROW_SELECTION_COLUMN_ID,
-    )
-    const clickedRowIsSelected = selectedRowCellIds.some(
-      (selectedCellId) => parseCellId(selectedCellId)?.rowId === cellData.entityId,
-    )
-    // if selecting a cell outside of the current selection
-    if (
-      (!currentSelectedCells.includes(cellId) && !clickedRowIsSelected) ||
-      !currentSelectedCells.length
-    ) {
+    if (!isRowSelectionCell) {
+      currentSelectedCells = currentSelectedCells.filter(
+        (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+      )
+    }
+    // right clicking outside of the selection selects that cell on its own
+    if (!currentSelectedCells.includes(cellId)) {
       currentSelectedCells = [cellId]
-      // update selection
       selectCell(cellId, false, false)
       focusCell(cellId)
     }
@@ -481,6 +503,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,
@@ -496,6 +519,7 @@ const useCellContextMenu = ({
             filteredSelectedCellsData,
             {
               selectedCells: selectedRealCells, // selected cells without row selection
+              scopedCells: currentSelectedCells,
               selectedRows: selectedCellRows,
               selectedColumns: selectedCellColumns,
               selectedFullRows: selectedCellFullRows,

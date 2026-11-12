@@ -1,6 +1,9 @@
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
+export const DATA_ROW_HEIGHT = 32
+export const DATA_HEADER_HEIGHT = 32
+
 export const TR = styled.tr`
   display: flex;
   position: absolute;
@@ -27,7 +30,8 @@ export const TR = styled.tr`
     border-right: 2px solid var(--md-sys-color-surface-container);
   }
 
-  &:hover {
+  &:hover,
+  &[data-context-menu-target] {
     .inner-td {
       background-color: var(--md-sys-color-surface-container-hover);
       border-top-color: var(--md-sys-color-surface-container-hover);
@@ -219,6 +223,57 @@ export const TableContainer = styled.div`
   tbody {
     position: relative;
     display: grid;
+  }
+
+  &.data {
+    padding: 0;
+
+    table {
+      min-width: max-content;
+    }
+
+    thead {
+      min-height: ${DATA_HEADER_HEIGHT}px;
+      background-color: var(--md-sys-color-surface-container);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    }
+
+    th,
+    td {
+      flex-shrink: 0;
+    }
+
+    th {
+      height: ${DATA_HEADER_HEIGHT - 1}px;
+    }
+
+    .resize-handle:not(.resizing) {
+      background-color: var(--md-sys-color-outline-variant);
+    }
+
+    .table-list-row {
+      height: ${DATA_ROW_HEIGHT}px;
+      border-radius: 0;
+
+      td .inner-td {
+        left: 0 !important;
+        gap: var(--base-gap-small);
+        border: 0;
+        border-radius: 0;
+        background-color: transparent;
+      }
+
+      &:hover td .inner-td,
+      &[data-context-menu-target] td .inner-td {
+        background-color: var(--md-sys-color-surface-container-hover);
+      }
+
+      &.selected td .inner-td {
+        border: 0;
+        background-color: var(--md-sys-color-primary-container);
+        color: var(--md-sys-color-on-primary-container);
+      }
+    }
   }
 `
 

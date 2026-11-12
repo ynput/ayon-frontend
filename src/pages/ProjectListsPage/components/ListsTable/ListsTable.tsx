@@ -1,6 +1,7 @@
-import { FC, useState, useMemo, useCallback, useId } from 'react'
+import { FC, ReactNode, useState, useCallback, useId } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
+import { useProjectContext } from '@shared/context'
 import SimpleTable, {
   Container,
   SimpleTableCellTemplate,
@@ -25,6 +26,8 @@ interface ListsTableProps {
   hiddenButtons?: ButtonType[]
   onRowSubmit?: (id: string) => void
   onCreateList?: () => void
+  scrollToRowId?: string
+  getRowTag?: (listId: string) => ReactNode // shown left of the count
 }
 
 const ListsTable: FC<ListsTableProps> = ({
@@ -36,7 +39,10 @@ const ListsTable: FC<ListsTableProps> = ({
   hiddenButtons,
   onRowSubmit,
   onCreateList,
+  scrollToRowId,
+  getRowTag,
 }) => {
+  const { projectName } = useProjectContext()
   const {
     rowSelection,
     setRowSelection,
@@ -85,6 +91,15 @@ const ListsTable: FC<ListsTableProps> = ({
     (props: any, row: any) => {
       const listId = row.original.id
       const { isDisabled, disabledMessage, inactive, data } = row.original
+      // no lists are fetched in folders-only mode, so every count would read 0
+      const badge = isDisabled
+        ? disabledMessage
+        : inactive
+        ? '(archived)'
+        : foldersOnly
+        ? undefined
+        : data.count
+      const tag = picker ? undefined : getRowTag?.(listId)
 
       return (
         <SimpleTableCellTemplate
@@ -92,20 +107,20 @@ const ListsTable: FC<ListsTableProps> = ({
           key={listId}
           iconColor={data.color}
           enableNonFolderIndent={false}
-          // no lists are fetched in folders-only mode, so every count would read 0
           badge={
-            isDisabled
-              ? disabledMessage
-              : inactive
-              ? '(archived)'
-              : foldersOnly
-              ? undefined
-              : data.count
+            tag ? (
+              <>
+                {tag}
+                {badge !== undefined && <span>{badge}</span>}
+              </>
+            ) : (
+              badge
+            )
           }
         />
       )
     },
-    [foldersOnly],
+    [foldersOnly, picker, getRowTag],
   )
 
   return (
@@ -136,6 +151,8 @@ const ListsTable: FC<ListsTableProps> = ({
               picker
                 ? [
                     'new-folder',
+                    'import-list',
+                    'duplicate-list',
                     'delete',
                     'filter',
                     ...(onCreateList ? [] : ['new-list']),
@@ -157,9 +174,11 @@ const ListsTable: FC<ListsTableProps> = ({
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
+            scrollToRowId={scrollToRowId}
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}
+            addonShortcuts={picker ? undefined : { table: 'listsPanel', projectName }}
             renamingId={picker ? undefined : renamingList}
             onRename={picker ? undefined : handleRename}
             onSubmitRename={picker ? undefined : handleSubmitRename}

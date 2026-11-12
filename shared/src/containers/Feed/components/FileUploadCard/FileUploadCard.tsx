@@ -7,6 +7,7 @@ import type { SavedAnnotationMetadata } from '../../index'
 import { useFeedContext } from '../../context/feed'
 import { useDetailsPanelContext } from '@shared/context'
 import { AnnotationPreview } from '../CommentInput/hooks/useAnnotationsSync'
+import { getVersionMediaStart } from '../../helpers/versionFrames'
 
 export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string
@@ -14,6 +15,7 @@ export interface FileUploadCardProps extends React.HTMLAttributes<HTMLDivElement
   src?: string
   unsavedAnnotation?: AnnotationPreview
   savedAnnotation?: SavedAnnotationMetadata
+  annotationFrameStart?: number | null
   size: number
   progress: number
   onRemove?: () => void
@@ -83,6 +85,7 @@ const FileUploadCard = ({
   src,
   unsavedAnnotation,
   savedAnnotation,
+  annotationFrameStart,
   size,
   progress,
   onRemove,
@@ -132,18 +135,17 @@ const FileUploadCard = ({
       return [1, 1]
     }
 
-    if (!firstEntity?.attrib) {
-      return someAnnotation?.range ?? [1, 1]
+    // undefined = origin version unknown, offset by the feed entity; null = origin has no frameStart
+    const mediaStart =
+      annotationFrameStart === undefined
+        ? getVersionMediaStart(firstEntity?.attrib?.frameStart, firstEntity?.attrib?.handleStart)
+        : annotationFrameStart
+    if (typeof mediaStart !== 'number' || !Number.isFinite(mediaStart)) {
+      return someAnnotation.range
     }
 
-    const { frameStart } = firstEntity?.attrib
-    // using isNaN here because Number.isNaN(undefined) returns false
-    if (isNaN(frameStart)) {
-      return someAnnotation?.range ?? [1, 1]
-    }
-
-    return [frameStart - 1 + someAnnotation.range[0], frameStart - 1 + someAnnotation.range[1]]
-  }, [someAnnotation])
+    return [mediaStart - 1 + someAnnotation.range[0], mediaStart - 1 + someAnnotation.range[1]]
+  }, [someAnnotation, annotationFrameStart, firstEntity])
 
   return (
     <Styled.File
