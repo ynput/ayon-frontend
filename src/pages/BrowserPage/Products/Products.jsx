@@ -5,7 +5,7 @@ import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
 // shared
-import { DetailsDialog } from '@shared/components'
+import { DetailsDialog, ValuePill } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
@@ -330,9 +330,10 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const color = project.getProductType(node.data.productType).color || '#cccccc'
+          const { color } = project.getProductType(node.data.productType)
 
-          return <CellWithIcon text={node.data.productType} textStyle={{ color }} />
+          // tinted with its colour like the other coloured values, never coloured text
+          return <ValuePill variant="tinted" label={node.data.productType} color={color} />
         },
       },
       {

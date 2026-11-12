@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { useSelector } from 'react-redux'
 import { OverflowField } from '@ynput/ayon-react-components'
 import { copyToClipboard } from '@shared/util'
+import { ValuePill } from '@shared/components'
 
 // Attributes
 
@@ -44,9 +45,8 @@ const TagsField = ({ value }) => {
       {value.map(
         (tag) =>
           typeof tag === 'string' && (
-            <span key={tag} style={{ color: tags[tag]?.color }}>
-              {tag}
-            </span>
+            // tinted like the tags everywhere else, never coloured text
+            <ValuePill key={tag} variant="tinted" label={tag} color={tags[tag]?.color} />
           ),
       )}
       {isMulti && <span>{')'}</span>}

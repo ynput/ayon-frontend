@@ -1,5 +1,5 @@
 import type { EnumItem } from '@shared/api'
-import { getTagColors, Icon, IconProps } from '@ynput/ayon-react-components'
+import { Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
@@ -230,9 +230,13 @@ export const EnumCellValue = ({
     >
       <StyledValuesContainer className="values">
         {selectedOptions.map((option, i) => {
+          // a value in a studio colour is always a pill, never coloured text: the given style for a
+          // single value, tinted for list values and where no style is given. Theme colours (a
+          // value that isn't an option any more) stay the text colour.
+          const themeColor = option.color?.startsWith('var(') ? option.color : undefined
           const pill =
-            pillStyle && option.color && !isMultiSelect && !iconOnlyColor
-              ? getPillColors(option.color, pillStyle)
+            option.color && !themeColor && !iconOnlyColor
+              ? getPillColors(option.color, (!isMultiSelect && pillStyle) || 'tinted')
               : undefined
           return (
             <StyledValueWrapper
@@ -252,7 +256,11 @@ export const EnumCellValue = ({
                 <Icon
                   icon={option.icon}
                   style={{
-                    color: pill ? pill.color : option.color ?? undefined,
+                    color: pill
+                      ? pill.color
+                      : iconOnlyColor || themeColor
+                      ? option.color ?? undefined
+                      : undefined,
                     ...iconStyle,
                   }}
                   className={iconClassName}
@@ -263,7 +271,7 @@ export const EnumCellValue = ({
               {(showLabels || !option.icon) && (
                 <StyledValue
                   style={{
-                    ...(!pill && getValueColors(option, !!backgroundColor, iconOnlyColor)),
+                    ...(!pill && getValueColors(!!backgroundColor, themeColor)),
                     ...valueStyle,
                   }}
                   className={clsx({ placeholder: isPlaceholder }, valueClassName)}
@@ -302,26 +310,11 @@ export const EnumCellValue = ({
   )
 }
 
-// a value shown as a chip takes the tag colours, otherwise its colour is the text colour
-const getValueColors = (
-  option: EnumItem,
-  isChip: boolean,
-  iconOnlyColor: boolean,
-): React.CSSProperties => {
-  if (isChip && option.color) {
-    const colors = getTagColors(option.color)
-    return {
-      color: colors.text,
-      backgroundColor: colors.background,
-      boxShadow: `inset 0 0 0 1px ${colors.border}`,
-    }
-  }
-  if (isChip) return { backgroundColor: 'var(--md-sys-color-surface-container)' }
-  return {
-    color: iconOnlyColor && option.icon ? undefined : option.color ?? undefined,
-    backgroundColor: 'transparent',
-  }
-}
+// a value without a studio colour: a plain chip in a list, otherwise plain text (in a theme colour if given)
+const getValueColors = (isChip: boolean, themeColor?: string): React.CSSProperties =>
+  isChip
+    ? { backgroundColor: 'var(--md-sys-color-surface-container)', color: themeColor }
+    : { backgroundColor: 'transparent', color: themeColor }
 
 // Helper functions to check if the icon is a valid image source
 const checkForImgSrc = (icon: string | undefined = ''): boolean => {

@@ -246,10 +246,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           value={valueArray}
           options={enumOptions}
           type={type}
+          // coloured values as in the tables: a status filled, a type with only its icon coloured,
+          // other values tinted
+          pill={field.name === 'status' ? 'filled' : 'tinted'}
           pt={{
             template: {
               style: { height: 32 },
               className: 'enum',
+              iconOnlyColor: ['folderType', 'taskType', 'productType'].includes(field.name),
             },
           }}
           placeholder={
