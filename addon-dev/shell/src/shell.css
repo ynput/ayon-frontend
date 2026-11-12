@@ -676,50 +676,13 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   color: var(--md-sys-color-on-surface);
 }
 
-/* slotOverlay.tsx: Highlight slots marks every slot of the place. An unused one gets a "+ label"
-   placeholder where a contribution would go; the wrapper has no box of its own, so the page lays
-   out the chip as it would a contribution */
-.ayon-dev-slot {
-  display: contents;
-}
-.ayon-dev-slot > .ayon-dev-slot-chip {
-  display: inline-block;
-  flex: 0 0 auto;
-  align-self: center;
-  vertical-align: middle;
-  box-sizing: border-box;
-  height: 18px;
-  padding: 0 6px;
-  border: 1px dashed var(--md-sys-color-tertiary);
-  border-radius: 4px;
-  font-size: 10px;
-  font-weight: normal;
-  line-height: 16px;
-  white-space: nowrap;
-  color: var(--md-sys-color-tertiary);
-  background: color-mix(in srgb, var(--md-sys-color-tertiary) 8%, transparent);
-}
-.ayon-dev-slot.active > .ayon-dev-slot-chip {
-  border-style: solid;
-  color: var(--md-sys-color-on-tertiary);
-  background: var(--md-sys-color-tertiary);
-}
-/* a used slot's content: a light outline with Highlight slots, a strong one while its row is hovered */
-.ayon-dev-item {
-  display: contents;
-}
-.ayon-dev-item.marked > * {
-  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-tertiary) 60%, transparent);
-  outline-offset: 1px;
-}
-.ayon-dev-item.hovered > * {
-  outline: 2px solid var(--md-sys-color-tertiary);
-  outline-offset: 1px;
-}
-/* AYON's slot highlighting (slotHighlight in the shared package) outlines menu entries, addon
-   columns and the buttons that open slot menus; a column's button shows without hovering its header */
-.ayon-slot-highlight .ayon-shell-tree-table th .actions:has([data-ayon-slot-trigger]) {
+/* the slot inspector (slotInspector in the shared package) outlines contributions and the buttons
+   that open menus with them; a column's button shows without hovering its header */
+.ayon-slot-inspector .ayon-shell-tree-table th .actions:has([data-ayon-trigger]) {
   display: flex;
+}
+.ayon-shell-inspector {
+  margin: 0 -4px 8px;
 }
 
 /* the project table: AYON's (ProjectTreeTable) */

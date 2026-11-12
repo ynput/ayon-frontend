@@ -17,6 +17,8 @@ export interface ContractSlot {
   required: readonly string[]
   pieces: readonly string[]
   optionalPieces?: readonly string[]
+  /** what developer mode's Show slots renders in the slot */
+  example?: Record<string, unknown>
   /** the contract package it comes from */
   package: string
 }

@@ -29,7 +29,7 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 |---|---|
 | `ayon-addon dev [--port 5174]` | The dev shell (below): the addon in AYON's surfaces, without AYON, with hot reload |
 | `ayon-addon dev --ayon [--port 5173] [--open] [--frontend <url>]` | Builds on every change and serves the build with CORS. Checks what AYON's dev override needs on the server, then prints (`--open`: opens) the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
-| `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads. Then the slots of the addon's contract packages (dependencies with `"ayonAddon": { "slots": ... }` in their `package.json`), as "from `<package>`" |
+| `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads. Then the slots of the addon's contract packages (dependencies with `"ayonAddon": { "slots": ... }` in their `package.json`), as "from `<package>`". Then each slot's example as a manifest entry: what developer mode's Show slots renders there |
 | `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc`. Contributions are checked against AYON's slots, those of the addon's contract packages and those it declares itself. The contract packages' preview scenes are checked too, with a note for contributions no scene renders (below) |
 | `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
 | `ayon-addon preview <slot> <id> --fixture name [--run] [--prune] [--screenshot file]` | The same from `dev/fixtures/<name>.json`, without a server. `--prune` drops the answers it didn't use |
@@ -121,12 +121,12 @@ of AYON:
     not: places (name, package) and slots (label, name, the titles of the addon's
     contributions). A package's heading is its name for people (`@scope/ayon-addon-board` is
     "Board"), with the full name as the tooltip.
-  - **Highlight** (Highlight slots), at the right of the Slots heading: marks every slot of the
-    place on stage (below). It is the only thing that does; off, the stage looks as in AYON.
+  - **Show slots**, **Highlight contributions** and the legend of addons, under the Slots heading:
+    AYON's developer mode switches (below). Off, the stage looks as in AYON.
   - **Slots**: a read-only overview of the place's slots (label, with the name muted under it),
     and under each the addon's contributions with an icon, with the ones AYON would skip and why.
-    Hovering a slot's row outlines it on stage, and hovering a highlighted slot on stage
-    highlights its row. Nothing is selected: the place shows all its slots at once.
+    Hovering a slot's row outlines it on stage, and hovering a contribution on stage (with a
+    switch on) highlights its row. Nothing is selected: the place shows all its slots at once.
 - **The stage** renders the selected place with all its slots: menus show all their items. The
   header above it has a fixed height and names the place; where the place comes from is behind
   (i). A warning shows only when the stage is not live (a `?preview=` fixture). A place without a
@@ -149,7 +149,7 @@ of AYON:
   fixtures. "," and "/" do nothing while typing in a field.
 - **Other addons' slots**: contributions to the slots of the addon's contract packages, in the
   preview scenes of the package (below).
-- The place and the switches are in the URL: `?surface=<place>&showAll=1&highlight=1&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…&ctxValues=<JSON>`.
+- The place and Show all are in the URL: `?surface=<place>&showAll=1&ctxProject=…&ctxProjects=a,b&ctxEntities=task:<id>,…&ctxValues=<JSON>`.
   Going to another place adds a history entry (Back works); changing inputs replaces it. A
   scene's values are kept per place while the page is open: going back to it restores them. Old
   links are read as what they meant: `scene=<package>:<id>` becomes `surface=`, `showUnused=1`
@@ -206,18 +206,17 @@ contribution is developed without that addon installed:
   tooltip), and under each slot the addon's contributions to it. Selecting it puts the scene on
   stage, full width, with the shell's providers (right-click menus, the details panel, the user).
   A contract slot no scene renders is under Other slots.
-- **Highlight slots** (the Slots heading's switch, in the URL as `highlight=1`): a slot on stage rendered with
-  `SlotOutlet` and without contributions gets a small dashed "+ title" chip where they would go,
-  and a menu slot without items gets one disabled "title" entry with an `add` icon where its items
-  would be (also a menu that would otherwise not open, such as a table cell's). What a used slot
-  renders gets a light outline instead, and so do a menu's entries from a used slot. The button
-  that opens a menu with a slot (a More button, a column's menu button) gets a thin solid outline,
-  used or not. Hovering a slot's row outlines it strongly on stage, menu entries included, and the
-  other way round. The menus are AYON's own (shared), so the tagging, placeholders, styles and
-  state are shared's slot highlighting (`slotHighlight.ts`, see `src/remote/AGENTS.md`): the
-  switch calls its `setSlotHighlight`, a row its `setHighlightedSlot`. The scenes need nothing for
-  it: the shell hands the SDK an internal hook (`devSlots`, mapped to the same helpers) that AYON
-  never sets, so in AYON `SlotOutlet` and `useSlotMenuItems` render exactly the contributions.
+- **Show slots** and **Highlight contributions** (under the Slots heading) are AYON's developer mode
+  switches, the same component, state and rendering (`slotInspector` in the shared package, see
+  `src/remote/AGENTS.md`), kept in session storage. Show slots adds every slot's example
+  contribution after the real ones: AYON's for its slots, the contract package's `example` for an
+  addon's (a menu gets an entry, an outlet the example's component). Using one only shows "Example
+  contribution to `<slot>`". Highlight contributions outlines each contribution in its addon's
+  colour (the legend lists them, with a checkbox each) and the buttons that open menus with them;
+  hovering one shows its addon, slot and key. A new session in the shell starts with Highlight
+  contributions on. Examples don't count as used: Places and "N of M used" count the addon's own
+  contributions. The scenes need nothing for it: the shell hands the SDK an internal hook
+  (`devSlots`) only to learn the context each slot passes (Context), which AYON never sets.
 - A scene's fields are a form under *Input values*, with *Reset* and the values as JSON. The values
   changed from the defaults are in the URL (`ctxValues`), so a reload or a shared link keeps them.
 - `@ynput/ayon-addon` and `react` in a scene resolve to the contributing addon's copies, also when

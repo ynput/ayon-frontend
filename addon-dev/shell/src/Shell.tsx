@@ -29,7 +29,12 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { AddonServices, LoginPage, setSlotHighlight, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
+import {
+  AddonServices,
+  LoginPage,
+  setSlotInspectorAvailable,
+  SplitterStyles,
+} from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
 import { DevPanel, slotsHere } from './DevPanel'
@@ -203,8 +208,12 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
-  // AYON's slot highlighting (shared), which the stage's own markers follow too (slotOverlay.tsx)
-  useEffect(() => setSlotHighlight(!!selection.highlight), [selection.highlight])
+  // AYON's slot inspector (its developer mode's switches): always available here, and a new
+  // session starts with every addon's contributions outlined
+  useEffect(() => {
+    setSlotInspectorAvailable(true, { highlight: true })
+    return () => setSlotInspectorAvailable(false)
+  }, [])
   // the menus opened in the last place are not this one's
   useEffect(() => clearMenus(), [selection.surface])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])

@@ -5,7 +5,7 @@ import { normalizeParams } from './places'
 import type { Place } from './places'
 import type { ShellSelection } from './types'
 
-// ?surface=details-panel&showAll=1&highlight=1&ctxProject=demo&ctxEntities=task:<id>
+// ?surface=details-panel&showAll=1&ctxProject=demo&ctxEntities=task:<id>
 // Names of their own: AYON's surfaces keep their state in the URL too (project, type, id).
 // `slot` and `contribution` are what `ayon-addon open` is about; the panel doesn't show them.
 export const PARAMS = {
@@ -13,7 +13,6 @@ export const PARAMS = {
   slot: 'slot',
   id: 'contribution',
   showAll: 'showAll',
-  highlight: 'highlight',
   project: 'ctxProject',
   projects: 'ctxProjects',
   entities: 'ctxEntities',
@@ -56,7 +55,6 @@ export const readSelection = (search = window.location.search, places?: readonly
     slot: knownSlot,
     id: (knownSlot && params.get(PARAMS.id)) || undefined,
     showAll: params.get(PARAMS.showAll) === '1' || (!places && params.get('showUnused') === '1'),
-    highlight: params.get(PARAMS.highlight) === '1',
     projectName,
     projectNames: params.get(PARAMS.projects)?.split(',').filter(Boolean),
     entityType: entities[0]?.entityType || params.get(PARAMS.entityType) || undefined,
@@ -83,12 +81,13 @@ export const writeSelection = (selection: ShellSelection, push = false) => {
   params.delete('scene')
   params.delete('showSlots')
   params.delete('showUnused')
+  // the slot inspector's switches are kept in the session, as in AYON
+  params.delete('highlight')
   set(PARAMS.preview, selection.preview)
   set(PARAMS.surface, selection.surface)
   set(PARAMS.slot, selection.slot)
   set(PARAMS.id, selection.id)
   set(PARAMS.showAll, selection.showAll ? '1' : undefined)
-  set(PARAMS.highlight, selection.highlight ? '1' : undefined)
   set(PARAMS.project, selection.projectName)
   set(PARAMS.projects, selection.projectNames?.join(',') || undefined)
   set(PARAMS.page, selection.page)

@@ -24,7 +24,7 @@ import type {
   ProjectTableState,
   TableShortcutContext,
 } from '@ynput/ayon-addon'
-import { contributionTitle, getHost } from '@ynput/ayon-addon/host'
+import { contributionTags, contributionTitle, getHost } from '@ynput/ayon-addon/host'
 import {
   useGetCurrentUserQuery,
   useGetProjectQuery,
@@ -59,12 +59,12 @@ import {
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
-import { contributionsTo, findContribution, getPlace, idOf, slotSnippet } from './catalog'
+import { contributionsTo, findContribution, getPlace, idOf, onStage, slotSnippet } from './catalog'
 import { contractSlot, getContracts, noSceneNote } from './contractModel'
 import type { Place } from './places'
 import { SceneStage } from './scenes'
 import { missingInputs } from './slotNeeds'
-import { Placeholder, SlotFrame, slotInfo } from './slotOverlay'
+import { slotInfo } from './slotOverlay'
 import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
@@ -86,7 +86,7 @@ const Hint = ({ children }: { children: ReactNode }) => (
  * `ayon-addon open` is about).
  */
 const usePage = (slot: 'project.page' | 'studio.page', selection: ShellSelection) => {
-  const pages = contributionsTo(slot)
+  const pages = onStage(slot)
   const opened = selection.slot === slot ? findContribution(slot, selection.id) : undefined
   const [picked, setPicked] = useState(opened?.key)
   return { pages, page: pages.find((p) => p.key === picked) ?? pages[0], pick: setPicked }
@@ -94,25 +94,25 @@ const usePage = (slot: 'project.page' | 'studio.page', selection: ShellSelection
 
 /** A page slot's tabs: this addon's pages of the slot, the picked one on stage. */
 const PageTabs = ({
-  slot,
-  label,
   pages,
   current,
   onPick,
 }: {
-  slot: 'project.page' | 'studio.page'
-  label: string
   pages: AnyContribution[]
   current?: AnyContribution
   onPick: (key: string) => void
 }) => (
   <div className="ayon-shell-bar" data-shell-surface="page-tabs">
     {pages.map((page) => (
-      <SlotFrame key={page.key} slot={slot} contribution={page.key}>
-        <Button label={contributionTitle(page)} variant="text" selected={page === current} onClick={() => onPick(page.key)} />
-      </SlotFrame>
+      <Button
+        key={page.key}
+        label={contributionTitle(page)}
+        variant="text"
+        selected={page === current}
+        onClick={() => onPick(page.key)}
+        {...contributionTags(page)}
+      />
     ))}
-    <Placeholder slot={slot} label={label} />
   </div>
 )
 
@@ -174,7 +174,7 @@ const ProjectPagesStage = ({ selection }: StageProps) => {
   }, [page])
   return (
     <div className="ayon-shell-stage" style={{ flex: 1 }}>
-      <PageTabs slot="project.page" label="Project page" pages={pages} current={page} onPick={pick} />
+      <PageTabs pages={pages} current={page} onPick={pick} />
       {page ? (
         <ProjectPageProviders
           key={page.key}
@@ -231,7 +231,7 @@ const StudioPagesStage = ({ selection, onChange }: StageProps) => {
   }, [page])
   return (
     <div className="ayon-shell-stage" style={{ flex: 1 }}>
-      <PageTabs slot="studio.page" label="Studio page" pages={pages} current={page} onPick={pick} />
+      <PageTabs pages={pages} current={page} onPick={pick} />
       {page ? (
         <ViewsProvider key={page.key} viewType={(page as { viewType?: string }).viewType} dispatch={dispatch}>
           <StudioPageSelectionProvider value={studio}>
@@ -250,15 +250,15 @@ const BackgroundStage = ({ selection }: StageProps) => {
   const context = useMemo(() => ({ projectName: selection.projectName ?? null }), [selection.projectName])
   useSlotReport('app.service', context)
   useStageReady(true)
-  const services = contributionsTo('app.service')
+  const services = onStage('app.service')
   return (
     <div className="ayon-shell-no-preview" data-shell-surface="service">
       <strong>No visual preview</strong>
       <p>This service runs throughout the dev shell. Opening this place does not start or restart it.</p>
       {services.map((service) => (
-        <SlotFrame key={service.key} slot="app.service" contribution={service.key}>
-          <code>{idOf(service)}</code>
-        </SlotFrame>
+        <code key={service.key} {...contributionTags(service)}>
+          {idOf(service)}
+        </code>
       ))}
     </div>
   )
@@ -320,10 +320,7 @@ const AccountStage = () => {
               </FormRow>
             </Panel>
             <div className="ayon-shell-account-side">
-              <SlotFrame slot="profile.section">
-                <AddonProfileSections />
-              </SlotFrame>
-              <Placeholder slot="profile.section" label="Profile section" />
+              <AddonProfileSections />
             </div>
           </div>
         </div>
@@ -360,7 +357,7 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   useSlotReport('userDetails.menuItem', target ? context : undefined)
   useStageReady(!!target)
   const addonMenu = useAddonUserMenuItems(context)
-  // tagged with the slot, the placeholder among them while slots are highlighted (the shared hook)
+  // tagged for the slot inspector (the shared hook)
   const menuItems = [
     ...addonMenu.topItems,
     ...addonMenu.items,
@@ -412,10 +409,7 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
           onMenuOpen={addonMenu.prefetch}
         />
         <div className="ayon-shell-user-forms">
-          <SlotFrame slot="userDetails.section">
-            <AddonUserDetailsSections context={context} />
-          </SlotFrame>
-          <Placeholder slot="userDetails.section" label="Section" />
+          <AddonUserDetailsSections context={context} />
         </div>
         <Panel className="ayon-shell-panel-buttons">
           <Button label="Cancel" icon="close" disabled />
@@ -441,16 +435,13 @@ const HeaderStage = ({ selection }: StageProps) => {
   const item = (header: Contribution<'header.item'>) => {
     const any = header as unknown as AnyContribution
     return (
-      <SlotFrame key={any.key} slot="header.item" contribution={any.key}>
-        <ButtonItem contribution={any} context={base} onContext={setPopup} />
-      </SlotFrame>
+      <ButtonItem key={any.key} contribution={any} context={base} onContext={setPopup} />
     )
   }
   return (
     <div className="ayon-shell-bar" data-shell-surface="header">
       <Button icon="home" variant="text" disabled />
       {sorted('left').map(item)}
-      <Placeholder slot="header.item" label="Header item" />
       <span className="spacer" />
       {sorted('right').map(item)}
       <Button icon="forum" variant="text" disabled />
@@ -628,12 +619,9 @@ const TableStage = ({ selection }: StageProps) => {
         {pageToolbarItems.map((item) => {
           const any = item as unknown as AnyContribution
           return (
-            <SlotFrame key={any.key} slot="projectTable.toolbarItem" contribution={any.key}>
-              <ButtonItem contribution={any} context={base} onContext={setPopup} />
-            </SlotFrame>
+            <ButtonItem key={any.key} contribution={any} context={base} onContext={setPopup} />
           )
         })}
-        <Placeholder slot="projectTable.toolbarItem" label="Toolbar item" />
         <Button
           icon="settings"
           label="Customize"
@@ -652,9 +640,7 @@ const TableStage = ({ selection }: StageProps) => {
         </div>
         {isPanelOpen && (
           <div className="ayon-shell-customize" data-shell-surface="customize">
-            <SlotFrame slot="projectTable.customizeSection">
-              <SettingsPanel settings={sections} />
-            </SlotFrame>
+            <SettingsPanel settings={sections} />
           </div>
         )}
       </div>
@@ -682,9 +668,9 @@ const NoPreviewSlot = ({ slot, label, description }: { slot: string; label: stri
       {description && <p>{description}</p>}
       {declared && <p className="ayon-shell-note">{noSceneNote(declared, getContracts().find((c) => c.package === declared.package))}</p>}
       {contributions.map((c) => (
-        <SlotFrame key={c.key} slot={slot} contribution={c.key}>
-          <span className="ayon-shell-chip">{contributionTitle(c)}</span>
-        </SlotFrame>
+        <span key={c.key} className="ayon-shell-chip" {...contributionTags(c)}>
+          {contributionTitle(c)}
+        </span>
       ))}
       {snippet && (
         <>

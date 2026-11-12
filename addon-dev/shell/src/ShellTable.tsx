@@ -6,7 +6,7 @@
 // settings kept in memory, no edits saved.
 import { useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
-import type { ColumnDef, ExpandedState } from '@tanstack/react-table'
+import type { ExpandedState } from '@tanstack/react-table'
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { EntityRef, ProjectTablePage, ProjectTableState } from '@ynput/ayon-addon'
 import { useGetEntitiesDetailsPanelQuery } from '@ynput/ayon-frontend-shared/api'
@@ -39,9 +39,7 @@ import type {
   ProjectDataContextProps,
   ProjectTableProviderProps,
   TableRow,
-  TreeTableExtraColumn,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { Placeholder, usePlaceholderShown } from './slotOverlay'
 
 interface ShellTableProps {
   page: ProjectTablePage
@@ -84,20 +82,6 @@ const NO_ROW_DATA: ProjectDataContextProps = {
 // the group-by settings are the Customize panel's, which the shell draws itself
 const MODULES = { GroupSettings: (() => null) as never, isLoading: false }
 
-/** The "+ Column" placeholder of an unused tableColumn slot, as a column at the end. */
-const PLACEHOLDER_COLUMN: TreeTableExtraColumn = {
-  column: {
-    id: 'ayon-dev-column-placeholder',
-    header: () => <Placeholder slot="tableColumn" label="Column" />,
-    cell: () => null,
-    size: 120,
-    enableSorting: false,
-    enableHiding: false,
-    enablePinning: false,
-    enableResizing: false,
-  } as ColumnDef<TableRow>,
-}
-
 interface Details {
   id: string
   name?: string
@@ -134,12 +118,7 @@ const ProjectData = ({ children }: { children: ReactNode }) =>
   )
 
 export const ShellTable = ({ page, tableState, entities, onSelect }: ShellTableProps) => {
-  const { columns: addonColumns } = useAddonTableColumns(page)
-  const placeholder = usePlaceholderShown('tableColumn')
-  const extraColumns = useMemo(
-    () => (placeholder ? [...addonColumns, PLACEHOLDER_COLUMN] : addonColumns),
-    [addonColumns, placeholder],
-  )
+  const { columns: extraColumns } = useAddonTableColumns(page)
   // shown: Name, Status and those columns (the others start hidden, as AYON's opt-in columns)
   const defaultColumnVisibility = useMemo(
     () =>

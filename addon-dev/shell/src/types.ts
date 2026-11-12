@@ -28,8 +28,6 @@ export interface ShellSelection {
   id?: string
   /** Show all: list every place and slot, used or not */
   showAll?: boolean
-  /** Highlight slots: mark every slot of the place on stage (placeholders, outlines) */
-  highlight?: boolean
   projectName?: string
   /** the studio's project selection (studio pages, the project list) */
   projectNames?: string[]

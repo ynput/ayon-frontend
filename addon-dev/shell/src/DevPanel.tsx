@@ -1,7 +1,8 @@
 // The developer panel: Places (top), every place of AYON (by area) and of the contract packages
 // that has a slot this addon uses (all of them with Show all), and Slots (bottom), a read-only
 // overview of the selected place's slots with this addon's contributions to each. A place opens
-// the UI around all its slots on the stage; Highlight slots marks them there. Each half scrolls on
+// the UI around all its slots on the stage; the slot inspector's switches (AYON's, as in its
+// developer mode) show the slots' examples and outline contributions there. Each half scrolls on
 // its own. Everything here is also settable from the URL (params.ts).
 import { useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
@@ -9,7 +10,11 @@ import { Button, Icon, InputSwitch, InputText } from '@ynput/ayon-react-componen
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
 import { useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
-import { setHighlightedSlot, useSlotHighlight } from '@ynput/ayon-frontend-shared/components'
+import {
+  setHighlightedSlot,
+  SlotInspectorControls,
+  useSlotInspector,
+} from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, getPlace, getPlaces, getUsedSlots } from './catalog'
 import { getContracts } from './contractModel'
 import { AYON_AREAS, AYON_SOURCE, packageTitle, panelListing, placeSummary } from './places'
@@ -137,7 +142,7 @@ const Places = ({ options, selection, search, onSearch, onChange, onPick }: DevP
     ...getContracts().flatMap((contract) => contract.problems.map((problem) => `${contract.package}: ${problem}`)),
     ...getRegistry().skipped.map((s) => `${s.slot} ${s.id}: ${s.reason}`),
   ]
-  const nothingUsed = !getRegistry().contributions.length
+  const nothingUsed = !used.size
   const pick = (place: Place) =>
     onPick({
       ...selection,
@@ -263,22 +268,16 @@ const SlotRow = ({
   )
 }
 
-const Slots = ({ selection, search, onChange }: Pick<DevPanelProps, 'selection' | 'search' | 'onChange'>) => {
-  const { hovered } = useSlotHighlight()
+const Slots = ({ selection, search }: Pick<DevPanelProps, 'selection' | 'search'>) => {
+  const { hovered } = useSlotInspector()
   const place = getPlace(selection.surface)
   const slots = slotsHere(place, selection, search)
   return (
     <>
       <div className="ayon-shell-section-header">
         <h3>Slots</h3>
-        <Switch
-          label="Highlight"
-          action="highlight"
-          title="Highlight slots: mark every slot of the place in the preview, a placeholder where an unused slot is, an outline around what a used one shows and around the buttons that open menus with a slot."
-          checked={!!selection.highlight}
-          onChange={(checked) => onChange({ ...selection, highlight: checked })}
-        />
       </div>
+      <SlotInspectorControls className="ayon-shell-inspector" />
       {!place ? (
         <small className="ayon-shell-note">Select a place.</small>
       ) : (
@@ -344,7 +343,6 @@ export const DevPanel = (props: DevPanelProps) => {
           const params = new URLSearchParams()
           if (next.surface) params.set('surface', next.surface)
           if (next.showAll) params.set('showAll', '1')
-          if (next.highlight) params.set('highlight', '1')
           window.location.href = `?${params}`
         }
       : props.onChange
@@ -374,7 +372,7 @@ export const DevPanel = (props: DevPanelProps) => {
           <Places {...props} onPick={onPick} />
         </SplitterPanel>
         <SplitterPanel size={50} minSize={10} className="ayon-shell-section">
-          <Slots selection={selection} search={props.search} onChange={props.onChange} />
+          <Slots selection={selection} search={props.search} />
         </SplitterPanel>
       </Splitter>
     </aside>

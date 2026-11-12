@@ -1,6 +1,6 @@
 // The places of this shell: AYON's slots (the SDK's), the contract packages' scenes and the slots
 // the addon declares itself (places.ts), built once the manifests are registered.
-import { getRegistry } from '@ynput/ayon-addon/host'
+import { getRegistry, isExample } from '@ynput/ayon-addon/host'
 import { SLOT_DOCS, SLOTS } from '@ynput/ayon-addon/check'
 import type { AnyContribution, SlotName } from '@ynput/ayon-addon'
 import { getContracts } from './contractModel'
@@ -29,11 +29,16 @@ export const getPlace = (id?: string) => (id ? getPlaces().find((place) => place
 
 export const idOf = (contribution: AnyContribution) => (contribution as { id: string }).id
 
-/** This addon's contributions: what makes a slot "used". */
-export const contributionsTo = (slot?: string) =>
-  slot ? getRegistry().contributions.filter((c) => c.slot === slot) : []
+/** The addon's own contributions, without the slots' examples (Show slots). */
+const ownContributions = () => getRegistry().contributions.filter((c) => !isExample(c))
 
-export const getUsedSlots = () => usedSlots(getRegistry().contributions)
+/** This addon's contributions to a slot: what makes it "used". */
+export const contributionsTo = (slot?: string) => (slot ? ownContributions().filter((c) => c.slot === slot) : [])
+
+/** What a slot shows on stage: the addon's contributions, then its example with Show slots on. */
+export const onStage = (slot: string) => getRegistry().contributions.filter((c) => c.slot === slot)
+
+export const getUsedSlots = () => usedSlots(ownContributions())
 
 /** The contribution in focus, if the selection names one. */
 export const findContribution = (slot?: string, id?: string) =>
