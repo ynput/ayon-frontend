@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import type { EnumItem, Project, ProjectFolderModel } from '@shared/api'
-import type { UserColor } from '@ynput/ayon-react-components'
+import type { Project, ProjectFolderModel } from '@shared/api'
 import {
   buildGroupedData,
   compareGroupingPathItems,
@@ -230,14 +229,12 @@ export const useProjectTableRows = ({
       const attribute = columnAttributeData[columnId]
       if (attribute?.enum?.length) {
         const optionIndex = attribute.enum.findIndex((item) => String(item.value) === String(value))
-        const option: (EnumItem & UserColor) | undefined =
-          optionIndex >= 0 ? attribute.enum[optionIndex] : undefined
+        const option = optionIndex >= 0 ? attribute.enum[optionIndex] : undefined
         return {
           value,
           label: String(option?.label ?? option?.value ?? value ?? '(None)'),
           icon: typeof option?.icon === 'string' ? option.icon : undefined,
           color: option?.color,
-          colorLight: option?.colorLight,
           sortIndex: optionIndex >= 0 ? optionIndex : Number.MAX_SAFE_INTEGER,
           sortValue: String(option?.label ?? option?.value ?? value ?? '(None)'),
         }

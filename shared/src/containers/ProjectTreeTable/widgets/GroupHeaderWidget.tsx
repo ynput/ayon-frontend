@@ -1,4 +1,4 @@
-import { Button, Icon, theme, getReadableColor } from '@ynput/ayon-react-components'
+import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import clsx from 'clsx'
 import { getPillColors, type PillStyle } from '@shared/util/pillColors'
@@ -109,7 +109,6 @@ type GroupHeaderProps = {
   icon?: string | null
   img?: string | null
   color?: string | null
-  colorLight?: string | null
   count?: number
   percentage?: number
   isExpanded: boolean
@@ -127,15 +126,14 @@ export const GroupHeaderWidget = ({
   count,
   percentage,
   color,
-  colorLight,
   isExpanded,
   isEmpty,
   toggleExpanded,
   pill,
 }: GroupHeaderProps) => {
   // a coloured group value shows as a pill, like the value in its cells
-  const pillColors = pill && color ? getPillColors({ color, colorLight }, pill) : undefined
-  const textColor = pillColors ? 'inherit' : getReadableColor({ color, colorLight })
+  const pillColors = pill && color ? getPillColors(color, pill) : undefined
+  const textColor = pillColors ? 'inherit' : color || undefined
   return (
     <StyledGroupHeader id={id}>
       <Expander

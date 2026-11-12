@@ -2,7 +2,6 @@ import {
   DefaultItemTemplate,
   DefaultValueTemplate,
   DropdownProps,
-  getReadableColor,
   Icon,
   InputSwitch,
   InputText,
@@ -143,9 +142,7 @@ export default function ColumnMapper({
                       value={value}
                       displayIcon={dropdownValueIcon && selectedTargetOption?.icon}
                       style={dropdownValueIcon
-                        ? {
-                            "--icon-color": getReadableColor(selectedTargetOption),
-                          } as unknown as CSSProperties
+                        ? { "--icon-color": selectedTargetOption?.color } as unknown as CSSProperties
                         : {}
                       }
                       isOpen={isOpen}

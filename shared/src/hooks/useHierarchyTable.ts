@@ -1,14 +1,13 @@
 // create table data for the hierarchy
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 import type { FolderType, FolderListItem } from '@shared/api'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { useCallback, useMemo } from 'react'
 import { useProjectFoldersContext } from '@shared/context'
 import { getEntityThumbnailUrl } from '@shared/util'
 
 type Props = {
   projectName: string | null
-  folderTypes: (FolderType & UserColor)[]
+  folderTypes: FolderType[]
   includeColors?: boolean
   includeThumbnails?: boolean
 }
@@ -27,9 +26,9 @@ export const useHierarchyTable = ({
   }
 
   const getFolderColor = (type: string) => {
-    if (!includeColors) return {}
+    if (!includeColors) return undefined
     const folderType = folderTypes.find((folderType) => folderType.name === type)
-    return { iconColor: folderType?.color, iconColorLight: folderType?.colorLight }
+    return folderType?.color
   }
 
   const getFolderThumbnail = (folder: FolderListItem) => {
@@ -48,7 +47,7 @@ export const useHierarchyTable = ({
     name: folder.name,
     label: folder.label || folder.name,
     icon: getFolderIcon(folder.folderType),
-    ...getFolderColor(folder.folderType),
+    iconColor: getFolderColor(folder.folderType),
     img: getFolderThumbnail(folder),
     data: {
       id: folder.id,

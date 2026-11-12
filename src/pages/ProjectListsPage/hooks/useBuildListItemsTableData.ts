@@ -46,7 +46,6 @@ const useBuildListItemsTableData = ({ listItemsData, getRowValues }: Props) => {
         ...rowValues,
         icon: isRestricted ? RESTRICTED_ENTITY_ICON : entityTypeData?.icon,
         color: isRestricted ? '' : entityTypeData?.color,
-        colorLight: isRestricted ? '' : entityTypeData?.colorLight,
         folderId: extractFolderId(item, item.entityType),
         taskId: item.task?.id,
         versionEntityId: item.entityType === 'version' ? item.id : undefined,

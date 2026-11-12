@@ -27,7 +27,6 @@ export type PatchOperation = Pick<OperationModel, 'entityId' | 'entityType' | 'd
 }
 
 interface EnumOption extends EnumItem {
-  colorLight?: string | null
   scope?: string[]
 }
 

@@ -44,7 +44,6 @@ import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containe
 import { useVPViewsContext } from '../vp-views/VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import {
@@ -138,7 +137,7 @@ export interface VersionsDataContextValue {
   hasNextPage: boolean | undefined
   fetchNextPage: (group?: string) => void
   // grouping
-  groups: (EntityGroup & UserColor)[]
+  groups: EntityGroup[]
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
