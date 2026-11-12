@@ -203,14 +203,16 @@ contribution is developed without that addon installed:
   A contract slot no scene renders is under Other slots.
 - **Highlight slots** (the Slots heading's switch, in the URL as `highlight=1`): a slot on stage rendered with
   `SlotOutlet` and without contributions gets a small dashed "+ title" chip where they would go,
-  and a menu slot without items gets one disabled "+ title" entry at the top of the menu (also a
-  menu that would otherwise not open, such as a table cell's). What a used slot renders gets a
-  light outline instead, and so do a menu's entries from a used slot. The button that opens a menu
-  with a slot (a More button, a column's menu button) gets a thin solid outline, used or not.
-  Hovering a slot's row outlines it strongly on stage, menu entries included, and the other way
-  round. Menus are built when they open, so their entries carry their slot as data attributes and
-  CSS matches them against the switch on the page's root. The scenes need nothing for it: the shell hands the SDK an internal hook that AYON never
-  sets, so in AYON `SlotOutlet` and `useSlotMenuItems` render exactly the contributions.
+  and a menu slot without items gets one disabled "title" entry with an `add` icon where its items
+  would be (also a menu that would otherwise not open, such as a table cell's). What a used slot
+  renders gets a light outline instead, and so do a menu's entries from a used slot. The button
+  that opens a menu with a slot (a More button, a column's menu button) gets a thin solid outline,
+  used or not. Hovering a slot's row outlines it strongly on stage, menu entries included, and the
+  other way round. The menus are AYON's own (shared), so the tagging, placeholders, styles and
+  state are shared's slot highlighting (`slotHighlight.ts`, see `src/remote/AGENTS.md`): the
+  switch calls its `setSlotHighlight`, a row its `setHighlightedSlot`. The scenes need nothing for
+  it: the shell hands the SDK an internal hook (`devSlots`, mapped to the same helpers) that AYON
+  never sets, so in AYON `SlotOutlet` and `useSlotMenuItems` render exactly the contributions.
 - A scene's fields are a form under *Input values*, with *Reset* and the values as JSON. The values
   changed from the defaults are in the URL (`ctxValues`), so a reload or a shared link keeps them.
 - `@ynput/ayon-addon` and `react` in a scene resolve to the contributing addon's copies, also when
