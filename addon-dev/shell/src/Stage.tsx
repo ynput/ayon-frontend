@@ -560,8 +560,8 @@ const ProjectListStage = ({ selection, onChange }: StageProps) => {
 const sampleTableState = (page: ProjectTablePage): ProjectTableState | undefined =>
   page === 'lists' ? undefined : { entityType: page === 'products' ? 'version' : 'task', filters: {}, showHierarchy: true }
 
-// the project table slots: a replica of AYON's table with the real addon columns, column menus,
-// right-click menu, shortcuts, toolbar items and Customize panel
+// the project table slots: AYON's table (shared) with the addon columns, column menus, right-click
+// menu and shortcuts, and a replica of its toolbar items and Customize panel
 const TableStage = ({ selection }: StageProps) => {
   const projectName = selection.projectName!
   const page = selection.page || 'overview'
@@ -574,7 +574,7 @@ const TableStage = ({ selection }: StageProps) => {
   const tableState = useMemo(() => sampleTableState(page), [page])
 
   // table.shortcut: the selected rows (else all of them) as AYON's table passes them, from the name
-  // column; the keys work once the table has focus
+  // column, for running one from the developer panel (the table handles the keys itself)
   const shortcuts = useAddonTableShortcuts(page)
   const shortcutContext = useMemo<TableShortcutContext | undefined>(() => {
     const targets = selected.length ? selected : entities
@@ -645,16 +645,7 @@ const TableStage = ({ selection }: StageProps) => {
       <div className="ayon-shell-body">
         <div className="ayon-shell-table-scroll">
           {entities.length ? (
-            <div tabIndex={0} className="ayon-shell-table-focus" onKeyDown={(e) => shortcuts.handleShortcut(e, () => shortcutContext)}>
-              <ShellTable
-                page={page}
-                projectName={projectName}
-                tableState={tableState}
-                entities={entities}
-                selected={selected}
-                onSelect={setSelected}
-              />
-            </div>
+            <ShellTable page={page} tableState={tableState} entities={entities} onSelect={setSelected} />
           ) : (
             <Hint>Choose a project and entities in Context: they are the table&apos;s rows.</Hint>
           )}

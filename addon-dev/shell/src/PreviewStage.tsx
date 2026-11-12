@@ -93,7 +93,6 @@ export const PreviewStage = ({
         <ShellTable
           page={(context.page as never) || 'overview'}
           entities={entities}
-          selected={[]}
           onSelect={() => undefined}
         />
       )

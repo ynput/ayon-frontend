@@ -102,9 +102,10 @@ of AYON:
   Customize panel, and the addon columns' cells and `fetchValues`, in AYON's providers (store, api,
   contexts). AYON's project list (shared `ProjectsList`) and the studio pages' splitter, with
   AYON's menus minus what needs the app (open, manage, new project) or changes projects and
-  folders on the server (archive, delete, labels, folders). Plain stand-ins for what lives in the AYON app: the header and the
-  table around the columns (its rows are the picked entities, its right-click menu has the
-  `entityMenuItem` items, and once clicked it takes the `table.shortcut` keys). Pages render alone, without AYON's page tabs.
+  folders on the server (archive, delete, labels, folders). AYON's project table (shared
+  `ProjectTreeTable`): its rows are the picked entities, its right-click menu has the
+  `entityMenuItem` items, and once clicked it takes the `table.shortcut` keys. A plain stand-in
+  for what lives in the AYON app: the header. Pages render alone, without AYON's page tabs.
 - **Developer panel** on the left, in two halves that scroll on their own. It sits in a splitter
   (drag its edge to resize it); the button at the left of the stage header or "," hides and shows
   it.
@@ -131,10 +132,12 @@ of AYON:
   (i). A warning shows only when the stage is not live (a `?preview=` fixture). A place without a
   preview (Other slots) shows "No preview available" and a manifest entry for the slot, built
   from its declaration only.
-- AYON's pages that live in the app are replicas built from AYON's components: the project
-  tables (Name and Status, then the addon's columns as real columns; header, grid, whole-row
-  hover, a column header menu with the `projectTable.columnMenuItem` items, widths dragged at a
-  header's right edge; sorting, grouping and hiding do nothing), User
+- The project tables are AYON's `ProjectTreeTable` fed from the shell (`shell/src/ShellTable.tsx`):
+  Name and Status, then the addon's columns, with AYON's header cells, column menus (with the
+  `projectTable.columnMenuItem` items), cell widgets, resizing, selection and right-click menu.
+  The rows are the picked entities, read-only; the column settings last for the session; the
+  page data layer (views, queries, group-by settings) is not there.
+- AYON's other pages that live in the app are replicas built from AYON's components: User
   details (Settings > Users: the users, and the details panel under AYON's own header from
   `@ynput/ayon-frontend-shared` with its more menu) and Account (the profile page). They show a
   subset of AYON's fields and save nothing.

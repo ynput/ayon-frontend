@@ -469,10 +469,6 @@ main.ayon-shell-stage {
   padding: 16px;
   color: var(--md-sys-color-outline);
 }
-.ayon-shell-placeholder-cell {
-  width: 1px;
-  white-space: nowrap;
-}
 /* Other slots: a card per slot, without a preview */
 .ayon-shell-body.ayon-shell-other {
   flex-direction: column;
@@ -720,26 +716,24 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   outline: 2px solid var(--md-sys-color-tertiary);
   outline-offset: 1px;
 }
-/* AYON's slot highlighting (slotHighlight in the shared package) outlines menu entries and the
-   buttons that open slot menus; a column's button shows without hovering its header */
-.ayon-slot-highlight .ayon-shell-th-actions:has([data-ayon-slot-trigger]) {
+/* AYON's slot highlighting (slotHighlight in the shared package) outlines menu entries, addon
+   columns and the buttons that open slot menus; a column's button shows without hovering its header */
+.ayon-slot-highlight .ayon-shell-tree-table th .actions:has([data-ayon-slot-trigger]) {
   display: flex;
 }
-.ayon-shell-table .ayon-dev-column.marked {
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-tertiary) 60%, transparent);
-}
-.ayon-shell-table .ayon-dev-column.hovered {
-  box-shadow: inset 0 0 0 2px var(--md-sys-color-tertiary);
-}
 
-/* the project table: AYON's look (ProjectTreeTable) */
+/* the project table: AYON's (ProjectTreeTable) */
 .ayon-shell-table-scroll {
+  display: flex;
   flex: 1;
   min-width: 0;
   overflow: auto;
 }
-.ayon-shell-table-focus {
-  outline: none;
+.ayon-shell-tree-table {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
 }
 .ayon-shell-bar-title {
   font-weight: 600;
@@ -777,17 +771,6 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   text-overflow: ellipsis;
   font-weight: 600;
 }
-.ayon-shell-th-actions {
-  position: absolute;
-  top: 50%;
-  right: 8px;
-  display: none;
-  transform: translateY(-50%);
-}
-.ayon-shell-th:hover .ayon-shell-th-actions,
-.ayon-shell-th.open .ayon-shell-th-actions {
-  display: flex;
-}
 .ayon-shell-table td {
   background: var(--color-table-row);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
@@ -810,28 +793,6 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
 }
 .ayon-shell-td-content .icon {
   font-size: 18px;
-}
-.ayon-shell-table .ayon-shell-filler {
-  width: auto;
-}
-.ayon-shell-status-cell {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-}
-.ayon-shell-resizer {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 6px;
-  height: 100%;
-  cursor: col-resize;
-  user-select: none;
-  touch-action: none;
-}
-.ayon-shell-resizer:hover,
-.ayon-shell-resizer.resizing {
-  background: var(--md-sys-color-primary);
 }
 .ayon-shell-customize {
   width: 320px;
