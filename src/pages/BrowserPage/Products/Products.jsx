@@ -1,13 +1,6 @@
 import { useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
-import {
-  InputText,
-  TablePanel,
-  Section,
-  Toolbar,
-  Spacer,
-  getReadableColor,
-} from '@ynput/ayon-react-components'
+import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
@@ -337,14 +330,9 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const { color, colorLight } = project.getProductType(node.data.productType)
+          const color = project.getProductType(node.data.productType).color || '#cccccc'
 
-          return (
-            <CellWithIcon
-              text={node.data.productType}
-              textStyle={{ color: getReadableColor({ color: color || '#cccccc', colorLight }) }}
-            />
-          )
+          return <CellWithIcon text={node.data.productType} textStyle={{ color }} />
         },
       },
       {

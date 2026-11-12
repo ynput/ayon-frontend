@@ -1,12 +1,11 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { Icon, getReadableColor, getTextColor } from '@ynput/ayon-react-components'
+import { Icon, getTextColor } from '@ynput/ayon-react-components'
 
 const hoverStyle = css`
   background-color: var(--md-sys-color-surface-container-low-hover);
-  color: ${({ $color, $colorLight }) =>
-    getReadableColor({ color: $color, colorLight: $colorLight })};
+  color: ${({ $color }) => $color};
 `
 
 const invertHoverStyle = css`
@@ -16,8 +15,7 @@ const invertHoverStyle = css`
 `
 const defaultStyle = css`
   /* default text color */
-  color: ${({ $color, $colorLight }) =>
-    getReadableColor({ color: $color, colorLight: $colorLight })};
+  color: ${({ $color }) => $color};
   background-color: transparent;
 `
 
@@ -160,7 +158,6 @@ const StatusField = ({
   const {
     shortName,
     color = 'var(--md-sys-color-surface-container-highest)',
-    colorLight,
     icon = 'help_center',
   } = statuses[value] || {}
 
@@ -172,7 +169,6 @@ const StatusField = ({
       style={{ ...style, height }}
       id={shownValue}
       $color={color}
-      $colorLight={colorLight}
       $isActive={isActive}
       $isSelecting={isSelecting}
       $isChanging={isChanging}

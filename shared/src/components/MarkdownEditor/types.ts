@@ -40,7 +40,6 @@ export interface MentionItem {
   label: string
   icon?: string
   color?: string
-  colorLight?: string
   context?: string
   suffix?: string
 }

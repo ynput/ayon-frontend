@@ -1,4 +1,4 @@
-import { Icon, getReadableColor } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './InboxMessageStatus.styled'
 import { Fragment } from 'react'
 import type { InboxStatusChange } from '../../types'
@@ -10,13 +10,9 @@ interface InboxMessageStatusProps {
 const InboxMessageStatus = ({ statuses = [] }: InboxMessageStatusProps) => {
   return (
     <Styled.MessageStatus>
-      {statuses.map(({ icon = 'fiber_manual_record', color, colorLight, name }, index) => (
+      {statuses.map(({ icon = 'fiber_manual_record', color, name }, index) => (
         <Fragment key={index}>
-          <Icon
-            icon={icon}
-            style={{ color: getReadableColor({ color, colorLight }) }}
-            className="status"
-          />
+          <Icon icon={icon} style={{ color }} className="status" />
           <Styled.Name>{name}</Styled.Name>
           {index < statuses.length - 1 && <Icon icon="arrow_right_alt" className="type" />}
         </Fragment>

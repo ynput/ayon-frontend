@@ -35,6 +35,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
   const { folderTypes } = useProjectContext()
   const folderTypeData = folderTypes?.find((ft) => ft.name === folder.folderType)
   const icon = folderTypeData?.icon ?? getEntityTypeIcon('folder')
+  const color = folderTypeData?.color
 
   const thumbnailUrl = getEntityThumbnailUrl({
     projectName,
@@ -65,7 +66,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
           <FilmstripEntityCard
             title={folder.name}
             titleIcon={icon}
-            titleColor={folderTypeData}
+            titleColor={color}
             imageUrl={thumbnailUrl ?? undefined}
             // folders do not know about reviewables, the server responds with no content
             filmstripUrl={
@@ -91,7 +92,7 @@ export const FolderBody: FC<FolderBodyProps> = ({
             projectName={projectName}
             thumbnailHash={folder.thumbnailHash}
             icon={icon}
-            color={folderTypeData}
+            color={color}
             showBorder={false}
             src={thumbnailUrl ?? undefined}
             hoverIcon="expand_all"
