@@ -720,34 +720,10 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   outline: 2px solid var(--md-sys-color-tertiary);
   outline-offset: 1px;
 }
-/* the button that opens a menu slot's menu: a thin solid outline with Highlight slots, so the menu
-   is known to hold a slot (a column's shows without hovering its header) */
-.ayon-dev-item.trigger > * {
-  outline: 1px solid var(--md-sys-color-tertiary);
-  outline-offset: 1px;
-}
-.ayon-dev-item.trigger.hovered > * {
-  outline-width: 2px;
-}
-.ayon-dev-highlight .ayon-shell-th-actions:has(.ayon-dev-item.trigger) {
+/* AYON's slot highlighting (slotHighlight in the shared package) outlines menu entries and the
+   buttons that open slot menus; a column's button shows without hovering its header */
+.ayon-slot-highlight .ayon-shell-th-actions:has([data-ayon-slot-trigger]) {
   display: flex;
-}
-/* menus: their entries carry their slot (slotOverlay.tsx markMenuItem); the root carries the switch,
-   and the hovered row's slot gets a stronger outline from a style slotOverlay writes */
-.ayon-dev-highlight [data-ayon-dev-menu='used'] {
-  outline: 1px dashed color-mix(in srgb, var(--md-sys-color-tertiary) 70%, transparent);
-  outline-offset: -1px;
-  border-radius: 4px;
-}
-[data-ayon-dev-menu='unused'] {
-  outline: 1px dashed var(--md-sys-color-tertiary);
-  outline-offset: -1px;
-  border-radius: 4px;
-  opacity: 1 !important;
-}
-[data-ayon-dev-menu='unused'],
-[data-ayon-dev-menu='unused'] * {
-  color: var(--md-sys-color-tertiary) !important;
 }
 .ayon-shell-table .ayon-dev-column.marked {
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--md-sys-color-tertiary) 60%, transparent);

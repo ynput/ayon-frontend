@@ -9,13 +9,13 @@ import { Button, Icon, InputSwitch, InputText } from '@ynput/ayon-react-componen
 import { contributionTitle, getRegistry } from '@ynput/ayon-addon/host'
 import { useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
+import { setHighlightedSlot, useSlotHighlight } from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, getPlace, getPlaces, getUsedSlots } from './catalog'
 import { getContracts } from './contractModel'
 import { AYON_AREAS, AYON_SOURCE, packageTitle, panelListing, placeSummary } from './places'
 import type { Place, PlaceSlot } from './places'
 import { rememberedSceneValues } from './params'
 import { hiddenReason } from './slotNeeds'
-import { hoverSlot, useSlotOverlay } from './slotOverlay'
 import type { ShellOptions, ShellSelection } from './types'
 
 interface DevPanelProps {
@@ -233,8 +233,8 @@ const SlotRow = ({
     <div
       className={`ayon-shell-slot-entry${contributions.length ? '' : ' empty'}${hovered ? ' hovered' : ''}`}
       data-shell-slot={slot.slot}
-      onMouseEnter={() => hoverSlot(slot.slot)}
-      onMouseLeave={() => hoverSlot(undefined)}
+      onMouseEnter={() => setHighlightedSlot(slot.slot)}
+      onMouseLeave={() => setHighlightedSlot(undefined)}
     >
       <div className="ayon-shell-slot-head" title={slot.description ? `${slot.label}: ${slot.description}` : slot.label}>
         <span className="ayon-shell-slot-title">
@@ -264,7 +264,7 @@ const SlotRow = ({
 }
 
 const Slots = ({ selection, search, onChange }: Pick<DevPanelProps, 'selection' | 'search' | 'onChange'>) => {
-  const { hovered } = useSlotOverlay()
+  const { hovered } = useSlotHighlight()
   const place = getPlace(selection.surface)
   const slots = slotsHere(place, selection, search)
   return (

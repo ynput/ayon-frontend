@@ -29,7 +29,7 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { AddonServices, LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
+import { AddonServices, LoginPage, setSlotHighlight, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
 import { DevPanel, slotsHere } from './DevPanel'
@@ -44,7 +44,6 @@ import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
 import { getPlace, getPlaces, getUsedSlots } from './catalog'
 import { listedPlaces } from './places'
-import { setHighlight } from './slotOverlay'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -204,7 +203,8 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
-  useEffect(() => setHighlight(!!selection.highlight), [selection.highlight])
+  // AYON's slot highlighting (shared), which the stage's own markers follow too (slotOverlay.tsx)
+  useEffect(() => setSlotHighlight(!!selection.highlight), [selection.highlight])
   // the menus opened in the last place are not this one's
   useEffect(() => clearMenus(), [selection.surface])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])

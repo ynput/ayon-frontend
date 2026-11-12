@@ -6,7 +6,8 @@ import { Button } from '@ynput/ayon-react-components'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { AnyContribution, MenuKind, SlotName } from '@ynput/ayon-addon'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-import { devSlots } from './slotOverlay'
+import { withSlotEntries } from '@ynput/ayon-frontend-shared/components'
+import { slotInfo } from './slotOverlay'
 
 type MenuContext = Record<string, unknown>
 
@@ -38,9 +39,8 @@ export const useShellMenu = (
             command: () => runContribution(item as never, context as never),
           }
         })
-      // an unused slot: its marker, where the items would be (Highlight slots)
-      const marker = items.length ? undefined : devSlots.menuPlaceholder(slot)
-      return marker ? [marker] : items
+      // tagged with the slot, or its placeholder while slots are highlighted (as AYON's menus)
+      return withSlotEntries(slot, items, slotInfo(slot).label, 'command')
     },
     [contributions, makeContext, applies, slot],
   )

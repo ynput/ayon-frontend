@@ -56,6 +56,7 @@ import {
   AddonUserDetailsSections,
   AddonProfileSections,
   shortcutEntities,
+  slotTriggerProps,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
@@ -66,7 +67,7 @@ import { StudioSelectionProvider } from './host'
 import type { Place } from './places'
 import { SceneStage } from './scenes'
 import { missingInputs } from './slotNeeds'
-import { markMenuItem, menuMarkerEntry, Placeholder, SlotFrame, slotInfo } from './slotOverlay'
+import { Placeholder, SlotFrame, slotInfo } from './slotOverlay'
 import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
@@ -362,17 +363,16 @@ const UserDetailsHeader = ({ user, menuItems, onMenuOpen }: { user: ShellUser; m
           <span className="ayon-shell-detail-subtitle">{access.length ? access.join(', ') : 'No AccessGroups'}</span>
         </div>
       </div>
-      <SlotFrame slot="userDetails.menuItem" trigger>
-        <Button
-          ref={button}
-          icon="more_horiz"
-          variant="text"
-          aria-label="More actions"
-          className={open ? 'active' : undefined}
-          data-shell-menu="user-details"
-          onClick={() => toggleMenuOpen(id)}
-        />
-      </SlotFrame>
+      <Button
+        ref={button}
+        icon="more_horiz"
+        variant="text"
+        aria-label="More actions"
+        className={open ? 'active' : undefined}
+        data-shell-menu="user-details"
+        {...slotTriggerProps('userDetails.menuItem')}
+        onClick={() => toggleMenuOpen(id)}
+      />
       <MenuContainer id={id} target={button.current} align="right">
         <Menu menu={menuItems as never} onClose={() => setMenuOpen(false)} />
       </MenuContainer>
@@ -401,10 +401,10 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   useSlotReport('userDetails.menuItem', target ? context : undefined)
   useStageReady(!!target)
   const addonMenu = useAddonUserMenuItems(context)
-  const marker = menuMarkerEntry('userDetails.menuItem')
+  // tagged with the slot, the placeholder among them while slots are highlighted (the shared hook)
   const menuItems = [
-    ...[...addonMenu.topItems, ...addonMenu.items].map((item) => markMenuItem('userDetails.menuItem', item)),
-    ...(marker ? [marker] : []),
+    ...addonMenu.topItems,
+    ...addonMenu.items,
     { id: 'delete', label: 'Delete user', icon: 'delete', danger: true, disabled: true },
     { id: 'view-data', label: 'View data', icon: 'data_object', disabled: true },
   ]

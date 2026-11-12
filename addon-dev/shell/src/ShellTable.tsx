@@ -25,9 +25,9 @@ import {
   useAddonEntityMenuItems,
   useAddonTableColumns,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { AddonDialog, ColumnHeaderMenuUI } from '@ynput/ayon-frontend-shared/components'
+import { AddonDialog, ColumnHeaderMenuUI, withSlotEntries } from '@ynput/ayon-frontend-shared/components'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-import { markMenuItem, menuMarker, menuMarkerEntry, Placeholder, SlotFrame, stageHover, usePlaceholderShown, useSlotMarks } from './slotOverlay'
+import { Placeholder, stageHover, usePlaceholderShown, useSlotMarks } from './slotOverlay'
 import { useSlotReport } from './status'
 
 type ColumnMenuItem = Parameters<typeof ColumnHeaderMenuUI>[0]['menuItems'][number]
@@ -112,9 +112,12 @@ const HeaderCell = ({
     >
       <div className="ayon-shell-th-content">{label}</div>
       <div className="ayon-shell-th-actions">
-        <SlotFrame slot="projectTable.columnMenuItem" trigger>
-          <ColumnHeaderMenuUI menuItems={menuItems} menuId={menuId(columnId)} className="header-menu" />
-        </SlotFrame>
+        <ColumnHeaderMenuUI
+          menuItems={menuItems}
+          menuId={menuId(columnId)}
+          className="header-menu"
+          slot="projectTable.columnMenuItem"
+        />
       </div>
       <div
         className={`ayon-shell-resizer${resizing ? ' resizing' : ''}`}
@@ -263,14 +266,13 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
       .filter((item) => matchesColumn(item.columns, column.columnId) && (!item.groupable || !!column.groupField))
       .map((item) => {
         prefetchPiece(item.dialog || item.run)
-        return markMenuItem('projectTable.columnMenuItem', {
+        return {
           id: item.key,
           label: withColumnLabel(item.label, column.columnLabel),
           icon: item.icon,
           onClick: close(() => void runColumnItem(item, column)),
-        })
+        }
       })
-    const marker = menuMarkerEntry('projectTable.columnMenuItem')
     return [
       { id: 'pin', label: 'Pin column', icon: 'push_pin', onClick: close() },
       { id: 'divider-pin', type: 'divider' },
@@ -280,8 +282,8 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
       ...(column.groupField
         ? [{ id: 'group-by', label: `Group by ${column.columnLabel}`, icon: 'splitscreen', onClick: close() }]
         : []),
-      ...addon,
-      ...(marker ? [marker as ColumnMenuItem] : []),
+      // tagged with the slot, or its placeholder (AYON's slot highlighting, as ColumnHeaderMenu)
+      ...withSlotEntries<ColumnMenuItem>('projectTable.columnMenuItem', addon, 'Column menu item'),
       ...(column.columnId === 'name' ? [] : [{ id: 'hide', label: 'Hide column', icon: 'visibility_off', onClick: close() }]),
     ]
   }
@@ -320,18 +322,18 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
       e as never,
       cell as never,
       cells as never,
-      { selectedCells: cells.map((c) => c.cellId), selectedRows: [], selectedColumns: [], selectedFullRows: [], selectedGroups: [] },
+      {
+        selectedCells: cells.map((c) => c.cellId),
+        scopedCells: cells.map((c) => c.cellId),
+        selectedRows: [],
+        selectedColumns: [],
+        selectedFullRows: [],
+        selectedGroups: [],
+      },
       {} as never,
     )
-    // an unused slot: its marker, where the items would be (Highlight slots)
-    const marker = menuMarker('entityMenuItem')
-    const shown =
-      Array.isArray(items) && items.length
-        ? items.map((item) => (item && !item.separator ? markMenuItem('entityMenuItem', item) : item))
-        : marker
-          ? [marker]
-          : []
-    if (shown.length) openMenu(e, shown as never)
+    // tagged with the slot, or its placeholder while slots are highlighted (the shared hook)
+    if (Array.isArray(items) && items.length) openMenu(e, items as never)
   }
 
   const addonColumnKey = (meta: unknown) =>
