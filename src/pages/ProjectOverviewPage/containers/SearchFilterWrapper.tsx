@@ -1,4 +1,9 @@
-import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
+import {
+  AdvancedFilterSlot,
+  BuildFilterOptions,
+  useBuildFilterOptions,
+  ScopeWithFilterTypes,
+} from '@shared/components'
 import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
   Filter,
@@ -33,12 +38,19 @@ interface SearchFilterWrapperProps
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
   onChange?: (queryFilters: QueryFilter) => void
+  // nested filter next to the search bar: shown when onAdvancedFilterChange is given
+  advancedFilter?: QueryFilter
+  onAdvancedFilterChange?: (advancedFilter: QueryFilter | undefined) => void
+  advancedFilterExclude?: string[] // option ids the advanced filter can't use
   data: BuildFilterOptions['data']
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   queryFilters,
   onChange,
+  advancedFilter,
+  onAdvancedFilterChange,
+  advancedFilterExclude,
   data: customData,
   filterTypes,
   projectNames,
@@ -494,6 +506,15 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         }}
         {...props}
       />
+      {onAdvancedFilterChange && (
+        <AdvancedFilterSlot
+          value={advancedFilter}
+          onChange={onAdvancedFilterChange}
+          options={options}
+          scopes={scopes?.map(({ scope }) => scope)}
+          exclude={advancedFilterExclude}
+        />
+      )}
       <CustomDateRangeDialog
         isOpen={!!dateRange.customRangeFilterId}
         header={
