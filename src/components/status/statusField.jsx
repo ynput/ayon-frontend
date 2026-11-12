@@ -3,10 +3,14 @@ import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
 import { Icon, getTextColor } from '@ynput/ayon-react-components'
 
+// text on the status colour; a status without one has a theme colour, which follows the theme
+const textOn = (color) =>
+  color.startsWith('var(') ? 'var(--md-sys-color-on-surface)' : getTextColor(color)
+
 // the whole field filled with the status colour
 const invertHoverStyle = css`
   background-color: ${({ $color }) => $color};
-  color: ${({ $color }) => getTextColor($color)};
+  color: ${({ $color }) => textOn($color)};
 `
 // filled as a whole: the block inside it has nothing to add
 const plainTextIcon = css`
@@ -54,7 +58,7 @@ const StatusStyled = styled.div`
     padding: 2px 6px;
     border-radius: var(--border-radius-m);
     background-color: ${({ $color }) => $color};
-    color: ${({ $color }) => getTextColor($color)};
+    color: ${({ $color }) => textOn($color)};
   }
 
   .status-text {
@@ -122,11 +126,12 @@ const StatusStyled = styled.div`
     filter: brightness(110%);
   }
 
-  /* the open value at the top of the list */
+  /* the current status in the list */
   ${({ $isActive, $isSelecting }) =>
     $isActive &&
     $isSelecting &&
     css`
+      background-color: var(--md-sys-color-primary-container);
       [icon='expand_more'] {
         transform: rotate(180deg);
       }
