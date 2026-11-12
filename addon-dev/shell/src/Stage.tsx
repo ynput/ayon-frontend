@@ -1,8 +1,8 @@
 // The stage: the selected place with this addon's contributions where AYON shows them, all its
 // slots at once. AYON's own surfaces where they live in @ynput/ayon-frontend-shared (details
-// panel, slicer, Customize panel, the addon columns' cells and data); replicas of what lives in the
-// ayon-frontend app (the header, the project table around the columns, the user details panel,
-// the account page, the dashboard's layout). Pages render alone, without AYON's page tabs. Each
+// panel, slicer, Customize panel, the addon columns' cells and data, the project list and the
+// studio pages' layout); replicas of what lives in the ayon-frontend app (the header, the project
+// table around the columns, the user details panel, the account page). Pages render alone, without AYON's page tabs. Each
 // slot reports the context it passes (Context shows it).
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
@@ -57,13 +57,13 @@ import {
   AddonProfileSections,
   shortcutEntities,
   slotTriggerProps,
+  StudioPageSelectionProvider,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
 } from '@ynput/ayon-frontend-shared/components'
 import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, findContribution, getPlace, idOf, slotSnippet } from './catalog'
 import { contractSlot, getContracts, noSceneNote } from './contractModel'
-import { StudioSelectionProvider } from './host'
 import type { Place } from './places'
 import { SceneStage } from './scenes'
 import { missingInputs } from './slotNeeds'
@@ -237,9 +237,9 @@ const StudioPagesStage = ({ selection, onChange }: StageProps) => {
       <PageTabs slot="studio.page" label="Studio page" pages={pages} current={page} onPick={pick} />
       {page ? (
         <ViewsProvider key={page.key} viewType={(page as { viewType?: string }).viewType} dispatch={dispatch}>
-          <StudioSelectionProvider value={studio}>
+          <StudioPageSelectionProvider value={studio}>
             <StudioPageBody page={page} selectedProjects={studio.selection} />
-          </StudioSelectionProvider>
+          </StudioPageSelectionProvider>
         </ViewsProvider>
       ) : (
         <Hint>This addon has no studio pages.</Hint>
@@ -585,11 +585,11 @@ const ProjectListStage = ({ selection, onChange }: StageProps) => {
   useStageReady(true)
   const { ProjectList } = getHostComponents()
   return (
-    <StudioSelectionProvider value={studio}>
+    <StudioPageSelectionProvider value={studio}>
       <div style={{ width: 280, height: '100%' }}>
         <ProjectList multiSelect />
       </div>
-    </StudioSelectionProvider>
+    </StudioPageSelectionProvider>
   )
 }
 
