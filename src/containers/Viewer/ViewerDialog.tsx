@@ -22,6 +22,11 @@ const StyledDialog = styled(Dialog)`
   &:focus-visible {
     outline: none;
   }
+  /* The open animation would keep its last frame (scale: 1) afterwards, which makes the dialog
+     the containing block of fixed elements inside it, e.g. the annotation brush cursor. */
+  && {
+    animation-fill-mode: backwards;
+  }
   /* hide header and footer */
   .header,
   .footer {

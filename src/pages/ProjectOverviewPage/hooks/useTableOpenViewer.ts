@@ -22,7 +22,10 @@ const useTableOpenViewer = ({ projectName }: TableOpenViewerProps) => {
       if (config?.reviewableId) payload.reviewableIds = [config.reviewableId]
 
       if (targetIds.versionId) {
-        payload.versionIds = [targetIds.versionId]
+        // several versions (a multi-selection) play one after another on a timeline
+        payload.versionIds = targetIds.versionIds?.length
+          ? targetIds.versionIds
+          : [targetIds.versionId]
         payload.selectedProductId = targetIds.productId
         payload.folderId = targetIds.folderId
       } else if (targetIds.taskId) {

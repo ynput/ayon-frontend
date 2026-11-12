@@ -8,16 +8,20 @@ import { Player, ClipHeaderThumbnail, clearMemoizedPlayables } from '@ynput/ayon
 import type { PlayerInitialState, PlayerViewState } from '@ynput/ayon-player'
 import type { PlayerPlugins } from '@ynput/ayon-player/plugins'
 import type { Clip } from '@ynput/ayon-player/model'
-import ReviewVersionDropdown from '@/components/ReviewVersionDropdown'
 import { updateSelection, updateProduct } from '@state/viewer'
 import ViewerEmpty from './ViewerEmpty'
 import ViewerSidebarProviders from './ViewerSidebarProviders'
+import { ViewerCloseContext } from './ViewerCloseContextInstance'
 import useViewerPlayerPlugins, { type UseViewerPlayerPlugins } from './useViewerPlayerPlugins'
 import { isPlayable, versionClip } from './viewerClips'
 import * as Styled from './Viewer.styled'
 
 // shared
-import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
+import {
+  useGetViewerReviewablesQuery,
+  useGetEntitiesDetailsPanelQuery,
+  useExecuteActionMutation,
+} from '@shared/api'
 import type { GetReviewablesResponse } from '@shared/api'
 import {
   ProjectContextProvider,
@@ -25,7 +29,8 @@ import {
   useProjectContext,
   useScopedDetailsPanel,
 } from '@shared/context'
-import { useLocalStorage } from '@shared/hooks'
+import { useGetBundleAddon, useLocalStorage } from '@shared/hooks'
+import { openReviewSession } from '@pages/ProjectListsPage/util/openReviewSession'
 
 interface ViewerProps {
   onClose?: () => void
@@ -324,6 +329,21 @@ const ViewerBody = ({
     [reviewPlugins],
   )
 
+  // the clips' versions in an unsaved review session, like "Open in review" in the tables
+  const { getBundleAddonVersion } = useGetBundleAddon()
+  const reviewAddonVersion = getBundleAddonVersion('review')
+  const [executeAction] = useExecuteActionMutation()
+  const handleCreateReview = () => {
+    if (!reviewAddonVersion || !projectName) return
+    openReviewSession({
+      executeAction,
+      projectName,
+      reviewAddonVersion,
+      entityType: 'version',
+      entityIds: [...new Set(clips.map((clip) => clip.context.versionId))],
+    })
+  }
+
   // ---- header ----
   const clipDetails = details.find((d) => d.id === pickerVersionId) ?? details[0]
   const folderLabel = clipDetails?.folder?.label || clipDetails?.folder?.name
@@ -337,31 +357,50 @@ const ViewerBody = ({
           src={`/api/projects/${projectName}/files/${currentFileId}/thumbnail`}
         />
       )}
-      {folderLabel && <span className="path">{folderLabel}</span>}
-      {!isTimeline && hasMultipleProducts && (
-        <ReviewVersionDropdown
+      {folderLabel && (
+        <>
+          <span className="name" data-tooltip={clipDetails?.folder?.path}>
+            {folderLabel}
+          </span>
+          /
+        </>
+      )}
+      {!isTimeline && hasMultipleProducts ? (
+        <Styled.HeaderDropdown
           options={productOptions}
+          value={selectedProductId ? [selectedProductId] : []}
+          onChange={([id]) => id && handleProductChange(id)}
           placeholder="Select a product"
-          prefix="Product: "
-          value={selectedProductId}
-          onChange={handleProductChange}
-          valueProps={{ className: 'product-dropdown' }}
-          tooltip="Select a product to view its versions reviewables"
-          valueIcon={selectedProduct?.icon || ''}
-          valueColor={selectedProduct?.color}
+          valueIcon={selectedProduct?.icon}
+          widthExpand
+          activateKeys={['Enter']}
+          data-tooltip="Product"
         />
+      ) : (
+        currentClip && <span className="name">{currentClip.context.productName}</span>
       )}
       {!!pickerVersions.length && (
-        <ReviewVersionDropdown
-          options={versionOptions(pickerVersions)}
-          value={pickerVersionId ?? null}
-          onChange={handleVersionChange}
-        />
+        <>
+          /
+          <Styled.HeaderDropdown
+            options={versionOptions(pickerVersions)}
+            value={pickerVersionId ? [pickerVersionId] : []}
+            onChange={([id]) => id && handleVersionChange(id)}
+            className="version"
+            placeholder="Select a version"
+            search={pickerVersions.length > 20}
+            searchFields={['label']}
+            widthExpand
+            activateKeys={['Enter']}
+            data-tooltip="Version"
+          />
+        </>
       )}
     </Styled.HeaderStart>
   )
 
-  const headerEnd = (
+  // the details panel has the close button while it is shown
+  const renderHeaderEnd = (showClose: boolean) => (
     <Styled.HeaderEnd>
       {!reviewPlugins?.Comparison && (
         <Button
@@ -385,7 +424,19 @@ const ViewerBody = ({
           <Icon icon="bolt" />
         </Button>
       )}
-      {onClose && <Button onClick={onClose} icon="close" variant="text" data-tooltip="Close" />}
+      {reviewAddonVersion && !!clips.length && (
+        <Button
+          variant="surface"
+          icon="subscriptions"
+          data-tooltip="Open these versions in a new review session"
+          onClick={handleCreateReview}
+        >
+          Create review
+        </Button>
+      )}
+      {showClose && onClose && (
+        <Button onClick={onClose} icon="close" variant="text" data-tooltip="Close" />
+      )}
     </Styled.HeaderEnd>
   )
 
@@ -395,20 +446,22 @@ const ViewerBody = ({
   if (clips.length && !isLoadingDetails) {
     return (
       <Styled.Container ref={containerRef}>
-        <Player
-          clips={clips}
-          context={playerContext}
-          user={user as any}
-          theatreContainerRef={containerRef}
-          plugins={plugins}
-          isSubscribed={!!reviewPlugins}
-          onChangeReviewable={handleReviewableChange}
-          initial={initial}
-          onChangeView={setSavedView}
-          headerStart={headerStart}
-          headerEnd={headerEnd}
-          onCurrentClipChange={handleCurrentClipChange}
-        />
+        <ViewerCloseContext.Provider value={onClose}>
+          <Player
+            clips={clips}
+            context={playerContext}
+            user={user as any}
+            theatreContainerRef={containerRef}
+            plugins={plugins}
+            isSubscribed={!!reviewPlugins}
+            onChangeReviewable={handleReviewableChange}
+            initial={initial}
+            onChangeView={setSavedView}
+            headerStart={headerStart}
+            headerEnd={renderHeaderEnd(!(savedView.sidebarShown ?? true))}
+            onCurrentClipChange={handleCurrentClipChange}
+          />
+        </ViewerCloseContext.Provider>
       </Styled.Container>
     )
   }
@@ -417,11 +470,12 @@ const ViewerBody = ({
 
   // nothing to play: the version's details stay, e.g. to upload a reviewable or comment
   const emptyVersionId = isTimeline ? versionIds[0] : selectedVersion?.id
+  const hasEmptySidebar = !!(emptyVersionId && projectName)
   return (
     <Styled.Container ref={containerRef}>
       <Styled.EmptyHeader>
         {headerStart}
-        {headerEnd}
+        {renderHeaderEnd(!hasEmptySidebar)}
       </Styled.EmptyHeader>
       <Styled.EmptyBody>
         <ViewerEmpty
@@ -432,10 +486,14 @@ const ViewerBody = ({
           noVersions={noVersions}
           onUpload={handleUpload}
         />
-        {emptyVersionId && projectName && (
+        {hasEmptySidebar && (
           <Styled.EmptySidebar>
             <Suspense>
-              <ViewerDetails projectName={projectName} versionId={emptyVersionId} />
+              <ViewerDetails
+                projectName={projectName}
+                versionId={emptyVersionId}
+                onClose={onClose}
+              />
             </Suspense>
           </Styled.EmptySidebar>
         )}
