@@ -16,12 +16,13 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
+import { AdvancedFilterSetting, useAdvancedFilterSetting } from './useAdvancedFilterSetting'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
-type Return = {
+type Return = AdvancedFilterSetting & {
   // Filter management
   filters: QueryFilter
   onUpdateFilters: (filters: QueryFilter) => void
@@ -83,6 +84,8 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     setLocalColumns(null)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify((viewSettings as OverviewSettings)?.columns)])
+
+  const advancedFilterSetting = useAdvancedFilterSetting(viewSettings, updateViewSettings)
 
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
@@ -215,6 +218,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   return {
     filters,
     onUpdateFilters,
+    ...advancedFilterSetting,
     showHierarchy,
     onUpdateHierarchy,
     columns,

@@ -16,12 +16,13 @@ import {
   convertTanstackStatesToColumnConfig,
 } from '@shared/util'
 import { useViewUpdateHelper } from '../../utils/viewUpdateHelper'
+import { AdvancedFilterSetting, useAdvancedFilterSetting } from './useAdvancedFilterSetting'
 import { useState, useEffect, useCallback, useMemo } from 'react'
 
 // Import the internal QueryFilter type that the app uses
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 
-export type ListsViewSettings = {
+export type ListsViewSettings = AdvancedFilterSetting & {
   // Filter management
   filters: QueryFilter
   onUpdateFilters: (filters: QueryFilter) => void
@@ -46,6 +47,8 @@ export const useListsViewSettings = (): ListsViewSettings => {
 
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
+
+  const advancedFilterSetting = useAdvancedFilterSetting(viewSettings, updateViewSettings)
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings
@@ -113,6 +116,7 @@ export const useListsViewSettings = (): ListsViewSettings => {
   return {
     filters,
     onUpdateFilters,
+    ...advancedFilterSetting,
     columns,
     onUpdateColumns,
     listValues,
