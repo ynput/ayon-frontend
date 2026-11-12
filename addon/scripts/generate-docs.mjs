@@ -271,6 +271,7 @@ Look in the browser console first: every message starts with \`[addon <name>]\`.
 |---|---|
 | nothing at all, the contribution is missing | The addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's \`frontend_modules\`. With \`?addonDev=\`, see "Developing inside AYON" in \`@ynput/ayon-addon-dev\`'s \`AGENTS.md\` |
 | \`skipped contribution "x": this AYON version has no such slot\` | The slot is newer than the AYON you run (\`ayon-addon slots\` lists the installed package's). The rest of the addon works |
+| \`...and no addon in the bundle declares it (it would be addon "y")\` | The slot is addon \`y\`'s, and \`y\` isn't in the bundle or is too old to have it. The rest of the addon works |
 | \`skipped contribution "x" (slot): invalid id …\` / \`missing …\` / \`invalid <field> …\` | The description breaks the slot's rules. \`ayon-addon check\` prints the same reasons without AYON |
 | \`… must be a loader: () => import('./File')\` | A piece is a component or a static import. Pieces are dynamic imports of local files |
 | \`duplicate id in slot "…"\` | Ids are unique within a slot, across the whole addon |
@@ -377,6 +378,122 @@ import { MoreMenu } from '@ynput/ayon-addon'
   Escape puts the focus back on the button. Keys as in AYON's menus: Tab moves through the items,
   Enter picks one or opens its submenu, Escape closes the submenu first.
 - In tests the items are \`listitem\`s (\`getByRole('listitem', { name: 'Delete' })\`), not \`menuitem\`s.
+
+## Slots of other addons
+
+An addon can declare its own slots, and other addons contribute to them the way they contribute to
+AYON's. Module federation doesn't change: every addon is still its own remote, and nothing of the
+declaring addon's code reaches the contributor. The examples use an addon named \`example\` with a
+menu of cards.
+
+**Declaring.** List the slots in the manifest, and render them with \`SlotOutlet\` (components) or
+\`useSlotMenuItems\` (menu items) from this package:
+
+\`\`\`ts
+// src/manifest.ts of the addon "example"
+export default defineAddon({ slots, contributes: [...] }) // slots: from its contract package's slots.js
+\`\`\`
+
+\`\`\`ts
+const buildSlotItems = useSlotMenuItems('example.cardMenuItem')
+// when the menu opens: a broken item is a toast, never a broken menu
+const { top, bottom } = buildSlotItems({ projectName, cards })
+\`\`\`
+
+When a contribution can narrow where it shows, give the slot a description field for it and pass
+the second argument, which leaves out what doesn't apply (here \`cardTypes\`, all when not set).
+Different things get different slots, kinds of one thing get a field:
+
+\`\`\`ts
+buildSlotItems({ projectName, cards }, ({ cardTypes }) => !cardTypes || cards.every((c) => cardTypes.includes(c.cardType)))
+\`\`\`
+
+\`<SlotOutlet slot context />\` renders no element of its own: each contribution's component is a
+direct child of the element around it, in manifest order, with nothing (or \`loading\`) while it loads.
+Lay them out with that element (a flex row in a header, a column in a panel). A contribution that
+fails shows an error box sized for a panel; in an inline place (a badge, a header button) pass
+\`error={() => null}\` to render nothing instead, or your own small fallback.
+
+A declaration has \`name\`, \`version\`, \`required\`, \`pieces\` and optionally \`optionalPieces\`,
+\`optional\`, \`check\` and \`description\`: what AYON checks for its own slots.
+
+**Ownership.** The name is \`<addon>.<name>\`: the addon's name from \`package.py\`, a dot, then a letter
+followed by letters, digits and \`_\` (no more dots). Only that addon can declare it. A declaration with
+another addon's name, a name AYON already has, or a name already declared is skipped with a console
+warning naming the addons. Names under the first parts of AYON's slots (\`project.\`, \`studio.\`,
+\`header.\`, ...) are AYON's: an addon with one of those names can't declare slots.
+
+**Contract package.** The types and declarations reach contributors through a small npm package,
+\`@ynput/ayon-addon-<addon>\`, with no code of the addon in it. It lists \`@ynput/ayon-addon\` as a
+\`peerDependency\`, never a dependency: a nested copy would get the \`SlotMap\` augmentation instead of the
+contributor's.
+
+- the declarations as data, in a plain JS module that imports without React, marked in its
+  \`package.json\`: \`"ayonAddon": { "slots": "./slots.js" }\`. The module exports \`slots\`:
+
+  \`\`\`js
+  // slots.js
+  export const slots = [
+    {
+      name: 'example.cardMenuItem',
+      version: 1,
+      description: 'an entry in the right-click menu of a card',
+      required: ['label', 'icon'],
+      pieces: ['run'],
+      optional: { position: /^(top|bottom)$/ },
+    },
+  ]
+  \`\`\`
+
+- the types: \`declare module '@ynput/ayon-addon' { interface SlotMap { 'example.cardMenuItem': { meta, context, pieces } } }\`.
+  \`SlotName\`, \`SlotProps\`, \`useSlot\` and \`contribute\` then cover the slots of the contract packages an
+  addon has installed, in \`@ynput/ayon-addon\` and \`@ynput/ayon-addon/manifest\` alike. Every
+  contribution has an \`id\`, so \`meta\` only lists the slot's own fields.
+- one helper per slot, which stamps \`slotVersion\` from the declaration in \`slots.js\`, so the version
+  is written once. Keep the helper in the contract package: the contributor's manifest bundles it,
+  and it works with any AYON that has addon slots.
+
+  \`\`\`ts
+  // index.ts
+  import type { SlotName } from '@ynput/ayon-addon'
+  import type { ContributionFields, ContributionInput } from '@ynput/ayon-addon/manifest'
+  import { slots } from './slots.js'
+
+  const slotHelper = <S extends SlotName>(slot: S) => {
+    const { version } = slots.find((declaration) => declaration.name === slot)!
+    return (fields: ContributionFields<S>) => ({ ...fields, slot, slotVersion: version }) as ContributionInput<S>
+  }
+  export const exampleCardMenuItem = slotHelper('example.cardMenuItem')
+  \`\`\`
+
+**Contributing.** Install the contract package and use its helper in the manifest:
+\`exampleCardMenuItem({ id, label, icon, run: () => import('./openCard') })\`. AYON registers each
+manifest as it arrives and works out declarations and contributions again from all of them, so the
+order they load in doesn't matter: a contribution appears once its slot's addon has loaded. When all
+manifests are in and no addon in the bundle declares the slot (the addon isn't installed, or is older),
+the contribution is skipped with a console warning and the rest of the addon works.
+
+**Versioning.** The declaration has \`version\`, and a contribution the \`slotVersion\` it was built
+against (the contract package's helper stamps it; one without counts as version 1). A contribution
+for any other version is skipped with a warning naming the addon to update. Additive context fields
+are a minor release of the contract package; a breaking change is a new slot version. To keep older
+contributions working through a transition, declare the new shape under a new slot name and keep the
+old slot for a while.
+
+**Supporting older AYON.** AYON provides \`@ynput/ayon-addon\` at run time, so on an AYON from before
+addon slots the declaring addon gets a package without \`SlotOutlet\` and \`useSlotMenuItems\` (the
+contributors are fine: AYON skips their unknown slots). Read both through a namespace import and fall
+back once, when the module loads, so a component calls the same hooks on every render:
+
+\`\`\`ts
+import * as ayonAddon from '@ynput/ayon-addon'
+import type { SlotMenuItems } from '@ynput/ayon-addon'
+
+const noItems = (): SlotMenuItems => ({ top: [], bottom: [] })
+// without addon slots: render nothing, and menus get no items
+export const SlotOutlet = ayonAddon.SlotOutlet ?? (() => null)
+export const useSlotMenuItems = ayonAddon.useSlotMenuItems ?? (() => noItems)
+\`\`\`
 
 ## A right-click menu: \`useContextMenu\`
 
