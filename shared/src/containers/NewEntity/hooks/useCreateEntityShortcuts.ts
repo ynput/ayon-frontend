@@ -43,7 +43,8 @@ const useCreateEntityShortcuts = ({
         (e.target.tagName === 'INPUT' ||
           e.target.tagName === 'TEXTAREA' ||
           e.target.isContentEditable ||
-          e.target.getAttribute('role') === 'textbox')
+          e.target.getAttribute('role') === 'textbox' ||
+          e.target.closest('.block-shortcuts'))
       ) {
         return
       }

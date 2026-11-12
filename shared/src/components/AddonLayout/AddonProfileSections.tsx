@@ -1,5 +1,5 @@
 // Addon sections on the profile page (Account → Profile, profile.section slot, @ynput/ayon-addon),
-// below AYON's forms. Used by the app's ProfilePage and by the dev shell.
+// next to AYON's profile form. Used by the app's ProfilePage and by the dev shell.
 import { useMemo } from 'react'
 import { ContributionView, useContributions } from '@ynput/ayon-addon'
 import type { ProfileSectionContext } from '@ynput/ayon-addon'
@@ -28,7 +28,7 @@ export const AddonProfileSections = () => {
     <>
       {sections.map((section) => (
         <Panel key={section.key} data-addon-section={section.key}>
-          <b>{section.title}</b>
+          <b className="profile-card-header">{section.title}</b>
           <ContributionView contribution={section} context={context} />
         </Panel>
       ))}

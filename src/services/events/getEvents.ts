@@ -25,11 +25,11 @@ const EVENT_FIELDS = `
 
 const EVENTS_QUERY = `
 query EventsPage(
-  $last: Int, $before: String, $includeLogs: Boolean!, $topics: [String!], $projects: [String!],
+  $ids: [String!], $last: Int, $before: String, $includeLogs: Boolean!, $topics: [String!], $projects: [String!],
   $users: [String!], $statuses: [String!], $newerThan: String, $olderThan: String, $filter: String
 ) {
   events(
-    last: $last, before: $before, includeLogs: $includeLogs, topics: $topics, projects: $projects,
+    ids: $ids, last: $last, before: $before, includeLogs: $includeLogs, topics: $topics, projects: $projects,
     users: $users, statuses: $statuses, newerThan: $newerThan, olderThan: $olderThan, filter: $filter
   ) {
     edges { cursor node { ${EVENT_FIELDS} } }

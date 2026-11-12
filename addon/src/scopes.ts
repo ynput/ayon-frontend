@@ -204,3 +204,97 @@ export interface ProjectPageMeta extends PageMeta {
    */
   detailsPanel?: boolean
 }
+
+/** A condition of a server filter, as AYON's REST and GraphQL queries take it. */
+export interface QueryCondition {
+  /** the field, e.g. `status`, `taskType`, `attrib.priority`, `tags` */
+  key: string
+  value?: string | number | boolean | null | string[] | number[]
+  /** `eq` when not set */
+  operator?:
+    | 'eq'
+    | 'like'
+    | 'notlike'
+    | 'lt'
+    | 'gt'
+    | 'lte'
+    | 'gte'
+    | 'ne'
+    | 'isnull'
+    | 'notnull'
+    | 'in'
+    | 'notin'
+    | 'includes'
+    | 'excludes'
+    | 'includesall'
+    | 'excludesall'
+    | 'includesany'
+    | 'excludesany'
+}
+
+/** A server filter: conditions and nested filters, joined by `operator` (`and` when not set). */
+export interface QueryFilter {
+  conditions?: (QueryCondition | QueryFilter)[]
+  operator?: 'and' | 'or'
+}
+
+/** A table's grouping: the field the rows are grouped by. */
+export interface TableGroupBy {
+  /** `status`, `taskType`, `assignees`, `attrib.<name>`, ... */
+  id: string
+  desc: boolean
+}
+
+/** The entities a project table filters by. */
+export type TableFilterEntity = 'folder' | 'task' | 'product' | 'version' | 'representation'
+
+/** Products: the version query arguments that are not filter conditions, named like GraphQL `versions`. */
+export interface VersionQueryArgs {
+  /** only these featured versions of each product; send `featuredOnlyEntityType: 'product'` with it */
+  featuredOnly?: ('hero' | 'latestDone' | 'latest')[]
+  /** only the latest version in each folder */
+  latestPerFolder?: boolean
+  /** only versions with (`true`) or without (`false`) reviewables */
+  hasReviewables?: boolean
+}
+
+/** What a project table shows right now, as the host queries it. */
+export interface ProjectTableState {
+  /** the rows: `task` on Overview, `version` on Products */
+  entityType: 'task' | 'version'
+  /**
+   * the filter bar and every slicer panel, one filter per entity, keys without a scope prefix and
+   * relative dates resolved; an entity without conditions is left out
+   */
+  filters: Partial<Record<TableFilterEntity, QueryFilter>>
+  /** name search: comma-separated terms, OR-ed; Overview only */
+  search?: string
+  /**
+   * the folders the rows are in (hierarchy panel, pinned slice, list panel folders, folder
+   * search), with all their descendants; can be thousands. `undefined`: no folder restriction
+   */
+  folderIds?: string[]
+  /**
+   * entities picked in a lists slicer panel, already narrowed to `folderIds`. Products sends
+   * `version` or `product`, not both, as its query does
+   */
+  ids?: Partial<Record<'task' | 'product' | 'version', string[]>>
+  /**
+   * Overview: the folder tree; false for a flat task list, the flat folder view and a grouping.
+   * Products: products with their versions
+   */
+  showHierarchy: boolean
+  /** the grouping; `undefined` when not grouped */
+  groupBy?: TableGroupBy
+  /**
+   * query arguments that are not filter conditions, per entity like `filters`: Products sets
+   * `version`. `undefined` when none is set
+   */
+  queryArgs?: { version?: VersionQueryArgs }
+}
+
+/** Project table slots: what the table shows. */
+export interface ProjectTableScope {
+  /** Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts */
+  tableState?: ProjectTableState
+}

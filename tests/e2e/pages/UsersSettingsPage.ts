@@ -1,13 +1,18 @@
 import { expect, Page } from '@playwright/test'
-import { dialog, formRow, menuItem, switchBody, toast } from '@ynput/ayon-e2e'
+import { dialog, formRow, menuItem, runPrefix, switchBody, toast } from '@ynput/ayon-e2e'
 
 /** /settings/users */
 export class UsersSettingsPage {
   constructor(readonly page: Page) {}
 
-  async goto() {
+  /**
+   * Opens the page filtered to the users this run created. The table only renders the rows in
+   * view, so on a server with many users the others are not in the page.
+   */
+  async goto({ filter = runPrefix() }: { filter?: string } = {}) {
     await this.page.goto('/settings/users')
     await expect(this.page.getByPlaceholder('Filter users...')).toBeVisible({ timeout: 30_000 })
+    if (filter) await this.filter(filter)
   }
 
   get table() {

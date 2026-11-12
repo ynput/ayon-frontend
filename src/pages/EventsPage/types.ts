@@ -20,6 +20,8 @@ export type Severity = 'error' | 'warning' | 'info'
 
 export type EventFilters = {
   search?: string
+  /** event ids */
+  ids?: string[]
   /** topic categories, eg `entity` matches `entity.*` */
   types?: string[]
   /** explicit topics, `*` is a wildcard */

@@ -90,6 +90,11 @@ export default ({ mode }) => {
           target: SERVER_URL,
           changeOrigin: true,
         },
+        // documents applications discover the server's authorization server by
+        '/.well-known': {
+          target: SERVER_URL,
+          changeOrigin: true,
+        },
       },
     },
     plugins: [
