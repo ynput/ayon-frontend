@@ -3,18 +3,15 @@ import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-ad
 import type { MenuItemPosition } from '@ynput/ayon-addon'
 import { menuItemsAt } from '@ynput/ayon-addon/host'
 import { usePowerpack } from '@shared/context'
-import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
-import {
-  FOLDER_ICON,
-  FOLDER_ICON_REMOVE,
-} from '@pages/ProjectListsPage/hooks/useListContextMenu.ts'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
-import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
+import { parseProjectFolderRowId } from '../../buildProjectsTableData'
 import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
 import { slotEntries, withSlotEntries } from '@shared/components'
 
 const SLOT = 'projectList.menuItem'
+const FOLDER_ICON = 'snippet_folder'
+const FOLDER_ICON_REMOVE = 'folder_off'
 
 export type Hidden = {
   search?: boolean
@@ -246,7 +243,7 @@ const useProjectsListMenuItems = ({
       )
 
       const allSelectedRowsAreFolders = selection.every((selected) =>
-        parseListFolderRowId(selected),
+        parseProjectFolderRowId(selected),
       )
       // Create recursive folder submenu
       const createFolderHierarchy = (

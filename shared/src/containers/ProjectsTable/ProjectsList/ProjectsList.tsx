@@ -1,0 +1,274 @@
+import { useGetProjectFoldersQuery } from '@shared/api'
+import { getProjectDisplayName } from '@shared/util'
+import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
+import { FC, useCallback, useEffect, useMemo, useState } from 'react'
+import ProjectsTable from '../ProjectsTable'
+import { MENU_ID as PROJECTS_LIST_MENU_ID } from '../ProjectsListTableHeader'
+import buildProjectsTableData, { buildProjectFolderRowId } from '../buildProjectsTableData'
+import useProjectMenuController from './hooks/useProjectMenuController'
+import type { Hidden } from './hooks/useProjectsListMenuItems'
+import { useMenuContext } from '@shared/context'
+import { useLocalStorage } from '@shared/hooks'
+import { ProjectFolderFormDialog } from './ProjectFolderFormDialog'
+import { useGlobalContext, usePowerpack } from '@shared/context'
+import ProjectsShortcuts from './ProjectsShortcuts'
+
+export interface ProjectsListProps {
+  selection: string[]
+  onSelect: (ids: string[]) => void
+  multiSelect?: boolean
+  allowEmptySelection?: boolean
+  onNewProject?: () => void
+  onNoProjectSelected?: (projectName: string) => void
+  hidden?: Hidden
+  pt?: {
+    container?: React.HTMLAttributes<HTMLDivElement>
+  }
+  /** The search, e.g. kept in the URL by the app; kept here when not given. */
+  search?: string
+  onSearch?: (search: string | undefined) => void
+  /** What the app adds (routes, store, permissions): see useProjectMenuController. */
+  onOpenProject?: (projectName: string) => void
+  onManageProject?: (projectName: string) => void
+  canCreateProject?: boolean
+  /** while true the list's shortcut keys do nothing */
+  shortcutsPaused?: boolean
+}
+
+const ProjectsList: FC<ProjectsListProps> = ({
+  selection,
+  onSelect,
+  multiSelect,
+  allowEmptySelection,
+  onNewProject,
+  onNoProjectSelected,
+  hidden,
+  pt,
+  search,
+  onSearch,
+  onOpenProject: openProject,
+  onManageProject,
+  canCreateProject: userCanCreateProject,
+  shortcutsPaused,
+}) => {
+  // GET USER PREFERENCES (moved to hook)
+  const { powerLicense } = usePowerpack()
+  const {
+    projects: globalProjects,
+    isLoading: globalIsLoading,
+    error: globalError,
+  } = useGlobalContext()
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+  // Show archived state (stored in local storage)
+  const [showArchived, setShowArchived] = useLocalStorage<boolean>('projects-show-archived', false)
+
+  const data = showArchived ? globalProjects.all : globalProjects.active
+  const isLoading = globalIsLoading.projects
+  const error = globalError.projects
+  const { data: folders } = useGetProjectFoldersQuery()
+
+  // transformations
+  // sort projects by active pinned, active, inactive (active=false) and then alphabetically by display name (label || name)
+  const projects = useMemo(() => {
+    return [...data].sort((a, b) => {
+      if (a.active && !b.active) return -1
+      if (!a.active && b.active) return 1
+      return getProjectDisplayName(a).localeCompare(getProjectDisplayName(b))
+    })
+  }, [data])
+
+  const selectedProjects = useMemo(() => {
+    return projects.filter((p) => selection.includes(p.name))
+  }, [projects, selection])
+
+  useEffect(() => {
+    if (selection?.length) return
+    if (!projects?.length) return
+    if (!onNoProjectSelected) return
+    onNoProjectSelected(projects[0].name)
+  }, [selection, projects, onNoProjectSelected])
+
+  // if not multi-select, remove selected projects except the first one
+  // if there is no project selected, select the first one
+  useEffect(() => {
+    if (!multiSelect && selection.length > 1) {
+      onSelect([selectedProjects[0].name])
+    }
+    // if there is no project selected, select the first one
+    if (!allowEmptySelection && projects.length && !selection.length) {
+      onSelect([projects[0].name])
+    }
+  }, [multiSelect, selection, selectedProjects, onSelect, projects, allowEmptySelection])
+
+  // state
+  // search state
+  const [ownSearch, setOwnSearch] = useState<string>()
+  const clientSearch = onSearch ? search : ownSearch
+  const setClientSearch = onSearch ?? setOwnSearch
+  // format data for the table, pass pinned projects for sorting
+  // show folders when search is empty, hide when searching
+
+  const showFolders = !clientSearch && powerLicense
+  const listsTableData = useMemo(
+    () => buildProjectsTableData(projects, showFolders ? folders : [], true, powerLicense),
+    [projects, folders, powerLicense, showFolders],
+  )
+  // convert selection to RowSelectionState
+  const rowSelection: RowSelectionState = useMemo(
+    () =>
+      selection.reduce((acc, id) => {
+        acc[id] = true
+        return acc
+      }, {} as RowSelectionState),
+    [selection],
+  )
+
+  // handle selection change
+  const setRowSelection = useCallback(
+    (newSelection: RowSelectionState) => {
+      const selectedIds = Object.keys(newSelection).filter((id) => newSelection[id])
+      onSelect(selectedIds)
+    },
+    [onSelect],
+  )
+  const { toggleMenuOpen } = useMenuContext()
+  const toggleMenu = (open: boolean = true) => {
+    toggleMenuOpen(open ? PROJECTS_LIST_MENU_ID : false)
+  }
+
+  const toggleSelectAll = () => {
+    // select all projects
+    if (onSelect) {
+      if (selection.length === projects.length) {
+        onSelect([]) // Deselect all
+      } else {
+        const allIds = projects.map((p) => p.name)
+        onSelect(allIds) // Select all
+      }
+    }
+  }
+  const onShowArchivedToggle = () => {
+    if (showArchived) {
+      const activeProjects = projects.filter((p) => p.active)
+      onSelect(selection.filter((s) => activeProjects.some((p) => p.name === s)))
+    }
+    setShowArchived(!showArchived)
+  }
+
+  // Post-creation callbacks for folder state management
+  const handleFolderCreated = useCallback(
+    (folderId: string, hadProjects: boolean) => {
+      const folderRowId = buildProjectFolderRowId(folderId)
+      if (hadProjects) {
+        // Projects were added to folder, expand it to show them
+        setExpanded((prev) => ({
+          ...(typeof prev === 'object' ? prev : {}),
+          [folderRowId]: true,
+        }))
+      } else {
+        // Empty folder created, select it for further action
+        onSelect([folderRowId])
+      }
+    },
+    [setExpanded, onSelect],
+  )
+
+  const handleFoldersCreated = useCallback(
+    (parentFolderIds: string[], areExpanding: boolean) => {
+      if (areExpanding) {
+        // Expand parent folders to show new subfolders
+        setExpanded((prev) => {
+          const newExpanded = typeof prev === 'object' ? { ...prev } : {}
+          parentFolderIds.forEach((id) => {
+            newExpanded[buildProjectFolderRowId(id)] = true
+          })
+          return newExpanded
+        })
+      }
+    },
+    [setExpanded],
+  )
+  const {
+    buildMenuItems,
+    rowContextMenuBuilder,
+    canCreateProject,
+    rowPinning,
+    onRowPinningChange,
+    onOpenProject,
+    handleOpenFolderDialog,
+    folderDialogProps,
+    onRenameFolder,
+    onRenameProject,
+    renamingFolder,
+    onSubmitRenameFolder,
+    closeRenameFolder,
+    renamingProject,
+    onSubmitRenameProject,
+    closeRenameProject,
+  } = useProjectMenuController({
+    projects,
+    folders: folders || [],
+    selection,
+    onSelect,
+    onNewProject,
+    multiSelect,
+    showArchived,
+    onSelectAll: toggleSelectAll,
+    onShowArchivedToggle,
+    hidden,
+    onFolderCreated: handleFolderCreated,
+    onFoldersCreated: handleFoldersCreated,
+    onOpenProject: openProject,
+    onManageProject,
+    canCreateProject: userCanCreateProject,
+  })
+
+  return (
+    <>
+      <ProjectsTable
+        data={listsTableData}
+        isLoading={isLoading}
+        error={error ? (error as string) : undefined}
+        search={clientSearch}
+        onSearch={setClientSearch}
+        rowSelection={rowSelection}
+        onRowSelectionChange={setRowSelection}
+        rowPinning={rowPinning}
+        onRowPinningChange={onRowPinningChange}
+        expanded={expanded}
+        setExpanded={setExpanded}
+        multiSelect={multiSelect}
+        readonly={false}
+        buildMenuItems={buildMenuItems}
+        rowContextMenuBuilders={[rowContextMenuBuilder]}
+        selection={selection}
+        onSelect={onSelect}
+        onOpenProject={onOpenProject}
+        enableClickToDeselect={allowEmptySelection}
+        title="Projects"
+        showAddProject={canCreateProject && !hidden?.['add-project']}
+        onNewProject={onNewProject}
+        toggleMenu={toggleMenu}
+        onSelectAll={toggleSelectAll}
+        hiddenButtons={!multiSelect ? ['select-all'] : []}
+        onRenameFolder={onRenameFolder}
+        onRenameProject={onRenameProject}
+        renamingFolder={renamingFolder}
+        onSubmitRenameFolder={onSubmitRenameFolder}
+        closeRenameFolder={closeRenameFolder}
+        renamingProject={renamingProject}
+        onSubmitRenameProject={onSubmitRenameProject}
+        closeRenameProject={closeRenameProject}
+        pt={pt}
+      />
+      <ProjectFolderFormDialog {...folderDialogProps} />
+      <ProjectsShortcuts
+        onOpenFolderDialog={handleOpenFolderDialog}
+        disabled={!powerLicense || !!hidden?.['create-folder']}
+        paused={shortcutsPaused}
+      />
+    </>
+  )
+}
+
+export default ProjectsList

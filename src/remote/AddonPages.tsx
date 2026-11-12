@@ -16,7 +16,7 @@ import { useAppSelector } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { hasPageAccess } from './AddonPagesHelpers'
-import { StudioPageSelectionProvider } from './AddonLayout'
+import { StudioPageSelectionProvider } from '@shared/components/AddonLayout/StudioPageLayout'
 import { AddonDetailsPanel } from './AddonDetailsPanel'
 
 // Pages contributed through the project.page and studio.page slots (@ynput/ayon-addon).

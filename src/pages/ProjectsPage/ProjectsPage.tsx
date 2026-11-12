@@ -35,8 +35,8 @@ import { SettingsPanelProvider, usePowerpack, useSettingsPanel } from '@shared/c
 import { CustomizeButton, InfoMessage, PowerpackButton } from '@shared/components'
 import { useSessionStorage } from '@shared/hooks'
 import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
-import useProjectMenuController from '@containers/ProjectsList/hooks/useProjectMenuController'
-import { ProjectFolderFormDialog } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { ProjectFolderFormDialog, useProjectMenuController } from '@shared/containers/ProjectsTable'
+import { useProjectsListAppProps } from '@containers/ProjectsList/useProjectsListAppProps'
 import { getMaxDepth } from './utils'
 
 interface ProjectsPageProps {
@@ -132,6 +132,8 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   const { isPanelOpen } = useSettingsPanel()
 
   // CONTEXT: build context menu for project and folder rows
+  const { onOpenProject: openProject, onManageProject, canCreateProject: userCanCreateProject } =
+    useProjectsListAppProps()
   const {
     canCreateProject,
     buildListTableContextMenuItems,
@@ -145,6 +147,9 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     selection: selectedProjectIds,
     onSelect: setSelectedProjectIds,
     onNewProject,
+    onOpenProject: openProject,
+    onManageProject,
+    canCreateProject: userCanCreateProject,
     hidden: {
       search: true,
       'select-all': true,

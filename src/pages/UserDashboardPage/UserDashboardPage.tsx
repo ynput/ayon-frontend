@@ -9,11 +9,9 @@ import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
-import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
-import { SplitterPanel } from 'primereact/splitter'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import { ProjectsListSplitter } from './UserDashboardPage.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
@@ -27,7 +25,10 @@ import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { useContributions } from '@ynput/ayon-addon'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
-import { StudioPageSelectionProvider } from '@/remote/AddonLayout'
+import {
+  StudioPageLayoutHost,
+  StudioPageSelectionProvider,
+} from '@shared/components/AddonLayout/StudioPageLayout'
 import { ProjectList, StudioPageLayout } from '@ynput/ayon-addon'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
@@ -351,23 +352,20 @@ const UserDashboardPage: React.FC = () => {
         <main>
           <WithViews viewType={viewType}>
             <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-              {showProjectList ? (
-                <ProjectsListSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-                  <SplitterPanel size={15}>
+              <StudioPageLayoutHost
+                sidebar={
+                  showProjectList && (
                     <ProjectsList
                       multiSelect={isMultiSelect}
                       selection={selectedProjects}
                       onSelect={setSelectedProjects}
                       onNewProject={() => setShowNewProject(true)}
                     />
-                  </SplitterPanel>
-                  <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-                    {moduleComponent}
-                  </SplitterPanel>
-                </ProjectsListSplitter>
-              ) : (
-                moduleComponent
-              )}
+                  )
+                }
+              >
+                {moduleComponent}
+              </StudioPageLayoutHost>
             </Section>
           </WithViews>
         </main>
