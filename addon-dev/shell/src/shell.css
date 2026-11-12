@@ -814,11 +814,19 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   align-items: center;
   gap: 4px;
 }
-.ayon-shell-tag {
-  padding: 0 6px;
-  border-radius: 4px;
-  font-size: 12px;
-  background: var(--md-sys-color-surface-container-high);
+.ayon-shell-resizer {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+.ayon-shell-resizer:hover,
+.ayon-shell-resizer.resizing {
+  background: var(--md-sys-color-primary);
 }
 .ayon-shell-customize {
   width: 320px;

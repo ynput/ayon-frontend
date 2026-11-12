@@ -36,10 +36,6 @@ type ColumnMenuContribution = Contribution<'projectTable.columnMenuItem'>
 interface Details {
   id: string
   status?: string
-  entitySubType?: string
-  tags?: string[]
-  updatedAt?: string
-  task?: { assignees?: string[] }
 }
 
 interface ShellRow {
@@ -82,9 +78,10 @@ const withColumnLabel = (text: string, columnLabel: string) => text.replace(/\{c
 
 const menuId = (columnId: string) => `addon-dev-column-menu-${columnId}`
 
-const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString() : '')
-
-/** A header cell as AYON's: its label, and on hover (or while open) the more menu at the right. */
+/**
+ * A header cell as AYON's: its label, on hover (or while open) the more menu at the right, and a
+ * handle on its right edge to drag its width.
+ */
 const HeaderCell = ({
   label,
   menuItems,
@@ -92,6 +89,8 @@ const HeaderCell = ({
   width,
   className,
   extra,
+  onResize,
+  resizing,
 }: {
   label: ReactNode
   menuItems: ColumnMenuItem[]
@@ -99,6 +98,8 @@ const HeaderCell = ({
   width: number
   className?: string
   extra?: object
+  onResize: (event: unknown) => void
+  resizing: boolean
 }) => {
   const { menuOpen } = useMenuContext()
   const open = menuOpen === menuId(columnId)
@@ -113,6 +114,12 @@ const HeaderCell = ({
       <div className="ayon-shell-th-actions">
         <ColumnHeaderMenuUI menuItems={menuItems} menuId={menuId(columnId)} className="header-menu" />
       </div>
+      <div
+        className={`ayon-shell-resizer${resizing ? ' resizing' : ''}`}
+        onMouseDown={onResize}
+        onTouchStart={onResize}
+        onClick={(e) => e.stopPropagation()}
+      />
     </th>
   )
 }
@@ -159,35 +166,8 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
           ) : null
         },
       },
-      {
-        columnId: 'subType',
-        columnLabel: page === 'products' ? 'Product type' : 'Type',
-        groupField: page === 'products' ? 'productType' : 'taskType',
-        size: 130,
-        cell: (row) => row.details?.entitySubType,
-      },
-      {
-        columnId: 'assignees',
-        columnLabel: 'Assignees',
-        groupField: 'assignees',
-        size: 150,
-        cell: (row) => row.details?.task?.assignees?.join(', '),
-      },
-      {
-        columnId: 'tags',
-        columnLabel: 'Tags',
-        groupField: 'tags',
-        size: 150,
-        cell: (row) => row.details?.tags?.map((tag) => <span key={tag} className="ayon-shell-tag">{tag}</span>),
-      },
-      {
-        columnId: 'updatedAt',
-        columnLabel: 'Updated at',
-        size: 120,
-        cell: (row) => formatDate(row.details?.updatedAt),
-      },
     ],
-    [page, statuses],
+    [statuses],
   )
 
   const columns = useMemo<ColumnDef<ShellRow>[]>(
@@ -218,6 +198,10 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
     columns,
     getCoreRowModel: getCoreRowModel(),
     getRowId: (row) => row.id,
+    // drag a header's right edge, as in AYON: an addon column may need room for its content
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    defaultColumn: { minSize: 60 },
     // AYON's table declares its own filter functions (ProjectTreeTable)
     filterFns: {} as never,
   })
@@ -366,6 +350,8 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
                     width={header.getSize()}
                     label={content}
                     menuItems={menuItemsFor(column)}
+                    onResize={header.getResizeHandler()}
+                    resizing={header.column.getIsResizing()}
                     // an addon column: marked as the tableColumn slot's
                     className={key ? ` ayon-dev-column${tableMarks.className}` : undefined}
                     extra={key ? { 'data-ayon-dev-contribution': key, ...stageHover('tableColumn') } : undefined}
