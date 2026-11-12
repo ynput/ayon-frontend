@@ -8,6 +8,7 @@ import {
   useColumnSettingsContext,
   useGroupCounts,
   useSlicerContext,
+  mergeQueryFilters,
 } from '@shared/containers'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { FC, useCallback, useMemo } from 'react'
@@ -58,7 +59,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     skip: isLoadingViews,
     args: columnStatsArgs,
   })
-  const { showProducts, onUpdateShowProducts, filters } = useVPViewsContext()
+  const { showProducts, onUpdateShowProducts, filters, advancedFilter } = useVPViewsContext()
 
   const { ...projectInfo } = useProjectContext()
   const { attribFields, users } = useProjectDataContext()
@@ -158,7 +159,11 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       hierarchyActive={showProducts}
       isLoading={isLoadingAll}
       scopes={SCOPES}
-      queryFilters={{ filter: filters as any, search: undefined }}
+      queryFilters={{
+        // the filters the page has, which decides how a load error is shown
+        filter: mergeQueryFilters(filters as any, advancedFilter),
+        search: undefined,
+      }}
       playerOpen={viewerOpen}
       onOpenPlayer={handleOpenPlayer}
       error={error}
