@@ -1,6 +1,7 @@
-// The slot inspector's card: what the contribution (or menu button) under the pointer is. It sits
-// at the element's top-right corner, stays while the pointer is on the element or on it, and copies
-// a prompt for an AI coding assistant: add a contribution to the slot, or change this one.
+// The slot inspector's card: what the contribution (or menu button) under the pointer is: the slot's
+// id, where the slot comes from and the contribution. It sits at the element's top-right corner,
+// stays while the pointer is on the element or on it, and copies a prompt for an AI coding
+// assistant: add a contribution to the slot, or edit this one.
 // SlotInspectorMenu renders it, so it shows wherever that menu is (AYON's header in developer
 // mode, the addon dev shell). Internal, like slotInspector.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
@@ -12,8 +13,8 @@ import { getRegistry, isExample, slotInfo } from '@ynput/ayon-addon/host'
 import { safeWriteClipboard } from '../../util/clipboardUtils'
 import {
   AYON_ADDON,
+  SLOT_CARD_ATTRIBUTE,
   addonColor,
-  holdInspected,
   releaseInspected,
   useInspectedElement,
 } from './slotInspector'
@@ -41,12 +42,20 @@ const Card = styled.div`
   cursor: default;
 `
 
-const Title = styled.div`
+const Header = styled.div`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 14px;
-  font-weight: 600;
+
+  .copy {
+    visibility: hidden;
+    padding: 2px;
+    min-height: 0;
+  }
+  &:hover .copy,
+  .copy:focus-visible {
+    visibility: visible;
+  }
 `
 
 const Swatch = styled.span`
@@ -56,6 +65,13 @@ const Swatch = styled.span`
   border-radius: 50%;
 `
 
+const SlotId = styled.code`
+  font-family: monospace;
+  font-size: 14px;
+  font-weight: 600;
+  word-break: break-all;
+`
+
 const Badge = styled.span`
   margin-left: auto;
   padding: 0 6px;
@@ -63,7 +79,6 @@ const Badge = styled.span`
   background-color: var(--md-sys-color-surface-container-low);
   color: var(--md-sys-color-outline);
   font-size: 11px;
-  font-weight: normal;
 `
 
 const Code = styled.code`
@@ -77,7 +92,6 @@ const Muted = styled.span`
 
 const Actions = styled.div`
   display: flex;
-  gap: 4px;
   margin-top: 4px;
 
   button {
@@ -90,8 +104,6 @@ const Actions = styled.div`
 
 interface Inspected {
   slot: string
-  label: string
-  description?: string
   /** the addon that declared the slot; none for AYON's */
   owner?: { name: string; version: string }
   /** a rendered contribution: its addon and key, and whether it is the slot's example */
@@ -103,7 +115,7 @@ interface Inspected {
 const describe = (element: Element): Inspected | undefined => {
   const slot = element.getAttribute('data-ayon-slot')
   if (!slot) return undefined
-  const info = slotInfo(slot)
+  const { owner } = slotInfo(slot)
   const addon = element.getAttribute('data-ayon-addon')
   const key = element.getAttribute('data-ayon-contribution')
   const contribution =
@@ -117,7 +129,8 @@ const describe = (element: Element): Inspected | undefined => {
         }
       : undefined
   return {
-    ...info,
+    slot,
+    owner,
     contribution,
     menuOf: element.hasAttribute('data-ayon-trigger')
       ? (element.getAttribute('data-ayon-addons') || '').split(' ').filter(Boolean)
@@ -125,11 +138,14 @@ const describe = (element: Element): Inspected | undefined => {
   }
 }
 
-/** The prompt to paste into an AI coding assistant: the slot or the contribution, by its id. */
+/**
+ * The prompt to paste into an AI coding assistant, by id: add a contribution to the slot, or edit
+ * this contribution (ending in a colon, for what to change).
+ */
 const promptFor = ({ slot, owner, contribution }: Inspected) => {
   const slotName = owner ? `the ${owner.name} addon's slot \`${slot}\`` : `the AYON slot \`${slot}\``
   if (contribution && !contribution.example)
-    return `Change the contribution \`${contribution.key}\` of the ${contribution.addon} addon to ${slotName}.`
+    return `Edit the ${contribution.addon} addon's contribution \`${contribution.key}\` (in ${slotName}):`
   return `Add a contribution to ${slotName} in this addon.`
 }
 
@@ -156,7 +172,17 @@ const placeCard = (element: Element, card: HTMLElement) => {
   return { left, top }
 }
 
-const CopyButton = ({ text, label, icon }: { text: string; label: string; icon: IconType }) => {
+const CopyButton = ({
+  text,
+  label,
+  icon,
+  className,
+}: {
+  text: string
+  label?: string
+  icon: IconType
+  className?: string
+}) => {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return undefined
@@ -165,11 +191,14 @@ const CopyButton = ({ text, label, icon }: { text: string; label: string; icon: 
   }, [copied])
   return (
     <Button
-      variant="surface"
+      variant={label ? 'surface' : 'text'}
+      className={className}
       icon={copied ? 'check' : icon}
+      aria-label={label ? undefined : 'Copy'}
+      data-tooltip={label ? undefined : 'Copy'}
       onClick={async () => setCopied(await safeWriteClipboard(text))}
     >
-      {copied ? 'Copied' : label}
+      {label && (copied ? 'Copied' : label)}
     </Button>
   )
 }
@@ -198,7 +227,7 @@ export const SlotInspectorCard = () => {
 
   const inspected = element && describe(element)
   if (!element || !inspected) return null
-  const { slot, label, description, owner, contribution, menuOf } = inspected
+  const { slot, owner, contribution, menuOf } = inspected
   const colorOf = contribution?.addon ?? owner?.name ?? AYON_ADDON
   // a modal dialog (an open menu) keeps the rest of the page inert: the card goes in it
   const dialog = element.closest('dialog')
@@ -207,27 +236,21 @@ export const SlotInspectorCard = () => {
   return createPortal(
     <Card
       ref={ref}
-      data-ayon-slot-card=""
+      {...{ [SLOT_CARD_ATTRIBUTE]: '' }}
       style={position ?? { visibility: 'hidden', left: 0, top: 0 }}
-      onPointerEnter={holdInspected}
-      onPointerLeave={() => releaseInspected()}
       // the page's click-outside handlers (an open menu's) don't see clicks on the card
       onPointerDown={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => e.stopPropagation()}
     >
-      <Title>
+      <Header>
         <Swatch style={{ backgroundColor: addonColor(colorOf) }} />
-        {label}
+        <SlotId>{slot}</SlotId>
+        <CopyButton text={slot} icon="content_copy" className="copy" />
         {contribution?.example && <Badge>Example</Badge>}
         {menuOf && <Badge>Menu button</Badge>}
-      </Title>
-      <Code>{slot}</Code>
-      <span>
-        <Muted>From </Muted>
-        {owner ? `${owner.name} ${owner.version} (declared slot)` : 'AYON (@ynput/ayon-addon)'}
-      </span>
-      {description && <Muted>{description}</Muted>}
+      </Header>
+      <Muted>From {owner ? `${owner.name} ${owner.version}` : 'AYON'}</Muted>
       {contribution && !contribution.example && (
         <span>
           <Muted>Contribution </Muted>
@@ -237,13 +260,12 @@ export const SlotInspectorCard = () => {
       )}
       {menuOf && (
         <span>
-          <Muted>Opens a menu with contributions by </Muted>
+          <Muted>Menu with contributions by </Muted>
           {menuOf.join(', ')}
         </span>
       )}
       <Actions>
         <CopyButton text={promptFor(inspected)} label="Copy AI prompt" icon="smart_toy" />
-        <CopyButton text={slot} label="Copy slot ID" icon="content_copy" />
       </Actions>
     </Card>,
     container,

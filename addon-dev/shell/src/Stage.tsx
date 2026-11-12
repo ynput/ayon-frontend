@@ -122,7 +122,8 @@ const ProjectPageBody = ({ page, selection }: { page: AnyContribution; selection
   useStageReady(!!context.project)
   return (
     <div className="ayon-shell-body" data-shell-surface="project-page">
-      <ContributionView contribution={page as never} context={context as never} />
+      {/* untagged: as in AYON, the page's tab carries the slot inspector's tags */}
+      <ContributionView contribution={page as never} context={context as never} untagged />
     </div>
   )
 }
@@ -215,7 +216,8 @@ const StudioPageBody = ({ page, selectedProjects }: { page: AnyContribution; sel
   useStageReady(true)
   return (
     <div className="ayon-shell-body" data-shell-surface="studio-page">
-      <ContributionView contribution={page as never} context={context as never} />
+      {/* untagged: as in AYON, the page's tab carries the slot inspector's tags */}
+      <ContributionView contribution={page as never} context={context as never} untagged />
     </div>
   )
 }

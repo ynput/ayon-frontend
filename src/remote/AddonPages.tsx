@@ -109,8 +109,9 @@ export const AddonProjectPage = ({
   const allowed = usePageAccess(contribution)
 
   if (!allowed) return null
+  // untagged: the page's tab carries the slot inspector's tags, not the whole page
   const page = (
-    <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+    <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} untagged />
   )
   return contribution.detailsPanel ? (
     // keyed by project: the shown entities belong to one project
@@ -148,7 +149,8 @@ export const AddonStudioPage = ({
   if (!allowed) return null
   return (
     <StudioPageSelectionProvider value={studioPage}>
-      <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+      {/* untagged: the page's tab carries the slot inspector's tags, not the whole page */}
+      <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} untagged />
     </StudioPageSelectionProvider>
   )
 }

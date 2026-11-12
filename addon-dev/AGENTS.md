@@ -214,9 +214,9 @@ contribution is developed without that addon installed:
   addon's (a menu gets an entry, an outlet the example's component). Using one only shows "Example
   contribution to `<slot>`". Highlight contributions outlines each contribution in its addon's
   colour (the legend lists them, with a checkbox each) and the buttons that open menus with them;
-  hovering one shows a card at its top-right corner (the slot's title and name, AYON's or the
-  declaring addon's, the contribution's key) with Copy AI prompt: add a contribution to the slot,
-  or for a real contribution change it, by id. A new session in the shell starts with Highlight
+  hovering one shows a card at its top-right corner (the slot's id, where the slot comes from, the
+  contribution's key) with Copy AI prompt: add a contribution to the slot, or for a real
+  contribution edit it, by id. A page is outlined on its tab, not over its whole content. A new session in the shell starts with Highlight
   contributions on. Examples don't count as used: Places and "N of M used" count the addon's own
   contributions. The scenes need nothing for it: the shell hands the SDK an internal hook
   (`devSlots`) only to learn the context each slot passes (Context), which AYON never sets.

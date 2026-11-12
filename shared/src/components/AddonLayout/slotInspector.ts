@@ -138,6 +138,7 @@ let hideTimer: ReturnType<typeof setTimeout> | undefined
 const inspectedListeners = new Set<() => void>()
 const inspect = (element?: Element) => {
   clearTimeout(hideTimer)
+  hideTimer = undefined
   const addon = element?.getAttribute('data-ayon-addon')
   const next = addon && state.hiddenAddons.includes(addon) ? undefined : element
   if (next === inspected) return
@@ -155,26 +156,52 @@ const subscribeInspected = (listener: () => void) => {
 const getInspected = () => inspected
 /** The tagged element under the pointer (or the card), re-rendering on changes. */
 export const useInspectedElement = () => useSyncExternalStore(subscribeInspected, getInspected, getInspected)
-/** The pointer is on the card: keep it. */
-export const holdInspected = () => clearTimeout(hideTimer)
-/** The pointer left the element or the card: drop it after a moment, unless it comes back. */
-export const releaseInspected = (delay = 200) => {
+const holdInspected = () => {
   clearTimeout(hideTimer)
-  hideTimer = setTimeout(() => inspect(undefined), delay)
+  hideTimer = undefined
+}
+/** The pointer left the element and the card: drop it after a moment, unless it comes back. */
+export const releaseInspected = (delay = 200) => {
+  if (delay && hideTimer !== undefined) return
+  clearTimeout(hideTimer)
+  hideTimer = setTimeout(() => {
+    hideTimer = undefined
+    inspect(undefined)
+  }, delay)
 }
 
 const TAGGED = '[data-ayon-contribution], [data-ayon-trigger]'
-let pointed: Element | undefined
-const onPointerOver = (event: PointerEvent) => {
-  const element = (event.target as Element | null)?.closest?.(TAGGED)
-  if (!element) return
-  pointed = element
-  inspect(element)
+/** On the card (SlotInspectorCard): the pointer there keeps it. */
+export const SLOT_CARD_ATTRIBUTE = 'data-ayon-slot-card'
+
+// The innermost tagged element at a point: every element there, top first, also the ones under an
+// element that isn't tagged (an event bar drawn over its badges), and of their tagged ancestors the
+// one inside the others (an addon's slot on a page another slot shows, not the page).
+const taggedAt = (x: number, y: number) => {
+  let found: Element | undefined
+  for (const element of document.elementsFromPoint(x, y)) {
+    const tagged = element.closest(TAGGED)
+    if (tagged && (!found || (tagged !== found && found.contains(tagged)))) found = tagged
+  }
+  return found
 }
+
+let frame = 0
+let point = { x: 0, y: 0 }
+const onPointerMove = (event: PointerEvent) => {
+  point = { x: event.clientX, y: event.clientY }
+  if (frame) return
+  frame = requestAnimationFrame(() => {
+    frame = 0
+    if (document.elementFromPoint(point.x, point.y)?.closest(`[${SLOT_CARD_ATTRIBUTE}]`)) return holdInspected()
+    const element = taggedAt(point.x, point.y)
+    if (element) inspect(element)
+    else if (inspected) releaseInspected()
+  })
+}
+// the pointer left the window
 const onPointerOut = (event: PointerEvent) => {
-  if (!pointed || pointed.contains(event.relatedTarget as Node | null)) return
-  pointed = undefined
-  releaseInspected()
+  if (!event.relatedTarget && inspected) releaseInspected()
 }
 
 let listening = false
@@ -186,12 +213,11 @@ const syncDocument = () => {
   if (tagsOn() !== listening) {
     listening = tagsOn()
     if (listening) {
-      document.addEventListener('pointerover', onPointerOver)
+      document.addEventListener('pointermove', onPointerMove)
       document.addEventListener('pointerout', onPointerOut)
     } else {
-      document.removeEventListener('pointerover', onPointerOver)
+      document.removeEventListener('pointermove', onPointerMove)
       document.removeEventListener('pointerout', onPointerOut)
-      pointed = undefined
       inspect(undefined)
     }
   }
