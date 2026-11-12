@@ -223,6 +223,8 @@ export interface ProjectTableProviderProps {
 
   groupByConfig?: {
     entityType?: GroupByEntityType
+    // drops empty groups whatever the user setting, when a filter already decides the groups
+    hideEmpty?: boolean
   }
 
   // Custom hierarchy-like options for the group-by settings panel
@@ -348,7 +350,7 @@ export const ProjectTableProvider = ({
     entityType: groupByConfig?.entityType || 'unknown',
     groups: groups,
     attribFields,
-    showEmpty: showEmptyGroups,
+    showEmpty: showEmptyGroups && !groupByConfig?.hideEmpty,
     groupRowFunc,
     groupCounts,
     groupCountsComplete,

@@ -13,6 +13,13 @@ import { formatEntityLabel } from './utils/formatEntityLinks'
 import { toast } from 'react-toastify'
 import { createRealtimeBatcher, PubSub, waitForRealtimeJitter } from '@shared/util'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { chunk } from 'lodash'
+import { useEffect, useMemo, useState } from 'react'
+
+// entities per links request, more are fetched in further requests
+const LINKS_BATCH_SIZE = 100
+// a failing batch is tried this many times before the query fails
+const LINKS_BATCH_ATTEMPTS = 3
 
 /**
  * Custom queryFn for fetching entity links with optimized caching behavior.
@@ -30,6 +37,8 @@ export type GetEntityLinksArgs = {
   projectName: string
   entityIds: string[]
   entityType: 'folder' | 'task' | 'product' | 'version' | 'representation' | 'workfile'
+  // see useGetEntityLinksInBatchesQuery
+  afterRequest?: number
 }
 
 // Define link types for each entity
@@ -94,6 +103,80 @@ const entityResultPaths = {
   workfile: 'workfiles',
 } as const
 
+// asks for the links of one batch, trying again before giving up
+const fetchLinksBatch = async (
+  dispatch: (action: any) => any,
+  endpoint: string,
+  projectName: string,
+  entityIds: string[],
+) => {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await dispatch(
+        (gqlLinksApi.endpoints as any)[endpoint].initiate(
+          { projectName, entityIds },
+          { forceRefetch: true, subscribe: false },
+        ),
+      ).unwrap()
+    } catch (error) {
+      if (attempt >= LINKS_BATCH_ATTEMPTS) throw error
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt))
+    }
+  }
+}
+
+const toEntityWithLinks = (node: any): EntityWithLinks => {
+  // Log restricted links
+  const restrictedLinks = node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
+  if (restrictedLinks.length > 0) {
+    console.log(
+      `[RESTRICTED LINKS] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
+      restrictedLinks.map((link: any) => ({
+        linkId: link?.id,
+        linkType: link?.linkType,
+        direction: link?.direction,
+        entityType: link?.entityType,
+        nodeIsNull: !link?.node,
+      })),
+    )
+  }
+
+  return {
+    id: node.id,
+    links:
+      node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
+        if (!linkEdge?.node) {
+          // Restricted link - node is null
+          return {
+            ...linkEdge,
+            node: null,
+            isRestricted: true,
+          } as EntityLink
+        }
+        // Normal link
+        return {
+          ...linkEdge,
+          node: {
+            id: linkEdge.node.id,
+            name: linkEdge.node.name,
+            label: formatEntityLabel(linkEdge.node),
+            parents: linkEdge.node.parents || [],
+            subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
+          },
+          isRestricted: false,
+        } as EntityLink
+      }) || [], // Flatten the edges structure
+  }
+}
+
+// merges entities into the cached ones, replacing those with the same id
+const mergeEntitiesWithLinks = (cache: EntityWithLinks[], entities: EntityWithLinks[]) => {
+  const cacheMap = new Map(cache.map((item) => [item.id, item]))
+  for (const entity of entities) cacheMap.set(entity.id, entity)
+  cache.length = 0
+  cache.push(...cacheMap.values())
+}
+
 const injectedQueries = foldersApi.injectEndpoints({
   endpoints: (build) => ({
     getEntityLinks: build.query<GetEntityLinksResult, GetEntityLinksArgs>({
@@ -124,59 +207,33 @@ const injectedQueries = foldersApi.injectEndpoints({
           const endpoint = entityEndpoints[entityType]
           const resultPath = entityResultPaths[entityType]
 
-          // Fetch only the entities that aren't already cached
-          const result = await dispatch(
-            (gqlLinksApi.endpoints as any)[endpoint].initiate(
-              { projectName, entityIds: entityIdsToFetch },
-              { forceRefetch: true },
-            ),
-          ).unwrap()
+          // Fetch only the entities that aren't already cached, one batch after another to keep
+          // the load per user down. A refresh writes each batch into the cache as it arrives, so a
+          // realtime update made meanwhile is not replaced by an older response at the end.
+          const writesBatches = forced && cacheEntry?.data !== undefined
+          const newEntities: EntityWithLinks[] = []
+          for (const batchIds of chunk(entityIdsToFetch, LINKS_BATCH_SIZE)) {
+            const result = await fetchLinksBatch(dispatch, endpoint, projectName, batchIds)
+            const entities: EntityWithLinks[] = (result.project?.[resultPath]?.edges || []).map(
+              ({ node }: { node: any }) => toEntityWithLinks(node),
+            )
+            // entities the server leaves out (deleted since the rows loaded) have no links, and
+            // caching them keeps them from holding up the next batch
+            const returnedIds = new Set(entities.map((entity) => entity.id))
+            for (const id of batchIds) if (!returnedIds.has(id)) entities.push({ id, links: [] })
 
-          const newEntities =
-            result.project?.[resultPath]?.edges?.map(({ node }: { node: any }) => {
-              // Log restricted links
-              const restrictedLinks =
-                node.links.edges?.filter((e: EntityLinkQuery | null) => !e?.node) || []
-              if (restrictedLinks.length > 0) {
-                console.log(
-                  `[RESTRICTED LINKS] Entity ${node.id} (${node.name}) has ${restrictedLinks.length} restricted link(s):`,
-                  restrictedLinks.map((link: any) => ({
-                    linkId: link?.id,
-                    linkType: link?.linkType,
-                    direction: link?.direction,
-                    entityType: link?.entityType,
-                    nodeIsNull: !link?.node,
-                  })),
-                )
-              }
-
-              return {
-                id: node.id,
-                links:
-                  node.links.edges?.map((linkEdge: EntityLinkQuery | null) => {
-                    if (!linkEdge?.node) {
-                      // Restricted link - node is null
-                      return {
-                        ...linkEdge,
-                        node: null,
-                        isRestricted: true,
-                      } as EntityLink
-                    }
-                    // Normal link
-                    return {
-                      ...linkEdge,
-                      node: {
-                        id: linkEdge.node.id,
-                        name: linkEdge.node.name,
-                        label: formatEntityLabel(linkEdge.node),
-                        parents: linkEdge.node.parents || [],
-                        subType: 'subType' in linkEdge.node ? linkEdge.node.subType : undefined,
-                      },
-                      isRestricted: false,
-                    } as EntityLink
-                  }) || [], // Flatten the edges structure
-              }
-            }) || []
+            if (writesBatches) {
+              dispatch(
+                injectedQueries.util.updateQueryData(
+                  'getEntityLinks',
+                  { projectName, entityIds, entityType },
+                  (draft) => mergeEntitiesWithLinks(draft, entities),
+                ),
+              )
+            } else {
+              newEntities.push(...entities)
+            }
+          }
 
           // Return the new entities - the merge function will handle combining with existing cache
           return { data: newEntities }
@@ -212,14 +269,7 @@ const injectedQueries = foldersApi.injectEndpoints({
       // 4. We should merge new entities into the cache ensuring there are no duplicates.
       merge: (currentCache, newItems) => {
         if (!currentCache) return newItems
-
-        const cacheMap = new Map(currentCache.map((item) => [item.id, item]))
-        for (const newItem of newItems) {
-          cacheMap.set(newItem.id, newItem) // Overwrite if exists, add if not
-        }
-        // Update currentCache in-place
-        currentCache.length = 0
-        currentCache.push(...cacheMap.values())
+        mergeEntitiesWithLinks(currentCache, newItems)
       },
       // Provide tags for potential invalidation
       providesTags: (result, error, arg) =>
@@ -338,4 +388,62 @@ const injectedQueries = foldersApi.injectEndpoints({
 })
 
 export const { useGetEntityLinksQuery } = injectedQueries
+
+/**
+ * useGetEntityLinksQuery for many entities: asks for one batch of uncached entities at a time, so
+ * the first rows show their links while the rest are still loading.
+ */
+export const useGetEntityLinksInBatchesQuery = (
+  args: GetEntityLinksArgs,
+  options?: { skip?: boolean; priorityIds?: string[] },
+) => {
+  const { projectName, entityType, entityIds } = args
+  // one cache entry holds the links of every entity of the project and type
+  const { data: cachedEntities, fulfilledTimeStamp } =
+    injectedQueries.endpoints.getEntityLinks.useQueryState(args)
+  // a batch that failed is left out, so the batches after it still load
+  const [failedIds, setFailedIds] = useState<Set<string>>(() => new Set())
+  useEffect(() => setFailedIds(new Set()), [projectName, entityType])
+  const idsKey = entityIds.join(',')
+  const priorityKey = options?.priorityIds?.join(',') ?? ''
+
+  const { batchArgs, cachedIds, hasMore } = useMemo(() => {
+    const cachedIds = new Set(cachedEntities?.map((entity) => entity.id))
+    const priority = new Set(options?.priorityIds)
+    const cached = entityIds.filter((id) => cachedIds.has(id))
+    // rows on screen first, so their links load before those scrolled out of view
+    const uncached = entityIds
+      .filter((id) => !cachedIds.has(id) && !failedIds.has(id))
+      .sort((a, b) => Number(priority.has(b)) - Number(priority.has(a)))
+    const batchIds = uncached.slice(0, LINKS_BATCH_SIZE)
+    return {
+      cachedIds,
+      hasMore: uncached.length > LINKS_BATCH_SIZE,
+      batchArgs: {
+        projectName,
+        entityType,
+        entityIds: [...cached, ...batchIds],
+        // changes once a request is done, so the next batch is asked for even when the same
+        // ids were already asked for while that request ran (RTK Query drops those)
+        afterRequest: fulfilledTimeStamp,
+      },
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectName, entityType, idsKey, priorityKey, cachedEntities, failedIds, fulfilledTimeStamp])
+
+  const result = useGetEntityLinksQuery(batchArgs, { skip: options?.skip })
+
+  // the uncached entities of the request that failed, not of the next batch
+  const failedBatchKey = result.isError
+    ? (result.originalArgs?.entityIds ?? []).filter((id) => !cachedIds.has(id)).join(',')
+    : ''
+  useEffect(() => {
+    if (!failedBatchKey) return
+    setFailedIds((ids) => new Set([...ids, ...failedBatchKey.split(',')]))
+  }, [failedBatchKey])
+
+  // entities waiting for a later batch count as loading
+  const isWaiting = !options?.skip && hasMore
+  return { ...result, isFetching: result.isFetching || isWaiting }
+}
 export { injectedQueries as entityLinksApi }

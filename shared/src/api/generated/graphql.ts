@@ -3048,7 +3048,7 @@ export const GetVersionsFrameStartDocument = new TypedDocumentString(`
       edges {
         node {
           id
-          attrib(names: ["frameStart"])
+          attrib(names: ["frameStart", "handleStart"])
         }
       }
     }
@@ -4488,6 +4488,7 @@ export const GetInboxHasUnreadDocument = new TypedDocumentString(`
     query GetInboxHasUnread {
   inbox(
     last: 1
+    showActiveProjects: true
     showActiveMessages: true
     showImportantMessages: true
     showUnreadMessages: true
@@ -4505,6 +4506,7 @@ export const GetInboxMessagesDocument = new TypedDocumentString(`
     query GetInboxMessages($last: Int, $active: Boolean, $important: Boolean, $unread: Boolean, $cursor: String) {
   inbox(
     last: $last
+    showActiveProjects: true
     showActiveMessages: $active
     showImportantMessages: $important
     showUnreadMessages: $unread
@@ -4556,6 +4558,7 @@ export const GetInboxUnreadCountDocument = new TypedDocumentString(`
     query GetInboxUnreadCount($important: Boolean) {
   inbox(
     last: 500
+    showActiveProjects: true
     showActiveMessages: true
     showImportantMessages: $important
     showUnreadMessages: true

@@ -34,6 +34,13 @@ import {
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
+import {
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+  useTableStateConsumers,
+} from '@shared/containers/ProjectTreeTable'
+import type { ProjectTableState, VersionQueryArgs } from '@ynput/ayon-addon'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -373,15 +380,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       value: scopedTaskIds,
     }
 
-    const existingFilter = combinedTaskFilter.filterString
-      ? JSON.parse(combinedTaskFilter.filterString)
-      : { conditions: [], operator: 'and' }
-
+    // nested, so an OR filter stays OR and is ANDed with the ids as a whole
+    const existingFilter = combinedTaskFilter.filter
     return JSON.stringify({
-      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      conditions: existingFilter?.conditions?.length
+        ? [existingFilter, taskIdCondition]
+        : [taskIdCondition],
       operator: 'and',
     })
-  }, [scopedTaskIds, combinedTaskFilter.filterString])
+  }, [scopedTaskIds, combinedTaskFilter.filter])
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -425,7 +432,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const countsTaskFilterString = scopedTaskIds.length
         ? JSON.stringify({
             conditions: [
-              ...(countsTaskFilter.filter?.conditions || []),
+              ...(countsTaskFilter.filter?.conditions?.length ? [countsTaskFilter.filter] : []),
               { key: 'id', operator: 'in', value: scopedTaskIds },
             ],
             operator: 'and',
@@ -617,6 +624,63 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [resolveEntityArguments],
   )
 
+  // what the table shows, for addon slots: the values the queries below are built from
+  const groupByDesc = columns.groupBy?.desc ?? false
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    const versionArgs: VersionQueryArgs = {
+      featuredOnly: featuredVersionFilter?.length
+        ? (featuredVersionFilter as VersionQueryArgs['featuredOnly'])
+        : undefined,
+      latestPerFolder: latestPerFolder || undefined,
+      hasReviewables: hasReviewablesFilter,
+    }
+    // the versions query uses version ids over product ids when a list panel gives both
+    const versionIds = nonEmptyIds(scopedVersionIds)
+    const ids = {
+      task: nonEmptyIds(scopedTaskIds),
+      product: versionIds ? undefined : nonEmptyIds(scopedProductIds),
+      version: versionIds,
+    }
+    return {
+      entityType: 'version',
+      filters: toTableStateFilters({
+        version: combinedVersionFilter.filter,
+        product: combinedProductFilter.filter,
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+        representation: combinedRepresentationFilter.filter,
+      }),
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedSlicerFolderIds, true)),
+      ids: ids.task || ids.product || ids.version ? ids : undefined,
+      showHierarchy: !!showProducts,
+      groupBy: groupBy ? { id: groupBy, desc: groupByDesc } : undefined,
+      queryArgs: Object.values(versionArgs).some((value) => value !== undefined)
+        ? { version: versionArgs }
+        : undefined,
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedVersionFilter.filter,
+    combinedProductFilter.filter,
+    combinedTaskFilter.filter,
+    combinedFolderFilter.filter,
+    combinedRepresentationFilter.filter,
+    selectedSlicerFolderIds,
+    getChildFolderIds,
+    scopedTaskIds,
+    scopedProductIds,
+    scopedVersionIds,
+    showProducts,
+    groupBy,
+    groupByDesc,
+    featuredVersionFilter,
+    latestPerFolder,
+    hasReviewablesFilter,
+  ])
+
   // QUERY: Get all products when showing products
   const {
     data: productsData,
@@ -624,6 +688,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
@@ -641,6 +706,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isLoading: isLoadingVersions,
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
@@ -655,22 +721,29 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
+    folderIds: slicerFolderIds,
     modules,
     versionArguments,
     expanded,
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
+  const isLoadingQueryArgs = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
+  // switching grouping keeps the query args, so cover the source that just became active
+  const isLoadingTable =
+    isLoadingQueryArgs ||
+    (groupBy ? isLoadingGroups : showProducts ? isLoadingProducts : isLoadingVersions)
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
@@ -911,5 +984,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     error,
   }
 
-  return <VersionsDataContext.Provider value={value}>{children}</VersionsDataContext.Provider>
+  return (
+    <VersionsDataContext.Provider value={value}>
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
+    </VersionsDataContext.Provider>
+  )
 }

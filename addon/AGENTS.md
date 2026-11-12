@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 0.5.0
+# @ynput/ayon-addon 0.6.0
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
@@ -82,6 +82,73 @@ A `tableColumn` contribution shows up in the project tables as `addon__<addon>__
 name (anything but letters and digits becomes `_`), then the contribution's id. Columns are hidden
 until the user adds them in Customize. Build the id with `addonColumnId(addon, id)` (`ADDON_COLUMN_PREFIX`
 is the `addon__` part) in tests and saved views; do not write it out by hand.
+
+## What a project table shows: `tableState`
+
+`tableState` is the table's filter as AYON queries it: the filter bar, every slicer panel, the
+search, the folders and the grouping. Use it to act on everything the table shows, not only the
+selection ("chart this", "export filtered"). The identity changes only when one of those changes.
+It is never in `tableColumn`, whose values would refetch on every filter change.
+
+- `filters`: one server `QueryFilter` per entity (`folder`, `task`, `product`, `version`,
+  `representation`), each applying to that entity. The filters are ANDed together. Keys have no
+  scope prefix and are the entity's own fields: `status`, `tags`, `name`, `createdAt`,
+  `updatedAt`, `attrib.<name>`, and per entity `taskType` and `assignees` (task),
+  `folderType` (folder), `productType` and `productBaseType` (product), `author` and
+  `version` (version). Relative dates are resolved. An entity without conditions is left out. To
+  filter tasks by their folder, prefix the folder keys (`folder.status`).
+- `search`: Overview's name search for tasks, comma-separated terms ORed. Products has none.
+- `folderIds`: the folders the rows are in, with all descendants. This can be thousands of ids;
+  send them as `folder.id in [...]` / `folderIds`, not one request each. `undefined`: the whole
+  project.
+- `ids`: the entities picked in a lists slicer panel, already inside `folderIds`. Only those rows show.
+- `groupBy`: `{ id, desc }`, the field the rows are grouped by (`status`, `taskType`,
+  `assignees`, `attrib.<name>`, ...). `undefined` when not grouped.
+
+| | Overview | Products |
+| --- | --- | --- |
+| `entityType` | `task` | `version` |
+| `filters` | `task`, `folder` | `version`, `product`, `task`, `folder`, `representation` (file extension as a `path` condition) |
+| `search` | task names | not set |
+| `ids` | `task` | `task`, `product`, `version` |
+| `showHierarchy` | the folder tree | products with their versions |
+| `groupBy` | task fields; `folderType` groups folders | version fields |
+| `queryArgs` | not set | `version`: `featuredOnly`, `latestPerFolder`, `hasReviewables` |
+
+`queryArgs` are filters a query takes as arguments, not conditions, per entity like `filters`.
+`queryArgs.version` is named like GraphQL `versions` arguments. Send `featuredOnlyEntityType: 'product'` with `featuredOnly`.
+
+## A column's menu: `projectTable.columnMenuItem`
+
+An item in the column header's more menu, after "Group by", for acting on one column: "Chart
+tasks by {column}". `{column}` in `label` and `dialogTitle` becomes the column's name. The
+context has `columnId` (`status`, `subType`, `assignees`, `attrib_priority`), `columnLabel`,
+`groupField` and `tableState`. `groupField` is what "Group by" on that column groups by, the
+same key as `tableState.groupBy.id` (`status`, `taskType`, `attrib.priority`), and
+`undefined` when the table can't group by the column. Narrow where it shows in the description,
+so no code loads to decide: `pages`, `columns` (ids, `attrib_*` for every attribute) and
+`groupable: true` (only columns with a `groupField`). Columns whose header has no plain name
+(link columns) get no addon items unless they are groupable.
+
+```ts
+projectTableColumnMenuItem({
+  id: 'chartTasks',
+  label: 'Chart tasks by {column}',
+  icon: 'bar_chart',
+  pages: ['overview'],
+  groupable: true,
+  dialogHeader: false,
+  dialogSize: 'lg',
+  dialog: () => import('./ChartDialog'),
+})
+```
+
+## Dialogs without AYON's header: `dialogHeader: false`
+
+A `dialog` piece (`header.item`, `projectTable.toolbarItem`, `projectTable.columnMenuItem`,
+`table.shortcut`) sits in AYON's dialog with a header: the title and a close button. With
+`dialogHeader: false` AYON draws no header and the piece draws its own toolbar, which must
+have a close button calling `close`. Escape and a click outside still close it.
 
 ## Common errors
 
@@ -246,6 +313,9 @@ The same thing has the same name and type in every slot that has it:
   `user` without `isDeveloper`), in slots about other users: `userDetails.section` and
   `userDetails.menuItem` (the users selected in Settings → Users). Not the signed-in user: that is
   `user`.
+- **`tableState`** (`ProjectTableState`), in `projectTable.toolbarItem`,
+  `projectTable.columnMenuItem`, `entityMenuItem` and `table.shortcut`: what the project table shows. Set on Overview and Products; `undefined` on
+  Lists, in the panels' tables and on older hosts. See "What a project table shows".
 
 ## Slots
 
@@ -308,6 +378,7 @@ A button in the main header, drawn by the host like its own buttons. What a clic
 | `to` | `string \| undefined` | navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) |
 | `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
 | `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
+| `dialogHeader` | `boolean \| undefined` | `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws its own, with a close button calling `close`. Escape and a click outside still close it |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -434,6 +505,7 @@ An item in the right-click menu of the project tables' cells, for the selected e
 | `page` (required) | `ProjectTablePage` |  |
 | `entities` (required) | `EntityRef[]` | the selected entities (not table rows: list items resolve to their entity) |
 | `projectName` (required) | `string` |  |
+| `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run`.
 
@@ -451,6 +523,7 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `to` | `string \| undefined` | navigates there on click, e.g. `/dashboard/comments` (exactly one action: see the slot) |
 | `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
 | `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
+| `dialogHeader` | `boolean \| undefined` | `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws its own, with a close button calling `close`. Escape and a click outside still close it |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -460,8 +533,39 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `list` | `{ id: string; label: string; entityType: string; } \| undefined` | on Lists: the open list |
 | `projectName` (required) | `string` |  |
 | `navigate` (required) | `(to: string) => void` | goes to an AYON URL, e.g. `navigate('/dashboard/comments')` |
+| `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
+
+### `projectTable.columnMenuItem`: `projectTableColumnMenuItem`
+
+An item in the "more" menu of a project table column's header (Overview, Products, Lists), after "Group by". It shows from the description; `{column}` in the label becomes the column's name (`Chart tasks by {column}`). Pressed, it runs code (`run`) or opens a dialog (`dialog`) with the column and what the table shows; set exactly one. Loads: menu open / click.
+
+| Description field | Type | |
+|---|---|---|
+| `label` (required) | `string` | the menu entry; `{column}` becomes the column's name, e.g. `Chart tasks by {column}` |
+| `pages` | `ProjectTablePage[] \| undefined` | which tables' columns offer it; all (Overview, Products, Lists) when not set |
+| `columns` | `string[] \| undefined` | column ids it shows for, e.g. `status`, `subType`, `assignees`; a trailing `*` matches a prefix (`attrib_*`). All columns when not set |
+| `groupable` | `boolean \| undefined` | only for columns the table can group by (`groupField` is set) |
+| `dialogTitle` | `string \| undefined` | the `dialog`'s title, `{column}` as in `label`; the label when not set |
+| `id` (required) | `string` | unique among the addon's items of the slot |
+| `icon` (required) | `string` | a Material Symbols icon name |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+| `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
+| `dialogHeader` | `boolean \| undefined` | `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws its own, with a close button calling `close`. Escape and a click outside still close it |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'projectTable.columnMenuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `page` (required) | `ProjectTablePage` |  |
+| `columnId` (required) | `string` | the column's id: `status`, `subType`, `assignees`, `attrib_priority`, ... |
+| `columnLabel` (required) | `string` | the column's name as its header shows it |
+| `groupField` | `string \| undefined` | the field the table groups by for this column, as `TableGroupBy.id` (`status`, `taskType`, `attrib.priority`); `undefined` when the table cannot group by it |
+| `projectName` (required) | `string` |  |
+| `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
+
+Pieces: `run` (optional), `dialog` (optional).
 
 ### `projectTable.customizeSection`: `projectTableCustomizeSection`
 
@@ -521,6 +625,7 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 | `tables` | `ShortcutTable[] \| undefined` | which tables it works in; all when not set. `overview`, `products`, `lists` (the project tables), `slicer`, `projects`, `listsPanel`, `versionsPanel` |
 | `dialogTitle` | `string \| undefined` | the `dialog`'s title; the label when not set |
 | `dialogSize` | `"sm" \| "md" \| "lg" \| "full" \| undefined` | the `dialog`'s size, `md` by default |
+| `dialogHeader` | `boolean \| undefined` | `false`: AYON draws no header (title and close button) around the `dialog`; the piece draws its own, with a close button calling `close`. Escape and a click outside still close it |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -532,6 +637,7 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 | `entities` (required) | `EntityRef[]` | the entities of `rows` in the project tables (list items resolve to their entity); empty in the panels' tables, whose rows are not all entities: read `rows` there |
 | `focused` (required) | `{ rowId: string; columnId?: string \| undefined; }` | where the key was pressed: the row's id, and the column's in the project tables |
 | `cells` (required) | `{ rowId: string; columnId: string; }[]` | project tables: the selected cells, by row (entity) and column id; empty elsewhere |
+| `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run` (optional), `dialog` (optional).
 
@@ -580,7 +686,7 @@ Pieces: `run`.
 
 ### `profile.section`: `profileSection`
 
-A section on the signed-in user's profile page (Account → Profile), below AYON's own forms. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
+A section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens). The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
 
 | Description field | Type | |
 |---|---|---|

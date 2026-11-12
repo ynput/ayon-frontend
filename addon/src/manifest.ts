@@ -14,6 +14,7 @@ export {
   profileSection,
   projectListMenuItem,
   projectPage,
+  projectTableColumnMenuItem,
   projectTableCustomizeSection,
   projectTableToolbarItem,
   slicerMenuItem,

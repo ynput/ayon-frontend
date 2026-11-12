@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import type { MouseEvent } from 'react'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { EntityRef, ProjectTablePage } from '@ynput/ayon-addon'
+import type { EntityRef, ProjectTablePage, ProjectTableState } from '@ynput/ayon-addon'
 import {
   AddonColumnDataScope,
   useAddonEntityMenuItems,
@@ -19,12 +19,14 @@ interface ShellRow {
 
 interface ShellTableProps {
   page: ProjectTablePage
+  /** what the table shows, for the addon right-click menu items */
+  tableState?: ProjectTableState
   entities: EntityRef[]
   selected: EntityRef[]
   onSelect: (selected: EntityRef[]) => void
 }
 
-export const ShellTable = ({ page, entities, selected, onSelect }: ShellTableProps) => {
+export const ShellTable = ({ page, tableState, entities, selected, onSelect }: ShellTableProps) => {
   const { columns: addonColumns } = useAddonTableColumns(page)
   const columns = useMemo<ColumnDef<ShellRow>[]>(
     () => [
@@ -60,7 +62,7 @@ export const ShellTable = ({ page, entities, selected, onSelect }: ShellTablePro
     filterFns: {} as never,
   })
 
-  const buildAddonItems = useAddonEntityMenuItems(page)
+  const buildAddonItems = useAddonEntityMenuItems(page, 'bottom', tableState)
   const [openMenu] = useCreateContextMenu([])
   const isSelected = (id: string) => selected.some((entity) => entity.id === id)
 

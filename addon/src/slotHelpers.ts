@@ -36,6 +36,11 @@ export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
 export const projectTableToolbarItem = (item: ContributionFields<'projectTable.toolbarItem'>) =>
   contribute('projectTable.toolbarItem', item)
 
+/** An item in a project table column's "more" menu: runs code or opens a dialog for the column. */
+export const projectTableColumnMenuItem = (
+  item: ContributionFields<'projectTable.columnMenuItem'>,
+) => contribute('projectTable.columnMenuItem', item)
+
 /** A section in the project tables' Customize panel. */
 export const projectTableCustomizeSection = (
   section: ContributionFields<'projectTable.customizeSection'>,

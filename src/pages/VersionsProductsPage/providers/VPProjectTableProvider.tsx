@@ -142,7 +142,11 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       groups={groups}
       groupCounts={groupCounts}
       groupCountsComplete={groupCountsComplete}
-      groupByConfig={{ entityType: 'version' }}
+      groupByConfig={{
+        entityType: 'version',
+        // folder conditions can't be matched against the folder list, so empty folders read as non-matching
+        hideEmpty: groupBy?.id === 'folderId' && !!columnStatsArgs.folderFilter,
+      }}
       hierarchyOptions={hierarchyOptions}
       groupRowFunc={groupRowFunc}
       loadingLinksEntityIds={loadingLinksEntityIds}

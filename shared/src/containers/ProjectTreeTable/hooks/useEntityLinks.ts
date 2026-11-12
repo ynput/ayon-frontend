@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetEntityLinksQuery } from '@shared/api'
+import { useGetEntityLinksInBatchesQuery } from '@shared/api'
 import type {
   EntityLink,
   EntityWithLinks,
@@ -11,6 +11,8 @@ type UseEntityLinksProps = {
   entityType: GetEntityLinksArgs['entityType']
   entityIds: Iterable<string>
   skip?: boolean
+  // rows on screen, their links load first
+  priorityIds?: string[]
 }
 
 const EMPTY_LINKS: EntityWithLinks[] = []
@@ -20,6 +22,7 @@ export const useEntityLinks = ({
   entityType,
   entityIds,
   skip = false,
+  priorityIds,
 }: UseEntityLinksProps) => {
   const ids = useMemo(() => Array.from(entityIds), [entityIds])
   const args = useMemo(
@@ -32,7 +35,7 @@ export const useEntityLinks = ({
     data = EMPTY_LINKS,
     isFetching,
     isUninitialized,
-  } = useGetEntityLinksQuery(args, { skip: shouldSkip })
+  } = useGetEntityLinksInBatchesQuery(args, { skip: shouldSkip, priorityIds })
 
   const links = useMemo(
     () => new Map<string, EntityLink[]>(data.map((entity) => [entity.id, entity.links])),

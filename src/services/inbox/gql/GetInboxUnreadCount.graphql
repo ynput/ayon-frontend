@@ -1,6 +1,7 @@
 query GetInboxUnreadCount($important: Boolean) {
   inbox(
     last: 500
+    showActiveProjects: true
     showActiveMessages: true
     showImportantMessages: $important
     showUnreadMessages: true

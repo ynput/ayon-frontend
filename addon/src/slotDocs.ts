@@ -68,6 +68,11 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     where: "an item in the project tables' toolbar, before Customize",
     loads: 'first click (component: with the page)',
   },
+  'projectTable.columnMenuItem': {
+    helper: 'projectTableColumnMenuItem',
+    where: "an item in a project table column header's more menu, after Group by",
+    loads: 'menu open / click',
+  },
   'projectTable.customizeSection': {
     helper: 'projectTableCustomizeSection',
     where: "a section in the project tables' Customize panel",
@@ -95,7 +100,8 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'profile.section': {
     helper: 'profileSection',
-    where: "a section on the signed-in user's profile page (Account → Profile), below AYON's forms",
+    where:
+      "a section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens)",
     loads: 'first shown',
   },
 }
