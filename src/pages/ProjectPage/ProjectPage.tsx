@@ -43,6 +43,7 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
+import { contributionTags, useContributionTagging } from '@ynput/ayon-addon/host'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
@@ -296,6 +297,7 @@ const ProjectPageInner = () => {
     OWNED_PAGES,
   )
 
+  const tagging = useContributionTagging()
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
@@ -381,6 +383,8 @@ const ProjectPageInner = () => {
           viewType: page.viewType,
           accessLevels: pageAccessLevels(page.access),
           startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
+          // the slot inspector's tags on the tab, while it is on
+          ...contributionTags(page),
         })),
       ...addonsData
         .filter((addon) => {
@@ -409,7 +413,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle],
+    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle, tagging],
   )
 
   const activeLink = useMemo(() => {

@@ -23,6 +23,7 @@ import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { useContributions } from '@ynput/ayon-addon'
+import { contributionTags, useContributionTagging } from '@ynput/ayon-addon/host'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
 import {
@@ -162,6 +163,7 @@ const UserDashboardPage: React.FC = () => {
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
 
+  const tagging = useContributionTagging()
   // Build pages configuration - single source of truth for navigation and components
   const pages: PageLink[] = useMemo(
     () => [
@@ -263,6 +265,8 @@ const UserDashboardPage: React.FC = () => {
         viewType: page.viewType as ViewType | undefined,
         startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
         showProjectList: false,
+        // the slot inspector's tags on the tab, while it is on
+        ...contributionTags(page),
       })),
       { node: 'spacer' },
       {
@@ -279,6 +283,7 @@ const UserDashboardPage: React.FC = () => {
       addonsData,
       remotePages,
       addonStudioPages,
+      tagging,
       getAddonBundle,
       legacyStudioSelection,
       projectsInfoWithProjects,
