@@ -37,22 +37,26 @@ export const Reference = styled.span<{
     background-color: var(--md-sys-color-surface-container-high-active);
   }
 
-  /* in a comment with a category: tinted with its colour like a tag, never coloured text */
-  ${({ $categoryPrimary }) => {
-    if (!$categoryPrimary) return ''
+  /* in a comment with a category: tinted with its colour like a tag, never coloured text
+     (the filled variant has its own fill below) */
+  ${({ $categoryPrimary, $variant }) => {
+    if (!$categoryPrimary || $variant === 'filled') return ''
     const colors = getTagColors($categoryPrimary)
     return css`
       &,
       .icon {
         color: ${colors.text};
       }
-      background-color: ${colors.background};
-      box-shadow: inset 0 0 0 1px ${colors.border};
-      &:hover,
-      &:active {
+      ${$variant === 'surface' &&
+      css`
         background-color: ${colors.background};
-        filter: brightness(0.97);
-      }
+        box-shadow: inset 0 0 0 1px ${colors.border};
+        &:hover,
+        &:active {
+          background-color: ${colors.background};
+          filter: brightness(0.97);
+        }
+      `}
     `
   }}
 
