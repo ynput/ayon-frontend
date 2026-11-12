@@ -4,7 +4,7 @@
 // studio pages' layout); replicas of what lives in the ayon-frontend app (the header, the project
 // table around the columns, the user details panel, the account page). Pages render alone, without AYON's page tabs. Each
 // slot reports the context it passes (Context shows it).
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import type { ReactNode } from 'react'
 import {
   Button,
@@ -14,7 +14,6 @@ import {
   LockedInput,
   Panel,
   SaveButton,
-  UserImagesStacked,
 } from '@ynput/ayon-react-components'
 import { ContributionView, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
@@ -34,7 +33,6 @@ import {
 } from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
-  useMenuContext,
   useSettingsPanel,
 } from '@ynput/ayon-frontend-shared/context'
 import { DetailsPanel } from '@ynput/ayon-frontend-shared/DetailsPanel'
@@ -44,8 +42,6 @@ import { ViewsProvider } from '@ynput/ayon-frontend-shared/Views'
 import { useDispatch } from 'react-redux'
 import {
   AddonDialog,
-  Menu,
-  MenuContainer,
   SettingsPanel,
   SlicerHost,
   UserImage,
@@ -56,7 +52,8 @@ import {
   AddonUserDetailsSections,
   AddonProfileSections,
   shortcutEntities,
-  slotTriggerProps,
+  UserDetailsHeader,
+  usersAccessLabel,
   StudioPageSelectionProvider,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
@@ -343,47 +340,9 @@ type ShellUser = UserDetailsSource & {
 const userLevel = (user: ShellUser) =>
   user.isAdmin ? 'admin' : user.isService ? 'service' : user.isManager ? 'manager' : 'user'
 
-/** The panel's header (UserDetailsHeader): the avatar, the name and access, the more menu. */
-const UserDetailsHeader = ({ user, menuItems, onMenuOpen }: { user: ShellUser; menuItems: object[]; onMenuOpen?: () => void }) => {
-  const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
-  const button = useRef<HTMLButtonElement>(null)
-  const id = `addon-dev-user-menu-${user.name}`
-  const open = menuOpen === id
-  useEffect(() => {
-    if (open) onMenuOpen?.()
-  }, [open, onMenuOpen])
-  const level = userLevel(user)
-  const access = level === 'user' ? Object.keys(user.accessGroups || {}) : [level]
-  return (
-    <Panel className="ayon-shell-detail-header">
-      <div>
-        <UserImagesStacked users={[{ avatarUrl: `/api/users/${user.name}/avatar` }] as never} />
-        <div>
-          <h2>{user.attrib?.fullName || user.name}</h2>
-          <span className="ayon-shell-detail-subtitle">{access.length ? access.join(', ') : 'No AccessGroups'}</span>
-        </div>
-      </div>
-      <Button
-        ref={button}
-        icon="more_horiz"
-        variant="text"
-        aria-label="More actions"
-        className={open ? 'active' : undefined}
-        data-shell-menu="user-details"
-        {...slotTriggerProps('userDetails.menuItem')}
-        onClick={() => toggleMenuOpen(id)}
-      />
-      <MenuContainer id={id} target={button.current} align="right">
-        <Menu menu={menuItems as never} onClose={() => setMenuOpen(false)} />
-      </MenuContainer>
-      <Button icon="close" variant="text" disabled />
-    </Panel>
-  )
-}
-
 // userDetails.section and userDetails.menuItem: a replica of the user details panel of Settings >
 // Users (UserDetail in the ayon-frontend app), next to a list of the users to pick from (also in
-// Context). Only the header and the addon sections: AYON's own forms are left out.
+// Context). AYON's header (shared) and the addon sections: AYON's own forms are left out.
 const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   const signedIn = useUser()
   const { data = [], isLoading } = useGetUsersQuery({ selfName: signedIn?.name })
@@ -406,7 +365,6 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
     ...addonMenu.topItems,
     ...addonMenu.items,
     { id: 'delete', label: 'Delete user', icon: 'delete', danger: true, disabled: true },
-    { id: 'view-data', label: 'View data', icon: 'data_object', disabled: true },
   ]
   if (isLoading) return <Hint>Loading users…</Hint>
   if (!target) return <Hint>No users to show.</Hint>
@@ -447,7 +405,12 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
         </tbody>
       </table>
       <section className="ayon-shell-user-detail">
-        <UserDetailsHeader user={target} menuItems={menuItems} onMenuOpen={addonMenu.prefetch} />
+        <UserDetailsHeader
+          users={selected}
+          subTitle={usersAccessLabel(selected)}
+          menuItems={menuItems}
+          onMenuOpen={addonMenu.prefetch}
+        />
         <div className="ayon-shell-user-forms">
           <SlotFrame slot="userDetails.section">
             <AddonUserDetailsSections context={context} />

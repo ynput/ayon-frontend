@@ -135,8 +135,9 @@ of AYON:
   tables (Name and Status, then the addon's columns as real columns; header, grid, whole-row
   hover, a column header menu with the `projectTable.columnMenuItem` items, widths dragged at a
   header's right edge; sorting, grouping and hiding do nothing), User
-  details (Settings > Users: the users, the details panel with its more menu) and Account (the
-  profile page). They show a subset of AYON's fields and save nothing.
+  details (Settings > Users: the users, and the details panel under AYON's own header from
+  `@ynput/ayon-frontend-shared` with its more menu) and Account (the profile page). They show a
+  subset of AYON's fields and save nothing.
 - **Context** (the preview inputs), under the stage in a second splitter (drag the edge between them;
   the button at the left of its header or "/" folds it to its header). *Input values*: a project switcher, the studio's
   project selection, an entity picker (AYON's) for the slots about entities, the table page, a
