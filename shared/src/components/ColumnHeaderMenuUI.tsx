@@ -3,6 +3,7 @@ import { useMenuContext } from '@shared/context'
 import { Menu, MenuContainer } from './Menu'
 import type { MenuItemType } from './Menu'
 import { ColumnMenuButton } from './ColumnHeaderMenuUI.styled'
+import { slotTriggerProps } from './AddonLayout/slotHighlight'
 
 export type ColumnMenuItemType = {
   id: string
@@ -18,13 +19,20 @@ interface ColumnHeaderMenuUIProps {
   menuItems: ColumnMenuItemType[]
   menuId: string
   className?: string
+  /** the addon slot the menu holds: its button is outlined while slots are highlighted */
+  slot?: string
 }
 
 /**
  * Self-contained column header menu UI.
  * Uses the shared MenuContainer/Menu infrastructure and MenuContext for open state.
  */
-export const ColumnHeaderMenuUI = ({ menuItems, menuId, className }: ColumnHeaderMenuUIProps) => {
+export const ColumnHeaderMenuUI = ({
+  menuItems,
+  menuId,
+  className,
+  slot,
+}: ColumnHeaderMenuUIProps) => {
   const { toggleMenuOpen, menuOpen } = useMenuContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const isOpen = menuOpen === menuId
@@ -35,6 +43,7 @@ export const ColumnHeaderMenuUI = ({ menuItems, menuId, className }: ColumnHeade
     <>
       <ColumnMenuButton
         ref={buttonRef}
+        {...(slot ? slotTriggerProps(slot) : {})}
         className={className}
         onClick={(e) => {
           e.stopPropagation()

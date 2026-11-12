@@ -6,6 +6,9 @@ import { useColumnSettingsContext } from '../context'
 import { useColumnGroupBy } from '../hooks'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
+import { useSlotHighlight, withSlotEntries } from '@shared/components/AddonLayout/slotHighlight'
+
+const SLOT = 'projectTable.columnMenuItem'
 
 interface ColumnHeaderMenuProps {
   header: Header<TableRow, unknown>
@@ -34,6 +37,8 @@ export const ColumnHeaderMenu = ({
   const columnId = String(column.id)
   const { toggleMenuOpen } = useMenuContext()
   const { updateGroupBy, groupBy, sorting } = useColumnSettingsContext()
+  // while slots are highlighted (slotHighlight): a placeholder where addon items would be
+  const { on: highlightSlots } = useSlotHighlight()
 
   const { canGroupThisColumn, groupLabel, groupBySelectedColumn, targetGroupById } =
     useColumnGroupBy(columnId)
@@ -161,6 +166,9 @@ export const ColumnHeaderMenu = ({
   }
 
   const addonItems = getAddonItems?.(addonColumn) ?? []
+  if (!addonItems.length && highlightSlots) {
+    menuItems.push(...withSlotEntries<ColumnMenuItemType>(SLOT, [], 'Column menu item'))
+  }
   for (const item of addonItems) {
     menuItems.push({
       ...item,
@@ -207,6 +215,7 @@ export const ColumnHeaderMenu = ({
       className={className}
       menuItems={menuItems}
       menuId={menuId || `column-menu-${header.id}`}
+      slot={SLOT}
     />
   )
 }

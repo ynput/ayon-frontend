@@ -8,6 +8,12 @@ import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
 import {
+  slotEntries,
+  slotTriggerProps,
+  useSlotHighlight,
+  withSlotEntries,
+} from '@shared/components/AddonLayout/slotHighlight'
+import {
   useMenuContext,
   ThumbnailUploadContext,
   useDeleteEntitiesContextOptional,
@@ -19,6 +25,8 @@ import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
 import { ShareDialog } from './components/ShareDialog'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from './types'
+
+const SLOT = 'detailsPanel.menuItem'
 
 export interface DetailsPanelMoreMenuProps {
   entityType: string
@@ -188,13 +196,21 @@ export const DetailsPanelMoreMenu = ({
     () => applicableAddonItems.filter((item) => !item.pinned),
     [applicableAddonItems],
   )
+  // tagged with their slot (slotHighlight), with a placeholder where they would be while slots are
+  // highlighted and the menu has none
+  const { on: highlightSlots } = useSlotHighlight()
   const addonTopItems = useMemo(
-    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
+    () => slotEntries(SLOT, menuItemsAt(menuAddonItems, 'top').map(toMenuItem)),
     [menuAddonItems, toMenuItem],
   )
   const addonItems = useMemo(
-    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
-    [menuAddonItems, toMenuItem],
+    () =>
+      menuAddonItems.length
+        ? slotEntries(SLOT, menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem))
+        : highlightSlots
+        ? withSlotEntries(SLOT, [], 'More menu item')
+        : [],
+    [menuAddonItems, toMenuItem, highlightSlots],
   )
   // the items draw from their descriptions; their code loads when the menu opens
   useEffect(() => {
@@ -248,6 +264,7 @@ export const DetailsPanelMoreMenu = ({
         variant="text"
         data-tooltip="More actions"
         aria-label="More actions"
+        {...slotTriggerProps(SLOT)}
         className={clsx({ active: isOpen })}
         onClick={() => toggleMenuOpen(menuId)}
       />

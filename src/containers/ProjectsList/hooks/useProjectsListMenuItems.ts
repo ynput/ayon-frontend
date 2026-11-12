@@ -12,6 +12,9 @@ import {
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
+import { slotEntries, withSlotEntries } from '@shared/components'
+
+const SLOT = 'projectList.menuItem'
 
 export type Hidden = {
   search?: boolean
@@ -357,21 +360,31 @@ const useProjectsListMenuItems = ({
       // the right-click menu opens (the dropdown's items are built with the list, so on click)
       const menu = command ? 'context' : 'dropdown'
       const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
-      const buildAddonItems = (position: MenuItemPosition): MenuItem[] =>
-        selectedProjectNames.length
-          ? menuItemsAt(addonMenuItems, position)
-              .filter((item) => !item.in?.length || item.in.includes(menu))
-              .map((item) => {
-                if (command) prefetchPiece(item.run)
-                return {
-                  id: item.key,
-                  label: item.label,
-                  icon: item.icon,
-                  [command ? 'command' : 'onClick']: () =>
-                    runContribution(item, { projectNames: selectedProjectNames, menu }),
-                }
-              })
-          : []
+      // tagged with their slot; while slots are highlighted (slotHighlight), a placeholder where
+      // they would be when no addon contributes to the menu
+      const buildAddonItems = (position: MenuItemPosition): MenuItem[] => {
+        if (!addonMenuItems.length) {
+          return position === 'bottom'
+            ? withSlotEntries(SLOT, [], 'Project menu item', command ? 'command' : 'entry')
+            : []
+        }
+        if (!selectedProjectNames.length) return []
+        return slotEntries(
+          SLOT,
+          menuItemsAt(addonMenuItems, position)
+            .filter((item) => !item.in?.length || item.in.includes(menu))
+            .map((item) => {
+              if (command) prefetchPiece(item.run)
+              return {
+                id: item.key,
+                label: item.label,
+                icon: item.icon,
+                [command ? 'command' : 'onClick']: () =>
+                  runContribution(item, { projectNames: selectedProjectNames, menu }),
+              }
+            }),
+        )
+      }
       // `top` items first in the menu, the rest (default) above Archive and Delete
       const addonTopItems = buildAddonItems('top')
       const addonItems = buildAddonItems('bottom')

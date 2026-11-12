@@ -13,6 +13,7 @@ import { useProjectContext } from '@shared/context'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 import { useProjectTableState } from '../context/project-table-state'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
+import { slotEntry } from '@shared/components/AddonLayout/slotHighlight'
 
 export interface AddonMenuColumn {
   columnId: string
@@ -89,7 +90,8 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
           tableState,
         }
         const label = withColumnLabel(item.label, columnLabel)
-        return {
+        // tagged with its slot (slotHighlight)
+        return slotEntry('projectTable.columnMenuItem', {
           id: item.key,
           label,
           icon: item.icon,
@@ -105,7 +107,7 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
               title: item.dialogTitle ? withColumnLabel(item.dialogTitle, columnLabel) : label,
             })
           },
-        }
+        })
       })
     },
     [itemsFor, page, projectName, tableState],

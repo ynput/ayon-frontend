@@ -5,6 +5,9 @@ import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-ad
 import type { Contribution, UserDetailsContext, UserRef, UserSelection } from '@ynput/ayon-addon'
 import { menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
+import { slotEntries, useSlotHighlight, withSlotEntries } from './slotHighlight'
+
+const SLOT = 'userDetails.menuItem'
 
 /** A user as AYON's users queries have it. */
 export interface UserDetailsSource {
@@ -42,13 +45,19 @@ export const useUserDetailsSlotContext = (
 export interface AddonUserMenuItems {
   /** first in the menu (`position: 'top'`) */
   topItems: MenuItemType[]
-  /** after the menu's own items, above Delete */
+  /**
+   * after the menu's own items, above Delete; while slots are highlighted (slotHighlight) and no
+   * addon contributes, a placeholder where they would be
+   */
   items: MenuItemType[]
   /** loads the items' code: call it when the menu opens */
   prefetch: () => void
 }
 
-/** The addons' items for the user details "more" menu. */
+/**
+ * The addons' items for the user details "more" menu, tagged with their slot. The button that opens
+ * the menu takes `slotTriggerProps('userDetails.menuItem')`.
+ */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')
   const applicable = useMemo(
@@ -65,13 +74,19 @@ export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMen
     }),
     [context],
   )
+  const { on: highlightSlots } = useSlotHighlight()
   const topItems = useMemo(
-    () => menuItemsAt(applicable, 'top').map(toMenuItem),
+    () => slotEntries(SLOT, menuItemsAt(applicable, 'top').map(toMenuItem)),
     [applicable, toMenuItem],
   )
   const items = useMemo(
-    () => menuItemsAt(applicable, 'bottom').map(toMenuItem),
-    [applicable, toMenuItem],
+    () =>
+      applicable.length
+        ? slotEntries(SLOT, menuItemsAt(applicable, 'bottom').map(toMenuItem))
+        : highlightSlots
+        ? withSlotEntries(SLOT, [], 'More menu item')
+        : [],
+    [applicable, toMenuItem, highlightSlots],
   )
   const prefetch = useCallback(
     () => applicable.forEach((item) => prefetchPiece(item.run)),
