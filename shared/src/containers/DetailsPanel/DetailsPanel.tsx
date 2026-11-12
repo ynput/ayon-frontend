@@ -327,8 +327,10 @@ DetailsPanelProps) => {
   const clearSearchUrl = () => {
     // remove URL params when closing
     setSearchParams(
-      (prev) => {
-        const newParams = new URLSearchParams(prev)
+      () => {
+        // from the address bar, not the router's copy: the panel (useDetailsPanelURLSync) and
+        // other state, like the viewer's, write their params past the router
+        const newParams = new URLSearchParams(window.location.search)
         newParams.delete('project')
         newParams.delete('type')
         newParams.delete('id')

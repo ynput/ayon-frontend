@@ -11,6 +11,7 @@ import type { Clip } from '@ynput/ayon-player/model'
 import { updateSelection, updateProduct } from '@state/viewer'
 import ViewerEmpty from './ViewerEmpty'
 import ViewerSidebarProviders from './ViewerSidebarProviders'
+import { ViewerCloseContext } from './ViewerCloseContextInstance'
 import useViewerPlayerPlugins, { type UseViewerPlayerPlugins } from './useViewerPlayerPlugins'
 import { isPlayable, versionClip } from './viewerClips'
 import * as Styled from './Viewer.styled'
@@ -378,7 +379,8 @@ const ViewerBody = ({
     </Styled.HeaderStart>
   )
 
-  const headerEnd = (
+  // the details panel has the close button while it is shown
+  const renderHeaderEnd = (showClose: boolean) => (
     <Styled.HeaderEnd>
       {!reviewPlugins?.Comparison && (
         <Button
@@ -402,7 +404,9 @@ const ViewerBody = ({
           <Icon icon="bolt" />
         </Button>
       )}
-      {onClose && <Button onClick={onClose} icon="close" variant="text" data-tooltip="Close" />}
+      {showClose && onClose && (
+        <Button onClick={onClose} icon="close" variant="text" data-tooltip="Close" />
+      )}
     </Styled.HeaderEnd>
   )
 
@@ -412,20 +416,22 @@ const ViewerBody = ({
   if (clips.length && !isLoadingDetails) {
     return (
       <Styled.Container ref={containerRef}>
-        <Player
-          clips={clips}
-          context={playerContext}
-          user={user as any}
-          theatreContainerRef={containerRef}
-          plugins={plugins}
-          isSubscribed={!!reviewPlugins}
-          onChangeReviewable={handleReviewableChange}
-          initial={initial}
-          onChangeView={setSavedView}
-          headerStart={headerStart}
-          headerEnd={headerEnd}
-          onCurrentClipChange={handleCurrentClipChange}
-        />
+        <ViewerCloseContext.Provider value={onClose}>
+          <Player
+            clips={clips}
+            context={playerContext}
+            user={user as any}
+            theatreContainerRef={containerRef}
+            plugins={plugins}
+            isSubscribed={!!reviewPlugins}
+            onChangeReviewable={handleReviewableChange}
+            initial={initial}
+            onChangeView={setSavedView}
+            headerStart={headerStart}
+            headerEnd={renderHeaderEnd(!(savedView.sidebarShown ?? true))}
+            onCurrentClipChange={handleCurrentClipChange}
+          />
+        </ViewerCloseContext.Provider>
       </Styled.Container>
     )
   }
@@ -434,11 +440,12 @@ const ViewerBody = ({
 
   // nothing to play: the version's details stay, e.g. to upload a reviewable or comment
   const emptyVersionId = isTimeline ? versionIds[0] : selectedVersion?.id
+  const hasEmptySidebar = !!(emptyVersionId && projectName)
   return (
     <Styled.Container ref={containerRef}>
       <Styled.EmptyHeader>
         {headerStart}
-        {headerEnd}
+        {renderHeaderEnd(!hasEmptySidebar)}
       </Styled.EmptyHeader>
       <Styled.EmptyBody>
         <ViewerEmpty
@@ -449,10 +456,14 @@ const ViewerBody = ({
           noVersions={noVersions}
           onUpload={handleUpload}
         />
-        {emptyVersionId && projectName && (
+        {hasEmptySidebar && (
           <Styled.EmptySidebar>
             <Suspense>
-              <ViewerDetails projectName={projectName} versionId={emptyVersionId} />
+              <ViewerDetails
+                projectName={projectName}
+                versionId={emptyVersionId}
+                onClose={onClose}
+              />
             </Suspense>
           </Styled.EmptySidebar>
         )}

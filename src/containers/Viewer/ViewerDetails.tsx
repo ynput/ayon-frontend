@@ -12,11 +12,13 @@ type Props = {
   versionId?: string
   // the player's annotations, when shown beside the player
   annotations?: SidebarProps['allAnnotations']
+  // closes the viewer, from the panel's close button
+  onClose?: () => void
 }
 
 // The details panel of one version in the viewer: beside the player (its Sidebar plugin), or
 // beside the empty state when the version has nothing to play.
-const ViewerDetails = ({ projectName, versionId, annotations }: Props) => {
+const ViewerDetails = ({ projectName, versionId, annotations, onClose }: Props) => {
   const { data = {} } = useGetProjectsInfoQuery(
     { projects: projectName ? [projectName] : [] },
     { skip: !projectName },
@@ -50,7 +52,6 @@ const ViewerDetails = ({ projectName, versionId, annotations }: Props) => {
 
   if (!projectName) return null
   const projectInfo = projectsInfo[projectName]
-
   return (
     <EntityListsContextBoundary projectName={projectName}>
       {(entityListsContext) => (
@@ -72,6 +73,7 @@ const ViewerDetails = ({ projectName, versionId, annotations }: Props) => {
               annotations={annotations?.unsavedAnnotations}
               removeAnnotation={annotations?.removeAnnotation}
               exportAnnotationComposite={annotations?.exportAnnotationComposite}
+              onClose={onClose}
             />
           )}
           <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="review" />
