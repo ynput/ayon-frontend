@@ -1,58 +1,217 @@
-// The stand-in for AYON's project table: the picked entities as rows, with the addon's real
-// columns (cells and fetchValues through AYON's own column code) and right-click menu items.
-import { useMemo } from 'react'
-import type { MouseEvent } from 'react'
+// The stand-in for AYON's project table (ProjectTreeTable): the picked entities as rows, some of
+// AYON's columns filled from the entities' details, and the addon's real columns (cells and
+// fetchValues through AYON's own column code). Like AYON's: whole-row hover, a "more" menu in each
+// column header (the projectTable.columnMenuItem items with AYON's own), the right-click menu
+// (entityMenuItem). Sorting, grouping and hiding are not wired: the shell has no data to sort.
+import { useCallback, useMemo, useState } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { EntityRef, ProjectTablePage, ProjectTableState } from '@ynput/ayon-addon'
+import { Icon } from '@ynput/ayon-react-components'
+import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
+import type {
+  AnyContribution,
+  Contribution,
+  EntityRef,
+  ProjectTableColumnMenuItemContext,
+  ProjectTablePage,
+  ProjectTableState,
+} from '@ynput/ayon-addon'
+import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { useGetEntitiesDetailsPanelQuery, useGetProjectQuery } from '@ynput/ayon-frontend-shared/api'
+import { useMenuContext } from '@ynput/ayon-frontend-shared/context'
 import {
   AddonColumnDataScope,
   useAddonEntityMenuItems,
   useAddonTableColumns,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
+import { AddonDialog, ColumnHeaderMenuUI } from '@ynput/ayon-frontend-shared/components'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-import { devSlots, FocusFrame, Placeholder, usePlaceholderShown } from './slotOverlay'
+import { menuMarker, Placeholder, stageHover, usePlaceholderShown, useSlotMarks } from './slotOverlay'
+import { useSlotReport } from './status'
+
+type ColumnMenuItem = Parameters<typeof ColumnHeaderMenuUI>[0]['menuItems'][number]
+type ColumnMenuContribution = Contribution<'projectTable.columnMenuItem'>
+
+interface Details {
+  id: string
+  status?: string
+  entitySubType?: string
+  tags?: string[]
+  updatedAt?: string
+  task?: { assignees?: string[] }
+}
 
 interface ShellRow {
   id: string
   primary: { id: string; entityType: string; name: string; label?: string }
+  details?: Details
+}
+
+/** A column as its header menu sees it: AYON's ColumnHeaderMenu gets the same. */
+interface MenuColumn {
+  columnId: string
+  columnLabel: string
+  groupField?: string
 }
 
 interface ShellTableProps {
   page: ProjectTablePage
-  /** what the table shows, for the addon right-click menu items */
+  projectName?: string
+  /** what the table shows, for the addon menu items */
   tableState?: ProjectTableState
   entities: EntityRef[]
   selected: EntityRef[]
   onSelect: (selected: EntityRef[]) => void
+  /** preview: no server to fill AYON's columns from */
+  offline?: boolean
 }
 
-export const ShellTable = ({ page, tableState, entities, selected, onSelect }: ShellTableProps) => {
+const ENTITY_ICONS: Record<string, string> = {
+  folder: 'folder',
+  task: 'check_circle',
+  product: 'inventory_2',
+  version: 'layers',
+}
+
+// the projectTable.columnMenuItem helpers of AYON's table (useAddonColumnMenuItems)
+const matchesColumn = (patterns: string[] | undefined, columnId: string) =>
+  !patterns?.length ||
+  patterns.some((pattern) => (pattern.endsWith('*') ? columnId.startsWith(pattern.slice(0, -1)) : pattern === columnId))
+const withColumnLabel = (text: string, columnLabel: string) => text.replace(/\{column\}/g, () => columnLabel)
+
+const menuId = (columnId: string) => `addon-dev-column-menu-${columnId}`
+
+const formatDate = (value?: string) => (value ? new Date(value).toLocaleDateString() : '')
+
+/** A header cell as AYON's: its label, and on hover (or while open) the more menu at the right. */
+const HeaderCell = ({
+  label,
+  menuItems,
+  columnId,
+  width,
+  className,
+  extra,
+}: {
+  label: ReactNode
+  menuItems: ColumnMenuItem[]
+  columnId: string
+  width: number
+  className?: string
+  extra?: object
+}) => {
+  const { menuOpen } = useMenuContext()
+  const open = menuOpen === menuId(columnId)
+  return (
+    <th
+      className={`ayon-shell-th${open ? ' open' : ''}${className || ''}`}
+      style={{ width, minWidth: width }}
+      data-shell-column={columnId}
+      {...extra}
+    >
+      <div className="ayon-shell-th-content">{label}</div>
+      <div className="ayon-shell-th-actions">
+        <ColumnHeaderMenuUI menuItems={menuItems} menuId={menuId(columnId)} className="header-menu" />
+      </div>
+    </th>
+  )
+}
+
+export const ShellTable = ({ page, projectName, tableState, entities, selected, onSelect, offline }: ShellTableProps) => {
   const { columns: addonColumns } = useAddonTableColumns(page)
-  const columns = useMemo<ColumnDef<ShellRow>[]>(
+  const tableMarks = useSlotMarks('tableColumn')
+
+  // AYON's columns: filled from the entities' details
+  const entityType = entities[0]?.entityType || 'task'
+  const { data: details = [] } = useGetEntitiesDetailsPanelQuery(
+    { entityType: entityType as never, entities: entities.map((e) => ({ id: e.id, projectName: e.projectName })) },
+    { skip: offline || !entities.length },
+  )
+  const { data: project } = useGetProjectQuery({ projectName: projectName! }, { skip: offline || !projectName })
+  const statuses = (project as { statuses?: { name: string; color?: string; icon?: string }[] } | undefined)?.statuses
+
+  const builtIn = useMemo<(MenuColumn & { size: number; cell: (row: ShellRow) => ReactNode })[]>(
     () => [
       {
-        id: 'name',
-        header: 'Name',
-        size: 260,
-        cell: ({ row }) => row.original.primary.label || row.original.primary.name,
+        columnId: 'name',
+        columnLabel: 'Name',
+        size: 240,
+        cell: (row) => (
+          <>
+            <Icon icon={(ENTITY_ICONS[row.primary.entityType] || 'help') as never} />
+            <span>{row.primary.label || row.primary.name}</span>
+          </>
+        ),
       },
+      {
+        columnId: 'status',
+        columnLabel: 'Status',
+        groupField: 'status',
+        size: 140,
+        cell: (row) => {
+          const name = row.details?.status
+          const status = statuses?.find((s) => s.name === name)
+          return name ? (
+            <span className="ayon-shell-status-cell" style={{ color: status?.color }}>
+              {status?.icon && <Icon icon={status.icon as never} />}
+              {name}
+            </span>
+          ) : null
+        },
+      },
+      {
+        columnId: 'subType',
+        columnLabel: page === 'products' ? 'Product type' : 'Type',
+        groupField: page === 'products' ? 'productType' : 'taskType',
+        size: 130,
+        cell: (row) => row.details?.entitySubType,
+      },
+      {
+        columnId: 'assignees',
+        columnLabel: 'Assignees',
+        groupField: 'assignees',
+        size: 150,
+        cell: (row) => row.details?.task?.assignees?.join(', '),
+      },
+      {
+        columnId: 'tags',
+        columnLabel: 'Tags',
+        groupField: 'tags',
+        size: 150,
+        cell: (row) => row.details?.tags?.map((tag) => <span key={tag} className="ayon-shell-tag">{tag}</span>),
+      },
+      {
+        columnId: 'updatedAt',
+        columnLabel: 'Updated at',
+        size: 120,
+        cell: (row) => formatDate(row.details?.updatedAt),
+      },
+    ],
+    [page, statuses],
+  )
+
+  const columns = useMemo<ColumnDef<ShellRow>[]>(
+    () => [
+      ...builtIn.map(
+        (column): ColumnDef<ShellRow> => ({
+          id: column.columnId,
+          header: column.columnLabel,
+          size: column.size,
+          cell: ({ row }) => column.cell(row.original),
+        }),
+      ),
       ...(addonColumns.map((extra) => extra.column) as unknown as ColumnDef<ShellRow>[]),
     ],
-    [addonColumns],
+    [builtIn, addonColumns],
   )
   const data = useMemo<ShellRow[]>(
     () =>
       entities.map((entity) => ({
         id: entity.id,
-        primary: {
-          id: entity.id,
-          entityType: entity.entityType,
-          name: entity.name || entity.id,
-          label: entity.label,
-        },
+        primary: { id: entity.id, entityType: entity.entityType, name: entity.name || entity.id, label: entity.label },
+        details: (details as Details[]).find((d) => d.id === entity.id),
       })),
-    [entities],
+    [entities, details],
   )
   const table = useReactTable({
     data,
@@ -63,6 +222,95 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
     filterFns: {} as never,
   })
 
+  // projectTable.columnMenuItem: the addon items of a column's more menu, run or opened as AYON does
+  const { contributions } = useContributions('projectTable.columnMenuItem')
+  const columnItems = useMemo(
+    () =>
+      menuItemsAt(contributions as never, 'bottom').filter(
+        (item) => !(item as ColumnMenuContribution).pages?.length || (item as ColumnMenuContribution).pages!.includes(page),
+      ) as unknown as ColumnMenuContribution[],
+    [contributions, page],
+  )
+  const [dialog, setDialog] = useState<{ contribution: ColumnMenuContribution; context: object; title: string }>()
+  const columnContext = useCallback(
+    (column: MenuColumn): ProjectTableColumnMenuItemContext => ({
+      projectName: projectName!,
+      page,
+      columnId: column.columnId,
+      columnLabel: column.columnLabel,
+      groupField: column.groupField,
+      tableState,
+    }),
+    [projectName, page, tableState],
+  )
+  const runColumnItem = useCallback(
+    (item: ColumnMenuContribution, column: MenuColumn) => {
+      const context = columnContext(column)
+      if (!item.dialog) return runContribution(item, context)
+      const label = withColumnLabel(item.label, column.columnLabel)
+      setDialog({
+        contribution: item,
+        context: { ...context, close: () => setDialog(undefined) },
+        title: item.dialogTitle ? withColumnLabel(item.dialogTitle, column.columnLabel) : label,
+      })
+      return undefined
+    },
+    [columnContext],
+  )
+  const { menuOpen, toggleMenuOpen } = useMenuContext()
+  const menuColumns = useMemo<MenuColumn[]>(
+    () => [
+      ...builtIn,
+      ...addonColumns.map((extra) => {
+        const def = extra.column as { id?: string; header?: unknown }
+        return { columnId: def.id || '', columnLabel: typeof def.header === 'string' ? def.header : def.id || '' }
+      }),
+    ],
+    [builtIn, addonColumns],
+  )
+  const menuItemsFor = (column: MenuColumn): ColumnMenuItem[] => {
+    const close = (run?: () => void) => () => {
+      run?.()
+      toggleMenuOpen(false)
+    }
+    const addon = columnItems
+      .filter((item) => matchesColumn(item.columns, column.columnId) && (!item.groupable || !!column.groupField))
+      .map((item) => {
+        prefetchPiece(item.dialog || item.run)
+        return {
+          id: item.key,
+          label: withColumnLabel(item.label, column.columnLabel),
+          icon: item.icon,
+          onClick: close(() => void runColumnItem(item, column)),
+        }
+      })
+    const marker = menuMarker('projectTable.columnMenuItem')
+    return [
+      { id: 'pin', label: 'Pin column', icon: 'push_pin', onClick: close() },
+      { id: 'divider-pin', type: 'divider' },
+      { id: 'sort-asc', label: 'Sort ascending', icon: 'sort', className: 'sort-asc-icon', onClick: close() },
+      { id: 'sort-desc', label: 'Sort descending', icon: 'sort', className: 'sort-desc-icon', onClick: close() },
+      { id: 'divider-sort', type: 'divider' },
+      ...(column.groupField
+        ? [{ id: 'group-by', label: `Group by ${column.columnLabel}`, icon: 'splitscreen', onClick: close() }]
+        : []),
+      ...addon,
+      ...(marker ? [{ id: marker.id as string, label: marker.label as string, icon: 'add', className: 'ayon-dev-menu-marker' }] : []),
+      ...(column.columnId === 'name' ? [] : [{ id: 'hide', label: 'Hide column', icon: 'visibility_off', onClick: close() }]),
+    ]
+  }
+  // what the items of the open column menu get (the first column's until one opens)
+  const openColumn = menuColumns.find((column) => menuOpen === menuId(column.columnId)) ?? menuColumns[1]
+  const openColumnContext = useMemo(() => openColumn && columnContext(openColumn), [openColumn, columnContext])
+  const runOpenColumnItem = useCallback(
+    async (item: AnyContribution) => {
+      if (openColumn) await runColumnItem(item as unknown as ColumnMenuContribution, openColumn)
+    },
+    [openColumn, runColumnItem],
+  )
+  useSlotReport('projectTable.columnMenuItem', openColumnContext, runOpenColumnItem)
+
+  // entityMenuItem: the right-click menu of a row's cells
   const buildAddonItems = useAddonEntityMenuItems(page, 'bottom', tableState)
   const [openMenu] = useCreateContextMenu([])
   const isSelected = (id: string) => selected.some((entity) => entity.id === id)
@@ -82,82 +330,102 @@ export const ShellTable = ({ page, tableState, entities, selected, onSelect }: S
       data: { name: target.name, label: target.label },
     }))
     const cell = cells.find((c) => c.entityId === entity.id)!
-    const items = buildAddonItems(e as never, cell as never, cells as never, {
-      selectedCells: cells.map((c) => c.cellId),
-      selectedRows: [],
-      selectedColumns: [],
-      selectedFullRows: [],
-      selectedGroups: [],
-    }, {} as never)
-    // an unused slot: its marker, where the items would be (Show unused slots, or in focus)
-    const marker = devSlots.menuPlaceholder('entityMenuItem')
+    const items = buildAddonItems(
+      e as never,
+      cell as never,
+      cells as never,
+      { selectedCells: cells.map((c) => c.cellId), selectedRows: [], selectedColumns: [], selectedFullRows: [], selectedGroups: [] },
+      {} as never,
+    )
+    // an unused slot: its marker, where the items would be (Highlight slots)
+    const marker = menuMarker('entityMenuItem')
     const shown = Array.isArray(items) && items.length ? items : marker ? [marker] : []
     if (shown.length) openMenu(e, shown as never)
   }
 
+  const addonColumnKey = (meta: unknown) =>
+    (meta as { addonColumn?: { contribution?: { key?: string } } } | undefined)?.addonColumn?.contribution?.key
+
   return (
-    <table className="ayon-shell-table" data-shell-surface="table">
-      <thead>
-        {table.getHeaderGroups().map((group) => (
-          <tr key={group.id}>
-            {group.headers.map((header) => {
-              const content = flexRender(header.column.columnDef.header, header.getContext())
-              // an addon column: outlined while it is in focus in the developer panel
-              const key = (header.column.columnDef.meta as { addonColumn?: { contribution?: { key?: string } } } | undefined)
-                ?.addonColumn?.contribution?.key
-              return (
-                <th key={header.id} style={{ width: header.getSize() }}>
-                  {key ? (
-                    <FocusFrame slot="tableColumn" contribution={key}>
-                      <span>{content}</span>
-                    </FocusFrame>
-                  ) : (
-                    content
-                  )}
+    <>
+      <table className="ayon-shell-table" data-shell-surface="table">
+        <thead>
+          {table.getHeaderGroups().map((group) => (
+            <tr key={group.id}>
+              {group.headers.map((header) => {
+                const content = flexRender(header.column.columnDef.header, header.getContext())
+                const key = addonColumnKey(header.column.columnDef.meta)
+                const column = menuColumns.find((c) => c.columnId === header.column.id) ?? {
+                  columnId: header.column.id,
+                  columnLabel: header.column.id,
+                }
+                return (
+                  <HeaderCell
+                    key={header.id}
+                    columnId={header.column.id}
+                    width={header.getSize()}
+                    label={content}
+                    menuItems={menuItemsFor(column)}
+                    // an addon column: marked as the tableColumn slot's
+                    className={key ? ` ayon-dev-column${tableMarks.className}` : undefined}
+                    extra={key ? { 'data-ayon-dev-contribution': key, ...stageHover('tableColumn') } : undefined}
+                  />
+                )
+              })}
+              {placeholder && (
+                <th className="ayon-shell-th ayon-shell-placeholder-cell">
+                  <div className="ayon-shell-th-content">
+                    <Placeholder slot="tableColumn" label="Column" />
+                  </div>
                 </th>
+              )}
+              <th className="ayon-shell-th ayon-shell-filler" />
+            </tr>
+          ))}
+        </thead>
+        <AddonColumnDataScope columns={table.getAllLeafColumns() as never} entities={data.map((row) => row.primary) as never}>
+          <tbody>
+            {table.getRowModel().rows.map((row) => {
+              const entity = entities.find((e) => e.id === row.id)!
+              return (
+                <tr
+                  key={row.id}
+                  className={isSelected(row.id) ? 'selected' : undefined}
+                  onClick={(e) =>
+                    onSelect(
+                      e.metaKey || e.ctrlKey
+                        ? isSelected(row.id)
+                          ? selected.filter((s) => s.id !== row.id)
+                          : [...selected, entity]
+                        : [entity],
+                    )
+                  }
+                  onContextMenu={(e) => onContextMenu(e, entity)}
+                >
+                  {row.getVisibleCells().map((cell) => {
+                    const key = addonColumnKey(cell.column.columnDef.meta)
+                    return (
+                      <td
+                        key={cell.id}
+                        className={`${cell.column.id}${key ? ` ayon-dev-column${tableMarks.className}` : ''}`}
+                        style={{ width: cell.column.getSize(), minWidth: cell.column.getSize() }}
+                        {...(key ? stageHover('tableColumn') : {})}
+                      >
+                        <div className="ayon-shell-td-content">{flexRender(cell.column.columnDef.cell, cell.getContext())}</div>
+                      </td>
+                    )
+                  })}
+                  {placeholder && <td className="ayon-shell-placeholder-cell" />}
+                  <td className="ayon-shell-filler" />
+                </tr>
               )
             })}
-            {placeholder && (
-              <th className="ayon-shell-placeholder-cell">
-                <Placeholder slot="tableColumn" label="Column" />
-              </th>
-            )}
-          </tr>
-        ))}
-      </thead>
-      <AddonColumnDataScope
-        columns={table.getAllLeafColumns() as never}
-        entities={data.map((row) => row.primary) as never}
-      >
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            const entity = entities.find((e) => e.id === row.id)!
-            return (
-              <tr
-                key={row.id}
-                className={isSelected(row.id) ? 'selected' : undefined}
-                onClick={(e) =>
-                  onSelect(
-                    e.metaKey || e.ctrlKey
-                      ? isSelected(row.id)
-                        ? selected.filter((s) => s.id !== row.id)
-                        : [...selected, entity]
-                      : [entity],
-                  )
-                }
-                onContextMenu={(e) => onContextMenu(e, entity)}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className={cell.column.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-                {placeholder && <td className="ayon-shell-placeholder-cell" />}
-              </tr>
-            )
-          })}
-        </tbody>
-      </AddonColumnDataScope>
-    </table>
+          </tbody>
+        </AddonColumnDataScope>
+      </table>
+      {dialog && (
+        <AddonDialog contribution={dialog.contribution} context={dialog.context as never} title={dialog.title} />
+      )}
+    </>
   )
 }

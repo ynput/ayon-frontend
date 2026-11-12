@@ -1,13 +1,13 @@
 // Preview: the contribution with the fixture's context, every request answered from the fixture.
 // Components render in a frame the size of their place in AYON; menu items are a menu to run.
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import { ContributionView, runContribution } from '@ynput/ayon-addon'
 import type { AnyContribution } from '@ynput/ayon-addon'
 import { getFixture } from './network'
 import { ShellTable } from './ShellTable'
 import { isMenuSlot } from './slotNeeds'
-import { setStage } from './status'
+import { useSlotReport, useStageReady } from './status'
 import type { ShellSelection } from './types'
 import { ButtonItem, ServiceNote } from './parts'
 
@@ -30,10 +30,8 @@ export const PreviewStage = ({
     () => runContribution(contribution as never, context as never),
     [contribution, context],
   )
-  const onPopupContext = useCallback(
-    (popup: Record<string, unknown>) => setStage({ context: popup, ready: true }),
-    [],
-  )
+  // a header or toolbar item's popup passes its own context
+  const [popup, setPopup] = useState<Record<string, unknown>>()
   const isPopup = slot === 'header.item' || slot === 'projectTable.toolbarItem'
   // a table shortcut with a dialog: its content, as for a page
   const isDialog =
@@ -41,10 +39,8 @@ export const PreviewStage = ({
     !!(contribution as { dialog?: unknown }).dialog
   const runs = isMenuSlot(slot) && !isDialog
 
-  useEffect(() => {
-    if (!fixture) return
-    if (!isPopup) setStage({ context, ready: true, run: runs ? run : undefined })
-  }, [fixture, context, run, isPopup, runs])
+  useSlotReport(slot, fixture ? (isPopup ? popup : context) : undefined)
+  useStageReady(!!fixture)
 
   if (!fixture) {
     return (
@@ -66,7 +62,7 @@ export const PreviewStage = ({
       return (
         <div className="ayon-shell-bar">
           <span className="spacer" />
-          <ButtonItem contribution={contribution} context={context} autoOpen onContext={onPopupContext} />
+          <ButtonItem contribution={contribution} context={context} autoOpen onContext={setPopup} />
         </div>
       )
     }

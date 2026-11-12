@@ -38,7 +38,7 @@ export const useShellMenu = (
             command: () => runContribution(item as never, context as never),
           }
         })
-      // an unused slot: its marker, where the items would be (Show unused slots, or in focus)
+      // an unused slot: its marker, where the items would be (Highlight slots)
       const marker = items.length ? undefined : devSlots.menuPlaceholder(slot)
       return marker ? [marker] : items
     },

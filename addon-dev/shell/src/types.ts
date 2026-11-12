@@ -20,12 +20,16 @@ export interface ShellOptions {
 export interface ShellSelection {
   /** the place on stage (places.ts): an AYON surface, a preview scene `<package>:<id>`, `other` */
   surface?: string
-  /** the slot in focus */
+  /**
+   * the contribution `ayon-addon open` (and a preview fixture) is about: its slot and its id there.
+   * The panel doesn't show it; it is what the status page's fixture and run are for.
+   */
   slot?: SlotName
-  /** the contribution in focus: its id in that slot */
   id?: string
-  /** Show unused slots: list them, their places, and mark where they would show */
-  showUnused?: boolean
+  /** Show all: list every place and slot, used or not */
+  showAll?: boolean
+  /** Highlight slots: mark every slot of the place on stage (placeholders, outlines) */
+  highlight?: boolean
   projectName?: string
   /** the studio's project selection (studio pages, the project list) */
   projectNames?: string[]
@@ -34,6 +38,8 @@ export interface ShellSelection {
   entities: EntityRef[]
   /** the project table page for the projectTable and table slots */
   page?: 'overview' | 'products' | 'lists'
+  /** the user the user details panel shows (else the signed-in one, or the first user) */
+  userName?: string
   /** a preview scene's values the developer changed (the rest are the fields' defaults) */
   sceneValues?: Record<string, unknown>
   /** a fixture name: preview mode, no server */
@@ -71,6 +77,6 @@ export interface ShellStatus {
   used: string[]
   /** the current selection as a fixture: context plus the responses recorded since it was set */
   fixture: () => Fixture | undefined
-  /** runs a menu item (`run` piece) of the selection with its context */
+  /** runs the selection's menu item, shortcut or column menu item with its slot's context */
   run: () => Promise<void>
 }

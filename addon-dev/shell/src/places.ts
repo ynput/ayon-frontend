@@ -1,7 +1,7 @@
 // Places: where slots show, the developer panel's first choice. AYON's surfaces from the catalog
 // below, one place per preview scene of the contract packages, and "Other slots" for every known
-// slot without a preview. A place opens the UI around its slots; a slot or one of its
-// contributions is a focus inside it. No React or package imports: unit tests import it as is.
+// slot without a preview. A place opens the UI around its slots, all of them at once. No React or
+// package imports: unit tests import it as is.
 import type { Contract, Scene } from './contractModel'
 import { slotLabel } from './contractModel'
 
@@ -25,38 +25,67 @@ export interface Place {
   scene?: Scene
   /** a stand-in for a surface of the AYON app: some of AYON's controls around the slots are left out */
   simplified?: boolean
+  /** where an AYON place is in the app: the panel lists AYON's places under these */
+  area?: AyonArea
 }
+
+/** The parts of the AYON app, in the panel's order. */
+export const AYON_AREAS = ['Studio', 'Project', 'Settings', 'App'] as const
+export type AyonArea = (typeof AYON_AREAS)[number]
 
 export const OTHER_PLACE = 'other'
 export const AYON_SOURCE = 'AYON'
 
 type CatalogPlace = Omit<Place, 'source' | 'kind'>
 
-/** AYON's surfaces as the dev shell shows them, with the slots each one has. */
+/**
+ * AYON's surfaces as the dev shell shows them, with the slots each one has, by where they are in
+ * the app: the studio's pages (the header is above them), a project's pages, the settings, and
+ * what runs app-wide.
+ */
 export const AYON_PLACES: readonly CatalogPlace[] = [
   {
     id: 'app-header',
     label: 'App header',
     icon: 'web_asset',
+    area: 'Studio',
     simplified: true,
     slots: [{ slot: 'header.item', label: 'Header item' }],
+  },
+  {
+    id: 'studio-pages',
+    label: 'Studio pages',
+    icon: 'home',
+    area: 'Studio',
+    simplified: true,
+    slots: [{ slot: 'studio.page', label: 'Studio page' }],
+  },
+  {
+    id: 'project-list',
+    label: 'Project list',
+    icon: 'list',
+    area: 'Studio',
+    slots: [{ slot: 'projectList.menuItem', label: 'Project menu item' }],
   },
   {
     id: 'project-pages',
     label: 'Project pages',
     icon: 'folder_open',
+    area: 'Project',
     slots: [{ slot: 'project.page', label: 'Project page' }],
   },
   {
     id: 'slicer',
     label: 'Slicer',
     icon: 'account_tree',
+    area: 'Project',
     slots: [{ slot: 'slicer.menuItem', label: 'Slicer menu item' }],
   },
   {
     id: 'project-tables',
     label: 'Project tables',
     icon: 'table',
+    area: 'Project',
     simplified: true,
     slots: [
       { slot: 'tableColumn', label: 'Column' },
@@ -71,28 +100,17 @@ export const AYON_PLACES: readonly CatalogPlace[] = [
     id: 'details-panel',
     label: 'Details panel',
     icon: 'dock_to_left',
+    area: 'Project',
     slots: [
       { slot: 'detailsPanel.tab', label: 'Tab' },
       { slot: 'detailsPanel.menuItem', label: 'More menu item' },
     ],
   },
   {
-    id: 'studio-pages',
-    label: 'Studio pages',
-    icon: 'home',
-    simplified: true,
-    slots: [{ slot: 'studio.page', label: 'Studio page' }],
-  },
-  {
-    id: 'project-list',
-    label: 'Project list',
-    icon: 'list',
-    slots: [{ slot: 'projectList.menuItem', label: 'Project menu item' }],
-  },
-  {
     id: 'user-details',
     label: 'User details',
     icon: 'person',
+    area: 'Settings',
     simplified: true,
     slots: [
       { slot: 'userDetails.section', label: 'Section' },
@@ -100,9 +118,10 @@ export const AYON_PLACES: readonly CatalogPlace[] = [
     ],
   },
   {
-    id: 'profile',
-    label: 'Profile',
+    id: 'account',
+    label: 'Account',
     icon: 'account_circle',
+    area: 'Settings',
     simplified: true,
     slots: [{ slot: 'profile.section', label: 'Profile section' }],
   },
@@ -110,9 +129,13 @@ export const AYON_PLACES: readonly CatalogPlace[] = [
     id: 'background',
     label: 'Background',
     icon: 'memory',
+    area: 'App',
     slots: [{ slot: 'app.service', label: 'Service' }],
   },
 ]
+
+/** Places renamed since: an old link's `surface` opens the place it meant. */
+const RENAMED: Record<string, string> = { profile: 'account' }
 
 /** A slot an addon declares (the addon itself, or one installed through a contract package). */
 export interface DeclaredSlotInfo {
@@ -210,24 +233,24 @@ export const placeSummary = (place: Place, used: ReadonlySet<string>, services =
 }
 
 /**
- * The places the panel lists: those with a slot this addon uses, or all of them with Show unused
- * slots; and the selected one either way (an unused selection stays visible).
+ * The places the panel lists: those with a slot this addon uses, or all of them with Show all; and
+ * the selected one either way (an unused selection stays visible).
  */
 export const listedPlaces = (
   places: readonly Place[],
   used: ReadonlySet<string>,
-  showUnused: boolean,
+  showAll: boolean,
   selected?: string,
 ) =>
   places.filter(
     (place) =>
       place.id === selected ||
-      (place.slots.length > 0 && (showUnused || place.slots.some((s) => used.has(s.slot)))),
+      (place.slots.length > 0 && (showAll || place.slots.some((s) => used.has(s.slot)))),
   )
 
-/** The slots a place lists: the used ones, or all with Show unused slots; the focused one either way. */
-export const listedSlots = (place: Place, used: ReadonlySet<string>, showUnused: boolean, focused?: string) =>
-  place.slots.filter((s) => showUnused || used.has(s.slot) || s.slot === focused)
+/** The slots a place lists: the used ones, or all with Show all. */
+export const listedSlots = (place: Place, used: ReadonlySet<string>, showAll: boolean) =>
+  place.slots.filter((s) => showAll || used.has(s.slot))
 
 /** The place a slot is shown in: the first that has it, "Other slots" when none does. */
 export const placeOfSlot = (places: readonly Place[], slot: string) =>
@@ -259,31 +282,28 @@ export const searchPlaces = (
 
 /**
  * What the panel lists, places with their slots. Without a search: the places with a used slot
- * and their used slots (all of them with Show unused slots), the selected place and the focused
- * slot either way. With one: every place and slot the search matches, used or not (a place that
- * matches by its name or package lists all its slots), and the focused slot of a matched place.
+ * and their used slots (all of them with Show all), the selected place either way. With one:
+ * every place and slot the search matches, used or not (a place that matches by its name or
+ * package lists all its slots).
  */
 export const panelListing = (
   places: readonly Place[],
   used: ReadonlySet<string>,
-  showUnused: boolean,
+  showAll: boolean,
   query: string,
   titles?: (slot: string) => string[],
-  selected: { surface?: string; slot?: string } = {},
+  selected?: string,
 ) => {
   if (!query.trim())
-    return listedPlaces(places, used, showUnused, selected.surface).map((place) => ({
+    return listedPlaces(places, used, showAll, selected).map((place) => ({
       place,
-      slots: listedSlots(place, used, showUnused, selected.slot),
+      slots: listedSlots(place, used, showAll),
     }))
   return searchPlaces(
     places.filter((place) => place.slots.length),
     query,
     titles,
-  ).map(({ place, slots }) => ({
-    place,
-    slots: place.slots.filter((s) => slots.includes(s) || s.slot === selected.slot),
-  }))
+  )
 }
 
 /** A package's name for people: `@scope/ayon-addon-example-board` is "Example board". */
@@ -294,15 +314,20 @@ export const packageTitle = (source: string) => {
 
 /**
  * Old links: `scene=<package>:<id>` (a scene), `slot=…&contribution=…` without `surface` (a
- * contribution, `ayon-addon open`), `showSlots` (the old outline toggle). Returns the parameters
- * with `surface` set from them; the rest stays.
+ * contribution, `ayon-addon open`), `showSlots` (the old outline toggle), `showUnused` (now
+ * `showAll`), a renamed place. Returns the parameters with `surface` set from them; the rest stays.
  */
 export const normalizeParams = (search: string | URLSearchParams, places: readonly Place[]) => {
   const params = new URLSearchParams(search)
   const scene = params.get('scene')
   params.delete('scene')
   params.delete('showSlots')
-  if (params.get('surface')) return params
+  const showUnused = params.get('showUnused')
+  params.delete('showUnused')
+  if (showUnused && !params.has('showAll')) params.set('showAll', showUnused)
+  const given = params.get('surface')
+  if (given && RENAMED[given]) params.set('surface', RENAMED[given])
+  if (given) return params
   const slot = params.get('slot')
   const scenePlace = scene ? places.find((place) => place.id === scene) : undefined
   const surface =

@@ -5,19 +5,22 @@ import { normalizeParams } from './places'
 import type { Place } from './places'
 import type { ShellSelection } from './types'
 
-// ?surface=details-panel&slot=detailsPanel.tab&contribution=comments&ctxProject=demo&ctxEntities=task:<id>
+// ?surface=details-panel&showAll=1&highlight=1&ctxProject=demo&ctxEntities=task:<id>
 // Names of their own: AYON's surfaces keep their state in the URL too (project, type, id).
+// `slot` and `contribution` are what `ayon-addon open` is about; the panel doesn't show them.
 export const PARAMS = {
   surface: 'surface',
   slot: 'slot',
   id: 'contribution',
-  showUnused: 'showUnused',
+  showAll: 'showAll',
+  highlight: 'highlight',
   project: 'ctxProject',
   projects: 'ctxProjects',
   entities: 'ctxEntities',
   entityType: 'ctxEntityType',
   page: 'ctxPage',
   sceneValues: 'ctxValues',
+  user: 'ctxUser',
   preview: 'preview',
 } as const
 
@@ -39,7 +42,7 @@ const parseEntities = (value: string | null, projectName?: string): EntityRef[] 
 
 /**
  * The selection in the URL. With the places, old links (`scene=`, `slot=&contribution=` without
- * `surface`, `showSlots=`) are read as the place they meant.
+ * `surface`, `showSlots=`, `showUnused=`, a renamed place) are read as what they meant.
  */
 export const readSelection = (search = window.location.search, places?: readonly Place[]): ShellSelection => {
   const params = places ? normalizeParams(search, places) : new URLSearchParams(search)
@@ -52,24 +55,25 @@ export const readSelection = (search = window.location.search, places?: readonly
     surface: params.get(PARAMS.surface) || undefined,
     slot: knownSlot,
     id: (knownSlot && params.get(PARAMS.id)) || undefined,
-    showUnused: params.get(PARAMS.showUnused) === '1',
+    showAll: params.get(PARAMS.showAll) === '1' || (!places && params.get('showUnused') === '1'),
+    highlight: params.get(PARAMS.highlight) === '1',
     projectName,
     projectNames: params.get(PARAMS.projects)?.split(',').filter(Boolean),
     entityType: entities[0]?.entityType || params.get(PARAMS.entityType) || undefined,
     entities,
     page: page && PAGES.includes(page) ? page : undefined,
     sceneValues: decodeSceneValues(params.get(PARAMS.sceneValues)),
+    userName: params.get(PARAMS.user) || undefined,
     preview: params.get(PARAMS.preview) || undefined,
   }
 }
 
 /** What moving around is (a new history entry); the rest are edits of the inputs (replaced). */
-export const navigationKey = (selection: ShellSelection) =>
-  [selection.preview, selection.surface, selection.slot, selection.id].join('\u0000')
+export const navigationKey = (selection: ShellSelection) => [selection.preview, selection.surface].join('\u0000')
 
 /**
  * Puts the selection in the URL, leaving AYON's own parameters alone: a new history entry when
- * `push` (going to another place or focus), else in place (inputs).
+ * `push` (going to another place), else in place (inputs, switches).
  */
 export const writeSelection = (selection: ShellSelection, push = false) => {
   const params = new URLSearchParams(window.location.search)
@@ -78,15 +82,18 @@ export const writeSelection = (selection: ShellSelection, push = false) => {
   // the old names, now read into the ones below
   params.delete('scene')
   params.delete('showSlots')
+  params.delete('showUnused')
   set(PARAMS.preview, selection.preview)
   set(PARAMS.surface, selection.surface)
   set(PARAMS.slot, selection.slot)
   set(PARAMS.id, selection.id)
-  set(PARAMS.showUnused, selection.showUnused ? '1' : undefined)
+  set(PARAMS.showAll, selection.showAll ? '1' : undefined)
+  set(PARAMS.highlight, selection.highlight ? '1' : undefined)
   set(PARAMS.project, selection.projectName)
   set(PARAMS.projects, selection.projectNames?.join(',') || undefined)
   set(PARAMS.page, selection.page)
   set(PARAMS.sceneValues, encodeSceneValues(selection.sceneValues))
+  set(PARAMS.user, selection.userName)
   set(
     PARAMS.entities,
     selection.entities.map((entity) => `${entity.entityType}:${entity.id}`).join(',') || undefined,

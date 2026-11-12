@@ -1,19 +1,21 @@
 // Preview inputs: the drawer below the stage. What the place is rendered with (a preview scene's
-// fields, or the project, the studio's projects, entities and table page for AYON's places), the
-// context the focused contribution received, and the saved examples (preview fixtures). The
-// inputs are the place's, not the focused contribution's: they stay when the focus changes.
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
-import type { PointerEvent, ReactNode } from 'react'
+// fields, or the project, the studio's projects, entities, table page and user for AYON's places),
+// the context each of its slots passes, and the saved examples (preview fixtures). Its height is
+// the stage column's splitter (Shell.tsx); collapsed, only its header shows.
+import { useEffect, useState, useSyncExternalStore } from 'react'
+import type { ReactNode } from 'react'
 import { Button, Dialog, Dropdown, Icon, InputText } from '@ynput/ayon-react-components'
-import { EntityPicker } from '@ynput/ayon-addon'
+import { EntityPicker, useUser } from '@ynput/ayon-addon'
 import type { PickableEntityType } from '@ynput/ayon-addon'
-import { useGetEntitiesDetailsPanelQuery, useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
+import { contributionTitle } from '@ynput/ayon-addon/host'
+import { useGetEntitiesDetailsPanelQuery, useGetUsersQuery, useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
 import { JsonViewer } from '@ynput/ayon-frontend-shared/components'
-import { findContribution, getPlace } from './catalog'
+import { contributionsTo, getPlace, idOf } from './catalog'
 import { getUnmatched, onUnmatched } from './network'
+import type { PlaceSlot } from './places'
 import { SceneForm } from './scenes'
-import { ENTITY_TYPES, isMenuSlot, placeNeeds } from './slotNeeds'
-import { getStageContext, subscribeStage } from './status'
+import { ENTITY_TYPES, placeNeeds } from './slotNeeds'
+import { fixtureFor, getReports, subscribeReports } from './status'
 import type { ShellSelection } from './types'
 
 interface InputsProps {
@@ -145,6 +147,27 @@ const EntitiesPicker = ({ selection, onChange }: InputsProps) => {
   )
 }
 
+// the user details panel's user; else the signed-in one, unless it is a service user (an API key)
+const UserPicker = ({ selection, onChange }: InputsProps) => {
+  const signedIn = useUser()
+  const { data: users = [] } = useGetUsersQuery({ selfName: signedIn?.name })
+  const list = users as { name: string; isService?: boolean; attrib?: { fullName?: string } }[]
+  return (
+    <Field label="User">
+      <Dropdown
+        value={selection.userName ? [selection.userName] : []}
+        options={list.map((u) => ({
+          value: u.name,
+          label: u.isService ? `${u.name} (service)` : u.attrib?.fullName || u.name,
+        }))}
+        placeholder="Signed-in user"
+        search
+        onChange={(names) => onChange({ ...selection, userName: names[0] })}
+      />
+    </Field>
+  )
+}
+
 const TablePage = ({ selection, onChange }: InputsProps) => (
   <Field label="Table">
     <Dropdown
@@ -161,7 +184,7 @@ const InputValues = ({ mode, selection, onChange }: InputsProps & { mode: 'live'
   if (mode === 'preview') return <small className="ayon-shell-note">From the fixture.</small>
   if (place?.scene) return <SceneForm scene={place.scene} selection={selection} onChange={onChange} />
   const needs = placeNeeds(place?.id)
-  if (!needs.project && !needs.projects && !needs.entities) {
+  if (!needs.project && !needs.projects && !needs.entities && !needs.user) {
     return <small className="ayon-shell-note">Nothing to choose for this place.</small>
   }
   return (
@@ -170,6 +193,7 @@ const InputValues = ({ mode, selection, onChange }: InputsProps & { mode: 'live'
       {needs.projects && <ProjectsPicker selection={selection} onChange={onChange} />}
       {needs.entities && <EntitiesPicker selection={selection} onChange={onChange} />}
       {needs.tablePage && <TablePage selection={selection} onChange={onChange} />}
+      {needs.user && <UserPicker selection={selection} onChange={onChange} />}
     </div>
   )
 }
@@ -177,12 +201,15 @@ const InputValues = ({ mode, selection, onChange }: InputsProps & { mode: 'live'
 /** A heading that opens and closes what is under it. */
 const Disclosure = ({
   label,
+  detail,
   open,
   onToggle,
   extra,
   children,
 }: {
   label: string
+  /** muted, after the label (a slot's name) */
+  detail?: string
   open: boolean
   onToggle: () => void
   extra?: ReactNode
@@ -193,6 +220,7 @@ const Disclosure = ({
       <button className="ayon-shell-subheader label" aria-expanded={open} onClick={onToggle}>
         <Icon icon={open ? 'expand_more' : 'chevron_right'} />
         {label}
+        {detail && <code>{detail}</code>}
       </button>
       {extra}
     </div>
@@ -200,61 +228,77 @@ const Disclosure = ({
   </div>
 )
 
-// the context the focused contribution got: a few lines, the whole of it in a dialog
-const ContextReceived = ({ selection }: { selection: ShellSelection }) => {
-  const context = useSyncExternalStore(subscribeStage, getStageContext)
-  const focus = findContribution(selection.slot, selection.id)
-  // collapsed until a contribution is in focus: nothing to show before
-  const focusKey = focus?.key
-  const [open, setOpen] = useState(!!focusKey)
-  useEffect(() => setOpen(!!focusKey), [focusKey])
+// what one slot of the place passes: a few lines, the whole of it in a dialog
+const SlotContext = ({ slot, count, context }: { slot: PlaceSlot; count: number; context?: Record<string, unknown> }) => {
+  const [open, setOpen] = useState<boolean>()
   const [dialog, setDialog] = useState(false)
   const text = showContext(context)
   return (
-    <Disclosure
-      label="Context received"
-      open={open}
-      onToggle={() => setOpen(!open)}
-      extra={
-        <Button
-          icon="open_in_full"
-          variant="text"
-          data-tooltip="Show the whole context"
-          aria-label="Show the whole context"
-          disabled={!context}
-          onClick={() => setDialog(true)}
-        />
-      }
-    >
-      {!focus ? (
-        <small className="ayon-shell-note">Select a contribution to inspect the context it receives.</small>
-      ) : !context ? (
-        <small className="ayon-shell-note">Nothing received yet: it shows once the contribution is on screen (a menu: once it opens).</small>
-      ) : (
-        <button
-          className="ayon-shell-context"
-          data-shell-context
-          title="Show the whole context"
-          onClick={() => setDialog(true)}
-        >
-          <pre className="ayon-shell-code">{text}</pre>
-        </button>
-      )}
+    <div className="ayon-shell-slot-context" data-shell-context-slot={slot.slot}>
+      <Disclosure
+        label={slot.label}
+        detail={slot.slot}
+        // open while it has something, until opened or closed by hand
+        open={open ?? !!context}
+        onToggle={() => setOpen(!(open ?? !!context))}
+        extra={
+          context && (
+            <Button
+              icon="open_in_full"
+              variant="text"
+              data-tooltip="Show the whole context"
+              aria-label="Show the whole context"
+              onClick={() => setDialog(true)}
+            />
+          )
+        }
+      >
+        {!context ? (
+          <small className="ayon-shell-note">Nothing received yet: it shows once the slot is on screen (a menu: once it opens).</small>
+        ) : (
+          <>
+            <button className="ayon-shell-context" data-shell-context title="Show the whole context" onClick={() => setDialog(true)}>
+              <pre className="ayon-shell-code">{text}</pre>
+            </button>
+            {count > 1 && <small className="ayon-shell-note">Shown in {count} places with different contexts: this is the first.</small>}
+          </>
+        )}
+      </Disclosure>
       {dialog && context && (
-        <Dialog isOpen header="Context received" size="lg" onClose={() => setDialog(false)}>
+        <Dialog isOpen header={`Context received: ${slot.label}`} size="lg" onClose={() => setDialog(false)}>
           <JsonViewer value={JSON.parse(text)} wrap />
         </Dialog>
       )}
+    </div>
+  )
+}
+
+// the context each slot of the place passes its contributions, all at once
+const ContextReceived = ({ selection }: { selection: ShellSelection }) => {
+  const reports = useSyncExternalStore(subscribeReports, getReports)
+  const place = getPlace(selection.surface)
+  const [open, setOpen] = useState(true)
+  const slots = place?.kind === 'other' ? [] : place?.slots || []
+  return (
+    <Disclosure label="Context received" open={open} onToggle={() => setOpen(!open)}>
+      {!slots.length && <small className="ayon-shell-note">No slot here passes a context in the dev shell.</small>}
+      {slots.map((slot) => {
+        const list = reports.get(slot.slot) || []
+        // the same context from several contributions of one outlet counts once
+        const distinct = new Set(list.map((report) => showContext(report.context)))
+        return <SlotContext key={slot.slot} slot={slot} count={distinct.size} context={list[0]?.context} />
+      })}
     </Disclosure>
   )
 }
 
-// save the live context and responses as a preview fixture, and open the saved ones
+// save a contribution's context and the server's answers as a preview fixture, and open the saved ones
 const SavedExamples = ({ mode, selection }: { mode: 'live' | 'preview'; selection: ShellSelection }) => {
   const [open, setOpen] = useState(mode === 'preview')
   const [names, setNames] = useState<string[]>([])
   const [name, setName] = useState('')
   const [saved, setSaved] = useState<string>()
+  const reports = useSyncExternalStore(subscribeReports, getReports)
   const list = () =>
     fetch('/__ayon-addon/fixtures')
       .then((response) => (response.ok ? response.json() : []))
@@ -263,8 +307,13 @@ const SavedExamples = ({ mode, selection }: { mode: 'live' | 'preview'; selectio
   useEffect(() => {
     list()
   }, [])
+  // the place's contributions whose slot passed a context
+  const place = getPlace(selection.surface)
+  const savable = (place?.slots || []).flatMap((s) => (reports.has(s.slot) ? contributionsTo(s.slot) : []))
+  const [picked, setPicked] = useState<string>()
+  const contribution = savable.find((c) => c.key === picked) ?? savable[0]
   const save = async () => {
-    const fixture = window.__AYON_ADDON_SHELL__?.fixture()
+    const fixture = contribution && fixtureFor(contribution.slot, idOf(contribution))
     if (!fixture || !name) return
     const response = await fetch(`/__ayon-addon/fixtures/${encodeURIComponent(name)}`, {
       method: 'POST',
@@ -274,17 +323,21 @@ const SavedExamples = ({ mode, selection }: { mode: 'live' | 'preview'; selectio
     setSaved(response.ok ? `Saved dev/fixtures/${name}.json` : `Failed: ${response.status}`)
     list()
   }
-  const focus = findContribution(selection.slot, selection.id)
   return (
     <Disclosure label={`Saved examples${names.length ? ` (${names.length})` : ''}`} open={open} onToggle={() => setOpen(!open)}>
       <small className="ayon-shell-note">
         A contribution&apos;s context and the server&apos;s answers (preview fixtures), to render it without a server.
       </small>
-      {mode === 'live' && focus && (
+      {mode === 'live' && contribution && (
         <div className="ayon-shell-entities">
+          <Dropdown
+            value={[contribution.key]}
+            options={savable.map((c) => ({ value: c.key, label: contributionTitle(c) }))}
+            onChange={(keys) => setPicked(keys[0])}
+          />
           <InputText
             value={name}
-            placeholder={`${selection.id}`}
+            placeholder={idOf(contribution)}
             onChange={(e) => setName(e.target.value.replace(/[^\w-]/g, ''))}
           />
           <Button icon="save" label="Save" disabled={!name} onClick={save} />
@@ -324,20 +377,6 @@ const NotInFixture = () => {
   )
 }
 
-const INPUTS_HEIGHT = 'ayon-addon-shell-inputs-height'
-const MIN_HEIGHT = 0.12
-const MAX_HEIGHT = 0.8
-/** The drawer's height, a share of the stage column: about a quarter until resized. */
-const readHeight = () => {
-  try {
-    const stored = Number(localStorage.getItem(INPUTS_HEIGHT))
-    if (stored >= MIN_HEIGHT && stored <= MAX_HEIGHT) return stored
-  } catch {
-    // no storage: the default
-  }
-  return 0.28
-}
-
 export const PreviewInputs = ({
   mode,
   selection,
@@ -345,71 +384,28 @@ export const PreviewInputs = ({
   open,
   onToggle,
 }: InputsProps & { mode: 'live' | 'preview'; open: boolean; onToggle: () => void }) => {
-  const focus = findContribution(selection.slot, selection.id)
   const [valuesOpen, setValuesOpen] = useState(true)
-  const [height, setHeight] = useState(readHeight)
-  const section = useRef<HTMLElement>(null)
-  // drag the top edge: the drawer's share of the column it sits in, kept for the next visit
-  const resize = (e: PointerEvent<HTMLDivElement>) => {
-    const column = section.current?.parentElement
-    if (!column) return
-    e.preventDefault()
-    const { bottom, height: total } = column.getBoundingClientRect()
-    let next = height
-    const move = (event: globalThis.PointerEvent) => {
-      next = Math.min(MAX_HEIGHT, Math.max(MIN_HEIGHT, (bottom - event.clientY) / total))
-      setHeight(next)
-    }
-    const stop = () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerup', stop)
-      try {
-        localStorage.setItem(INPUTS_HEIGHT, String(next))
-      } catch {
-        // a viewer convenience only
-      }
-    }
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerup', stop)
-  }
   return (
-    <section
-      ref={section}
-      className={`ayon-shell-inputs${open ? ' open' : ''}`}
-      data-shell-surface="preview-inputs"
-      style={open ? { height: `${height * 100}%` } : undefined}
-    >
-      {open && (
-        <div
-          className="ayon-shell-inputs-resize"
-          role="separator"
-          aria-orientation="horizontal"
-          aria-label="Resize Preview inputs"
-          data-shell-action="resize-inputs"
-          onPointerDown={resize}
-        />
-      )}
-      <button className="ayon-shell-inputs-header" aria-expanded={open} onClick={onToggle}>
-        <Icon icon={open ? 'expand_more' : 'chevron_right'} />
+    <section className={`ayon-shell-inputs${open ? ' open' : ''}`} data-shell-surface="preview-inputs">
+      <div className="ayon-shell-inputs-header">
         <span>Preview inputs</span>
-      </button>
+        <Button
+          icon={open ? 'bottom_panel_close' : 'bottom_panel_open'}
+          variant="text"
+          className="ayon-shell-icon-button"
+          aria-expanded={open}
+          aria-label={open ? 'Hide Preview inputs (/)' : 'Show Preview inputs (/)'}
+          data-tooltip={open ? 'Hide inputs /' : 'Show inputs /'}
+          data-shell-action="toggle-inputs"
+          onClick={onToggle}
+        />
+      </div>
       {open && (
         <div className="ayon-shell-inputs-body">
           <div className="ayon-shell-inputs-column">
             <Disclosure label="Input values" open={valuesOpen} onToggle={() => setValuesOpen(!valuesOpen)}>
               <InputValues mode={mode} selection={selection} onChange={onChange} />
             </Disclosure>
-            {focus && isMenuSlot(focus.slot) && (
-              <div>
-                <Button
-                  icon="play_arrow"
-                  label={focus.slot === 'table.shortcut' ? 'Press the shortcut' : 'Run the menu item'}
-                  variant="filled"
-                  data-shell-action="run"
-                  onClick={() => window.__AYON_ADDON_SHELL__?.run()}
-                />
-              </div>
-            )}
           </div>
           <div className="ayon-shell-inputs-column">
             <ContextReceived selection={selection} />

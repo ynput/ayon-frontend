@@ -37,14 +37,14 @@ import { Stage } from './Stage'
 import { StageHeader } from './StageHeader'
 import { StageBoundary } from './StageBoundary'
 import { PreviewInputs } from './PreviewInputs'
-import { setStatus } from './status'
+import { clearMenus, setStatus } from './status'
 import type { ShellOptions, ShellSelection } from './types'
 import { navigationKey, readSelection, rememberSceneValues, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
-import { findContribution, getPlace, getPlaces, getUsedSlots } from './catalog'
+import { getPlace, getPlaces, getUsedSlots } from './catalog'
 import { listedPlaces } from './places'
-import { FocusedMenuItemStyle, setOverlay } from './slotOverlay'
+import { setHighlight } from './slotOverlay'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -133,31 +133,62 @@ const ProjectProviders = ({
     <>{children}</>
   )
 
+// the panels' open state, a viewer convenience only
 const INPUTS_OPEN = 'ayon-addon-shell-inputs'
-const readInputsOpen = () => {
+const LEFT_OPEN = 'ayon-addon-shell-left'
+const readOpen = (key: string, fallback: boolean) => {
   try {
-    return localStorage.getItem(INPUTS_OPEN) === '1'
+    const stored = localStorage.getItem(key)
+    return stored === null ? fallback : stored === '1'
   } catch {
-    return false
+    return fallback
   }
+}
+const useStoredToggle = (key: string, fallback: boolean) => {
+  const [open, setOpen] = useState(() => readOpen(key, fallback))
+  const toggle = useCallback(
+    (next?: boolean) =>
+      setOpen((current) => {
+        const value = next ?? !current
+        try {
+          localStorage.setItem(key, value ? '1' : '0')
+        } catch {
+          // a viewer convenience only
+        }
+        return value
+      }),
+    [key],
+  )
+  return [open, toggle] as const
+}
+
+/** Whether a key press goes to a field: then it is typing, not a shortcut. */
+const isTyping = (target: EventTarget | null) => {
+  const element = target as HTMLElement | null
+  if (!element) return false
+  return (
+    element.isContentEditable ||
+    ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName) ||
+    !!element.closest?.('[contenteditable=""], [contenteditable="true"]')
+  )
 }
 
 /** The selection in the URL; without a place, the first one this addon uses. */
 const initialSelection = () => {
   const selection = readSelection(window.location.search, getPlaces())
   if (selection.surface) return selection
-  const first = listedPlaces(getPlaces(), getUsedSlots(), !!selection.showUnused)[0]
+  const first = listedPlaces(getPlaces(), getUsedSlots(), !!selection.showAll)[0]
   return { ...selection, surface: first?.id }
 }
 
 const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'preview' }) => {
   const [selection, setSelection] = useState<ShellSelection>(initialSelection)
   const [search, setSearch] = useState('')
-  const [inputsOpen, setInputsOpen] = useState(readInputsOpen)
+  const [inputsOpen, toggleInputs] = useStoredToggle(INPUTS_OPEN, false)
+  const [panelOpen, togglePanel] = useStoredToggle(LEFT_OPEN, true)
   const place = getPlace(selection.surface)
-  const focus = findContribution(selection.slot, selection.id)
 
-  // the URL: a new history entry for another place or focus, the same one for inputs
+  // the URL: a new history entry for another place, the same one for the inputs and switches
   const shown = useRef(navigationKey(selection))
   useEffect(() => {
     const key = navigationKey(selection)
@@ -173,13 +204,25 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
-  useEffect(
-    () => setOverlay({ showUnused: !!selection.showUnused, focusSlot: selection.slot, focusKey: focus?.key }),
-    [selection.showUnused, selection.slot, focus?.key],
-  )
+  useEffect(() => setHighlight(!!selection.highlight), [selection.highlight])
+  // the menus opened in the last place are not this one's
+  useEffect(() => clearMenus(), [selection.surface])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
   // the inputs of each scene, for when the developer comes back to it
   useEffect(() => rememberSceneValues(selection.surface, selection.sceneValues), [selection.surface, selection.sceneValues])
+
+  // "," toggles the developer panel, "/" Preview inputs, unless typing
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || isTyping(e.target)) return
+      if (e.key === ',') togglePanel()
+      else if (e.key === '/') toggleInputs()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [togglePanel, toggleInputs])
 
   // a project to start with
   const { data: projects = [] } = useListProjectsQuery({ active: true }, { skip: mode !== 'live' })
@@ -189,26 +232,15 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     }
   }, [mode, projects, selection.projectName])
 
-  const toggleInputs = useCallback(
-    (open?: boolean) =>
-      setInputsOpen((current) => {
-        const next = open ?? !current
-        try {
-          localStorage.setItem(INPUTS_OPEN, next ? '1' : '0')
-        } catch {
-          // a viewer convenience only
-        }
-        return next
-      }),
-    [],
-  )
-
   return (
     <>
       {/* the addon's services, once for the whole shell as in AYON; not remounted per selection */}
       <AddonServices projectName={selection.projectName ?? null} />
-      <FocusedMenuItemStyle />
-      <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
+      <Splitter
+        className={`ayon-shell${panelOpen ? '' : ' left-collapsed'}`}
+        stateKey="ayon-addon-shell"
+        stateStorage="local"
+      >
         <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
           <StageBoundary what="developer panel">
             <DevPanel
@@ -222,33 +254,43 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
           </StageBoundary>
         </SplitterPanel>
         <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <StageHeader mode={mode} selection={selection} onChange={setSelection} />
-          <ProjectProviders
-            // preview renders the contribution alone: only the table columns need the project
-            projectName={
-              mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
-            }
-            light={mode === 'preview'}
+          <StageHeader mode={mode} selection={selection} panelOpen={panelOpen} onTogglePanel={() => togglePanel()} />
+          <Splitter
+            layout="vertical"
+            className={`ayon-shell-column${inputsOpen ? '' : ' inputs-collapsed'}`}
+            stateKey="ayon-addon-shell-inputs-split"
+            stateStorage="local"
           >
-            {/* the place stays mounted while the focus inside it changes; a new project starts
-                the project contexts and the slicer fresh */}
-            <StageBoundary key={`${selection.surface}:${place?.scene ? '' : selection.projectName || ''}`}>
-              <Stage
+            <SplitterPanel size={70} minSize={20} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <ProjectProviders
+                // preview renders the contribution alone: only the table columns need the project
+                projectName={
+                  mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
+                }
+                light={mode === 'preview'}
+              >
+                {/* a new place or project starts the project contexts and the slicer fresh */}
+                <StageBoundary key={`${selection.surface}:${place?.scene ? '' : selection.projectName || ''}`}>
+                  <Stage
+                    mode={mode}
+                    selection={selection}
+                    listedSlots={slotsHere(place, selection, search)}
+                    onChange={setSelection}
+                    onOpenInputs={() => toggleInputs(true)}
+                  />
+                </StageBoundary>
+              </ProjectProviders>
+            </SplitterPanel>
+            <SplitterPanel size={30} minSize={10} style={{ overflow: 'hidden' }}>
+              <PreviewInputs
                 mode={mode}
                 selection={selection}
-                listedSlots={slotsHere(place, selection, search)}
                 onChange={setSelection}
-                onOpenInputs={() => toggleInputs(true)}
+                open={inputsOpen}
+                onToggle={() => toggleInputs()}
               />
-            </StageBoundary>
-          </ProjectProviders>
-          <PreviewInputs
-            mode={mode}
-            selection={selection}
-            onChange={setSelection}
-            open={inputsOpen}
-            onToggle={() => toggleInputs()}
-          />
+            </SplitterPanel>
+          </Splitter>
         </SplitterPanel>
       </Splitter>
     </>

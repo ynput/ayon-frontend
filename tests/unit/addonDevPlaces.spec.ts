@@ -3,6 +3,7 @@
 // preview.
 import { expect, test } from '@playwright/test'
 import {
+  AYON_AREAS,
   AYON_PLACES,
   buildPlaces,
   listedPlaces,
@@ -66,6 +67,22 @@ test('every AYON slot has a place, or is under Other slots', () => {
   })
 })
 
+test("AYON's places are listed by area, the studio's first", () => {
+  const ayon = places.filter((p) => p.kind === 'ayon')
+  expect(ayon.every((p) => p.area)).toBe(true)
+  // one block per area, in the panel's order
+  const areas = ayon.map((p) => p.area)
+  expect(areas.filter((area, i) => area !== areas[i - 1])).toEqual([...AYON_AREAS])
+  expect(ayon.filter((p) => p.area === 'Studio').map((p) => p.id)).toEqual(['app-header', 'studio-pages', 'project-list'])
+  expect(ayon.filter((p) => p.area === 'Project').map((p) => p.id)).toEqual([
+    'project-pages',
+    'slicer',
+    'project-tables',
+    'details-panel',
+  ])
+  expect(ayon.filter((p) => p.area === 'Settings').map((p) => p.label)).toEqual(['User details', 'Account'])
+})
+
 test('a slot the catalog misses goes to Other slots, never nowhere', () => {
   const withNew = buildPlaces({ ayonSlots: [...ayonSlots, 'brandNew.slot'] })
   expect(placeOfSlot(withNew, 'brandNew.slot')).toBe(OTHER_PLACE)
@@ -97,15 +114,13 @@ test('usage counts distinct slots, not contributions', () => {
   expect(placeUsage(twice, usedSlots([{ slot: 'detailsPanel.tab' }]))).toEqual({ used: 1, total: 2 })
 })
 
-test('the panel lists used places and slots; Show unused slots lists all of them', () => {
+test('the panel lists used places and slots; Show all lists all of them', () => {
   const used = usedSlots([{ slot: 'example.cardBadge' }, { slot: 'tableColumn' }])
   expect(listedPlaces(places, used, false).map((p) => p.id)).toEqual(['project-tables', `${PACKAGE}:card`])
   // the selected place stays listed
-  expect(listedPlaces(places, used, false, 'profile').map((p) => p.id)).toContain('profile')
+  expect(listedPlaces(places, used, false, 'account').map((p) => p.id)).toContain('account')
   expect(listedPlaces(places, used, true)).toHaveLength(places.length)
   expect(listedSlots(place(`${PACKAGE}:card`), used, false).map((s) => s.slot)).toEqual(['example.cardBadge'])
-  // the focused slot stays listed
-  expect(listedSlots(place(`${PACKAGE}:card`), used, false, 'example.cardEndItem')).toHaveLength(2)
   expect(listedSlots(place(`${PACKAGE}:card`), used, true)).toHaveLength(3)
 })
 
@@ -119,10 +134,10 @@ test('search finds places by name or package, and slots by label, name or contri
   expect(ids('  ')).toHaveLength(places.length)
 })
 
-test('a search lists what it matches, used or not; without one the panel follows Show unused slots', () => {
+test('a search lists what it matches, used or not; without one the panel follows Show all', () => {
   const used = usedSlots([{ slot: 'example.cardBadge' }])
-  const list = (query: string, showUnused = false, selected = {}) =>
-    panelListing(places, used, showUnused, query, undefined, selected).map(({ place, slots }) => [
+  const list = (query: string, showAll = false, selected?: string) =>
+    panelListing(places, used, showAll, query, undefined, selected).map(({ place, slots }) => [
       place.id,
       slots.map((s) => s.slot),
     ])
@@ -131,11 +146,9 @@ test('a search lists what it matches, used or not; without one the panel follows
   expect(list('end item')).toEqual([[`${PACKAGE}:card`, ['example.cardEndItem']]])
   // an unused place: listed too
   expect(list('details panel')).toEqual([['details-panel', ['detailsPanel.tab', 'detailsPanel.menuItem']]])
-  // the selected place that doesn't match isn't listed; the focused slot of a matched place is
-  expect(list('end item', false, { surface: 'profile' }).map(([id]) => id)).toEqual([`${PACKAGE}:card`])
-  expect(list('end item', false, { slot: 'example.cardBadge' })).toEqual([
-    [`${PACKAGE}:card`, ['example.cardBadge', 'example.cardEndItem']],
-  ])
+  // the selected place that doesn't match isn't listed
+  expect(list('end item', false, 'account').map(([id]) => id)).toEqual([`${PACKAGE}:card`])
+  expect(list('', false, 'account').map(([id]) => id)).toEqual(['account', `${PACKAGE}:card`])
   expect(list('nothing like it')).toEqual([])
 })
 
@@ -164,7 +177,13 @@ test('old links are read as the place they meant', () => {
   })
   expect(read('?slot=example.boardDialog').surface).toBe(OTHER_PLACE)
   // the old outline toggle is gone; a surface given wins
-  expect(read('?showSlots=0&surface=profile&slot=tableColumn')).toEqual({ surface: 'profile', slot: 'tableColumn' })
+  expect(read('?showSlots=0&surface=details-panel&slot=tableColumn')).toEqual({
+    surface: 'details-panel',
+    slot: 'tableColumn',
+  })
+  // renamed: Profile is Account, Show unused slots is Show all
+  expect(read('?surface=profile&showUnused=1')).toEqual({ surface: 'account', showAll: '1' })
+  expect(read('?surface=account&showAll=1&showUnused=1')).toEqual({ surface: 'account', showAll: '1' })
   expect(read('?slot=unknown.slot')).toEqual({ slot: 'unknown.slot' })
 })
 

@@ -18,7 +18,7 @@ import { useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
 import { sceneDefaults } from '../../src/contractPreviews'
 import type { PreviewApi, PreviewEntity, PreviewField, PreviewPickOption } from '../../src/contractPreviews'
 import type { Scene } from './contractModel'
-import { setStage } from './status'
+import { useStageReady } from './status'
 import type { ShellSelection } from './types'
 
 type Values = Record<string, any>
@@ -95,8 +95,8 @@ export const SceneStage = ({
   onChange: OnChange
 }) => {
   const { values, setValues } = useSceneValues(scene, selection, onChange)
-  // ready as it renders; the focused contribution's context comes from its slot (slotOverlay.tsx)
-  useEffect(() => setStage({ ready: true }), [scene.key, selection.slot, selection.id])
+  // ready as it renders; each slot reports its context itself (slotOverlay.tsx)
+  useStageReady(true)
   const Component = scene.component
   return (
     <div className="ayon-shell-body" data-shell-surface="scene" data-shell-scene={scene.key}>

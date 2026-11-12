@@ -1,5 +1,5 @@
 // What Preview inputs asks for, per place of AYON (places.ts); a preview scene takes its own
-// fields instead. And which focused contributions Preview inputs can run.
+// fields instead. And which slots are menus (a preview runs their item).
 import type { AnyContribution } from '@ynput/ayon-addon'
 import type { ShellSelection } from './types'
 
@@ -11,6 +11,8 @@ export interface PlaceNeeds {
   entities?: boolean
   /** the project table page */
   tablePage?: boolean
+  /** the user the user details panel shows */
+  user?: boolean
 }
 
 const NEEDS: Record<string, PlaceNeeds> = {
@@ -20,6 +22,7 @@ const NEEDS: Record<string, PlaceNeeds> = {
   'details-panel': { project: true, entities: true },
   'studio-pages': { projects: true },
   'project-list': { projects: true },
+  'user-details': { user: true },
 }
 
 export const placeNeeds = (place?: string): PlaceNeeds => (place && NEEDS[place]) || {}

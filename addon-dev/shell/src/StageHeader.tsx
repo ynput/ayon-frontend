@@ -1,145 +1,93 @@
-// The lines above the stage: the place on it, how many of its slots this addon uses, and the
-// focus (a slot, or one of its contributions) with how to see it when it isn't on screen yet.
-// Everything under it is AYON (its surfaces, or stand-ins for the app's); the header is the shell's.
-import { useState } from 'react'
+// The line above the stage: the place on it, with where it comes from behind (i), and a warning
+// when the stage isn't showing a server's live data. One fixed height: nothing in it changes the
+// stage's size. Everything under it is AYON (its surfaces, or stand-ins for the app's); the
+// header is the shell's.
+import { useEffect, useRef, useState } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { contributionTitle } from '@ynput/ayon-addon/host'
-import { contributionsTo, findContribution, getPlace, getUsedSlots, slotDeclaration } from './catalog'
-import { placeSummary } from './places'
-import type { Place } from './places'
-import { useSlotOverlay } from './slotOverlay'
+import { getPlace } from './catalog'
 import type { ShellSelection } from './types'
 
-// AYON's slots whose contributions aren't on screen until the developer opens something
-const INSTRUCTIONS: Record<string, string> = {
-  entityMenuItem: 'Right-click a row to see this menu.',
-  'projectTable.columnMenuItem':
-    'The stand-in table has no column menus: pick a column in the toolbar and use Run in Preview inputs.',
-  'table.shortcut': 'Click a row, then press the shortcut.',
-  'detailsPanel.menuItem': "Open the details panel's more menu to see this item.",
-  'slicer.menuItem': 'Right-click a row in the slicer, or open its menu, to see this item.',
-  'projectList.menuItem': 'Right-click a project to see this menu.',
-  'userDetails.menuItem': "The stand-in shows the more menu's items as buttons in its bar.",
-}
-
-/** How to see the focused slot on stage, when it needs more than looking. */
-const instruction = (place: Place, slot: string | undefined, focus: unknown, mounted: readonly string[]) => {
-  if (!slot) return undefined
-  if (place.kind === 'ayon') {
-    const keys = (focus as { keys?: string } | undefined)?.keys
-    if (slot === 'table.shortcut' && keys) return `Click a row, then press ${keys}.`
-    return INSTRUCTIONS[slot]
-  }
-  if (place.kind !== 'scene') return undefined
-  const pieces = (slotDeclaration(slot) as { pieces?: readonly string[] } | undefined)?.pieces || []
-  if (pieces.includes('run')) return 'Right-click in the preview to see this menu.'
-  if (!mounted.includes(slot)) return 'Not on screen yet: open the part of the preview that shows it.'
-  return undefined
+/** The (i) next to the place: what it is, in a popover over the stage. */
+const About = ({ lines }: { lines: string[] }) => {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (!open) return undefined
+    const close = (e: PointerEvent) => {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false)
+    }
+    window.addEventListener('pointerdown', close)
+    return () => window.removeEventListener('pointerdown', close)
+  }, [open])
+  return (
+    <div className="ayon-shell-caption-about-anchor" ref={ref}>
+      <button
+        className="ayon-shell-caption-info"
+        aria-label="About this place"
+        aria-expanded={open}
+        data-shell-action="place-info"
+        onClick={() => setOpen(!open)}
+      >
+        <Icon icon="info" />
+      </button>
+      {open && (
+        <div className="ayon-shell-caption-about" data-shell-about role="dialog">
+          {lines.map((line) => (
+            <small key={line}>{line}</small>
+          ))}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export const StageHeader = ({
   mode,
   selection,
-  onChange,
+  panelOpen,
+  onTogglePanel,
 }: {
   mode: 'live' | 'preview'
   selection: ShellSelection
-  onChange: (selection: ShellSelection) => void
+  /** the developer panel on the left */
+  panelOpen: boolean
+  onTogglePanel: () => void
 }) => {
-  const overlay = useSlotOverlay()
   const place = getPlace(selection.surface)
-  const [info, setInfo] = useState(false)
-  const chip =
-    mode === 'live' ? (
-      <span className="ayon-shell-chip live" title="Server data is live; preview inputs may be examples.">
-        Connected to AYON
-      </span>
-    ) : (
-      <span className="ayon-shell-chip preview">Preview: {selection.preview}</span>
-    )
-  if (!place) {
-    return (
-      <header className="ayon-shell-caption" data-shell-surface="caption">
-        <div className="ayon-shell-caption-text" />
-        {chip}
-      </header>
-    )
-  }
-  const used = getUsedSlots()
-  const focus = findContribution(selection.slot, selection.id)
-  const slot = selection.slot ? place.slots.find((s) => s.slot === selection.slot) : undefined
-  const unused = !!selection.slot && !used.has(selection.slot)
-  const help =
-    focus && overlay.emptyFocus === focus.key
-      ? 'Not shown with these inputs.'
-      : instruction(place, selection.slot, focus, overlay.mounted)
-  const summary =
-    place.kind === 'other'
-      ? 'No preview'
-      : placeSummary(place, used, contributionsTo('app.service').length).replace(/ used$/, ' slots used')
-  // where the place comes from and what it is: behind (i), not in the header's lines
-  const about = [
-    place.kind === 'scene' ? `Preview scene from ${place.source}` : undefined,
-    place.scene?.description,
-    place.simplified ? 'Simplified preview: some surrounding AYON controls are omitted.' : undefined,
-  ].filter(Boolean) as string[]
+  // where the place comes from and what it is: behind (i)
+  const about = place
+    ? ([
+        place.kind === 'scene' ? `Preview scene from ${place.source}` : undefined,
+        place.scene?.description,
+        place.kind === 'other' ? 'Slots without a preview in the dev shell.' : undefined,
+        place.simplified ? 'Simplified preview: some surrounding AYON controls are omitted.' : undefined,
+      ].filter(Boolean) as string[])
+    : []
   return (
     <header className="ayon-shell-caption" data-shell-surface="caption">
-      <Icon icon={place.icon as never} />
-      <div className="ayon-shell-caption-text">
-        <div className="ayon-shell-caption-title">
-          <strong>{place.label}</strong>
-          {about.length > 0 && (
-            <button
-              className="ayon-shell-caption-info"
-              aria-label="About this place"
-              aria-expanded={info}
-              title={about.join('\n')}
-              data-shell-action="place-info"
-              onClick={() => setInfo(!info)}
-            >
-              <Icon icon="info" />
-            </button>
-          )}
-        </div>
-        <small data-shell-summary>
-          {summary}
-          {slot && (
-            <>
-              {' · Focus: '}
-              <strong>{slot.label}</strong>
-              {focus && ` › ${contributionTitle(focus)}`}
-              {unused && summary !== 'Unused' && <span className="ayon-shell-chip">Unused</span>}
-            </>
-          )}
-        </small>
-        {slot && (
-          <small className="ayon-shell-caption-slot">
-            <code>{slot.slot}</code>
-          </small>
-        )}
-        {info && (
-          <div className="ayon-shell-caption-about" data-shell-about>
-            {about.map((line) => (
-              <small key={line}>{line}</small>
-            ))}
-          </div>
-        )}
-        {help && (
-          <p className="ayon-shell-instruction" data-shell-instruction>
-            <Icon icon="info" /> {help}
-          </p>
-        )}
-      </div>
-      {slot && (
-        <Button
-          label="Clear focus"
-          variant="text"
-          data-shell-action="clear-focus"
-          onClick={() => onChange({ ...selection, slot: undefined, id: undefined })}
-        />
+      <Button
+        icon={panelOpen ? 'left_panel_close' : 'left_panel_open'}
+        variant="text"
+        className="ayon-shell-icon-button"
+        aria-label={panelOpen ? 'Hide the developer panel (,)' : 'Show the developer panel (,)'}
+        data-tooltip={panelOpen ? 'Hide panel ,' : 'Show panel ,'}
+        data-shell-action="toggle-panel"
+        onClick={onTogglePanel}
+      />
+      {place && <Icon icon={place.icon as never} />}
+      <strong className="ayon-shell-caption-title">{place?.label}</strong>
+      {about.length > 0 && <About key={place?.id} lines={about} />}
+      <span className="spacer" />
+      {mode === 'preview' && (
+        <span
+          className="ayon-shell-chip warning"
+          title="The stage answers from a saved example: no server, no live data."
+          data-shell-status="preview"
+        >
+          <Icon icon="cloud_off" />
+          Preview: {selection.preview}, not live
+        </span>
       )}
-      {chip}
     </header>
   )
 }
