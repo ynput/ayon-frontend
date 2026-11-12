@@ -1,18 +1,13 @@
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
-import {
-  slotEntries,
-  slotTriggerProps,
-  useSlotHighlight,
-  withSlotEntries,
-} from '@shared/components/AddonLayout/slotHighlight'
+import { useSlotTriggerProps } from '@shared/components/AddonLayout/slotInspector'
 import {
   useMenuContext,
   ThumbnailUploadContext,
@@ -180,6 +175,7 @@ export const DetailsPanelMoreMenu = ({
       icon: item.icon,
       'data-addon-item': item.key,
       onClick: () => runContribution(item, addonContext),
+      ...contributionTags(item),
     }),
     [addonContext],
   )
@@ -196,22 +192,15 @@ export const DetailsPanelMoreMenu = ({
     () => applicableAddonItems.filter((item) => !item.pinned),
     [applicableAddonItems],
   )
-  // tagged with their slot (slotHighlight), with a placeholder where they would be while slots are
-  // highlighted and the menu has none
-  const { on: highlightSlots } = useSlotHighlight()
   const addonTopItems = useMemo(
-    () => slotEntries(SLOT, menuItemsAt(menuAddonItems, 'top').map(toMenuItem)),
+    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
     [menuAddonItems, toMenuItem],
   )
   const addonItems = useMemo(
-    () =>
-      menuAddonItems.length
-        ? slotEntries(SLOT, menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem))
-        : highlightSlots
-        ? withSlotEntries(SLOT, [], 'More menu item')
-        : [],
-    [menuAddonItems, toMenuItem, highlightSlots],
+    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
+    [menuAddonItems, toMenuItem],
   )
+  const triggerProps = useSlotTriggerProps(SLOT)
   // the items draw from their descriptions; their code loads when the menu opens
   useEffect(() => {
     if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
@@ -254,6 +243,7 @@ export const DetailsPanelMoreMenu = ({
           data-tooltip={item.label}
           aria-label={item.label}
           data-addon-item={item.key}
+          {...contributionTags(item)}
           onMouseEnter={() => prefetchPiece(item.run)}
           onClick={() => runContribution(item, addonContext)}
         />
@@ -264,7 +254,7 @@ export const DetailsPanelMoreMenu = ({
         variant="text"
         data-tooltip="More actions"
         aria-label="More actions"
-        {...slotTriggerProps(SLOT)}
+        {...triggerProps}
         className={clsx({ active: isOpen })}
         onClick={() => toggleMenuOpen(menuId)}
       />

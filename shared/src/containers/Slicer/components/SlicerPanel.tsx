@@ -1,7 +1,7 @@
 import { FC, useCallback, useEffect, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable/SimpleTable.types'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
@@ -25,12 +25,7 @@ import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
 import { useMenuContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
 import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shared/components/Menu'
-import {
-  slotEntries,
-  slotTriggerProps,
-  useSlotHighlight,
-  withSlotEntries,
-} from '@shared/components/AddonLayout/slotHighlight'
+import { useSlotTriggerProps } from '@shared/components/AddonLayout/slotInspector'
 import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
@@ -266,19 +261,14 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
       ),
     [addonMenuContributions, sliceType],
   )
-  // while slots are highlighted (slotHighlight), a slot without items gets a placeholder entry
-  const { on: highlightSlots } = useSlotHighlight()
   const buildAddonItems = (
     menu: MenuKind,
     selectedIds: string[],
     position: MenuItemPosition = 'bottom',
   ) => {
-    if (!addonMenuItems.length) {
-      return position === 'bottom' && highlightSlots
-        ? withSlotEntries(SLOT, [], 'Slicer menu item', menu === 'context' ? 'command' : 'entry')
-        : []
-    }
-    if (!selectedIds.length) return []
+    // the slot's example (Show slots) also shows without a selection
+    const items = selectedIds.length ? addonMenuItems : addonMenuItems.filter(isExample)
+    if (!items.length) return []
     const isHierarchy = sliceType === 'hierarchy'
     const selected = selectedIds.map((id) => {
       const row = sliceMap.get(id)
@@ -301,17 +291,15 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         }))
       : []
     const context = { projectName, sliceType, selected, entities, menu }
-    return slotEntries(
-      SLOT,
-      menuItemsAt(addonMenuItems, position)
-        .filter((item) => !item.in?.length || item.in.includes(menu))
-        .map((item) => ({
-          id: item.key,
-          label: item.label,
-          icon: item.icon,
-          [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
-        })),
-    )
+    return menuItemsAt(items, position)
+      .filter((item) => !item.in?.length || item.in.includes(menu))
+      .map((item) => ({
+        id: item.key,
+        label: item.label,
+        icon: item.icon,
+        [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
+        ...contributionTags(item),
+      }))
   }
   // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
   const addonRowContextMenu =
@@ -325,7 +313,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
       )
     }
   // addon items: `top` ones first, the rest after the slice's own items and above Delete
-  const hasAddonBuilders = addonMenuItems.length > 0 || highlightSlots
+  const hasAddonBuilders = addonMenuItems.length > 0
+  const triggerProps = useSlotTriggerProps(SLOT)
   const rowContextMenuBuilders = hasAddonBuilders
     ? [
         addonRowContextMenu('top'),
@@ -464,7 +453,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               <HeaderButton
                 icon="more_horiz"
                 id={menuId}
-                {...slotTriggerProps(SLOT)}
+                {...triggerProps}
                 className={clsx('slicer-menu', { active: isMenuOpen })}
                 data-tooltip="More"
                 data-tooltip-delay={0}

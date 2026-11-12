@@ -1,15 +1,13 @@
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import { usePowerpack } from '@shared/context'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
 import { parseProjectFolderRowId } from '../../buildProjectsTableData'
 import { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable'
-import { slotEntries, withSlotEntries } from '@shared/components'
 
-const SLOT = 'projectList.menuItem'
 const FOLDER_ICON = 'snippet_folder'
 const FOLDER_ICON_REMOVE = 'folder_off'
 
@@ -357,30 +355,23 @@ const useProjectsListMenuItems = ({
       // the right-click menu opens (the dropdown's items are built with the list, so on click)
       const menu = command ? 'context' : 'dropdown'
       const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
-      // tagged with their slot; while slots are highlighted (slotHighlight), a placeholder where
-      // they would be when no addon contributes to the menu
+      // tagged for the slot inspector; the slot's example (Show slots) also shows without a
+      // selected project
       const buildAddonItems = (position: MenuItemPosition): MenuItem[] => {
-        if (!addonMenuItems.length) {
-          return position === 'bottom'
-            ? withSlotEntries(SLOT, [], 'Project menu item', command ? 'command' : 'entry')
-            : []
-        }
-        if (!selectedProjectNames.length) return []
-        return slotEntries(
-          SLOT,
-          menuItemsAt(addonMenuItems, position)
-            .filter((item) => !item.in?.length || item.in.includes(menu))
-            .map((item) => {
-              if (command) prefetchPiece(item.run)
-              return {
-                id: item.key,
-                label: item.label,
-                icon: item.icon,
-                [command ? 'command' : 'onClick']: () =>
-                  runContribution(item, { projectNames: selectedProjectNames, menu }),
-              }
-            }),
-        )
+        const shown = selectedProjectNames.length ? addonMenuItems : addonMenuItems.filter(isExample)
+        return menuItemsAt(shown, position)
+          .filter((item) => !item.in?.length || item.in.includes(menu))
+          .map((item) => {
+            if (command) prefetchPiece(item.run)
+            return {
+              id: item.key,
+              label: item.label,
+              icon: item.icon,
+              [command ? 'command' : 'onClick']: () =>
+                runContribution(item, { projectNames: selectedProjectNames, menu }),
+              ...contributionTags(item),
+            }
+          })
       }
       // `top` items first in the menu, the rest (default) above Archive and Delete
       const addonTopItems = buildAddonItems('top')

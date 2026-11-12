@@ -3,7 +3,7 @@ import { useMenuContext } from '@shared/context'
 import { Menu, MenuContainer } from './Menu'
 import type { MenuItemType } from './Menu'
 import { ColumnMenuButton } from './ColumnHeaderMenuUI.styled'
-import { slotTriggerProps } from './AddonLayout/slotHighlight'
+import { useSlotTriggerProps } from './AddonLayout/slotInspector'
 
 export type ColumnMenuItemType = {
   id: string
@@ -19,7 +19,7 @@ interface ColumnHeaderMenuUIProps {
   menuItems: ColumnMenuItemType[]
   menuId: string
   className?: string
-  /** the addon slot the menu holds: its button is outlined while slots are highlighted */
+  /** the addon slot the menu holds: the slot inspector outlines its button */
   slot?: string
 }
 
@@ -36,6 +36,7 @@ export const ColumnHeaderMenuUI = ({
   const { toggleMenuOpen, menuOpen } = useMenuContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const isOpen = menuOpen === menuId
+  const triggerProps = useSlotTriggerProps(slot ?? '')
 
   if (menuItems.length === 0) return null
 
@@ -43,7 +44,7 @@ export const ColumnHeaderMenuUI = ({
     <>
       <ColumnMenuButton
         ref={buttonRef}
-        {...(slot ? slotTriggerProps(slot) : {})}
+        {...(slot ? triggerProps : undefined)}
         className={className}
         onClick={(e) => {
           e.stopPropagation()

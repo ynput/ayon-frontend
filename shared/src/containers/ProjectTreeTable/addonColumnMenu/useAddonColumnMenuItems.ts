@@ -8,12 +8,11 @@ import type {
   ProjectTableColumnMenuItemContext,
   ProjectTablePage,
 } from '@ynput/ayon-addon'
-import { getHost, menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, getHost, menuItemsAt } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 import { useProjectTableState } from '../context/project-table-state'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
-import { slotEntry } from '@shared/components/AddonLayout/slotHighlight'
 
 export interface AddonMenuColumn {
   columnId: string
@@ -112,8 +111,7 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
       const { columnLabel } = context
       return itemsFor(column).map((item) => {
         const label = withColumnLabel(item.label, columnLabel)
-        // tagged with its slot (slotHighlight)
-        return slotEntry('projectTable.columnMenuItem', {
+        return {
           id: item.key,
           label,
           icon: item.icon,
@@ -129,7 +127,8 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
               title: item.dialogTitle ? withColumnLabel(item.dialogTitle, columnLabel) : label,
             })
           },
-        })
+          ...contributionTags(item),
+        }
       })
     },
     [contextFor, itemsFor],

@@ -136,7 +136,7 @@ import {
   type PrefetchAddonColumnMenuItems,
 } from './addonColumnMenu/useAddonColumnMenuItems'
 import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
-import { slotEntry } from '@shared/components/AddonLayout/slotHighlight'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -168,9 +168,9 @@ declare module '@tanstack/react-table' {
   }
 }
 
-// a column an addon contributes: its cells tagged with the tableColumn slot (slotHighlight)
+// a column an addon contributes: its header and cells tagged for the slot inspector
 const addonColumnSlot = (meta: { addonColumn?: AddonColumnMeta } | undefined) =>
-  meta?.addonColumn ? slotEntry('tableColumn', {}) : undefined
+  meta?.addonColumn ? contributionTags(meta.addonColumn.contribution) : undefined
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {

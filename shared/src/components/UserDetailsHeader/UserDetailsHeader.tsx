@@ -7,7 +7,7 @@ import { Button, Dialog, Icon, UserImagesStacked } from '@ynput/ayon-react-compo
 import { Menu, MenuContainer } from '../Menu'
 import type { MenuItemType } from '../Menu'
 import { CodeEditor } from '../CodeEditor'
-import { slotTriggerProps } from '../AddonLayout/slotHighlight'
+import { useSlotTriggerProps } from '../AddonLayout/slotInspector'
 import { useMenuContext } from '@shared/context'
 import { copyToClipboard } from '@shared/util'
 import { DetailHeader } from './DetailHeader'
@@ -66,6 +66,7 @@ export const UserDetailsHeader = ({
       ]
     : []
 
+  const triggerProps = useSlotTriggerProps('userDetails.menuItem')
   const rawJson = useMemo(() => {
     try {
       return JSON.stringify(users, null, 2)
@@ -83,7 +84,7 @@ export const UserDetailsHeader = ({
         data-tooltip="More actions"
         aria-label="More actions"
         className={clsx({ active: isOpen })}
-        {...slotTriggerProps('userDetails.menuItem')}
+        {...triggerProps}
         onClick={() => toggleMenuOpen(menuId)}
       />
       <MenuContainer id={menuId} target={buttonRef.current} align="right">

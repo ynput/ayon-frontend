@@ -6,7 +6,12 @@ import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ContributionView, prefetchPiece, runContribution } from '@ynput/ayon-addon'
 import type { AddonMenuItem, AnyContribution, Contribution, SlotMap } from '@ynput/ayon-addon'
-import { loadPiece, pieceContext, reportContributionError } from '@ynput/ayon-addon/host'
+import {
+  contributionTags,
+  loadPiece,
+  pieceContext,
+  reportContributionError,
+} from '@ynput/ayon-addon/host'
 import { Menu } from '@shared/components/Menu/Menu'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
@@ -142,14 +147,24 @@ export const AddonButton = <S extends ButtonSlot>({
     }
   }
 
+  const button = renderButton({
+    ref: setAnchor,
+    active: dialogOpen || popoverOpen || menuOpen === menuId,
+    onClick,
+    onMouseEnter: () => action && action !== 'to' && prefetchPiece(any[action] as never),
+  })
+  // the slot inspector's tags, while it is on (ContributionView does the same for a component)
+  const tags = contributionTags(any)
+
   return (
     <>
-      {renderButton({
-        ref: setAnchor,
-        active: dialogOpen || popoverOpen || menuOpen === menuId,
-        onClick,
-        onMouseEnter: () => action && action !== 'to' && prefetchPiece(any[action] as never),
-      })}
+      {tags ? (
+        <span style={{ display: 'contents' }} data-ayon-wrap="" {...tags}>
+          {button}
+        </span>
+      ) : (
+        button
+      )}
       {action === 'dialog' && dialogOpen && (
         <AddonDialog contribution={contribution} context={dialogContext} />
       )}

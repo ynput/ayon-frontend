@@ -1,5 +1,5 @@
 import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
-import { slotTriggerProps } from '@shared/components/AddonLayout/slotHighlight'
+import { useSlotTriggerProps } from '@shared/components/AddonLayout/slotInspector'
 import { Header, HeaderButton } from '@shared/containers/SimpleTable'
 import { theme } from '@ynput/ayon-react-components'
 import type { IconType } from '@ynput/ayon-react-components'
@@ -105,6 +105,7 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
 }) => {
   const { menuOpen } = useMenuContext()
   const isOpen = menuOpen === MENU_ID
+  const triggerProps = useSlotTriggerProps('projectList.menuItem')
 
   const addButton = {
     icon: 'add' as const,
@@ -127,8 +128,8 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
             id={MENU_ID}
-            // its menu holds the projectList.menuItem slot (slotHighlight)
-            {...slotTriggerProps('projectList.menuItem')}
+            // its menu holds the projectList.menuItem slot (slot inspector)
+            {...triggerProps}
             className={clsx('list-menu', { active: isOpen })}
           />
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">

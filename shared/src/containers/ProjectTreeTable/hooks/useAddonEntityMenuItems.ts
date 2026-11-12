@@ -6,21 +6,17 @@ import type {
   ProjectTablePage,
   ProjectTableState,
 } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { ContextMenuItemConstructor } from './useCellContextMenu'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
-import { slotEntries, withSlotEntries } from '@shared/components/AddonLayout/slotHighlight'
-
-const SLOT = 'entityMenuItem'
 
 /**
  * Items addons contribute to the cells' right-click menu (entityMenuItem slot, @ynput/ayon-addon),
  * as one constructor a page adds to its contextMenuItems: the `top` ones first in the list, the
  * `bottom` ones (default) right before 'delete'. The items draw from their descriptions; `run`
  * starts loading when the menu opens. `tableState`: what the table shows (Overview, Products).
- * The items are tagged with their slot; while slots are highlighted (slotHighlight) and no addon
- * contributes to the page, the `bottom` constructor gives a placeholder where they would be.
+ * The items are tagged for the slot inspector.
  */
 export const useAddonEntityMenuItems = (
   page: ProjectTablePage,
@@ -35,12 +31,7 @@ export const useAddonEntityMenuItems = (
       const items = menuItemsAt(contributions, position).filter((item) =>
         appliesToPage(item, page),
       )
-      if (!items.length) {
-        const none =
-          position === 'bottom' && !contributions.some((item) => appliesToPage(item, page))
-        const placeholder = none ? withSlotEntries(SLOT, [], 'Cell menu item', 'command') : []
-        return placeholder.length ? placeholder : undefined
-      }
+      if (!items.length) return undefined
 
       // like the built-in items: the selected cells (not row checkboxes), else the selected rows,
       // else the clicked cell; each entity once (several cells of a row are one entity)
@@ -61,28 +52,28 @@ export const useAddonEntityMenuItems = (
         })
       }
       const selection = [...entities.values()]
-      if (!selection.length) return undefined
+      // the slot's example (Show slots) shows on any cell
+      const shown = selection.length ? items : items.filter(isExample)
+      if (!shown.length) return undefined
 
       const context = { projectName, page, entities: selection, tableState }
-      return slotEntries(
-        SLOT,
-        items
-          .filter(
-            (item) =>
-              (item.selection !== 'single' || selection.length === 1) &&
-              (!item.entityTypes?.length ||
-                selection.every((entity) => item.entityTypes!.includes(entity.entityType))),
-          )
-          .map((item) => {
-            prefetchPiece(item.run)
-            return {
-              id: item.key,
-              label: item.label,
-              icon: item.icon,
-              command: () => runContribution(item, context),
-            }
-          }),
-      )
+      return shown
+        .filter(
+          (item) =>
+            (item.selection !== 'single' || selection.length === 1) &&
+            (!item.entityTypes?.length ||
+              selection.every((entity) => item.entityTypes!.includes(entity.entityType))),
+        )
+        .map((item) => {
+          prefetchPiece(item.run)
+          return {
+            id: item.key,
+            label: item.label,
+            icon: item.icon,
+            command: () => runContribution(item, context),
+            ...contributionTags(item),
+          }
+        })
     },
     [contributions, projectName, page, tableState],
   )
