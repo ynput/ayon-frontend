@@ -1,4 +1,4 @@
-// The slot inspector's switches and its legend of addons: in AYON's header while developer mode is
+// The slot inspector's Show slots switch and its legend of addons: in AYON's header while developer mode is
 // on, and in the addon dev shell. Internal, like slotInspector.
 import { useSyncExternalStore } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
@@ -8,7 +8,6 @@ import {
   addonColor,
   inspectorAddons,
   setAddonHighlighted,
-  setHighlightContributions,
   setShowSlots,
   useSlotInspector,
 } from './slotInspector'
@@ -69,24 +68,17 @@ const useAddons = () => {
   return inspectorAddons()
 }
 
-/** Show slots, Highlight contributions and the addons' colours, each with a checkbox. */
+/** Show slots and the addons' colours, each with a checkbox. */
 export const SlotInspectorControls = ({ className }: { className?: string }) => {
   const inspector = useSlotInspector()
   const addons = useAddons()
   return (
     <Controls className={className} data-ayon-slot-inspector-controls="">
-      <Row title="Every slot shows its example contribution, after the real ones">
+      <Row title="Every slot shows its example contribution, after the real ones, and every contribution is outlined in the colour of its addon">
         <span>Show slots</span>
         <InputSwitch
           checked={inspector.showSlots}
           onChange={(event) => setShowSlots(event.currentTarget.checked)}
-        />
-      </Row>
-      <Row title="Outline every contribution in the colour of its addon">
-        <span>Highlight contributions</span>
-        <InputSwitch
-          checked={inspector.highlight}
-          onChange={(event) => setHighlightContributions(event.currentTarget.checked)}
         />
       </Row>
       <Legend>

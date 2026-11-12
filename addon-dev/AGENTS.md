@@ -121,9 +121,8 @@ of AYON:
     not: places (name, package) and slots (label, name, the titles of the addon's
     contributions). A package's heading is its name for people (`@scope/ayon-addon-board` is
     "Board"), with the full name as the tooltip.
-  - **Show slots**, **Highlight contributions** and the legend of addons are not in the panel: they
-    are in the slot menu at the right of the top bar, AYON's developer mode menu (below). Off, the
-    stage looks as in AYON.
+  - **Show slots** and the legend of addons are not in the panel: they are in the slot menu at the
+    right of the top bar, AYON's developer mode menu (below). Off, the stage looks as in AYON.
   - **Slots**: a read-only overview of the place's slots (label, with the name muted under it),
     and under each the addon's contributions with an icon, with the ones AYON would skip and why.
     Hovering a slot's row outlines it on stage, and hovering a contribution on stage (with a
@@ -207,17 +206,17 @@ contribution is developed without that addon installed:
   tooltip), and under each slot the addon's contributions to it. Selecting it puts the scene on
   stage, full width, with the shell's providers (right-click menus, the details panel, the user).
   A contract slot no scene renders is under Other slots.
-- **Show slots** and **Highlight contributions** (the slot menu at the right of the top bar) are AYON's
-  developer mode menu, the same header button, dropdown, state and rendering (`slotInspector` in the shared package, see
-  `src/remote/AGENTS.md`), kept in session storage. Show slots adds every slot's example
-  contribution after the real ones: AYON's for its slots, the contract package's `example` for an
-  addon's (a menu gets an entry, an outlet the example's component). Using one only shows "Example
-  contribution to `<slot>`". Highlight contributions outlines each contribution in its addon's
-  colour (the legend lists them, with a checkbox each) and the buttons that open menus with them;
-  hovering one shows a card at its top-right corner (the slot's id, where the slot comes from, the
-  contribution's key) with Copy AI prompt: add a contribution to the slot, or for a real
-  contribution edit it, by id. A page is outlined on its tab, not over its whole content. A new session in the shell starts with Highlight
-  contributions on. Examples don't count as used: Places and "N of M used" count the addon's own
+- **Show slots** (the slot menu at the right of the top bar) is AYON's developer mode menu, the
+  same header button, dropdown, state and rendering (`slotInspector` in the shared package, see
+  `src/remote/AGENTS.md`), kept in session storage. It adds every slot's example contribution
+  after the real ones: AYON's for its slots, the contract package's `example` for an addon's (a
+  menu gets an entry, an outlet the example's component). Using one only shows "Example
+  contribution to `<slot>`". It also outlines each contribution in its addon's colour (the legend
+  lists them, with a checkbox each) and the buttons that open menus with them; hovering one shows
+  a card at its top-right corner (the slot's id, where the slot comes from, the contribution's key)
+  with Copy AI prompt: add a contribution to the slot, or for a real contribution edit it, by id.
+  A page is outlined on its tab, not over its whole content. A new session in the shell starts
+  with Show slots on. Examples don't count as used: Places and "N of M used" count the addon's own
   contributions. The scenes need nothing for it: the shell hands the SDK an internal hook
   (`devSlots`) only to learn the context each slot passes (Context), which AYON never sets.
 - A scene's fields are a form under *Input values*, with *Reset* and the values as JSON. The values

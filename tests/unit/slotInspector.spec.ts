@@ -5,7 +5,6 @@ import {
   getSlotInspector,
   inspectorAddons,
   setAddonHighlighted,
-  setHighlightContributions,
   setHighlightedSlot,
   setShowSlots,
   setSlotInspectorAvailable,
@@ -22,9 +21,9 @@ import {
 } from '../../addon/src/registry'
 import { renderToHtml } from './support/render'
 
-// The slot inspector: developer mode's Show slots and Highlight contributions. The switches only
-// apply while the inspector is available (developer mode, the dev shell); with both off nothing is
-// tagged and the registry has no examples.
+// The slot inspector: developer mode's Show slots, which adds the examples and tags (outlines)
+// contributions. It only applies while the inspector is available (developer mode, the dev shell);
+// off, nothing is tagged and the registry has no examples.
 
 const run = () => Promise.resolve({ default: () => undefined })
 const manifest = (name: string) => ({
@@ -40,7 +39,6 @@ test.describe('slot inspector', () => {
   })
   test.afterEach(() => {
     setShowSlots(false)
-    setHighlightContributions(false)
     setAddonHighlighted('alpha', true)
     setHighlightedSlot(undefined)
     setSlotInspectorAvailable(false)
@@ -50,17 +48,16 @@ test.describe('slot inspector', () => {
 
   test("defaults apply to a session that hasn't set the switches, once", () => {
     // first: no session storage here, and nothing has made it available yet
-    setSlotInspectorAvailable(true, { highlight: true })
-    expect(getSlotInspector().highlight).toBe(true)
-    setHighlightContributions(false)
+    setSlotInspectorAvailable(true, { showSlots: true })
+    expect(getSlotInspector().showSlots).toBe(true)
+    setShowSlots(false)
     setSlotInspectorAvailable(false)
-    setSlotInspectorAvailable(true, { highlight: true })
-    expect(getSlotInspector().highlight).toBe(false)
+    setSlotInspectorAvailable(true, { showSlots: true })
+    expect(getSlotInspector().showSlots).toBe(false)
   })
 
-  test('the switches apply only while it is available', () => {
+  test('Show slots applies only while it is available', () => {
     setShowSlots(true)
-    setHighlightContributions(true)
     expect(getRegistry()).toMatchObject({ examples: false, tagged: false })
     setSlotInspectorAvailable(true)
     expect(getRegistry()).toMatchObject({ examples: true, tagged: true })
@@ -68,12 +65,9 @@ test.describe('slot inspector', () => {
     expect(getRegistry()).toMatchObject({ examples: false, tagged: false })
   })
 
-  test('Highlight contributions tags without examples; Show slots tags too', () => {
+  test('Show slots adds the examples and tags contributions', () => {
     setSlotInspectorAvailable(true)
     expect(getRegistry()).toMatchObject({ examples: false, tagged: false })
-    setHighlightContributions(true)
-    expect(getRegistry()).toMatchObject({ examples: false, tagged: true })
-    setHighlightContributions(false)
     setShowSlots(true)
     expect(getRegistry()).toMatchObject({ examples: true, tagged: true })
   })
@@ -108,12 +102,13 @@ test.describe('slot inspector', () => {
     renderToHtml(Button)
     expect(props).toBeUndefined()
     setSlotInspectorAvailable(true)
-    setHighlightContributions(true)
+    setShowSlots(true)
     renderToHtml(Button)
     expect(props).toEqual({
       'data-ayon-slot': 'userDetails.menuItem',
       'data-ayon-trigger': '',
-      'data-ayon-addons': 'zebra alpha',
+      // AYON's example is in the menu too, after the real ones
+      'data-ayon-addons': 'zebra alpha ayon',
     })
   })
 })

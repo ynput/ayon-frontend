@@ -1,13 +1,12 @@
-// The slot inspector: developer mode's two switches, Show slots and Highlight contributions, and its
-// legend of addons. Show slots adds every slot's example contribution (the SDK's registry renders
-// them where the slot's real ones go); Highlight contributions outlines every rendered
-// contribution in its addon's colour. While either is on, rendered contributions carry
-// `data-ayon-addon`, `data-ayon-slot` and `data-ayon-contribution` (the SDK's `contributionTags`)
-// and hovering one shows a card with what it is (SlotInspectorCard); with both off, AYON's DOM has
-// none.
+// The slot inspector: developer mode's Show slots switch and its legend of addons. Show slots adds
+// every slot's example contribution (the SDK's registry renders them where the slot's real ones go)
+// and outlines every rendered contribution in its addon's colour. While it is on, rendered
+// contributions carry `data-ayon-addon`, `data-ayon-slot` and `data-ayon-contribution` (the SDK's
+// `contributionTags`) and hovering one shows a card with what it is (SlotInspectorCard); off,
+// AYON's DOM has none.
 //
 // Internal: AYON's header (developer mode) and the addon dev shell drive it, not addons. The
-// switches and the legend are kept in session storage.
+// switch and the legend are kept in session storage.
 import { useSyncExternalStore } from 'react'
 import { useContributions } from '@ynput/ayon-addon'
 import type { SlotName } from '@ynput/ayon-addon'
@@ -21,10 +20,8 @@ import {
 export interface SlotInspectorState {
   /** the inspector can be used: developer mode in AYON, always in the dev shell */
   available: boolean
-  /** each slot shows its example contribution */
+  /** each slot shows its example contribution, and contributions are outlined in their addon's colour */
   showSlots: boolean
-  /** rendered contributions are outlined in their addon's colour */
-  highlight: boolean
   /** addons the legend unchecked: no outlines */
   hiddenAddons: readonly string[]
   /** one slot singled out (a stronger outline), e.g. the one under the pointer */
@@ -42,23 +39,22 @@ const STORAGE_KEY = 'ayon-slot-inspector'
 // eight colours apart from each other on dark and light surfaces; AYON's own is the tertiary colour
 const PALETTE = ['#4fc3f7', '#ffb74d', '#81c784', '#f06292', '#ba68c8', '#fff176', '#4db6ac', '#ff8a65']
 
-const readStored = (): Pick<SlotInspectorState, 'showSlots' | 'highlight' | 'hiddenAddons'> => {
+const readStored = (): Pick<SlotInspectorState, 'showSlots' | 'hiddenAddons'> => {
   try {
     const stored = JSON.parse(sessionStorage.getItem(STORAGE_KEY) || '{}')
     return {
       showSlots: stored.showSlots === true,
-      highlight: stored.highlight === true,
       hiddenAddons: Array.isArray(stored.hiddenAddons)
         ? stored.hiddenAddons.filter((name: unknown) => typeof name === 'string')
         : [],
     }
   } catch {
-    return { showSlots: false, highlight: false, hiddenAddons: [] }
+    return { showSlots: false, hiddenAddons: [] }
   }
 }
 
 let state: SlotInspectorState = { available: false, ...readStored() }
-// whether the session had switches of its own when the page loaded: defaults don't override them
+// whether the session had a switch of its own when the page loaded: defaults don't override it
 let storedAtLoad = (() => {
   try {
     return sessionStorage.getItem(STORAGE_KEY) !== null
@@ -84,8 +80,7 @@ export const addonColor = (addon: string, addons: readonly string[] = inspectorA
   return PALETTE[(index < 0 ? addons.length : index) % PALETTE.length]
 }
 
-const tagsOn = () => state.available && (state.showSlots || state.highlight)
-const outlinesOn = () => state.available && state.highlight
+const tagsOn = () => state.available && state.showSlots
 
 const quote = (value: string) => `"${CSS.escape(value)}"`
 // what shows a contribution: the tagged element, or the elements of a `display: contents` wrapper
@@ -209,7 +204,7 @@ const syncDocument = () => {
   setSlotExamples(state.available && state.showSlots)
   setContributionTags(tagsOn())
   if (typeof document === 'undefined') return
-  document.documentElement.classList.toggle(SLOT_INSPECTOR_CLASS, outlinesOn())
+  document.documentElement.classList.toggle(SLOT_INSPECTOR_CLASS, tagsOn())
   if (tagsOn() !== listening) {
     listening = tagsOn()
     if (listening) {
@@ -225,7 +220,7 @@ const syncDocument = () => {
     styles = { outlines: styleElement('outlines', ''), hovered: styleElement('hovered', '') }
   }
   if (styles) {
-    styles.outlines.textContent = outlinesOn() ? outlineStyles() : ''
+    styles.outlines.textContent = tagsOn() ? outlineStyles() : ''
     styles.hovered.textContent = tagsOn() && state.hovered ? hoveredStyles(state.hovered) : ''
   }
 }
@@ -250,10 +245,10 @@ const update = (patch: Partial<SlotInspectorState>) => {
   state = next
   if (state.available) watchRegistry()
   try {
-    const { showSlots, highlight, hiddenAddons } = state
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ showSlots, highlight, hiddenAddons }))
+    const { showSlots, hiddenAddons } = state
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ showSlots, hiddenAddons }))
   } catch {
-    // no session storage (private mode, tests): the switches just aren't kept
+    // no session storage (private mode, tests): the switch just isn't kept
   }
   syncDocument()
   listeners.forEach((listener) => listener())
@@ -271,22 +266,20 @@ export const useSlotInspector = () =>
   useSyncExternalStore(subscribeSlotInspector, getSlotInspector, getSlotInspector)
 
 /**
- * Developer mode is on (AYON) or the dev shell runs: the switches apply. Off: as if both are off.
- * `defaults` are the switches of a session that has not set them yet.
+ * Developer mode is on (AYON) or the dev shell runs: Show slots applies. Off: as if it is off.
+ * `defaults` are the switch of a session that has not set it yet.
  */
 export const setSlotInspectorAvailable = (
   available: boolean,
-  defaults?: Partial<Pick<SlotInspectorState, 'showSlots' | 'highlight'>>,
+  defaults?: Partial<Pick<SlotInspectorState, 'showSlots'>>,
 ) => {
   // only a call with defaults uses them up: the header menu's own call may come first
   const patch = !storedAtLoad && defaults ? defaults : {}
   if (defaults) storedAtLoad = true
   update({ ...patch, available })
 }
-/** Show slots: every slot shows its example contribution. */
+/** Show slots: every slot shows its example contribution, and contributions are outlined. */
 export const setShowSlots = (showSlots: boolean) => update({ showSlots })
-/** Highlight contributions: outline every rendered contribution in its addon's colour. */
-export const setHighlightContributions = (highlight: boolean) => update({ highlight })
 /** Shows or hides one addon's outlines (the legend's checkbox). */
 export const setAddonHighlighted = (addon: string, highlighted: boolean) =>
   update({
@@ -304,7 +297,7 @@ export const setHighlightedSlot = (slot?: string) => update({ hovered: slot })
 export const useSlotTriggerProps = (slot: string) => {
   const { contributions } = useContributions(slot as SlotName)
   const inspector = useSlotInspector()
-  if (!inspector.available || !(inspector.showSlots || inspector.highlight) || !contributions.length)
+  if (!inspector.available || !inspector.showSlots || !contributions.length)
     return undefined
   const addons = [...new Set(contributions.map((c) => (c as { addon: { name: string } }).addon.name))]
   return { 'data-ayon-slot': slot, 'data-ayon-trigger': '', 'data-ayon-addons': addons.join(' ') }

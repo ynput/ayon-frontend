@@ -3,7 +3,7 @@
 // AYON's. The shell hands `devSlots` to the SDK as the host's (internal, never set by AYON), so
 // scenes need no code for it: each slot reports the context it passes, which the Context panel
 // shows. What marks slots on stage is AYON's slot inspector (`slotInspector` in the shared
-// package): Show slots adds every slot's example, Highlight contributions outlines them.
+// package): Show slots adds every slot's example and outlines every contribution.
 import type { DevSlots } from '@ynput/ayon-addon/host'
 import { reportMenu, useSlotReport } from './status'
 

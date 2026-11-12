@@ -1,6 +1,5 @@
-// Developer mode's slot inspector in the header: Show slots, Highlight contributions and the
-// addons' colours. AYON's header shows it while developer mode is on; the addon dev shell's top bar
-// shows the same menu. It also renders the card of the contribution under the pointer
+// Developer mode's slot inspector in the header: Show slots and the addons' colours. AYON's header
+// shows it while developer mode is on; the addon dev shell's top bar shows the same menu. It also renders the card of the contribution under the pointer
 // (SlotInspectorCard). Internal, like slotInspector.
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'
@@ -17,9 +16,9 @@ const MENU_ID = 'slot-inspector'
 export const SlotInspectorMenu = () => {
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { menuOpen, toggleMenuOpen } = useMenuContext()
-  const { showSlots, highlight } = useSlotInspector()
+  const { showSlots } = useSlotInspector()
 
-  // the switches apply while this menu is in the header: developer mode is on
+  // Show slots applies while this menu is in the header: developer mode is on
   useEffect(() => {
     setSlotInspectorAvailable(true)
     return () => setSlotInspectorAvailable(false)
@@ -33,7 +32,7 @@ export const SlotInspectorMenu = () => {
         variant="nav"
         data-tooltip="Addon slots"
         aria-label="Addon slots"
-        className={clsx({ active: menuOpen === MENU_ID || showSlots || highlight })}
+        className={clsx({ active: menuOpen === MENU_ID || showSlots })}
         onClick={() => toggleMenuOpen(MENU_ID)}
       />
       <MenuContainer id={MENU_ID} target={buttonRef.current}>

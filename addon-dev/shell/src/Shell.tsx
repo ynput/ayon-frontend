@@ -208,10 +208,10 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     window.addEventListener('popstate', onPop)
     return () => window.removeEventListener('popstate', onPop)
   }, [])
-  // AYON's slot inspector (its developer mode's switches): always available here, and a new
-  // session starts with every addon's contributions outlined
+  // AYON's slot inspector (its developer mode's Show slots): always available here, and a new
+  // session starts with it on
   useEffect(() => {
-    setSlotInspectorAvailable(true, { highlight: true })
+    setSlotInspectorAvailable(true, { showSlots: true })
     return () => setSlotInspectorAvailable(false)
   }, [])
   // the menus opened in the last place are not this one's
