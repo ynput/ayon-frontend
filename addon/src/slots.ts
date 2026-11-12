@@ -195,8 +195,9 @@ export interface SlotMap {
     pieces: { component: Loader<ComponentType<SlotProps<'userDetails.section'>>> }
   }
   /**
-   * An item in the user details panel's "more" menu (Settings → Users), for the selected users.
-   * It shows from the description; `run` loads when the menu opens and is called on click.
+   * An item in the user details panel's "more" menu (Settings → Users) and in the users table's
+   * right-click menu, for the selected users. It shows from the description; `run` loads when the
+   * menu opens and is called on click.
    */
   'userDetails.menuItem': {
     version: 1

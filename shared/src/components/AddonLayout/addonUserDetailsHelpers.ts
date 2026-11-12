@@ -48,38 +48,46 @@ export interface AddonUserMenuItems {
   prefetch: () => void
 }
 
+const toMenuItems = (
+  contributions: readonly Contribution<'userDetails.menuItem'>[],
+  context: UserDetailsContext,
+): AddonUserMenuItems => {
+  const applicable = contributions.filter((item) =>
+    showsForSelection(item.selection, context.users.length),
+  )
+  const toMenuItem = (item: Contribution<'userDetails.menuItem'>): MenuItemType => ({
+    id: item.key,
+    label: item.label,
+    icon: item.icon,
+    'data-addon-item': item.key,
+    onClick: () => runContribution(item, context),
+    ...contributionTags(item),
+  })
+  return {
+    topItems: menuItemsAt(applicable, 'top').map(toMenuItem),
+    items: menuItemsAt(applicable, 'bottom').map(toMenuItem),
+    prefetch: () => applicable.forEach((item) => prefetchPiece(item.run)),
+  }
+}
+
 /**
  * The addons' items for the user details "more" menu, tagged for the slot inspector. The button that
  * opens the menu carries `data-ayon-trigger="userDetails.menuItem"`.
  */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')
-  const applicable = useMemo(
-    () => contributions.filter((item) => showsForSelection(item.selection, context.users.length)),
-    [contributions, context.users.length],
+  return useMemo(() => toMenuItems(contributions, context), [contributions, context])
+}
+
+/**
+ * The same items for users known only when the menu opens: the users table's context menu, for
+ * the right-clicked users.
+ */
+export const useAddonUserMenuItemsFor = (readOnly: boolean) => {
+  const { contributions } = useContributions('userDetails.menuItem')
+  return useCallback(
+    (users: UserDetailsSource[]) =>
+      toMenuItems(contributions, { users: users.map(toUserRef), readOnly }),
+    [contributions, readOnly],
   )
-  const toMenuItem = useCallback(
-    (item: Contribution<'userDetails.menuItem'>): MenuItemType => ({
-      id: item.key,
-      label: item.label,
-      icon: item.icon,
-      'data-addon-item': item.key,
-      onClick: () => runContribution(item, context),
-      ...contributionTags(item),
-    }),
-    [context],
-  )
-  const topItems = useMemo(
-    () => menuItemsAt(applicable, 'top').map(toMenuItem),
-    [applicable, toMenuItem],
-  )
-  const items = useMemo(
-    () => menuItemsAt(applicable, 'bottom').map(toMenuItem),
-    [applicable, toMenuItem],
-  )
-  const prefetch = useCallback(
-    () => applicable.forEach((item) => prefetchPiece(item.run)),
-    [applicable],
-  )
-  return { topItems, items, prefetch }
 }

@@ -1243,7 +1243,7 @@ userDetailsSection({
 
 ### `userDetails.menuItem`: `userDetailsMenuItem`
 
-An item in the user details panel's "more" menu (Settings → Users), for the selected users. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
+An item in the user details panel's "more" menu (Settings → Users) and in the users table's right-click menu, for the selected users. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
 
 | Description field | Type | |
 |---|---|---|

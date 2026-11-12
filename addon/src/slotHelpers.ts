@@ -70,7 +70,10 @@ export const appService = (service: ContributionFields<'app.service'>) =>
 export const userDetailsSection = (section: ContributionFields<'userDetails.section'>) =>
   contribute('userDetails.section', section)
 
-/** An item in the user details panel's "more" menu (Settings → Users), for the selected users. */
+/**
+ * An item in the user details panel's "more" menu (Settings → Users) and in the users table's
+ * right-click menu, for the selected users.
+ */
 export const userDetailsMenuItem = (item: ContributionFields<'userDetails.menuItem'>) =>
   contribute('userDetails.menuItem', item)
 
