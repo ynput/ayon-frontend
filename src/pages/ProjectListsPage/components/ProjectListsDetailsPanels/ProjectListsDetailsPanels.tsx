@@ -36,7 +36,8 @@ export default function ProjectListsDetailsPanels({
     listItemsData,
     isLoadingAll: isLoadingListItems,
     listItemsFilters,
-    setListItemsFilters,
+    listItemsAdvancedFilter,
+    resetFilters,
   } = useListItemsDataContext()
 
   // Handle URI opening to select list item
@@ -46,8 +47,8 @@ export default function ProjectListsDetailsPanels({
     if (!uriEntityId) return
 
     // if there are filters, we need to remove them first
-    if (listItemsFilters.conditions?.length) {
-      setListItemsFilters({})
+    if (listItemsFilters.conditions?.length || listItemsAdvancedFilter) {
+      resetFilters()
       return
       // now the list items data will reload without filters, and the effect will run again
     }
@@ -69,7 +70,7 @@ export default function ProjectListsDetailsPanels({
     setSelectedCells(
       new Set([getCellId(listItem.id, 'name'), getCellId(listItem.id, ROW_SELECTION_COLUMN_ID)]),
     )
-  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters])
+  }, [uriEntityId, isLoadingListItems, listItemsData, listItemsFilters, listItemsAdvancedFilter])
 
   const { selectedEntity } = useDetailsPanelEntityContext()
 

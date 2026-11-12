@@ -47,6 +47,7 @@ import {
   splitClientFiltersByScope,
   splitFiltersByScope,
 } from '@shared/components/SearchFilter/useBuildFilterOptions'
+import { splitAdvancedFilterByScope } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
 import { useVPViewsContext } from '../vp-views/VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
@@ -195,6 +196,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const { getFolderIdsWithoutChildren, getChildFolderIds } = useProjectFoldersContext()
   const {
     filters,
+    advancedFilter,
     showProducts,
     sorting,
     featuredVersionOrder,
@@ -252,6 +254,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       { fallbackScope: 'version' },
     )
   }, [filtersWithoutExtracted])
+
+  // The advanced filter per scope, merged into every filter built below
+  const advancedFilters = useMemo(
+    () =>
+      splitAdvancedFilterByScope(
+        advancedFilter,
+        ['version', 'product', 'task', 'folder', 'representation'],
+        'version',
+      ),
+    [advancedFilter],
+  )
 
   const { updateExpanded, expandedIds } = useExpandedState({
     expanded,
@@ -346,19 +359,23 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   // combine slicer filters with version/product filters
   const combinedVersionFilter = useQueryFilters({
     queryFilters: versionFilter,
+    advancedFilter: advancedFilters.version,
     sliceFilters: slicerVersionFilters,
   })
   const combinedProductFilter = useQueryFilters({
     queryFilters: productFilter,
+    advancedFilter: advancedFilters.product,
     sliceFilters: slicerProductFilters,
   })
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
+    advancedFilter: advancedFilters.task,
     sliceFilters: slicerTaskFilters,
   })
   // folder names stay filter conditions: products and versions have no folder text search
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
+    advancedFilter: advancedFilters.folder,
     sliceFilters: slicerFolderFilters,
   })
   // no slicer panel is representation scoped, so this is the filter bar's conditions only
@@ -368,6 +385,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
   const combinedRepresentationFilter = useQueryFilters({
     queryFilters: resolvedRepresentationFilter,
+    advancedFilter: advancedFilters.representation,
   })
 
   // When entity list has task IDs, merge them into the task filter
@@ -414,18 +432,22 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       })
       const countsVersionFilter = buildQueryFilters({
         queryFilters: versionFilter,
+        advancedFilter: advancedFilters.version,
         sliceFilters: otherVersionFilters,
       })
       const countsProductFilter = buildQueryFilters({
         queryFilters: productFilter,
+        advancedFilter: advancedFilters.product,
         sliceFilters: otherProductFilters,
       })
       const countsTaskFilter = buildQueryFilters({
         queryFilters: taskFilter,
+        advancedFilter: advancedFilters.task,
         sliceFilters: otherTaskFilters,
       })
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
+        advancedFilter: advancedFilters.folder,
         sliceFilters: otherFolderFilters,
       })
       // a task-list panel narrows via task ids, like entityListTaskFilterString
@@ -471,6 +493,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       productFilter,
       taskFilter,
       folderFilter,
+      advancedFilters,
       combinedRepresentationFilter.filterString,
       projectName,
       slicerFolderIds,
@@ -825,10 +848,10 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       childVersions,
       expandedProductIds: expandedIds,
       productsMap,
-      hasFiltersApplied: (filters.conditions?.length || 0) > 0,
+      hasFiltersApplied: (filters.conditions?.length || 0) > 0 || !!advancedFilter,
       isLoading: isLoadingChildVersions,
     })
-  }, [childVersions, expandedIds, productsMap, isLoadingChildVersions, filters])
+  }, [childVersions, expandedIds, productsMap, isLoadingChildVersions, filters, advancedFilter])
 
   const loadingProductVersionsFinished = useMemo(() => {
     // Return array of product IDs that have finished loading

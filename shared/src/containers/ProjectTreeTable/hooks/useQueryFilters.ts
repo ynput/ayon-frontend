@@ -1,11 +1,18 @@
 import { useMemo } from 'react'
 import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
 import { type QueryTasksFoldersApiArg } from '@shared/api'
-import { clientFilterToQueryFilter, expandRelativeDates, sanitizeQueryFilter } from '../utils'
+import {
+  clientFilterToQueryFilter,
+  expandRelativeDates,
+  mergeQueryFilters,
+  sanitizeQueryFilter,
+} from '../utils'
 import type { QueryFilter, QueryCondition } from '../types/operations'
 
 interface UseQueryFiltersProps {
   queryFilters: QueryFilter
+  // the advanced filter of this scope, ANDed with everything else as one nested group
+  advancedFilter?: QueryFilter
   sliceFilter?: Filter | null
   sliceFilters?: (Filter | null)[] | null
   config?: {
@@ -23,6 +30,7 @@ interface QueryFiltersResult {
 
 export const buildQueryFilters = ({
   queryFilters,
+  advancedFilter,
   sliceFilter,
   sliceFilters,
   config: { searchKey } = {},
@@ -104,9 +112,17 @@ export const buildQueryFilters = ({
 
   // Expand relative date values (e.g., "relative:today:0") to actual ISO dates
   // before sending to the backend API
-  const expandedQueryFilter = combinedQueryFilter?.conditions?.length
+  const expandedSimpleFilter = combinedQueryFilter?.conditions?.length
     ? sanitizeQueryFilter(expandRelativeDates(combinedQueryFilter))
     : combinedQueryFilter
+
+  // merged last and as a whole: its conditions are never read as search text or name search
+  const expandedQueryFilter = advancedFilter?.conditions?.length
+    ? mergeQueryFilters(
+        expandedSimpleFilter,
+        sanitizeQueryFilter(expandRelativeDates(advancedFilter)),
+      )
+    : expandedSimpleFilter
 
   const queryFilterString = expandedQueryFilter?.conditions?.length
     ? JSON.stringify(expandedQueryFilter)
@@ -122,6 +138,9 @@ export const buildQueryFilters = ({
 }
 
 export const useQueryFilters = (props: UseQueryFiltersProps): QueryFiltersResult => {
-  const { queryFilters, sliceFilter, sliceFilters } = props
-  return useMemo(() => buildQueryFilters(props), [queryFilters, sliceFilter, sliceFilters])
+  const { queryFilters, advancedFilter, sliceFilter, sliceFilters } = props
+  return useMemo(
+    () => buildQueryFilters(props),
+    [queryFilters, advancedFilter, sliceFilter, sliceFilters],
+  )
 }

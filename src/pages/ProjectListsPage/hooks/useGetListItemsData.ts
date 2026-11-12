@@ -22,6 +22,7 @@ import {
 } from '@shared/containers/ProjectTreeTable/utils/restrictedEntity'
 import { sanitizeQueryFilter } from '@shared/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { mergeQueryFilters } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
@@ -48,6 +49,8 @@ interface UseGetListItemsDataProps {
   listId?: string
   sorting: SortingState
   filters?: QueryFilter
+  // nested filter stored next to `filters`, ANDed with it
+  advancedFilter?: QueryFilter
   skip?: boolean
   entityType?: string
   skipLinks?: boolean
@@ -87,6 +90,7 @@ const useGetListItemsData = ({
   entityType,
   sorting,
   filters = { conditions: [], operator: 'and' },
+  advancedFilter,
   skip,
   skipLinks = true,
   showComments = false,
@@ -109,7 +113,8 @@ const useGetListItemsData = ({
       : undefined
   ) as StatsEntity | undefined
   const statsProjectName = contextProjectName || projectName
-  const { search, filters: filtersWithoutSearch } = extractSearchFromFilters(filters)
+  const { search, filters: simpleFilters } = extractSearchFromFilters(filters)
+  const filtersWithoutSearch = mergeQueryFilters(simpleFilters, advancedFilter)
   const queryFilterString = filtersWithoutSearch.conditions?.length
     ? JSON.stringify(
         toEntityValueKeys(

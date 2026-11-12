@@ -11,6 +11,7 @@ import {
   ProjectTreeTable,
   type ProjectTreeTableProps,
   isFilterError,
+  mergeQueryFilters,
   getFilterErrorMessage,
 } from '@shared/containers/ProjectTreeTable'
 import { Button } from '@ynput/ayon-react-components'
@@ -62,6 +63,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     fetchNextPage,
     resetFilters,
     listItemsFilters,
+    listItemsAdvancedFilter,
     onLinkColumnsVisibleChange,
     fieldStats,
     fieldStatsLoading,
@@ -119,7 +121,9 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   }
 
   if (isError) {
-    if (isFilterError(error, { filter: listItemsFilters })) {
+    if (
+      isFilterError(error, { filter: mergeQueryFilters(listItemsFilters, listItemsAdvancedFilter) })
+    ) {
       return (
         <EmptyPlaceholder message={getFilterErrorMessage('List items')} icon="filter_alt_off">
           <Button label="Reset filters" icon="replay" onClick={resetFilters} />
