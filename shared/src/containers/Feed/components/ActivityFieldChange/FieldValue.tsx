@@ -33,13 +33,14 @@ interface FieldValueProps extends React.HTMLAttributes<HTMLDivElement> {
   color?: string
   name: string
   items?: { label: string; color?: string }[]
-  // a coloured value shows as a pill, like in the tables: filled for a status, tinted for others and for items
+  // a coloured value is a pill, like in the tables: filled for a status, tinted (the default) for others
+  // and for items; the colour is never the text colour
   pill?: PillStyle
 }
 
 export const FieldValue = forwardRef<HTMLDivElement, FieldValueProps>(
   ({ icon, color, name, items, pill, ...props }, ref) => {
-    if (pill && items?.some((item) => item.color)) {
+    if (items?.some((item) => item.color)) {
       return (
         <Value {...props} ref={ref}>
           {items.map((item, index) => (
@@ -49,22 +50,22 @@ export const FieldValue = forwardRef<HTMLDivElement, FieldValueProps>(
       )
     }
 
-    if (pill && color) {
+    if (color) {
       return (
         <Value {...props} ref={ref}>
-          <ValuePill variant={pill} label={name} {...{ icon, color }} />
+          <ValuePill variant={pill ?? 'tinted'} label={name} {...{ icon, color }} />
         </Value>
       )
     }
 
     return (
       <Value {...props} ref={ref}>
-        {icon && <Icon icon={icon} style={{ color }} />}
+        {icon && <Icon icon={icon} />}
         <ValueText title={name}>
           {items
             ? items.map((item, index) => (
                 <Fragment key={index}>
-                  <span style={{ color: item.color }}>{item.label}</span>
+                  <span>{item.label}</span>
                   {index < items.length - 1 && ', '}
                 </Fragment>
               ))
