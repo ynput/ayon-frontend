@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
-import { Button, TablePanel } from '@ynput/ayon-react-components'
+import { Button, Dropdown, Icon, TablePanel } from '@ynput/ayon-react-components'
 
 import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 
 import { copyToClipboard, replaceRoot } from '@shared/util'
+import { useLocalStorage } from '@shared/hooks'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
 import versionsToRepresentations from './versionsToRepresentations'
@@ -25,11 +26,36 @@ const StyledContext = styled.div`
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+`
 
-  .toggle-all {
+// title row: section title on the left, grouping controls top right
+const StyledHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  min-height: 32px;
+
+  h4 {
+    margin: 0;
+  }
+
+  .group-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
     margin-left: auto;
     flex-shrink: 0;
   }
+`
+
+// compact "Group by" value, matching the products toolbar group by dropdown
+const StyledGroupByValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  height: 100%;
+  padding: 0 8px;
+  white-space: nowrap;
 `
 
 const StyledType = styled.span`
@@ -51,6 +77,12 @@ const StyledGroup = styled.span`
   vertical-align: middle;
   font-weight: 500;
 
+  /* rows inside a group are indented one more level */
+  &.child {
+    max-width: calc(100% - 56px);
+    font-weight: normal;
+  }
+
   .path {
     overflow: hidden;
     white-space: nowrap;
@@ -64,15 +96,39 @@ const StyledGroup = styled.span`
 
 type RepContext = { folderName?: string; productName?: string; productType?: string }
 
+type GroupBy = 'version' | 'name'
+
+const GROUP_BY_OPTIONS = [
+  { value: 'version', label: 'Version', icon: 'layers' },
+  { value: 'name', label: 'Representation', icon: 'description' },
+]
+
 const CONTEXT_FIELDS = ['folderName', 'productName', 'productType'] as const
 
 const contextPath = (r: RepContext) => [r.folderName, r.productName].filter(Boolean).join(' / ')
 
-type Props = {
-  entities: DetailsPanelEntityData[]
+// label for a version: only the context that differs between the selected versions, plus its name
+const VersionLabel = ({ data, isChild }: { data: any; isChild?: boolean }) => {
+  const path = contextPath(data)
+  return (
+    <StyledGroup
+      className={isChild ? 'child' : undefined}
+      title={[path, data.versionName].filter(Boolean).join(' · ')}
+    >
+      {path && <span className="path">{path}</span>}
+      <span className="version">{data.versionName}</span>
+      {data.productType && <StyledType>{data.productType}</StyledType>}
+    </StyledGroup>
+  )
 }
 
-export const RepresentationsList = ({ entities = [] }: Props) => {
+type Props = {
+  entities: DetailsPanelEntityData[]
+  // section title; when set, the grouping controls sit on the title row (top right)
+  title?: string
+}
+
+export const RepresentationsList = ({ entities = [], title }: Props) => {
   // merge all entities data into one array of entities
   const representations = useMemo(() => versionsToRepresentations(entities) || [], [entities])
 
@@ -93,30 +149,61 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
     return shared
   }, [representations])
 
-  // one version -> flat list; several versions -> one group per version
+  const [groupBy, setGroupBy] = useLocalStorage<GroupBy>('representationsList-groupBy', 'name')
+
+  const isMultiVersion = useMemo(
+    () => new Set(representations.map((rep) => rep.versionId)).size > 1,
+    [representations],
+  )
+
+  // one version -> flat list; several versions -> grouped by version or by representation name
   const data = useMemo(() => {
-    const byVersion = new Map<string, typeof representations>()
-    for (const rep of representations) {
-      const key = rep.versionId || ''
-      byVersion.set(key, [...(byVersion.get(key) || []), rep])
-    }
+    if (!isMultiVersion) return representations.map((rep) => ({ key: rep.id, data: rep }))
 
-    if (byVersion.size <= 1) return representations.map((rep) => ({ key: rep.id, data: rep }))
-
-    return [...byVersion.entries()].map(([versionId, reps]) => {
-      const first = reps[0]
-      // only keep context fields that differ between the selected versions
+    // only keep context fields that differ between the selected versions
+    const ownContext = (rep: (typeof representations)[number]) => {
       const own: RepContext = {}
       for (const field of CONTEXT_FIELDS) {
-        if (sharedContext?.[field] === undefined) own[field] = first[field]
+        if (sharedContext?.[field] === undefined) own[field] = rep[field]
       }
+      return own
+    }
+
+    const groupKey = (rep: (typeof representations)[number]) =>
+      (groupBy === 'name' ? rep.name : rep.versionId) || ''
+    const groups = new Map<string, typeof representations>()
+    for (const rep of representations) {
+      const key = groupKey(rep)
+      groups.set(key, [...(groups.get(key) || []), rep])
+    }
+
+    return [...groups.entries()].map(([key, reps]) => {
+      const first = reps[0]
       return {
-        key: `group-${versionId}`,
-        data: { isGroup: true, ...own, versionName: first.versionName },
-        children: reps.map((rep) => ({ key: rep.id, data: rep })),
+        key: `group-${groupBy}-${key}`,
+        data:
+          groupBy === 'name'
+            ? { isGroup: true, name: first.name, count: reps.length }
+            : { isGroup: true, ...ownContext(first), versionName: first.versionName },
+        // grouped by name, each child is a version: label it with what differs between versions
+        children: reps.map((rep) => ({
+          key: rep.id,
+          data:
+            groupBy === 'name'
+              ? {
+                  ...rep,
+                  // drop the context shared by all versions; it is already shown above the table
+                  folderName: undefined,
+                  productName: undefined,
+                  productType: undefined,
+                  ...ownContext(rep),
+                  isVersionRow: true,
+                }
+              : rep,
+        })),
       }
     })
-  }, [representations, sharedContext])
+  }, [representations, sharedContext, isMultiVersion, groupBy])
 
   const isGrouped = data.some((row: any) => row.children)
 
@@ -202,7 +289,37 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
 
   return (
     <>
-      {(sharedPath || sharedContext?.productType || isGrouped) && (
+      {(title || isGrouped) && (
+        <StyledHeader>
+          {title && <h4>{title}</h4>}
+          {isGrouped && (
+            <div className="group-controls">
+              <Dropdown
+                value={[groupBy]}
+                options={GROUP_BY_OPTIONS}
+                onChange={(value) => value[0] && setGroupBy(value[0] as GroupBy)}
+                align="right"
+                valueTemplate={(_value, _selected, isOpen) => (
+                  <StyledGroupByValue>
+                    <span>Group by</span>
+                    <Icon icon={isOpen ? 'expand_less' : 'expand_more'} />
+                  </StyledGroupByValue>
+                )}
+                data-tooltip="Group representations by version or by representation name"
+                data-tooltip-delay={0}
+              />
+              <Button
+                variant="text"
+                icon={allExpanded ? 'unfold_less' : 'unfold_more'}
+                onClick={toggleAll}
+                data-tooltip={allExpanded ? 'Collapse all groups' : 'Expand all groups'}
+                data-tooltip-delay={0}
+              />
+            </div>
+          )}
+        </StyledHeader>
+      )}
+      {(sharedPath || sharedContext?.productType) && (
         <StyledContext>
           {sharedPath && (
             <span className="path" title={sharedPath}>
@@ -210,16 +327,6 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
             </span>
           )}
           {sharedContext?.productType && <StyledType>{sharedContext.productType}</StyledType>}
-          {isGrouped && (
-            <Button
-              className="toggle-all"
-              variant="text"
-              icon={allExpanded ? 'unfold_less' : 'unfold_more'}
-              onClick={toggleAll}
-              data-tooltip={allExpanded ? 'Collapse all versions' : 'Expand all versions'}
-              data-tooltip-delay={0}
-            />
-          )}
         </StyledContext>
       )}
       <TablePanel>
@@ -243,15 +350,17 @@ export const RepresentationsList = ({ entities = [] }: Props) => {
             expander={isGrouped}
             style={{ minWidth: 120 }}
             body={(node: any) => {
-              if (!node.data.isGroup) return node.data.name
-              const path = contextPath(node.data)
-              return (
-                <StyledGroup title={[path, node.data.versionName].filter(Boolean).join(' · ')}>
-                  {path && <span className="path">{path}</span>}
-                  <span className="version">{node.data.versionName}</span>
-                  {node.data.productType && <StyledType>{node.data.productType}</StyledType>}
-                </StyledGroup>
-              )
+              const { data } = node
+              if (data.isVersionRow) return <VersionLabel data={data} isChild />
+              if (!data.isGroup) return data.name
+              if (groupBy === 'name')
+                return (
+                  <StyledGroup title={data.name}>
+                    <span className="path">{data.name}</span>
+                    <span className="version">{data.count}</span>
+                  </StyledGroup>
+                )
+              return <VersionLabel data={data} />
             }}
           />
           <Column
