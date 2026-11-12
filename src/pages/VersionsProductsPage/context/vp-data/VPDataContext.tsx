@@ -425,7 +425,11 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   )
 
   const resolvedSortBy = useMemo(
-    () => sortBy && (SORT_BY_FIELD_MAP[sortBy] || getColumnSortKey(sortBy, true, 'product')),
+    // saved views can hold a non-string sortBy (e.g. from an older server); ignore it instead of crashing
+    () =>
+      typeof sortBy === 'string' && sortBy
+        ? SORT_BY_FIELD_MAP[sortBy] || getColumnSortKey(sortBy, true, 'product')
+        : undefined,
     [sortBy],
   )
   const queryArgs = useMemo(
