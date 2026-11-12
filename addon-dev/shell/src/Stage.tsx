@@ -846,7 +846,7 @@ export const Stage = ({
 }: {
   mode: 'live' | 'preview'
   selection: ShellSelection
-  /** the slots "Slots here" lists (Other slots shows those) */
+  /** the slots the panel's Slots list shows (Other slots shows those) */
   listedSlots: Place['slots']
   onChange: OnChange
   onOpenInputs: () => void
