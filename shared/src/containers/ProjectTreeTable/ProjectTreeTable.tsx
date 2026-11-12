@@ -136,6 +136,7 @@ import {
   type PrefetchAddonColumnMenuItems,
 } from './addonColumnMenu/useAddonColumnMenuItems'
 import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { slotEntry } from '@shared/components/AddonLayout/slotHighlight'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -166,6 +167,10 @@ declare module '@tanstack/react-table' {
     prefetchAddonColumnMenuItems?: PrefetchAddonColumnMenuItems
   }
 }
+
+// a column an addon contributes: its cells tagged with the tableColumn slot (slotHighlight)
+const addonColumnSlot = (meta: { addonColumn?: AddonColumnMeta } | undefined) =>
+  meta?.addonColumn ? slotEntry('tableColumn', {}) : undefined
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {
@@ -1328,6 +1333,7 @@ const TableHeadCell = ({
     <Styled.HeaderCell
       ref={setNodeRef}
       data-column-id={column.id}
+      {...addonColumnSlot(column.columnDef.meta)}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
@@ -1894,6 +1900,7 @@ const TD = ({
   return (
     <Styled.TD
       {...props}
+      {...addonColumnSlot(cell.column.columnDef.meta)}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
