@@ -66,7 +66,7 @@ import { StudioSelectionProvider } from './host'
 import type { Place } from './places'
 import { SceneStage } from './scenes'
 import { missingInputs } from './slotNeeds'
-import { menuMarker, Placeholder, SlotFrame, slotInfo } from './slotOverlay'
+import { markMenuItem, menuMarkerEntry, Placeholder, SlotFrame, slotInfo } from './slotOverlay'
 import { ButtonItem } from './parts'
 import { PreviewStage } from './PreviewStage'
 import { ShellTable } from './ShellTable'
@@ -362,7 +362,7 @@ const UserDetailsHeader = ({ user, menuItems, onMenuOpen }: { user: ShellUser; m
           <span className="ayon-shell-detail-subtitle">{access.length ? access.join(', ') : 'No AccessGroups'}</span>
         </div>
       </div>
-      <SlotFrame slot="userDetails.menuItem">
+      <SlotFrame slot="userDetails.menuItem" trigger>
         <Button
           ref={button}
           icon="more_horiz"
@@ -401,11 +401,10 @@ const UserDetailsStage = ({ selection, onChange }: StageProps) => {
   useSlotReport('userDetails.menuItem', target ? context : undefined)
   useStageReady(!!target)
   const addonMenu = useAddonUserMenuItems(context)
-  const marker = menuMarker('userDetails.menuItem')
+  const marker = menuMarkerEntry('userDetails.menuItem')
   const menuItems = [
-    ...addonMenu.topItems,
-    ...addonMenu.items,
-    ...(marker ? [{ id: marker.id, label: marker.label, icon: 'add', disabled: true }] : []),
+    ...[...addonMenu.topItems, ...addonMenu.items].map((item) => markMenuItem('userDetails.menuItem', item)),
+    ...(marker ? [marker] : []),
     { id: 'delete', label: 'Delete user', icon: 'delete', danger: true, disabled: true },
     { id: 'view-data', label: 'View data', icon: 'data_object', disabled: true },
   ]

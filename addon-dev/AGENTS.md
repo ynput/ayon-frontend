@@ -119,8 +119,8 @@ of AYON:
     not: places (name, package) and slots (label, name, the titles of the addon's
     contributions). A package's heading is its name for people (`@scope/ayon-addon-board` is
     "Board"), with the full name as the tooltip.
-  - **Highlight slots**, next to Show all: marks every slot of the place on stage (below). It is
-    the only thing that does; off, the stage looks as in AYON.
+  - **Highlight** (Highlight slots), at the right of the Slots heading: marks every slot of the
+    place on stage (below). It is the only thing that does; off, the stage looks as in AYON.
   - **Slots**: a read-only overview of the place's slots (label, with the name muted under it),
     and under each the addon's contributions with an icon, with the ones AYON would skip and why.
     Hovering a slot's row outlines it on stage, and hovering a highlighted slot on stage
@@ -201,12 +201,15 @@ contribution is developed without that addon installed:
   tooltip), and under each slot the addon's contributions to it. Selecting it puts the scene on
   stage, full width, with the shell's providers (right-click menus, the details panel, the user).
   A contract slot no scene renders is under Other slots.
-- **Highlight slots** (in the panel, in the URL as `highlight=1`): a slot on stage rendered with
+- **Highlight slots** (the Slots heading's switch, in the URL as `highlight=1`): a slot on stage rendered with
   `SlotOutlet` and without contributions gets a small dashed "+ title" chip where they would go,
   and a menu slot without items gets one disabled "+ title" entry at the top of the menu (also a
   menu that would otherwise not open, such as a table cell's). What a used slot renders gets a
-  light outline instead. Hovering a slot's row outlines it strongly on stage and the other way
-  round. The scenes need nothing for it: the shell hands the SDK an internal hook that AYON never
+  light outline instead, and so do a menu's entries from a used slot. The button that opens a menu
+  with a slot (a More button, a column's menu button) gets a thin solid outline, used or not.
+  Hovering a slot's row outlines it strongly on stage, menu entries included, and the other way
+  round. Menus are built when they open, so their entries carry their slot as data attributes and
+  CSS matches them against the switch on the page's root. The scenes need nothing for it: the shell hands the SDK an internal hook that AYON never
   sets, so in AYON `SlotOutlet` and `useSlotMenuItems` render exactly the contributions.
 - A scene's fields are a form under *Input values*, with *Reset* and the values as JSON. The values
   changed from the defaults are in the URL (`ctxValues`), so a reload or a shared link keeps them.

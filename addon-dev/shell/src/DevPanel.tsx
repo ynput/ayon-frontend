@@ -173,13 +173,6 @@ const Places = ({ options, selection, search, onSearch, onChange, onPick }: DevP
           checked={showAll}
           onChange={(checked) => onChange({ ...selection, showAll: checked })}
         />
-        <Switch
-          label="Highlight slots"
-          action="highlight"
-          title="Mark every slot of the place in the preview: a placeholder where an unused slot is, an outline around what a used one shows."
-          checked={!!selection.highlight}
-          onChange={(checked) => onChange({ ...selection, highlight: checked })}
-        />
       </div>
       {nothingUsed && !showAll && !found.length && !search.trim() && (
         <small className="ayon-shell-note">This addon has no contributions yet. Turn on Show all to explore.</small>
@@ -270,13 +263,22 @@ const SlotRow = ({
   )
 }
 
-const Slots = ({ selection, search }: Pick<DevPanelProps, 'selection' | 'search'>) => {
+const Slots = ({ selection, search, onChange }: Pick<DevPanelProps, 'selection' | 'search' | 'onChange'>) => {
   const { hovered } = useSlotOverlay()
   const place = getPlace(selection.surface)
   const slots = slotsHere(place, selection, search)
   return (
     <>
-      <h3>Slots</h3>
+      <div className="ayon-shell-section-header">
+        <h3>Slots</h3>
+        <Switch
+          label="Highlight"
+          action="highlight"
+          title="Highlight slots: mark every slot of the place in the preview, a placeholder where an unused slot is, an outline around what a used one shows and around the buttons that open menus with a slot."
+          checked={!!selection.highlight}
+          onChange={(checked) => onChange({ ...selection, highlight: checked })}
+        />
+      </div>
       {!place ? (
         <small className="ayon-shell-note">Select a place.</small>
       ) : (
@@ -372,7 +374,7 @@ export const DevPanel = (props: DevPanelProps) => {
           <Places {...props} onPick={onPick} />
         </SplitterPanel>
         <SplitterPanel size={50} minSize={10} className="ayon-shell-section">
-          <Slots selection={selection} search={props.search} />
+          <Slots selection={selection} search={props.search} onChange={props.onChange} />
         </SplitterPanel>
       </Splitter>
     </aside>

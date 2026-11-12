@@ -581,4 +581,19 @@ test.describe('Show slots (the dev shell only)', () => {
     expect(menu('example.cardMenuItem')).toMatchObject({ top: [], bottom: [{ id: 'contributor.log' }] })
     expect(built).toEqual([['example.cardMenuItem', {}, ['contributor.log']]])
   })
+
+  test('with it, every menu entry passes through menuItem, the placeholder too', () => {
+    provideHost({
+      devSlots: {
+        Outlet,
+        menuPlaceholder: () => placeholder,
+        menuItem: (slot, item) => ({ ...item, slot }) as never,
+      },
+    })
+    expect(menu('example.cardMenuItem')).toMatchObject({
+      top: [],
+      bottom: [{ id: 'contributor.log', slot: 'example.cardMenuItem' }],
+    })
+    expect(menu('example.boardDialog')).toEqual({ top: [{ ...placeholder, slot: 'example.boardDialog' }], bottom: [] })
+  })
 })

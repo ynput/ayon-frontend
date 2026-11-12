@@ -65,8 +65,8 @@ export interface DevSlotItemProps {
 /**
  * Internal, for the standalone dev shell only: AYON never sets it. Shows where each slot sits:
  * `SlotOutlet` renders its contributions inside `Outlet`, each in `Item` when it is set, and
- * `useSlotMenuItems` adds `menuPlaceholder` to a menu that has no items of the slot and tells
- * `menuBuilt` the context a menu was built for. Without it, both render exactly what they render
+ * `useSlotMenuItems` passes each entry through `menuItem`, adds `menuPlaceholder` to a menu that has
+ * no items of the slot and tells `menuBuilt` the context a menu was built for. Without it, both render exactly what they render
  * in AYON.
  */
 export interface DevSlots {
@@ -77,6 +77,8 @@ export interface DevSlots {
   menuPlaceholder: (slot: string) => SlotMenuItem | undefined
   /** a menu of the slot was built (it opens): its context and the keys of its contributions */
   menuBuilt?: (slot: string, context: unknown, contributions: string[]) => void
+  /** each entry of the slot's menu passes through it (the shell tags it to outline it) */
+  menuItem?: (slot: string, item: SlotMenuItem) => SlotMenuItem
 }
 
 export interface HostImplementation {

@@ -27,7 +27,7 @@ import {
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
 import { AddonDialog, ColumnHeaderMenuUI } from '@ynput/ayon-frontend-shared/components'
 import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-import { menuMarker, Placeholder, stageHover, usePlaceholderShown, useSlotMarks } from './slotOverlay'
+import { markMenuItem, menuMarker, menuMarkerEntry, Placeholder, SlotFrame, stageHover, usePlaceholderShown, useSlotMarks } from './slotOverlay'
 import { useSlotReport } from './status'
 
 type ColumnMenuItem = Parameters<typeof ColumnHeaderMenuUI>[0]['menuItems'][number]
@@ -112,7 +112,9 @@ const HeaderCell = ({
     >
       <div className="ayon-shell-th-content">{label}</div>
       <div className="ayon-shell-th-actions">
-        <ColumnHeaderMenuUI menuItems={menuItems} menuId={menuId(columnId)} className="header-menu" />
+        <SlotFrame slot="projectTable.columnMenuItem" trigger>
+          <ColumnHeaderMenuUI menuItems={menuItems} menuId={menuId(columnId)} className="header-menu" />
+        </SlotFrame>
       </div>
       <div
         className={`ayon-shell-resizer${resizing ? ' resizing' : ''}`}
@@ -261,14 +263,14 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
       .filter((item) => matchesColumn(item.columns, column.columnId) && (!item.groupable || !!column.groupField))
       .map((item) => {
         prefetchPiece(item.dialog || item.run)
-        return {
+        return markMenuItem('projectTable.columnMenuItem', {
           id: item.key,
           label: withColumnLabel(item.label, column.columnLabel),
           icon: item.icon,
           onClick: close(() => void runColumnItem(item, column)),
-        }
+        })
       })
-    const marker = menuMarker('projectTable.columnMenuItem')
+    const marker = menuMarkerEntry('projectTable.columnMenuItem')
     return [
       { id: 'pin', label: 'Pin column', icon: 'push_pin', onClick: close() },
       { id: 'divider-pin', type: 'divider' },
@@ -279,7 +281,7 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
         ? [{ id: 'group-by', label: `Group by ${column.columnLabel}`, icon: 'splitscreen', onClick: close() }]
         : []),
       ...addon,
-      ...(marker ? [{ id: marker.id as string, label: marker.label as string, icon: 'add', className: 'ayon-dev-menu-marker' }] : []),
+      ...(marker ? [marker as ColumnMenuItem] : []),
       ...(column.columnId === 'name' ? [] : [{ id: 'hide', label: 'Hide column', icon: 'visibility_off', onClick: close() }]),
     ]
   }
@@ -323,7 +325,12 @@ export const ShellTable = ({ page, projectName, tableState, entities, selected, 
     )
     // an unused slot: its marker, where the items would be (Highlight slots)
     const marker = menuMarker('entityMenuItem')
-    const shown = Array.isArray(items) && items.length ? items : marker ? [marker] : []
+    const shown =
+      Array.isArray(items) && items.length
+        ? items.map((item) => (item && !item.separator ? markMenuItem('entityMenuItem', item) : item))
+        : marker
+          ? [marker]
+          : []
     if (shown.length) openMenu(e, shown as never)
   }
 

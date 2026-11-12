@@ -101,7 +101,9 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
       if (!dev) return entries
       dev.menuBuilt?.(slot, context, items.map((item) => item.key))
       const placeholder = !entries.top.length && !entries.bottom.length ? dev.menuPlaceholder(slot) : undefined
-      return placeholder ? { ...entries, top: [placeholder] } : entries
+      const shown = placeholder ? { ...entries, top: [placeholder] } : entries
+      const mark = dev.menuItem
+      return mark ? { top: shown.top.map((item) => mark(slot, item)), bottom: shown.bottom.map((item) => mark(slot, item)) } : shown
     },
     [contributions, slot],
   )
