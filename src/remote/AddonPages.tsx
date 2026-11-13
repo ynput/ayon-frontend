@@ -12,20 +12,13 @@ import {
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 import { useDetailsPanelContext } from '@shared/context'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
-import { useAppSelector } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
-import { hasPageAccess } from './AddonPagesHelpers'
 import { StudioPageSelectionProvider } from '@shared/components/AddonLayout/StudioPageLayout'
 import { AddonDetailsPanel } from './AddonDetailsPanel'
 
-// Pages contributed through the project.page and studio.page slots (@ynput/ayon-addon).
-// Without access the page renders nothing; AppNavLinks hides its tab and redirects.
-
-const usePageAccess = (contribution: Contribution<'project.page' | 'studio.page'>) => {
-  const user = useAppSelector((state) => state.user.data)
-  return hasPageAccess(contribution.access, user)
-}
+// Pages contributed through the project.page and studio.page slots (@ynput/ayon-addon). A page
+// whose `access` (or `minExposureLevel`) the user lacks never gets here: the registry hides it.
 
 type ShownEntities = { entityType: DetailsPanelEntityType; entityIds: string[] }
 
@@ -106,9 +99,6 @@ export const AddonProjectPage = ({
 }) => {
   // project, slicer selection, project folders and views, from the providers ProjectPage renders
   const context = useProjectPageSlotContext(projectName)
-  const allowed = usePageAccess(contribution)
-
-  if (!allowed) return null
   // untagged: the page's tab carries the slot inspector's tags, not the whole page
   const page = (
     <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} untagged />
@@ -144,9 +134,6 @@ export const AddonStudioPage = ({
     () => ({ selection, onSelect: setSelection, onNewProject }),
     [selection, setSelection, onNewProject],
   )
-  const allowed = usePageAccess(contribution)
-
-  if (!allowed) return null
   return (
     <StudioPageSelectionProvider value={studioPage}>
       {/* untagged: the page's tab carries the slot inspector's tags, not the whole page */}

@@ -1,10 +1,22 @@
 import type { SlotDeclaration, SlotMap, SlotName } from './slots'
 
+/** The description fields every slot has, whatever its own. */
+export interface CommonMeta {
+  /** unique within the slot: a letter, then letters, digits and `_` */
+  id: string
+  /**
+   * Hides the contribution from users whose UI exposure level is lower, e.g. `EXPOSURE.manager`
+   * (700): managers and admins see it. AYON hides it before loading any of its code. It only hides
+   * UI: the addon's server must still check permissions
+   */
+  minExposureLevel?: number
+}
+
 /**
- * The fields of a contribution to slot `S`: its `id` (every contribution has one, so a slot's
- * `meta` needn't repeat it), its description and its pieces.
+ * The fields of a contribution to slot `S`: its `id` and `minExposureLevel` (every slot has them,
+ * so a slot's `meta` needn't repeat them), its description and its pieces.
  */
-export type ContributionFields<S extends SlotName> = { id: string } & SlotMap[S]['meta'] &
+export type ContributionFields<S extends SlotName> = CommonMeta & SlotMap[S]['meta'] &
   SlotMap[S]['pieces']
 
 /** What an addon writes for a contribution to slot `S`: the slot, its description and pieces. */

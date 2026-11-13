@@ -1,4 +1,4 @@
-import type { Access, Contribution } from '@ynput/ayon-addon'
+import type { Contribution } from '@ynput/ayon-addon'
 import { useMemo } from 'react'
 import { viewTypes } from '@shared/containers/Views/types'
 
@@ -84,11 +84,3 @@ export const useAddonPages = <S extends PageSlot>(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contributions, reservedKey])
 }
-
-// AppNavLinks hides a tab and redirects away from it when the user lacks one of these
-export const pageAccessLevels = (access?: Access) => (access ? [access] : [])
-
-export const hasPageAccess = (
-  access: Access | undefined,
-  user: { isAdmin?: boolean; isManager?: boolean },
-) => !access || !!user.isAdmin || (access === 'manager' && !!user.isManager)

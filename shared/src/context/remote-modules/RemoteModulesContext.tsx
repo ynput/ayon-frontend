@@ -1,6 +1,6 @@
-import { ReactNode, useEffect, useMemo, useState } from 'react'
+import { ReactNode, useEffect, useLayoutEffect, useMemo, useState } from 'react'
 import { loadRemote, registerRemotes } from '@module-federation/enhanced/runtime'
-import { setManifestsLoading } from '@ynput/ayon-addon/host'
+import { EXPOSURE, setExposureLevel, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { toast } from 'react-toastify'
 import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useListAddonsQuery, useListBundlesQuery, useListFrontendModulesQuery } from '@shared/api'
@@ -63,6 +63,15 @@ export const RemoteModulesProvider = ({ children, skip }: Props) => {
 
   // the modules of the bundle the user is on (production, staging or their dev bundle)
   const variant = getBundleModeFromUser(user)
+
+  // who sees which addon contributions (minExposureLevel): the registry hides the rest before any
+  // of their code loads. Service users are admins on the server (src/helpers/serviceUser.ts).
+  const exposureLevel =
+    user?.uiExposureLevel ?? (user?.data?.isService ? EXPOSURE.admin : undefined)
+  // a layout effect: before the effects below register manifests and surfaces read the registry
+  useLayoutEffect(() => {
+    setExposureLevel(exposureLevel)
+  }, [exposureLevel])
 
   // only load if logged in, and once we know the bundle the user is on
   const {
