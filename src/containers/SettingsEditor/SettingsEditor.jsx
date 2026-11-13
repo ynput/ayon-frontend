@@ -11,6 +11,7 @@ import './SettingsEditor.sass'
 import { TextWidget } from './Widgets/TextWidget'
 import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
+import SettingsObjectField from './FormTemplates/SettingsObjectField'
 import { FormWrapper } from './SettingsEditor.styled'
 import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
@@ -48,6 +49,9 @@ const widgets = {
   CheckboxWidget,
   DateTimeWidget,
 }
+
+// RJSF's own object field, plus directory mappings drawn as pairs in the flat layout
+const settingsFields = { ObjectField: SettingsObjectField }
 
 // Just close the top-level object to a simple div
 const uiSchema = {
@@ -203,6 +207,7 @@ const SettingsEditor = ({
         formData={formData}
         formContext={fullContext}
         widgets={widgets}
+        fields={settingsFields}
         onChange={(evt) => onChange(evt.formData)}
         templates={{
           FieldTemplate,

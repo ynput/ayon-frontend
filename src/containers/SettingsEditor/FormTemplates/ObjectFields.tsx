@@ -7,6 +7,9 @@ import { isGroupSchema, isPlatformGroup } from '../SettingsGroup/SettingsGroupHe
 import { getFoldingGroupNames, getRowCellWidth, isShortField } from './listItemLayout'
 import SettingsFoldingGroup from './SettingsFoldingGroup'
 import SearchHidden from './SearchHidden'
+import { usePathMapping } from './PathMappingContextInstance'
+import { DESTINATION_FIELD, SOURCE_FIELD } from './PathMappingHelpers'
+import { PathMappingField } from './PathMappingField'
 import {
   ObjectFieldElement,
   ObjectFieldsMode,
@@ -212,9 +215,37 @@ export const ObjectFields = ({
   matches,
   lead,
 }: ObjectFieldsProps) => {
+  const pathMapping = usePathMapping()
   const hidden = getHiddenFieldNames(schema, formContext, formData)
   const visible = getVisibleFields(properties, schema, hidden)
   const layout = getObjectFieldsLayout(schema, flatLayout, visible.length)
+
+  // a directory mapping is drawn as pairs, while both its lists show and can be edited;
+  // otherwise its two lists are drawn as they are (SettingsObjectField)
+  const pairLists = [SOURCE_FIELD, DESTINATION_FIELD]
+  const asPairs =
+    pathMapping?.objectId === idSchema.$id &&
+    pairLists.every(
+      (name) =>
+        visible.some((element) => element.name === name) &&
+        !(schema.properties?.[name] as $Any)?.disabled,
+    )
+  if (asPairs) {
+    return (
+      <SearchHidden matches={matches}>
+        {longDescription}
+        <div className={clsx(className, 'settings-path-mapping-panel')} data-fieldid={id}>
+          <PathMappingField
+            id={idSchema.$id}
+            schema={schema}
+            formData={formData}
+            formContext={formContext}
+            onChange={pathMapping.onChange}
+          />
+        </div>
+      </SearchHidden>
+    )
+  }
   const isCard = flatLayout && schema.listLayout === 'card'
   // a card's columns: how many values share its lines (SettingsEditor.sass)
   const layoutClassName = clsx(

@@ -47,6 +47,27 @@ Application definitions), or more than half are plugins (an `enabled` switch, or
 like `ValidateMeshUVs`, since AYON keys plugin settings by class name). All of a card's groups
 fold or none do, so a card never mixes boxes and sections.
 
+### Directory mapping as pairs
+
+Maya and Nuke store directory mapping (`DirmapPathsSubmodel`) as two lists of strings,
+`source_path` and `destination_path`, matched by position. The flat layout draws them as one
+list of pairs (`PathMappingField`): a row maps a source to a destination, and adding, removing or
+reordering a pair changes both lists.
+
+- Only an object with exactly those two fields pairs up (`isPathMappingSchema`). Other objects
+  with two lists side by side hold unrelated lists (FFmpeg input and output arguments, families
+  and tags), so the rule is by field name, not by shape.
+- A pair edit is one write of the whole object. `SettingsObjectField` (registered as RJSF's
+  `ObjectField`) passes the object's `onChange` down through `PathMappingContext`; writing the
+  two lists one after the other would lose the first, as RJSF builds each change from the
+  object's current value.
+- Saved lists of different lengths show as many pairs as the longer one, with an empty value
+  where the other ends. Nothing is written until the user edits a pair.
+- The column headings keep each list's override colour, right-click menu and breadcrumb
+  (`useFieldOverride`). Both lists are marked changed on every edit.
+- The classic layout, and a mapping whose list is out of scope or disabled, draw the two lists.
+- The lasting fix is in the addons: a list of `{source, destination}` records.
+
 ### Open state
 
 `useFoldState` is shared by list items (`useListItemFold`) and groups (`useGroupFold`). Open items
