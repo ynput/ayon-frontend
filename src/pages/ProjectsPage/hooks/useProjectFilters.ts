@@ -1,4 +1,4 @@
-import { useViewsContext } from '@shared/containers'
+import { useAdvancedFilterSetting, useViewsContext } from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import type { OverviewSettings } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -23,5 +23,11 @@ export const useProjectFilters = () => {
     [updateViewSettings],
   )
 
-  return { filters, handleFiltersChange }
+  // the nested filter next to the search bar, both must match
+  const { advancedFilter, onUpdateAdvancedFilter } = useAdvancedFilterSetting(
+    viewSettings,
+    updateViewSettings,
+  )
+
+  return { filters, handleFiltersChange, advancedFilter, onUpdateAdvancedFilter }
 }
