@@ -5,6 +5,7 @@ import {
   SettingsOutlineItem,
   findSettingsGroup,
   getScrollContainer,
+  isOutlineNeeded,
   isSameOutline,
   readSettingsOutline,
   scrollToSettingsGroup,
@@ -22,6 +23,8 @@ export type SettingsOutlineProps = {
 // Re-reading the sheet waits for a burst of DOM changes (typing, a search) to settle
 const UPDATE_DELAY = 150
 
+const NO_ITEMS: SettingsOutlineItem[] = []
+
 // by item depth: a sheet, a card, a sub-group
 const OUTLINE_LINK_CLASSES = [
   'settings-outline-sheet',
@@ -36,10 +39,18 @@ const OUTLINE_LINK_CLASSES = [
  */
 export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   const [items, setItems] = useState<SettingsOutlineItem[]>([])
+  // a short sheet that fits in its panel needs no outline (isOutlineNeeded)
+  const [needed, setNeeded] = useState(false)
   const navRef = useRef<HTMLElement>(null)
   // hidden with the toolbar button (SettingsOutlineToggle)
   const [collapsed] = useSettingsOutlineCollapsed()
-  const { currentId, pinned, pin, native } = useSettingsOutlineCurrent(sheetRef, navRef, items)
+  // a single group needs no outline either: the toolbar's toggle waits for one with links
+  const hasLinks = needed && items.length >= 2
+  const { currentId, pinned, pin, native } = useSettingsOutlineCurrent(
+    sheetRef,
+    navRef,
+    hasLinks ? items : NO_ITEMS,
+  )
 
   useEffect(() => {
     const sheet = sheetRef.current
@@ -48,6 +59,7 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     const update = debounce(() => {
       const next = readSettingsOutline(sheet)
       setItems((prev) => (isSameOutline(prev, next) ? prev : next))
+      setNeeded(isOutlineNeeded(sheet))
     }, UPDATE_DELAY)
 
     update()
@@ -61,8 +73,15 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
       attributeFilter: ['data-hidden'],
     })
 
+    // the sheet grows and shrinks with folds, and the panel with the window
+    const resizeObserver = new ResizeObserver(update)
+    resizeObserver.observe(sheet)
+    const scroller = getScrollContainer(sheet)
+    if (scroller) resizeObserver.observe(scroller)
+
     return () => {
       observer.disconnect()
+      resizeObserver.disconnect()
       update.cancel()
     }
   }, [sheetRef])
@@ -93,8 +112,6 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     pin(id)
   }
 
-  // a single group needs no outline: the toolbar's toggle waits for one with links
-  const hasLinks = items.length >= 2
   useEffect(() => (hasLinks ? announceOutline() : undefined), [hasLinks])
 
   // the rail sticks to the top of the panel it scrolls in, so it is as tall as that panel

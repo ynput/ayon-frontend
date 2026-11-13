@@ -69,6 +69,13 @@ middle of the view. Only Chrome has been checked. A jump (`scrollToSettingsGroup
 card until `scrollend`, or 2 seconds at most; a new jump ends the one still settling. The toolbar
 toggle shows only while an outline has links (`outlineAvailability.ts`).
 
+The outline shows only when it helps (`isOutlineNeeded`): the sheet has at least 2 groups to link
+to, and either more than 20 settings showing (rows of `SettingField`, not those a search hides) or
+some of them out of view below the scroll. It is checked again as the sheet changes (folds, search)
+and when the sheet or its panel is resized. It can't flicker: the rail shows when the sheet
+overflows at full width, and narrowing the sheet only makes it taller; it hides when the sheet
+fits beside it, and widening the sheet only makes it shorter.
+
 Addon settings and Site settings stack one editor per selected addon (and site). They share one
 outline (`AddonSettingsSheets`, editors get `outline={false}`), so every sheet starts at the same edge
 whether or not it has groups of its own. Each sheet heads its cards in that rail. A rail lists a

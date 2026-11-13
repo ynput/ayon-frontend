@@ -72,6 +72,28 @@ export const getScrollContainer = (node: HTMLElement | null): HTMLElement | null
   return getScrollContainer(node.parentElement)
 }
 
+// A sheet with more settings than this gets an outline even when it fits in its panel
+const OUTLINE_MIN_SETTINGS = 20
+// a setting's row, as drawn by SettingField (groups carry a field id too)
+const SETTING_ROW = '.form-inline-field[data-fieldid]'
+
+/**
+ * Whether a sheet needs an outline: it has more than 20 settings showing, or some of
+ * them are out of view, below the scroll. Settings a search hides don't count.
+ */
+export const isOutlineNeeded = (sheet: HTMLElement) => {
+  const scroller = getScrollContainer(sheet) ?? document.scrollingElement
+  if (scroller && scroller.scrollHeight > scroller.clientHeight + 1) return true
+
+  let count = 0
+  for (const row of sheet.querySelectorAll(SETTING_ROW)) {
+    if (row.closest('[data-hidden="true"]')) continue
+    count += 1
+    if (count > OUTLINE_MIN_SETTINGS) return true
+  }
+  return false
+}
+
 // How long the sheet stays fully rendered when a jump never scrolls (already in place)
 const JUMP_TIMEOUT = 2000
 
