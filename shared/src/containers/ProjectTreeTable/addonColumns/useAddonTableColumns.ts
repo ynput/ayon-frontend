@@ -8,6 +8,7 @@ import { AddonColumnCell } from './AddonColumns'
 import { appliesToPage, getAddonColumnId } from './addonColumnsHelpers'
 
 const DEFAULT_WIDTH = 150
+const NO_COLUMNS: TreeTableExtraColumn[] = []
 
 /**
  * The columns addons contribute to this page's table (tableColumn slot): `columns` for the
@@ -35,8 +36,10 @@ export const useAddonTableColumns = (page: ProjectTablePage) => {
     })
   }, [pageColumns])
 
-  return useMemo(() => {
-    const columns: TreeTableExtraColumn[] = pageColumns.map((contribution) => {
+  // a new columns array rebuilds the table's columns and remounts every cell, closing open editors
+  const columns = useMemo(() => {
+    if (!pageColumns.length) return NO_COLUMNS
+    return pageColumns.map((contribution): TreeTableExtraColumn => {
       const id = getAddonColumnId(contribution)
       return {
         column: {
@@ -56,20 +59,24 @@ export const useAddonTableColumns = (page: ProjectTablePage) => {
         },
       }
     })
+  }, [pageColumns, page])
 
-    const settingsColumns = pageColumns.map((contribution) => {
-      const { addon, menu } = contribution
-      const menuLabel =
-        menu ?? (addonList?.addons.find((a) => a.name === addon.name)?.title || addon.name)
-      return {
-        value: getAddonColumnId(contribution),
-        label: contribution.label,
-        icon: contribution.icon,
-        // one submenu per name, so addons can share one ("Production")
-        menu: menuLabel === false ? undefined : menuLabel,
-      }
-    })
+  const settingsColumns = useMemo(
+    () =>
+      pageColumns.map((contribution) => {
+        const { addon, menu } = contribution
+        const menuLabel =
+          menu ?? (addonList?.addons.find((a) => a.name === addon.name)?.title || addon.name)
+        return {
+          value: getAddonColumnId(contribution),
+          label: contribution.label,
+          icon: contribution.icon,
+          // one submenu per name, so addons can share one ("Production")
+          menu: menuLabel === false ? undefined : menuLabel,
+        }
+      }),
+    [pageColumns, addonList],
+  )
 
-    return { columns, settingsColumns }
-  }, [pageColumns, page, addonList])
+  return { columns, settingsColumns }
 }
