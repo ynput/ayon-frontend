@@ -724,6 +724,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isFetching: isFetchingGroupedVersions,
     isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
@@ -884,7 +885,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (error) return
 
     if (group) {
-      incrementGroupPage(group)
+      if (!isFetchingGroupedVersions) incrementGroupPage(group)
     } else {
       fetchNextPage()
     }

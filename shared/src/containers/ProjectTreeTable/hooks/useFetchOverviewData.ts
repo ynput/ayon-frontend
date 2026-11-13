@@ -540,6 +540,7 @@ export const useFetchOverviewData = ({
 
   const {
     data: { tasks: groupTasks = [] } = {},
+    isFetching: isFetchingGroupedTasks,
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
   } = useGetGroupedTasksListQuery(groupTasksArgs, {
@@ -580,7 +581,8 @@ export const useFetchOverviewData = ({
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       // Ungrouped is never seeded into pageCounts, so don't gate on key presence
-      if (group) {
+      // one page at a time: the grouped query refetches every expanded group
+      if (group && !isFetchingGroupedTasks) {
         incrementPageCount(group)
       }
     } else if (hasNextPage) {

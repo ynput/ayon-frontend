@@ -21,7 +21,7 @@ interface LoadMoreWidgetProps {
 
 const LoadMoreWidget: FC<LoadMoreWidgetProps> = ({ label = 'Load more', id, onLoadMore }) => {
   return (
-    <LoadMore id={`load-more-${id}`} className="load-more">
+    <LoadMore id={`load-more-${id}`} className="load-more" data-group={id}>
       <Button
         label={label}
         onClick={(e) => {

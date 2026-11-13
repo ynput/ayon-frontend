@@ -164,6 +164,7 @@ const useVersionsGroupBy = ({
     versions,
     isLoading,
     isLoadingGroups,
+    isFetching: isFetchingGroups,
     refetch: refetchGroupedVersions,
     isUninitialized: isUninitializedGroupedVersions,
     queryArgs,
