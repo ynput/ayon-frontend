@@ -8,7 +8,9 @@ import { buildContract, contractManifests, setContracts } from './contractModel'
 import type { ContractModule } from './contractModel'
 import { provideShellHost } from './host'
 import { installNetwork, setFixture } from './network'
-import { readSelection, writeSelection } from './params'
+import { PARAMS, readSelection, writeSelection } from './params'
+import { reportPiece, setTrackedPieces } from './status'
+import { trackContribution } from './tracking'
 import { Shell } from './Shell'
 import type { Fixture, ShellOptions } from './types'
 import './shell.css'
@@ -88,7 +90,16 @@ export const startShell = async (options: ShellOptions) => {
   const contracts = await loadContracts(options.contracts)
   setContracts(contracts)
   registerManifests(contractManifests(contracts, options.addon.name) as never)
-  registerManifest(options.addon, options.manifest)
+  // the contribution `ayon-addon open` is about reports when its pieces mount and run
+  const params = new URLSearchParams(window.location.search)
+  const tracked = trackContribution(
+    options.manifest,
+    params.get(PARAMS.slot) || undefined,
+    params.get(PARAMS.id) || undefined,
+    reportPiece,
+  )
+  setTrackedPieces(tracked.found, tracked.pieces)
+  registerManifest(options.addon, tracked.manifest)
   setManifestsLoading(false)
 
   if (preview) {

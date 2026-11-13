@@ -318,8 +318,10 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
   open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]
        [--run] [--screenshot <file>] [--save-fixture <name>] [--url <dev shell>] [--json]
-                               render one contribution in the dev shell, headless, and report
-                               errors, toasts, its context (and the clipboard with --run)
+                               render one contribution in the dev shell, headless (its tab,
+                               Customize section or menu shown), check that its component
+                               mounted (--run: that it ran), and report errors, toasts, its
+                               context (and the clipboard with --run)
   preview <slot> <id> --fixture <name> [--run] [--prune] [--screenshot <file>] [--json]
                                the same from dev/fixtures/<name>.json, without a server;
                                --prune drops the answers the preview didn't use

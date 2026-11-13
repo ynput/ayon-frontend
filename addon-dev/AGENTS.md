@@ -31,13 +31,22 @@ Run in the addon's frontend folder. Every command takes `--json` for scripts and
 | `ayon-addon dev --ayon [--port 5173] [--open] [--frontend <url>]` | Builds on every change and serves the build with CORS. Checks what AYON's dev override needs on the server, then prints (`--open`: opens) the AYON URL that loads it: `<server>/?addonDev=<addon>@http://localhost:5173` |
 | `ayon-addon slots` | The slots of the installed `@ynput/ayon-addon`: helper, where, when the code loads. Then the slots of the addon's contract packages (dependencies with `"ayonAddon": { "slots": ... }` in their `package.json`), as "from `<package>`". Then each slot's example as a manifest entry: what developer mode's Show slots renders there |
 | `ayon-addon check [--no-types]` | The manifest as AYON reads it (slots, ids, fields, pieces), that each piece's file exists, and `tsc`. Contributions are checked against AYON's slots, those of the addon's contract packages and those it declares itself. The contract packages' preview scenes are checked too, with a note for contributions no scene renders (below) |
-| `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Reports error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
+| `ayon-addon open <slot> <id> [--project P] [--entities type:id,...] [--page overview\|products\|lists] [--run] [--screenshot file] [--save-fixture name]` | One contribution in the dev shell in a headless browser, against the server. Shows it first (its details panel tab, its Customize section, the menu with a menu item) and checks that its component mounted (a column: at least one cell) and, with `--run`, that its `run` piece ran. Reports that, error boxes, console errors, toasts, the context it got, the clipboard after `--run` (menu items). Exit code 1 when it failed |
 | `ayon-addon preview <slot> <id> --fixture name [--run] [--prune] [--screenshot file]` | The same from `dev/fixtures/<name>.json`, without a server. `--prune` drops the answers it didn't use |
 | `ayon-addon generate-rest [--schema file] [--hooks]` | The addon's server endpoints as RTK Query endpoints in AYON's api (below) |
 
-`open` and `preview` start the dev shell themselves, or use a running one with `--url
-http://localhost:5174`. They need playwright (`yarn add -D playwright`, `npx playwright install
-chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
+`open` and `preview` start the dev shell themselves on `127.0.0.1:5180` (the next free port when
+it is taken), or use a running one with `--url http://localhost:5174`. They need playwright: the
+addon's (`yarn add -D playwright`, `npx playwright install chromium`; the way for an addon outside
+the workbench), else the one next to `@ynput/ayon-addon-dev` (linked from an ayon-frontend
+checkout), else, in the AYON dev workbench, `repos/ayon-frontend`'s. Without one, the error lists
+where it looked.
+
+What `open` checks, besides errors: the dev shell wraps the opened contribution's pieces (only that
+one, `shell/src/tracking.ts`) so they report when they mount and run. "ok" needs its `component`
+mounted (a details panel tab that stayed a button, a contribution its `entityTypes` hide: failed),
+for a column a mounted `cell` (rows: `--entities`), and with `--run` a call of its `run` piece. A
+contribution the manifest doesn't have fails too. `--json` has them as `pieces` and `problems`.
 
 ## Developing inside AYON (`dev --ayon`)
 
@@ -155,8 +164,9 @@ of AYON:
   links are read as what they meant: `scene=<package>:<id>` becomes `surface=`, `showUnused=1`
   becomes `showAll=1`, `surface=profile` becomes `surface=account`, `?slot=…&contribution=…`
   without `surface` (`ayon-addon open`) opens the slot's first place, and `showSlots` is dropped.
-  `slot` and `contribution` only tell `ayon-addon open | preview` which contribution to run or
-  record; the page ignores them.
+  `slot` and `contribution` tell `ayon-addon open | preview` which contribution to check, run or
+  record. The page shows it once (a details panel tab is picked, a Customize section opened) and
+  tracks its pieces; the developer can switch away.
 - Requests to `/api`, `/graphql`, `/ws` go through the dev server to the AYON server, with the API
   key when there is one (no login page); without a key the page shows AYON's login. The key is read
   for every request (the workbench's `data/local-api-key` changes when its stack is reset), and a

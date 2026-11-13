@@ -7,7 +7,8 @@ import type { ShellSelection } from './types'
 
 // ?surface=details-panel&showAll=1&ctxProject=demo&ctxEntities=task:<id>
 // Names of their own: AYON's surfaces keep their state in the URL too (project, type, id).
-// `slot` and `contribution` are what `ayon-addon open` is about; the panel doesn't show them.
+// `slot` and `contribution` are what `ayon-addon open` is about: the stage shows that contribution
+// once (its tab, its Customize section) and tracks its pieces (tracking.ts).
 export const PARAMS = {
   surface: 'surface',
   slot: 'slot',
