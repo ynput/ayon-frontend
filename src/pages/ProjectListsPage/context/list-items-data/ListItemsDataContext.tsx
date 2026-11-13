@@ -440,6 +440,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       projectName,
       listId: selectedListId,
       entityType: listEntityType,
+      attribFields,
       listItemsMap,
       canEditList: (selectedList?.accessLevel || 0) >= 20,
     })
