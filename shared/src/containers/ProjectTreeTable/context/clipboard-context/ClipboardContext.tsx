@@ -13,13 +13,14 @@ import {
   getEntityDataById,
   getLinkEntityIdsByColumnId,
   parseCellId,
+  parseScopedColumnId,
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
 import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
 import { getAddonColumnText } from '../../addonColumns/addonColumnValues'
 
 // Types
-import { TableRow } from '../../types/table'
+import { TableRow, getScopedEntity } from '../../types/table'
 import { EntityUpdate } from '../../hooks/useUpdateTableData'
 import usePasteLinks, { LinkUpdate } from '../../hooks/usePasteLinks'
 import { downloadUrl, getCsvFileName } from '../../../TableExport/csvFile'
@@ -41,6 +42,14 @@ import { ClipboardContextType, ClipboardProviderProps } from '../clipboard/clipb
 import { useProjectTableContext } from '../project-table/ProjectTableContextInstance'
 import { validateEntityId, getEntityId } from '@shared/util'
 import { ClipboardContext } from './ClipboardContextInstance'
+
+// parent link columns (e.g. folder_link_*) read the parent's links and are never pasted into
+const getParentLink = (colId: string) => {
+  const { scope, field } = parseScopedColumnId(colId)
+  return scope !== 'primary' && field.startsWith('link_')
+    ? { scope, linkKey: field.slice('link_'.length) }
+    : undefined
+}
 
 const DISPLAY_PREFERRED_COLS = new Set([
   'version',
@@ -207,6 +216,10 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
               // what the addon column's fetchValues returned for the entity, as text. List items
               // are keyed by their entity (row.primary.id), not the list item id
               cellValue = getAddonColumnText(colId, entity.entityId || entity.id)
+            } else if (getParentLink(colId)) {
+              const { scope, linkKey } = getParentLink(colId)!
+              const parent = displayRow && getScopedEntity(displayRow, scope)
+              cellValue = parent?.links?.[linkKey]?.map((link) => link.entityId).join(',') || ''
             } else if (colId.startsWith('link_')) {
               cellValue = getLinkEntityIdsByColumnId(entity.links, colId)
             } else if (colId === 'subtasks') {
@@ -529,6 +542,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // Validate each mapped value
         for (const colId of selectedColIds) {
           if (colId === 'subType' && isProductType) continue
+          if (getParentLink(colId)) continue
           const pasteValue = mappedValues[colId] || ''
 
           const isValid = validateClipboardData({
@@ -568,7 +582,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         const colId = selectedColIds[colIndex]
 
         // Skip special handling for 'name' which we don't want to paste
-        if (colId === 'name') continue
+        if (colId === 'name' || getParentLink(colId)) continue
 
         // Special handling for subtasks column
         if (colId === 'subtasks') {

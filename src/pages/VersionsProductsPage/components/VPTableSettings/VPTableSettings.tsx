@@ -6,7 +6,12 @@ import { SettingSwitch } from '@shared/components/ProjectTableSettings/ColumnsSe
 import { SizeSlider } from '@shared/components'
 import { useVPViewsContext } from '../../context/vp-views'
 import { FeaturedVersionOrder, FEATURED_VERSION_TYPES } from '@shared/components'
-import { VP_COLUMN_ID_ALIASES, VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from './VPTableSettingsHelpers'
+import {
+  VP_COLUMN_ID_ALIASES,
+  VP_EXTRA_COLUMNS,
+  VP_PARENT_COLUMNS,
+  VP_PARENT_SCOPES,
+} from './VPTableSettingsHelpers'
 
 export interface VPTableSettingsProps {}
 
@@ -81,8 +86,8 @@ export const VPTableSettings: FC<VPTableSettingsProps> = ({}) => {
     <ProjectTableSettings
       extraColumns={extraColumns}
       parentColumns={VP_PARENT_COLUMNS}
+      parentLinkScopes={VP_PARENT_SCOPES}
       settings={[...extraSettings, ...addonSections]}
-      includeLinks={false}
       scope="version"
       columnIdAliases={VP_COLUMN_ID_ALIASES}
       order={[
