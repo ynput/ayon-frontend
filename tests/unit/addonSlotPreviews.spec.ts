@@ -16,6 +16,7 @@ import {
 import {
   contractsCode,
   findContractPackages,
+  jsLiteral,
   loadPreviewsModule,
   readContractPreviews,
   readContractSlots,
@@ -238,9 +239,9 @@ test('the dev server imports declarations and previews by file path', () => {
   const root = addonRoot()
   const dir = path.join(root, 'node_modules', PACKAGE)
   const code = contractsCode(root, 'contributor')
-  expect(code).toContain(`package: "${PACKAGE}"`)
-  expect(code).toContain(`slots: () => import(${JSON.stringify(path.join(dir, 'slots.js'))})`)
-  expect(code).toContain(`previews: () => import(${JSON.stringify(path.join(dir, 'previews.js'))})`)
+  expect(code).toContain(`package: ${jsLiteral(PACKAGE)}`)
+  expect(code).toContain(`slots: () => import(${jsLiteral(path.join(dir, 'slots.js'))})`)
+  expect(code).toContain(`previews: () => import(${jsLiteral(path.join(dir, 'previews.js'))})`)
   expect(code).toContain('export const contractProblems = []')
 })
 

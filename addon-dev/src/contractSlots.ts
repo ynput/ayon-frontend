@@ -39,23 +39,18 @@ export interface ContractPackage {
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
 
-const UNSAFE_JS_CODEPOINTS: Record<string, string> = {
+// what JSON.stringify leaves unescaped but a <script> or a JS source can't take as is
+const UNSAFE_IN_JS: Record<string, string> = {
   '<': '\\u003C',
   '>': '\\u003E',
   '/': '\\u002F',
-  '\\': '\\\\',
-  '\b': '\\b',
-  '\f': '\\f',
-  '\n': '\\n',
-  '\r': '\\r',
-  '\t': '\\t',
-  '\0': '\\0',
   '\u2028': '\\u2028',
   '\u2029': '\\u2029',
 }
 
-const escapeUnsafeForGeneratedJs = (str: string) =>
-  str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => UNSAFE_JS_CODEPOINTS[ch] ?? ch)
+/** A value as a JS literal for generated code. */
+export const jsLiteral = (value: unknown) =>
+  JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (ch) => UNSAFE_IN_JS[ch])
 
 /** The contract packages in the addon's dependencies and devDependencies. */
 export const findContractPackages = (root: string) => {
@@ -98,20 +93,18 @@ export const findContractPackages = (root: string) => {
 export const contractsCode = (root: string, addonName: string) => {
   const { packages, problems } = findContractPackages(root)
   const load = (file?: string) =>
-    file
-      ? `() => import(${escapeUnsafeForGeneratedJs(JSON.stringify(file.split(path.sep).join('/')))})`
-      : 'undefined'
+    file ? `() => import(${jsLiteral(file.split(path.sep).join('/'))})` : 'undefined'
   const contracts = packages
     .filter((contract) => contract.slots)
     .map(
       (contract) =>
-        `{ package: ${JSON.stringify(contract.name)}, entries: ${JSON.stringify(contract.entries)}, ` +
+        `{ package: ${jsLiteral(contract.name)}, entries: ${jsLiteral(contract.entries)}, ` +
         `slots: ${load(contract.slots)}, previews: ${load(contract.previews)} }`,
     )
   return [
     `// the contract packages of ${addonName}`,
     `export const contracts = [${contracts.join(', ')}]`,
-    `export const contractProblems = ${JSON.stringify(problems.map((p) => p.reason))}`,
+    `export const contractProblems = ${jsLiteral(problems.map((p) => p.reason))}`,
   ].join('\n')
 }
 
