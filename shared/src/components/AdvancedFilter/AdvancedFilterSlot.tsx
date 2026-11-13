@@ -1,9 +1,8 @@
-import { FC, useMemo } from 'react'
-import { Button, Icon, Option } from '@ynput/ayon-react-components'
+import { FC } from 'react'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   AdvancedFilterField,
-  buildAdvancedFilterFields,
   countAdvancedFilterRules,
 } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 import { PowerpackButton } from '../Powerpack'
@@ -17,21 +16,15 @@ import { useParentNarrowerThan } from './useParentNarrowerThan'
 import * as Styled from './AdvancedFilterSlot.styled'
 
 const LABEL = ADVANCED_FILTER_LABEL
-const NO_FIELDS: AdvancedFilterField[] = []
 
 export interface AdvancedFilterSlotProps {
   value?: QueryFilter
   onChange: (value: QueryFilter | undefined) => void
-  // from useAdvancedFilterEditor
+  // from useAdvancedFilterInSearchBar
   editor: AdvancedFilterEditor
+  fields: AdvancedFilterField[]
   // opens the editor each time it changes
   openRequest?: number
-  // the options of the search bar next to it: the fields that can be filtered by
-  options: Option[]
-  // entity types of a multi-scope page
-  scopes?: string[]
-  // option ids that can't be used in the advanced filter
-  exclude?: string[]
   disabled?: boolean
   // toolbar width below which the control is an icon with the count badge
   compactBelow?: number
@@ -44,21 +37,12 @@ export const AdvancedFilterSlot: FC<AdvancedFilterSlotProps> = ({
   value,
   onChange,
   editor: { Editor, powerLicense, isLoading, outdated },
+  fields,
   openRequest,
-  options,
-  scopes,
-  exclude,
   disabled,
   compactBelow = ADVANCED_FILTER_COMPACT_WIDTH,
 }) => {
   const [markerRef, compact] = useParentNarrowerThan(compactBelow)
-
-  // The options are rebuilt on every render. The editor gets a new list only when a field
-  // changed (compared without `loadValues`, which is kept from the first list).
-  const builtFields = Editor ? buildAdvancedFilterFields(options, { scopes, exclude }) : NO_FIELDS
-  const fieldsKey = JSON.stringify(builtFields)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const fields = useMemo(() => builtFields, [fieldsKey])
 
   const label = compact ? undefined : LABEL
 

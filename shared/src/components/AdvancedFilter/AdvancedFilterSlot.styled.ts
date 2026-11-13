@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
 
 // same height as the search bar it sits next to
 export const Chip = styled.div`
@@ -34,4 +35,14 @@ export const Chip = styled.div`
   .remove {
     padding: 4px;
   }
+`
+
+// the last item inside the search bar, at its right end whatever the bar holds (React may
+// append its own children after it)
+export const MoveButton = styled(Button)`
+  order: 1;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 2px 6px;
+  white-space: nowrap;
 `

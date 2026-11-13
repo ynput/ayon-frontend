@@ -1,8 +1,9 @@
 import {
   AdvancedFilterDropdownButton,
+  AdvancedFilterMoveButton,
   AdvancedFilterSlot,
   BuildFilterOptions,
-  useAdvancedFilterEditor,
+  useAdvancedFilterInSearchBar,
   useBuildFilterOptions,
   ScopeWithFilterTypes,
 } from '@shared/components'
@@ -41,7 +42,8 @@ interface SearchFilterWrapperProps
   onChange?: (queryFilters: QueryFilter) => void
   // nested filter next to the search bar: shown when onAdvancedFilterChange is given
   advancedFilter?: QueryFilter
-  onAdvancedFilterChange?: (advancedFilter: QueryFilter | undefined) => void
+  // `filter`: the search bar's filter, saved together with it (filters moved into it)
+  onAdvancedFilterChange?: (advancedFilter: QueryFilter | undefined, filter?: QueryFilter) => void
   advancedFilterExclude?: string[] // option ids the advanced filter can't use
   data: BuildFilterOptions['data']
 }
@@ -135,9 +137,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
   const searchFilterRef = useRef<SearchFilterRef>(null)
-
-  const advancedFilterEditor = useAdvancedFilterEditor({ skip: !onAdvancedFilterChange })
-  const [advancedFilterOpenRequest, setAdvancedFilterOpenRequest] = useState(0)
 
   // Custom date range
   const dateRange = useDateRangeFilter()
@@ -313,9 +312,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     searchFilterRef.current?.close()
   }
 
-  // The button in the dropdown: applies what Confirm would apply, then opens the advanced
-  // filter. close() alone would drop the values picked so far.
-  const handleOpenAdvancedFilter = () => {
+  // Before the advanced filter opens: applies what Confirm would apply and closes the
+  // dropdown. close() alone would drop the values picked so far.
+  const applySearchBar = () => {
     const chipId = editingSearchChipRef.current
     const input = searchFilterRef.current
       ?.getContainerElement()
@@ -329,8 +328,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
       handleFinish(applied)
       searchFilterRef.current?.close()
     }
-    setAdvancedFilterOpenRequest((request) => request + 1)
   }
+
+  const pinnedFilterId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
+  const advancedFilterBar = useAdvancedFilterInSearchBar({
+    value: advancedFilter,
+    onChange: onAdvancedFilterChange,
+    options,
+    scopes: scopes?.map(({ scope }) => scope),
+    exclude: advancedFilterExclude,
+    filters: localFilters.filter((f) => f.id !== pinnedFilterId),
+    applySearchBar,
+    removeFilters: (ids) => {
+      const kept = localFilters.filter((f) => !ids.includes(f.id))
+      setLocalFilters(kept)
+      searchFilterRef.current?.close()
+      // the pinned slice is display-only, as in handleFinish
+      return clientFilterToQueryFilter(kept.filter((f) => f.id !== pinnedFilterId))
+    },
+  })
 
   // While editing a search chip, intercept Enter on the dropdown input AND clicks
   // on the dropdown's Confirm button so the chip's value gets updated (or removed
@@ -433,7 +449,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     <>
       <SearchFilter
         ref={searchFilterRef}
-        options={options}
+        options={advancedFilterBar.option ? [...options, advancedFilterBar.option] : options}
         groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
@@ -446,17 +462,14 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         enableAutosuggestion={false}
         pt={{
           searchBar: {
-            style: {
-              paddingRight: 28,
-            },
             onClickCapture: handleSearchBarClickCapture,
             ...searchBar,
           },
           dropdown: {
             operationsTemplate: onAdvancedFilterChange && (
               <AdvancedFilterDropdownButton
-                editor={advancedFilterEditor}
-                onOpen={handleOpenAdvancedFilter}
+                editor={advancedFilterBar.editor}
+                onSwitch={advancedFilterBar.switchFilter}
               />
             ),
             pt: {
@@ -464,6 +477,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
                 onClick: (event) => {
                   const listItem = (event.target as HTMLLIElement).closest('li')
                   if (!listItem) return true
+
+                  // the "Advanced filter" entry at the end of the field list
+                  if (!advancedFilterBar.handleItemClick(event)) return false
 
                   // PowerPack gating
                   if (listItem.querySelector('span[icon="bolt"]')) {
@@ -530,15 +546,18 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         }}
         {...props}
       />
+      <AdvancedFilterMoveButton
+        searchFilterRef={searchFilterRef}
+        count={advancedFilterBar.movableCount}
+        onMove={advancedFilterBar.moveToAdvancedFilter}
+      />
       {onAdvancedFilterChange && (
         <AdvancedFilterSlot
           value={advancedFilter}
           onChange={onAdvancedFilterChange}
-          editor={advancedFilterEditor}
-          openRequest={advancedFilterOpenRequest}
-          options={options}
-          scopes={scopes?.map(({ scope }) => scope)}
-          exclude={advancedFilterExclude}
+          editor={advancedFilterBar.editor}
+          fields={advancedFilterBar.fields}
+          openRequest={advancedFilterBar.openRequest}
         />
       )}
       <CustomDateRangeDialog

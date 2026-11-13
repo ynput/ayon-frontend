@@ -108,7 +108,7 @@ export interface ListItemsDataContextValue {
   setListItemsFilters: (filters: QueryFilter) => void
   // nested filter stored next to listItemsFilters, ANDed with it
   listItemsAdvancedFilter: QueryFilter | undefined
-  setListItemsAdvancedFilter: (filter: QueryFilter | undefined) => void
+  setListItemsAdvancedFilter: (filter: QueryFilter | undefined, searchFilter?: QueryFilter) => void
   // folders data
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap

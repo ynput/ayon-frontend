@@ -79,7 +79,7 @@ export interface ProjectOverviewContextType {
   setQueryFilters: (queryFilters: QueryFilter) => void
   // nested filter stored next to the search bar's filter, already part of the filters above
   advancedFilter?: QueryFilter
-  setAdvancedFilter?: (advancedFilter: QueryFilter | undefined) => void
+  setAdvancedFilter?: (advancedFilter: QueryFilter | undefined, filter?: QueryFilter) => void
 
   // Dual filtering system
   combinedFilters: QueryFilter // For data fetching (includes slice filters)
