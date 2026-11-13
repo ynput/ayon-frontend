@@ -35,7 +35,6 @@ import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
 import { useGetBundleAddon } from '@shared/hooks'
-import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
 
 interface DashboardAddon {
   name: string
@@ -95,7 +94,6 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const hasPlanner = !!getBundleAddonVersion('planner')
   const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
@@ -105,7 +103,6 @@ const UserDashboardPage: React.FC = () => {
     studioPageContributions,
     [
       ...BUILT_IN_MODULES,
-      'planner',
       ...(addonsData as DashboardAddon[]).map((a) => a.name),
       ...remotePages.map((p) => p.module),
     ],
@@ -190,20 +187,6 @@ const UserDashboardPage: React.FC = () => {
         showProjectList: false,
         requiresProjects: true,
       },
-      // Show bookings splash when planner addon is not installed;
-      // when installed the remote page from the planner addon handles /dashboard/bookings
-      ...(!hasPlanner
-        ? [
-            {
-              name: 'Planner',
-              path: '/dashboard/planner',
-              module: 'planner',
-              accessLevels: [],
-              component: <BookingsSplashscreen />,
-              showProjectList: false,
-            },
-          ]
-        : []),
       // Add legacy dashboard addons
       ...(addonsData as DashboardAddon[])
         .filter((addon) => {
@@ -288,7 +271,6 @@ const UserDashboardPage: React.FC = () => {
       isManager,
       addonName,
       module,
-      hasPlanner,
     ],
   )
 
