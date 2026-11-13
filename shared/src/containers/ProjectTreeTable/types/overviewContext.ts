@@ -77,6 +77,9 @@ export interface ProjectOverviewContextType {
   // Backward compatibility for ProjectTableProvider (uses taskFilters)
   queryFilters: QueryFilterParams
   setQueryFilters: (queryFilters: QueryFilter) => void
+  // nested filter stored next to the search bar's filter, already part of the filters above
+  advancedFilter?: QueryFilter
+  setAdvancedFilter?: (advancedFilter: QueryFilter | undefined) => void
 
   // Dual filtering system
   combinedFilters: QueryFilter // For data fetching (includes slice filters)
