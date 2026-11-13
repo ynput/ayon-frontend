@@ -14,6 +14,31 @@ export interface AddonConfig {
 }
 
 export const addonConfigs: Record<string, AddonConfig> = {
+  review: {
+    label: 'Review',
+    icon: 'subscriptions',
+    features: {
+      compare: {
+        label: 'Compare versions',
+        description:
+          'Compare a version with any other version side by side, as an overlay, with a split or by swapping between them.',
+        bullet: 'Compare versions side by side, split or overlaid',
+      },
+      timeline: {
+        label: 'Timeline playback',
+        description:
+          'Select several versions and play them one after another on a timeline, like an edit.',
+        bullet: 'Play selected versions back to back on a timeline',
+      },
+      annotations: {
+        label: 'Advanced annotations',
+        description:
+          'Draw on any frame with shapes, text and colours, and keep annotations across a range of frames.',
+        bullet: 'Shapes, text and frame range annotations',
+      },
+    },
+    featureOrder: ['compare', 'timeline', 'annotations'],
+  },
   planner: {
     label: 'Planner',
     icon: 'calendar_month',

@@ -12,6 +12,7 @@ The host shares these as singletons, so an addon that declares the same shares u
 | --- | --- |
 | `react`, `react-dom`, `@ynput/ayon-react-components` | `shared` in the federation plugin (`vite.config.ts`) |
 | `@reduxjs/toolkit`, `react-redux`, `react-router`, `react-router-dom`, `react-toastify`, `primereact/confirmdialog`, `@ynput/ayon-frontend-shared` and every subpath (`/api`, `/context`, `/Slicer`, ...) | `registerShared` at startup, with the host's own modules (`hostSharedModules.ts`, called from `src/index.tsx`) |
+| `@ynput/ayon-player` and its subpaths (`/plugins`, `/model`, `/utils`, `/attributes`, `/color`) | `registerShared` too, from a separate lazy module (`hostPlayerEntries.ts`) that only loads when an addon asks for it, e.g. Review's viewer player plugins |
 
 What an addon gets from that:
 - RTK Query hooks from `/api` read and write the host's cache. A tag the host invalidates refetches addon queries and the other way round. A query the host already ran isn't requested again.
