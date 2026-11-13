@@ -1,3 +1,5 @@
 export * from './AdvancedFilterSlot'
+export * from './AdvancedFilterDropdownButton'
+export * from './useAdvancedFilterEditor'
 export * from './AdvancedFilterSlotHelpers'
 export * from './useParentNarrowerThan'

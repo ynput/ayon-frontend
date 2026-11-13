@@ -1,30 +1,31 @@
 import { FC, useMemo } from 'react'
 import { Button, Icon, Option } from '@ynput/ayon-react-components'
-import { usePowerpack } from '@shared/context'
-import { useAfterStartup } from '@shared/hooks/useAfterStartup'
-import { useLoadModule } from '@shared/hooks/useLoadModule'
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
   AdvancedFilterField,
-  AdvancedFilterProps,
   buildAdvancedFilterFields,
   countAdvancedFilterRules,
 } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 import { PowerpackButton } from '../Powerpack'
 import {
   ADVANCED_FILTER_COMPACT_WIDTH,
+  ADVANCED_FILTER_LABEL,
   ADVANCED_FILTER_MAX_DEPTH,
-  ADVANCED_FILTER_MIN_VERSION,
 } from './AdvancedFilterSlotHelpers'
+import type { AdvancedFilterEditor } from './useAdvancedFilterEditor'
 import { useParentNarrowerThan } from './useParentNarrowerThan'
 import * as Styled from './AdvancedFilterSlot.styled'
 
-const LABEL = 'Advanced filter'
+const LABEL = ADVANCED_FILTER_LABEL
 const NO_FIELDS: AdvancedFilterField[] = []
 
 export interface AdvancedFilterSlotProps {
   value?: QueryFilter
   onChange: (value: QueryFilter | undefined) => void
+  // from useAdvancedFilterEditor
+  editor: AdvancedFilterEditor
+  // opens the editor each time it changes
+  openRequest?: number
   // the options of the search bar next to it: the fields that can be filtered by
   options: Option[]
   // entity types of a multi-scope page
@@ -36,15 +37,14 @@ export interface AdvancedFilterSlotProps {
   compactBelow?: number
 }
 
-// `compact` asks the editor to show its button as an icon with the count badge
-type AdvancedFilterEditorProps = AdvancedFilterProps & { compact?: boolean }
-
 // The advanced filter control next to a search bar. The editor is the Power Pack module
 // `AdvancedFilter`. Without it a stored filter still applies: it is shown as a chip that can
 // only be removed.
 export const AdvancedFilterSlot: FC<AdvancedFilterSlotProps> = ({
   value,
   onChange,
+  editor: { Editor, powerLicense, isLoading, outdated },
+  openRequest,
   options,
   scopes,
   exclude,
@@ -52,21 +52,6 @@ export const AdvancedFilterSlot: FC<AdvancedFilterSlotProps> = ({
   compactBelow = ADVANCED_FILTER_COMPACT_WIDTH,
 }) => {
   const [markerRef, compact] = useParentNarrowerThan(compactBelow)
-  const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
-  // the table doesn't wait for the editor, so it is loaded after the page
-  const isReady = useAfterStartup()
-
-  const [AdvancedFilter, { isLoaded, isLoading, outdated }] =
-    useLoadModule<FC<AdvancedFilterEditorProps> | null>({
-      addon: 'powerpack',
-      remote: 'views',
-      module: 'AdvancedFilter',
-      fallback: null,
-      minVersion: ADVANCED_FILTER_MIN_VERSION,
-      skip: !powerLicense,
-      defer: !isReady,
-    })
-  const Editor = isLoaded ? AdvancedFilter : null
 
   // The options are rebuilt on every render. The editor gets a new list only when a field
   // changed (compared without `loadValues`, which is kept from the first list).
@@ -87,6 +72,7 @@ export const AdvancedFilterSlot: FC<AdvancedFilterSlotProps> = ({
           disabled={disabled}
           maxDepth={ADVANCED_FILTER_MAX_DEPTH}
           compact={compact}
+          openRequest={openRequest}
         />
       )
     }
@@ -114,7 +100,7 @@ export const AdvancedFilterSlot: FC<AdvancedFilterSlotProps> = ({
     }
 
     // keeps the place of the editor's button while the license or the module loads
-    if (isLoadingLicense || (powerLicense && (isLoading || !isReady))) {
+    if (isLoading) {
       return <Button className="loading" icon="filter_alt" label={label} disabled />
     }
 

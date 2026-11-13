@@ -1,6 +1,8 @@
 import {
+  AdvancedFilterDropdownButton,
   AdvancedFilterSlot,
   BuildFilterOptions,
+  useAdvancedFilterEditor,
   useBuildFilterOptions,
   ScopeWithFilterTypes,
 } from '@shared/components'
@@ -15,7 +17,6 @@ import {
   buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
-import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -134,6 +135,9 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   const [localFilters, setLocalFilters] = useState<Filter[]>(filters)
 
   const searchFilterRef = useRef<SearchFilterRef>(null)
+
+  const advancedFilterEditor = useAdvancedFilterEditor({ skip: !onAdvancedFilterChange })
+  const [advancedFilterOpenRequest, setAdvancedFilterOpenRequest] = useState(0)
 
   // Custom date range
   const dateRange = useDateRangeFilter()
@@ -309,6 +313,25 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     searchFilterRef.current?.close()
   }
 
+  // The button in the dropdown: applies what Confirm would apply, then opens the advanced
+  // filter. close() alone would drop the values picked so far.
+  const handleOpenAdvancedFilter = () => {
+    const chipId = editingSearchChipRef.current
+    const input = searchFilterRef.current
+      ?.getContainerElement()
+      ?.querySelector('ul .search input') as HTMLInputElement | null
+    if (chipId && input) {
+      // a search chip being edited: keep the typed text
+      commitSearchChipEdit(chipId, input)
+    } else {
+      const applied = localFiltersRef.current.filter((f) => f.values?.length)
+      setLocalFilters(applied)
+      handleFinish(applied)
+      searchFilterRef.current?.close()
+    }
+    setAdvancedFilterOpenRequest((request) => request + 1)
+  }
+
   // While editing a search chip, intercept Enter on the dropdown input AND clicks
   // on the dropdown's Confirm button so the chip's value gets updated (or removed
   // if cleared). Without these intercepts the default Confirm path passes the
@@ -430,8 +453,11 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
             ...searchBar,
           },
           dropdown: {
-            operationsTemplate: powerLicense ? undefined : (
-              <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
+            operationsTemplate: onAdvancedFilterChange && (
+              <AdvancedFilterDropdownButton
+                editor={advancedFilterEditor}
+                onOpen={handleOpenAdvancedFilter}
+              />
             ),
             pt: {
               item: {
@@ -508,6 +534,8 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         <AdvancedFilterSlot
           value={advancedFilter}
           onChange={onAdvancedFilterChange}
+          editor={advancedFilterEditor}
+          openRequest={advancedFilterOpenRequest}
           options={options}
           scopes={scopes?.map(({ scope }) => scope)}
           exclude={advancedFilterExclude}

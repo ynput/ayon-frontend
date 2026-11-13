@@ -44,6 +44,8 @@ export type AdvancedFilterProps = {
   fields: AdvancedFilterField[]
   disabled?: boolean
   maxDepth?: number
+  compact?: boolean // narrow toolbar: the button is an icon with the count badge
+  openRequest?: number // opens the panel each time it changes
 }
 
 const isCondition = (node: QueryCondition | QueryFilter): node is QueryCondition => 'key' in node
