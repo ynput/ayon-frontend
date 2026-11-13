@@ -21,6 +21,7 @@ import { readContractPreviews, readContractSlots } from '../../addon-dev/src/con
 import { loadManifests } from '../../shared/src/context/remote-modules/loadManifests'
 import { useSlotMenuItems } from '../../addon/src/SlotOutlet'
 import { manifestSnippet } from '../../addon-dev/shell/src/places'
+import { exampleSnippet } from '../../addon/src/slotExamples'
 import { renderToHtml } from './support/render'
 
 const example = { name: 'example', version: '2.0.0', remote: 'example' }
@@ -542,6 +543,22 @@ test('contract packages type contributions in both entries', () => {
       writeFileSync(file, `import '${path.join(fixture, 'exampleContract')}'\n${snippet}\n`)
       return file
     })
+    // and the Show slots snippet of each, with the pieces it imports
+    for (const version of [1, 2]) {
+      const snippets = [
+        exampleSnippet('example.itemMenuItem', { version, required: ['label', 'icon'], pieces: ['run'], label: 'Item menu item' }),
+        exampleSnippet('example.panel', { version, required: ['title'], pieces: ['component'], label: 'Panel' }),
+      ]
+      const file = path.join(generated, `example-v${version}.ts`)
+      writeFileSync(
+        file,
+        `import '${path.join(fixture, 'exampleContract')}'\nimport { contribute } from '@ynput/ayon-addon/manifest'\n` +
+          `export default [\n${snippets.join(',\n')},\n]\n`,
+      )
+      files.push(file)
+    }
+    writeFileSync(path.join(generated, 'Run.ts'), 'export default () => undefined\n')
+    writeFileSync(path.join(generated, 'Component.ts'), 'export default () => null\n')
     writeFileSync(
       path.join(generated, 'ItemMenuItem.ts'),
       "import type { RunPiece } from '@ynput/ayon-addon'\n" +
