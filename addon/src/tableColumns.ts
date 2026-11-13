@@ -32,3 +32,55 @@ export const ADDON_COLUMN_PREFIX = 'addon__'
  */
 export const addonColumnId = (addon: string, id: string) =>
   `${ADDON_COLUMN_PREFIX}${addon.replace(/[^A-Za-z0-9]/g, '_')}__${id}`
+
+/**
+ * A `tableColumn` value with its own Copy text: what `cellValue` returns. `__ayonCellValue` marks
+ * it, so it can't be mistaken for an addon's own `{ value, copy }` data; a string key, not a
+ * symbol, so it stays plain data the host can keep, clone and serialise.
+ */
+export interface CellValue<T = unknown> {
+  readonly __ayonCellValue: true
+  /** what the cell gets as `value` */
+  value: T
+  /** what Copy puts on the clipboard for this cell */
+  copy: string
+}
+
+/**
+ * A `tableColumn` value with its own Copy text, for `fetchValues` to return for an entity:
+ * `cellValue({ total, currency }, { copy: '12500 EUR' })`. The cell gets `value` (any data, it is
+ * not shown as text); Copy takes `copy`. Without it, Copy takes the value itself as text
+ * (strings, numbers and booleans; lists joined with `, `; nothing for other objects).
+ */
+export const cellValue = <T>(value: T, { copy }: { copy: string }): CellValue<T> => ({
+  __ayonCellValue: true,
+  value,
+  copy,
+})
+
+/**
+ * For the host: one entity's result of `fetchValues` as the cell's `value` and the Copy text
+ * (`copy`: set only by `cellValue`). Anything not made by `cellValue` is the value itself, so a
+ * plain `{ value, copy }` object of an addon stays its value.
+ */
+export const readCellValue = (result: unknown): { value: unknown; copy?: string } => {
+  if (
+    result !== null &&
+    typeof result === 'object' &&
+    (result as Partial<CellValue>).__ayonCellValue === true
+  ) {
+    const { value, copy } = result as CellValue
+    return typeof copy === 'string' ? { value, copy } : { value }
+  }
+  return { value: result }
+}
+
+/** The Copy text of a `tableColumn` cell: `copy` when set, else the value as text. */
+export const cellCopyText = ({ value, copy }: { value?: unknown; copy?: string }): string => {
+  if (copy !== undefined) return copy
+  if (Array.isArray(value)) return value.filter((item) => typeof item !== 'object').join(', ')
+  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+    return String(value)
+  }
+  return ''
+}

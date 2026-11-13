@@ -111,6 +111,29 @@ name (anything but letters and digits becomes `_`), then the contribution's id. 
 until the user adds them in Customize. Build the id with `addonColumnId(addon, id)` (`ADDON_COLUMN_PREFIX`
 is the `addon__` part) in tests and saved views; do not write it out by hand.
 
+## Table column values and Copy
+
+`fetchValues` returns one value per entity id, and the cell gets it as `value`. Copy (and the
+cell selection's copy) takes the value as text: strings, numbers and booleans, lists joined with
+`, `, nothing for other objects. When the cell shows data that isn't text, return it with its Copy
+text, `cellValue(value, { copy })` from `@ynput/ayon-addon`: the cell gets `value`, Copy takes
+`copy`. Don't pack the data into a string for the cell to parse back.
+
+```ts
+import { cellValue, type TableColumnFetch } from '@ynput/ayon-addon'
+const fetchTotals: TableColumnFetch = async ({ projectName, entities }) => {
+  // one request for the batch: by entity id, { total: 12500, currency: 'EUR', count: 2, status: 'draft' }
+  const totals = await getTotals(projectName, entities)
+  return Object.fromEntries(
+    Object.entries(totals).map(([id, t]) => [id, cellValue(t, { copy: `${t.total} ${t.currency}` })]),
+  )
+}
+```
+
+Only `cellValue` makes a value with Copy text: a plain `{ value, copy }` object is a value like
+any other, so existing columns are unchanged. Values are kept while the table is open: return plain
+data, not class instances or functions.
+
 ## What a project table shows: `tableState`
 
 `tableState` is the table's filter as AYON queries it: the filter bar, every slicer panel, the
@@ -1021,7 +1044,7 @@ projectTableCustomizeSection({
 
 ### `tableColumn`: `tableColumn`
 
-A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
+A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy work as in other columns. Copy takes the cell's `value` as text, or the text `fetchValues` gives with `cellValue(value, { copy })`, so `value` can be data that only `cell` turns into text. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
 
 | Description field | Type | |
 |---|---|---|
@@ -1040,7 +1063,7 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `entity` (required) | `EntityRef` |  |
-| `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` |
+| `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity (for a `cellValue(value, { copy })`, its `value`); `undefined` without `fetchValues` |
 | `projectName` (required) | `string` |  |
 
 Pieces: `cell`, `fetchValues` (optional).

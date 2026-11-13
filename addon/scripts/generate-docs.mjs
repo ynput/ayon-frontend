@@ -241,6 +241,29 @@ name (anything but letters and digits becomes \`_\`), then the contribution's id
 until the user adds them in Customize. Build the id with \`addonColumnId(addon, id)\` (\`ADDON_COLUMN_PREFIX\`
 is the \`addon__\` part) in tests and saved views; do not write it out by hand.
 
+## Table column values and Copy
+
+\`fetchValues\` returns one value per entity id, and the cell gets it as \`value\`. Copy (and the
+cell selection's copy) takes the value as text: strings, numbers and booleans, lists joined with
+\`, \`, nothing for other objects. When the cell shows data that isn't text, return it with its Copy
+text, \`cellValue(value, { copy })\` from \`@ynput/ayon-addon\`: the cell gets \`value\`, Copy takes
+\`copy\`. Don't pack the data into a string for the cell to parse back.
+
+\`\`\`ts
+import { cellValue, type TableColumnFetch } from '@ynput/ayon-addon'
+const fetchTotals: TableColumnFetch = async ({ projectName, entities }) => {
+  // one request for the batch: by entity id, { total: 12500, currency: 'EUR', count: 2, status: 'draft' }
+  const totals = await getTotals(projectName, entities)
+  return Object.fromEntries(
+    Object.entries(totals).map(([id, t]) => [id, cellValue(t, { copy: \`\${t.total} \${t.currency}\` })]),
+  )
+}
+\`\`\`
+
+Only \`cellValue\` makes a value with Copy text: a plain \`{ value, copy }\` object is a value like
+any other, so existing columns are unchanged. Values are kept while the table is open: return plain
+data, not class instances or functions.
+
 ## What a project table shows: \`tableState\`
 
 \`tableState\` is the table's filter as AYON queries it: the filter bar, every slicer panel, the
