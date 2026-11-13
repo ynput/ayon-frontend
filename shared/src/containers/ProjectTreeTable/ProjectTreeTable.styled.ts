@@ -113,7 +113,7 @@ export const ColumnHeader = styled.tr`
 
 export const HeaderCell = styled.th`
   position: relative;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--color-table-header);
   box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
   display: flex;
   align-items: center;
@@ -121,14 +121,14 @@ export const HeaderCell = styled.th`
   white-space: nowrap;
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-lowest-hover);
+    background-color: var(--color-table-header-hover);
     .resize-handle {
       opacity: 1;
     }
 
     .actions {
       display: flex !important;
-      background-color: var(--md-sys-color-surface-container-lowest-hover);
+      background-color: var(--color-table-header-hover);
     }
 
     .actions .sort-button,
@@ -198,7 +198,7 @@ export const HeaderButtons = styled.div<{ $isOpen: boolean }>`
   right: 8px;
   top: 50%;
   transform: translateY(-50%);
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--color-table-header);
   padding-left: 4px;
 
   .resizing & {
@@ -489,7 +489,7 @@ export const TableHeader = styled.thead`
   top: 0;
   min-height: 34px;
   z-index: 10;
-  background-color: var(--md-sys-color-surface-container-lowest);
+  background-color: var(--color-table-header);
 
   .resizing & {
     cursor: col-resize !important;

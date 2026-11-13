@@ -7,6 +7,17 @@
   }
 }
 
+// shimmer lightness per theme (light-dark() only takes colours)
+:root,
+[data-theme='dark'] {
+  --shimmer-base-lightness: 15%;
+  --shimmer-highlight-lightness: 16.5%;
+}
+[data-theme='light'] {
+  --shimmer-base-lightness: 90%;
+  --shimmer-highlight-lightness: 93%;
+}
+
 //   Anything with .loading class will have the shimmer effect
 .loading:not(.no-shimmer):not(.p-treetable):not(.p-datatable),
 .p-treetable .p-treetable-tbody > tr.loading,
@@ -14,8 +25,6 @@
   /* Shimmer Effect Variables */
   --shimmer-hue: 215;
   --shimmer-saturation: 15%;
-  --shimmer-base-lightness: 15%;
-  --shimmer-highlight-lightness: 16.5%;
 
   /* Adjustment Variable */
   --shimmer-lightness-delta: 2%;

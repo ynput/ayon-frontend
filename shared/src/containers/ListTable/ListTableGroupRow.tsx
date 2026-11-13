@@ -1,5 +1,5 @@
 import React from 'react'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import * as Styled from './ListTable.styled'
 import clsx from 'clsx'
 import {
@@ -64,7 +64,7 @@ export function GroupRow({
           {displayFromValue?.icon ? (
             <Icon
               icon={displayFromValue.icon as any}
-              style={{ color: displayFromValue.color }}
+              style={{ color: getReadableColor(displayFromValue) }}
               filled
             />
           ) : displayFromValue?.color ? (

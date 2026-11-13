@@ -70,7 +70,7 @@ export const DialogContent = styled.div`
   /* add shadow to each item */
   & > *:not(.sub-menu),
   .sub-menu menu {
-    box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--md-sys-elevation-overlay);
   }
 
   /* theme support */
@@ -93,7 +93,7 @@ export const Section = styled.section`
   padding: 0px;
   border-radius: 8px;
   /* colors */
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   color: var(--md-sys-color-on-surface);
   z-index: 10;
   overflow: hidden;
@@ -149,7 +149,7 @@ export const Menu = styled.menu`
   }
 
   /* colors */
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
 
   /* divider */
   hr {

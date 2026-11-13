@@ -154,7 +154,7 @@ const EnumResolverPreview: FC<EnumResolverPreviewProps> = ({
     <Preview>
       {preview.map(({ option, icon }) => (
         <EnumItemRow key={String(option.value)}>
-          <EnumItemIcon icon={icon} color={option.color} reserveSpace={hasIcons} />
+          <EnumItemIcon icon={icon} color={option} reserveSpace={hasIcons} />
           <span className="label">{option.label}</span>
         </EnumItemRow>
       ))}

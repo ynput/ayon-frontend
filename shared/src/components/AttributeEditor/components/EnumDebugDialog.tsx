@@ -269,7 +269,7 @@ export const EnumDebugDialog: FC<EnumDebugDialogProps> = ({ resolver, settings, 
 
     return filteredItems.map((item) => (
       <ItemRow key={String(item.value)} title={item.description}>
-        <EnumItemIcon icon={item.icon} color={item.color} reserveSpace={hasIcons} />
+        <EnumItemIcon icon={item.icon} color={item} reserveSpace={hasIcons} />
         <span className="label">{item.label}</span>
         <span className="value">{String(item.value)}</span>
       </ItemRow>

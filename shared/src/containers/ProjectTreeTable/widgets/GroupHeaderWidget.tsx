@@ -1,4 +1,4 @@
-import { Button, Icon, theme } from '@ynput/ayon-react-components'
+import { Button, Icon, theme, getReadableColor } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 const Expander = styled(Button)`
@@ -88,6 +88,7 @@ type GroupHeaderProps = {
   icon?: string | null
   img?: string | null
   color?: string | null
+  colorLight?: string | null
   count?: number
   percentage?: number
   isExpanded: boolean
@@ -104,6 +105,7 @@ export const GroupHeaderWidget = ({
   count,
   percentage,
   color,
+  colorLight,
   isExpanded,
   isEmpty,
   toggleExpanded,
@@ -122,8 +124,10 @@ export const GroupHeaderWidget = ({
         <StyledContentAbsolute>
           <StyledContent>
             {img && <StyledImg src={img} alt={name} className="img" />}
-            {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
-            <StyledTextContent style={{ color: color || undefined }}>
+            {icon && (
+              <Icon icon={icon} style={{ color: getReadableColor({ color, colorLight }) }} />
+            )}
+            <StyledTextContent style={{ color: getReadableColor({ color, colorLight }) }}>
               <span className="label">{label || name}</span>
             </StyledTextContent>
             {count !== undefined && count > 0 ? (

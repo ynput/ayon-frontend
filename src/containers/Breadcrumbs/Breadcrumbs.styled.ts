@@ -92,12 +92,12 @@ export const CrumbsForm = styled.form`
       input {
         user-select: text;
         cursor: text;
-        background-color: var(--md-sys-color-surface-container-high);
+        background-color: var(--md-sys-color-surface-overlay);
         color: var(--md-sys-color-on-secondary-container);
         outline: none;
         border-color: var(--md-sys-color-outline);
 
-        box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+        box-shadow: var(--md-sys-elevation-overlay);
       }
     }
   }

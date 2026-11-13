@@ -6,6 +6,7 @@ export type EntityAnatomy = {
   name: string
   icon?: string
   color?: string
+  colorLight?: string
 }
 
 export const buildEntityPickerTableData = (
@@ -22,6 +23,7 @@ export const buildEntityPickerTableData = (
       parents: entity.parents,
       icon: anatomy?.icon || getEntityTypeIcon(entity.entityType),
       iconColor: anatomy?.color,
+      iconColorLight: anatomy?.colorLight,
       img: entity.thumbnail
         ? getEntityThumbnailUrl({ projectName, ...entity.thumbnail })
         : null,
@@ -53,6 +55,7 @@ export const buildFolderPickerTableData = (
       path: '/' + folder.path,
       icon: anatomy?.icon || getEntityTypeIcon('folder'),
       iconColor: anatomy?.color,
+      iconColorLight: anatomy?.colorLight,
       img: getEntityThumbnailUrl({
         projectName,
         entityType: 'folder',

@@ -1,8 +1,9 @@
 import { useGetProjectsInfoQuery } from '@shared/api'
 import type { ProjectModel, TaskType, FolderType } from '@shared/api'
+import type { UserColor } from '@ynput/ayon-react-components'
 import { intersectionBy } from 'lodash'
 
-type EntityType = TaskType | FolderType
+type EntityType = (TaskType | FolderType) & UserColor
 
 export const useScopedTypes = (projects: string[], entityType: string) => {
   const response = useGetProjectsInfoQuery({ projects: [...new Set(projects).values()] })

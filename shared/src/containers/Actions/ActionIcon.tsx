@@ -1,5 +1,5 @@
 import type { IconModel } from '@shared/api'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled, { keyframes } from 'styled-components'
 
@@ -28,7 +28,9 @@ const ActionIcon: FC<ActionIconProps> = ({ icon, isExecuting }) => {
 
   if (isExecuting) component = <SpinningIcon icon="sync" />
   else if (icon?.type === 'material-symbols' && icon?.name) {
-    component = <Icon icon={icon.name} style={{ color: icon.color }} />
+    component = (
+      <Icon icon={icon.name} style={{ color: getReadableColor(icon.color ?? undefined) }} />
+    )
   } else if (icon?.type === 'url') {
     component = <img src={icon.url} title="Action" />
   } else {

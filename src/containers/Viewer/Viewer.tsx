@@ -81,6 +81,8 @@ const ViewerBody = ({
           label: product?.productName || 'Unknown product',
           icon: product?.productType && project.getProductType(product.productType).icon,
           color: product?.productType && project.getProductType(product.productType).color,
+          colorLight:
+            product?.productType && project.getProductType(product.productType).colorLight,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -410,7 +412,7 @@ const ViewerBody = ({
                   valueProps={{ className: 'product-dropdown' }}
                   tooltip="Select a product to view its versions reviewables"
                   valueIcon={selectedProduct?.icon || ''}
-                  valueColor={selectedProduct?.color}
+                  valueColor={selectedProduct}
                 />
               )}
             </>
@@ -434,19 +436,21 @@ const ViewerBody = ({
           </Styled.ButtonGroup>
         </Styled.MinimizedToolbar>
 
-        <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
-          <ViewerComponent
-            projectName={projectName}
-            productId={productId}
-            reviewables={reviewables}
-            selectedReviewable={selectedReviewable}
-            versionIds={versionIds}
-            isFetchingReviewables={isFetchingReviewables}
-            noVersions={noVersions}
-            quickView={quickView}
-            onUpload={handleUploadAction}
-          />
-        </Styled.FullScreenWrapper>
+        <Styled.DarkTheme data-theme="dark">
+          <Styled.FullScreenWrapper handle={handle} onChange={fullScreenChange}>
+            <ViewerComponent
+              projectName={projectName}
+              productId={productId}
+              reviewables={reviewables}
+              selectedReviewable={selectedReviewable}
+              versionIds={versionIds}
+              isFetchingReviewables={isFetchingReviewables}
+              noVersions={noVersions}
+              quickView={quickView}
+              onUpload={handleUploadAction}
+            />
+          </Styled.FullScreenWrapper>
+        </Styled.DarkTheme>
 
         <Styled.RightToolBar
           ref={rightToolBarRef}
@@ -460,7 +464,9 @@ const ViewerBody = ({
             projectName={projectName}
             onUpload={handleUploadAction(true)}
           />
-          <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
+          <Styled.DarkTheme data-theme="dark">
+            <Styled.AnnotationTools id="annotation-tools" ref={annotationToolsRef} />
+          </Styled.DarkTheme>
         </Styled.RightToolBar>
 
         <ViewerDetailsPanel

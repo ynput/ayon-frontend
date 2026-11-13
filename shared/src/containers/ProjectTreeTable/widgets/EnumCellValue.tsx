@@ -1,5 +1,11 @@
 import type { EnumItem } from '@shared/api'
-import { getTextColor, Icon, IconProps } from '@ynput/ayon-react-components'
+import {
+  getReadableColor,
+  getTagColors,
+  getTextColor,
+  Icon,
+  IconProps,
+} from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
@@ -108,6 +114,12 @@ const StyledValueWrapper = styled.div`
 
   max-width: 100%;
   min-width: 20px;
+
+  &.pill {
+    gap: 4px;
+    padding: 1px 6px 1px 4px;
+    border-radius: var(--border-radius-m);
+  }
 `
 
 const StyledImg = styled.img`
@@ -153,6 +165,9 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
   isSelected?: boolean
   isReadOnly?: boolean
   iconOnlyColor?: boolean // When true, only the icon gets colored, not the text label
+  // a single value with a colour shows as a pill: filled with the colour (statuses, which stand out) or tinted
+  // like a tag (other coloured values such as priority). Lists keep their own chips
+  pill?: 'filled' | 'tinted'
   pt?: {
     icon?: Partial<IconProps>
     img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
@@ -172,6 +187,7 @@ export const EnumCellValue = ({
   isSelected,
   isReadOnly,
   iconOnlyColor = false,
+  pill: pillStyle,
   className,
   pt,
   ...props
@@ -219,51 +235,53 @@ export const EnumCellValue = ({
       {...props}
     >
       <StyledValuesContainer className="values">
-        {selectedOptions.map((option, i) => (
-          <StyledValueWrapper
-            key={option.value.toString() + i}
-            className={clsx({ 'has-img': checkForImgSrc(option.icon) })}
-          >
-            {option.icon && checkForImgSrc(option.icon) ? (
-              <StyledImg
-                src={option.icon}
-                className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
-                style={imgStyle}
-                data-tooltip={option.label}
-                {...imgRest}
-              />
-            ) : option.icon ? (
-              <Icon
-                icon={option.icon}
-                style={{ color: option.color, ...iconStyle }}
-                className={iconClassName}
-                {...iconRest}
-              />
-            ) : null}
+        {selectedOptions.map((option, i) => {
+          const pill =
+            pillStyle && option.color && !isMultiSelect && !iconOnlyColor
+              ? getPillColors(option, pillStyle)
+              : undefined
+          return (
+            <StyledValueWrapper
+              key={option.value.toString() + i}
+              className={clsx({ 'has-img': checkForImgSrc(option.icon), pill })}
+              style={pill}
+            >
+              {option.icon && checkForImgSrc(option.icon) ? (
+                <StyledImg
+                  src={option.icon}
+                  className={clsx({ avatar: checkAvatarImg(option.icon) }, imgClassName)}
+                  style={imgStyle}
+                  data-tooltip={option.label}
+                  {...imgRest}
+                />
+              ) : option.icon ? (
+                <Icon
+                  icon={option.icon}
+                  style={{
+                    color: pill ? pill.color : getReadableColor(option),
+                    ...iconStyle,
+                  }}
+                  className={iconClassName}
+                  {...iconRest}
+                />
+              ) : null}
 
-            {(showLabels || !option.icon) && (
-              <StyledValue
-                style={{
-                  color:
-                    backgroundColor && option.color
-                      ? getTextColor(option.color)
-                      : iconOnlyColor && option.icon
-                      ? undefined
-                      : option.color,
-                  backgroundColor: backgroundColor
-                    ? option.color || 'var(--md-sys-color-surface-container)'
-                    : 'transparent',
-                  ...valueStyle,
-                }}
-                className={clsx({ placeholder: isPlaceholder }, valueClassName)}
-                aria-label={option.label}
-                {...valueRest}
-              >
-                {option.label}
-              </StyledValue>
-            )}
-          </StyledValueWrapper>
-        ))}
+              {(showLabels || !option.icon) && (
+                <StyledValue
+                  style={{
+                    ...(!pill && getValueColors(option, !!backgroundColor, iconOnlyColor)),
+                    ...valueStyle,
+                  }}
+                  className={clsx({ placeholder: isPlaceholder }, valueClassName)}
+                  aria-label={option.label}
+                  {...valueRest}
+                >
+                  {option.label}
+                </StyledValue>
+              )}
+            </StyledValueWrapper>
+          )
+        })}
       </StyledValuesContainer>
       {!isItem && !isReadOnly && (
         <StyledExpandButton
@@ -288,6 +306,40 @@ export const EnumCellValue = ({
       )}
     </StyledWidget>
   )
+}
+
+const getPillColors = (option: EnumItem, style: 'filled' | 'tinted'): React.CSSProperties => {
+  if (style === 'filled') {
+    // the full colour, as on status buttons and task progress cards
+    return { backgroundColor: option.color!, color: getTextColor(option.color!) }
+  }
+  const colors = getTagColors(option)
+  return {
+    color: colors.text,
+    backgroundColor: colors.background,
+    boxShadow: `inset 0 0 0 1px ${colors.border}`,
+  }
+}
+
+// a value shown as a chip takes the tag colours, otherwise its colour is the text colour
+const getValueColors = (
+  option: EnumItem,
+  isChip: boolean,
+  iconOnlyColor: boolean,
+): React.CSSProperties => {
+  if (isChip && option.color) {
+    const colors = getTagColors(option)
+    return {
+      color: colors.text,
+      backgroundColor: colors.background,
+      boxShadow: `inset 0 0 0 1px ${colors.border}`,
+    }
+  }
+  if (isChip) return { backgroundColor: 'var(--md-sys-color-surface-container)' }
+  return {
+    color: iconOnlyColor && option.icon ? undefined : getReadableColor(option),
+    backgroundColor: 'transparent',
+  }
 }
 
 // Helper functions to check if the icon is a valid image source

@@ -434,6 +434,7 @@ const SimpleTable: FC<SimpleTableProps> = ({
             parents: row.original.parents,
             icon: row.original.icon || undefined,
             iconColor: row.original.iconColor,
+            iconColorLight: row.original.iconColorLight,
             iconFilled: row.original.iconFilled,
             img: row.original.img,
             imgShape: row.original.imgShape,

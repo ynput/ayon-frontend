@@ -832,11 +832,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             }}
           />
           <Section>
-            <StyledScrollPanel
-              className="transparent nopad"
-              style={{ flexGrow: 1 }}
-              id="settings-scroll-panel"
-            >
+            <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()

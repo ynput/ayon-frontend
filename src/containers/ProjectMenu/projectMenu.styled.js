@@ -11,7 +11,7 @@ export const ProjectSidebar = styled(Sidebar)`
 
   background: none;
 
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--md-sys-elevation-overlay);
 
   overflow: hidden;
 

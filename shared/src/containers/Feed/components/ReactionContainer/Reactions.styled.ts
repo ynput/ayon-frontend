@@ -1,4 +1,5 @@
 import styled, { css } from 'styled-components'
+import { getReadableColor } from '@ynput/ayon-react-components'
 
 type CategoryProps = {
   $categoryPrimary?: string
@@ -107,7 +108,7 @@ const Overlay = styled.div`
 `
 const ReactionsPanel = styled.div<CategoryProps>`
   /* VARS */
-  --panel-bg: var(--md-sys-color-surface-container-high);
+  --panel-bg: var(--md-sys-color-surface-overlay);
 
   /* CATEGORY */
   ${({ $categoryPrimary, $categorySecondary }) =>
@@ -142,7 +143,7 @@ const ReactionPanelOpener = styled.div<CategoryProps>`
     css`
       --opener-bg: ${$categorySecondary};
       --opener-hover-bg: ${$categorySecondary};
-      --opener-color: ${$categoryPrimary};
+      --opener-color: ${getReadableColor($categoryPrimary)};
     `}
 
   user-select: none;

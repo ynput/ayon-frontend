@@ -190,7 +190,7 @@ export const EntityNameWidget = ({
                 subType: 'subType' in entity ? entity.subType : undefined,
               }}
               icon={entity.icon || undefined}
-              color={entity.color || undefined}
+              color={entity.color ? entity : undefined}
             />
             <StyledTextContent className={layout}>
               {shouldShowPath && !isRestricted && (

@@ -1,4 +1,5 @@
 import type { Anatomy } from '@shared/api/generated/projects'
+import type { UserColor } from '@ynput/ayon-react-components'
 import { getEntityTypeIcon } from '@shared/util/getEntityTypeIcon'
 
 export type IconAnatomy = Pick<Anatomy, 'folder_types' | 'task_types' | 'product_base_types'>
@@ -34,4 +35,13 @@ export const getEntityColor = (
   anatomy: IconAnatomy,
 ): string | undefined => {
   return getAnatomyType(entityType, subType, anatomy)?.color
+}
+
+export const getEntityColorLight = (
+  entityType: string,
+  subType: string | undefined,
+  anatomy: IconAnatomy,
+): string | undefined => {
+  const type: UserColor | undefined = getAnatomyType(entityType, subType, anatomy)
+  return type?.colorLight ?? undefined
 }

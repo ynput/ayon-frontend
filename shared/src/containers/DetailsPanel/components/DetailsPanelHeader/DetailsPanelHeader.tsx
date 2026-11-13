@@ -375,6 +375,7 @@ const DetailsPanelHeader = ({
           {priorities ? (
             <Styled.PriorityEnumDropdown
               options={priorities}
+              tinted
               placeholder="No priority"
               value={priorityValues}
               onChange={(value) => handleUpdate('attrib', { priority: value[0] })}

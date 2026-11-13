@@ -9,6 +9,7 @@ import {
   Icon,
   InputNumber,
   InputText,
+  getReadableColor,
 } from '@ynput/ayon-react-components'
 import { ReviewableUpload } from '../../ReviewablesList/ReviewablesUpload'
 import { useVersionUploadContext } from '../context/version-upload'
@@ -401,7 +402,7 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                   disabled={isFormSubmitted}
                   variant="text"
                 >
-                  <Icon icon={taskIcon} style={{ color: taskTypeInfo?.color }} />
+                  <Icon icon={taskIcon} style={{ color: getReadableColor(taskTypeInfo) }} />
                   <TaskText>
                     {taskFolderPath && (
                       <TaskPath>

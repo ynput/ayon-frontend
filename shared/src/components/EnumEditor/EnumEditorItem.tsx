@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react'
 import { kebabCase } from 'lodash'
 
-import { DropdownRef, Icon } from '@ynput/ayon-react-components'
+import {
+  DropdownRef,
+  Icon,
+  getTextColor,
+  isReadableOnLight,
+  makeReadableOnLight,
+} from '@ynput/ayon-react-components'
 
 import * as Styled from './EnumEditor.styled'
 import type { AttributeData } from './EnumEditor'
@@ -56,10 +62,11 @@ const EnumEditorItem = ({
   pt,
   ...props
 }: EnumEditorItemProps) => {
-  const { label, value, icon, color, isNewAttribute } = item
+  const { label, value, icon, color, colorLight, isNewAttribute } = item
   const labelRef = useRef<HTMLInputElement>(null)
   const valueRef = useRef<HTMLInputElement>(null)
   const colorPickerRef = useRef<HTMLInputElement>(null)
+  const colorLightPickerRef = useRef<HTMLInputElement>(null)
   const iconSelectRef = useRef<DropdownRef>(null)
 
   useEffect(() => {
@@ -225,6 +232,54 @@ const EnumEditorItem = ({
           )}
         </Styled.PlaceholderWrapper>
       </Styled.Row>
+
+      {color && (
+        // without a pick, the light theme shows the colour
+        <Styled.Row key="colorLight">
+          <Styled.Label>Light theme</Styled.Label>
+
+          <Styled.PlaceholderWrapper style={{ position: 'relative' }}>
+            <Styled.ColorPicker
+              className="active"
+              style={{ backgroundColor: colorLight || color, color: getTextColor(color) }}
+              onClick={() => colorLightPickerRef.current?.click()}
+            >
+              {!colorLight ? 'Same as color' : ''}
+              <input
+                type="color"
+                ref={colorLightPickerRef}
+                value={colorLight || color}
+                onChange={(event) => {
+                  onChange && onChange(['colorLight'], [event.target.value])
+                  onCommit && onCommit(['colorLight'], [event.target.value])
+                }}
+              />
+            </Styled.ColorPicker>
+            {!isReadableOnLight(colorLight || color) && (
+              <Styled.Fix
+                icon="warning"
+                variant="text"
+                data-tooltip="Hard to read on the light theme. Click to darken it just enough."
+                onClick={() => {
+                  const fixed = makeReadableOnLight(colorLight || color)
+                  onChange && onChange(['colorLight'], [fixed])
+                  onCommit && onCommit(['colorLight'], [fixed])
+                }}
+              />
+            )}
+            {colorLight && (
+              <Styled.Button
+                icon="close"
+                variant="text"
+                data-tooltip="Use the same color"
+                onClick={() => {
+                  onChange && onChange(['colorLight'], [undefined])
+                }}
+              />
+            )}
+          </Styled.PlaceholderWrapper>
+        </Styled.Row>
+      )}
 
       {(showRemoveButton || showDuplicateButton) && (
         <Styled.Row {...pt?.footer} className={clsx('footer', pt?.footer?.className)}>

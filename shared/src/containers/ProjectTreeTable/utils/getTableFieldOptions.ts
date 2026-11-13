@@ -1,4 +1,5 @@
 import type { ProductType } from '@shared/api'
+import type { UserColor } from '@ynput/ayon-react-components'
 import { labelCollator } from '@shared/util/sortLists'
 import type { BuiltInFieldOptions } from '../types'
 import type { FolderType, Status, Tag, TaskType } from '../types/project'
@@ -12,7 +13,7 @@ type Params = {
   statuses: Status[]
   folderTypes: FolderType[]
   taskTypes: TaskType[]
-  productTypes: ProductType[]
+  productTypes: (ProductType & UserColor)[]
   tags: Tag[]
   scopes: string[]
 }
@@ -31,10 +32,11 @@ export const getTableFieldOptions = ({
       .filter(
         (status) => !status.scope || allowedScopes.some((scope) => status.scope?.includes(scope)),
       )
-      .map(({ name, color, icon, scope }) => ({
+      .map(({ name, color, colorLight, icon, scope }) => ({
         value: name,
         label: name,
         color,
+        colorLight,
         icon,
         scope,
       }))
@@ -52,19 +54,32 @@ export const getTableFieldOptions = ({
     status: getStatusOptions(scopes),
     folderStatus: getStatusOptions(['folder']),
     taskStatus: getStatusOptions(['task']),
-    tag: tags.map(({ name, color }) => ({ value: name, label: name, color })),
-    folderType: folderTypes.map(({ name, icon, color }) => ({
+    tag: tags.map(({ name, color, colorLight }) => ({
       value: name,
       label: name,
-      icon,
       color,
+      colorLight,
     })),
-    taskType: taskTypes.map(({ name, icon, color }) => ({ value: name, label: name, icon, color })),
-    productType: productTypes.map(({ name, icon, color }) => ({
+    folderType: folderTypes.map(({ name, icon, color, colorLight }) => ({
       value: name,
       label: name,
       icon,
       color,
+      colorLight,
+    })),
+    taskType: taskTypes.map(({ name, icon, color, colorLight }) => ({
+      value: name,
+      label: name,
+      icon,
+      color,
+      colorLight,
+    })),
+    productType: productTypes.map(({ name, icon, color, colorLight }) => ({
+      value: name,
+      label: name,
+      icon,
+      color,
+      colorLight,
     })),
   }
 }

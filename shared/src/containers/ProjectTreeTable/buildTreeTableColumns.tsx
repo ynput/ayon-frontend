@@ -732,6 +732,7 @@ const buildTreeTableColumns = ({
                 icon={row.original.group.icon}
                 img={row.original.group.img}
                 color={row.original.group.color}
+                colorLight={row.original.group.colorLight}
                 count={row.original.group.count}
                 percentage={row.original.group.percentage}
                 isExpanded={row.getIsExpanded()}

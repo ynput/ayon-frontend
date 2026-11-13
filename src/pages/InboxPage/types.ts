@@ -95,6 +95,7 @@ export interface StatusInfo {
 export interface InboxStatusChange {
   icon?: string
   color?: string
+  colorLight?: string
   name?: string
 }
 

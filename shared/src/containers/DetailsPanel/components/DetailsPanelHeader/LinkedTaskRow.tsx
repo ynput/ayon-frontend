@@ -1,4 +1,4 @@
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 
 import type { DetailsPanelEntityData, TaskType } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
@@ -28,7 +28,7 @@ const LinkedTaskRow = ({ entity, taskTypes }: LinkedTaskRowProps) => {
           openSlideOut({ entityId: task.id as string, entityType: 'task', projectName })
         }
       >
-        <Icon icon={taskType?.icon || 'task_alt'} style={{ color: taskType?.color || undefined }} />
+        <Icon icon={taskType?.icon || 'task_alt'} style={{ color: getReadableColor(taskType) }} />
         <span className="label">{task.label || task.name}</span>
       </Styled.TaskLink>
     </Styled.Row>

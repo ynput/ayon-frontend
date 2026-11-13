@@ -1,4 +1,9 @@
-import { DropdownRef, TagsSelect, type DropdownProps } from '@ynput/ayon-react-components'
+import {
+  DropdownRef,
+  TagsSelect,
+  type DropdownProps,
+  type UserColor,
+} from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { useEffect, useMemo, useRef } from 'react'
 import styled from 'styled-components'
@@ -8,8 +13,9 @@ import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import type { WidgetBaseProps } from './CellWidget'
 import { EnumCellValue, EnumTemplateProps } from './EnumCellValue'
 
-// the colour TagsSelect gives tags that have none, a hex so the chip text colour can be worked out
-const NO_COLOR_TAG = '#353B46'
+// the colour TagsSelect gives tags that have none (surface-container-high of each theme),
+// as values so getTagColors can work out the chip colours
+const NO_COLOR_TAG = 'light-dark(#E4E8ED, #353B46)'
 
 const StyledTagsSelect = styled(TagsSelect)`
   width: 100%;
@@ -22,7 +28,7 @@ export interface TagsWidgetProps
     WidgetBaseProps {
   value: (string | number | boolean)[]
   // the anatomy tags
-  options: EnumItem[]
+  options: (EnumItem & UserColor)[]
   projectName?: string
   placeholder?: string
   align?: 'left' | 'right'
@@ -58,10 +64,10 @@ export const TagsWidget = ({
   )
   // the anatomy tags with their colours, then the values that are not in the anatomy
   const tags = useMemo(() => {
-    const result: Record<string, { name: string; color: string }> = {}
+    const result: Record<string, { name: string; color: string; colorLight?: string }> = {}
     for (const option of options) {
       const name = option.value.toString()
-      result[name] = { name, color: option.color || '' }
+      result[name] = { name, color: option.color || '', colorLight: option.colorLight || undefined }
     }
     for (const name of values) if (!result[name]) result[name] = { name, color: '' }
     return result

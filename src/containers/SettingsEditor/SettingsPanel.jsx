@@ -23,7 +23,7 @@ const PanelHeader = styled.div`
   cursor: pointer;
   min-height: 32px;
   max-height: 32px;
-  background-color: #434a56;
+  background-color: var(--md-sys-color-surface-container-highest);
   border-radius: 4px;
   user-select: none;
   border-left: 4px solid transparent;
@@ -35,7 +35,7 @@ const PanelHeader = styled.div`
     margin-left: 8px;
     border: 0;
     font-size: 1rem;
-    color: white;
+    color: light-dark(var(--md-sys-color-on-surface), white);
     white-space: nowrap;
 
     display: flex;
@@ -45,7 +45,7 @@ const PanelHeader = styled.div`
 
     .new-object {
       font-style: italic;
-      color: yellow;
+      color: light-dark(var(--md-sys-color-warning), yellow);
     }
   }
 
@@ -67,7 +67,7 @@ const PanelContent = styled.div`
   overflow: auto;
   display: flex;
   flex-direction: column;
-  border-left: 1px dotted #434a56;
+  border-left: 1px dotted var(--md-sys-color-surface-container-highest);
   padding: 10px 0;
   padding-left: 20px;
   margin: 0;

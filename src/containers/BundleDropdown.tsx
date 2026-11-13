@@ -19,7 +19,7 @@ const DropdownBadge = styled.span`
   padding: 2px 4px;
   font-size: 0.7rem;
   font-weight: 600;
-  color: black;
+  color: var(--color-on-hl);
 
   &.disabled {
     /* strikethrough text */
@@ -62,7 +62,10 @@ export const BundleBadges = ({
     prodBadge = (
       <DropdownBadge
         className={clsx('badge', { disabled: previous === 'production' })}
-        style={{ backgroundColor: 'var(--color-hl-production)' }}
+        style={{
+          backgroundColor: 'var(--color-hl-production)',
+          color: 'var(--color-on-hl-production)',
+        }}
       >
         {startContent}
         Production

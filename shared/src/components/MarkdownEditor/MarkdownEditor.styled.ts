@@ -96,7 +96,7 @@ export const LinkPopover = styled.div`
   max-width: calc(100vw - 16px);
   padding: 2px 2px 2px 8px;
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
 
   .icon {
@@ -132,7 +132,7 @@ export const InlinePrompt = styled.button`
   gap: 6px;
   padding: 4px 6px 4px 8px;
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
   color: var(--md-sys-color-on-surface);
   font-size: 12px;
@@ -222,7 +222,7 @@ export const FloatingToolbar = styled.div`
   min-width: 200px;
   padding: 2px;
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
 
   .md-toolbar-button {
@@ -493,7 +493,7 @@ export const MentionMenu = styled.div`
   max-width: calc(100vw - 16px);
   padding: 0 0 4px;
   border-radius: var(--border-radius-m);
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   box-shadow: 0 3px 15px 0 rgba(0, 0, 0, 0.4);
   overflow: hidden;
 

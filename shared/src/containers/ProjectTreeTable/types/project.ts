@@ -90,12 +90,14 @@ export type FolderType = {
   shortName?: string
   icon?: string
   color?: string
+  colorLight?: string
 }
 export type TaskType = {
   name: string
   original_name?: string
   shortName?: string
   color?: string
+  colorLight?: string
   icon?: string
 }
 
@@ -104,6 +106,7 @@ export type LinkType = {
   input_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   output_type: 'folder' | 'product' | 'version' | 'representation' | 'task' | 'workfile'
   color?: string
+  colorLight?: string
   style?: 'solid' | 'dashed'
 }
 export type Status = {
@@ -113,6 +116,7 @@ export type Status = {
   state?: 'not_started' | 'in_progress' | 'done' | 'blocked'
   icon?: string
   color?: string
+  colorLight?: string
   /** Limit the status to specific entity types. */
   scope?: string[]
 }
@@ -120,6 +124,7 @@ export type Tag = {
   name: string
   original_name?: string
   color?: string
+  colorLight?: string
 }
 export type Anatomy = {
   /** Setup root paths for the project */

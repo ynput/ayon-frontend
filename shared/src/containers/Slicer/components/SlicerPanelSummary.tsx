@@ -1,6 +1,6 @@
 import { FC, useLayoutEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, getReadableColor } from '@ynput/ayon-react-components'
 import type { RowSelectionState } from '@tanstack/react-table'
 import type { SliceMap } from '../types'
 
@@ -111,7 +111,17 @@ export const SlicerPanelSummary: FC<SlicerPanelSummaryProps> = ({ rowSelection, 
             (row.img ? (
               <img src={row.img} alt="" />
             ) : (
-              row.icon && <Icon icon={row.icon} style={{ color: row.iconColor }} />
+              row.icon && (
+                <Icon
+                  icon={row.icon}
+                  style={{
+                    color: getReadableColor({
+                      color: row.iconColor,
+                      colorLight: row.iconColorLight,
+                    }),
+                  }}
+                />
+              )
             ))}
           {!(compact && hasGlyph(row)) && <span>{row.label || row.name}</span>}
         </Chip>

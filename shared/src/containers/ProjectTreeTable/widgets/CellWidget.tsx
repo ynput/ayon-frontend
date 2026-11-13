@@ -55,6 +55,11 @@ const Cell = styled.div`
   &.inherited {
     opacity: 0.6;
     font-style: italic;
+
+    /* light fades less: at 0.6, coloured values drop below readable contrast there */
+    [data-theme='light'] & {
+      opacity: 0.8;
+    }
   }
 
   &.loading {
@@ -389,6 +394,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
           return (
             <EnumCellValue
               selectedOptions={selectedOptions}
+              pill={columnId === 'status' ? 'filled' : 'tinted'}
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
@@ -404,6 +410,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             isLoadingOptions={isLoadingOptions}
+            pill={columnId === 'status' ? 'filled' : 'tinted'}
             {...mixedProps}
             {...sharedProps}
             {...pt?.enum}

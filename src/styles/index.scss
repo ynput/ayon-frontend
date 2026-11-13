@@ -42,51 +42,84 @@ strong {
   font-weight: 800;
 }
 
-:root {
+// the AYON logo is white: dark letters (and the same green) on light surfaces
+[data-theme='light'] img[src='/AYON.svg'] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+:root,
+[data-theme] {
+  // light-dark() picks the value for the theme of the element using the variable, and the
+  // tokens resolve there too: declared on every theme scope so a nested one recomputes them
+
   // developer colors
-  --color-hl-developer-container: hsl(272, 23%, 22%);
-  --color-hl-developer-container-hover: hsl(272, 23%, 25%);
+  --color-hl-developer: light-dark(#7b3fc4, #c78fff);
+  --color-hl-developer-container: light-dark(hsl(272, 60%, 95%), hsl(272, 23%, 22%));
+  --color-hl-developer-container-hover: light-dark(hsl(272, 60%, 91%), hsl(272, 23%, 25%));
   --color-hl-developer-hover: hsl(272, 96%, 83%);
   --color-hl-developer-surface: hsl(272, 30%, 70%);
   --color-hl-developer-surface-hover: hsl(272, 30%, 75%);
-  --color-hl-dev: hsl(272 100% 78%);
+  --color-hl-dev: light-dark(#7b3fc4, hsl(272 100% 78%));
 
-  // production colors
-  --color-hl-production: var(--md-sys-color-tertiary);
-  --color-hl-production-hover: var(--md-sys-color-tertiary-hover);
-  --color-hl-production-active: var(--md-sys-color-tertiary-active);
+  // production colors: the brand mint on both themes, with dark text on it
+  --color-hl-production: var(--md-sys-color-tertiary-fixed);
+  --color-hl-production-hover: var(--md-sys-color-tertiary-fixed-hover);
+  --color-hl-production-active: var(--md-sys-color-tertiary-fixed-active);
+  --color-on-hl-production: var(--md-sys-color-on-tertiary-fixed);
 
   // staging colors
-  --color-hl-staging-container: hsl(21deg 83.13% 20.94%);
-  --color-hl-staging-container-hover: hsl(21deg 83.13% 23.94%);
-  --color-hl-staging: hsl(357, 100%, 76%);
-  --color-hl-staging-hover: hsl(357, 100%, 73%);
-  --color-hl-staging-active: hsl(357, 100%, 70%);
+  --color-hl-staging-container: light-dark(hsl(21, 85%, 94%), hsl(21deg 83.13% 20.94%));
+  --color-hl-staging-container-hover: light-dark(hsl(21, 85%, 90%), hsl(21deg 83.13% 23.94%));
+  --color-hl-staging: light-dark(#c8323c, hsl(357, 100%, 76%));
+  --color-hl-staging-hover: light-dark(#b42d36, hsl(357, 100%, 73%));
+  --color-hl-staging-active: light-dark(#a0282f, hsl(357, 100%, 70%));
+
+  // text on a badge filled with --color-hl-production, -staging or -developer
+  --color-on-hl: light-dark(white, black);
 
   // table colors
-  --color-table-border: hsl(210 8% 18%);
-  --color-table-row: hsl(216 15% 11.5%);
-  --color-table-row-high: var(--md-sys-color-surface-container-low);
+  --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
+  --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
+  // folder rows and the header: a step off the rows on light too, where -low is barely off white
+  --color-table-row-high: light-dark(#f3f5f8, var(--md-sys-color-surface-container-low));
+  --color-table-header: light-dark(
+    var(--md-sys-color-surface-container),
+    var(--md-sys-color-surface-container-lowest)
+  );
+  --color-table-header-hover: light-dark(
+    var(--md-sys-color-surface-container-hover),
+    var(--md-sys-color-surface-container-lowest-hover)
+  );
   --color-table-hover: var(--md-sys-color-surface-container);
-  --color-table-row-hover: hsl(215 14% 15%);
-  --color-table-selected: var(--md-sys-color-secondary-container);
+  --color-table-row-hover: light-dark(
+    var(--md-sys-color-surface-container-lowest-hover),
+    hsl(215 14% 15%)
+  );
+  // on light the grey-blue secondary container was too close to hover and the selected row
+  --color-table-selected: light-dark(
+    var(--md-sys-color-primary-container),
+    var(--md-sys-color-secondary-container)
+  );
   --color-table-selected-row: var(--md-sys-color-surface-container-high);
-  --color-table-readonly-focused: hsl(212 15% 18%);
-  --color-table-collapsed-widget: hsl(0 0% 100%);
-  --color-table-boolean-border: hsl(212.31deg 16.83% 74.65%);
-  --color-table-status-border: #21252b;
+  --color-table-readonly-focused: var(--md-sys-color-surface-container);
+  --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
+  --color-table-boolean-border: light-dark(
+    var(--md-sys-color-on-surface-variant),
+    hsl(212.31deg 16.83% 74.65%)
+  );
+  --color-table-status-border: light-dark(var(--md-sys-color-surface-container), #21252b);
 
   // row highlight colors (for matching products/tasks)
-  --color-row-hl-1: #01cc34;
+  --color-row-hl-1: light-dark(#00801d, #01cc34);
   --color-row-hl-2: #9b00ff;
-  --color-row-hl-3: #ffea02;
-  --color-row-hl-4: #dc1d83;
-  --color-row-hl-5: #fd9a04;
-  --color-row-hl-6: #ff5e50;
-  --color-row-hl-7: #009b77;
-  --color-row-hl-8: #dd4124;
-  --color-row-hl-9: #d65076;
-  --color-row-hl-10: #efc050;
+  --color-row-hl-3: light-dark(#7a6f00, #ffea02);
+  --color-row-hl-4: light-dark(#d30a7c, #dc1d83);
+  --color-row-hl-5: light-dark(#9f5f00, #fd9a04);
+  --color-row-hl-6: light-dark(#d02e27, #ff5e50);
+  --color-row-hl-7: light-dark(#007d60, #009b77);
+  --color-row-hl-8: light-dark(#ce3213, #dd4124);
+  --color-row-hl-9: light-dark(#c13c65, #d65076);
+  --color-row-hl-10: light-dark(#8b6800, #efc050);
   --color-row-hl-11: #5b5ea6;
 
   // row status colors
@@ -98,9 +131,9 @@ strong {
   --color-sub-pro: var(--md-sys-color-tertiary);
   --color-sub-pro-hover: var(--md-sys-color-tertiary-hover);
   --color-on-sub-pro: var(--md-sys-color-on-tertiary);
-  --color-sub-studio: hsl(42, 100%, 50%);
-  --color-on-sub-studio: hsl(53, 100%, 11%);
-  --color-sub-studio-hover: hsl(42, 100%, 45%);
+  --color-sub-studio: light-dark(#936500, hsl(42, 100%, 50%));
+  --color-on-sub-studio: light-dark(white, hsl(53, 100%, 11%));
+  --color-sub-studio-hover: light-dark(#7f5700, hsl(42, 100%, 45%));
 
   // tag colors
   --color-tag-text: hsl(180, 5%, 96%);
@@ -397,8 +430,11 @@ a {
 
 // keep the right-clicked row looking hovered while its context menu is open
 .p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
-  background: rgba(255, 255, 255, 0.03);
-  color: #ffffffde;
+  background: light-dark(
+    var(--md-sys-color-surface-container-lowest-hover),
+    rgba(255, 255, 255, 0.03)
+  );
+  color: light-dark(var(--md-sys-color-on-surface), #ffffffde);
 }
 
 // right-clicked entity card (grid, kanban) while its context menu is open

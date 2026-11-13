@@ -77,6 +77,15 @@ $field-gap: 8px
         &.widget-color .form-inline-field-widget
           max-width: 30px
 
+        // room for the samples and buttons, so rows with and without a pick line up
+        &.widget-color-dark .form-inline-field-widget
+          min-width: 70px
+          max-width: 70px
+
+        &.widget-color-light .form-inline-field-widget
+          min-width: 124px
+          max-width: 124px
+
         &.widget-icon .form-inline-field-widget
           max-width: 150px
           .dropdown
@@ -93,7 +102,7 @@ $field-gap: 8px
 
     &.layout-expanded
       flex-direction: row
-      border-bottom: 1px dotted #444
+      border-bottom: 1px dotted light-dark(var(--md-sys-color-outline-variant), #444)
       flex-grow: 1
       padding-bottom: 6px
 
@@ -143,14 +152,29 @@ $field-gap: 8px
       user-select: none
       align-self: flex-start
 
+      // the accents are too light for text on the light theme, so there an override shows as a shade of its
+      // accent on a tint of it
       &.studio
-        color: var(--color-hl-studio)
+        color: light-dark(#006b2b, var(--color-hl-studio))
+        --label-tint: light-dark(#d7f4e1, transparent)
       &.project
-        color: var(--color-hl-project)
+        color: light-dark(#8a4d00, var(--color-hl-project))
+        --label-tint: light-dark(#ffe9d1, transparent)
       &.site
-        color: var(--color-hl-site)
+        color: light-dark(#9b3f53, var(--color-hl-site))
+        --label-tint: light-dark(#fbe3e9, transparent)
       &.edit
         color: var(--color-changed)
+
+      .label-text
+        display: inline-block
+        width: auto
+        height: auto
+        padding: 2px 6px
+        // the tint reaches past the text without moving it
+        margin-right: -6px
+        border-radius: 4px
+        background-color: var(--label-tint, transparent)
 
       span
         display: flex
@@ -169,7 +193,7 @@ $field-gap: 8px
       display: flex
       flex-direction: column
       &.left-border
-        border-left: 1px dashed #434a56 !important
+        border-left: 1px dashed var(--md-sys-color-surface-container-highest) !important
         padding-left: 6px
 
 
@@ -179,7 +203,7 @@ $field-gap: 8px
       padding: 0
 
       div
-        border-bottom: 1px dashed #434a56 !important
+        border-bottom: 1px dashed var(--md-sys-color-surface-container-highest) !important
         padding: 0       
         margin: 0
 

@@ -22,13 +22,13 @@ const StateShade = styled.div`
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: #252a31;
+  background-color: var(--md-sys-color-background);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 24px;
   font-weight: bold;
-  color: #666;
+  color: light-dark(var(--md-sys-color-outline), #666);
 `
 
 const CopySettingsDialog = ({

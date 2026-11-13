@@ -36,9 +36,9 @@ export const ViewsModal = styled.div`
 
   z-index: 910;
 
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   border-radius: var(--border-radius-l);
-  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--md-sys-elevation-overlay);
 `
 export const ViewsMenuDivider = styled.li`
   height: 1px;
