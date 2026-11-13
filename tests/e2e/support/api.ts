@@ -246,6 +246,40 @@ export class AyonApi extends BaseApi {
   }
 
   // ---------------------------------------------------------------------------
+  // entity links
+  // ---------------------------------------------------------------------------
+
+  /** `linkType` is the full name, e.g. `generative|version|version` */
+  async createLink(project: string, data: { linkType: string; input: string; output: string }) {
+    const { id } = await this.post(`/api/projects/${project}/links`, data)
+    return id as string
+  }
+
+  async createLinkType(project: string, name: string) {
+    await this.put(`/api/projects/${project}/links/types/${encodeURIComponent(name)}`, { data: {} })
+  }
+
+  /** ids of the entities on the other end of an entity's links; `in` = links the entity is the output of */
+  async listLinkedIds(
+    project: string,
+    entityType: 'version' | 'product',
+    id: string,
+    direction: 'in' | 'out',
+  ): Promise<string[]> {
+    const data = await this.graphql(
+      `query EntityLinks($project: String!, $id: String!, $direction: String!) {
+        project(name: $project) {
+          ${entityType}(id: $id) {
+            links(direction: $direction) { edges { entityId } }
+          }
+        }
+      }`,
+      { project, id, direction },
+    )
+    return data.project[entityType].links.edges.map((edge: { entityId: string }) => edge.entityId)
+  }
+
+  // ---------------------------------------------------------------------------
   // entity lists
   // ---------------------------------------------------------------------------
 

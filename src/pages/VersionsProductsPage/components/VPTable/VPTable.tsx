@@ -1,16 +1,18 @@
 import { ProjectTreeTable, useAddonTableColumns } from '@shared/containers'
-import type { EntityType } from '@shared/containers'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 import { VPContextMenuItems } from '../../hooks/useVPContextMenu'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
-import { VP_EXTRA_COLUMNS, VP_PARENT_COLUMNS } from '../VPTableSettings/VPTableSettingsHelpers'
+import {
+  VP_EXTRA_COLUMNS,
+  VP_PARENT_COLUMNS,
+  VP_PARENT_SCOPES,
+} from '../VPTableSettings/VPTableSettingsHelpers'
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
-// module constant: a new array each render rebuilds the table columns, which remounts every cell
-const VP_INCLUDE_PARENTS: EntityType[] = ['folder', 'product', 'task']
+const VP_LINK_COLUMNS = ['link_*', ...VP_PARENT_SCOPES.map((scope) => `${scope}_link_*`)]
 
 const TableWrapper = styled.div`
   position: relative;
@@ -31,6 +33,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
     groupFieldStats,
     fieldStatsLoading,
     fieldStatsError,
+    onLinkColumnsVisibleChange,
   } = useVersionsDataContext()
   const { showProducts } = useVPViewsContext()
   // columns addons contribute (tableColumn slot)
@@ -65,9 +68,10 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         extraColumns={addonColumns}
         isExpandable={showProducts}
         isLoading={isLoading}
-        includeLinks={false}
-        includeParents={VP_INCLUDE_PARENTS}
+        includeParents={VP_PARENT_SCOPES}
         parentColumns={VP_PARENT_COLUMNS}
+        onColumnVisibleChangeSubscribed={VP_LINK_COLUMNS}
+        onColumnVisibleChange={onLinkColumnsVisibleChange}
         showColumnSummaries
         fieldStats={fieldStats}
         groupFieldStats={groupFieldStats}
@@ -99,7 +103,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
       <AddColumnButton
         extraColumns={addColumnItems}
         parentColumns={VP_PARENT_COLUMNS}
-        includeLinks={false}
+        parentLinkScopes={VP_PARENT_SCOPES}
       />
     </TableWrapper>
   )
