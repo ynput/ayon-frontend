@@ -1,4 +1,5 @@
 import type { AddonInfo, AnyContribution } from './contributions'
+import { exposureProblem } from './exposure'
 import { SLOTS } from './slots'
 import type { SlotDeclaration, SlotDefinition } from './slots'
 
@@ -290,7 +291,11 @@ export const checkManifest = (
       )
       continue
     }
-    let problem: string | undefined
+    let problem = exposureProblem(item as Record<string, unknown>)
+    if (problem) {
+      skip(problem, slotName, idName)
+      continue
+    }
     try {
       problem = definition.check?.(item as Record<string, unknown>)
     } catch (error) {

@@ -233,6 +233,9 @@ The CLI, the dev shell and the preview scenes of other addons' slots are in
   \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
   (yours or AYON's, such as \`task\`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
+- Hide a contribution from users below a role with \`minExposureLevel: EXPOSURE.manager\` in its
+  description, not with a check inside its code: AYON then loads none of it for them. It only hides
+  UI; see "Who sees a contribution".
 
 ## Table column ids
 
@@ -308,13 +311,40 @@ A \`dialog\` piece (\`header.item\`, \`projectTable.toolbarItem\`, \`projectTabl
 \`dialogHeader: false\` AYON draws no header and the piece draws its own toolbar, which must
 have a close button calling \`close\`. Escape and a click outside still close it.
 
+## Who sees a contribution: \`minExposureLevel\`
+
+Every contribution, in every slot (also the slots of other addons), can set \`minExposureLevel\`:
+users whose UI exposure level is lower don't see it. AYON hides it before loading any of its code:
+no tab button, column, menu item or header button, no \`fetchValues\` call, no service. Use the
+levels in \`EXPOSURE\` (from \`@ynput/ayon-addon/manifest\` in the manifest, \`@ynput/ayon-addon\`
+elsewhere): \`guest\` 100, \`user\` 500, \`manager\` 700, \`admin\` 900. A user's level comes from
+their role and they can lower their own; service users count as admins. A page's \`access\`
+(\`manager\`, \`admin\`) is the same check.
+
+\`\`\`ts
+import { detailsPanelTab, EXPOSURE } from '@ynput/ayon-addon/manifest'
+detailsPanelTab({
+  id: 'invoices',
+  label: 'Invoices',
+  icon: 'receipt',
+  entityTypes: ['folder'],
+  minExposureLevel: EXPOSURE.manager,
+  component: () => import('./InvoicesTab'),
+})
+\`\`\`
+
+It only hides UI. The addon's server must still check permissions on every endpoint: anyone can
+call it, and a hidden contribution's data must not depend on the frontend hiding it. A level that is
+not a whole number from 0 to 1000 skips the contribution; \`ayon-addon check\` notes one that is
+none of AYON's levels. The dev shell shows every contribution, whatever the level.
+
 ## Common errors
 
 Look in the browser console first: every message starts with \`[addon <name>]\`.
 
 | You see | Cause |
 |---|---|
-| nothing at all, the contribution is missing | The addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's \`frontend_modules\`. With \`?addonDev=\`, see "Developing inside AYON" in \`@ynput/ayon-addon-dev\`'s \`AGENTS.md\` |
+| nothing at all, the contribution is missing | The user's exposure level is below the contribution's \`minExposureLevel\` (or a page's \`access\`). Or the addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's \`frontend_modules\`. With \`?addonDev=\`, see "Developing inside AYON" in \`@ynput/ayon-addon-dev\`'s \`AGENTS.md\` |
 | \`skipped contribution "x": this AYON version has no such slot\` | The slot is newer than the AYON you run (\`ayon-addon slots\` lists the installed package's). The rest of the addon works |
 | \`...and no addon in the bundle declares it (it would be addon "y")\` | The slot is addon \`y\`'s, and \`y\` isn't in the bundle or is too old to have it. The rest of the addon works |
 | \`skipped contribution "x" (slot): invalid id …\` / \`missing …\` / \`invalid <field> …\` | The description breaks the slot's rules. \`ayon-addon check\` prints the same reasons without AYON |

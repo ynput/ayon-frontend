@@ -3,7 +3,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
-import { registerManifest, registerManifests, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { registerManifest, registerManifests, setExposureLevel, setManifestsLoading } from '@ynput/ayon-addon/host'
 import { buildContract, contractManifests, setContracts } from './contractModel'
 import type { ContractModule } from './contractModel'
 import { provideShellHost } from './host'
@@ -84,6 +84,9 @@ export const startShell = async (options: ShellOptions) => {
   installNetwork(mode)
   if (mode === 'live' && options.signedInWithKey) await dropStaleToken()
   provideShellHost()
+  // the shell shows every contribution of the addon, whoever is signed in: minExposureLevel and a
+  // page's access hide them in AYON only
+  setExposureLevel(Number.POSITIVE_INFINITY)
   // the slots of other addons, as if those addons were installed: contributions to them register
   const contracts = await loadContracts(options.contracts)
   setContracts(contracts)

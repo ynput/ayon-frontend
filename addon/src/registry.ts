@@ -3,6 +3,7 @@
 // useSyncExternalStore.
 import { useSyncExternalStore } from 'react'
 import type { AddonInfo, AnyContribution, Contribution } from './contributions'
+import { isExposed } from './exposure'
 import { SLOTS } from './slots'
 import type { SlotName } from './slots'
 import {
@@ -21,7 +22,12 @@ export interface ManifestEntry {
 }
 
 interface RegistryState {
+  /** what the user sees: contributions their exposure level hides are in `hidden` instead */
   contributions: AnyContribution[]
+  /** contributions the user's exposure level hides (`minExposureLevel`, a page's `access`) */
+  hidden: AnyContribution[]
+  /** the user's UI exposure level; `undefined` until the host knows the user */
+  exposureLevel: number | undefined
   skipped: SkippedContribution[]
   addons: AddonInfo[]
   /** the slots addons declared, each with its owner */
@@ -39,6 +45,8 @@ interface RegistryState {
 
 let state: RegistryState = {
   contributions: [],
+  hidden: [],
+  exposureLevel: undefined,
   skipped: [],
   addons: [],
   slots: [],
@@ -61,10 +69,12 @@ const listeners = new Set<() => void>()
 let examples: typeof import('./examples') | undefined
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
 let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
+let hiddenSnapshots = new Map<string, AnyContribution[]>()
 
 const setState = (next: Partial<RegistryState>) => {
   state = { ...state, ...next }
   slotSnapshots = new Map()
+  hiddenSnapshots = new Map()
   listeners.forEach((listener) => listener())
 }
 
@@ -114,10 +124,14 @@ const applyManifests = (next: ManifestEntry[]) => {
 
   const available = { ...SLOTS, ...Object.fromEntries(slots.map((slot) => [slot.name, slot])) }
   const contributions: AnyContribution[] = []
+  const hidden: AnyContribution[] = []
   const skipped: SkippedContribution[] = []
   for (const { addon, manifest } of next) {
     const result = checkManifest(addon, manifest, available, built)
-    contributions.push(...result.contributions)
+    // hidden here, so no surface sees them and none of their code loads
+    for (const contribution of result.contributions) {
+      ;(isExposed(contribution, state.exposureLevel) ? contributions : hidden).push(contribution)
+    }
     skipped.push(...result.skipped)
   }
   // each slot's example after its real contributions: surfaces list a slot's in registry order
@@ -125,7 +139,7 @@ const applyManifests = (next: ManifestEntry[]) => {
 
   warnNew(state.skippedSlots, skippedSlots, formatSkippedDeclaration)
   const addons = new Map(next.map(({ addon }) => [addon.name, addon]))
-  setState({ contributions, skipped, slots, skippedSlots, addons: [...addons.values()] })
+  setState({ contributions, hidden, skipped, slots, skippedSlots, addons: [...addons.values()] })
   warnSkipped()
 }
 
@@ -153,6 +167,18 @@ export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
 /** Removes everything an addon registered. */
 export const unregisterAddon = (addonName: string) =>
   applyManifests(manifests.filter(({ addon }) => addon.name !== addonName))
+
+/**
+ * The signed-in user's UI exposure level (`uiExposureLevel`, 900 for service users). Until the host
+ * sets it, contributions with a `minExposureLevel` (or a page with `access`) are hidden. A hidden
+ * contribution is left out of `useContributions` and `getRegistry().contributions`, so none of its
+ * code loads.
+ */
+export const setExposureLevel = (level: number | undefined) => {
+  if (state.exposureLevel === level) return
+  state = { ...state, exposureLevel: level }
+  applyManifests(manifests)
+}
 
 /** The host calls this once every manifest it knows of has loaded (or failed). */
 export const setManifestsLoading = (isLoading: boolean) => {
@@ -262,6 +288,27 @@ export const getContributions = <S extends SlotName>(slot: S): ContributionsResu
   }
   return snapshot as unknown as ContributionsResult<S>
 }
+
+const getHidden = (slot: string) => {
+  let snapshot = hiddenSnapshots.get(slot)
+  if (!snapshot) {
+    snapshot = state.hidden.filter((c) => c.slot === slot)
+    hiddenSnapshots.set(slot, snapshot)
+  }
+  return snapshot
+}
+
+/**
+ * For the host: the contributions to one slot the user's exposure level hides. Never render them
+ * or load their code; a tab AYON always shows for an addon's page (`ownedPages`) hides when its
+ * page is here.
+ */
+export const useHiddenContributions = <S extends SlotName>(slot: S): Contribution<S>[] =>
+  useSyncExternalStore(
+    subscribe,
+    () => getHidden(slot),
+    () => getHidden(slot),
+  ) as unknown as Contribution<S>[]
 
 /**
  * The contributions to one slot, updated as manifests load.
