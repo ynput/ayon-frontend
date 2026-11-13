@@ -28,7 +28,7 @@ import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
 import { useEntityLinks } from './useEntityLinks'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
-import { debounce } from 'lodash'
+import { debounce, isEqual } from 'lodash'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
@@ -196,9 +196,14 @@ export const useFetchOverviewData = ({
     return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
   }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
+  // All expanded folders share one cache entry, and RTK Query starts no request for an entry while
+  // one runs. Folders expanded during a fetch are passed to the query once it is done, and the
+  // endpoint then loads only the ones it does not have yet.
+  const [queriedFolderIds, setQueriedFolderIds] = useState(visibleFolderIdsToQuery)
+
   const expandedFoldersTasksArgs = {
     projectName,
-    parentIds: visibleFolderIdsToQuery,
+    parentIds: queriedFolderIds,
     filter: taskFilters.filterString,
     folderFilter: folderFilters.filterString,
     search: taskFilters.search,
@@ -212,9 +217,17 @@ export const useFetchOverviewData = ({
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip:
-      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip: isLoadingViews || !queriedFolderIds.length || (!showHierarchy && !isFlatFolderView),
   })
+
+  useEffect(() => {
+    if (isFetchingExpandedFoldersTasks) return
+    // visibleFolderIdsToQuery is a new array on every render: keep the old one while it is equal
+    setQueriedFolderIds((prev) =>
+      isEqual(prev, visibleFolderIdsToQuery) ? prev : visibleFolderIdsToQuery,
+    )
+  }, [isFetchingExpandedFoldersTasks, visibleFolderIdsToQuery])
+  const hasPendingFolders = !isEqual(queriedFolderIds, visibleFolderIdsToQuery)
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
@@ -399,14 +412,20 @@ export const useFetchOverviewData = ({
 
   // calculate partial loading states
   const loadingTasksForParents = useMemo(() => {
-    if (isFetchingExpandedFoldersTasks) {
+    if (isFetchingExpandedFoldersTasks || hasPendingFolders) {
       return determineLoadingTaskFolders({
         expandedFoldersTasks,
         expandedParentIds,
         foldersMap,
       })
     } else return {}
-  }, [isFetchingExpandedFoldersTasks, expandedFoldersTasks, expandedParentIds, foldersMap])
+  }, [
+    isFetchingExpandedFoldersTasks,
+    hasPendingFolders,
+    expandedFoldersTasks,
+    expandedParentIds,
+    foldersMap,
+  ])
 
   const [tasksListCursor, setTasksListCursor] = useState('')
 
