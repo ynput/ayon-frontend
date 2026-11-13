@@ -20,6 +20,7 @@ import {
   usedSlots,
 } from '../../addon-dev/shell/src/places'
 import type { Contract } from '../../addon-dev/shell/src/contractModel'
+import { declaredSlotPiece } from '../../addon-dev/shell/src/slotNeeds'
 import { SLOTS } from '../../addon/src/slots'
 import { SLOT_DOCS } from '../../addon/src/slotDocs'
 
@@ -222,4 +223,16 @@ test('the manifest entry for a slot comes from its declaration only', () => {
   expect(manifestSnippet({ name: 'example.x', version: 1, pieces: ['component'], optionalPieces: ['run'] })).toContain(
     '  // optional: run',
   )
+})
+
+// A preview of a contribution to another addon's slot shows the piece it has: AYON's slots are
+// listed in the shell, an addon's custom menu or dialog slot is not, so it would be a blank stage.
+test("a preview of an addon's slot shows the contribution's component, dialog or run button", () => {
+  const load = () => Promise.resolve({ default: () => null })
+  const contribution = (pieces: Record<string, unknown>) =>
+    ({ slot: 'example.cardMenuItem', id: 'x', key: 'a.x', addon: {} as never, ...pieces }) as never
+  expect(declaredSlotPiece(contribution({ run: load }))).toBe('run')
+  expect(declaredSlotPiece(contribution({ dialog: load }))).toBe('dialog')
+  expect(declaredSlotPiece(contribution({ component: load, run: load }))).toBe('component')
+  expect(declaredSlotPiece(contribution({ cell: load }))).toBeUndefined()
 })
