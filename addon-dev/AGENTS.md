@@ -313,8 +313,11 @@ A scene is `{ id, label, description?, slots, fields, component }`:
   each scene has a label, slots of the package, well-formed fields and a function `component`. A
   contribution to a slot no scene renders is a note, not a failure. It runs `previews.js` in Node
   without rendering it: the SDK, AYON's components, `styled-components`, `react-dom` and packages
-  that aren't installed or don't load in Node get stand-ins, so work at the top of the module
-  (`styled.div` templates, contexts) runs, but don't compute the scenes' list from them.
+  that don't load in Node get stand-ins, so work at the top of the module (`styled.div` templates,
+  contexts) runs, but don't compute the scenes' list from them. A package the previews import that
+  is installed neither with the contract package nor in the addon is reported (the browser can't
+  load it either), though check still reads the scenes with a stand-in for it. One that is
+  installed but only loads in a browser gets a stand-in without a message.
 
 ## Server endpoints: `ayon-addon generate-rest`
 
