@@ -114,6 +114,19 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
 
   useEffect(() => (hasLinks ? announceOutline() : undefined), [hasLinks])
 
+  // a wheel over the rail never scrolls the sheet. A rail that scrolls is held at its ends
+  // by overscroll-behavior; one short enough not to scroll has to stop the wheel itself
+  useEffect(() => {
+    const nav = navRef.current
+    if (!nav) return
+    const onWheel = (e: WheelEvent) => {
+      // ctrl + wheel is the browser's zoom (and a trackpad pinch)
+      if (!e.ctrlKey && nav.scrollHeight <= nav.clientHeight) e.preventDefault()
+    }
+    nav.addEventListener('wheel', onWheel, { passive: false })
+    return () => nav.removeEventListener('wheel', onWheel)
+  }, [hasLinks])
+
   // the rail sticks to the top of the panel it scrolls in, so it is as tall as that panel
   useEffect(() => {
     const nav = navRef.current

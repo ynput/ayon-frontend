@@ -30,10 +30,14 @@ export const useSettingsOutlineCurrent = (
     const scroller = getScrollParent(sheetRef.current)
     const target: HTMLElement | Window = scroller ?? window
     if (!pinned) return
-    const unpin = () => setPinnedId(null)
+    // scrolling the rail itself, or clicking in it, isn't reading the sheet
+    const unpin = (e: Event) => {
+      if (e.target instanceof Node && navRef.current?.contains(e.target)) return
+      setPinnedId(null)
+    }
     USER_SCROLL_EVENTS.forEach((type) => target.addEventListener(type, unpin, { passive: true }))
     return () => USER_SCROLL_EVENTS.forEach((type) => target.removeEventListener(type, unpin))
-  }, [pinned, sheetRef])
+  }, [navRef, pinned, sheetRef])
 
   useEffect(() => {
     const sheet = sheetRef.current

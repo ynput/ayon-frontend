@@ -8,6 +8,8 @@ export const Outline = styled.nav`
      so the rail clips its list instead of reflowing it */
   overflow-x: hidden;
   overflow-y: auto;
+  /* at its ends, a scroll over the rail stops there instead of moving the sheet */
+  overscroll-behavior: contain;
   /* as tall as the panel it scrolls in, measured by SettingsOutline on every page */
   max-height: var(--settings-outline-height, calc(100dvh - 180px));
   /* the first link's text centres on the sheet's title, which is 32px tall */

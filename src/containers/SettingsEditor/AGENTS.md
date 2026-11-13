@@ -106,6 +106,11 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
 - With several big addons the rail is far taller than the view (Maya, Core, Deadline and Task
   Status: 295 links, about 9,000px). It scrolls itself to keep the current link in view, and
   scrolls only itself: `scrollIntoView` would move the sheet too.
+- A wheel over the rail never scrolls the sheet. A rail that scrolls holds the wheel at its ends
+  with `overscroll-behavior: contain`; a rail short enough not to scroll has no scrolling for
+  that to act on, so a `wheel` listener stops it (ctrl + wheel, the browser's zoom, still
+  passes). Wheel, touch, key and pointer input inside the rail also leaves a clicked link
+  highlighted, as it isn't reading the sheet.
 
 ## Gotchas
 
