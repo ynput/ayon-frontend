@@ -19,7 +19,6 @@ const groupedByAttribute: Args = { ...hierarchy, showHierarchy: false, isGrouped
 test('hierarchy with an empty slicer loads tasks per expanded folder and never pages the whole project', () => {
   expect(getOverviewTaskSource(hierarchy)).toEqual({
     source: 'expandedFolders',
-    tasksUnderSelectedFolders: false,
     skipTasksList: true,
   })
 })
@@ -27,7 +26,6 @@ test('hierarchy with an empty slicer loads tasks per expanded folder and never p
 test('hierarchy with slicer folders lists the tasks directly under them next to expanded folders', () => {
   expect(getOverviewTaskSource({ ...hierarchy, hasSelectedFolders: true })).toEqual({
     source: 'expandedFoldersAndTasksList',
-    tasksUnderSelectedFolders: true,
     skipTasksList: false,
   })
 })

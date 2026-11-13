@@ -38,7 +38,6 @@ export const getOverviewTaskSource = ({
 
   return {
     source,
-    tasksUnderSelectedFolders,
     skipTasksList: isLoadingViews || !usesTasksList,
   }
 }

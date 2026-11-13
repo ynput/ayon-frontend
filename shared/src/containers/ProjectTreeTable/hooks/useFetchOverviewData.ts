@@ -428,14 +428,7 @@ export const useFetchOverviewData = ({
     [selectedFolders, getFolderIdsWithoutChildren],
   )
 
-  // In hierarchy mode with slicer-selected folders, use GetTasksList with folderIds to fetch
-  // tasks directly under those folders in a single paginated request, rather than firing one
-  // request per folder via getOverviewTasksByFolders.
-  const {
-    source: taskSource,
-    tasksUnderSelectedFolders,
-    skipTasksList,
-  } = getOverviewTaskSource({
+  const { source: taskSource, skipTasksList } = getOverviewTaskSource({
     showHierarchy,
     isFlatFolderView,
     isGrouped: !!groupBy,
@@ -467,7 +460,7 @@ export const useFetchOverviewData = ({
     sortBy: tasksSortBy,
     desc: tasksSortDesc,
     showComments,
-    includeFolderChildren: !tasksUnderSelectedFolders,
+    includeFolderChildren: taskSource !== 'expandedFoldersAndTasksList',
   }
 
   // Use the new infinite query hook for tasks list with correct name
