@@ -882,8 +882,13 @@ const injectedApi = enhancedApi.injectEndpoints({
             fetchedGroups.set(groupValue, groupTasks)
           }
 
+          // read the cache again: reused groups may have been patched while fetching
+          const latestGroups = cachedGroups.size
+            ? getCachedGroupItems<EditorTaskNode>(api.getState(), 'getGroupedTasksList', args, (data) => data?.tasks)
+            : cachedGroups
           const tasks = groups.flatMap(
-            ({ value }) => fetchedGroups.get(value) ?? cachedGroups.get(value) ?? [],
+            ({ value }) =>
+              fetchedGroups.get(value) ?? latestGroups.get(value) ?? cachedGroups.get(value) ?? [],
           )
 
           // Return the tasks directly as required by the query format

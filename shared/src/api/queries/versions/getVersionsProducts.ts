@@ -1237,8 +1237,13 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             fetchedGroups.set(groupValue, groupVersions)
           }
 
+          // read the cache again: reused groups may have been patched while fetching
+          const latestGroups = cachedGroups.size
+            ? getCachedGroupItems<VersionNode>(api.getState(), 'getGroupedVersionsList', args, (data) => data?.versions)
+            : cachedGroups
           const versions = groups.flatMap(
-            ({ value }) => fetchedGroups.get(value) ?? cachedGroups.get(value) ?? [],
+            ({ value }) =>
+              fetchedGroups.get(value) ?? latestGroups.get(value) ?? cachedGroups.get(value) ?? [],
           )
 
           return {
