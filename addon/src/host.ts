@@ -17,6 +17,7 @@ export {
   setSlotExamples,
   subscribeRegistry,
   unregisterAddon,
+  useContributionWrappers,
 } from './registry'
 export type { ContributionTags, ManifestEntry } from './registry'
 export {
