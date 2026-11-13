@@ -40,6 +40,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
     columnStatsArgs,
     linksMap,
     loadingLinksEntityIds,
+    isFetchingGroupedVersions,
   } = useVersionsDataContext()
 
   const { resetWorkingView, isLoadingViews } = useViewsContext()
@@ -157,6 +158,7 @@ export const VPProjectTableProvider: FC<VPProjectTableProviderProps> = ({
       updateShowHierarchy={onUpdateShowProducts}
       hierarchyActive={showProducts}
       isLoading={isLoadingAll}
+      isLoadingMoreGroups={!!groupBy && isFetchingGroupedVersions}
       scopes={SCOPES}
       queryFilters={{ filter: filters as any, search: undefined }}
       playerOpen={viewerOpen}

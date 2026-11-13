@@ -150,6 +150,7 @@ export interface VersionsDataContextValue {
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
+  isFetchingGroupedVersions: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
   // links
   linksMap: Map<string, LinksTableData>
@@ -978,6 +979,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,
+    isFetchingGroupedVersions,
     loadingProductVersions,
     onSyncData,
     // links

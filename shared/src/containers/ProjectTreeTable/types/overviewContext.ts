@@ -37,6 +37,7 @@ export interface ProjectOverviewContextType {
   // loading
   isLoading: boolean
   isLoadingMore: boolean
+  isLoadingMoreGroups: boolean
   loadingTasks: LoadingTasks
   error?: string
   softError?: string // non-blocking error (e.g. for fetching tasks for expanded folders)
