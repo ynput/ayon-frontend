@@ -484,14 +484,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const sortArgs = useMemo(() => {
     const resolve = (entityType: 'version' | 'product') =>
       buildSortArgs(
-        sorting.map((sort) => {
-          const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
-          const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
-          return {
-            key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
-            desc: sort.desc,
-          }
-        }),
+        sorting
+          // saved views can hold a non-string sort id (e.g. from an older server); skip it instead of crashing
+          .filter((sort) => typeof sort.id === 'string' && sort.id)
+          .map((sort) => {
+            const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
+            const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
+            return {
+              key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
+              desc: sort.desc,
+            }
+          }),
       )
     return { version: resolve('version'), product: resolve('product') }
   }, [sorting])
