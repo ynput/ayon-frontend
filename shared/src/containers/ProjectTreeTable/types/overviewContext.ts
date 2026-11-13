@@ -13,7 +13,8 @@ import { ProjectInfo } from '@shared/containers/DetailsPanel/helpers/mergeProjec
 
 export interface ProjectOverviewProviderProps {
   children: ReactNode
-  modules: ProjectTableModulesType
+  /** @deprecated unused, the overview data no longer waits for the GroupSettings remote */
+  modules?: ProjectTableModulesType
   // keys the expanded rows in session storage; another table of the project needs its own
   page?: string
 }
@@ -106,7 +107,9 @@ export interface ProjectOverviewContextType {
 
   // links
   loadingLinksEntityIds: Set<string>
-  setLinksVisible: (visible: boolean) => void
+  onLinkColumnsVisibleChange?: (changes: Record<string, boolean>) => void
+  /** @deprecated use onLinkColumnsVisibleChange */
+  setLinksVisible?: (visible: boolean) => void
 
   // context menu items
   contextMenuItems: ContextMenuItemConstructors
