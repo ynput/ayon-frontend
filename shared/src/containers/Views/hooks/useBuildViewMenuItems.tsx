@@ -121,21 +121,37 @@ const useBuildViewMenuItems = ({
     skip: !viewType || !powerLicense,
   })
 
+  // admins and managers also get public views that are not shared with them, keep those apart
+  const [sharedViewsList, notSharedViewsList] = useMemo(() => {
+    const shared: ViewListItemModelExtended[] = []
+    const notShared: ViewListItemModelExtended[] = []
+    extendedViewsList.forEach((view) =>
+      (view.sharedWithMe === false ? notShared : shared).push(view),
+    )
+    return [shared, notShared]
+  }, [extendedViewsList])
+
   const { myViews, sharedViews, allPrivateViews } = getCustomViews({
-    viewsList: extendedViewsList,
+    viewsList: sharedViewsList,
     onEdit,
     onSelect,
     onSave: handleEditView,
   })
 
-  const toggleSection = useCallback(
-    (id: string) => {
-      setCollapsed({ ...collapsed, [id]: !collapsed[id] })
-    },
-    [collapsed, setCollapsed],
-  )
+  // they are all public, so getCustomViews returns them as shared views
+  const { sharedViews: notSharedViews } = getCustomViews({
+    viewsList: notSharedViewsList,
+    onEdit,
+    onSelect,
+    onSave: handleEditView,
+  })
 
-  const sections: Array<{ id: string; title: string; items: ViewItem[] }> = useMemo(() => {
+  const sections: Array<{
+    id: string
+    title: string
+    items: ViewItem[]
+    defaultCollapsed?: boolean
+  }> = useMemo(() => {
     return [
       { id: 'myViews', title: `My ${viewAlias.toLowerCase()}s`, items: myViews as ViewItem[] },
       {
@@ -148,8 +164,26 @@ const useBuildViewMenuItems = ({
         title: `All private ${viewAlias.toLowerCase()}s`,
         items: allPrivateViews as ViewItem[],
       },
+      {
+        id: 'notSharedViews',
+        title: 'Not shared',
+        items: notSharedViews as ViewItem[],
+        defaultCollapsed: true,
+      },
     ]
-  }, [myViews, sharedViews, allPrivateViews])
+  }, [myViews, sharedViews, allPrivateViews, notSharedViews, viewAlias])
+
+  const isSectionCollapsed = useCallback(
+    (id: string) => collapsed[id] ?? !!sections.find((s) => s.id === id)?.defaultCollapsed,
+    [collapsed, sections],
+  )
+
+  const toggleSection = useCallback(
+    (id: string) => {
+      setCollapsed({ ...collapsed, [id]: !isSectionCollapsed(id) })
+    },
+    [collapsed, setCollapsed, isSectionCollapsed],
+  )
 
   const workingViewItem: ViewMenuItem = useMemo(() => {
     return {
@@ -170,7 +204,7 @@ const useBuildViewMenuItems = ({
     if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
 
     visibleSections.forEach((section) => {
-      const isCollapsed = !!collapsed[section.id]
+      const isCollapsed = isSectionCollapsed(section.id)
       result.push({
         type: 'section',
         id: section.id,
@@ -187,7 +221,7 @@ const useBuildViewMenuItems = ({
     })
 
     return result
-  }, [workingViewItem, sections, collapsed, toggleSection, selectedId, powerLicense])
+  }, [workingViewItem, sections, isSectionCollapsed, toggleSection, selectedId, powerLicense])
 
   return viewItems
 }
