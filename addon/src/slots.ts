@@ -788,7 +788,8 @@ export interface SlotDeclaration extends SlotDefinition {
    * the slot's real contributions: its description fields and, optionally, its pieces. A required
    * field or piece left out is filled in: the label, and a piece that shows it in one line, with
    * the slot and its context in its tooltip (`ExampleInline`), or, for `run`, says it was used.
-   * Example code never changes anything
+   * Its `run` is always AYON's, which only says it was used: using an example changes nothing. Its
+   * components are your code: keep them to display only
    */
   example?: SlotExample
 }

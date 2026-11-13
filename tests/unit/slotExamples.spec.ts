@@ -70,6 +70,22 @@ test('the snippet is a manifest entry, with the helper when the slot has one', (
   )
 })
 
+// The entry for an addon's slot after a breaking change carries the version, or AYON would take
+// it as built for version 1 and skip it.
+test("the snippet for an addon's slot at version 2 has slotVersion, and that entry is accepted", () => {
+  const source = { version: 2, required: ['label'], pieces: ['component'], label: 'Card badge' }
+  const snippet = exampleSnippet('example.cardBadge', source)
+  expect(snippet.split('\n').slice(0, 3)).toEqual(["contribute('example.cardBadge', {", "  id: 'example',", '  slotVersion: 2,'])
+  expect(exampleSnippet('example.cardBadge', { ...source, version: 1 })).not.toContain('slotVersion')
+  const available = {
+    'example.cardBadge': { name: 'example.cardBadge', version: 2, required: ['label'], pieces: ['component'], owner },
+  }
+  const entry = { ...exampleFields(source), slot: 'example.cardBadge', slotVersion: 2 }
+  const { contributions, skipped } = checkManifest({ ...owner, name: 'contributor' }, { contributes: [entry] }, available)
+  expect(skipped).toEqual([])
+  expect(contributions).toHaveLength(1)
+})
+
 const owner = { name: 'example', version: '1.0.0', remote: 'example' }
 const declared = (example?: object) =>
   checkSlotDeclarations(owner, {
@@ -113,6 +129,17 @@ test('examples belong to the slot owner and go last', () => {
   expect(isExample(badge)).toBe(true)
   // an unchanged example is the same contribution: nothing re-renders
   expect(buildExamples(slots).find((c) => c.slot === 'example.cardBadge')).toBe(badge)
+})
+
+// The owner's own `run` would do whatever it does: the example's is AYON's, which only says it was used
+test("an example's run is AYON's, even when the owner's example sets one", () => {
+  const custom = () => Promise.resolve({ default: () => undefined })
+  const { slots } = checkSlotDeclarations(owner, {
+    slots: [{ name: 'example.cardAction', version: 1, required: ['label'], pieces: ['run'], example: { label: 'Go', run: custom } }],
+  })
+  const action = buildExamples(slots).find((c) => c.slot === 'example.cardAction')!
+  expect(action).toMatchObject({ label: 'Go', example: true })
+  expect(action.run).toBe(exampleRun)
 })
 
 test('an example its slot skips is left out with a warning', () => {

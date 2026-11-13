@@ -443,7 +443,9 @@ contributions. It is filled in where it leaves something out: each required fiel
 label (\`icon\` an icon), \`run\` says it was used, any other piece shows the label in one line,
 with the slot and its context in its tooltip (\`ExampleInline\`). A piece of its own is a dynamic import in the contract package, which may render
 \`ExampleView\` from \`@ynput/ayon-addon\` inside its own markup (a badge's size, a button's look).
-Using an example never changes anything.
+An example's \`run\` is always AYON's, which only says it was used, even when the example sets its
+own, so using an example changes nothing; its components are the contract package's code, so keep
+them to display only.
 
 **Ownership.** The name is \`<addon>.<name>\`: the addon's name from \`package.py\`, a dot, then a letter
 followed by letters, digits and \`_\` (no more dots). Only that addon can declare it. A declaration with

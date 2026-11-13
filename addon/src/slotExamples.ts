@@ -39,6 +39,8 @@ export const SLOT_EXAMPLES: { readonly [S in SlotName]: SlotExample } = {
 
 /** What a slot's example is filled in from: the parts of its definition or declaration it needs. */
 export interface ExampleSource {
+  /** the slot's version: a manifest entry for an addon's slot at another version than 1 needs it */
+  version?: number
   required: readonly string[]
   pieces: readonly string[]
   /** a declared slot's title for people */
@@ -50,7 +52,8 @@ export interface ExampleSource {
  * A slot's example as contribution fields, with the id `example`: what its owner wrote, plus each
  * required field it left out (the slot's label, an icon) and each required piece (`run` says it
  * was used, any other is the one-line `ExampleInline`: AYON doesn't know how big a declared slot
- * is, and the full `ExampleView` breaks a badge or a button's place).
+ * is, and the full `ExampleView` breaks a badge or a button's place). `run` is always AYON's, the
+ * owner's too, so using an example changes nothing.
  */
 export const exampleFields = (source: ExampleSource): Record<string, unknown> => {
   const fields: Record<string, unknown> = { id: 'example', ...source.example }
@@ -60,6 +63,7 @@ export const exampleFields = (source: ExampleSource): Record<string, unknown> =>
   for (const piece of source.pieces) {
     if (typeof fields[piece] !== 'function') fields[piece] = piece === 'run' ? exampleRun : exampleInline
   }
+  if ('run' in fields) fields.run = exampleRun
   return fields
 }
 
@@ -77,10 +81,13 @@ const value = (item: unknown, key: string, indent: string): string => {
 
 /**
  * A slot's example as a manifest entry, for the docs and `ayon-addon slots`: the slot's helper
- * when it has one (`headerItem({ ... })`), else `contribute('<slot>', { ... })`. Pieces show as
+ * when it has one (`headerItem({ ... })`), else `contribute('<slot>', { ... })`, with `slotVersion`
+ * when the slot isn't at version 1 (as the dev shell's entries). Pieces show as
  * `() => import('./Piece')`.
  */
 export const exampleSnippet = (slot: string, source: ExampleSource, helper?: string) => {
-  const fields = value(exampleFields(source), '', '')
+  const { id, ...rest } = exampleFields(source)
+  const versioned = !helper && source.version !== undefined && source.version !== 1
+  const fields = value({ id, ...(versioned ? { slotVersion: source.version } : {}), ...rest }, '', '')
   return helper ? `${helper}(${fields})` : `contribute('${slot}', ${fields})`
 }
