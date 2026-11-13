@@ -80,7 +80,7 @@ The generic ones (workers, teardown order, failed logins, access groups, dialogs
 - **New entity dialog.** The dialog opens its type dropdown by itself about 180 ms after it appears. `OverviewPage.fillCreateDialog` waits for that rather than racing it with a click.
 - **Overview columns.** The default view hides most attributes. Show one for setup with `api.setWorkingViewColumns(...)`. A header's accessible name changes on hover, so use `OverviewPage.columnHeader(id)`. Enter in a text cell saves and starts editing the next row (`editTextCell` presses Escape afterwards).
 - **Escape in the overview details panel** also reaches the table, which clears the selection and closes the panel. Close dropdowns there by clicking outside.
-- **Settings editor** (anatomy, access groups, addon settings): expand a section with its chevron (`.panel-toggler`), not the header. Field labels are not linked to inputs, so use `[data-schema-id="root_..."]`. Number fields commit on blur.
+- **Settings editor** (anatomy, access groups, addon settings): the tests use the classic layout. `auth.setup.ts` switches off the admin's opt-in flat layout (`frontendPreferences.flatSettingsLayout`), so a run with `--no-deps` keeps whatever the admin last chose. Expand a section with its chevron (`.panel-toggler`), not the header. Field labels are not linked to inputs, so use `[data-schema-id="root_..."]`. Number fields commit on blur.
 - **Not tested on purpose.** "Set username" renames the user in every project schema in one transaction, the same concurrency hazard as project create/delete.
 
 ### Areas added in round 2

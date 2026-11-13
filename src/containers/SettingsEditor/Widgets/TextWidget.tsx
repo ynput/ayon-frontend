@@ -22,7 +22,8 @@ export const TextWidget = (props: $Any) => {
     if (['integer', 'number'].includes(type))
       commitValue = checkNumber(originalValue, commitValue, type)
 
-    if (commitValue === props.value) return
+    // the local copy holds null for an unset value: committing it untouched would write null
+    if (commitValue === props.value || (commitValue == null && props.value == null)) return
     const isChanged = commitValue !== originalValue
     props.onChange(commitValue)
     setTimeout(() => {

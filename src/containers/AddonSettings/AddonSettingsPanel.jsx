@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import {
   useGetAddonSettingsSchemaQuery,
@@ -53,16 +53,46 @@ const AddonSettingsPanel = ({
     }
   }, [addon.name, isSuccess, schema, updateAddonSchema])
 
-  const { data: originalData, isLoading: settingsLoading } = useGetAddonSettingsQuery(queryArgs)
+  const {
+    data: originalData,
+    isLoading: settingsLoading,
+    fulfilledTimeStamp,
+    refetch: refetchSettings,
+  } = useGetAddonSettingsQuery(queryArgs)
 
   const { data: overrides, isLoading: overridesLoading } =
     useGetAddonSettingsOverridesQuery(queryArgs)
 
+  // localData is cleared after a save or an override change (reloadAddons). The cached
+  // values can predate it, so the form waits for a response that arrives after the reload
+  const reloadStartedAt = useRef(0)
+  const hadLocalData = useRef(false)
+  const [reloadFailures, setReloadFailures] = useState(0)
+
+  useEffect(() => {
+    if (localData) {
+      hadLocalData.current = true
+      return
+    }
+    if (!hadLocalData.current) return
+    hadLocalData.current = false
+    reloadStartedAt.current = Date.now()
+    refetchSettings()
+      .unwrap()
+      .catch(() => {
+        // fall back to the cached values rather than leave the form empty
+        reloadStartedAt.current = 0
+        setReloadFailures((count) => count + 1)
+      })
+  }, [localData, refetchSettings])
+
   useEffect(() => {
     if (originalData === undefined) return
-    if (!localData) onChange(addon, siteId || '_', originalData)
     onLoad(addon, siteId || '_', originalData)
-  }, [addon, localData, onChange, onLoad, originalData, siteId])
+    if (localData) return
+    if ((fulfilledTimeStamp ?? 0) <= reloadStartedAt.current) return
+    onChange(addon, siteId || '_', originalData)
+  }, [addon, fulfilledTimeStamp, localData, onChange, onLoad, originalData, reloadFailures, siteId])
 
   const breadcrumbs = useMemo(() => {
     if (!currentSelection) return null
@@ -114,11 +144,18 @@ const AddonSettingsPanel = ({
     [addon, onChange, siteId],
   )
 
+  // RJSF fills an empty form with the schema defaults and reports them as a change, which
+  // would then replace the saved values. So the form keeps its last values during a reload
+  const shownData = useRef(localData)
+  if (localData) shownData.current = localData
+  const formData = localData ?? shownData.current
+  if (!formData) return <div style={{ flexGrow: 0, visibility: 'hidden' }} />
+
   const editor = (
     <SettingsEditor
       schema={schema}
       originalData={originalData}
-      formData={localData}
+      formData={formData}
       changedKeys={changedKeys}
       overrides={overrides}
       onChange={handleSettingsChange}

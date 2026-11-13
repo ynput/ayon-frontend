@@ -54,9 +54,10 @@ export const SettingField = ({
   >
     {label && (
       <div className={`form-inline-field-label ${level}`}>
-        <button type="button" onClick={onLabelClick} style={labelStyle}>
+        {/* a span, as in the classic markup: e2e tests take a field's first button as its control */}
+        <span onClick={onLabelClick} style={labelStyle}>
           {label}
-        </button>
+        </span>
       </div>
     )}
 

@@ -157,19 +157,13 @@ $field-gap: 8px
       &.edit
         color: var(--color-changed)
 
-      button
+      span
         display: flex
         align-items: center
         justify-content: flex-end
         width: 100%
         height: var(--base-input-size)
         background-color: transparent
-        border: 0
-        padding: 0
-        color: inherit
-        font: inherit
-        text-align: left
-        cursor: pointer
         white-space: nowrap
         font-weight: 600
 
@@ -1160,7 +1154,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         > .form-inline-field
           padding: 0
 
-          > .form-inline-field-label button
+          > .form-inline-field-label span
             font-size: var(--md-sys-typescale-body-small-font-size)
 
       // a switch has a row of its own under the values (switches come last): its label at the
