@@ -22,6 +22,7 @@ import {
 import { useGetAnatomyPresetsQuery } from '@queries/anatomy/getAnatomy'
 import PresetList from './PresetList'
 import AnatomyEditor from '@containers/AnatomyEditor'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import {
   useDeleteAnatomyPresetMutation,
   useUpdateAnatomyPresetMutation,
@@ -226,6 +227,7 @@ const AnatomyPresets = () => {
           <Button label="Paste anatomy" icon="content_paste" onClick={onPasteAnatomy} />
 
           <Spacer />
+          <SettingsOutlineToggle />
           <Button
             label="Set as primary"
             icon="flag"

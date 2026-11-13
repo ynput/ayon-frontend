@@ -6,6 +6,24 @@ const FormWrapper = styled.div<{ $currentSelection: string }>`
     background-color: rgba(0, 0, 0, 0.2);
   }
 
+  /* flat layout: a selected field is a rounded band, inset from the panel's edges and
+     drawn behind the row, so the dividers around it stay. Groups keep no mark */
+  &.settings-flat [data-fieldid='${(props) => props.$currentSelection}']:not(.settings-group) {
+    position: relative;
+    isolation: isolate;
+    background-color: transparent;
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: calc(var(--space-1) / 2) var(--space-1);
+      z-index: -1;
+      border-radius: var(--border-radius-m);
+      background-color: color-mix(in srgb, var(--md-sys-color-shadow) 20%, transparent);
+      pointer-events: none;
+    }
+  }
+
   .rjsf {
     flex-grow: 1;
     margin: 0;

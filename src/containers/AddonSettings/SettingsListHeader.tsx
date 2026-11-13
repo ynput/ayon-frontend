@@ -1,11 +1,17 @@
 // @ts-ignore
-import sh from 'searchhash';
+import sh from 'searchhash'
 
-import SearchDropdown from '@components/SearchDropdown/SearchDropdown'
+import SearchDropdown, { type Suggestion } from '@components/SearchDropdown/SearchDropdown'
 import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
-import { useEffect, useState } from 'react';
-import { $Any } from '@types';
-import { generateResultsAndFilterIds } from './searchTools';
+import { useCallback, useEffect, useRef } from 'react'
+import { $Any } from '@types'
+import { generateResultsAndFilterIds } from './searchTools'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
+
+const NO_SUGGESTIONS: Suggestion[] = []
+
+// Searching re-renders every form, so it waits until typing pauses
+const SEARCH_DELAY = 250
 
 type AddonData = {
   name: string
@@ -17,10 +23,10 @@ type AddonData = {
 type Props = {
   showHelp: boolean
   addonsData: AddonData[]
-  searchTreeData: $Any,
+  searchTreeData: $Any
   addonSchemas: $Any
   setShowHelp: (value: boolean) => void
-  searchCallback: (searchText?: string, filterKeys?: {[key: string]: string[]}) => void
+  searchCallback: (searchText?: string, filterKeys?: { [key: string]: string[] }) => void
 }
 
 const SettingsListHeader = ({
@@ -31,74 +37,83 @@ const SettingsListHeader = ({
   setShowHelp,
   searchCallback,
 }: Props) => {
-  if (addonsData.length === 0) {
-    return null
-  }
+  const search = useRef('')
+  const pending = useRef<ReturnType<typeof setTimeout>>()
+  // the last search sent, so a submit of the same text doesn't re-render the forms again
+  const applied = useRef<{ text: string; build?: unknown }>({ text: '' })
 
-  const [search, setSearch] = useState<string>('')
-  const [filterKeys, setFilterKeys] = useState<{[key: string]: string[]}>({})
-  useEffect(() => {
-    filter()
-  }, [addonsData, addonSchemas])
+  const buildFilterKeys = useCallback(
+    (searchText: string) => {
+      if (searchText === '') return {}
 
-  useEffect(() => {
-    searchCallback(search, filterKeys)
-  }, [filterKeys])
+      const escapedSearch = searchText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      const regexp = RegExp(escapedSearch, 'i')
+      return addonsData.reduce<Record<string, string[]>>((results, addon) => {
+        if (addonSchemas?.[addon.name] === undefined) return results
 
-  useEffect(() => {
-  }, [filterKeys])
+        const hydratedObject = searchTreeData[addon.name] || {}
+        const keyResults = sh.forValue(hydratedObject, regexp)
+        results[addon.name] = generateResultsAndFilterIds(keyResults)
+        return results
+      }, {})
+    },
+    [addonsData, addonSchemas, searchTreeData],
+  )
+  const applySearch = useCallback(
+    (text: string) => {
+      clearTimeout(pending.current)
+      if (applied.current.text === text && applied.current.build === buildFilterKeys) return
+      applied.current = { text, build: buildFilterKeys }
+      searchCallback(text, buildFilterKeys(text))
+    },
+    [buildFilterKeys, searchCallback],
+  )
+  // the delayed search and SearchDropdown's own submit run the latest one, so a search typed
+  // right after an addon is selected also matches that addon
+  const applySearchRef = useRef(applySearch)
+  applySearchRef.current = applySearch
 
-  const filter = () => {
-    if (search === '') {
-      setFilterKeys({})
-      return []
+  const handleFilter = useCallback((newSearch: string) => {
+    search.current = newSearch
+    clearTimeout(pending.current)
+    if (newSearch) {
+      pending.current = setTimeout(() => applySearchRef.current(newSearch), SEARCH_DELAY)
     }
-
-    const regexp = RegExp(search, 'i')
-
-    setFilterKeys({})
-    for (const addon of addonsData) {
-      // console.log('addon: ', addon)
-      if (addonSchemas === undefined || addonSchemas[addon.name] === undefined) {
-        continue
-      }
-      const hydratedObject = searchTreeData[addon.name] || {}
-      const keyResults = sh.forValue(hydratedObject, regexp)
-
-      const filterKeys = generateResultsAndFilterIds(keyResults)
-      setFilterKeys((prev) => {
-        if (prev[addon.name] === undefined) {
-          prev[addon.name] = []
-        }
-        return { ...prev, [addon.name]: [...prev[addon.name], ...filterKeys] }
-      })
-    }
-
     return []
-  }
+  }, [])
+
+  // a search stays applied while addons are added or their schemas load: their keys are matched too
+  useEffect(() => {
+    if (applied.current.text) applySearch(applied.current.text)
+  }, [applySearch])
+
+  useEffect(() => () => clearTimeout(pending.current), [])
+
+  if (addonsData.length === 0) return null
 
   return (
     <Toolbar>
       <SearchDropdown
         placeholder="Search and filter settings"
-        suggestions={[]}
+        suggestions={NO_SUGGESTIONS}
         suggestionsLimit={10}
         isLoading={false}
         hideSuggestions={true}
-        onSubmit={() => {
-          searchCallback(search, filterKeys)
+        onSubmit={() => applySearchRef.current(search.current)}
+        onClear={() => {
+          clearTimeout(pending.current)
+          search.current = ''
+          applied.current = { text: '' }
+          searchCallback()
         }}
-        onClear={() => searchCallback()}
         onFocus={() => {}}
         onClose={() => {}}
-        filter={(newSearch) => {
-          setSearch(newSearch)
-          return filter()
-        }}
+        filter={handleFilter}
       />
 
       <Spacer />
 
+      <SettingsOutlineToggle />
       <Button
         onClick={() => {
           setShowHelp(!showHelp)
@@ -110,7 +125,5 @@ const SettingsListHeader = ({
     </Toolbar>
   )
 }
-
-
 
 export default SettingsListHeader

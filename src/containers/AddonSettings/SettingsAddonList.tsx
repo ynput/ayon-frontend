@@ -7,6 +7,7 @@ import { Column } from 'primereact/column'
 import { useGetAddonSettingsListQuery } from '@queries/addonSettings'
 import clsx from 'clsx'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useAddonSettingsPrefetch } from './useAddonSettingsPrefetch'
 import { useURIContext } from '@shared/context'
 import { AddonSettingsItemModel } from '@shared/api'
 
@@ -35,6 +36,8 @@ interface SettingsAddonListProps {
   changedAddonKeys?: string[] | null
   projectName?: string
   siteId?: string
+  /** Set while the bundle to show isn't known yet: the list shows as loading */
+  waiting?: boolean
 }
 
 const SettingsAddonList: FC<SettingsAddonListProps> = ({
@@ -50,16 +53,33 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
   changedAddonKeys = null,
   projectName,
   siteId,
+  waiting = false,
 }) => {
-  const { data, isLoading, isError } = useGetAddonSettingsListQuery({
-    projectName,
-    siteId,
-    variant,
-    bundleName,
-    projectBundleName,
-  })
+  const {
+    data,
+    isLoading: listLoading,
+    isError,
+  } = useGetAddonSettingsListQuery(
+    {
+      projectName,
+      siteId,
+      variant,
+      bundleName,
+      projectBundleName,
+    },
+    { skip: waiting },
+  )
+  const isLoading = listLoading || waiting
 
   const [preferredSelection, setPreferredSelection] = useState<Addon[]>([])
+  const { prefetch, cancel: cancelPrefetch } = useAddonSettingsPrefetch()
+
+  // site settings load per selected site, so only the studio and project ones are prefetched
+  const onRowMouseEnter = (e: any) => {
+    const addon = e.data as Addon
+    if (siteSettings || isLoading || !addon?.name || addon.isBroken) return
+    prefetch({ addonName: addon.name, addonVersion: addon.version, variant, projectName })
+  }
 
   // Filter addons by variant
   // add 'version' property to each addon
@@ -186,6 +206,8 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
           onContextMenu={onContextMenu}
           className={clsx('addon-list-table', { loading: isLoading })}
           rowClassName={rowDataClassNameFormatter}
+          onRowMouseEnter={onRowMouseEnter}
+          onRowMouseLeave={cancelPrefetch}
           emptyMessage={isError ? `WARNING: No bundle set to ${variant}` : 'No addons found'}
         >
           <Column field="title" header="Addon" />
