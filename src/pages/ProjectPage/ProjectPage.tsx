@@ -43,7 +43,7 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
-import { contributionTags, useContributionTagging } from '@ynput/ayon-addon/host'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
@@ -297,7 +297,6 @@ const ProjectPageInner = () => {
     OWNED_PAGES,
   )
 
-  const tagging = useContributionTagging()
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
@@ -418,7 +417,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle, tagging],
+    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle],
   )
 
   const activeLink = useMemo(() => {

@@ -1,7 +1,7 @@
 import { createElement, useMemo } from 'react'
 import { ContributionView, useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
-import { contributionTags, useContributionTagging } from '@ynput/ayon-addon/host'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 
@@ -13,8 +13,6 @@ import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPan
 export const useAddonCustomizeSections = (page: ProjectTablePage): SettingConfig[] => {
   const { projectName } = useProjectContext()
   const { contributions } = useContributions('projectTable.customizeSection')
-  // the slot inspector's tags on each entry, while it is on
-  const tagging = useContributionTagging()
 
   return useMemo(() => {
     const context = { projectName, page }
@@ -31,5 +29,5 @@ export const useAddonCustomizeSections = (page: ProjectTablePage): SettingConfig
           context,
         }),
       }))
-  }, [contributions, projectName, page, tagging])
+  }, [contributions, projectName, page])
 }

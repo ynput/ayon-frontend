@@ -5,11 +5,13 @@
 // `contributionTags`) and hovering one shows a card with what it is (SlotInspectorCard); off,
 // AYON's DOM has none.
 //
+// A button that opens a menu with a slot's entries only names the slot, always:
+// `data-ayon-trigger="<slot>"`. Everything else about it (whether it is outlined, in which colour,
+// what its card says) comes from the registry here, so menus don't follow the inspector's state.
+//
 // Internal: AYON's header (developer mode) and the addon dev shell drive it, not addons. The
 // switch and the legend are kept in session storage.
 import { useSyncExternalStore } from 'react'
-import { useContributions } from '@ynput/ayon-addon'
-import type { SlotName } from '@ynput/ayon-addon'
 import {
   getRegistry,
   setContributionTags,
@@ -83,6 +85,26 @@ export const addonColor = (addon: string, addons: readonly string[] = inspectorA
 
 const tagsOn = () => state.available && state.showSlots
 
+/**
+ * The addons with contributions to a slot, in registry order (a slot's example, AYON's, comes
+ * after the real ones): what a menu button of the slot (`data-ayon-trigger`) holds.
+ */
+export const slotAddons = (slot: string): string[] => [
+  ...new Set(
+    getRegistry()
+      .contributions.filter((c) => c.slot === slot)
+      .map((c) => c.addon.name),
+  ),
+]
+
+/** The slot a tagged element is about: a contribution's, or the one a menu button opens. */
+export const slotOf = (element: Element) =>
+  element.getAttribute('data-ayon-slot') || element.getAttribute('data-ayon-trigger') || undefined
+
+// the menu buttons of the slots with contributions; those of an empty slot aren't outlined
+const triggers = (slots: readonly string[]) =>
+  slots.map((slot) => `.${SLOT_INSPECTOR_CLASS} [data-ayon-trigger=${quote(slot)}]`).join(',\n')
+
 const quote = (value: string) => `"${CSS.escape(value)}"`
 // what shows a contribution: the tagged element, or the elements of a `display: contents` wrapper
 const shown = (match: string) =>
@@ -91,27 +113,43 @@ const shown = (match: string) =>
 const outlineStyles = () => {
   const addons = inspectorAddons()
   const visible = addons.filter((addon) => !state.hiddenAddons.includes(addon))
+  // each slot with contributions and their addons: its menu buttons are outlined
+  const slots = new Map<string, Set<string>>()
+  for (const { slot, addon } of getRegistry().contributions) {
+    slots.set(slot, (slots.get(slot) ?? new Set()).add(addon.name))
+  }
+  const slotsOf = (addon: string) => [...slots].filter(([, of]) => of.has(addon)).map(([slot]) => slot)
   return [
-    `.${SLOT_INSPECTOR_CLASS} [data-ayon-trigger] {
+    slots.size
+      ? `${triggers([...slots.keys()])} {
   outline: 1px dashed var(--md-sys-color-outline);
   outline-offset: 1px;
-}`,
-    ...visible.map(
-      (addon) => `${shown(`[data-ayon-addon=${quote(addon)}]`)} {
+}`
+      : '',
+    ...visible.map((addon) => {
+      const menus = slotsOf(addon)
+      return `${shown(`[data-ayon-addon=${quote(addon)}]`)} {
   outline: 2px solid ${addonColor(addon, addons)};
   outline-offset: -2px;
   border-radius: 4px;
-}
-.${SLOT_INSPECTOR_CLASS} [data-ayon-trigger][data-ayon-addons~=${quote(addon)}] {
+}${
+        menus.length
+          ? `
+${triggers(menus)} {
   outline: 2px dashed ${addonColor(addon, addons)};
-}`,
-    ),
-  ].join('\n')
+}`
+          : ''
+      }`
+    }),
+  ]
+    .filter(Boolean)
+    .join('\n')
 }
 
 const hoveredStyles = (slot: string) => {
   const match = `[data-ayon-slot=${quote(slot)}]`
-  return `${match}:not([data-ayon-wrap]), [data-ayon-wrap]${match} > * {
+  const menus = slotAddons(slot).length ? `, [data-ayon-trigger=${quote(slot)}]` : ''
+  return `${match}:not([data-ayon-wrap]), [data-ayon-wrap]${match} > *${menus} {
   outline: 3px solid var(--md-sys-color-primary) !important;
   outline-offset: -3px;
 }`
@@ -140,8 +178,8 @@ const inspect = (element?: Element) => {
   if (next === inspected) return
   inspected = next
   inspectedListeners.forEach((listener) => listener())
-  if (state.hovered !== (next?.getAttribute('data-ayon-slot') || undefined))
-    setHighlightedSlot(next?.getAttribute('data-ayon-slot') || undefined)
+  const slot = next && slotOf(next)
+  if (state.hovered !== slot) setHighlightedSlot(slot)
 }
 const subscribeInspected = (listener: () => void) => {
   inspectedListeners.add(listener)
@@ -173,10 +211,17 @@ export const SLOT_CARD_ATTRIBUTE = 'data-ayon-slot-card'
 // The innermost tagged element at a point: every element there, top first, also the ones under an
 // element that isn't tagged (an event bar drawn over its badges), and of their tagged ancestors the
 // one inside the others (an addon's slot on a page another slot shows, not the page).
+// A menu button of a slot without contributions isn't tagged.
+const closestTagged = (element: Element | null) => {
+  let tagged = element?.closest(TAGGED)
+  while (tagged && !tagged.hasAttribute('data-ayon-contribution') && !slotAddons(slotOf(tagged) ?? '').length)
+    tagged = tagged.parentElement?.closest(TAGGED)
+  return tagged ?? undefined
+}
 const taggedAt = (x: number, y: number) => {
   let found: Element | undefined
   for (const element of document.elementsFromPoint(x, y)) {
-    const tagged = element.closest(TAGGED)
+    const tagged = closestTagged(element)
     if (tagged && (!found || (tagged !== found && found.contains(tagged)))) found = tagged
   }
   return found
@@ -227,15 +272,16 @@ const syncDocument = () => {
   }
 }
 
-// the colours follow the addons that are registered
+// the colours follow the addons that are registered, the menu buttons' outlines their contributions
 let watchingRegistry = false
 const watchRegistry = () => {
   if (watchingRegistry) return
   watchingRegistry = true
-  let addons = getRegistry().addons
+  let { addons, contributions } = getRegistry()
   subscribeRegistry(() => {
-    if (getRegistry().addons === addons) return
-    addons = getRegistry().addons
+    const registry = getRegistry()
+    if (registry.addons === addons && registry.contributions === contributions) return
+    ;({ addons, contributions } = registry)
     syncDocument()
   })
 }
@@ -291,16 +337,3 @@ export const setAddonHighlighted = (addon: string, highlighted: boolean) =>
   })
 /** Singles one slot out (a stronger outline), or none. */
 export const setHighlightedSlot = (slot?: string) => update({ hovered: slot })
-
-/**
- * On the button that opens a menu with a slot's contributions: tags it (outlined in the colour of
- * those contributions' addons) while the inspector tags contributions, else nothing.
- */
-export const useSlotTriggerProps = (slot: string) => {
-  const { contributions } = useContributions(slot as SlotName)
-  const inspector = useSlotInspector()
-  if (!inspector.available || !inspector.showSlots || !contributions.length)
-    return undefined
-  const addons = [...new Set(contributions.map((c) => (c as { addon: { name: string } }).addon.name))]
-  return { 'data-ayon-slot': slot, 'data-ayon-trigger': '', 'data-ayon-addons': addons.join(' ') }
-}

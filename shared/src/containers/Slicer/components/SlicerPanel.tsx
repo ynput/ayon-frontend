@@ -25,7 +25,6 @@ import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
 import { useMenuContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
 import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shared/components/Menu'
-import { useSlotTriggerProps } from '@shared/components/AddonLayout/slotInspector'
 import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
@@ -313,9 +312,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
       )
     }
   // addon items: `top` ones first, the rest after the slice's own items and above Delete
-  const hasAddonBuilders = addonMenuItems.length > 0
-  const triggerProps = useSlotTriggerProps(SLOT)
-  const rowContextMenuBuilders = hasAddonBuilders
+  const rowContextMenuBuilders = addonMenuItems.length
     ? [
         addonRowContextMenu('top'),
         ...(isHierarchy ? hierarchyContextMenu.rowContextMenuBuilders : []),
@@ -453,7 +450,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               <HeaderButton
                 icon="more_horiz"
                 id={menuId}
-                {...triggerProps}
+                data-ayon-trigger={SLOT}
                 className={clsx('slicer-menu', { active: isMenuOpen })}
                 data-tooltip="More"
                 data-tooltip-delay={0}

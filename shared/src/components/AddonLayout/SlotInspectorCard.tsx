@@ -16,6 +16,8 @@ import {
   SLOT_CARD_ATTRIBUTE,
   addonColor,
   releaseInspected,
+  slotAddons,
+  slotOf,
   useInspectedElement,
 } from './slotInspector'
 
@@ -113,7 +115,7 @@ interface Inspected {
 }
 
 const describe = (element: Element): Inspected | undefined => {
-  const slot = element.getAttribute('data-ayon-slot')
+  const slot = slotOf(element)
   if (!slot) return undefined
   const { owner } = slotInfo(slot)
   const addon = element.getAttribute('data-ayon-addon')
@@ -132,9 +134,7 @@ const describe = (element: Element): Inspected | undefined => {
     slot,
     owner,
     contribution,
-    menuOf: element.hasAttribute('data-ayon-trigger')
-      ? (element.getAttribute('data-ayon-addons') || '').split(' ').filter(Boolean)
-      : undefined,
+    menuOf: element.hasAttribute('data-ayon-trigger') ? slotAddons(slot) : undefined,
   }
 }
 

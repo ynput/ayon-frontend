@@ -8,18 +8,20 @@ import {
   setHighlightedSlot,
   setShowSlots,
   setSlotInspectorAvailable,
+  slotAddons,
+  slotOf,
   subscribeSlotInspector,
-  useSlotTriggerProps,
 } from '../../shared/src/components/AddonLayout/slotInspector'
 import * as examplesModule from '../../addon/src/examples'
 import {
+  getContributions,
   getRegistry,
   provideExamples,
   registerManifests,
+  setContributionTags,
   setManifestsLoading,
   unregisterAddon,
 } from '../../addon/src/registry'
-import { renderToHtml } from './support/render'
 
 // The slot inspector: developer mode's Show slots, which adds the examples and tags (outlines)
 // contributions. It only applies while the inspector is available (developer mode, the dev shell);
@@ -93,22 +95,25 @@ test.describe('slot inspector', () => {
     expect(heard).toEqual(['userDetails.menuItem', undefined])
   })
 
-  test("tags a menu's button with the addons of its slot, only while it tags contributions", () => {
-    let props: unknown
-    const Button = () => {
-      props = useSlotTriggerProps('userDetails.menuItem')
-      return null
-    }
-    renderToHtml(Button)
-    expect(props).toBeUndefined()
+  test("a menu's button only names its slot: its addons come from the registry", () => {
+    const button = {
+      getAttribute: (name: string) => (name === 'data-ayon-trigger' ? 'userDetails.menuItem' : null),
+    } as unknown as Element
+    expect(slotOf(button)).toBe('userDetails.menuItem')
+    expect(slotAddons('userDetails.menuItem')).toEqual(['zebra', 'alpha'])
     setSlotInspectorAvailable(true)
     setShowSlots(true)
-    renderToHtml(Button)
-    expect(props).toEqual({
-      'data-ayon-slot': 'userDetails.menuItem',
-      'data-ayon-trigger': '',
-      // AYON's example is in the menu too, after the real ones
-      'data-ayon-addons': 'zebra alpha ayon',
-    })
+    // AYON's example is in the menu too, after the real ones
+    expect(slotAddons('userDetails.menuItem')).toEqual(['zebra', 'alpha', 'ayon'])
+    expect(slotAddons('projectList.menuItem')).toEqual(['ayon'])
+  })
+
+  test("a tag switch is a registry change: surfaces re-render through useContributions", () => {
+    const before = getContributions('userDetails.menuItem')
+    setContributionTags(true)
+    const tagged = getContributions('userDetails.menuItem')
+    expect(tagged).not.toBe(before)
+    setContributionTags(false)
+    expect(getContributions('userDetails.menuItem')).not.toBe(tagged)
   })
 })

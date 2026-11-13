@@ -220,7 +220,10 @@ export const contributionTags = (contribution: {
 
 const getTagged = () => state.tagged
 
-/** Whether rendered contributions are tagged; re-renders when it changes. */
+/**
+ * Whether rendered contributions are tagged; re-renders when it changes. For `ContributionView`:
+ * a switch is a registry change, so `useContributions` re-renders the host's surfaces anyway.
+ */
 export const useContributionTagging = () => useSyncExternalStore(subscribe, getTagged, getTagged)
 
 /**

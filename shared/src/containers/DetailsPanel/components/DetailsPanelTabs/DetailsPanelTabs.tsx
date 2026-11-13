@@ -4,7 +4,7 @@ import { FC } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import type { IconType } from '@ynput/ayon-react-components'
 import { prefetchPiece } from '@ynput/ayon-addon'
-import { contributionTags, useContributionTagging } from '@ynput/ayon-addon/host'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { DetailsPanelTab } from '@shared/context'
 import type { DetailsPanelEntityType } from '@shared/api'
 import { useAddonTabs } from '../../hooks/useAddonTabs'
@@ -34,8 +34,6 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
   const showFilesTab = entityType === 'version'
   // the buttons show from the descriptions; a tab's code loads when it is opened
   const { tabs: addonTabs } = useAddonTabs(entityType)
-  // re-render when the slot inspector starts or stops tagging contributions
-  useContributionTagging()
 
   return (
     <Styled.TabsContainer className={isLoading ? 'loading' : ''}>

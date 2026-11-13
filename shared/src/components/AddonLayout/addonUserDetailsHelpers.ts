@@ -50,7 +50,7 @@ export interface AddonUserMenuItems {
 
 /**
  * The addons' items for the user details "more" menu, tagged for the slot inspector. The button that
- * opens the menu takes `useSlotTriggerProps('userDetails.menuItem')`.
+ * opens the menu carries `data-ayon-trigger="userDetails.menuItem"`.
  */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')

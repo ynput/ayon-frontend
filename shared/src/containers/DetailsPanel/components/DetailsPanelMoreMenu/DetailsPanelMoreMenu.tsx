@@ -7,7 +7,6 @@ import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
 import { MenuContainer } from '@shared/components/Menu/MenuContainer'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
-import { useSlotTriggerProps } from '@shared/components/AddonLayout/slotInspector'
 import {
   useMenuContext,
   ThumbnailUploadContext,
@@ -200,7 +199,6 @@ export const DetailsPanelMoreMenu = ({
     () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
     [menuAddonItems, toMenuItem],
   )
-  const triggerProps = useSlotTriggerProps(SLOT)
   // the items draw from their descriptions; their code loads when the menu opens
   useEffect(() => {
     if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
@@ -254,7 +252,7 @@ export const DetailsPanelMoreMenu = ({
         variant="text"
         data-tooltip="More actions"
         aria-label="More actions"
-        {...triggerProps}
+        data-ayon-trigger={SLOT}
         className={clsx({ active: isOpen })}
         onClick={() => toggleMenuOpen(menuId)}
       />
