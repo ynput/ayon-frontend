@@ -25,6 +25,7 @@ import type { FieldStats } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { getCachedGroupItems } from '../actions/getCachedGroupItems'
 
 const CACHE_TIME = 10 // seconds
 
@@ -770,8 +771,8 @@ const injectedApi = enhancedApi.injectEndpoints({
       keepUnusedDataFor: CACHE_TIME,
     }),
     getGroupedTasksList: build.query<GetGroupedTasksListResult, GetGroupedTasksListArgs>({
-      queryFn: async (
-        {
+      queryFn: async (args, api) => {
+        const {
           projectName,
           groups,
           search,
@@ -781,15 +782,23 @@ const injectedApi = enhancedApi.injectEndpoints({
           sortBy,
           groupCount,
           showComments,
-        },
-        api,
-      ) => {
+        } = args
         try {
           let promises = []
+          // a refresh reloads every group, otherwise only the new or grown ones
+          const cachedGroups = api.forced
+            ? new Map<string, EditorTaskNode[]>()
+            : getCachedGroupItems<EditorTaskNode>(
+                api.getState(),
+                'getGroupedTasksList',
+                args,
+                (data) => data?.tasks,
+              )
           // Folder-level filter keys that must go in folderFilter, not task filter
           const folderFilterKeys = new Set(['folderType'])
 
           for (const group of groups) {
+            if (cachedGroups.has(group.value)) continue
             // Determine count for this group - use argument override, else group count, else default
             const count = groupCount || group.count || 500
 
@@ -849,7 +858,8 @@ const injectedApi = enhancedApi.injectEndpoints({
           }
 
           const result = await Promise.all(promises)
-          const tasks: EditorTaskNode[] = []
+          promises.forEach((promise) => promise.unsubscribe())
+          const fetchedGroups = new Map<string, EditorTaskNode[]>()
           for (const res of result) {
             if (res.error) throw res.error
             // get group value
@@ -869,8 +879,12 @@ const injectedApi = enhancedApi.injectEndpoints({
                 ],
               })) || []
 
-            tasks.push(...groupTasks)
+            fetchedGroups.set(groupValue, groupTasks)
           }
+
+          const tasks = groups.flatMap(
+            ({ value }) => fetchedGroups.get(value) ?? cachedGroups.get(value) ?? [],
+          )
 
           // Return the tasks directly as required by the query format
           return {
