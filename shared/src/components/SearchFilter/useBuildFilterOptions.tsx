@@ -72,8 +72,6 @@ type AttributeType =
 type AttributeDataValue = AttributeType | null | undefined
 
 type FilterConfig = {
-  enableExcludes?: boolean
-  enableOperatorChange?: boolean
   enableRelativeValues?: boolean
   prefixes?: Partial<Record<FilterFieldType, string>> // strings that will be prepended to the id of the option
   keys?: Partial<Record<FilterFieldType, string>> // replaces the default keys for the filter
@@ -213,10 +211,7 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('taskType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'taskType',
-        {
-          ...config,
-          enableOperatorChange: false,
-        },
+        config,
         entityType,
         groupedFilterTypes.has('taskType'),
       )
@@ -235,10 +230,7 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('folderType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'folderType',
-        {
-          ...config,
-          enableOperatorChange: false,
-        },
+        config,
         entityType,
         groupedFilterTypes.has('folderType'),
       )
@@ -257,10 +249,7 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('productType') && currentScope !== 'user') {
       const entitySubTypeOption = getOptionRoot(
         'productType',
-        {
-          ...config,
-          enableOperatorChange: false,
-        },
+        config,
         entityType,
         groupedFilterTypes.has('productType'),
       )
@@ -277,10 +266,7 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('productBaseType') && currentScope !== 'user') {
       const productBaseTypeOption = getOptionRoot(
         'productBaseType',
-        {
-          ...config,
-          enableOperatorChange: false,
-        },
+        config,
         entityType,
         groupedFilterTypes.has('productBaseType'),
       )
@@ -336,7 +322,7 @@ export const useBuildFilterOptions = ({
     if (scopeFilterTypes.includes('status')) {
       const statusOption = getOptionRoot(
         'status',
-        { ...config, enableOperatorChange: false },
+        config,
         entityType,
         groupedFilterTypes.has('status'),
       )
@@ -621,7 +607,6 @@ export const useBuildFilterOptions = ({
         const isDate = type === 'datetime'
         const isText = type === 'string'
         const isNumber = type === 'integer' || type === 'float'
-        const enableOperatorChange = isListOf ? config?.enableOperatorChange : false
         // a project default inherits down to every entity, so nullness filters would never match
         const alwaysResolvesToValue =
           attribute.data.default !== undefined &&
@@ -637,7 +622,6 @@ export const useBuildFilterOptions = ({
           {
             ...config,
             allowsCustomValues: true,
-            enableOperatorChange: enableOperatorChange,
             enableRelativeValues: enableRelativeValues,
           },
           entityType,
@@ -864,7 +848,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -880,7 +863,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -896,7 +878,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -912,7 +893,6 @@ const getOptionRoot = (
         allowsCustomValues: true,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -944,7 +924,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
       }
       break
@@ -960,8 +939,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: config?.enableRelativeValues,
         allowNoValue: config?.enableRelativeValues,
-        allowExcludes: config?.enableExcludes,
-        operatorChangeable: config?.enableOperatorChange,
       }
       break
     case 'author':
@@ -976,8 +953,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: config?.enableRelativeValues,
         allowNoValue: config?.enableRelativeValues,
-        allowExcludes: config?.enableExcludes,
-        operatorChangeable: config?.enableOperatorChange,
       }
       break
     case 'tags':
@@ -992,8 +967,6 @@ const getOptionRoot = (
         allowsCustomValues: true,
         allowHasValue: config?.enableRelativeValues,
         allowNoValue: config?.enableRelativeValues,
-        allowExcludes: config?.enableExcludes,
-        operatorChangeable: config?.enableOperatorChange,
       }
       break
     case 'version': // version: product latest/hero/latest done/number
@@ -1057,7 +1030,6 @@ const getOptionRoot = (
         allowsCustomValues: false,
         allowHasValue: false,
         allowNoValue: false,
-        allowExcludes: config?.enableExcludes,
         operatorChangeable: false,
         singleSelect: true,
       }
@@ -1159,8 +1131,6 @@ const getAttributeFieldOptionRoot = (
     allowsCustomValues: config?.allowsCustomValues,
     allowHasValue: config.enableRelativeValues,
     allowNoValue: config.enableRelativeValues,
-    allowExcludes: config?.enableExcludes,
-    operatorChangeable: config?.enableOperatorChange,
     icon: getAttributeIcon(attribute.name, attribute.data.type, hasEnumOptions(attribute.data)),
     group,
     tooltip: entityType ? `${upperFirst(entityType)} ${label}` : undefined,

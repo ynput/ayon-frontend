@@ -88,6 +88,8 @@ const ProjectOverviewPage: FC = () => {
     projectName,
     projectInfo,
     setQueryFilters,
+    advancedFilter,
+    setAdvancedFilter,
     displayFilters,
     viewGroupBy,
     viewGroupByDesc,
@@ -210,6 +212,7 @@ const ProjectOverviewPage: FC = () => {
     // Only reset view state
     if (source === 'uri') {
       setQueryFilters({})
+      if (advancedFilter) setAdvancedFilter?.(undefined)
       updateViewGroupBy(null) // switches to hierarchy and syncs groupBy in one server call
     }
 
@@ -256,6 +259,8 @@ const ProjectOverviewPage: FC = () => {
               <SearchFilterWrapper
                 queryFilters={displayFilters}
                 onChange={handleFiltersChange}
+                advancedFilter={advancedFilter}
+                onAdvancedFilterChange={setAdvancedFilter}
                 scopes={SCOPES}
                 projectNames={projectName ? [projectName] : []}
                 // @ts-expect-error: projectInfo is never matching, whatever

@@ -2,10 +2,17 @@ import { useCallback, useEffect, useState } from 'react'
 import type { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { UpdateViewSettingsFn } from '../../utils/viewUpdateHelper'
 
+// `filter` saves the search bar's filter in the same update, for filters moved from the search
+// bar into the advanced filter (two updates at once can reach the server in either order)
+export type UpdateAdvancedFilter = (
+  advancedFilter: QueryFilter | undefined,
+  filter?: QueryFilter,
+) => void
+
 export type AdvancedFilterSetting = {
   // undefined when there are no conditions
   advancedFilter: QueryFilter | undefined
-  onUpdateAdvancedFilter: (advancedFilter: QueryFilter | undefined) => void
+  onUpdateAdvancedFilter: UpdateAdvancedFilter
 }
 
 // The `advancedFilter` view setting, saved the same way as the page's `filter`
@@ -27,9 +34,10 @@ export const useAdvancedFilterSetting = (
   const advancedFilter = filter?.conditions?.length ? filter : undefined
 
   const onUpdateAdvancedFilter = useCallback(
-    async (newFilter: QueryFilter | undefined) => {
+    async (newFilter: QueryFilter | undefined, filter?: QueryFilter) => {
       const value = newFilter?.conditions?.length ? newFilter : undefined
-      await updateViewSettings({ advancedFilter: value }, setLocalFilter, value ?? {}, {
+      const settings = filter ? { advancedFilter: value, filter } : { advancedFilter: value }
+      await updateViewSettings(settings, setLocalFilter, value ?? {}, {
         errorMessage: 'Failed to update filter settings',
       })
     },

@@ -1,4 +1,12 @@
-import { BuildFilterOptions, useBuildFilterOptions, ScopeWithFilterTypes } from '@shared/components'
+import {
+  AdvancedFilterDropdownButton,
+  AdvancedFilterMoveButton,
+  AdvancedFilterSlot,
+  BuildFilterOptions,
+  useAdvancedFilterInSearchBar,
+  useBuildFilterOptions,
+  ScopeWithFilterTypes,
+} from '@shared/components'
 import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
   Filter,
@@ -10,7 +18,6 @@ import {
   buildFilterId,
 } from '@ynput/ayon-react-components'
 import { EditorTaskNode, TaskNodeMap } from '@shared/containers/ProjectTreeTable'
-import AdvancedFiltersPlaceholder from '@components/SearchFilter/AdvancedFiltersPlaceholder'
 import { ProjectModelWithProducts, usePowerpack } from '@shared/context'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -33,12 +40,20 @@ interface SearchFilterWrapperProps
   scopes?: ScopeWithFilterTypes[]
   queryFilters?: QueryFilter
   onChange?: (queryFilters: QueryFilter) => void
+  // nested filter next to the search bar: shown when onAdvancedFilterChange is given
+  advancedFilter?: QueryFilter
+  // `filter`: the search bar's filter, saved together with it (filters moved into it)
+  onAdvancedFilterChange?: (advancedFilter: QueryFilter | undefined, filter?: QueryFilter) => void
+  advancedFilterExclude?: string[] // option ids the advanced filter can't use
   data: BuildFilterOptions['data']
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   queryFilters,
   onChange,
+  advancedFilter,
+  onAdvancedFilterChange,
+  advancedFilterExclude,
   data: customData,
   filterTypes,
   projectNames,
@@ -87,8 +102,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     scopes,
     data,
     config: {
-      enableExcludes: powerLicense,
-      enableOperatorChange: powerLicense,
       enableRelativeValues: true,
       prefixes: { attributes: 'attrib.' },
       ...config,
@@ -299,6 +312,42 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     searchFilterRef.current?.close()
   }
 
+  // Before the advanced filter opens: applies what Confirm would apply and closes the
+  // dropdown. close() alone would drop the values picked so far.
+  const applySearchBar = () => {
+    const chipId = editingSearchChipRef.current
+    const input = searchFilterRef.current
+      ?.getContainerElement()
+      ?.querySelector('ul .search input') as HTMLInputElement | null
+    if (chipId && input) {
+      // a search chip being edited: keep the typed text
+      commitSearchChipEdit(chipId, input)
+    } else {
+      const applied = localFiltersRef.current.filter((f) => f.values?.length)
+      setLocalFilters(applied)
+      handleFinish(applied)
+      searchFilterRef.current?.close()
+    }
+  }
+
+  const pinnedFilterId = pinnedSlice ? pinnedSlice.sliceType + '__pinned' : null
+  const advancedFilterBar = useAdvancedFilterInSearchBar({
+    value: advancedFilter,
+    onChange: onAdvancedFilterChange,
+    options,
+    scopes: scopes?.map(({ scope }) => scope),
+    exclude: advancedFilterExclude,
+    filters: localFilters.filter((f) => f.id !== pinnedFilterId),
+    applySearchBar,
+    removeFilters: (ids) => {
+      const kept = localFilters.filter((f) => !ids.includes(f.id))
+      setLocalFilters(kept)
+      searchFilterRef.current?.close()
+      // the pinned slice is display-only, as in handleFinish
+      return clientFilterToQueryFilter(kept.filter((f) => f.id !== pinnedFilterId))
+    },
+  })
+
   // While editing a search chip, intercept Enter on the dropdown input AND clicks
   // on the dropdown's Confirm button so the chip's value gets updated (or removed
   // if cleared). Without these intercepts the default Confirm path passes the
@@ -400,7 +449,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     <>
       <SearchFilter
         ref={searchFilterRef}
-        options={options}
+        options={advancedFilterBar.option ? [...options, advancedFilterBar.option] : options}
         groupOptions={groupOptions}
         filters={localFilters}
         onChange={handleFilterChange}
@@ -413,21 +462,24 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         enableAutosuggestion={false}
         pt={{
           searchBar: {
-            style: {
-              paddingRight: 28,
-            },
             onClickCapture: handleSearchBarClickCapture,
             ...searchBar,
           },
           dropdown: {
-            operationsTemplate: powerLicense ? undefined : (
-              <AdvancedFiltersPlaceholder onClick={handlePowerClick} />
+            operationsTemplate: onAdvancedFilterChange && (
+              <AdvancedFilterDropdownButton
+                editor={advancedFilterBar.editor}
+                onSwitch={advancedFilterBar.switchFilter}
+              />
             ),
             pt: {
               item: {
                 onClick: (event) => {
                   const listItem = (event.target as HTMLLIElement).closest('li')
                   if (!listItem) return true
+
+                  // the "Advanced filter" entry at the end of the field list
+                  if (!advancedFilterBar.handleItemClick(event)) return false
 
                   // PowerPack gating
                   if (listItem.querySelector('span[icon="bolt"]')) {
@@ -494,6 +546,20 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         }}
         {...props}
       />
+      <AdvancedFilterMoveButton
+        searchFilterRef={searchFilterRef}
+        count={advancedFilterBar.movableCount}
+        onMove={advancedFilterBar.moveToAdvancedFilter}
+      />
+      {onAdvancedFilterChange && (
+        <AdvancedFilterSlot
+          value={advancedFilter}
+          onChange={onAdvancedFilterChange}
+          editor={advancedFilterBar.editor}
+          fields={advancedFilterBar.fields}
+          openRequest={advancedFilterBar.openRequest}
+        />
+      )}
       <CustomDateRangeDialog
         isOpen={!!dateRange.customRangeFilterId}
         header={

@@ -44,6 +44,8 @@ export type AdvancedFilterProps = {
   fields: AdvancedFilterField[]
   disabled?: boolean
   maxDepth?: number
+  compact?: boolean // narrow toolbar: the button is an icon with the count badge
+  openRequest?: number // opens the panel each time it changes
 }
 
 const isCondition = (node: QueryCondition | QueryFilter): node is QueryCondition => 'key' in node
@@ -87,6 +89,67 @@ export const mergeQueryFilters = <T extends QueryFilter | undefined>(
   if (!b?.conditions?.length) return a
   if (!a?.conditions?.length) return b.operator === 'or' ? { operator: 'and', conditions: [b] } : b
   return { operator: 'and', conditions: [a, b] }
+}
+
+// Adds conditions that must match as well, at the end of the root group (the root of an `or`
+// filter is wrapped in an `and` group first).
+export const appendToQueryFilter = (
+  tree: QueryFilter | undefined,
+  nodes: (QueryCondition | QueryFilter)[],
+): QueryFilter | undefined => {
+  if (!nodes.length) return tree
+  if (!tree?.conditions?.length) return { operator: 'and', conditions: nodes }
+  if (tree.operator === 'or') return { operator: 'and', conditions: [tree, ...nodes] }
+  return { ...tree, operator: 'and', conditions: [...tree.conditions, ...nodes] }
+}
+
+const asList = (value: unknown): unknown[] =>
+  Array.isArray(value) ? value : value === undefined ? [] : [value]
+
+// the stored value types don't list booleans, which the server takes
+const condition = (key: string, operator: QueryCondition['operator'], value: unknown) =>
+  ({ key, operator, value } as QueryCondition)
+
+// The search bar's conditions in the shapes the editor edits, with the same meaning:
+// a picked value of a single-select enum is "is any of", picked numbers are one comparison
+// each, "No" on a boolean is "is false" and "excludes all" is an `or` of "has none of".
+// Anything else is kept as it is.
+export const toEditableConditions = (
+  nodes: (QueryCondition | QueryFilter)[],
+  fields: AdvancedFilterField[],
+): (QueryCondition | QueryFilter)[] => {
+  const types = new Map(fields.map((field) => [field.key, field.type]))
+
+  const convert = (node: QueryCondition | QueryFilter): QueryCondition | QueryFilter => {
+    if (!isCondition(node)) {
+      return { ...node, conditions: (node.conditions || []).map(convert) }
+    }
+    const { key, operator = 'eq', value } = node
+    const type = types.get(key)
+    const isNegated = operator === 'ne' || operator === 'notin'
+
+    if (type === 'enum' && ['eq', 'ne', 'in', 'notin'].includes(operator)) {
+      return condition(key, isNegated ? 'notin' : 'in', asList(value))
+    }
+    if ((type === 'integer' || type === 'float') && (operator === 'in' || operator === 'notin')) {
+      const conditions = asList(value).map((v) => condition(key, isNegated ? 'ne' : 'eq', v))
+      if (conditions.length === 1) return conditions[0]
+      return { operator: isNegated ? 'and' : 'or', conditions }
+    }
+    if (type === 'boolean' && (operator === 'eq' || operator === 'ne')) {
+      const [flag] = asList(value)
+      if (typeof flag !== 'boolean') return node
+      // the editor stores "is true" as eq true and "is false" as ne true
+      return condition(key, flag !== isNegated ? 'eq' : 'ne', true)
+    }
+    if (type === 'list' && operator === 'excludesall') {
+      const conditions = asList(value).map((v) => condition(key, 'excludesany', [v]))
+      return conditions.length === 1 ? conditions[0] : { operator: 'or', conditions }
+    }
+    return node
+  }
+
+  return nodes.map(convert)
 }
 
 // One filter per scope, with the scope prefix removed from the keys. The backend takes one
