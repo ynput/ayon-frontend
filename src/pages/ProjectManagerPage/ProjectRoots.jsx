@@ -12,7 +12,7 @@ import {
 } from '@ynput/ayon-react-components'
 import ProjectManagerPageLayout from './ProjectManagerPageLayout'
 import { toast } from 'react-toastify'
-import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import EmptyPlaceholder, { EmptyPlaceholderFlexWrapper } from '@shared/components/EmptyPlaceholder'
 
 const ProjectRootForm = ({ projectName, siteName, siteId, roots }) => {
   const [setCustomRoots, { isLoading }] = useSetCustomRootsMutation()
@@ -117,12 +117,16 @@ const ProjectRoots = ({ projectName, projectList, userPermissions }) => {
   return (
     <ProjectManagerPageLayout {...{ projectList }}>
       {(!isLoadingProject && isError) || !userPermissions.assignedToProject(projectName) ? (
-        <EmptyPlaceholder
-          icon="settings_alert"
-          message="Something went wrong while fetching project roots data"
-        />
+        <EmptyPlaceholderFlexWrapper>
+          <EmptyPlaceholder
+            icon="settings_alert"
+            message="Something went wrong while fetching project roots data"
+          />
+        </EmptyPlaceholderFlexWrapper>
       ) : forms.length === 0 ? (
-        <EmptyPlaceholder icon="lists" message="No sites were found" />
+        <EmptyPlaceholderFlexWrapper>
+          <EmptyPlaceholder icon="lists" message="No sites were found" />
+        </EmptyPlaceholderFlexWrapper>
       ) : (
         <div style={{ height: '100%', overflow: 'auto' }}>
           <Section className="invisible" style={{ maxWidth: 600 }}>

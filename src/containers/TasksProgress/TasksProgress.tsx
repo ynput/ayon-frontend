@@ -19,7 +19,12 @@ import {
   useUpdateEntitiesMutation,
 } from '@shared/api'
 import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
-import { EmptyPlaceholder, FilterFieldType, SyncButton } from '@shared/components'
+import {
+  EmptyPlaceholder,
+  EmptyPlaceholderFlexWrapper,
+  FilterFieldType,
+  SyncButton,
+} from '@shared/components'
 import { createFilterFromSlicer, useTaskProgressViewSettings } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
@@ -449,14 +454,18 @@ const TasksProgress: FC<TasksProgressProps> = ({
               onCollapseRow={handleCollapseToggle}
             />
           ) : (
-            <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
+            <EmptyPlaceholderFlexWrapper>
+              <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
+            </EmptyPlaceholderFlexWrapper>
           )
         ) : (
-          <EmptyPlaceholder
-            message={'Select a folder to begin.'}
-            icon="folder_open"
-            error={error}
-          />
+          <EmptyPlaceholderFlexWrapper>
+            <EmptyPlaceholder
+              message={'Select a folder to begin.'}
+              icon="folder_open"
+              error={error}
+            />
+          </EmptyPlaceholderFlexWrapper>
         )}
       </Section>
     </>

@@ -103,12 +103,19 @@ const ProviderFill = styled.div`
   gap: var(--base-gap-large);
   width: 100%;
 
-  & > *:only-child {
+  /* not the table splitter, the only child too while no list is selected (no toolbar) */
+  & > *:only-child:not(.p-splitter) {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
     width: 100%;
+  }
+
+  /* the review addon shows its own empty state here while no session is selected: on a panel, not the page background */
+  &:has(> .empty-placeholder:only-child) {
+    background-color: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-m);
   }
 `
 

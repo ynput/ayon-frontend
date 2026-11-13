@@ -6,7 +6,7 @@ import AccessGroups from '@pages/SettingsPage/AccessGroups'
 const ProjectPermissions = ({ projectName, projectList }) => {
   return (
     <ProjectManagerPageLayout projectList={projectList}>
-      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+      <ScrollPanel style={{ flexGrow: 1 }}>
         <AccessGroups projectName={projectName} />
       </ScrollPanel>
     </ProjectManagerPageLayout>

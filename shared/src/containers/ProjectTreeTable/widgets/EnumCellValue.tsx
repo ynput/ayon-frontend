@@ -1,14 +1,9 @@
 import type { EnumItem } from '@shared/api'
-import {
-  getReadableColor,
-  getTagColors,
-  getTextColor,
-  Icon,
-  IconProps,
-} from '@ynput/ayon-react-components'
+import { getReadableColor, getTagColors, Icon, IconProps } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import { wrapMode } from './wrapMode'
+import { getPillColors, type PillStyle } from '@shared/util/pillColors'
 // Inline the edit trigger class to avoid runtime import and circular dependency with CellWidget
 const EDIT_TRIGGER_CLASS = 'edit-trigger'
 
@@ -165,9 +160,8 @@ export interface EnumTemplateProps extends React.HTMLAttributes<HTMLSpanElement>
   isSelected?: boolean
   isReadOnly?: boolean
   iconOnlyColor?: boolean // When true, only the icon gets colored, not the text label
-  // a single value with a colour shows as a pill: filled with the colour (statuses, which stand out) or tinted
-  // like a tag (other coloured values such as priority). Lists keep their own chips
-  pill?: 'filled' | 'tinted'
+  // a single value with a colour shows as a pill (see getPillColors); lists keep their own chips
+  pill?: PillStyle
   pt?: {
     icon?: Partial<IconProps>
     img?: Partial<React.ImgHTMLAttributes<HTMLImageElement>>
@@ -238,7 +232,7 @@ export const EnumCellValue = ({
         {selectedOptions.map((option, i) => {
           const pill =
             pillStyle && option.color && !isMultiSelect && !iconOnlyColor
-              ? getPillColors(option, pillStyle)
+              ? getPillColors({ ...option, color: option.color }, pillStyle)
               : undefined
           return (
             <StyledValueWrapper
@@ -306,19 +300,6 @@ export const EnumCellValue = ({
       )}
     </StyledWidget>
   )
-}
-
-const getPillColors = (option: EnumItem, style: 'filled' | 'tinted'): React.CSSProperties => {
-  if (style === 'filled') {
-    // the full colour, as on status buttons and task progress cards
-    return { backgroundColor: option.color!, color: getTextColor(option.color!) }
-  }
-  const colors = getTagColors(option)
-  return {
-    color: colors.text,
-    backgroundColor: colors.background,
-    boxShadow: `inset 0 0 0 1px ${colors.border}`,
-  }
 }
 
 // a value shown as a chip takes the tag colours, otherwise its colour is the text colour

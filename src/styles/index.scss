@@ -77,30 +77,25 @@ strong {
   // text on a badge filled with --color-hl-production, -staging or -developer
   --color-on-hl: light-dark(white, black);
 
+  // shared sizes, so lines line up across panels: headers (tables, kanban columns, list groups) and the rows of
+  // fixed-height lists such as the slicer. Table rows follow the user's row height instead
+  --size-header: 34px;
+  --size-row: 34px;
+
   // table colors
   --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
   --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
-  // folder rows and the header: a step off the rows on light too, where -low is barely off white
-  --color-table-row-high: light-dark(#f3f5f8, var(--md-sys-color-surface-container-low));
-  --color-table-header: light-dark(
-    var(--md-sys-color-surface-container),
-    var(--md-sys-color-surface-container-lowest)
-  );
-  --color-table-header-hover: light-dark(
-    var(--md-sys-color-surface-container-hover),
-    var(--md-sys-color-surface-container-lowest-hover)
-  );
-  --color-table-hover: var(--md-sys-color-surface-container);
-  --color-table-row-hover: light-dark(
-    var(--md-sys-color-surface-container-lowest-hover),
-    hsl(215 14% 15%)
-  );
-  // on light the grey-blue secondary container was too close to hover and the selected row
-  --color-table-selected: light-dark(
-    var(--md-sys-color-primary-container),
-    var(--md-sys-color-secondary-container)
-  );
-  --color-table-selected-row: var(--md-sys-color-surface-container-high);
+  // rows that group others and the header: a visible but light step off the rows
+  --color-table-row-high: light-dark(#f6f7f9, #20242b);
+  --color-table-header: var(--md-sys-color-surface-container);
+  --color-table-header-hover: var(--md-sys-color-surface-container-hover);
+  // hover is grey and a step past the group rows; selection is the one blue used by the tree, lists and cards
+  --color-table-row-hover: var(--md-sys-color-surface-container);
+  --color-table-hover: var(--md-sys-color-surface-container-hover);
+  --color-table-selected: var(--md-sys-color-primary-container);
+  --color-table-selected-row: var(--md-sys-color-primary-container);
+  --color-table-selected-row-hover: var(--md-sys-color-primary-container-hover);
+  --color-table-selected-row-cell-hover: var(--md-sys-color-primary-container-active);
   --color-table-readonly-focused: var(--md-sys-color-surface-container);
   --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
   --color-table-boolean-border: light-dark(
@@ -169,8 +164,9 @@ strong {
     // Navigation
   }
 }
+// the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
 nav.primary {
-  background-color: var(--panel-background);
+  background-color: var(--md-sys-color-background);
   padding: 8px;
   display: flex;
   flex-direction: row;
@@ -430,10 +426,7 @@ a {
 
 // keep the right-clicked row looking hovered while its context menu is open
 .p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
-  background: light-dark(
-    var(--md-sys-color-surface-container-lowest-hover),
-    rgba(255, 255, 255, 0.03)
-  );
+  background: var(--color-table-row-hover);
   color: light-dark(var(--md-sys-color-on-surface), #ffffffde);
 }
 

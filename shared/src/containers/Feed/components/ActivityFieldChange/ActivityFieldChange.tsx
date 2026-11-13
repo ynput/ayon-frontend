@@ -4,6 +4,7 @@ import ActivityDate from '../ActivityDate'
 import { Icon, type UserColor } from '@ynput/ayon-react-components'
 import useGetContextParents from './hooks/getContextParents'
 import { FieldValue } from './FieldValue'
+import { StatusLabel } from '@shared/components/StatusLabel'
 import { useGetAttributeListQuery } from '@shared/api'
 import type { AttributeModel, EnumItem } from '@shared/api'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
@@ -11,6 +12,7 @@ import { markdownToPlainText } from '@shared/components/MarkdownEditor/markdown/
 
 type FieldDisplayValue = {
   name: string
+  shortName?: string
   icon?: string
   color?: string
   colorLight?: string | null
@@ -123,6 +125,7 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
 
   const statusDisplay = (status?: FieldDisplayValue): FieldDisplayValue => ({
     name: status?.name || '',
+    shortName: status?.shortName,
     icon: status?.icon,
     color: status?.color,
     colorLight: status?.colorLight,
@@ -145,6 +148,8 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
     return formatValue(value, attribute, key)
   }
 
+  // a status change shows as status labels (icon in a square of its colour, then the name), other coloured
+  // values as tinted pills like in the tables
   const oldDisplay = getDisplay(oldValue, oldStatus)
   const newDisplay = getDisplay(newValue, newStatus)
 
@@ -158,9 +163,15 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
             <strong>{fieldTitle}</strong>
           </Styled.Text>
         )}
-        <FieldValue {...oldDisplay} />
-        <Icon icon="trending_flat" />
-        <FieldValue {...newDisplay} />
+        {isStatus ? (
+          <StatusLabel statuses={[oldDisplay, newDisplay].filter((status) => status.name)} />
+        ) : (
+          <>
+            <FieldValue {...oldDisplay} pill="tinted" />
+            <Icon icon="trending_flat" />
+            <FieldValue {...newDisplay} pill="tinted" />
+          </>
+        )}
       </Styled.Body>
       <ActivityDate date={createdAt} />
     </Styled.FieldChange>

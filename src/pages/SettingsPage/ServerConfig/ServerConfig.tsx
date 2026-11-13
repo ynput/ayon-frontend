@@ -17,6 +17,8 @@ import usePortalElements from '@hooks/usePortalElements'
 const StyledSection = styled(Section)`
   padding: var(--padding-m);
   align-items: center;
+  background-color: var(--panel-background);
+  border-radius: var(--border-radius-m);
   & > * {
     max-width: 800px;
   }

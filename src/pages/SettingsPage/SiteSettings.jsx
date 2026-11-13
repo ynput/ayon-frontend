@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { EmptyPlaceholder, EmptyPlaceholderFlexWrapper } from '@shared/components'
 import { toast } from 'react-toastify'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
@@ -123,7 +124,7 @@ const SiteSettings = () => {
         </Toolbar>
 
         {(selectedSites.length && (
-          <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+          <ScrollPanel style={{ flexGrow: 1 }}>
             {selectedAddons.map((addon) => {
               return selectedSites.map((siteId) => {
                 return (
@@ -144,8 +145,11 @@ const SiteSettings = () => {
               })
             })}
           </ScrollPanel>
-        )) ||
-          'Select a site to edit settings'}
+        )) || (
+          <EmptyPlaceholderFlexWrapper>
+            <EmptyPlaceholder icon="computer" message="Select a site to edit settings" />
+          </EmptyPlaceholderFlexWrapper>
+        )}
       </Section>
     </main>
   )

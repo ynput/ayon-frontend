@@ -2,8 +2,9 @@ import styled from 'styled-components'
 
 export const NavBar = styled.nav`
     padding-right: 8px;
+    /* the line the tabs stand on, the edge of the page */
     border-bottom: 1px solid var(--md-sys-color-outline-variant);
-    background-color: var(--panel-background);
+    background-color: var(--md-sys-color-background);
     padding: 0 8px;
 
     ul {
@@ -16,7 +17,7 @@ export const NavBar = styled.nav`
         margin: 0;
         padding: 0;
 
-        /* this hides the border of the navbar by putting the active tab border over it */
+        /* this puts the active tab's underline over the navbar's line */
         position: relative;
         top: 1px;
         margin-bottom: -1px;
@@ -40,8 +41,6 @@ export const NavItem = styled.li`
         padding: 2px 4px;
         padding-bottom: 4px;
         display: block;
-        border: 1px solid transparent;
-        border-radius: 4px 4px 0 0;
 
         /* this will be fixed with theme buttons */
         button {
@@ -49,18 +48,15 @@ export const NavItem = styled.li`
             max-height: unset;
         }
 
+        /* the active tab is underlined in the accent colour, on the navbar's line */
         &.active {
-            background-color: var(--md-sys-color-background);
-            border: 1px solid var(--md-sys-color-outline-variant);
-            border-bottom: 1px solid var(--color-grey-01);
+            box-shadow: inset 0 -2px 0 0 var(--md-sys-color-primary);
 
             button {
                 &:hover {
                     background-color: unset;
                 }
             }
-
-            border-bottom: 1px solid var(--md-sys-color-background);
         }
     }
 `

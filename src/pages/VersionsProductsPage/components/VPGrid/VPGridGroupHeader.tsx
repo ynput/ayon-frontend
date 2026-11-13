@@ -1,5 +1,7 @@
 import { FC } from 'react'
-import { Button, Icon, getReadableColor } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
+import { ValuePill } from '@shared/components'
+import type { PillStyle } from '@shared/util'
 import clsx from 'clsx'
 import * as Styled from './VPGridGroupHeader.styled'
 
@@ -10,6 +12,8 @@ export interface GridGroupHeaderProps {
   color?: string
   colorLight?: string | null
   count?: number
+  // a coloured group value shows as a pill, like the table group headers: filled for a status, tinted otherwise
+  pill: PillStyle
   isExpanded: boolean
   onToggle: () => void
 }
@@ -20,6 +24,7 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
   color,
   colorLight,
   count,
+  pill,
   isExpanded,
   onToggle,
 }) => {
@@ -32,8 +37,18 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
       <Styled.GroupHeader onClick={handleOnClick} className={clsx({ collapsed: !isExpanded })}>
         <Styled.Content>
           <Button icon="expand_more" className="expand-icon" variant="text" />
-          {icon && <Icon icon={icon} style={{ color: getReadableColor({ color, colorLight }) }} />}
-          <Styled.Label>{label}</Styled.Label>
+          {color ? (
+            <ValuePill
+              variant={pill}
+              className="group-pill"
+              {...{ label, icon, color, colorLight }}
+            />
+          ) : (
+            <>
+              {icon && <Icon icon={icon} />}
+              <Styled.Label>{label}</Styled.Label>
+            </>
+          )}
           {/* {count !== undefined && <Styled.Count>{count < 1 ? 'Empty' : count}</Styled.Count>} */}
         </Styled.Content>
       </Styled.GroupHeader>

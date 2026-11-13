@@ -273,7 +273,13 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   return (
     <main>
-      <Section style={{ paddingTop: 16 }}>
+      <Section
+        style={{
+          paddingTop: 16,
+          backgroundColor: 'var(--panel-background)',
+          borderRadius: 'var(--border-radius-m)',
+        }}
+      >
         <FormsStyled>
           <Avatar user={user} />
           <AvatarName className={clsx({ loading: !userName || isLoading }, 'shimmer-lightest')}>

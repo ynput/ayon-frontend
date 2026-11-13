@@ -15,35 +15,44 @@ export const TR = styled.tr`
   border-radius: var(--border-radius-m);
   overflow: hidden;
 
-  /* ROW COLOR */
+  /* ROW COLOR: each row is a card for one project, white on light, one light step above the panel on dark */
+  --list-row-bg: light-dark(
+    var(--md-sys-color-surface-container-lowest),
+    var(--color-table-row-high)
+  );
+  --list-row-bg-hover: light-dark(
+    var(--md-sys-color-surface-container-lowest-hover),
+    var(--md-sys-color-surface-container)
+  );
+
   .inner-td {
-    background-color: var(--md-sys-color-surface-container);
-    border-top: 2px solid var(--md-sys-color-surface-container);
-    border-bottom: 2px solid var(--md-sys-color-surface-container);
+    background-color: var(--list-row-bg);
+    border-top: 2px solid var(--list-row-bg);
+    border-bottom: 2px solid var(--list-row-bg);
   }
 
   td:first-child .inner-td {
-    border-left: 2px solid var(--md-sys-color-surface-container);
+    border-left: 2px solid var(--list-row-bg);
   }
 
   td:last-child .inner-td {
-    border-right: 2px solid var(--md-sys-color-surface-container);
+    border-right: 2px solid var(--list-row-bg);
   }
 
   &:hover,
   &[data-context-menu-target] {
     .inner-td {
-      background-color: var(--md-sys-color-surface-container-hover);
-      border-top-color: var(--md-sys-color-surface-container-hover);
-      border-bottom-color: var(--md-sys-color-surface-container-hover);
+      background-color: var(--list-row-bg-hover);
+      border-top-color: var(--list-row-bg-hover);
+      border-bottom-color: var(--list-row-bg-hover);
     }
 
     td:first-child .inner-td {
-      border-left-color: var(--md-sys-color-surface-container-hover);
+      border-left-color: var(--list-row-bg-hover);
     }
 
     td:last-child .inner-td {
-      border-right-color: var(--md-sys-color-surface-container-hover);
+      border-right-color: var(--list-row-bg-hover);
     }
   }
 

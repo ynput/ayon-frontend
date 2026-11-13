@@ -254,7 +254,7 @@ const AnatomyPresets = () => {
           />
         </Toolbar>
 
-        <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+        <ScrollPanel style={{ flexGrow: 1 }}>
           <AnatomyEditor
             formData={formData}
             setFormData={setFormData}

@@ -738,6 +738,7 @@ const buildTreeTableColumns = ({
                 isExpanded={row.getIsExpanded()}
                 isEmpty={row.original.group.count === 0}
                 toggleExpanded={row.getToggleExpandedHandler()}
+                pill={groupBy?.id === 'status' ? 'filled' : 'tinted'}
               />
             ) : (
               <EntityNameWidget
