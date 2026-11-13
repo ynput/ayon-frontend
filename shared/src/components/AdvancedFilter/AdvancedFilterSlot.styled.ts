@@ -12,15 +12,23 @@ export const Chip = styled.div`
   user-select: none;
 
   border-radius: var(--border-radius-m);
+  color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-container-high);
 
+  /* the same badge as on the editor's button */
   .count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     min-width: 18px;
-    padding: 0 4px;
-    text-align: center;
+    height: 18px;
+    padding: 0 5px;
     border-radius: 9px;
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    background-color: var(--md-sys-color-primary);
+    color: var(--md-sys-color-on-primary);
   }
 
   .remove {
