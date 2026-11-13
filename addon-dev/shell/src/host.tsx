@@ -51,7 +51,8 @@ export const getShellUser = (state: object) =>
   toAddonUser(usersApi.endpoints.getCurrentUser.select()(state as never).data)
 
 // AYON's project list (shared) without what needs the app (open, manage, new project) and without
-// the items that change projects or folders on the server: the shell previews, it saves nothing.
+// the items that change projects or folders on the server. Pin and unpin stay: they save the
+// user's own pinned projects (a frontend preference, as in AYON), not project data.
 const SHELL_HIDDEN: ProjectsListHidden = {
   'add-project': true,
   'archive-project': true,
