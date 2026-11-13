@@ -39,6 +39,24 @@ export interface ContractPackage {
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
 
+const UNSAFE_JS_CODEPOINTS: Record<string, string> = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\\': '\\\\',
+  '\b': '\\b',
+  '\f': '\\f',
+  '\n': '\\n',
+  '\r': '\\r',
+  '\t': '\\t',
+  '\0': '\\0',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+}
+
+const escapeUnsafeForGeneratedJs = (str: string) =>
+  str.replace(/[<>\/\\\b\f\n\r\t\0\u2028\u2029]/g, (ch) => UNSAFE_JS_CODEPOINTS[ch] ?? ch)
+
 /** The contract packages in the addon's dependencies and devDependencies. */
 export const findContractPackages = (root: string) => {
   const pkg = readJson(path.join(root, 'package.json'))
@@ -80,7 +98,9 @@ export const findContractPackages = (root: string) => {
 export const contractsCode = (root: string, addonName: string) => {
   const { packages, problems } = findContractPackages(root)
   const load = (file?: string) =>
-    file ? `() => import(${JSON.stringify(file.split(path.sep).join('/'))})` : 'undefined'
+    file
+      ? `() => import(${escapeUnsafeForGeneratedJs(JSON.stringify(file.split(path.sep).join('/')))})`
+      : 'undefined'
   const contracts = packages
     .filter((contract) => contract.slots)
     .map(
