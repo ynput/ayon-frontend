@@ -343,22 +343,27 @@ const ProjectPageInner = () => {
         viewType: 'reviews',
         startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
       },
-      ...ADDON_PAGES.map(({ name, module: addonModule, viewType, addon }) => ({
-        name,
-        path: `/projects/${projectName}/${addonModule}`,
-        module: addonModule,
-        viewType,
-        // a restricted addon page hides the tab, else the user lands on an empty page
-        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === addonModule)?.access),
-        startContent: (
-          <RemotePageBundleDot
-            bundle={
-              remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
-              getAddonBundle(addon)
-            }
-          />
-        ),
-      })),
+      ...ADDON_PAGES.map(({ name, module: addonModule, viewType, addon }) => {
+        const page = addonPages.find((p) => p.id === addonModule)
+        return {
+          name,
+          path: `/projects/${projectName}/${addonModule}`,
+          module: addonModule,
+          viewType,
+          // a restricted addon page hides the tab, else the user lands on an empty page
+          accessLevels: pageAccessLevels(page?.access),
+          startContent: (
+            <RemotePageBundleDot
+              bundle={
+                remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
+                getAddonBundle(addon)
+              }
+            />
+          ),
+          // the slot inspector's tags on the tab, as for other addon pages: the page itself has none
+          ...(page && contributionTags(page)),
+        }
+      }),
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
