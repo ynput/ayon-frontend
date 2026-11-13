@@ -121,17 +121,28 @@ const useBuildViewMenuItems = ({
     skip: !viewType || !powerLicense,
   })
 
-  // admins and managers also get public views that are not shared with them, keep those apart
-  const [sharedViewsList, notSharedViewsList] = useMemo(() => {
+  // Ownership takes priority over sharing when choosing a section.
+  const [ownedViewsList, sharedViewsList, notSharedViewsList] = useMemo(() => {
+    const owned: ViewListItemModelExtended[] = []
     const shared: ViewListItemModelExtended[] = []
     const notShared: ViewListItemModelExtended[] = []
-    extendedViewsList.forEach((view) =>
-      (view.sharedWithMe === false ? notShared : shared).push(view),
-    )
-    return [shared, notShared]
+    extendedViewsList.forEach((view) => {
+      if (view.isOwner) owned.push(view)
+      else if (view.sharedWithMe === false) notShared.push(view)
+      else shared.push(view)
+    })
+    return [owned, shared, notShared]
   }, [extendedViewsList])
 
-  const { myViews, sharedViews, allPrivateViews } = getCustomViews({
+  // The addon groups owned views by visibility; both belong in My views.
+  const { myViews, sharedViews: mySharedViews } = getCustomViews({
+    viewsList: ownedViewsList,
+    onEdit,
+    onSelect,
+    onSave: handleEditView,
+  })
+
+  const { sharedViews, allPrivateViews } = getCustomViews({
     viewsList: sharedViewsList,
     onEdit,
     onSelect,
@@ -153,10 +164,14 @@ const useBuildViewMenuItems = ({
     defaultCollapsed?: boolean
   }> = useMemo(() => {
     return [
-      { id: 'myViews', title: `My ${viewAlias.toLowerCase()}s`, items: myViews as ViewItem[] },
+      {
+        id: 'myViews',
+        title: `My ${viewAlias.toLowerCase()}s`,
+        items: [...myViews, ...mySharedViews] as ViewItem[],
+      },
       {
         id: 'sharedViews',
-        title: `Shared ${viewAlias.toLowerCase()}s`,
+        title: 'Shared with me',
         items: sharedViews as ViewItem[],
       },
       {
@@ -171,7 +186,7 @@ const useBuildViewMenuItems = ({
         defaultCollapsed: true,
       },
     ]
-  }, [myViews, sharedViews, allPrivateViews, notSharedViews, viewAlias])
+  }, [myViews, mySharedViews, sharedViews, allPrivateViews, notSharedViews, viewAlias])
 
   const isSectionCollapsed = useCallback(
     (id: string) => collapsed[id] ?? !!sections.find((s) => s.id === id)?.defaultCollapsed,
