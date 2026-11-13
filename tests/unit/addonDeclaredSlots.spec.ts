@@ -18,6 +18,7 @@ import { runContribution } from '../../addon/src/pieces'
 import { readContractSlots } from '../../addon-dev/src/contractSlots'
 import { loadManifests } from '../../shared/src/context/remote-modules/loadManifests'
 import { useSlotMenuItems } from '../../addon/src/SlotOutlet'
+import { manifestSnippet } from '../../addon-dev/shell/src/places'
 import { renderToHtml } from './support/render'
 
 const example = { name: 'example', version: '2.0.0', remote: 'example' }
@@ -481,14 +482,43 @@ test('contract packages type contributions in both entries', () => {
   } finally {
     rmSync(outDir, { recursive: true, force: true })
   }
-  const result = run([
-    path.join(root, 'node_modules/typescript/bin/tsc'),
-    '--noEmit',
-    '-p',
-    path.join(root, 'tests/unit/fixtures/addon-contract/tsconfig.json'),
-  ])
+  const tsc = (project: string) => run([path.join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '-p', project])
+  const fixture = path.join(root, 'tests/unit/fixtures/addon-contract')
+  const result = tsc(path.join(fixture, 'tsconfig.json'))
   expect(result.output).toBe('')
   expect(result.status).toBe(0)
+
+  // the dev shell's manifest entries for an addon's slot compile as they are, at version 1 and
+  // after a breaking change (2), with the piece file they import
+  const generated = mkdtempSync(path.join(os.tmpdir(), 'ayon-addon-snippets-'))
+  try {
+    const files = [1, 2].map((version) => {
+      const snippet = manifestSnippet({
+        name: 'example.itemMenuItem',
+        version,
+        required: ['label', 'icon'],
+        pieces: ['run'],
+      })
+      const file = path.join(generated, `v${version}.ts`)
+      writeFileSync(file, `import '${path.join(fixture, 'exampleContract')}'\n${snippet}\n`)
+      return file
+    })
+    writeFileSync(
+      path.join(generated, 'ItemMenuItem.ts'),
+      "import type { RunPiece } from '@ynput/ayon-addon'\n" +
+        "const run: RunPiece<'example.itemMenuItem'> = (context) => void context.entities\n" +
+        'export default run\n',
+    )
+    writeFileSync(
+      path.join(generated, 'tsconfig.json'),
+      JSON.stringify({ extends: path.join(fixture, 'tsconfig.json'), files }),
+    )
+    const snippets = tsc(path.join(generated, 'tsconfig.json'))
+    expect(snippets.output).toBe('')
+    expect(snippets.status).toBe(0)
+  } finally {
+    rmSync(generated, { recursive: true, force: true })
+  }
 })
 
 test('the CLI finds the slots of the contract packages among the dependencies', async () => {
