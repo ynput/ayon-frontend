@@ -99,8 +99,6 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     scopes,
     data,
     config: {
-      enableExcludes: powerLicense,
-      enableOperatorChange: powerLicense,
       enableRelativeValues: true,
       prefixes: { attributes: 'attrib.' },
       ...config,

@@ -113,8 +113,6 @@ export const useBuildProjectFilterOptions = (): ProjectFilterOption[] => {
         allowsCustomValues: false,
         allowHasValue: powerLicense,
         allowNoValue: powerLicense,
-        allowExcludes: powerLicense,
-        operatorChangeable: powerLicense && isEnum,
         values,
       })
     }
