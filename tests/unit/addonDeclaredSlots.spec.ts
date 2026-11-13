@@ -1,8 +1,10 @@
 import { expect, test } from '@playwright/test'
 import { spawnSync } from 'child_process'
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'fs'
 import os, { tmpdir } from 'os'
 import path from 'path'
+import ts from 'typescript'
+import { pathToFileURL } from 'url'
 import { checkManifest, checkSlotDeclarations } from '../../addon/src/validate'
 import { SLOTS } from '../../addon/src/slots'
 import {
@@ -15,9 +17,10 @@ import {
 } from '../../addon/src/registry'
 import { provideHost } from '../../addon/src/hostBridge'
 import { runContribution } from '../../addon/src/pieces'
-import { readContractSlots } from '../../addon-dev/src/contractSlots'
+import { readContractPreviews, readContractSlots } from '../../addon-dev/src/contractSlots'
 import { loadManifests } from '../../shared/src/context/remote-modules/loadManifests'
 import { useSlotMenuItems } from '../../addon/src/SlotOutlet'
+import { manifestSnippet } from '../../addon-dev/shell/src/places'
 import { renderToHtml } from './support/render'
 
 const example = { name: 'example', version: '2.0.0', remote: 'example' }
@@ -461,6 +464,43 @@ test('a failing or missing piece is reported, not thrown', async () => {
   }
 })
 
+// The contract package example of addon/AGENTS.md ("Slots of other addons"): each fenced block
+// between the contract-example markers, by the path on the line before it. Paths of the package
+// (`@ynput/ayon-addon-example/...`) go under node_modules, the addons' (`example/src/...`,
+// `contributor/src/...`) as they are.
+const contractExample = () => {
+  const root = path.resolve(__dirname, '../..')
+  const agents = readFileSync(path.join(root, 'addon/AGENTS.md'), 'utf8')
+  const start = agents.indexOf('<!-- contract-example -->')
+  const end = agents.indexOf('<!-- /contract-example -->')
+  expect(start, 'addon/AGENTS.md has no contract-example markers').toBeGreaterThan(-1)
+  const files: Record<string, string> = {}
+  for (const [, file, text] of agents.slice(start, end).matchAll(/^`([^`]+)`[^\n]*:\n\n```\w*\n([\s\S]*?)\n```$/gm)) {
+    files[file.startsWith('@ynput/') ? `node_modules/${file}` : file] = `${text}\n`
+  }
+  return files
+}
+
+const writeFiles = (dir: string, files: Record<string, string>) => {
+  for (const [file, text] of Object.entries(files)) {
+    mkdirSync(path.dirname(path.join(dir, file)), { recursive: true })
+    writeFileSync(path.join(dir, file), text)
+  }
+}
+
+const EXAMPLE_FILES = [
+  'node_modules/@ynput/ayon-addon-example/package.json',
+  'node_modules/@ynput/ayon-addon-example/slots.js',
+  'node_modules/@ynput/ayon-addon-example/index.d.ts',
+  'node_modules/@ynput/ayon-addon-example/index.js',
+  'node_modules/@ynput/ayon-addon-example/previews.js',
+  'example/src/manifest.ts',
+  'example/src/Card.tsx',
+  'contributor/src/manifest.ts',
+  'contributor/src/copyTitles.ts',
+  'contributor/src/DueBadge.tsx',
+]
+
 // tsc on a contributor with two contract packages: the fixture's @ts-expect-error lines are the
 // assertions. It checks the published types, so it builds the package first (a few seconds): its
 // declarations go to addon/dist/types as in `yarn build:addon`, the JS to a temporary folder.
@@ -481,14 +521,148 @@ test('contract packages type contributions in both entries', () => {
   } finally {
     rmSync(outDir, { recursive: true, force: true })
   }
-  const result = run([
-    path.join(root, 'node_modules/typescript/bin/tsc'),
-    '--noEmit',
-    '-p',
-    path.join(root, 'tests/unit/fixtures/addon-contract/tsconfig.json'),
-  ])
+  const tsc = (project: string) => run([path.join(root, 'node_modules/typescript/bin/tsc'), '--noEmit', '-p', project])
+  const fixture = path.join(root, 'tests/unit/fixtures/addon-contract')
+  const result = tsc(path.join(fixture, 'tsconfig.json'))
   expect(result.output).toBe('')
   expect(result.status).toBe(0)
+
+  // the dev shell's manifest entries for an addon's slot compile as they are, at version 1 and
+  // after a breaking change (2), with the piece file they import
+  const generated = mkdtempSync(path.join(os.tmpdir(), 'ayon-addon-snippets-'))
+  try {
+    const files = [1, 2].map((version) => {
+      const snippet = manifestSnippet({
+        name: 'example.itemMenuItem',
+        version,
+        required: ['label', 'icon'],
+        pieces: ['run'],
+      })
+      const file = path.join(generated, `v${version}.ts`)
+      writeFileSync(file, `import '${path.join(fixture, 'exampleContract')}'\n${snippet}\n`)
+      return file
+    })
+    writeFileSync(
+      path.join(generated, 'ItemMenuItem.ts'),
+      "import type { RunPiece } from '@ynput/ayon-addon'\n" +
+        "const run: RunPiece<'example.itemMenuItem'> = (context) => void context.entities\n" +
+        'export default run\n',
+    )
+    writeFileSync(
+      path.join(generated, 'tsconfig.json'),
+      JSON.stringify({ extends: path.join(fixture, 'tsconfig.json'), files }),
+    )
+    const snippets = tsc(path.join(generated, 'tsconfig.json'))
+    expect(snippets.output).toBe('')
+    expect(snippets.status).toBe(0)
+  } finally {
+    rmSync(generated, { recursive: true, force: true })
+  }
+
+  // the contract package example of addon/AGENTS.md: the package, the addon that declares the
+  // slots and one that contributes to them
+  const exampleDir = mkdtempSync(path.join(os.tmpdir(), 'ayon-addon-contract-example-'))
+  try {
+    const files = contractExample()
+    expect(Object.keys(files)).toEqual(EXAMPLE_FILES)
+    writeFiles(exampleDir, files)
+    writeFileSync(
+      path.join(exampleDir, 'tsconfig.json'),
+      JSON.stringify({
+        extends: path.join(fixture, 'tsconfig.json'),
+        compilerOptions: {
+          baseUrl: '.',
+          paths: {
+            '@ynput/ayon-addon': [path.join(root, 'addon/dist/types/index.d.ts')],
+            '@ynput/ayon-addon/manifest': [path.join(root, 'addon/dist/types/manifest.d.ts')],
+            react: [path.join(root, 'node_modules/@types/react/index.d.ts')],
+            'react/jsx-runtime': [path.join(root, 'node_modules/@types/react/jsx-runtime.d.ts')],
+          },
+        },
+        files: ['contributor/src/manifest.ts', 'example/src/manifest.ts', 'example/src/Card.tsx'],
+      }),
+    )
+    const compiled = tsc(path.join(exampleDir, 'tsconfig.json'))
+    expect(compiled.output).toBe('')
+    expect(compiled.status).toBe(0)
+  } finally {
+    rmSync(exampleDir, { recursive: true, force: true })
+  }
+})
+
+// The same example at run time, as AYON and `ayon-addon check` read it: the declarations, the
+// previews, and the contributor's manifest built with the helpers, at version 1 and after a
+// breaking change (version 2 in slots.js)
+test('the contract package example in AGENTS.md runs at version 1 and 2', async () => {
+  test.setTimeout(60_000)
+  const repo = path.resolve(__dirname, '../..')
+  const files = contractExample()
+  const transpile = (text: string) =>
+    ts.transpileModule(text, {
+      compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022, jsx: ts.JsxEmit.ReactJSX },
+    }).outputText
+  const manifests: Record<number, unknown> = {}
+  for (const version of [1, 2]) {
+    const root = mkdtempSync(path.join(tmpdir(), `ayon-addon-contract-example-v${version}-`))
+    try {
+      const slotsFile = 'node_modules/@ynput/ayon-addon-example/slots.js'
+      writeFiles(root, {
+        ...files,
+        [slotsFile]: files[slotsFile].replace(/version: 1,/g, `version: ${version},`),
+        'package.json': JSON.stringify({
+          name: 'contributor',
+          type: 'module',
+          dependencies: { '@ynput/ayon-addon-example': '1.0.0' },
+        }),
+        // the contract package's index.js imports contribute from the manifest entry
+        'node_modules/@ynput/ayon-addon/package.json': JSON.stringify({
+          name: '@ynput/ayon-addon',
+          type: 'module',
+          exports: { './manifest': './manifest.js' },
+        }),
+        'node_modules/@ynput/ayon-addon/manifest.js': transpile(
+          readFileSync(path.join(repo, 'addon/src/contributions.ts'), 'utf8'),
+        ),
+        'example/src/manifest.js': transpile(files['example/src/manifest.ts']),
+        'contributor/src/manifest.js': transpile(files['contributor/src/manifest.ts']),
+      })
+      for (const name of ['react', 'vite']) {
+        symlinkSync(path.dirname(require.resolve(`${name}/package.json`)), path.join(root, 'node_modules', name))
+      }
+      const load = async (file: string) => (await import(pathToFileURL(path.join(root, file)).href)).default
+
+      // the declaring addon's manifest lists the slots of slots.js
+      const declared = checkSlotDeclarations(example, await load('example/src/manifest.js'))
+      expect(declared.skipped).toEqual([])
+      expect(declared.slots.map((slot) => [slot.name, slot.version])).toEqual([
+        ['example.cardMenuItem', version],
+        ['example.cardBadge', version],
+      ])
+
+      // what `ayon-addon check` reads from the contract package
+      const contract = await readContractSlots(root)
+      expect(contract.problems).toEqual([])
+      expect(contract.slots.map((slot) => slot.name)).toEqual(['example.cardMenuItem', 'example.cardBadge'])
+      const previews = await readContractPreviews(root, contract.slots)
+      expect(previews.problems).toEqual([])
+      expect(previews.previews[0].scenes.map((scene) => scene.id)).toEqual(['card'])
+
+      // the helpers write the version of slots.js
+      const manifest = await load('contributor/src/manifest.js')
+      const slots = Object.fromEntries(declared.slots.map((slot) => [slot.name, slot]))
+      const { contributions, skipped } = checkManifest(contributor, manifest, slots)
+      expect(skipped).toEqual([])
+      expect(contributions.map(({ slot, id, slotVersion }) => [slot, id, slotVersion])).toEqual([
+        ['example.cardMenuItem', 'copy_titles', version],
+        ['example.cardBadge', 'due', version],
+      ])
+      manifests[version] = manifest
+      // a manifest built against version 1 doesn't run against version 2
+      if (version === 2) expect(checkManifest(contributor, manifests[1], slots).skipped).toHaveLength(2)
+    } finally {
+      rmSync(root, { recursive: true, force: true })
+    }
+  }
 })
 
 test('the CLI finds the slots of the contract packages among the dependencies', async () => {

@@ -41,6 +41,19 @@ export interface ContractPackage {
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
 
+// what JSON.stringify leaves unescaped but a <script> or a JS source can't take as is
+const UNSAFE_IN_JS: Record<string, string> = {
+  '<': '\\u003C',
+  '>': '\\u003E',
+  '/': '\\u002F',
+  '\u2028': '\\u2028',
+  '\u2029': '\\u2029',
+}
+
+/** A value as a JS literal for generated code. */
+export const jsLiteral = (value: unknown) =>
+  JSON.stringify(value).replace(/[<>/\u2028\u2029]/g, (ch) => UNSAFE_IN_JS[ch])
+
 /** The contract packages in the addon's dependencies and devDependencies. */
 export const findContractPackages = (root: string) => {
   const pkg = readJson(path.join(root, 'package.json'))
@@ -82,18 +95,18 @@ export const findContractPackages = (root: string) => {
 export const contractsCode = (root: string, addonName: string) => {
   const { packages, problems } = findContractPackages(root)
   const load = (file?: string) =>
-    file ? `() => import(${JSON.stringify(file.split(path.sep).join('/'))})` : 'undefined'
+    file ? `() => import(${jsLiteral(file.split(path.sep).join('/'))})` : 'undefined'
   const contracts = packages
     .filter((contract) => contract.slots)
     .map(
       (contract) =>
-        `{ package: ${JSON.stringify(contract.name)}, entries: ${JSON.stringify(contract.entries)}, ` +
+        `{ package: ${jsLiteral(contract.name)}, entries: ${jsLiteral(contract.entries)}, ` +
         `slots: ${load(contract.slots)}, previews: ${load(contract.previews)} }`,
     )
   return [
     `// the contract packages of ${addonName}`,
     `export const contracts = [${contracts.join(', ')}]`,
-    `export const contractProblems = ${JSON.stringify(problems.map((p) => p.reason))}`,
+    `export const contractProblems = ${jsLiteral(problems.map((p) => p.reason))}`,
   ].join('\n')
 }
 
@@ -166,15 +179,17 @@ export const BROWSER_PACKAGES = [
  * A previews module in Node, for `ayon-addon check`: bundled with Vite (its own relative imports
  * included, in one chunk) to CommonJS, and run with `provided` for the packages named there (by
  * default stand-ins for `BROWSER_PACKAGES`, entries included). Other packages are required from
- * where the module is, else from the addon; one that isn't installed or doesn't load in Node gets
- * a stand-in too. A previews.js that is itself a build of the declaring addon's components, with
- * React, the SDK, AYON's components and styled-components as externals, loads the same way.
+ * where the module is, else from the addon; one that is installed but doesn't load in Node gets a
+ * stand-in too. One that is installed in neither place gets a stand-in and is listed in `missing`:
+ * the dev shell's browser can't load it either. A previews.js that is itself a build of the
+ * declaring addon's components, with React, the SDK, AYON's components and styled-components as
+ * externals, loads the same way.
  */
 export const loadPreviewsModule = async (
   root: string,
   file: string,
   provided: Record<string, unknown> = Object.fromEntries(BROWSER_PACKAGES.map((pkg) => [pkg, stubModule()])),
-): Promise<{ previews?: unknown }> => {
+): Promise<{ previews?: unknown; missing: string[] }> => {
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
   const isPackage = (id: string) => !id.startsWith('.') && !path.isAbsolute(id) && !id.startsWith('\0')
   const output = await vite.build({
@@ -200,16 +215,21 @@ export const loadPreviewsModule = async (
   const fromModule = createRequire(file)
   const fromAddon = createRequire(path.join(root, 'package.json'))
   const stubs = new Map<string, unknown>()
+  const missing = new Set<string>()
+  const notInstalled = (error: unknown, id: string) =>
+    (error as { code?: string }).code === 'MODULE_NOT_FOUND' &&
+    String((error as Error).message).includes(`'${id}'`)
   const require = (id: string) => {
     const name = Object.keys(provided).find((pkg) => id === pkg || id.startsWith(`${pkg}/`))
     if (name) return provided[name]
     try {
       return fromModule(id)
-    } catch {
+    } catch (fromModuleError) {
       try {
         return fromAddon(id)
-      } catch {
-        // not installed here, or needs a browser: the scenes' metadata doesn't depend on it
+      } catch (fromAddonError) {
+        if (notInstalled(fromModuleError, id) && notInstalled(fromAddonError, id)) missing.add(id)
+        // needs a browser (or is missing, reported): the scenes' metadata doesn't depend on it
         if (!stubs.has(id)) stubs.set(id, stubModule())
         return stubs.get(id)
       }
@@ -217,7 +237,7 @@ export const loadPreviewsModule = async (
   }
   const module = { exports: {} as Record<string, unknown> }
   new Function('require', 'module', 'exports', code)(require, module, module.exports)
-  return module.exports
+  return { previews: module.exports.previews, missing: [...missing] }
 }
 
 /** The previews of the contract packages, checked against the slots each one declares. */
@@ -228,7 +248,7 @@ export const readContractPreviews = async (
   const result: ContractPreviews = { previews: [], problems: [] }
   for (const contract of findContractPackages(root).packages) {
     if (!contract.previews) continue
-    let module: { previews?: unknown }
+    let module: { previews?: unknown; missing: string[] }
     try {
       module = await loadPreviewsModule(root, contract.previews)
     } catch (error) {
@@ -237,6 +257,11 @@ export const readContractPreviews = async (
       })
       continue
     }
+    result.problems.push(
+      ...module.missing.map((id) => ({
+        reason: `${contract.name}: its previews import ${id}, which is installed neither with it nor in the addon`,
+      })),
+    )
     const declared = slots.filter((slot) => slot.package === contract.name).map((slot) => slot.name)
     const problems = checkPreviews(module.previews, declared, contract.entries.previews)
     result.problems.push(

@@ -15,6 +15,7 @@ import {
 import {
   contractsCode,
   findContractPackages,
+  jsLiteral,
   loadPreviewsModule,
   readContractPreviews,
   readContractSlots,
@@ -238,13 +239,45 @@ test('the CLI reads the scenes of the contract packages among the dependencies',
   expect(result.problems[1].reason).toMatch(/^syntax: its previews failed to load: /)
 })
 
+// A package the previews import that isn't installed fails in the dev shell's browser too, so
+// check reports it; one that is installed but only loads in a browser gets a stand-in, silently.
+test('check reports a package the previews import that is not installed', async () => {
+  const root = addonRoot({
+    browseronly: {
+      'package.json': JSON.stringify({ name: 'browseronly', main: 'index.js' }),
+      'index.js': 'window.addEventListener("load", () => undefined)',
+    },
+    needsdep: {
+      'package.json': JSON.stringify({
+        name: 'needsdep',
+        type: 'module',
+        ayonAddon: { slots: './slots.js', previews: './previews.js' },
+      }),
+      'slots.js': `export const slots = [{ name: 'needsdep.item', version: 1, required: [], pieces: ['run'] }]`,
+      'previews.js': [
+        "import { MissingComponent } from 'review-dependency-that-does-not-exist'",
+        "import 'browseronly'",
+        "export const previews = [{ id: 'x', label: 'X', slots: ['needsdep.item'], fields: [], component: MissingComponent }]",
+      ].join('\n'),
+    },
+  })
+  const { slots } = await readContractSlots(root)
+  const result = await readContractPreviews(root, slots)
+  expect(result.problems).toEqual([
+    {
+      reason:
+        'needsdep: its previews import review-dependency-that-does-not-exist, which is installed neither with it nor in the addon',
+    },
+  ])
+})
+
 test('the dev server imports declarations and previews by file path', () => {
   const root = addonRoot()
   const dir = path.join(root, 'node_modules', PACKAGE)
   const code = contractsCode(root, 'contributor')
-  expect(code).toContain(`package: "${PACKAGE}"`)
-  expect(code).toContain(`slots: () => import(${JSON.stringify(path.join(dir, 'slots.js'))})`)
-  expect(code).toContain(`previews: () => import(${JSON.stringify(path.join(dir, 'previews.js'))})`)
+  expect(code).toContain(`package: ${jsLiteral(PACKAGE)}`)
+  expect(code).toContain(`slots: () => import(${jsLiteral(path.join(dir, 'slots.js'))})`)
+  expect(code).toContain(`previews: () => import(${jsLiteral(path.join(dir, 'previews.js'))})`)
   expect(code).toContain('export const contractProblems = []')
 })
 
@@ -493,7 +526,12 @@ export const unused = [Theme, Global, Boundary, Lazy, createPortal, createRoot, 
   )
   const { slots } = await readContractSlots(root)
   const result = await readContractPreviews(root, slots)
-  expect(result.problems).toEqual([])
+  // the scenes still load, with a stand-in for it, but the dev shell's browser would fail on it
+  expect(result.problems).toEqual([
+    {
+      reason: `${PACKAGE}: its previews import not-installed-date-lib, which is installed neither with it nor in the addon`,
+    },
+  ])
   expect(result.previews).toEqual([
     { package: PACKAGE, scenes: [{ id: 'bar', label: 'A bar ', slots: ['example.cardBadge', 'example.cardEndItem'] }] },
   ])
