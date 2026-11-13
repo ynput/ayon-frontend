@@ -424,7 +424,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     // flush with the input's edge and with group titles, not indented by classic's 4px
     padding-left: 0
 
-    button
+    span
       justify-content: flex-start
       height: auto
       min-height: var(--base-input-size)
@@ -437,7 +437,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     .form-inline-field .form-inline-field-label
       flex: 0 1 250px
 
-      button
+      span
         white-space: nowrap
 
   // SettingField kinds (SettingFieldHelpers.ts)
@@ -496,7 +496,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
     .form-inline-field-label
       flex: none
-      button
+      span
         min-height: 0
 
   // Switchbox fields already show their choices as labeled rows; an extra field label
@@ -956,11 +956,12 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   .settings-panel:has(> .settings-folding-group:last-child)
     padding-bottom: calc(var(--space-3) - var(--space-1))
 
-  // A list of short rows (2 or 3 fields side by side) is a list of boxes like simple
+  // A list of short rows (up to 6 fields side by side) is a list of boxes like simple
   // items: handle, fields as cells parted by thin lines, X. The labels show once, above
   // the first box, as column headings; the other rows keep them for screen readers
   $row-item: '.settings-array-item.is-row'
-  // a card is a record of 4 to 8 single values: same box, its values in a grid (below)
+  // a card is a record of parallel values that don't fit a row (paths per platform), up to
+  // 8: same box, its values in a grid (below)
   $card-item: '.settings-array-item.is-card'
   $row-height: calc(var(--base-input-size) - 2px)
   $row-label-room: calc(var(--settings-label-height) + var(--space-3))
@@ -1107,7 +1108,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
             min-height: 22px
             max-height: 22px
 
-  // A card: a record of 4 to 8 single values (anatomy roots, file rules). Its name leads on a
+  // A card: parallel values that don't fit a row, up to 8 (anatomy roots). Its name leads on a
   // title line, as high as a row, between the handle and the X; the other values wrap in
   // lines below, each with its label above (a card's cells aren't a table's columns)
   // the box of a card doesn't light up: each of its inputs has its own ring
@@ -1229,7 +1230,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
       // a switch's label is as tall as a control to centre beside it; as a heading it
       // sits on the same line as the others
-      button
+      span
         min-height: 0
         height: var(--settings-label-height)
 

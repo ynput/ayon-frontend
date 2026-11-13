@@ -4,6 +4,7 @@ import debounce from 'lodash/debounce'
 import {
   SettingsOutlineItem,
   findSettingsGroup,
+  getScrollContainer,
   isSameOutline,
   readSettingsOutline,
   scrollToSettingsGroup,
@@ -95,6 +96,18 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   // a single group needs no outline: the toolbar's toggle waits for one with links
   const hasLinks = items.length >= 2
   useEffect(() => (hasLinks ? announceOutline() : undefined), [hasLinks])
+
+  // the rail sticks to the top of the panel it scrolls in, so it is as tall as that panel
+  useEffect(() => {
+    const nav = navRef.current
+    const scroller = getScrollContainer(nav?.parentElement ?? null)
+    if (!nav || !scroller) return
+    const observer = new ResizeObserver(() =>
+      nav.style.setProperty('--settings-outline-height', `${scroller.clientHeight}px`),
+    )
+    observer.observe(scroller)
+    return () => observer.disconnect()
+  }, [hasLinks])
 
   if (!hasLinks) return null
 

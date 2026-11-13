@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useCallback, useRef, useState } from 'react'
+import { useMemo, useCallback, useRef, useState } from 'react'
 import {
   DefaultItemTemplate,
   Dropdown,
@@ -282,13 +282,6 @@ const SelectWidget = (props: $Any) => {
   const formValue = props.value
   const value = isMissing ? getDefaultValue() : formValue
 
-  useEffect(
-    () => () => {
-      if (valueChangeTimer.current) clearTimeout(valueChangeTimer.current)
-    },
-    [],
-  )
-
   const handleValueChange = useCallback(
     (nextValue: $Any) => {
       if (nextValue === null) return
@@ -298,6 +291,8 @@ const SelectWidget = (props: $Any) => {
       if (same(nextValue, formValue)) return
 
       props.onChange(nextValue)
+      // the pending update still runs if the field unmounts (a pick that swaps its section):
+      // Save skips an addon without changed keys
       if (valueChangeTimer.current) clearTimeout(valueChangeTimer.current)
       valueChangeTimer.current = setTimeout(() => {
         const origChanged = isSortableMultiselect
@@ -371,6 +366,29 @@ const SelectWidget = (props: $Any) => {
     })
   }
 
+  // the flat layout sizes the menu to its options and keeps it on screen; the classic
+  // layout keeps the library's own menu
+  const flatMenuProps = props.formContext?.flatLayout
+    ? {
+        onOpen: onDropdownOpen,
+        maxHeight: dropdownMaxHeight,
+        itemStyle: { whiteSpace: 'nowrap' as const },
+        listStyle: { width: 'max-content', maxWidth: 'calc(100vw - 20px)' },
+        pt: {
+          container: {
+            className: 'settings-select-dropdown-menu',
+            style: {
+              width: 'max-content',
+              maxWidth: 'calc(100vw - 20px)',
+              ...dropdownPlacement,
+              ...dropdownHorizontalPlacement,
+            },
+          },
+          list: { style: { width: 'max-content', maxWidth: 'calc(100vw - 20px)' } },
+        },
+      }
+    : {}
+
   const hlstyle = getHighlightStyle(value, props.multiple, formValue, originalValue)
   const renderableValue = getRenderableValue(value, props.multiple)
 
@@ -419,22 +437,7 @@ const SelectWidget = (props: $Any) => {
       itemTemplate={itemTemplate}
       className={`form-field`}
       ref={dropdownRef}
-      onOpen={onDropdownOpen}
-      maxHeight={dropdownMaxHeight}
-      itemStyle={{ whiteSpace: 'nowrap' }}
-      listStyle={{ width: 'max-content', maxWidth: 'calc(100vw - 20px)' }}
-      pt={{
-        container: {
-          className: 'settings-select-dropdown-menu',
-          style: {
-            width: 'max-content',
-            maxWidth: 'calc(100vw - 20px)',
-            ...dropdownPlacement,
-            ...dropdownHorizontalPlacement,
-          },
-        },
-        list: { style: { width: 'max-content', maxWidth: 'calc(100vw - 20px)' } },
-      }}
+      {...flatMenuProps}
       multiSelect={props.multiple}
       style={hlstyle}
       disabled={disabled}

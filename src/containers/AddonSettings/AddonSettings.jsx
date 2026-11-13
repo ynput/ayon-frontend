@@ -67,8 +67,6 @@ const StyledScrollPanel = styled(ScrollPanel)`
     &:has(.settings-flat) {
       padding-right: 0;
     }
-    /* its height is fixed, so the settings outline can be as tall as the view (cqh) */
-    container-type: size;
   }
 `
 

@@ -26,7 +26,7 @@ type GroupFoldArgs = {
 export const useGroupFold = ({ formContext, parentId, name, schema, formData }: GroupFoldArgs) => {
   // a group with only its switch has nothing to open: it stays folded
   const empty = !hasFoldContent(schema, formContext)
-  const { expanded, onToggle } = useFoldState({
+  const { expanded, onToggle, forcedOpen } = useFoldState({
     formContext,
     itemKey: `${getListItemsPrefix(formContext, parentId)}${name}`,
     itemId: `${parentId}_${name}`,
@@ -48,7 +48,8 @@ export const useGroupFold = ({ formContext, parentId, name, schema, formData }: 
       summary,
       fallbackTitle: name,
       empty,
+      forcedOpen,
     }),
-    [expanded, empty, onToggle, summary, name],
+    [expanded, empty, forcedOpen, onToggle, summary, name],
   )
 }

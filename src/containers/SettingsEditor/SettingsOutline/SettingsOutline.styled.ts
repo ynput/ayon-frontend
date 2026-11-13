@@ -8,9 +8,8 @@ export const Outline = styled.nav`
      so the rail clips its list instead of reflowing it */
   overflow-x: hidden;
   overflow-y: auto;
-  /* the scroll panel is a size container (AddonSettings); 100dvh is the fallback */
-  max-height: calc(100dvh - 180px);
-  max-height: 100cqh;
+  /* as tall as the panel it scrolls in, measured by SettingsOutline on every page */
+  max-height: var(--settings-outline-height, calc(100dvh - 180px));
   /* the first link's text centres on the sheet's title, which is 32px tall */
   padding: 2px 0 16px;
   transition: opacity 0.2s ease, translate 0.25s ease;

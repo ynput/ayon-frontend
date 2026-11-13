@@ -20,7 +20,8 @@ export type ListItemLayouts = {
  * How the items of a list are drawn in the flat layout (see getListItemLayout), worked out once
  * for the whole list, and again only when its schema, its values or the level being edited
  * change. Rows need the width their cells count: in a list narrower than that (`listRef`, a
- * narrow settings pane) they are drawn as cards, their values stacked. None in the classic layout.
+ * narrow settings pane) they are drawn as cards when their values are parallel (paths per
+ * platform), else as folds (asNarrowListItem). None in the classic layout.
  */
 export const useListItemLayouts = (
   { schema, formData, registry, formContext }: ArrayFieldTemplateProps,

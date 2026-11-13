@@ -17,6 +17,8 @@ export type SettingsListItemState = {
   fallbackTitle: string
   /** Nothing to show inside (no fields besides its switch): it can't open */
   empty: boolean
+  /** Held open by a search, so it can't be folded until the search is cleared */
+  forcedOpen: boolean
 }
 
 export const SettingsListItemContext = createContext<SettingsListItemState | null>(null)

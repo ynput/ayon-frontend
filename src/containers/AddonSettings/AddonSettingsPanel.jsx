@@ -11,6 +11,30 @@ import { useURIContext } from '@shared/context'
 
 const noop = () => {}
 
+const shallowEqualEntries = (a, b) =>
+  a.length === b.length &&
+  a.every(([key, value], i) => b[i][0] === key && Object.is(b[i][1], value))
+
+/**
+ * The parent builds `context` on every render. This one stays the same object while its
+ * values do, so the editor can skip a render; its callbacks always call the latest ones.
+ */
+const useStableContext = (context) => {
+  const latest = useRef(context)
+  latest.current = context
+  const stable = useRef({ values: null, context: undefined })
+
+  const values = Object.entries(context || {}).filter(([, value]) => typeof value !== 'function')
+  if (!stable.current.values || !shallowEqualEntries(stable.current.values, values)) {
+    const wrapped = Object.entries(context || {}).map(([key, value]) => [
+      key,
+      typeof value === 'function' ? (...args) => latest.current?.[key]?.(...args) : value,
+    ])
+    stable.current = { values, context: context && Object.fromEntries(wrapped) }
+  }
+  return stable.current.context
+}
+
 const AddonSettingsPanel = ({
   addon,
   localData,
@@ -144,31 +168,55 @@ const AddonSettingsPanel = ({
     [addon, onChange, siteId],
   )
 
+  const handleSetChangedKeys = useCallback(
+    (data) => onSetChangedKeys(addon, siteId || '_', data),
+    [addon, onSetChangedKeys, siteId],
+  )
+  const editorContext = useStableContext(context)
+
   // RJSF fills an empty form with the schema defaults and reports them as a change, which
   // would then replace the saved values. So the form keeps its last values during a reload
   const shownData = useRef(localData)
   if (localData) shownData.current = localData
   const formData = localData ?? shownData.current
-  if (!formData) return <div style={{ flexGrow: 0, visibility: 'hidden' }} />
 
-  const editor = (
-    <SettingsEditor
-      schema={schema}
-      originalData={originalData}
-      formData={formData}
-      changedKeys={changedKeys}
-      overrides={overrides}
-      onChange={handleSettingsChange}
-      onSetChangedKeys={(data) => onSetChangedKeys(addon, siteId || '_', data)}
-      onSetBreadcrumbs={onSetBreadcrumbs}
-      breadcrumbs={breadcrumbs}
-      level={settingsLevel}
-      context={context}
-      // AddonSettings draws one outline for every selected addon
-      outline={false}
-      anchorScope={anchorScope}
-    />
+  // several addons share the page: an edit in one doesn't redraw the others
+  const editor = useMemo(
+    () =>
+      formData && (
+        <SettingsEditor
+          schema={schema}
+          originalData={originalData}
+          formData={formData}
+          changedKeys={changedKeys}
+          overrides={overrides}
+          onChange={handleSettingsChange}
+          onSetChangedKeys={handleSetChangedKeys}
+          onSetBreadcrumbs={onSetBreadcrumbs}
+          breadcrumbs={breadcrumbs}
+          level={settingsLevel}
+          context={editorContext}
+          // AddonSettings draws one outline for every selected addon
+          outline={false}
+          anchorScope={anchorScope}
+        />
+      ),
+    [
+      anchorScope,
+      breadcrumbs,
+      changedKeys,
+      editorContext,
+      formData,
+      handleSetChangedKeys,
+      handleSettingsChange,
+      onSetBreadcrumbs,
+      originalData,
+      overrides,
+      schema,
+      settingsLevel,
+    ],
   )
+  if (!formData) return <div style={{ flexGrow: 0, visibility: 'hidden' }} />
 
   // if (schemaLoading || settingsLoading || overridesLoading) {
   //   return `Loading... ${projectName}`

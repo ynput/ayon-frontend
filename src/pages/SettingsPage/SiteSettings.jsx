@@ -5,6 +5,8 @@ import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayo
 import SettingsEditor from '@containers/SettingsEditor'
 import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
+import { AddonSettingsSheets } from '@containers/AddonSettings/AddonSettingsSheets'
+import { useAppSelector } from '@state/store'
 import SiteList from '@containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@queries/siteSettings'
@@ -43,6 +45,10 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
       schema={{ ...schema, title: `${schema.title} (${siteId})` }}
       formData={formData}
       onChange={setFormData}
+      // the page stacks one editor per addon and site: one outline covers them all
+      // (AddonSettingsSheets), and each keeps its own group ids and open folds
+      outline={false}
+      anchorScope={`${addonName}-${siteId}`.replace(/[^\w-]/g, '-')}
     />
   )
 }
@@ -51,6 +57,9 @@ const SiteSettings = () => {
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
+  const flatLayout = useAppSelector(
+    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
+  )
   const [setSiteSettings] = useSetSiteSettingsMutation()
 
   const saveChanges = async () => {
@@ -86,7 +95,6 @@ const SiteSettings = () => {
         )
         return
       }
-
     }
     toast.success('Site settings saved')
     setNewData({})
@@ -126,25 +134,27 @@ const SiteSettings = () => {
 
         {(selectedSites.length && (
           <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
-            {selectedAddons.map((addon) => {
-              return selectedSites.map((siteId) => {
-                return (
-                  <Panel
-                    key={`${addon.name}|${addon.version}|${siteId}`}
-                    style={{ flexGrow: 0 }}
-                    className="transparent nopad"
-                    size={1}
-                  >
-                    <SiteSettingsEditor
-                      addonName={addon.name}
-                      addonVersion={addon.version}
-                      siteId={siteId}
-                      onChange={(data) => onChange(addon.name, addon.version, siteId, data)}
-                    />
-                  </Panel>
-                )
-              })
-            })}
+            <AddonSettingsSheets flat={flatLayout}>
+              {selectedAddons.map((addon) => {
+                return selectedSites.map((siteId) => {
+                  return (
+                    <Panel
+                      key={`${addon.name}|${addon.version}|${siteId}`}
+                      style={{ flexGrow: 0 }}
+                      className="transparent nopad"
+                      size={1}
+                    >
+                      <SiteSettingsEditor
+                        addonName={addon.name}
+                        addonVersion={addon.version}
+                        siteId={siteId}
+                        onChange={(data) => onChange(addon.name, addon.version, siteId, data)}
+                      />
+                    </Panel>
+                  )
+                })
+              })}
+            </AddonSettingsSheets>
           </ScrollPanel>
         )) ||
           'Select a site to edit settings'}

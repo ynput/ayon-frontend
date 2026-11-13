@@ -13,7 +13,9 @@ const listeners = new Set<() => void>()
 
 const load = () => {
   if (openItems) return
-  openItems = readSessionStorage<string[]>(OPEN_LIST_ITEMS_KEY, [])
+  const stored = readSessionStorage<unknown>(OPEN_LIST_ITEMS_KEY, [])
+  // anything else under the key (an older format, an edit by hand) starts empty
+  openItems = Array.isArray(stored) ? stored.filter((key) => typeof key === 'string') : []
   openSet = new Set(openItems)
 }
 

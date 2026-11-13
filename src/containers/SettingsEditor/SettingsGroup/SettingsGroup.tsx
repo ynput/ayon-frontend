@@ -50,8 +50,13 @@ const SettingsGroupHeader = ({
 }: SettingsGroupHeaderProps) => {
   const onHeaderClick = (e: MouseEvent) => {
     onClick?.()
-    // the item's own switch and buttons act on their own, they don't fold it
-    if (!listItem || listItem.empty || (e.target as HTMLElement).closest('button, input, label'))
+    // the item's own switch, buttons and field labels act on their own, they don't fold it
+    const target = e.target as HTMLElement
+    if (
+      !listItem ||
+      listItem.empty ||
+      target.closest('button, input, label, .form-inline-field-label')
+    )
       return
     listItem.onToggle()
   }
@@ -70,9 +75,10 @@ const SettingsGroupHeader = ({
           className="settings-group-fold"
           variant="text"
           icon={listItem.expanded ? 'expand_more' : 'chevron_right'}
-          disabled={listItem.empty}
+          disabled={listItem.empty || listItem.forcedOpen}
           aria-expanded={listItem.expanded}
           aria-label={listItem.expanded ? 'Fold item' : 'Open item'}
+          data-tooltip={listItem.forcedOpen ? 'Open while searching' : undefined}
           onClick={(e: MouseEvent) => {
             e.stopPropagation()
             listItem.onToggle()

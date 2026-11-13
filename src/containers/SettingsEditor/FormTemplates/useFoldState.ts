@@ -20,14 +20,20 @@ type FoldStateArgs = {
  */
 export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldStateArgs) => {
   const isOpen = useOpenItem(itemKey, foldable)
+  // while searching every item stays open, so no match is hidden inside a folded one
+  const forcedOpen = !!formContext?.searchText
 
-  const onToggle = useCallback(
+  const toggle = useCallback(
     () =>
       updateOpenItems((prev) =>
         prev.includes(itemKey) ? prev.filter((key) => key !== itemKey) : [...prev, itemKey],
       ),
     [itemKey],
   )
+  // a click can't fold an item the search holds open: it would only flip the hidden state
+  const onToggle = useCallback(() => {
+    if (!forcedOpen) toggle()
+  }, [forcedOpen, toggle])
 
   // currentId is 0, not a string, while nothing is selected (SettingsEditor)
   const currentId = formContext?.currentId
@@ -37,11 +43,10 @@ export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldSta
   useEffect(() => {
     const justPointed = pointedInside && !wasPointedInside.current
     wasPointedInside.current = pointedInside
-    if (foldable && justPointed && !isOpen) onToggle()
-  }, [foldable, pointedInside, isOpen, onToggle])
+    if (foldable && justPointed && !isOpen) toggle()
+  }, [foldable, pointedInside, isOpen, toggle])
 
-  // while searching every item stays open, so no match is hidden inside a folded one
-  const expanded = isOpen || !!formContext?.searchText
+  const expanded = isOpen || forcedOpen
 
-  return { expanded, onToggle }
+  return { expanded, onToggle, forcedOpen }
 }

@@ -42,7 +42,17 @@ const DndContextWrapper = styled.div`
   width: max-content;
 `
 
+// Below this distance the dragged item is still over its own slot
+const SELF_DROP_DISTANCE = 8
+
 const listCollisionDetection: CollisionDetection = (args) => {
+  // a click on the handle, or a drop back where the item started, moves nothing. Past
+  // that, only the other items count, so a tall open item moves past a short neighbour
+  const ownSlot = args.droppableRects.get(args.active.id)
+  if (ownSlot && args.collisionRect) {
+    const moved = Math.abs(args.collisionRect.top - ownSlot.top)
+    if (moved < SELF_DROP_DISTANCE) return [{ id: args.active.id }]
+  }
   const droppableContainers = args.droppableContainers.filter(
     (container) => container.id !== args.active.id,
   )

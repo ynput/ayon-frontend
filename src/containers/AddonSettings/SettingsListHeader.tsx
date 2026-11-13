@@ -68,16 +68,19 @@ const SettingsListHeader = ({
     },
     [buildFilterKeys, searchCallback],
   )
+  // the delayed search and SearchDropdown's own submit run the latest one, so a search typed
+  // right after an addon is selected also matches that addon
+  const applySearchRef = useRef(applySearch)
+  applySearchRef.current = applySearch
 
-  const handleFilter = useCallback(
-    (newSearch: string) => {
-      search.current = newSearch
-      clearTimeout(pending.current)
-      if (newSearch) pending.current = setTimeout(() => applySearch(newSearch), SEARCH_DELAY)
-      return []
-    },
-    [applySearch],
-  )
+  const handleFilter = useCallback((newSearch: string) => {
+    search.current = newSearch
+    clearTimeout(pending.current)
+    if (newSearch) {
+      pending.current = setTimeout(() => applySearchRef.current(newSearch), SEARCH_DELAY)
+    }
+    return []
+  }, [])
 
   // a search stays applied while addons are added or their schemas load: their keys are matched too
   useEffect(() => {
@@ -96,7 +99,7 @@ const SettingsListHeader = ({
         suggestionsLimit={10}
         isLoading={false}
         hideSuggestions={true}
-        onSubmit={() => applySearch(search.current)}
+        onSubmit={() => applySearchRef.current(search.current)}
         onClear={() => {
           clearTimeout(pending.current)
           search.current = ''

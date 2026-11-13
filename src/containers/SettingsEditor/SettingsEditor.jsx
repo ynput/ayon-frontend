@@ -188,6 +188,8 @@ const SettingsEditor = ({
     breadcrumbs: totallyRealBreadcrumbs,
     currentId: currentId,
     flatLayout,
+    // also keys the open folds, for editors that share a page without an addon context
+    anchorScope,
   }
 
   // console.log('context? ', fullContext)

@@ -56,7 +56,7 @@ export const useListItemFold = ({ formContext, layout, childProps, index }: List
 
   const itemId: string = childProps.idSchema?.$id || ''
   const prefix = getListItemsPrefix(formContext, itemId.split('_').slice(0, -1).join('_'))
-  const { expanded, onToggle } = useFoldState({
+  const { expanded, onToggle, forcedOpen } = useFoldState({
     formContext,
     itemKey: `${prefix}${index}`,
     itemId,
@@ -80,8 +80,17 @@ export const useListItemFold = ({ formContext, layout, childProps, index }: List
   const summary = (leadField ? summaryParts.slice(0, 2) : summaryParts.slice(1)).join(' · ')
 
   const itemState: SettingsListItemState = useMemo(
-    () => ({ expanded, onToggle, named, leadField, summary, fallbackTitle, empty: false }),
-    [expanded, onToggle, named, leadField, summary, fallbackTitle],
+    () => ({
+      expanded,
+      onToggle,
+      named,
+      leadField,
+      summary,
+      fallbackTitle,
+      empty: false,
+      forcedOpen,
+    }),
+    [expanded, onToggle, named, leadField, summary, fallbackTitle, forcedOpen],
   )
 
   // the open state of the items after a removed one moves up with them

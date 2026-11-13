@@ -65,8 +65,18 @@ export const getScrollParent = (node: HTMLElement | null): HTMLElement | null =>
   return getScrollParent(node.parentElement)
 }
 
+/** The nearest element that scrolls its content, whether or not it overflows yet */
+export const getScrollContainer = (node: HTMLElement | null): HTMLElement | null => {
+  if (!node || node === document.body || node === document.documentElement) return null
+  if (['auto', 'scroll'].includes(getComputedStyle(node).overflowY)) return node
+  return getScrollContainer(node.parentElement)
+}
+
 // How long the sheet stays fully rendered when a jump never scrolls (already in place)
 const JUMP_TIMEOUT = 2000
+
+// The jump still settling: a new one ends it first, or its timer would cut the new one short
+let endPendingJump: (() => void) | null = null
 
 /**
  * Scrolls a group to the top of the sheet. Cards off screen skip rendering and stand in
@@ -75,13 +85,16 @@ const JUMP_TIMEOUT = 2000
  * ends: the scroll lands on the group, and each card keeps its real height afterwards.
  */
 export const scrollToSettingsGroup = (sheet: HTMLElement, group: HTMLElement) => {
+  endPendingJump?.()
   const scrollTarget: HTMLElement | Window = getScrollParent(sheet) ?? window
   let timer = 0
   const done = () => {
     window.clearTimeout(timer)
     scrollTarget.removeEventListener('scrollend', done)
     sheet.classList.remove('settings-sheet-measure')
+    if (endPendingJump === done) endPendingJump = null
   }
+  endPendingJump = done
   sheet.classList.add('settings-sheet-measure')
   group.scrollIntoView({ behavior: 'smooth', block: 'start' })
   scrollTarget.addEventListener('scrollend', done)

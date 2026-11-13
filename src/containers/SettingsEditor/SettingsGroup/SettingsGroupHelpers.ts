@@ -97,10 +97,16 @@ const SUMMARY_SKIPPED_FIELDS = ['name', 'label', 'enabled']
 
 /**
  * Prefix of the stored keys for one list. Several addons, projects and sites can be
- * on screen at once with the same field ids, so the key includes all three.
+ * on screen at once with the same field ids, so the key includes all three, and the
+ * editor's anchor scope for pages that stack editors without them (Site settings).
  */
 export const getListItemsPrefix = (formContext: $Any, arrayId: string) =>
-  `${[formContext?.addonName, formContext?.headerProjectName, formContext?.headerSiteId]
+  `${[
+    formContext?.addonName,
+    formContext?.headerProjectName,
+    formContext?.headerSiteId,
+    formContext?.anchorScope,
+  ]
     .map((part) => part ?? '')
     .join('/')}|${arrayId}|`
 
