@@ -57,6 +57,7 @@ type useFetchOverviewDataData = {
   softErrorAction?: SoftErrorAction
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
+  isLoadingMoreGroups: boolean
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
@@ -540,6 +541,7 @@ export const useFetchOverviewData = ({
 
   const {
     data: { tasks: groupTasks = [] } = {},
+    isFetching: isFetchingGroupedTasks,
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
   } = useGetGroupedTasksListQuery(groupTasksArgs, {
@@ -580,7 +582,8 @@ export const useFetchOverviewData = ({
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       // Ungrouped is never seeded into pageCounts, so don't gate on key presence
-      if (group) {
+      // one page at a time: the grouped query refetches every expanded group
+      if (group && !isFetchingGroupedTasks) {
         incrementPageCount(group)
       }
     } else if (hasNextPage) {
@@ -754,6 +757,7 @@ export const useFetchOverviewData = ({
       isLoadingTasksList ||
       isLoadingTasksFolders, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
+    isLoadingMoreGroups: !!groupBy && isFetchingGroupedTasks,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,

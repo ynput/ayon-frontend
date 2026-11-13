@@ -150,6 +150,7 @@ export interface VersionsDataContextValue {
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
+  isFetchingGroupedVersions: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
   // links
   linksMap: Map<string, LinksTableData>
@@ -724,6 +725,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isFetching: isFetchingGroupedVersions,
     isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
@@ -884,7 +886,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (error) return
 
     if (group) {
-      incrementGroupPage(group)
+      if (!isFetchingGroupedVersions) incrementGroupPage(group)
     } else {
       fetchNextPage()
     }
@@ -977,6 +979,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,
+    isFetchingGroupedVersions,
     loadingProductVersions,
     onSyncData,
     // links

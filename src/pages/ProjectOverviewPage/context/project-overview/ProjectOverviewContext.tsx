@@ -419,6 +419,7 @@ export const ProjectOverviewProvider = ({
     onSyncData,
     isLoadingAll,
     isLoadingMore,
+    isLoadingMoreGroups,
     loadingTasks,
     loadingLinksEntityIds,
     error: dataError,
@@ -471,6 +472,7 @@ export const ProjectOverviewProvider = ({
         isInitialized: isInitialized,
         isLoading: isLoadingAll || isLoadingData || isLoadingGroups,
         isLoadingMore,
+        isLoadingMoreGroups,
         loadingTasks,
         error,
         softError, // shows a warning banner but doesn't block the table from rendering

@@ -841,14 +841,15 @@ export const ProjectTreeTable = ({
         }
       }
 
-      // Handle scroll-to-bottom for grouped data
       if (onScrollBottomGroupBy && groupBy) {
-        const containerRefElement = e.currentTarget
-        // look for a load more button
-        const loadMoreButton = containerRefElement?.querySelector('.load-more')
-        // get load more button id
-        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
-        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        const { top, bottom } = e.currentTarget.getBoundingClientRect()
+        const loadMore = Array.from(
+          e.currentTarget.querySelectorAll<HTMLElement>('.load-more'),
+        ).find((el) => {
+          const rect = el.getBoundingClientRect()
+          return rect.bottom > top && rect.top - bottom < 500
+        })
+        const groupValue = loadMore?.dataset.group
         if (groupValue) {
           onScrollBottomGroupBy(groupValue)
         }
