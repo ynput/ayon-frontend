@@ -11,6 +11,7 @@ import {
   loadPiece,
   pieceContext,
   reportContributionError,
+  useContributionWrappers,
 } from '@ynput/ayon-addon/host'
 import { Menu } from '@shared/components/Menu/Menu'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
@@ -87,6 +88,7 @@ export const AddonButton = <S extends ButtonSlot>({
   const menuId = `addon:${any.slot}:${any.key}`
   const [menuItems, setMenuItems] = useState<MenuItemType[]>([])
   const [anchor, setAnchor] = useState<HTMLElement | null>(null)
+  const wrappers = useContributionWrappers()
 
   useEffect(
     () =>
@@ -153,12 +155,14 @@ export const AddonButton = <S extends ButtonSlot>({
     onClick,
     onMouseEnter: () => action && action !== 'to' && prefetchPiece(any[action] as never),
   })
-  // the slot inspector's tags, while it is on (ContributionView does the same for a component)
+  // the slot inspector's tags, while it is on (ContributionView does the same for a component),
+  // on a wrapper that stays while the inspector is available, so the button isn't remounted
   const tags = contributionTags(any)
+  const wrapped = wrappers || !!tags
 
   return (
     <>
-      {tags ? (
+      {wrapped ? (
         <span style={{ display: 'contents' }} data-ayon-wrap="" {...tags}>
           {button}
         </span>

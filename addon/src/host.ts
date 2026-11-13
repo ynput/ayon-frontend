@@ -12,11 +12,13 @@ export {
   registerManifest,
   registerManifests,
   setContributionTags,
+  setContributionWrappers,
   setManifestsLoading,
   setSlotExamples,
   subscribeRegistry,
   unregisterAddon,
   useContributionTagging,
+  useContributionWrappers,
 } from './registry'
 export type { ContributionTags, ManifestEntry } from './registry'
 export {

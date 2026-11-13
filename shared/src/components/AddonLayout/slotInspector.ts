@@ -13,6 +13,7 @@ import type { SlotName } from '@ynput/ayon-addon'
 import {
   getRegistry,
   setContributionTags,
+  setContributionWrappers,
   setSlotExamples,
   subscribeRegistry,
 } from '@ynput/ayon-addon/host'
@@ -202,6 +203,7 @@ const onPointerOut = (event: PointerEvent) => {
 let listening = false
 const syncDocument = () => {
   setSlotExamples(state.available && state.showSlots)
+  setContributionWrappers(state.available)
   setContributionTags(tagsOn())
   if (typeof document === 'undefined') return
   document.documentElement.classList.toggle(SLOT_INSPECTOR_CLASS, tagsOn())

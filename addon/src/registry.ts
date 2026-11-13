@@ -33,6 +33,8 @@ interface RegistryState {
   examples: boolean
   /** a switch of the slot inspector is on: rendered contributions carry `contributionTags` */
   tagged: boolean
+  /** the slot inspector is available: `ContributionView` keeps a wrapper for the tags */
+  wrapped: boolean
 }
 
 let state: RegistryState = {
@@ -44,6 +46,7 @@ let state: RegistryState = {
   isLoading: true,
   examples: false,
   tagged: false,
+  wrapped: false,
 }
 // every manifest registered so far: the registry is computed from all of them, because a change to
 // one addon's declarations changes which contributions of the others apply
@@ -219,6 +222,20 @@ const getTagged = () => state.tagged
 
 /** Whether rendered contributions are tagged; re-renders when it changes. */
 export const useContributionTagging = () => useSyncExternalStore(subscribe, getTagged, getTagged)
+
+/**
+ * Keeps the `display: contents` element `ContributionView` puts the tags on, with or without
+ * them, while the slot inspector is available: turning the tags on and off then changes
+ * attributes only, and contributions keep their state. Without it, AYON's DOM has no wrappers.
+ */
+export const setContributionWrappers = (on: boolean) => {
+  if (state.wrapped !== on) setState({ wrapped: on })
+}
+
+const getWrapped = () => state.wrapped
+
+/** Whether `ContributionView` wraps contributions; re-renders when it changes. */
+export const useContributionWrappers = () => useSyncExternalStore(subscribe, getWrapped, getWrapped)
 
 /** Everything registered, for tooling (developer panel, `ayon-addon check`). */
 export const getRegistry = (): Readonly<RegistryState> => state
