@@ -38,6 +38,7 @@ export * from './parseFilename'
 export * from './mentionTypeOptions'
 export * from './searchTerms'
 export * from './activeEntities'
+export * from './entityAttribReadOnly'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }

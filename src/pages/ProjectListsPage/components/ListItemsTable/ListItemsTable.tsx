@@ -144,6 +144,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         // pagination
         onScrollBottom={fetchNextPage}
         readOnly={readOnly}
+        ignoreEntityAttribLocks={isPowerFeature}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         includeParents={includeParents}
