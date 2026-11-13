@@ -166,7 +166,7 @@ const useBuildViewMenuItems = ({
       },
       {
         id: 'notSharedViews',
-        title: 'Not shared',
+        title: 'All views (admin only)',
         items: notSharedViews as ViewItem[],
         defaultCollapsed: true,
       },
