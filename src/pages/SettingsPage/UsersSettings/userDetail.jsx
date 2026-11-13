@@ -16,7 +16,6 @@ import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
-import UserDetailsHeader from '@components/User/UserDetailsHeader'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
@@ -24,6 +23,8 @@ import {
   AddonUserDetailsSections,
   useAddonUserMenuItems,
   useUserDetailsSlotContext,
+  UserDetailsHeader,
+  usersAccessLabel,
 } from '@shared/components'
 import { PanelButtonsStyled } from './userDetail.styled'
 
@@ -403,35 +404,12 @@ const UserDetail = ({
   // Render
   //
 
-  const headerAccessGroups = formUsers.reduce((acc, user) => {
-    let accessGroups = Object.entries(user.accessGroups)
-      .map(([accessGroup]) => accessGroup)
-      .flat()
-
-    // if user is admin, he has also a manager role
-    const isUserManager = user.isManager && !user.isAdmin
-    const isUserAdmin = user.isManager && user.isAdmin
-
-    // if user is admin or manager, clear other roles
-    function replaceAccessRoles(role) {
-      accessGroups.length = 0
-      accessGroups.push(role)
-    }
-
-    // add admin, manager, service
-    if (isUserManager) replaceAccessRoles('manager')
-    if (isUserAdmin) replaceAccessRoles('admin')
-    if (user.isService) replaceAccessRoles('service')
-
-    return [...new Set([...acc, ...accessGroups])]
-  }, [])
-
   return (
     <Section wrap style={{ gap: '4px', bottom: 'unset', maxHeight: '100%' }}>
       <UserDetailsHeader
         users={formUsers}
         onClose={onClose}
-        subTitle={headerAccessGroups.length ? headerAccessGroups.join(', ') : 'No AccessGroups'}
+        subTitle={usersAccessLabel(formUsers)}
         menuItems={headerMenuItems}
         onMenuOpen={addonMenu.prefetch}
       />

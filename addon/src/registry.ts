@@ -29,6 +29,12 @@ interface RegistryState {
   skippedSlots: SkippedDeclaration[]
   /** true until the host has loaded every manifest it knows of */
   isLoading: boolean
+  /** Show slots is on: `contributions` ends with each slot's example (`example: true`) */
+  examples: boolean
+  /** a switch of the slot inspector is on: rendered contributions carry `contributionTags` */
+  tagged: boolean
+  /** the slot inspector is available: `ContributionView` keeps a wrapper for the tags */
+  wrapped: boolean
 }
 
 let state: RegistryState = {
@@ -38,6 +44,9 @@ let state: RegistryState = {
   slots: [],
   skippedSlots: [],
   isLoading: true,
+  examples: false,
+  tagged: false,
+  wrapped: false,
 }
 // every manifest registered so far: the registry is computed from all of them, because a change to
 // one addon's declarations changes which contributions of the others apply
@@ -48,6 +57,8 @@ const built = new WeakMap<object, AnyContribution>()
 // the skipped contributions already in the console
 let warnedSkipped: SkippedContribution[] = []
 const listeners = new Set<() => void>()
+// the example builder, loaded when Show slots first turns on
+let examples: typeof import('./examples') | undefined
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
 let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
 
@@ -63,6 +74,9 @@ const subscribe = (listener: () => void) => {
     listeners.delete(listener)
   }
 }
+
+/** Calls the listener after every change of the registry (`getRegistry`). */
+export const subscribeRegistry = subscribe
 
 const warnNew = <T>(previous: readonly T[], next: readonly T[], format: (item: T) => string) => {
   const known = new Set(previous.map(format))
@@ -106,6 +120,8 @@ const applyManifests = (next: ManifestEntry[]) => {
     contributions.push(...result.contributions)
     skipped.push(...result.skipped)
   }
+  // each slot's example after its real contributions: surfaces list a slot's in registry order
+  if (state.examples && examples) contributions.push(...examples.buildExamples(slots))
 
   warnNew(state.skippedSlots, skippedSlots, formatSkippedDeclaration)
   const addons = new Map(next.map(({ addon }) => [addon.name, addon]))
@@ -129,7 +145,7 @@ export const registerManifests = (entries: readonly ManifestEntry[]) => {
 export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
   registerManifests([{ addon, manifest }])
   return {
-    contributions: state.contributions.filter((c) => c.addon.name === addon.name),
+    contributions: state.contributions.filter((c) => c.addon.name === addon.name && !isExample(c)),
     skipped: state.skipped.filter((s) => s.addon === addon.name),
   }
 }
@@ -144,6 +160,85 @@ export const setManifestsLoading = (isLoading: boolean) => {
   setState({ isLoading })
   warnSkipped()
 }
+
+/**
+ * Show slots: adds the example contribution of every slot, AYON's and the declared ones, each
+ * owned by its slot's owner (`ayon` for AYON's). Their code loads when this first turns them on.
+ */
+export const setSlotExamples = (on: boolean) => {
+  if (state.examples === on) return
+  state = { ...state, examples: on }
+  if (!on || examples) {
+    applyManifests(manifests)
+    return
+  }
+  import('./examples').then(
+    (module) => {
+      examples = module
+      if (state.examples) applyManifests(manifests)
+    },
+    (error) => console.error('could not load the slot examples', error),
+  )
+}
+
+/** Internal, for tests (Node can't load the sources' dynamic imports): the example builder, loaded. */
+export const provideExamples = (module: typeof import('./examples')) => {
+  examples = module
+}
+
+/** Whether a contribution is a slot's example (Show slots), not an addon's. */
+export const isExample = (contribution: object) => (contribution as { example?: unknown }).example === true
+
+/** The attributes that tag a rendered contribution for the slot inspector. */
+export interface ContributionTags {
+  'data-ayon-addon': string
+  'data-ayon-slot': string
+  'data-ayon-contribution': string
+}
+
+/**
+ * Tags rendered contributions (`contributionTags`) while the slot inspector needs them; without
+ * it, AYON's DOM has none.
+ */
+export const setContributionTags = (on: boolean) => {
+  if (state.tagged !== on) setState({ tagged: on })
+}
+
+/** The attributes of an element that shows a contribution, or nothing when tags are off. */
+export const contributionTags = (contribution: {
+  addon: { name: string }
+  slot: string
+  key: string
+}): ContributionTags | undefined =>
+  state.tagged
+    ? {
+        'data-ayon-addon': contribution.addon.name,
+        'data-ayon-slot': contribution.slot,
+        'data-ayon-contribution': contribution.key,
+      }
+    : undefined
+
+const getTagged = () => state.tagged
+
+/**
+ * Whether rendered contributions are tagged; re-renders when it changes. For `ContributionView`:
+ * a switch is a registry change, so `useContributions` re-renders the host's surfaces anyway.
+ */
+export const useContributionTagging = () => useSyncExternalStore(subscribe, getTagged, getTagged)
+
+/**
+ * Keeps the `display: contents` element `ContributionView` puts the tags on, with or without
+ * them, while the slot inspector is available: turning the tags on and off then changes
+ * attributes only, and contributions keep their state. Without it, AYON's DOM has no wrappers.
+ */
+export const setContributionWrappers = (on: boolean) => {
+  if (state.wrapped !== on) setState({ wrapped: on })
+}
+
+const getWrapped = () => state.wrapped
+
+/** Whether `ContributionView` wraps contributions; re-renders when it changes. */
+export const useContributionWrappers = () => useSyncExternalStore(subscribe, getWrapped, getWrapped)
 
 /** Everything registered, for tooling (developer panel, `ayon-addon check`). */
 export const getRegistry = (): Readonly<RegistryState> => state

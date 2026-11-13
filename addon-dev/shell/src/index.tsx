@@ -2,7 +2,10 @@
 // `ayon-addon dev` serves (vite.ts). Not for addon code.
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { registerManifest, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { clearAccessToken } from '@ynput/ayon-frontend-shared/util'
+import { registerManifest, registerManifests, setManifestsLoading } from '@ynput/ayon-addon/host'
+import { buildContract, contractManifests, setContracts } from './contractModel'
+import type { ContractModule } from './contractModel'
 import { provideShellHost } from './host'
 import { installNetwork, setFixture } from './network'
 import { readSelection, writeSelection } from './params'
@@ -25,11 +28,66 @@ const loadFixture = async (name: string): Promise<Fixture | undefined> => {
   return fixture
 }
 
+const message = (error: unknown) => (error instanceof Error ? error.message : String(error))
+
+// the declarations and previews of the contract packages (the dev server imports them)
+const loadContracts = (modules: ContractModule[] = []) =>
+  Promise.all(
+    modules.map(async (module) => {
+      const loaded: Parameters<typeof buildContract>[1] = {}
+      await module
+        .slots()
+        .then((m) => (loaded.slots = m.slots))
+        .catch((error) => (loaded.slotsError = message(error)))
+      await module
+        .previews?.()
+        .then((m) => (loaded.previews = m.previews))
+        .catch((error) => (loaded.previewsError = message(error)))
+      return buildContract(module, loaded)
+    }),
+  )
+
+/**
+ * A token stored on the page earlier (signed in by hand, then expired or the server reset) that
+ * the server rejects is dropped, so the dev server's API key signs in: the proxy adds the key only
+ * to requests without a token. Checked before anything queries, as AYON's client sends a 401 to
+ * the login page.
+ */
+const storedTokens = () => {
+  let token: string | null = null
+  try {
+    token = localStorage.getItem('accessToken')
+  } catch {
+    // no storage: only the cookie
+  }
+  return { token, cookie: /(?:^|;\s*)accessToken=([^;]*)/.exec(document.cookie)?.[1] }
+}
+
+const dropStaleToken = async () => {
+  const checked = storedTokens()
+  if (!checked.token && !checked.cookie) return
+  try {
+    const response = await fetch('/api/users/me', {
+      headers: checked.token ? { Authorization: `Bearer ${checked.token}` } : {},
+    })
+    // only the token that was checked: another tab may have signed in meanwhile
+    const now = storedTokens()
+    if (response.status === 401 && now.token === checked.token && now.cookie === checked.cookie) clearAccessToken()
+  } catch {
+    // the server can't be reached: the shell says so
+  }
+}
+
 export const startShell = async (options: ShellOptions) => {
-  const preview = readSelection().preview
+  const { preview } = readSelection()
   const mode = preview ? 'preview' : 'live'
   installNetwork(mode)
+  if (mode === 'live' && options.signedInWithKey) await dropStaleToken()
   provideShellHost()
+  // the slots of other addons, as if those addons were installed: contributions to them register
+  const contracts = await loadContracts(options.contracts)
+  setContracts(contracts)
+  registerManifests(contractManifests(contracts, options.addon.name) as never)
   registerManifest(options.addon, options.manifest)
   setManifestsLoading(false)
 

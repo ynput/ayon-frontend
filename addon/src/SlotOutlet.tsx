@@ -2,9 +2,10 @@ import { useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { ContributionView } from './ContributionView'
 import type { AnyContribution, Contribution } from './contributions'
+import { getHost } from './hostBridge'
 import { menuItemsAt } from './menus'
 import { prefetchPiece, runContribution } from './pieces'
-import { useContributions } from './registry'
+import { contributionTags, isExample, useContributions } from './registry'
 import type { Loader, MenuItemPosition, SlotMap, SlotName } from './slots'
 
 export interface SlotOutletProps<S extends SlotName> {
@@ -19,12 +20,17 @@ export interface SlotOutletProps<S extends SlotName> {
   error?: (error: Error) => ReactNode
 }
 
+const noReport = () => undefined
+
 /**
  * Renders every contribution to a slot, for an addon that declares its own slots (and any other
  * surface). Each is a `ContributionView`: lazy, and a crash stays in its own error box.
  */
 export const SlotOutlet = <S extends SlotName>({ slot, context, piece, loading, error }: SlotOutletProps<S>) => {
   const { contributions } = useContributions(slot)
+  // the dev shell's Context panel shows what the slot passes; AYON has no such hook
+  const useOutletReport = getHost().devSlots?.useOutletReport ?? noReport
+  useOutletReport(slot, context)
   return (
     <>
       {contributions.map((contribution) => (
@@ -47,6 +53,8 @@ export interface SlotMenuItem {
   label: string
   icon: string
   command: () => void
+  /** the slot inspector's tags (`data-ayon-addon`, ...), while it is on: pass them to the entry's element */
+  [attribute: `data-${string}`]: string | undefined
 }
 
 export type SlotMenuItems = Record<MenuItemPosition, SlotMenuItem[]>
@@ -62,7 +70,10 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
   const { contributions } = useContributions(slot)
   return useCallback(
     (context: SlotMap[S]['context'], applies?: (item: Contribution<S>) => boolean): SlotMenuItems => {
-      const items = (applies ? contributions.filter(applies) : contributions) as unknown as (AnyContribution & {
+      // a slot's example shows wherever the slot does
+      const items = (
+        applies ? contributions.filter((item) => isExample(item) || applies(item)) : contributions
+      ) as unknown as (AnyContribution & {
         label: string
         icon: string
         position?: MenuItemPosition
@@ -75,10 +86,13 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
             label: item.label,
             icon: item.icon,
             command: () => void runContribution(item as unknown as Contribution<S>, context),
+            ...contributionTags(item),
           }
         })
+      // the dev shell's Context panel shows the context the menu was built for
+      getHost().devSlots?.menuBuilt?.(slot, context, items.map((item) => item.key))
       return { top: at('top'), bottom: at('bottom') }
     },
-    [contributions],
+    [contributions, slot],
   )
 }

@@ -16,7 +16,7 @@ import { useAppSelector } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { useCallback, useLayoutEffect, useMemo, useState } from 'react'
 import { hasPageAccess } from './AddonPagesHelpers'
-import { StudioPageSelectionProvider } from './AddonLayout'
+import { StudioPageSelectionProvider } from '@shared/components/AddonLayout/StudioPageLayout'
 import { AddonDetailsPanel } from './AddonDetailsPanel'
 
 // Pages contributed through the project.page and studio.page slots (@ynput/ayon-addon).
@@ -109,8 +109,9 @@ export const AddonProjectPage = ({
   const allowed = usePageAccess(contribution)
 
   if (!allowed) return null
+  // untagged: the page's tab carries the slot inspector's tags, not the whole page
   const page = (
-    <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+    <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} untagged />
   )
   return contribution.detailsPanel ? (
     // keyed by project: the shown entities belong to one project
@@ -148,7 +149,8 @@ export const AddonStudioPage = ({
   if (!allowed) return null
   return (
     <StudioPageSelectionProvider value={studioPage}>
-      <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} />
+      {/* untagged: the page's tab carries the slot inspector's tags, not the whole page */}
+      <ContributionView contribution={contribution} context={context} loading={<LoadingPage />} untagged />
     </StudioPageSelectionProvider>
   )
 }

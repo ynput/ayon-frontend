@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { Contribution, UserDetailsContext, UserRef, UserSelection } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 
 /** A user as AYON's users queries have it. */
@@ -48,7 +48,10 @@ export interface AddonUserMenuItems {
   prefetch: () => void
 }
 
-/** The addons' items for the user details "more" menu. */
+/**
+ * The addons' items for the user details "more" menu, tagged for the slot inspector. The button that
+ * opens the menu carries `data-ayon-trigger="userDetails.menuItem"`.
+ */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')
   const applicable = useMemo(
@@ -62,6 +65,7 @@ export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMen
       icon: item.icon,
       'data-addon-item': item.key,
       onClick: () => runContribution(item, context),
+      ...contributionTags(item),
     }),
     [context],
   )

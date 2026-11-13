@@ -776,9 +776,29 @@ export interface SlotDefinition {
 export interface SlotDeclaration extends SlotDefinition {
   /** `<addon>.<name>`, the name without dots, e.g. `example.cardMenuItem` */
   name: string
+  /**
+   * a short title for people, e.g. `Card menu item`: what the dev shell lists the slot as. Without
+   * one, the name after the dot in words (`cardMenuItem`: "Card menu item")
+   */
+  label?: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
+  /**
+   * a contribution of the slot's shape that AYON shows with Show slots on (developer mode), after
+   * the slot's real contributions: its description fields and, optionally, its pieces. A required
+   * field or piece left out is filled in: the label, and a piece that shows it in one line, with
+   * the slot and its context in its tooltip (`ExampleInline`), or, for `run`, says it was used.
+   * Its `run` is always AYON's, which only says it was used: using an example changes nothing. Its
+   * components are your code: keep them to display only
+   */
+  example?: SlotExample
 }
+
+/**
+ * A slot's example contribution: the fields of a contribution to the slot, without `id` (AYON
+ * gives it one). Pieces are optional loaders, like a contribution's.
+ */
+export type SlotExample = { readonly [field: string]: unknown }
 
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/

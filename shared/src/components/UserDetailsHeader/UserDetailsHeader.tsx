@@ -1,37 +1,45 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
-import PropTypes from 'prop-types'
+// The header of Settings > Users' details panel (also the team members'): the users' avatars,
+// name and subtitle, and the more menu with the userDetails.menuItem slot.
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import clsx from 'clsx'
-import DetailHeader from '../DetailHeader'
 import { Button, Dialog, Icon, UserImagesStacked } from '@ynput/ayon-react-components'
-import { Menu, MenuContainer } from '@shared/components'
+import { Menu, MenuContainer } from '../Menu'
+import type { MenuItemType } from '../Menu'
+import { CodeEditor } from '../CodeEditor'
 import { useMenuContext } from '@shared/context'
-import { CodeEditor } from '@shared/components/CodeEditor'
 import { copyToClipboard } from '@shared/util'
-import styled from 'styled-components'
+import { DetailHeader } from './DetailHeader'
+import { SubHeader } from './DetailHeader.styled'
+import type { UserDetailsHeaderUser } from './UserDetailsHeaderHelpers'
 
-const SubHeader = styled.span`
-  white-space: nowrap;
-  width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-`
+export interface UserDetailsHeaderProps {
+  users?: UserDetailsHeaderUser[]
+  onClose?: () => void
+  subTitle?: ReactNode
+  style?: CSSProperties
+  /** the more menu's items; "View data" is added after them */
+  menuItems?: MenuItemType[]
+  /** called when the more menu opens */
+  onMenuOpen?: () => void
+}
 
-const UserDetailsHeader = ({
+export const UserDetailsHeader = ({
   users = [],
   onClose,
   subTitle = '',
   style = {},
   menuItems,
   onMenuOpen,
-}) => {
+}: UserDetailsHeaderProps) => {
   // a single user
-  const singleUserEdit = users.length === 1 ? users[0] || ' ' : null
+  const singleUserEdit = users.length === 1 ? users[0] : null
 
-  const getUserName = (user) => user?.attrib?.fullName || user?.name
+  const getUserName = (user: UserDetailsHeaderUser) => user?.attrib?.fullName || user?.name
 
   const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} Users Selected`
 
-  const buttonRef = useRef(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
   const [showContext, setShowContext] = useState(false)
 
@@ -45,7 +53,7 @@ const UserDetailsHeader = ({
     if (isOpen) onMenuOpen?.()
   }, [isOpen, onMenuOpen])
   const hasMenu = Array.isArray(menuItems) && menuItems.length > 0
-  const fullItems = hasMenu
+  const fullItems: MenuItemType[] = hasMenu
     ? [
         ...menuItems,
         {
@@ -74,6 +82,8 @@ const UserDetailsHeader = ({
         data-tooltip="More actions"
         aria-label="More actions"
         className={clsx({ active: isOpen })}
+        // its menu holds the userDetails.menuItem slot (slot inspector)
+        data-ayon-trigger="userDetails.menuItem"
         onClick={() => toggleMenuOpen(menuId)}
       />
       <MenuContainer id={menuId} target={buttonRef.current} align="right">
@@ -93,6 +103,7 @@ const UserDetailsHeader = ({
       >
         <UserImagesStacked
           users={users.map((user) => ({
+            name: user.name || '',
             avatarUrl: user.name && `/api/users/${user.name}/avatar`,
             self: user?.self,
           }))}
@@ -145,16 +156,6 @@ const UserDetailsHeader = ({
       )}
     </>
   )
-}
-
-UserDetailsHeader.propTypes = {
-  users: PropTypes.arrayOf(PropTypes.object),
-  onClose: PropTypes.func,
-  subTitle: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  style: PropTypes.object,
-  menuItems: PropTypes.array,
-  /** called when the more menu opens */
-  onMenuOpen: PropTypes.func,
 }
 
 export default UserDetailsHeader

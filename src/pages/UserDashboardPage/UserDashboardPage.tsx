@@ -9,11 +9,9 @@ import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
 import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
-import ProjectsList, { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
-import { SplitterPanel } from 'primereact/splitter'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
-import { ProjectsListSplitter } from './UserDashboardPage.styled'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
@@ -25,9 +23,13 @@ import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { useContributions } from '@ynput/ayon-addon'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
-import { StudioPageSelectionProvider } from '@/remote/AddonLayout'
+import {
+  StudioPageLayoutHost,
+  StudioPageSelectionProvider,
+} from '@shared/components/AddonLayout/StudioPageLayout'
 import { ProjectList, StudioPageLayout } from '@ynput/ayon-addon'
 import { UserDashboardPageRemote } from './UserDashboardPageRemote'
 import LoadingPage from '@pages/LoadingPage'
@@ -262,6 +264,8 @@ const UserDashboardPage: React.FC = () => {
         viewType: page.viewType as ViewType | undefined,
         startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
         showProjectList: false,
+        // the slot inspector's tags on the tab, while it is on
+        ...contributionTags(page),
       })),
       { node: 'spacer' },
       {
@@ -351,23 +355,20 @@ const UserDashboardPage: React.FC = () => {
         <main>
           <WithViews viewType={viewType}>
             <Section direction="row" wrap style={{ position: 'relative', overflow: 'hidden' }}>
-              {showProjectList ? (
-                <ProjectsListSplitter stateKey={PROJECTS_LIST_WIDTH_KEY} stateStorage="local">
-                  <SplitterPanel size={15}>
+              <StudioPageLayoutHost
+                sidebar={
+                  showProjectList && (
                     <ProjectsList
                       multiSelect={isMultiSelect}
                       selection={selectedProjects}
                       onSelect={setSelectedProjects}
                       onNewProject={() => setShowNewProject(true)}
                     />
-                  </SplitterPanel>
-                  <SplitterPanel size={100} style={{ overflow: 'hidden' }}>
-                    {moduleComponent}
-                  </SplitterPanel>
-                </ProjectsListSplitter>
-              ) : (
-                moduleComponent
-              )}
+                  )
+                }
+              >
+                {moduleComponent}
+              </StudioPageLayoutHost>
             </Section>
           </WithViews>
         </main>

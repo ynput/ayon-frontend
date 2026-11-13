@@ -5,6 +5,7 @@
 import { useMemo } from 'react'
 import { ContributionView, useContributions } from '@ynput/ayon-addon'
 import type { UserDetailsContext } from '@ynput/ayon-addon'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { Panel } from '@ynput/ayon-react-components'
 import { showsForSelection } from './addonUserDetailsHelpers'
 
@@ -28,9 +29,9 @@ export const AddonUserDetailsSections = ({ context }: AddonUserDetailsSectionsPr
   return (
     <>
       {sections.map((section) => (
-        <Panel key={section.key} data-addon-section={section.key}>
+        <Panel key={section.key} data-addon-section={section.key} {...contributionTags(section)}>
           <b>{section.title}</b>
-          <ContributionView contribution={section} context={context} />
+          <ContributionView contribution={section} context={context} untagged />
         </Panel>
       ))}
     </>

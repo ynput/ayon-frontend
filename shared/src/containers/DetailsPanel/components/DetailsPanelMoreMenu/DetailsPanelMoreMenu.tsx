@@ -1,7 +1,7 @@
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
 import clsx from 'clsx'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components/Menu/Menu'
@@ -19,6 +19,8 @@ import { useContextAccess } from './hooks/useContextAccess'
 import { useMenuOptions } from './hooks/useMenuOptions'
 import { ShareDialog } from './components/ShareDialog'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef } from './types'
+
+const SLOT = 'detailsPanel.menuItem'
 
 export interface DetailsPanelMoreMenuProps {
   entityType: string
@@ -172,6 +174,7 @@ export const DetailsPanelMoreMenu = ({
       icon: item.icon,
       'data-addon-item': item.key,
       onClick: () => runContribution(item, addonContext),
+      ...contributionTags(item),
     }),
     [addonContext],
   )
@@ -238,6 +241,7 @@ export const DetailsPanelMoreMenu = ({
           data-tooltip={item.label}
           aria-label={item.label}
           data-addon-item={item.key}
+          {...contributionTags(item)}
           onMouseEnter={() => prefetchPiece(item.run)}
           onClick={() => runContribution(item, addonContext)}
         />
@@ -248,6 +252,7 @@ export const DetailsPanelMoreMenu = ({
         variant="text"
         data-tooltip="More actions"
         aria-label="More actions"
+        data-ayon-trigger={SLOT}
         className={clsx({ active: isOpen })}
         onClick={() => toggleMenuOpen(menuId)}
       />

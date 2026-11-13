@@ -8,7 +8,8 @@ import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayou
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
-import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
+import { AppProjectListHost } from './AddonLayout'
 import { LazyEntityTable } from './EntityTable/LazyEntityTable'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
@@ -52,7 +53,7 @@ export const provideAddonHost = () =>
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
-      ProjectList: ProjectListHost,
+      ProjectList: AppProjectListHost,
       EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
       EntityTable: LazyEntityTable,

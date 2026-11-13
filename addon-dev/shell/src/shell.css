@@ -4,6 +4,13 @@ body,
   height: 100%;
   margin: 0;
 }
+/* AYON's table colours (the app's index.scss), for the shell's stand-ins of its tables */
+:root {
+  --color-table-row: hsl(216 15% 11.5%);
+  --color-table-hover: var(--md-sys-color-surface-container);
+  --color-table-row-hover: hsl(215 14% 15%);
+  --color-table-selected: var(--md-sys-color-secondary-container);
+}
 body {
   background: var(--md-sys-color-surface-container-lowest);
   color: var(--md-sys-color-on-surface);
@@ -95,7 +102,6 @@ main.center {
 .ayon-shell-panel h3 {
   margin: 4px 0 0;
   font-size: 12px;
-  text-transform: uppercase;
   color: var(--md-sys-color-outline);
 }
 .ayon-shell-panel code {
@@ -114,36 +120,6 @@ main.center {
 .ayon-shell-area + .ayon-shell-area {
   padding-top: 4px;
   border-top: 1px solid var(--md-sys-color-outline-variant);
-}
-.ayon-shell-area-header {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 8px;
-  border: none;
-  border-radius: 4px;
-  background: none;
-  color: inherit;
-  font: inherit;
-  font-weight: 600;
-  cursor: pointer;
-}
-.ayon-shell-area-header:hover {
-  background: var(--md-sys-color-surface-container-high);
-}
-.ayon-shell-area-header .icon {
-  font-size: 18px;
-  color: var(--md-sys-color-outline);
-}
-.ayon-shell-area-header small {
-  margin-left: auto;
-  font-weight: normal;
-  color: var(--md-sys-color-outline);
-}
-.ayon-shell-slot {
-  display: flex;
-  flex-direction: column;
 }
 .ayon-shell-slot-label {
   padding: 6px 8px 2px 34px;
@@ -258,14 +234,6 @@ button.ayon-shell-subheader {
   display: flex;
   flex-direction: column;
 }
-.ayon-shell-fixtures {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-top: auto;
-  padding-top: 8px;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
-}
 .ayon-shell-link {
   display: flex;
   align-items: center;
@@ -326,41 +294,31 @@ main.ayon-shell-stage {
 .ayon-shell-caption {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 40px;
+  padding: 0 12px 0 4px;
   flex-shrink: 0;
   background: var(--md-sys-color-surface-container-low);
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 .ayon-shell-caption > .icon {
-  font-size: 22px;
+  font-size: 20px;
   color: var(--md-sys-color-outline);
 }
-.ayon-shell-caption-text {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-width: 0;
-}
-.ayon-shell-caption-text > div {
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-.ayon-shell-caption-text small {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+.ayon-shell-caption-info {
+  display: inline-flex;
+  padding: 0;
+  border: none;
+  background: none;
   color: var(--md-sys-color-outline);
+  cursor: pointer;
 }
-.ayon-shell-caption-text code {
-  font-size: 11px;
+.ayon-shell-caption-info .icon {
+  font-size: 16px;
 }
-.ayon-shell-caption-path {
-  color: var(--md-sys-color-outline);
-}
-.ayon-shell-caption-path span + span::before {
-  content: ' › ';
+.ayon-shell-caption-info[aria-expanded='true'] {
+  color: var(--md-sys-color-primary);
 }
 .ayon-shell-chip {
   flex-shrink: 0;
@@ -370,9 +328,15 @@ main.ayon-shell-stage {
   background: var(--md-sys-color-surface-container-high);
   color: var(--md-sys-color-outline);
 }
-.ayon-shell-chip.live {
-  background: var(--md-sys-color-primary-container);
-  color: var(--md-sys-color-on-primary-container);
+.ayon-shell-chip.warning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--md-sys-color-warning-container, var(--md-sys-color-tertiary-container));
+  color: var(--md-sys-color-on-warning-container, var(--md-sys-color-on-tertiary-container));
+}
+.ayon-shell-chip.warning .icon {
+  font-size: 14px;
 }
 .ayon-shell-bar {
   display: flex;
@@ -386,13 +350,6 @@ main.ayon-shell-stage {
 }
 .ayon-shell-bar .spacer {
   flex: 1;
-}
-.ayon-shell-tabs {
-  display: flex;
-  gap: 4px;
-  padding: 4px 8px;
-  flex-shrink: 0;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 }
 .ayon-shell-body {
   display: flex;
@@ -413,4 +370,527 @@ main.ayon-shell-stage {
 }
 .ayon-shell-table tr.selected td {
   background: var(--md-sys-color-primary-container);
+}
+.ayon-shell-body[data-shell-surface='scene'] {
+  flex-direction: column;
+  padding: 16px;
+  overflow: auto;
+}
+/* the scene's fields: longer labels than the context pickers */
+.ayon-shell-scene-fields .ayon-shell-field {
+  grid-template-columns: 96px minmax(0, 1fr);
+}
+.ayon-shell-scene-fields .ayon-shell-field > label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-entity-value {
+  align-self: center;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-json {
+  width: 100%;
+  font-family: monospace;
+  font-size: 12px;
+  resize: vertical;
+}
+.ayon-shell-slot-title {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.2;
+  text-align: left;
+}
+.ayon-shell-slot-title small {
+  overflow: hidden;
+  font-family: monospace;
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-panel .ayon-shell-slot-title span,
+.ayon-shell-panel .ayon-shell-slot-title small {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-toggle {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+  cursor: pointer;
+  user-select: none;
+}
+
+
+/* Places and Slots here */
+.ayon-shell-search {
+  width: 100%;
+}
+.ayon-shell-places {
+  display: flex;
+  flex-direction: column;
+}
+.ayon-shell-places .ayon-shell-slot-label {
+  padding-left: 8px;
+  cursor: default;
+}
+.ayon-shell-panel .contribution.ayon-shell-place {
+  padding-left: 8px;
+}
+.ayon-shell-panel .contribution.ayon-shell-place > span:not(.icon) {
+  flex: 1;
+}
+.ayon-shell-panel .contribution.ayon-shell-place > .icon {
+  flex-shrink: 0;
+}
+.ayon-shell-place > small,
+.ayon-shell-status {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-panel .contribution.selected > small {
+  color: inherit;
+}
+.ayon-shell-place.unused > span,
+.ayon-shell-place.unused > .icon {
+  opacity: 0.6;
+}
+.ayon-shell-hint {
+  padding: 16px;
+  color: var(--md-sys-color-outline);
+}
+/* Other slots: a card per slot, without a preview */
+.ayon-shell-body.ayon-shell-other {
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  overflow: auto;
+}
+.ayon-shell-no-preview {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 720px;
+  padding: 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: 8px;
+  color: var(--md-sys-color-on-surface);
+}
+.ayon-shell-no-preview header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+.ayon-shell-no-preview p {
+  margin: 0;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-no-preview code {
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-snippet {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  align-self: stretch;
+}
+.ayon-shell-snippet pre {
+  flex: 1;
+  overflow: auto;
+  white-space: pre;
+  word-break: normal;
+}
+div.ayon-shell-no-preview[data-shell-surface='service'] {
+  margin: 16px;
+}
+.ayon-shell-inputs-body {
+  flex: 1;
+  min-height: 0;
+  align-content: start;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+  padding: 0 12px 12px;
+  overflow: auto;
+}
+.ayon-shell-inputs-column {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.ayon-shell-disclosure {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.ayon-shell-disclosure .ayon-shell-subheader .label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+
+/* the panels: "," folds the developer panel away, "/" Context down to its header */
+.ayon-shell.left-collapsed > .p-splitter-panel:first-child {
+  flex: 0 0 0 !important;
+  overflow: hidden;
+}
+.ayon-shell.left-collapsed > .p-splitter-gutter {
+  display: none;
+}
+.ayon-shell-column.p-splitter {
+  flex: 1;
+  min-height: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+.ayon-shell-column.inputs-collapsed > .p-splitter-panel:first-child {
+  flex: 1 1 0 !important;
+}
+.ayon-shell-column.inputs-collapsed > .p-splitter-panel:last-child {
+  flex: 0 0 37px !important; /* the header (36px) and its top border */
+}
+.ayon-shell-column.inputs-collapsed > .p-splitter-gutter {
+  display: none;
+}
+.ayon-shell-icon-button.button,
+.ayon-shell-icon-button {
+  flex-shrink: 0;
+  padding: 4px;
+  min-height: 0;
+}
+
+/* Places: the heading with the search button, the switches, AYON's places by area */
+.ayon-shell-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 32px;
+}
+.ayon-shell-section-header h3 {
+  margin: 0;
+}
+.ayon-shell-toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+.ayon-shell-area-group {
+  display: flex;
+  flex-direction: column;
+}
+.ayon-shell-area-group + .ayon-shell-area-group {
+  margin-top: 4px;
+}
+.ayon-shell-area-label {
+  padding: 6px 8px 2px;
+  font-size: 12px;
+  color: var(--md-sys-color-outline);
+}
+
+/* Slots: an overview of the place's slots, this addon's contributions nested under each */
+.ayon-shell-slot-entry {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  border-radius: 4px;
+}
+.ayon-shell-slot-entry.hovered {
+  background: var(--md-sys-color-surface-container-high);
+}
+.ayon-shell-slot-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 8px;
+}
+.ayon-shell-slot-entry.empty .ayon-shell-slot-title {
+  opacity: 0.6;
+}
+.ayon-shell-slot-contribution {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 24px;
+  padding: 0 8px 0 24px;
+  font-size: 13px;
+}
+.ayon-shell-slot-contribution > span {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-slot-contribution > .icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-slot-contribution > small {
+  margin-left: auto;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--md-sys-color-outline);
+}
+
+/* the stage header: the place, (i) and its popover over the stage */
+.ayon-shell-caption-title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-caption .spacer {
+  flex: 1;
+}
+.ayon-shell-caption-about-anchor {
+  position: relative;
+  display: flex;
+}
+.ayon-shell-caption-about {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: max-content;
+  max-width: 420px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: var(--md-sys-color-surface-container-high);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 35%);
+  color: var(--md-sys-color-on-surface);
+}
+
+/* the slot inspector (slotInspector in the shared package) outlines contributions and the buttons
+   that open menus with them; a column's button shows without hovering its header */
+.ayon-slot-inspector .ayon-shell-tree-table th .actions:has([data-ayon-trigger]) {
+  display: flex;
+}
+
+/* the project table: AYON's (ProjectTreeTable) */
+.ayon-shell-table-scroll {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow: auto;
+}
+.ayon-shell-tree-table {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+}
+.ayon-shell-bar-title {
+  font-weight: 600;
+  text-transform: capitalize;
+}
+.ayon-shell-table {
+  table-layout: fixed;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+.ayon-shell-table th,
+.ayon-shell-table td {
+  height: 34px;
+  padding: 0;
+  border: none;
+  text-align: left;
+  font-weight: normal;
+}
+.ayon-shell-th {
+  position: relative;
+  background: var(--md-sys-color-surface-container-lowest);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+}
+.ayon-shell-th:hover {
+  background: var(--md-sys-color-surface-container-lowest-hover);
+}
+.ayon-shell-th-content {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 100%;
+  padding: 0 32px 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: 600;
+}
+.ayon-shell-table td {
+  background: var(--color-table-row);
+  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+}
+.ayon-shell-table tbody tr:hover td {
+  background: var(--color-table-row-hover);
+}
+.ayon-shell-table tbody tr.selected td {
+  background: var(--color-table-selected);
+}
+.ayon-shell-td-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  padding: 0 8px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.ayon-shell-td-content .icon {
+  font-size: 18px;
+}
+.ayon-shell-customize {
+  width: 320px;
+  flex-shrink: 0;
+  overflow: auto;
+  border-left: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+
+/* Settings > Users: the users, the user details panel at the right (UserDetail) */
+.ayon-shell-users {
+  gap: 8px;
+  padding: 8px;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+.ayon-shell-users-list {
+  flex: 1;
+  align-self: flex-start;
+  min-width: 0;
+  cursor: pointer;
+}
+.ayon-shell-user-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 420px;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.ayon-shell-user-forms {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+.ayon-shell-panel-buttons.ayon-shell-panel-buttons {
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Account > Profile (ProfilePage): AYON's tabs, the avatar and name, the profile card */
+.ayon-shell-nav-links {
+  display: flex;
+  gap: 4px;
+  padding: 4px 8px;
+  flex-shrink: 0;
+  background: var(--md-sys-color-surface-container-low);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+.ayon-shell-nav-links span {
+  padding: 6px 12px;
+  border-radius: 4px;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-nav-links span.selected {
+  background: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+}
+.ayon-shell-account {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 32px 16px;
+}
+.ayon-shell-account-forms {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin: 0 auto;
+  max-width: 960px;
+}
+.ayon-shell-account-name {
+  font-size: 18px;
+  font-weight: 600;
+}
+.ayon-shell-account-columns {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  margin-top: 16px;
+}
+.ayon-shell-account-columns > .panel,
+.ayon-shell-account-columns > div:first-child {
+  width: 440px;
+  max-width: 100%;
+}
+.ayon-shell-account-side {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 360px;
+  max-width: 100%;
+}
+.ayon-shell-card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ayon-shell-divider {
+  width: 100%;
+  margin: 8px 0;
+  border: none;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* Context: the lower panel of the stage's splitter */
+.ayon-shell-inputs {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  border-top: 1px solid var(--md-sys-color-outline-variant);
+  background: var(--md-sys-color-surface-container-low);
+}
+.ayon-shell-inputs-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-sizing: border-box;
+  height: 36px;
+  padding: 0 12px 0 8px;
+  flex-shrink: 0;
+  color: var(--md-sys-color-outline);
+  font-size: 12px;
+  font-weight: 600;
+}
+.ayon-shell-disclosure .ayon-shell-subheader code {
+  margin-left: 4px;
+  font-weight: normal;
+  color: var(--md-sys-color-outline);
+}
+.ayon-shell-slot-context {
+  padding-left: 12px;
 }

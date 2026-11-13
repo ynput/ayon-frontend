@@ -80,6 +80,8 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
             contribution={contribution}
             piece="cell"
             context={context}
+            // the cell is tagged for the slot inspector (ProjectTreeTable)
+            untagged
             loading={<div className="readonly loading" />}
             error={(error) => <CellError error={error} />}
           />

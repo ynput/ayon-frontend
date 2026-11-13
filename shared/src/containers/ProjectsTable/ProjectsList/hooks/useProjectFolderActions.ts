@@ -7,7 +7,7 @@ import {
   ProjectFolderModel,
 } from '@shared/api'
 import { getErrorMessage, handleDeleteFolders } from '@shared/util'
-import { ProjectFolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import type { ProjectFolderFormData } from '../ProjectFolderFormDialog'
 import { toast } from 'react-toastify'
 
 interface UseProjectFolderActionsProps {

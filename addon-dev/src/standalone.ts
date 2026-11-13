@@ -3,16 +3,20 @@
 // the dev server to the real server, signed in with the API key; preview fixtures are read and
 // written under dev/fixtures.
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'fs'
-import type { IncomingMessage, ServerResponse } from 'http'
+import type { ClientRequest, IncomingMessage, ServerResponse } from 'http'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import type { Plugin, ProxyOptions } from 'vite'
-import { findConnection, findPackageDir } from './project.js'
+import { contractsCode } from './contractSlots.js'
+import { HOST_PACKAGES } from './packages.js'
+import { currentApiKey, findConnection, findPackageDir, proxyApiKey } from './project.js'
 import type { AddonProject } from './project.js'
 
 export const STANDALONE_ENV = 'AYON_ADDON_STANDALONE'
 const ENTRY = '/@ayon-addon/shell-entry'
 const VIRTUAL_ENTRY = '\0ayon-addon-shell-entry'
+const CONTRACTS = '/@ayon-addon/contracts'
+const VIRTUAL_CONTRACTS = '\0ayon-addon-contracts'
 const FIXTURES_URL = '/__ayon-addon/fixtures'
 // what AYON serves itself: proxied to the server
 const PROXIED = ['/api', '/graphql', '/ws', '/addons', '/static', '/AYON.svg']
@@ -102,11 +106,22 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
     apply: (_config, { command }) => command === 'serve' && process.env[STANDALONE_ENV] === '1',
 
     config() {
-      const headers: Record<string, string> = connection.apiKey ? { 'x-api-key': connection.apiKey } : {}
+      const signIn = (proxyReq: ClientRequest, req: IncomingMessage) => {
+        const key = proxyApiKey(req.headers, () => currentApiKey(connection))
+        if (key) proxyReq.setHeader('x-api-key', key)
+      }
       const proxy: Record<string, ProxyOptions> = Object.fromEntries(
         PROXIED.map((prefix) => [
           prefix,
-          { target: connection.serverUrl, changeOrigin: true, ws: prefix === '/ws', headers },
+          {
+            target: connection.serverUrl,
+            changeOrigin: true,
+            ws: prefix === '/ws',
+            configure: (server) => {
+              server.on('proxyReq', signIn)
+              server.on('proxyReqWs', signIn)
+            },
+          },
         ]),
       )
       const sharedDir = findPackageDir(root, SHARED)
@@ -130,7 +145,14 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
           exclude: LINKED,
           // all known up front: a dependency found while the page loads re-optimizes and reloads
           // it. The addon's are found by scanning from its manifest (pieces are imports of it).
-          include: [...new Set([...sharedEntries, ...shellImports(root)])],
+          // AYON's packages too: a contract package's previews may be a build that imports them
+          include: [
+            ...new Set([
+              ...sharedEntries,
+              ...shellImports(root),
+              ...HOST_PACKAGES.filter((pkg) => findPackageDir(root, pkg)),
+            ]),
+          ],
           entries: [manifest],
         },
       }
@@ -138,9 +160,11 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
 
     resolveId(id) {
       if (id === ENTRY) return VIRTUAL_ENTRY
+      if (id === CONTRACTS) return VIRTUAL_CONTRACTS
     },
 
     load(id) {
+      if (id === VIRTUAL_CONTRACTS) return contractsCode(root, project.name)
       if (id !== VIRTUAL_ENTRY) return
       const shellOptions = {
         addon: { name: project.name, version: project.version, remote },
@@ -151,8 +175,9 @@ export const standalonePlugin = (options: StandaloneOptions): Plugin => {
         ...globalStyles(root).map((css) => `import ${JSON.stringify(css)}`),
         `import '@ynput/ayon-addon-dev/shell/style.css'`,
         `import manifest from ${JSON.stringify(`/${manifest}`)}`,
+        `import { contracts, contractProblems } from ${JSON.stringify(CONTRACTS)}`,
         `import { startShell } from '@ynput/ayon-addon-dev/shell'`,
-        `startShell({ ...${JSON.stringify(shellOptions)}, manifest })`,
+        `startShell({ ...${JSON.stringify(shellOptions)}, manifest, contracts, contractProblems })`,
       ].join('\n')
     },
 

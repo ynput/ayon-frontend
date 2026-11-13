@@ -3,6 +3,7 @@ import type { ComponentType, CSSProperties, ErrorInfo, ReactNode } from 'react'
 import type { AnyContribution, Contribution } from './contributions'
 import { useUser } from './globals'
 import { contributionTitle, pieceContext, usePiece } from './pieces'
+import { contributionTags, useContributionTagging, useContributionWrappers } from './registry'
 import type { Loader, SlotMap, SlotName } from './slots'
 import { SlotReactContext } from './SlotContextInstance'
 
@@ -95,7 +96,17 @@ export interface ContributionViewProps<S extends SlotName> {
   loading?: ReactNode
   /** replaces the default error box */
   error?: (error: Error) => ReactNode
+  /**
+   * the host tags the element around it itself (a table cell): no tagging wrapper. Without it, a
+   * wrapper with `display: contents` carries the slot inspector's tags while they are on, and
+   * stays without them while the inspector is available (`setContributionWrappers`)
+   */
+  untagged?: boolean
 }
+
+// the slot inspector's tags around a contribution: `display: contents`, so the layout around it
+// sees the contribution's own elements
+const contentsStyle: CSSProperties = { display: 'contents' }
 
 interface PieceProps {
   loader: Loader<unknown> | undefined
@@ -134,10 +145,14 @@ export const ContributionView = <S extends SlotName>({
   piece = 'component',
   loading = null,
   error,
+  untagged,
 }: ContributionViewProps<S>) => {
   const anyContribution = contribution as unknown as AnyContribution
   const { slot } = anyContribution
   const user = useUser()
+  const tagged = useContributionTagging() && !untagged
+  // while the inspector is available the wrapper stays, so switching the tags doesn't remount
+  const wrapped = (useContributionWrappers() || tagged) && !untagged
   // nothing renders without the user, so every piece can rely on `user`
   const value = useMemo(
     () => (user ? pieceContext(anyContribution, context as object, user) : undefined),
@@ -149,8 +164,9 @@ export const ContributionView = <S extends SlotName>({
   )
   const loader = anyContribution[piece] as Loader<unknown> | undefined
 
-  if (!active) return <>{loading}</>
-  return (
+  const view = !active ? (
+    <>{loading}</>
+  ) : (
     <ContributionErrorBoundary key={anyContribution.key} contribution={anyContribution} fallback={error}>
       <SlotReactContext.Provider value={active}>
         <Piece
@@ -162,5 +178,11 @@ export const ContributionView = <S extends SlotName>({
         />
       </SlotReactContext.Provider>
     </ContributionErrorBoundary>
+  )
+  if (!wrapped) return view
+  return (
+    <div style={contentsStyle} data-ayon-wrap="" {...(tagged ? contributionTags(anyContribution) : undefined)}>
+      {view}
+    </div>
   )
 }

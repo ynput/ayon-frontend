@@ -126,6 +126,8 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
             id={MENU_ID}
+            // its menu holds the projectList.menuItem slot (slot inspector)
+            data-ayon-trigger="projectList.menuItem"
             className={clsx('list-menu', { active: isOpen })}
           />
           <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">

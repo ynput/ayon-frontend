@@ -43,6 +43,19 @@ export interface HostComponents {
   EntityTable?: ComponentType<EntityTableProps>
 }
 
+/**
+ * Internal, for the standalone dev shell only: AYON never sets it. Tells the shell the context each
+ * slot passes, for its Context panel: `SlotOutlet` calls `useOutletReport` (a hook) on every render,
+ * `useSlotMenuItems` calls `menuBuilt` when a menu of the slot is built (it opens). Without it,
+ * both work exactly as in AYON.
+ */
+export interface DevSlots {
+  /** a `SlotOutlet` of the slot renders with this context */
+  useOutletReport?: (slot: string, context: unknown) => void
+  /** a menu of the slot was built (it opens): its context and the keys of its contributions */
+  menuBuilt?: (slot: string, context: unknown, contributions: string[]) => void
+}
+
 export interface HostImplementation {
   useUser?: () => AddonUser | undefined
   /** the same user outside React: `run` and `menu` pieces get it in their context */
@@ -63,6 +76,8 @@ export interface HostImplementation {
   /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
   useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
+  /** @internal the dev shell's slot reports (`DevSlots`); never set by AYON */
+  devSlots?: DevSlots
 }
 
 let host: HostImplementation = {}
