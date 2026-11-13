@@ -1,5 +1,7 @@
 import { ENTITY_COLUMN_IDS, getColumnLabel } from '@shared/containers'
-import type { ParentColumnDefinition } from '@shared/containers'
+import type { EntityType, ParentColumnDefinition } from '@shared/containers'
+
+export const VP_PARENT_SCOPES: EntityType[] = ['folder', 'product', 'task']
 
 export const VP_PARENT_COLUMNS: ParentColumnDefinition[] = [
   {
