@@ -61,8 +61,7 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
         />
       </StyledSection>
       <StyledSection>
-        <h4>Representations</h4>
-        <RepresentationsList entities={entities} />
+        <RepresentationsList entities={entities} title="Representations" />
       </StyledSection>
     </StyledContainer>
   )
