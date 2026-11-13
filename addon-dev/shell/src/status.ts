@@ -6,7 +6,8 @@ import { runContribution } from '@ynput/ayon-addon'
 import type { AnyContribution } from '@ynput/ayon-addon'
 import { getRegistry } from '@ynput/ayon-addon/host'
 import { getRecorded, getUnmatched, getUsed } from './network'
-import type { Fixture, ShellSelection, ShellStatus } from './types'
+import type { PieceEvent } from './tracking'
+import type { Fixture, PieceStatus, ShellSelection, ShellStatus } from './types'
 
 declare global {
   interface Window {
@@ -33,6 +34,27 @@ let reports: ReadonlyMap<string, readonly SlotReport[]> = new Map()
 const menus = new Map<string, SlotReport>()
 let stageReady = false
 let user: Fixture['user']
+let pieces: PieceStatus = { found: false, tracked: [], mounted: {}, everMounted: [], runs: 0 }
+
+/** The pieces of the selected contribution the shell wrapped (tracking.ts). */
+export const setTrackedPieces = (found: boolean, tracked: string[]) => {
+  pieces = { ...pieces, found, tracked }
+  publish()
+}
+
+/** What a wrapped piece reports. */
+export const reportPiece = ({ piece, event }: PieceEvent) => {
+  if (event === 'run') pieces = { ...pieces, runs: pieces.runs + 1 }
+  else {
+    const count = (pieces.mounted[piece] || 0) + (event === 'mount' ? 1 : -1)
+    pieces = {
+      ...pieces,
+      mounted: { ...pieces.mounted, [piece]: Math.max(0, count) },
+      everMounted: event === 'mount' && !pieces.everMounted.includes(piece) ? [...pieces.everMounted, piece] : pieces.everMounted,
+    }
+  }
+  publish()
+}
 
 const jsonSafe = (value: Context) =>
   JSON.parse(
@@ -138,6 +160,7 @@ function publish() {
       else if ((contribution as { run?: unknown }).run) await runContribution(contribution as never, report.context as never)
       else throw new Error('the selected contribution has no run piece')
     },
+    pieces,
   }
 }
 

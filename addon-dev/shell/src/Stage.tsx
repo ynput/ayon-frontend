@@ -33,6 +33,7 @@ import {
 } from '@ynput/ayon-frontend-shared/api'
 import {
   EntityUpdatesProvider,
+  useScopedDetailsPanel,
   useSettingsPanel,
 } from '@ynput/ayon-frontend-shared/context'
 import { DetailsPanel } from '@ynput/ayon-frontend-shared/DetailsPanel'
@@ -464,6 +465,13 @@ const DetailsPanelStage = ({ selection }: StageProps) => {
   useSlotReport('detailsPanel.menuItem', menuContext)
   useStageReady(!!project && entities.length > 0)
 
+  // the tab `ayon-addon open` is about is the one shown, once: the developer may switch away
+  const { setTab } = useScopedDetailsPanel(DETAILS_SCOPE)
+  const openedTab = selection.slot === 'detailsPanel.tab' ? findContribution(selection.slot, selection.id)?.key : undefined
+  useEffect(() => {
+    if (openedTab) setTab(openedTab as never)
+  }, [openedTab]) // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!project) return <Hint>Loading {projectName}…</Hint>
   return (
     <div className="ayon-shell-body" style={{ justifyContent: 'flex-end' }}>
@@ -562,7 +570,15 @@ const TableStage = ({ selection }: StageProps) => {
   const [popup, setPopup] = useState<Context>()
   const { contributions: toolbarItems } = useContributions('projectTable.toolbarItem')
   const sections = useAddonCustomizeSections(page)
-  const { isPanelOpen, openPanel, closePanel } = useSettingsPanel()
+  const { isPanelOpen, openPanel, closePanel, selectSetting } = useSettingsPanel()
+  // the Customize section `ayon-addon open` is about is open, once (its id: useAddonCustomizeSections)
+  const openedSection =
+    selection.slot === 'projectTable.customizeSection' ? findContribution(selection.slot, selection.id)?.key : undefined
+  useEffect(() => {
+    if (!openedSection) return
+    openPanel()
+    selectSetting(`addon:${openedSection}`)
+  }, [openedSection]) // eslint-disable-line react-hooks/exhaustive-deps
   const tableState = useMemo(() => sampleTableState(page), [page])
 
   // table.shortcut: the selected rows (else all of them) as AYON's table passes them, from the name

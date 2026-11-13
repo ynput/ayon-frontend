@@ -22,7 +22,8 @@ export interface ShellSelection {
   surface?: string
   /**
    * the contribution `ayon-addon open` (and a preview fixture) is about: its slot and its id there.
-   * The panel doesn't show it; it is what the status page's fixture and run are for.
+   * The panel doesn't list it; the stage shows it once (its tab, its Customize section) and the
+   * status page's fixture, run and piece reports are about it.
    */
   slot?: SlotName
   id?: string
@@ -77,4 +78,19 @@ export interface ShellStatus {
   fixture: () => Fixture | undefined
   /** runs the selection's menu item, shortcut or column menu item with its slot's context */
   run: () => Promise<void>
+  /** what the selected contribution's own code did (tracking.ts): `ayon-addon open` checks it rendered */
+  pieces: PieceStatus
+}
+
+/** The selected contribution's pieces: which the shell tracks, how many are mounted, how often `run` ran. */
+export interface PieceStatus {
+  /** the addon's manifest has the selected contribution (`slot` and `contribution` in the URL) */
+  found: boolean
+  tracked: string[]
+  /** per component piece: mounted now (a column has one per cell) */
+  mounted: Record<string, number>
+  /** per component piece: mounted at any time since the page loaded */
+  everMounted: string[]
+  /** calls of the `run` piece */
+  runs: number
 }

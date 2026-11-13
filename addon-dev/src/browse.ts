@@ -6,6 +6,8 @@ import { createRequire } from 'module'
 import path from 'path'
 import { pathToFileURL } from 'url'
 import type { ViteDevServer } from 'vite'
+import { expectedPiece, menuOpener, pieceProblems, playwrightLocations } from './openChecks.js'
+import type { PieceStatus } from './openChecks.js'
 import { findConnection, importFromProject, keySetupMessage } from './project.js'
 import { STANDALONE_ENV } from './standalone.js'
 
@@ -53,27 +55,43 @@ export interface BrowseResult {
   savedFixture?: string
   /** with --prune: the answers removed from the fixture */
   pruned?: number
+  /** the contribution's pieces: which mounted, how often `run` ran */
+  pieces?: PieceStatus
+  /** what it checked about the contribution that failed: not rendered, not run */
+  problems: string[]
 }
+
+export type { PieceStatus } from './openChecks.js'
 
 type Playwright = typeof import('playwright')
 
-// the addon's playwright, else the one next to this package (the ayon-frontend checkout)
 const loadPlaywright = async (root: string): Promise<Playwright> => {
   // a CommonJS package: its API is the default export
   const api = (module: Playwright & { default?: Playwright }) => module.default ?? module
-  try {
-    return api(await importFromProject<Playwright>(root, 'playwright'))
-  } catch {
+  const locations = playwrightLocations(root, import.meta.url)
+  for (const location of locations) {
+    let resolved: string
     try {
-      const require = createRequire(import.meta.url)
-      return api(await import(pathToFileURL(require.resolve('playwright')).href))
+      resolved = createRequire(location).resolve('playwright')
     } catch {
-      throw new Error(
-        'playwright is not installed: yarn add -D playwright && npx playwright install chromium',
-      )
+      continue
     }
+    return api(await import(pathToFileURL(resolved).href))
   }
+  throw new Error(
+    [
+      'playwright is not installed: yarn add -D playwright && npx playwright install chromium',
+      `  looked from: ${locations.map((location) => path.dirname(location)).join(', ')}`,
+    ].join('\n'),
+  )
 }
+
+// 127.0.0.1, not localhost: "localhost" is both 127.0.0.1 and ::1. Vite only moves on to the next
+// port when its own address is taken, so with something else on [::1]:5180 it listened on
+// 127.0.0.1:5180, printed http://localhost:5180, and the browser went to the other server (which
+// never answered: page.goto timed out). One address for both makes a busy port a busy port.
+export const DEV_HOST = '127.0.0.1'
+export const DEV_PORT = 5180
 
 const startServer = async (root: string): Promise<ViteDevServer> => {
   const vite = await importFromProject<typeof import('vite')>(root, 'vite')
@@ -81,7 +99,8 @@ const startServer = async (root: string): Promise<ViteDevServer> => {
   const server = await vite.createServer({
     root,
     logLevel: 'error',
-    server: { port: 5180, strictPort: false },
+    // the next free port when it is taken
+    server: { host: DEV_HOST, port: DEV_PORT, strictPort: false },
   })
   await server.listen()
   return server
@@ -92,6 +111,8 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
   if (mode === 'live' && !options.url && !findConnection(options.root).apiKey) {
     throw new Error(keySetupMessage(options.root))
   }
+  // before the dev server: without playwright there is nothing to stop
+  const { chromium } = await loadPlaywright(options.root)
   const server = options.url ? undefined : await startServer(options.root)
   const base = options.url || server!.resolvedUrls!.local[0]
   // the shell's URL parameters (shell/src/params.ts)
@@ -102,8 +123,10 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
   if (options.page) params.set('ctxPage', options.page)
   const url = `${base.replace(/\/$/, '')}/?${params}`
 
-  const { chromium } = await loadPlaywright(options.root)
-  const browser = await chromium.launch()
+  const browser = await chromium.launch().catch(async (error: Error) => {
+    await server?.close()
+    throw error
+  })
   const result: BrowseResult = {
     ok: false,
     mode,
@@ -114,6 +137,7 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
     errors: [],
     warnings: [],
     toasts: [],
+    problems: [],
   }
   let ready = false
   try {
@@ -141,6 +165,28 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
     await page.waitForTimeout(1000)
 
     ready = await page.evaluate(() => window.__AYON_ADDON_SHELL__?.ready === true)
+    // a menu slot: open the menu, so the screenshot shows its items
+    const opener = ready ? menuOpener(options.slot) : undefined
+    if (opener) {
+      await page
+        .locator(opener.selector)
+        .first()
+        .click({ button: opener.button, timeout: 5000 })
+        // off the button: the slot inspector's card over the menu goes
+        .then(() => page.mouse.move(1, 1))
+        .then(() => page.waitForTimeout(500))
+        .catch(() => result.warnings.push(`could not open the menu of ${options.slot} (${opener.selector})`))
+    }
+    // the contribution's component mounted (the shell selects a tab or Customize section itself)
+    const tracked = await page.evaluate(() => window.__AYON_ADDON_SHELL__?.pieces?.tracked)
+    const piece = tracked && expectedPiece(tracked)
+    if (ready && piece) {
+      await page
+        .waitForFunction((name) => !!window.__AYON_ADDON_SHELL__?.pieces.mounted[name], piece, {
+          timeout: Math.min(timeout, 10000),
+        })
+        .catch(() => undefined)
+    }
     if (options.run && ready) {
       await page.evaluate(() => window.__AYON_ADDON_SHELL__!.run())
       await page.waitForTimeout(1000)
@@ -149,8 +195,12 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
 
     const status = await page.evaluate(() => {
       const shell = window.__AYON_ADDON_SHELL__
-      return shell && { fixture: shell.fixture(), unmatched: shell.unmatched, used: shell.used }
+      return shell && { fixture: shell.fixture(), unmatched: shell.unmatched, used: shell.used, pieces: shell.pieces }
     })
+    result.pieces = status?.pieces
+    if (ready && status?.pieces) result.problems = pieceProblems(options.slot, options.id, status.pieces, options.run)
+    // a dev shell of an older @ynput/ayon-addon-dev (--url) doesn't report its pieces
+    else if (ready) result.warnings.push('the dev shell does not report whether the contribution rendered')
     result.context = status?.fixture?.context
     if (mode === 'preview') result.unmatched = status?.unmatched
     // without the box's icon name
@@ -190,6 +240,7 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
     !!result.context &&
     result.contributionErrors.length === 0 &&
     addonErrors.length === 0 &&
+    result.problems.length === 0 &&
     !(result.unmatched?.length)
   return result
 }
@@ -197,6 +248,7 @@ export const browse = async (options: BrowseOptions): Promise<BrowseResult> => {
 export const formatBrowse = (result: BrowseResult) =>
   [
     `${result.ok ? 'ok' : 'FAILED'}: ${result.slot} ${result.id} (${result.mode}) ${result.url}`,
+    ...result.problems.map((problem) => `  problem: ${problem}`),
     ...result.contributionErrors.map((error) => `  error box: ${error}`),
     ...result.errors.map((error) => `  console error: ${error.split('\n')[0]}`),
     ...result.toasts.map((toast) => `  toast: ${toast}`),
@@ -215,6 +267,7 @@ declare global {
       used: string[]
       fixture: () => { context: Record<string, unknown> } | undefined
       run: () => Promise<void>
+      pieces: PieceStatus
     }
   }
 }
