@@ -17,17 +17,6 @@ export const MENTION_REF_TYPES = [
 ] as const
 export type MentionRefType = (typeof MENTION_REF_TYPES)[number]
 
-// Which trigger is shown in front of a mention of each type
-export const MENTION_TRIGGER_BY_TYPE: Record<string, MentionTrigger> = {
-  user: '@',
-  team: '@',
-  version: '@@',
-  task: '@@@',
-}
-
-export const getMentionTrigger = (type: string): MentionTrigger =>
-  MENTION_TRIGGER_BY_TYPE[type] ?? '@'
-
 // where the mention picker opens
 export type MentionPlacement = 'inline' | 'top'
 
@@ -36,8 +25,11 @@ export interface MentionItem {
   type: string
   // entity id written to markdown, e.g. user name or task id
   id: string
-  // label shown in the editor and written to markdown
+  // label shown in the picker, also in the editor and markdown without a `mentionLabel`
   label: string
+  // shown in the editor and written to markdown, names the parents of tasks and versions:
+  // `sh010/lighting`, `sh010/renderMain/v003`
+  mentionLabel?: string
   icon?: string
   color?: string
   context?: string
@@ -56,8 +48,6 @@ export interface MentionTriggerConfig {
   title: string
   // label used in the "No ... found" message
   noun: string
-  // users are shown with a round avatar, entities with a square icon
-  isCircle?: boolean
   filters?: MentionFilter[]
 }
 
@@ -72,12 +62,41 @@ export interface MentionSource {
   triggers?: MentionTrigger[]
   config?: Partial<Record<MentionTrigger, Partial<MentionTriggerConfig>>>
   getOptions: (query: MentionQuery) => MentionItem[]
+  // search beyond the given options (e.g. the whole project), called debounced while typing,
+  // the results are listed after the matching options
+  search?: (query: MentionQuery) => Promise<MentionItem[]>
   // show a message instead of options (e.g. version mentions disabled for folders)
   getError?: (trigger: MentionTrigger) => string | null | undefined
   // limit of options shown at once
   limit?: number
   // optional custom renderer for the image part of an option
   renderOptionImage?: (option: MentionItem) => ReactNode
+  // a dialog to pick from all entities of a type, offered while the picker filters that type
+  browse?: MentionBrowse
+  // the mentions of pasted or dropped entities, in their order, null keeps the link (e.g. an
+  // entity of another project)
+  resolve?: (refs: MentionEntityRef[]) => Promise<(MentionItem | null)[]>
+}
+
+// an entity a link points to
+export interface MentionEntityRef {
+  projectName: string
+  type: string
+  id: string
+}
+
+export interface MentionBrowseProps {
+  // the filter of the picker, e.g. `task`
+  type: string
+  // the picked entities, mentioned where the trigger was typed
+  onPick: (items: MentionItem[]) => void
+  onClose: () => void
+}
+
+export interface MentionBrowse {
+  // filters the dialog can pick, e.g. folder, task, version
+  types: string[]
+  render: (props: MentionBrowseProps) => ReactNode
 }
 
 export interface MentionEventHandlers {
@@ -168,6 +187,6 @@ export interface MarkdownEditorHandle {
   setMarkdown: (markdown: string) => void
   clear: () => void
   isEmpty: () => boolean
-  // type a mention trigger at the caret and open the picker
-  insertMentionTrigger: (trigger: MentionTrigger) => void
+  // type a mention trigger at the caret and open the picker, with one of its filters on
+  insertMentionTrigger: (trigger: MentionTrigger, filter?: string) => void
 }

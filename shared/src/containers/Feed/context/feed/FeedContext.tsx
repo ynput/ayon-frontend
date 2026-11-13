@@ -15,7 +15,12 @@ import {
   teamsApi,
   useGetEntitiesChecklistsQuery,
 } from '@shared/api'
-import type { ActivityCategory, ChecklistCount, SuggestRequest, SuggestResponse } from '@shared/api'
+import type {
+  ActivityCategory,
+  ChecklistCount,
+  EntityMentionSuggestions,
+  SuggestRequest,
+} from '@shared/api'
 import { ActivityUser } from '../../helpers/groupMinorActivities'
 import { useDetailsPanelContext, type FeedFilter } from '@shared/context'
 import { getFilterActivityTypes } from '@shared/api'
@@ -84,7 +89,7 @@ export interface FeedContextType extends Omit<FeedContextProps, 'children'> {
   // team membership for current user
   userTeamNames: string[]
   // mentions data
-  mentionSuggestionsData: SuggestResponse
+  mentionSuggestionsData: EntityMentionSuggestions
   // categories data
   categories: ActivityCategory[]
   // checklists count

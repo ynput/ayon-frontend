@@ -41,7 +41,7 @@ const sortByRelevanceThenAlpha = (a, b) => {
 }
 
 // Prefixes that filter the @ mention list to a specific type
-const TYPE_PREFIXES = ['team:', 'user:']
+const TYPE_PREFIXES = ['team:', 'user:', 'task:', 'folder:', 'version:']
 
 /**
  * Parse a search string for type prefix filtering.
@@ -63,7 +63,8 @@ export const parseMentionPrefix = (search?: string) => {
   return { typeFilter: null, search }
 }
 
-const getMentionOptions = (type, values = {}, search) => {
+// `threshold`: the worst match-sorter ranking kept (default: fuzzy matches)
+const getMentionOptions = (type, values = {}, search?: string, threshold?: number) => {
   // values  = { users: function, tags: function }
 
   if (!(type in values)) return []
@@ -91,6 +92,7 @@ const getMentionOptions = (type, values = {}, search) => {
     matchSorter(options, term, {
       keys: ['label', 'context', 'keywords'],
       baseSort: baseSort,
+      ...(threshold !== undefined && { threshold }),
     })
 
   // the best match of each comma separated part first, then the second best of each, ...

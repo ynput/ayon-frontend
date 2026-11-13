@@ -479,6 +479,10 @@ export const Content = styled.div`
   .mention-team {
     cursor: default;
   }
+  /* a pasted or dropped entity until it is found */
+  .mention-pending {
+    color: var(--md-sys-color-outline);
+  }
   .md-activity-link {
     text-decoration: none;
   }
@@ -618,6 +622,14 @@ export const MentionMenuItem = styled.li`
   .suffix {
     color: var(--md-sys-color-outline);
     margin-left: auto;
+  }
+  .type {
+    color: var(--md-sys-color-outline);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+  .suffix + .type {
+    margin-left: 8px;
   }
   .hint {
     font-family: monospace;

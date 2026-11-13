@@ -358,6 +358,9 @@ DetailsPanelProps) => {
 
         if (isInputElement) return
 
+        // a dialog on top closes itself, e.g. the entity picker of a mention
+        if (target.closest('.dialog, [role="dialog"]')) return
+
         // don't trigger if the viewer is open and panel not in slideout mode
         if (isSlideOut === false && (target.closest('#viewer-dialog') || !!slideOut)) return
 

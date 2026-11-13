@@ -5,6 +5,7 @@ import { getDisplayValue, type DisplayConfig, getColumnDisplayConfig } from '../
 import { EntityIcon } from '@shared/components/EntityIcon/EntityIcon'
 import type { EntityData } from '../types/table'
 import { WRAP_MIN_ROW_HEIGHT } from '../constants'
+import { ENTITY_DRAG_PREVIEW_CLASS, useEntityDrag } from '../hooks/useEntityDrag'
 
 const Expander = styled(Button)`
   &.expander {
@@ -70,6 +71,30 @@ const StyledContent = styled.div`
       color: var(--md-sys-color-primary);
     }
   } */
+
+  /* the icon and name drag the entity, e.g. into a comment to mention it: hovered, they look
+     like what is dragged */
+  &[draggable='true'] {
+    cursor: grab;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest);
+    }
+  }
+
+  &.${ENTITY_DRAG_PREVIEW_CLASS} {
+    background-color: var(--md-sys-color-surface-container-highest);
+    padding: 2px 8px;
+
+    .count {
+      ${theme.labelMedium}
+      flex-shrink: 0;
+      padding: 0 6px;
+      border-radius: var(--border-radius-m);
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+  }
 `
 
 const StyledTextContent = styled.div`
@@ -164,6 +189,8 @@ export const EntityNameWidget = ({
   const showPathFull = getDisplayValue(columnDisplayConfig, 'path', 'full') ?? true
   const shouldShowPath = isCompact ? showPathCompact : showPathFull
 
+  const dragProps = useEntityDrag(id, entity)
+
   return (
     <StyledEntityNameWidget className={layout}>
       {isExpandable ? (
@@ -183,7 +210,7 @@ export const EntityNameWidget = ({
       ) : null}
       <StyledContentWrapper className={layout}>
         <StyledContentAbsolute>
-          <StyledContent className={layout}>
+          <StyledContent className={layout} {...dragProps}>
             <EntityIcon
               entity={{
                 entityType: entity.entityType,

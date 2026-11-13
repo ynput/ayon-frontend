@@ -1892,6 +1892,9 @@ const TD = ({
     [cellMark, rowReadOnly],
   )
 
+  // a press on the drag handle of a selected cell, which selects on mouseup unless it drags
+  const handleClickRef = useRef<{ additive: boolean; range: boolean } | null>(null)
+
   return (
     <Styled.TD
       {...props}
@@ -1923,6 +1926,7 @@ const TD = ({
       onMouseDown={(e) => {
         // Only process left clicks (button 0), ignore right clicks
         if (e.button !== 0) return
+        handleClickRef.current = null
 
         const target = e.target as HTMLElement
 
@@ -2015,6 +2019,14 @@ const TD = ({
           return
         }
 
+        // a drag handle (the entity icon of the name) drags the selected rows, so pressing it in
+        // a selected cell keeps the selection until mouseup, and the default is kept to start the drag
+        const isDragHandle = !!target.closest('[draggable="true"]')
+        if (isDragHandle && isCellSelected(cellId)) {
+          handleClickRef.current = { additive: e.metaKey || e.ctrlKey, range: e.shiftKey }
+          return
+        }
+
         // If there's an active edit on a different cell, blur it first to save changes
         if (editingCellId && editingCellId !== cellId) {
           // Find the currently editing input and blur it
@@ -2043,7 +2055,7 @@ const TD = ({
           }
 
           // Prevent default browser behavior to ensure focus stays on the cell
-          e.preventDefault()
+          if (!isDragHandle) e.preventDefault()
         }
       }}
       onMouseOver={(e) => {
@@ -2059,7 +2071,15 @@ const TD = ({
         }
       }}
       onMouseUp={() => {
+        // a click on the drag handle that did not drag
+        const handleClick = handleClickRef.current
+        handleClickRef.current = null
+        if (handleClick?.range) selectCell(cellId, handleClick.additive, true)
+        else if (handleClick) startSelection(cellId, handleClick.additive)
         endSelection(cellId)
+      }}
+      onDragStartCapture={() => {
+        handleClickRef.current = null
       }}
       onDoubleClick={(e) => {
         // Double-click is primarily handled in onMouseDown via e.detail === 2.

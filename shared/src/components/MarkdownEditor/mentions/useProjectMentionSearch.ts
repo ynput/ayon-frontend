@@ -1,0 +1,167 @@
+import { useCallback } from 'react'
+import { matchSorter, rankings } from 'match-sorter'
+import {
+  useLazySearchMentionEntitiesQuery,
+  type MentionSearchFolder,
+  type MentionSearchResult,
+  type MentionSearchType,
+} from '@shared/api'
+import { getEntityTypeIcon } from '@shared/util'
+import { getFuzzyDate } from '@shared/containers/Feed/components/ActivityDateHelpers'
+import type { MentionItem, MentionQuery, MentionSource } from '../types'
+
+// search results shown at once
+const SEARCH_LIMIT = 5
+
+interface TypeIcon {
+  name: string
+  icon?: string | null
+  color?: string | null
+}
+
+export interface ProjectMentionSearchOptions {
+  projectName?: string
+  folderTypes?: TypeIcon[]
+  taskTypes?: TypeIcon[]
+  productTypes?: TypeIcon[]
+}
+
+// the end of a folder path, enough to tell same-named entities apart
+const shortPath = (path = '', segments = 2) =>
+  path.split('/').filter(Boolean).slice(-segments).join('/')
+
+const parentPath = (path = '') => path.split('/').filter(Boolean).slice(0, -1).join('/')
+
+const folderName = (path = '') => shortPath(path, 1)
+
+const getType = (list: TypeIcon[] | undefined, name: string) =>
+  list?.find((type) => type.name === name)
+
+// a folder to mention, shown with the end of its parent path
+export const getFolderMention = (
+  folder: MentionSearchFolder,
+  folderTypes?: TypeIcon[],
+): MentionItem & { keywords: string[] } => ({
+  type: 'folder',
+  id: folder.id,
+  label: folder.label || folder.name,
+  context: shortPath(parentPath(folder.path)) || undefined,
+  icon: getType(folderTypes, folder.folderType)?.icon || getEntityTypeIcon('folder'),
+  keywords: [folder.name, folder.label || '', folder.path],
+})
+
+// mention options for found or picked folders, tasks and versions
+export const getEntityMentionItems = (
+  result: MentionSearchResult,
+  { folderTypes, taskTypes, productTypes }: Omit<ProjectMentionSearchOptions, 'projectName'>,
+): MentionItem[] => [
+  ...result.tasks.map((task) => {
+    const taskType = getType(taskTypes, task.taskType)
+    const label = task.label || task.name
+    return {
+      type: 'task',
+      id: task.id,
+      label,
+      mentionLabel: `${folderName(task.folder.path)}/${label}`,
+      context: shortPath(task.folder.path),
+      icon: taskType?.icon || getEntityTypeIcon('task'),
+      color: taskType?.color || undefined,
+    }
+  }),
+  ...result.folders.map((folder) => getFolderMention(folder, folderTypes)),
+  ...result.versions.map((version) => ({
+    type: 'version',
+    id: version.id,
+    label: version.name,
+    context: `${folderName(version.product.folder.path)}/${version.product.name}`,
+    mentionLabel: `${folderName(version.product.folder.path)}/${version.product.name}/${
+      version.name
+    }`,
+    icon: getType(productTypes, version.product.productType)?.icon || getEntityTypeIcon('version'),
+    suffix: getFuzzyDate(new Date(version.createdAt)),
+  })),
+]
+
+const SEARCH_TYPES: MentionSearchType[] = ['task', 'folder', 'version']
+
+// every searchable type, unless a picker filter picks one (users and teams are not searched)
+const getSearchTypes = ({ filter }: MentionQuery): MentionSearchType[] => {
+  if (!filter) return SEARCH_TYPES
+  return SEARCH_TYPES.filter((type) => type === filter)
+}
+
+/**
+ * Searches folders, tasks and versions across the whole project for the mention picker,
+ * `SEARCH_LIMIT` per type, the best `SEARCH_LIMIT` of them are returned.
+ * Every word has to match: `sh010 render v3` (or `sh010/render/v3`) finds version 3 of a
+ * render product in sh010.
+ */
+export const useProjectMentionSearch = ({
+  projectName,
+  folderTypes,
+  taskTypes,
+  productTypes,
+}: ProjectMentionSearchOptions): MentionSource['search'] => {
+  const [searchEntities] = useLazySearchMentionEntitiesQuery()
+
+  const search = useCallback(
+    async (query: MentionQuery): Promise<MentionItem[]> => {
+      const types = getSearchTypes(query)
+      if (!projectName || !types.length) return []
+
+      const terms = query.search.split(/[\s/]+/).filter(Boolean)
+      const result = await searchEntities(
+        { projectName, search: terms.join(' '), types, first: SEARCH_LIMIT },
+        // new versions and tasks show up the next time, the picker debounces the requests
+        false,
+      ).unwrap()
+
+      const items = getEntityMentionItems(result, { folderTypes, taskTypes, productTypes })
+
+      // best match of the last term first, keeping the server order otherwise
+      const lastTerm = terms[terms.length - 1] ?? ''
+      return matchSorter(items, lastTerm, {
+        keys: ['label', 'context'],
+        threshold: rankings.NO_MATCH,
+        baseSort: (a, b) => a.index - b.index,
+      }).slice(0, SEARCH_LIMIT)
+    },
+    [projectName, folderTypes, taskTypes, productTypes, searchEntities],
+  )
+
+  return projectName ? search : undefined
+}
+
+// mentions of entities of a type by id, in the order of the ids, missing ones left out
+export type ProjectMentionLookup = (
+  type: MentionSearchType,
+  ids: string[],
+) => Promise<MentionItem[]>
+
+/** Looks up the mentions of picked or linked folders, tasks and versions of the project. */
+export const useProjectMentionLookup = ({
+  projectName,
+  folderTypes,
+  taskTypes,
+  productTypes,
+}: ProjectMentionSearchOptions): ProjectMentionLookup | undefined => {
+  const [getEntities] = useLazySearchMentionEntitiesQuery()
+
+  const lookup = useCallback<ProjectMentionLookup>(
+    async (type, ids) => {
+      if (!projectName || !ids.length) return []
+      const result = await getEntities({
+        projectName,
+        ids,
+        types: [type],
+        first: ids.length,
+      }).unwrap()
+      return getEntityMentionItems(result, { folderTypes, taskTypes, productTypes }).sort(
+        (a, b) => ids.indexOf(a.id) - ids.indexOf(b.id),
+      )
+    },
+    [projectName, folderTypes, taskTypes, productTypes, getEntities],
+  )
+
+  return projectName ? lookup : undefined
+}
