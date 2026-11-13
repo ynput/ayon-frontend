@@ -98,6 +98,11 @@ export const Message = styled.li`
     display: none;
   }
 
+  /* the subject of an unread message stands out, like in a mail inbox */
+  &:not(.isRead) .title {
+    font-weight: 600;
+  }
+
   /* make all text grey when read */
   &.isRead {
     span:not(.icon):not(.shortcut) {

@@ -95,19 +95,27 @@ const StyledTextContent = styled.div`
     text-overflow: ellipsis;
   }
 
+  /* on one line the path gives way first, cut with an ellipsis, so the name stays readable */
   &.compact .path {
     margin-bottom: 0;
-    text-overflow: unset;
-    flex-shrink: 0 1 auto;
+    flex: 0 1000 auto;
+    min-width: 0;
   }
 
+  &.compact .path-divider {
+    color: var(--md-sys-color-outline);
+    flex-shrink: 0;
+  }
+
+  /* the name is what people scan for, the path only places it */
   .label {
     ${theme.bodyMedium}
     font-size: 14px;
+    font-weight: 600;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
-    flex: 1 1 auto;
+    flex: 0 1 auto;
     min-width: 0;
   }
 
@@ -193,11 +201,9 @@ export const EntityNameWidget = ({
               color={entity.color ? entity : undefined}
             />
             <StyledTextContent className={layout}>
-              {shouldShowPath && !isRestricted && (
-                <span className="path">
-                  {path}
-                  {isCompact && path ? '/' : ''}
-                </span>
+              {shouldShowPath && !isRestricted && <span className="path">{path}</span>}
+              {shouldShowPath && !isRestricted && isCompact && path && (
+                <span className="path-divider">/</span>
               )}
               <span className="label">{entity.label || entity.name}</span>
             </StyledTextContent>

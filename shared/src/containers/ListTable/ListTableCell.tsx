@@ -184,6 +184,7 @@ export const RowCells = <TData extends RowData>({
             key={cell.id}
             id={cellId}
             role="gridcell"
+            data-column-id={cell.column.id}
             style={{
               width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
               paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,

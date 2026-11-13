@@ -115,6 +115,11 @@ export const Cell = styled.div`
       color: var(--md-sys-color-on-primary-container);
     }
 
+    /* the selected item's name reads stronger, like the active tab */
+    .value {
+      font-weight: 600;
+    }
+
     /* update expander styles */
     .expander {
       &:hover {
