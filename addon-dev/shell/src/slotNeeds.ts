@@ -1,5 +1,6 @@
 // What Context asks for, per place of AYON (places.ts); a preview scene takes its own
-// fields instead. And which slots are menus (a preview runs their item).
+// fields instead. And which slots are menus (a preview runs their item), for AYON's slots and
+// other addons'.
 import type { AnyContribution } from '@ynput/ayon-addon'
 import type { ShellSelection } from './types'
 
@@ -46,6 +47,13 @@ const RUN: string[] = [
 ]
 
 export const isMenuSlot = (slot?: string) => !!slot && RUN.includes(slot)
+
+/**
+ * What a preview shows of a contribution to another addon's slot, from the pieces it has: its
+ * component, its dialog's content, or a button that runs it. Undefined when it has none of them.
+ */
+export const declaredSlotPiece = (contribution: AnyContribution) =>
+  (['component', 'dialog', 'run'] as const).find((piece) => typeof contribution[piece] === 'function')
 
 export const ENTITY_TYPES = ['folder', 'task', 'product', 'version'] as const
 

@@ -57,8 +57,12 @@ export interface AddonManifest {
  */
 export const defineAddon = (manifest: AddonManifest): AddonManifest => manifest
 
-/** A contribution to any slot by name. The named helpers (`studioPage`, ...) are shorthands. */
+/**
+ * A contribution to any slot by name. The named helpers (`studioPage`, ...) are shorthands. To an
+ * addon's slot at a version other than 1, pass the `slotVersion` it was built for (a contract
+ * package's helper does it).
+ */
 export const contribute = <S extends SlotName>(
   slot: S,
-  contribution: ContributionFields<S>,
+  contribution: ContributionFields<S> & { slotVersion?: number },
 ): ContributionInput<S> => ({ ...(contribution as object), slot }) as ContributionInput<S>
