@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import { Option, type UserColor } from '@ynput/ayon-react-components'
-import { AttributeData, EnumItem, EntityList, Tag, useGetAttributeListQuery } from '@shared/api'
+import { Option } from '@ynput/ayon-react-components'
+import { AttributeData, EnumItem, EntityList, useGetAttributeListQuery } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
@@ -10,7 +10,7 @@ import { entityTypeOptions } from '../components/NewListDialog/NewListDialogHelp
 const getAttributeValuesFromLists = (
   lists: EntityList[],
   attributeName: string,
-  enums?: (EnumItem & UserColor)[],
+  enums?: EnumItem[],
   type?: AttributeData['type'],
 ): Option[] => {
   const enumOptions: Option[] = []
@@ -26,7 +26,6 @@ const getAttributeValuesFromLists = (
         values: [],
         icon: enumItem.icon,
         color: enumItem.color,
-        colorLight: enumItem.colorLight,
       })
     })
   }
@@ -126,13 +125,12 @@ const useListsFilterOptions = (): Option[] => {
       })
 
       const tagValues = projectTags
-        .map((tag: Tag & UserColor) => ({
+        .map((tag) => ({
           id: tag.name,
           label: tag.name,
           type: 'string' as const,
           values: [],
           color: tag.color || null,
-          colorLight: tag.colorLight || null,
           count: tagCounts.get(tag.name) || 0,
         }))
         .sort((a, b) => b.count - a.count)

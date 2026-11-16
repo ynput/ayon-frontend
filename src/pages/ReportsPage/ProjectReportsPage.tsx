@@ -1,25 +1,22 @@
-// Wrapper around ReportsPage.
-// Shows a splash screen with PowerpackDialog when the reports addon is not installed.
+// The Reports tab without the reports addon's project.page: its legacy page (older reports
+// addon) or a splash screen with PowerpackDialog when the addon is not installed.
 
 import { FC } from 'react'
 import ReportsPage from './ReportsPage'
 import LoadingPage from '@pages/LoadingPage'
 import SplashWrapperPage from '@components/SplashWrapperPage'
+import { useGetBundleAddon } from '@shared/hooks'
 
 interface ProjectReportsPageProps {
   projectName: string
-  hasReportsAddon: boolean
-  isLoadingAccess: boolean
 }
 
-const ProjectReportsPage: FC<ProjectReportsPageProps> = ({
-  projectName,
-  hasReportsAddon,
-  isLoadingAccess,
-}) => {
-  if (isLoadingAccess) return <LoadingPage />
+const ProjectReportsPage: FC<ProjectReportsPageProps> = ({ projectName }) => {
+  const { getBundleAddonVersion, isLoading } = useGetBundleAddon()
 
-  if (hasReportsAddon) {
+  if (isLoading) return <LoadingPage />
+
+  if (getBundleAddonVersion('reports')) {
     return <ReportsPage projectName={projectName} />
   }
 

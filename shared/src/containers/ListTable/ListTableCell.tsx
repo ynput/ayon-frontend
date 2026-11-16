@@ -3,6 +3,7 @@ import { Cell, flexRender, Row, RowData } from '@tanstack/react-table'
 import * as Styled from './ListTable.styled'
 import {
   getListTableCellId,
+  isListTableGrowColumn,
   ListTableColumnAttributeData,
   ListTableDataTypeWidgets,
   ListTableWidgetRenderContext,
@@ -117,7 +118,7 @@ export const RowCells = <TData extends RowData>({
         : ''
 
     return (
-      <Styled.TD key={`${row.id}-placeholder`} style={{ width: '100%' }}>
+      <Styled.TD key={`${row.id}-placeholder`} role="gridcell" style={{ width: '100%' }}>
         <Styled.TDInner
           style={{ left: 0, paddingLeft: `calc(var(--padding-m) + ${row.depth * 16}px)` }}
         >
@@ -182,11 +183,14 @@ export const RowCells = <TData extends RowData>({
           <Styled.TD
             key={cell.id}
             id={cellId}
+            role="gridcell"
             data-column-id={cell.column.id}
             style={{
               width: `calc(var(--col-${cell.column.id}-size) * 1px)`,
               paddingRight: cellIndex === visibleCells.length - 1 ? 'var(--padding-m)' : undefined,
-              flexGrow: cellIndex === visibleCells.length - 1 ? 1 : undefined,
+              flexGrow: isListTableGrowColumn(cell.getContext().table, cell.column.id)
+                ? 1
+                : undefined,
             }}
             onDoubleClick={
               canStartTypedEdit

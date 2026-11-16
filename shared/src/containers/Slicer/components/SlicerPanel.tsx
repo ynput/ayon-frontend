@@ -1,7 +1,7 @@
-import { FC, useCallback, useMemo } from 'react'
+import { FC, useCallback, useEffect, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable/SimpleTable.types'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
@@ -28,6 +28,9 @@ import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shar
 import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
+import { getSearchMatchedRowIds } from '@shared/util'
+
+const SLOT = 'slicer.menuItem'
 
 const DropdownSkeleton = styled.div`
   height: 28px;
@@ -168,6 +171,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     getSliceSort,
     setSliceSort,
     projectName,
+    setSearchMatchesByPanel,
   } = useSlicerContext()
 
   const { refetch } = useProjectFoldersContext()
@@ -244,6 +248,25 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
   // the hierarchy panel is named after the tree, but what it lists is folders
   const searchSubject = isHierarchy ? 'Folders' : sliceTypeLabel
 
+  // a value panel's search acts like selecting every row it leaves (useSlicerPanelSelections).
+  // Rows still loading would read as no matches and empty the table, so wait for them.
+  // keyed by content: the rows are rebuilt on count updates, the matches rarely change
+  const searchMatchesKey = useMemo(() => {
+    if (isHierarchy || isLoadingSliceTableData) return null
+    return getSearchMatchedRowIds(sliceTableData, globalFilter)?.join('\n') ?? null
+  }, [isHierarchy, isLoadingSliceTableData, sliceTableData, globalFilter])
+  useEffect(() => {
+    if (searchMatchesKey === null) return
+    const ids = searchMatchesKey ? searchMatchesKey.split('\n') : []
+    setSearchMatchesByPanel((prev) => ({ ...prev, [panel.id]: ids }))
+    return () =>
+      setSearchMatchesByPanel((prev) => {
+        const rest = { ...prev }
+        delete rest[panel.id]
+        return rest
+      })
+  }, [searchMatchesKey, panel.id, setSearchMatchesByPanel])
+
   const hierarchyContextMenu = useHierarchyContextMenuItems(
     onAddToList || contextOnAddToList,
     sliceMap,
@@ -264,7 +287,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     selectedIds: string[],
     position: MenuItemPosition = 'bottom',
   ) => {
-    if (!selectedIds.length) return []
+    // the slot's example (Show slots) also shows without a selection
+    const items = selectedIds.length ? addonMenuItems : addonMenuItems.filter(isExample)
+    if (!items.length) return []
     const isHierarchy = sliceType === 'hierarchy'
     const selected = selectedIds.map((id) => {
       const row = sliceMap.get(id)
@@ -287,13 +312,14 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         }))
       : []
     const context = { projectName, sliceType, selected, entities, menu }
-    return menuItemsAt(addonMenuItems, position)
+    return menuItemsAt(items, position)
       .filter((item) => !item.in?.length || item.in.includes(menu))
       .map((item) => ({
         id: item.key,
         label: item.label,
         icon: item.icon,
         [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
+        ...contributionTags(item),
       }))
   }
   // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
@@ -450,6 +476,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               <HeaderButton
                 icon="more_horiz"
                 id={menuId}
+                data-ayon-trigger={SLOT}
                 className={clsx('slicer-menu', { active: isMenuOpen })}
                 data-tooltip="More"
                 data-tooltip-delay={0}

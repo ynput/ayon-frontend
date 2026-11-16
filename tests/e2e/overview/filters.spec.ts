@@ -26,7 +26,7 @@ test.describe('overview filters', () => {
 
     await overview.addFilter('Task', 'Status', 'In progress')
 
-    await expect(overview.filterChip('Task Status')).toContainText('In progress')
+    await overview.filters.expectChip('Task Status', 'In progress')
     await expect(overview.row('props')).toBeHidden()
     await overview.expand('sh010')
     await expect(overview.row('anim')).toBeVisible()
@@ -50,7 +50,7 @@ test.describe('overview filters', () => {
 
     await overview.addFilter('Task', 'Task Type', 'Compositing')
 
-    await expect(overview.filterChip('Task Type')).toContainText('Compositing')
+    await overview.filters.expectChip('Task Type', 'Compositing')
     await expect(overview.row('comp')).toBeVisible()
     await expect(overview.row('anim')).toBeHidden()
     await expect(overview.row('fx')).toBeHidden()
@@ -73,7 +73,7 @@ test.describe('overview filters', () => {
     })
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
-    await expect(overview.filterChip('Task Status')).toContainText('In progress')
+    await overview.filters.expectChip('Task Status', 'In progress')
     await expect(overview.row('props')).toBeHidden()
 
     await overview.removeFilter('Task Status')

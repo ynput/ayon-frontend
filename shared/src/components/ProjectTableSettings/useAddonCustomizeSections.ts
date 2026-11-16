@@ -1,6 +1,7 @@
 import { createElement, useMemo } from 'react'
 import { ContributionView, useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { SettingConfig } from '@shared/components/SettingsPanel/SettingsPanel'
 
@@ -22,6 +23,7 @@ export const useAddonCustomizeSections = (page: ProjectTablePage): SettingConfig
         id: `addon:${section.key}`,
         title: section.title,
         icon: section.icon,
+        attributes: contributionTags(section),
         component: createElement(ContributionView<'projectTable.customizeSection'>, {
           contribution: section,
           context,

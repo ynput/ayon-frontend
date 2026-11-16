@@ -10,7 +10,6 @@ export interface GridGroupHeaderProps {
   value: string
   icon?: string
   color?: string
-  colorLight?: string | null
   count?: number
   // a coloured group value shows as a pill, like the table group headers: filled for a status, tinted otherwise
   pill: PillStyle
@@ -22,7 +21,6 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
   label,
   icon,
   color,
-  colorLight,
   count,
   pill,
   isExpanded,
@@ -38,11 +36,7 @@ export const VPGridGroupHeader: FC<GridGroupHeaderProps> = ({
         <Styled.Content>
           <Button icon="expand_more" className="expand-icon" variant="text" />
           {color ? (
-            <ValuePill
-              variant={pill}
-              className="group-pill"
-              {...{ label, icon, color, colorLight }}
-            />
+            <ValuePill variant={pill} className="group-pill" {...{ label, icon, color }} />
           ) : (
             <>
               {icon && <Icon icon={icon} />}

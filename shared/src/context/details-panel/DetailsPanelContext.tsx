@@ -209,7 +209,7 @@ export const DetailsPanelProvider: React.FC<DetailsPanelProviderProps> = ({
     [panelOpenByScope],
   )
 
-  // Use localStorage to persist tab preferences by scope
+  // Use sessionStorage to persist tab preferences by scope
   const [tabsByScope, setTabByScope] = useSessionStorage<TabStateByScope>(TABS_BY_SCOPE_KEY, {})
 
   // Get the current tab for a specific scope

@@ -78,7 +78,13 @@ export const updateViewSettings = async (
     workingView,
     onSettingsChanged,
     isErrorWorkingView,
+    updateControlledSettings,
   } = viewContext
+
+  if (updateControlledSettings) {
+    updateControlledSettings(updatedSettings)
+    return
+  }
 
   if (!viewType) throw new Error('No view type provided for updating view settings')
 

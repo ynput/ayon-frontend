@@ -1,6 +1,5 @@
 import { useMemo } from 'react'
-import { useGetAttributeListQuery, type EnumItem } from '@shared/api'
-import type { UserColor } from '@ynput/ayon-react-components'
+import { useGetAttributeListQuery } from '@shared/api'
 import { usePowerpack } from '@shared/context'
 import { getAttributeIcon } from '@shared/util'
 import { generateDateOptions } from '@shared/components/SearchFilter/filterDates'
@@ -23,13 +22,7 @@ export type ProjectFilterOption = {
   icon?: string | null
   inverted?: boolean
   operator?: 'AND' | 'OR'
-  values?: {
-    id: string
-    label: string
-    icon?: string | null
-    color?: string | null
-    colorLight?: string | null
-  }[]
+  values?: { id: string; label: string; icon?: string | null; color?: string | null }[]
   allowsCustomValues?: boolean
   allowHasValue?: boolean
   allowNoValue?: boolean
@@ -94,12 +87,11 @@ export const useBuildProjectFilterOptions = (): ProjectFilterOption[] => {
 
       let values: ProjectFilterOption['values'] = []
       if (isEnum && attr.data.enum) {
-        values = attr.data.enum.map((e: EnumItem & UserColor) => ({
+        values = attr.data.enum.map((e) => ({
           id: String(e.value),
           label: String(e.label ?? e.value),
           icon: (e as any).icon ?? null,
           color: (e as any).color ?? null,
-          colorLight: e.colorLight ?? null,
         }))
       } else if (attr.data.type === 'boolean') {
         values = [

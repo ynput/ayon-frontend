@@ -58,20 +58,25 @@ export const useCreateContextMenu = (
       menuList: ContextMenuItemType[],
       ref: RefObject<{ hide: () => void }>,
     ): ContextMenuItemType[] => {
-      return menuList.filter(Boolean).map((item) => ({
-        template: (
-          <ContextMenuItem
-            key={item.label}
-            contextMenuRef={ref}
-            {...item}
-            powerLicense={powerLicense}
-            onPowerClick={setPowerpackDialog}
-          />
-        ),
-        items: item.items?.length
-          ? addTemplateToItems(item.items, ref, { powerLicense, setPowerpackDialog })
-          : undefined,
-      }))
+      // a separator is the context menu's own line, not an item
+      return menuList.filter(Boolean).map((item) =>
+        item.separator
+          ? item
+          : {
+              template: (
+                <ContextMenuItem
+                  key={item.label}
+                  contextMenuRef={ref}
+                  {...item}
+                  powerLicense={powerLicense}
+                  onPowerClick={setPowerpackDialog}
+                />
+              ),
+              items: item.items?.length
+                ? addTemplateToItems(item.items, ref, { powerLicense, setPowerpackDialog })
+                : undefined,
+            },
+      )
     },
     [powerLicense, setPowerpackDialog],
   )

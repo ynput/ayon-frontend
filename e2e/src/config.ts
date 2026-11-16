@@ -5,8 +5,8 @@ export interface AyonConfigOptions {
   /** port of the AYON frontend Playwright starts (default 3100, TEST_PORT overrides it) */
   port?: number
   /**
-   * the ayon-frontend checkout AYON is built from (default: the current folder).
-   * TEST_FRONTEND_DIR overrides it.
+   * the ayon-frontend checkout AYON is built from (default: the current folder, which only works in
+   * ayon-frontend itself). TEST_FRONTEND_DIR overrides it; an addon's suite needs one of the two.
    */
   frontendDir?: string
   /**
@@ -37,6 +37,13 @@ export const ayonConfig = (options: AyonConfigOptions = {}, ...configs: Playwrig
   // backend the frontend server proxies to
   const backendURL = process.env.TEST_BACKEND_URL || process.env.SERVER_URL || 'http://localhost:5000'
   const frontendDir = process.env.TEST_FRONTEND_DIR || options.frontendDir
+  // an addon's folder is not an ayon-frontend checkout: building there fails in a confusing way
+  if (options.addon && !frontendDir && !process.env.TEST_SERVER_URL) {
+    throw new Error(
+      'Set TEST_FRONTEND_DIR in .env.test.local to an ayon-frontend checkout with its dependencies installed, ' +
+        'outside this repo (or TEST_SERVER_URL to test a running frontend)',
+    )
+  }
 
   const webServer: NonNullable<PlaywrightTestConfig['webServer']> = []
   if (!process.env.TEST_SERVER_URL) {

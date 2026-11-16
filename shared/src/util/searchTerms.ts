@@ -56,6 +56,85 @@ export const matchSearchQuery = (haystack: string, groups: string[][]): RankingI
   return best ?? noMatch
 }
 
+// What a slicer row is searched by: its label, its name and its ancestors' labels, so a
+// child can be found by its parent path
+export const toSlicerSearchHaystack = (
+  label: string | undefined,
+  name: string | undefined,
+  parents: string[] = [],
+): string => [label, name, ...parents].join(' ')
+
+interface SearchableFolder {
+  id: string
+  parentId?: string | null
+  name: string
+  label?: string | null
+}
+
+// The top-most folders the hierarchy slicer search matches. A match on a parent label also
+// matches every descendant, so the descendants of a match are left out: the match covers
+// them. null when the query is empty, so callers can tell "no search" from "no matches".
+export const getSearchMatchedFolderIds = (
+  folders: SearchableFolder[],
+  query: string,
+): string[] | null => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return null
+
+  const ids = new Set(folders.map((folder) => folder.id))
+  const childrenOf = new Map<string, SearchableFolder[]>()
+  const roots: SearchableFolder[] = []
+  for (const folder of folders) {
+    if (!folder.parentId || !ids.has(folder.parentId)) {
+      roots.push(folder)
+      continue
+    }
+    const siblings = childrenOf.get(folder.parentId)
+    if (siblings) siblings.push(folder)
+    else childrenOf.set(folder.parentId, [folder])
+  }
+
+  const matched: string[] = []
+  const stack = roots.map((folder) => ({ folder, parents: [] as string[] }))
+  while (stack.length) {
+    const { folder, parents } = stack.pop()!
+    const label = folder.label || folder.name
+    if (matchSearchQuery(toSlicerSearchHaystack(label, folder.name, parents), groups).passed) {
+      matched.push(folder.id)
+      continue
+    }
+    const childParents = [...parents, label]
+    for (const child of childrenOf.get(folder.id) ?? []) {
+      stack.push({ folder: child, parents: childParents })
+    }
+  }
+  return matched
+}
+
+interface SearchableRow {
+  id: string
+  name?: string | null
+  label?: string | null
+  parents?: string[]
+  subRows?: SearchableRow[]
+}
+
+// The rows of a slicer panel its search leaves, at any depth. null when the query is empty.
+export const getSearchMatchedRowIds = (rows: SearchableRow[], query: string): string[] | null => {
+  const groups = parseSearchQuery(query)
+  if (!groups.length) return null
+
+  const matched: string[] = []
+  const stack = [...rows]
+  while (stack.length) {
+    const row = stack.pop()!
+    const haystack = toSlicerSearchHaystack(row.label ?? undefined, row.name ?? undefined, row.parents)
+    if (matchSearchQuery(haystack, groups).passed) matched.push(row.id)
+    if (row.subRows?.length) stack.push(...row.subRows)
+  }
+  return matched
+}
+
 // best matches first
 export const filterBySearchQuery = <T>(
   items: T[],

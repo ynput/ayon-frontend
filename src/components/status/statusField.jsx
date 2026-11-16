@@ -1,24 +1,25 @@
 import React from 'react'
 import PropTypes from 'prop-types'
 import styled, { css } from 'styled-components'
-import { Icon, getReadableColor, getTextColor } from '@ynput/ayon-react-components'
+import { Icon, getTextColor } from '@ynput/ayon-react-components'
 
-const hoverStyle = css`
-  background-color: var(--md-sys-color-surface-container-low-hover);
-  color: ${({ $color, $colorLight }) =>
-    getReadableColor({ color: $color, colorLight: $colorLight })};
-`
+// text on the status colour; a status without one has a theme colour, which follows the theme
+const textOn = (color) =>
+  color.startsWith('var(') ? 'var(--md-sys-color-on-surface)' : getTextColor(color)
 
+// the whole field filled with the status colour
 const invertHoverStyle = css`
-  /* flips the bg color for text color */
   background-color: ${({ $color }) => $color};
-  color: ${({ $color }) => getTextColor($color)};
+  color: ${({ $color }) => textOn($color)};
 `
-const defaultStyle = css`
-  /* default text color */
-  color: ${({ $color, $colorLight }) =>
-    getReadableColor({ color: $color, colorLight: $colorLight })};
-  background-color: transparent;
+// filled as a whole: the block inside it has nothing to add
+const plainTextIcon = css`
+  .status-texticon {
+    background-color: transparent;
+    color: inherit;
+    padding-left: 0;
+    padding-right: 0;
+  }
 `
 
 const StatusStyled = styled.div`
@@ -49,15 +50,26 @@ const StatusStyled = styled.div`
   height: 27px;
   min-height: 27px;
 
+  /* the status colour is a block behind the icon and name, never their colour, so it reads on any surface */
   .status-texticon {
     display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 6px;
+    border-radius: var(--border-radius-m);
+    background-color: ${({ $color }) => $color};
+    color: ${({ $color }) => textOn($color)};
   }
 
   .status-text {
-    margin-left: 8px;
+    padding-right: 2px;
+    &:empty {
+      display: none;
+    }
   }
 
-  ${defaultStyle}
+  color: var(--md-sys-color-on-surface);
+  background-color: transparent;
 
   /* Styles for highlighting changed status */
   ${({ $isChanged }) =>
@@ -74,6 +86,7 @@ const StatusStyled = styled.div`
       &:hover {
         background-color: var(--md-sys-color-primary-hover);
       }
+      ${plainTextIcon}
     `}
 
   /* selecting styles */
@@ -95,6 +108,7 @@ const StatusStyled = styled.div`
     ($invert &&
       css`
         ${invertHoverStyle}
+        ${plainTextIcon}
       `)}
 
 
@@ -108,24 +122,18 @@ const StatusStyled = styled.div`
     `}
 
 
-  /* sets for hover and when active whilst open (top one) */
   &:hover {
-    /* ${hoverStyle} */
     filter: brightness(110%);
   }
 
+  /* the current status in the list */
   ${({ $isActive, $isSelecting }) =>
     $isActive &&
     $isSelecting &&
     css`
-      ${invertHoverStyle}
-
-      &:hover {
-        ${invertHoverStyle}
-      }
+      background-color: var(--md-sys-color-primary-container);
       [icon='expand_more'] {
         transform: rotate(180deg);
-        ${invertHoverStyle}
       }
     `}
 
@@ -137,6 +145,14 @@ const StatusStyled = styled.div`
 
       span {
         margin: auto;
+      }
+
+      /* the icon alone: a square block with even padding */
+      .status-texticon {
+        margin: auto;
+        padding: 2px;
+        aspect-ratio: 1;
+        justify-content: center;
       }
     `}
 `
@@ -160,7 +176,6 @@ const StatusField = ({
   const {
     shortName,
     color = 'var(--md-sys-color-surface-container-highest)',
-    colorLight,
     icon = 'help_center',
   } = statuses[value] || {}
 
@@ -172,7 +187,6 @@ const StatusField = ({
       style={{ ...style, height }}
       id={shownValue}
       $color={color}
-      $colorLight={colorLight}
       $isActive={isActive}
       $isSelecting={isSelecting}
       $isChanging={isChanging}

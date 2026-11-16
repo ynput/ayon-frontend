@@ -17,13 +17,16 @@ export const loadPiece = <T>(loader: Loader<T>): Promise<T> => {
   if (loaded.has(loader)) return Promise.resolve(loaded.get(loader) as T)
   let promise = pending.get(loader) as Promise<T> | undefined
   if (!promise) {
-    promise = loader().then((module) => {
-      if (!module || !('default' in module)) {
-        throw new Error('the file has no default export')
-      }
-      loaded.set(loader, module.default)
-      return module.default
-    })
+    // through a promise, so a loader that throws fails like one whose import fails
+    promise = Promise.resolve()
+      .then(loader)
+      .then((module) => {
+        if (!module || !('default' in module)) {
+          throw new Error('the file has no default export')
+        }
+        loaded.set(loader, module.default)
+        return module.default
+      })
     pending.set(loader, promise)
     // a failed load (network, a redeploy) is tried again next time
     promise.catch(() => pending.delete(loader))

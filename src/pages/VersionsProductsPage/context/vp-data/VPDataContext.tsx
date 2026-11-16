@@ -30,9 +30,17 @@ import {
   useQueryFilters,
   buildQueryFilters,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useViewsContext,
 } from '@shared/containers'
+import {
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+  useTableStateConsumers,
+} from '@shared/containers/ProjectTreeTable'
+import type { ProjectTableState, VersionQueryArgs } from '@ynput/ayon-addon'
 import { ExpandedState, OnChangeFn } from '@tanstack/react-table'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import {
@@ -43,13 +51,12 @@ import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containe
 import { useVPViewsContext } from '../vp-views/VPViewsContextInstance'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { toast } from 'react-toastify'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { OnSyncDataCallback, useProjectFoldersContext } from '@shared/context'
 import type { FieldStats } from '@shared/api'
 import {
   refreshActiveAndPurgeOthers,
   refreshListsMembership,
-  refreshOtherActiveQueries,
+  refreshOtherActiveQueriesOf,
 } from '@shared/api'
 import {
   DEFAULT_FEATURED_ORDER,
@@ -58,6 +65,8 @@ import {
 import useVersionsGroupBy from '../../hooks/useVersionsGroupBy'
 import { useVPColumnStats } from '../../hooks/useVPColumnStats'
 import { useAppDispatch } from '@state/store'
+import { useVPLinks } from './useVPLinks'
+import type { LinksTableData } from '@shared/containers'
 
 // Stable default filter to prevent unnecessary re-renders
 const EMPTY_FILTER: QueryFilter = { conditions: [] }
@@ -137,11 +146,16 @@ export interface VersionsDataContextValue {
   hasNextPage: boolean | undefined
   fetchNextPage: (group?: string) => void
   // grouping
-  groups: (EntityGroup & UserColor)[]
+  groups: EntityGroup[]
   // loading
   isLoading: boolean
   isFetchingNextPage: boolean
+  isFetchingGroupedVersions: boolean
   loadingProductVersions: Record<string, number> // product IDs to their version counts that are loading
+  // links
+  linksMap: Map<string, LinksTableData>
+  loadingLinksEntityIds: Set<string>
+  onLinkColumnsVisibleChange: (changes: Record<string, boolean>) => void
   onSyncData: OnSyncDataCallback
   // meta
   error: string | undefined
@@ -188,6 +202,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder,
     groupBy,
     columns,
+    showGrid,
   } = useVPViewsContext()
   const { isLoadingViews: isLoadingViewSettings } = useViewsContext()
 
@@ -246,7 +261,13 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
 
   // SLICER
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
   const isLoadingViews = isLoadingViewSettings || isLicensePending
 
   // Separate slicer filters into different types
@@ -302,6 +323,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
   const slicerFolderIds = useMemo(
     () => getFolderIdsWithoutChildren(selectedSlicerFolderIds),
@@ -359,15 +381,15 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       value: scopedTaskIds,
     }
 
-    const existingFilter = combinedTaskFilter.filterString
-      ? JSON.parse(combinedTaskFilter.filterString)
-      : { conditions: [], operator: 'and' }
-
+    // nested, so an OR filter stays OR and is ANDed with the ids as a whole
+    const existingFilter = combinedTaskFilter.filter
     return JSON.stringify({
-      conditions: [...(existingFilter.conditions || []), taskIdCondition],
+      conditions: existingFilter?.conditions?.length
+        ? [existingFilter, taskIdCondition]
+        : [taskIdCondition],
       operator: 'and',
     })
-  }, [scopedTaskIds, combinedTaskFilter.filterString])
+  }, [scopedTaskIds, combinedTaskFilter.filter])
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -411,12 +433,25 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       const countsTaskFilterString = scopedTaskIds.length
         ? JSON.stringify({
             conditions: [
-              ...(countsTaskFilter.filter?.conditions || []),
+              ...(countsTaskFilter.filter?.conditions?.length ? [countsTaskFilter.filter] : []),
               { key: 'id', operator: 'in', value: scopedTaskIds },
             ],
             operator: 'and',
           })
         : countsTaskFilter.filterString
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolderIds =
+        countsSearchFolderIds === searchFolderIds
+          ? slicerFolderIds
+          : getFolderIdsWithoutChildren(
+              resolveSlicerFolders(
+                sliceSelections,
+                entityIds.folderIds,
+                getChildFolderIds,
+                countsSearchFolderIds,
+              ).selectedFolders,
+            )
       return {
         projectName,
         versionFilter: countsVersionFilter.filterString,
@@ -424,7 +459,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         taskFilter: countsTaskFilterString,
         folderFilter: countsFolderFilter.filterString,
         representationFilter: combinedRepresentationFilter.filterString,
-        folderIds: slicerFolderIds.length ? slicerFolderIds : undefined,
+        folderIds: countsFolderIds.length ? countsFolderIds : undefined,
         versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
         productIds: scopedProductIds.length ? scopedProductIds : undefined,
         latestPerFolder,
@@ -444,6 +479,12 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       scopedProductIds,
       scopedTaskIds,
       latestPerFolder,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
+      getFolderIdsWithoutChildren,
     ],
   )
 
@@ -451,14 +492,17 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
   const sortArgs = useMemo(() => {
     const resolve = (entityType: 'version' | 'product') =>
       buildSortArgs(
-        sorting.map((sort) => {
-          const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
-          const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
-          return {
-            key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
-            desc: sort.desc,
-          }
-        }),
+        sorting
+          // saved views can hold a non-string sort id (e.g. from an older server); skip it instead of crashing
+          .filter((sort) => typeof sort.id === 'string' && sort.id)
+          .map((sort) => {
+            const key = SORT_BY_FIELD_MAP[sort.id] || getColumnSortKey(sort.id, true, 'product')
+            const isExcluded = !!key && EXCLUDED_SORT_FIELDS[entityType].includes(key)
+            return {
+              key: isExcluded ? undefined : key?.replace('attrib_', 'attrib.'),
+              desc: sort.desc,
+            }
+          }),
       )
     return { version: resolve('version'), product: resolve('product') }
   }, [sorting])
@@ -584,6 +628,63 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     [resolveEntityArguments],
   )
 
+  // what the table shows, for addon slots: the values the queries below are built from
+  const groupByDesc = columns.groupBy?.desc ?? false
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    const versionArgs: VersionQueryArgs = {
+      featuredOnly: featuredVersionFilter?.length
+        ? (featuredVersionFilter as VersionQueryArgs['featuredOnly'])
+        : undefined,
+      latestPerFolder: latestPerFolder || undefined,
+      hasReviewables: hasReviewablesFilter,
+    }
+    // the versions query uses version ids over product ids when a list panel gives both
+    const versionIds = nonEmptyIds(scopedVersionIds)
+    const ids = {
+      task: nonEmptyIds(scopedTaskIds),
+      product: versionIds ? undefined : nonEmptyIds(scopedProductIds),
+      version: versionIds,
+    }
+    return {
+      entityType: 'version',
+      filters: toTableStateFilters({
+        version: combinedVersionFilter.filter,
+        product: combinedProductFilter.filter,
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+        representation: combinedRepresentationFilter.filter,
+      }),
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedSlicerFolderIds, true)),
+      ids: ids.task || ids.product || ids.version ? ids : undefined,
+      showHierarchy: !!showProducts,
+      groupBy: groupBy ? { id: groupBy, desc: groupByDesc } : undefined,
+      queryArgs: Object.values(versionArgs).some((value) => value !== undefined)
+        ? { version: versionArgs }
+        : undefined,
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedVersionFilter.filter,
+    combinedProductFilter.filter,
+    combinedTaskFilter.filter,
+    combinedFolderFilter.filter,
+    combinedRepresentationFilter.filter,
+    selectedSlicerFolderIds,
+    getChildFolderIds,
+    scopedTaskIds,
+    scopedProductIds,
+    scopedVersionIds,
+    showProducts,
+    groupBy,
+    groupByDesc,
+    featuredVersionFilter,
+    latestPerFolder,
+    hasReviewablesFilter,
+  ])
+
   // QUERY: Get all products when showing products
   const {
     data: productsData,
@@ -591,6 +692,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: productsFetchNextPage,
     isFetchingNextPage: productsIsFetchingNextPage,
     isFetching: isFetchingProducts,
+    isLoading: isLoadingProducts,
     isUninitialized: isProductsUninitialized,
     error: productsError,
   } = useGetProductsInfiniteQuery(productArguments, {
@@ -608,6 +710,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     fetchNextPage: versionsFetchNextPage,
     isFetchingNextPage: versionsIsFetchingNextPage,
     isFetching: isFetchingVersions,
+    isLoading: isLoadingVersions,
     isUninitialized: isVersionsUninitialized,
     error: versionsError,
   } = useGetVersionsInfiniteQuery(versionArguments, {
@@ -622,22 +725,30 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     groups,
     versions: groupedVersions,
     incrementPageCount: incrementGroupPage,
+    isFetching: isFetchingGroupedVersions,
+    isLoadingGroups,
     isUninitialized: isGroupedVersionsUninitialized,
     queryArgs: groupedVersionsArgs,
   } = useVersionsGroupBy({
     projectName,
     versionFilters: combinedVersionFilter.combinedFilters,
     taskFilters: combinedTaskFilter.combinedFilters,
+    folderFilters: combinedFolderFilter.combinedFilters,
     folderFilter: combinedFolderFilter.filterString,
+    folderIds: slicerFolderIds,
     modules,
     versionArguments,
     expanded,
   })
 
-  const isLoadingTable = useQueryArgumentChangeLoading(
+  const isLoadingQueryArgs = useQueryArgumentChangeLoading(
     { ...queryArgs, featuredVersionOrder },
     isFetchingProducts || isFetchingVersions || isLoadingSlicerData,
   )
+  // switching grouping keeps the query args, so cover the source that just became active
+  const isLoadingTable =
+    isLoadingQueryArgs ||
+    (groupBy ? isLoadingGroups : showProducts ? isLoadingProducts : isLoadingVersions)
 
   // Dynamic pagination based on showProducts
   const hasNextPage = showProducts ? productsHasNextPage : versionsHasNextPage
@@ -696,6 +807,20 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     entitiesMap = groupedVersionsMap
   }
 
+  // loaded version rows: grouped, children of expanded products, or the flat list
+  const isProductsTree = showProducts && !groupBy
+  const rowVersionsMap = isProductsTree ? childVersionsMap : versionsMap
+  const rowProductsMap = isProductsTree ? productsMap : undefined
+
+  const { linksMap, loadingLinksEntityIds, onLinkColumnsVisibleChange, ...links } = useVPLinks({
+    projectName,
+    showGrid,
+    skip: isLoadingSlicerData,
+    versionsMap: rowVersionsMap,
+    productsMap: rowProductsMap,
+    entitiesMap,
+  })
+
   // Determine which products are currently loading versions
   const loadingProductVersions = useMemo(() => {
     return determineLoadingVP({
@@ -729,6 +854,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     loadingProductVersions,
     loadingProductVersionsFinished,
     childVersionsErrors,
+    linksMap,
   })
 
   const error = showProducts
@@ -760,7 +886,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (error) return
 
     if (group) {
-      incrementGroupPage(group)
+      if (!isFetchingGroupedVersions) incrementGroupPage(group)
     } else {
       fetchNextPage()
     }
@@ -790,6 +916,9 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     if (!isVersionStatsUninitialized) {
       queriesToRefresh.push({ endpointName: 'GetVersionsColumnStats', args: versionStatsArgs })
     }
+    for (const { isUninitialized, args } of links.linkQueries) {
+      if (!isUninitialized) queriesToRefresh.push({ endpointName: 'getEntityLinks', args })
+    }
 
     await Promise.all([
       ...queriesToRefresh.map(({ endpointName, args }) =>
@@ -803,11 +932,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       dispatch(refreshListsMembership(projectName)),
     ])
 
-    await Promise.all(
-      queriesToRefresh.map(({ endpointName, args }) =>
-        dispatch(refreshOtherActiveQueries(endpointName, args)),
-      ),
-    )
+    await dispatch(refreshOtherActiveQueriesOf(queriesToRefresh))
   }
 
   const value: VersionsDataContextValue = {
@@ -846,7 +971,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     childVersionsMap,
     allVersionsMap,
     productsMap,
-    entitiesMap,
+    entitiesMap: links.entitiesMap,
     hasNextPage,
     fetchNextPage: handleFetchNextPage,
     // grouping
@@ -854,11 +979,22 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     // loading
     isLoading: isLoadingTable,
     isFetchingNextPage,
+    isFetchingGroupedVersions,
     loadingProductVersions,
     onSyncData,
+    // links
+    linksMap,
+    loadingLinksEntityIds,
+    onLinkColumnsVisibleChange,
     // meta
     error,
   }
 
-  return <VersionsDataContext.Provider value={value}>{children}</VersionsDataContext.Provider>
+  return (
+    <VersionsDataContext.Provider value={value}>
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
+    </VersionsDataContext.Provider>
+  )
 }

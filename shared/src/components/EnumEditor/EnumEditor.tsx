@@ -22,7 +22,6 @@ export type AttributeData = {
   label: string
   value: string
   color?: string
-  colorLight?: string
   icon?: string
   isLabelFocused: boolean
   isNewAttribute: boolean
@@ -32,7 +31,6 @@ export type NormalizedData = {
   label: string
   value: string | number | boolean
   color?: string
-  colorLight?: string
   icon?: string
 }
 
@@ -48,21 +46,19 @@ const creator = (): AttributeData => ({
 const normalize = (data: AttributeData[]): NormalizedData[] => {
   return data
     .filter((item) => item.label !== '' && item.value !== '')
-    .map(({ label, value, icon, color, colorLight }) => {
+    .map(({ label, value, icon, color }) => {
       let normalizedValue = value
       return {
         label,
         value: normalizedValue,
         icon: icon || undefined,
         color: color || undefined,
-        // only edited next to a colour
-        colorLight: (color && colorLight) || undefined,
       }
     })
 }
 
 const denormalize = (data: NormalizedData[]): AttributeData[] => {
-  return data.map(({ label, value, icon, color, colorLight }) => {
+  return data.map(({ label, value, icon, color }) => {
     return {
       id: uniqueId(),
       isExpanded: false,
@@ -70,7 +66,6 @@ const denormalize = (data: NormalizedData[]): AttributeData[] => {
       value: value.toString(),
       icon: icon,
       color: color,
-      colorLight: colorLight,
       isLabelFocused: false,
       isNewAttribute: false,
     }

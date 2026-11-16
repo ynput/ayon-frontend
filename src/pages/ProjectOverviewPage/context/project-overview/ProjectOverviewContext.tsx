@@ -16,6 +16,7 @@ import {
   buildQueryFilters,
   useEntitiesMap,
   useSelectedFolders,
+  resolveSlicerFolders,
   scopeIdsToFolders,
   useScopedAttributeFields,
   useExpandedState,
@@ -23,11 +24,20 @@ import {
   ProjectOverviewProviderProps,
   useColumnSettingsContext,
   checkColumnVisibility,
+  ProjectTableStateContext,
+  toTableStateFilters,
+  nonEmptyIds,
+  useTableStateConsumers,
 } from '@shared/containers/ProjectTreeTable'
 import type { ContextMenuItemConstructors } from '@shared/containers/ProjectTreeTable'
 
 // Views hooks
-import { useOverviewViewSettings, useViewsContext, useViewUpdateHelper } from '@shared/containers'
+import {
+  useLinkColumnsVisibility,
+  useOverviewViewSettings,
+  useViewsContext,
+  useViewUpdateHelper,
+} from '@shared/containers'
 
 // Local context and hooks
 import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containers/Slicer'
@@ -39,8 +49,12 @@ import { useAppDispatch } from '@state/store'
 import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
 import type { MultiEntityMoveData, OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
 import { getRequestErrorString } from '@shared/util'
+import type { ProjectTableState } from '@ynput/ayon-addon'
 
-export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewProviderProps) => {
+export const ProjectOverviewProvider = ({
+  children,
+  page = 'overview',
+}: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
 
   // Get project data from the new context
@@ -56,15 +70,19 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     columnVisibility,
   } = useColumnSettingsContext()
 
-  const { sliceSelections, sliceFilters, isLicensePending } = useSlicerPanelSelections(attribFields)
+  const {
+    sliceSelections,
+    sliceFilters,
+    searchFolderIds,
+    getCountsSearchFolderIds,
+    isLicensePending,
+  } = useSlicerPanelSelections(attribFields)
 
   // filter out attribFields by scope
   const scopedAttribFields = useScopedAttributeFields({
     attribFields,
     allowedScopes: ['task', 'folder'],
   })
-
-  const page = 'overview'
 
   const [expanded, setExpanded] = useSessionStorage<ExpandedState>(
     createLocalStorageKey(page, 'expanded', projectName),
@@ -83,9 +101,6 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   const closeMoveDialog = useCallback(() => {
     setMovingEntities(null)
   }, [])
-  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
-    openMoveDialog,
-  })
 
   // view context and update helper
   const { viewSettings, isLoadingViews } = useViewsContext()
@@ -115,20 +130,14 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
-    columns,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
-  const [linksVisible, setLinksVisible] = useState(false)
+  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(
+    projectInfo.linkTypes,
+  )
 
   // entity ids currently rendered in the table's viewport, reported by ProjectTreeTable
   const [visibleEntityIds, setVisibleEntityIds] = useState<string[]>([])
-
-  const hasLinkColumn = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
-    [columns, defaultColumnVisibility],
-  )
-
-  const skipLinks = !hasLinkColumn || !linksVisible
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
@@ -186,7 +195,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
   // folderType can only be used with entity type 'folder'
   // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
   const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
-  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
+  const {
+    groups: taskGroups,
+    error: groupingError,
+    isLoading: isLoadingGroups,
+  } = useGetEntityGroups({
     groupBy: viewGroupByObj,
     projectName,
     entityType: groupingEntityType,
@@ -267,6 +280,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     slices: sliceSelections,
     entityListFolderIds: entityIds.folderIds,
     getChildFolderIds,
+    searchFolderIds,
   })
 
   // list tasks narrowed to the hierarchy panel's subtree
@@ -274,6 +288,40 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     () => scopeIdsToFolders(rawEntityIds.taskIds, parentMaps.taskFolderIds, folderScope),
     [rawEntityIds.taskIds, parentMaps, folderScope],
   )
+
+  // what the table shows, for addon slots: the values the queries below are built from
+  const hasTableStateConsumers = useTableStateConsumers()
+  const tableState = useMemo<ProjectTableState | undefined>(() => {
+    if (!hasTableStateConsumers) return undefined
+    return {
+      entityType: 'task',
+      filters: toTableStateFilters({
+        task: combinedTaskFilter.filter,
+        folder: combinedFolderFilter.filter,
+      }),
+      search: combinedTaskFilter.search || undefined,
+      // the queries send the selected roots and the server adds their descendants
+      folderIds: nonEmptyIds(getChildFolderIds(selectedFolders, true)),
+      ids: selectedTaskIds.length ? { task: selectedTaskIds } : undefined,
+      showHierarchy,
+      groupBy: viewGroupByObj,
+    }
+  }, [
+    hasTableStateConsumers,
+    combinedTaskFilter.filter,
+    combinedTaskFilter.search,
+    combinedFolderFilter.filter,
+    selectedFolders,
+    getChildFolderIds,
+    selectedTaskIds,
+    showHierarchy,
+    viewGroupByObj,
+  ])
+
+  const contextMenuItems: ContextMenuItemConstructors = useOverviewContextMenu({
+    openMoveDialog,
+    tableState,
+  })
 
   // Slicer value counts: each panel's args exclude its OWN filter (so a selected
   // value keeps its siblings' true counts) but keep every other panel's filter
@@ -303,12 +351,23 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         queryFilters: folderFilter,
         sliceFilters: otherFolderFilters,
       })
+      // a panel's own search leaving nothing must not zero its own counts
+      const countsSearchFolderIds = getCountsSearchFolderIds(sliceType)
+      const countsFolders =
+        countsSearchFolderIds === searchFolderIds
+          ? selectedFolders
+          : resolveSlicerFolders(
+              sliceSelections,
+              entityIds.folderIds,
+              getChildFolderIds,
+              countsSearchFolderIds,
+            ).selectedFolders
       return {
         projectName,
         filter: countsTaskFilter.filterString || undefined,
         folderFilter: countsFolderFilter.filterString || undefined,
         search: countsTaskFilter.search || undefined,
-        folderIds: selectedFolders.length ? selectedFolders : undefined,
+        folderIds: countsFolders.length ? countsFolders : undefined,
         taskIds: selectedTaskIds.length ? selectedTaskIds : undefined,
       }
     },
@@ -320,6 +379,11 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
       projectName,
       selectedFolders,
       selectedTaskIds,
+      getCountsSearchFolderIds,
+      searchFolderIds,
+      sliceSelections,
+      entityIds.folderIds,
+      getChildFolderIds,
     ],
   )
 
@@ -355,6 +419,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     onSyncData,
     isLoadingAll,
     isLoadingMore,
+    isLoadingMoreGroups,
     loadingTasks,
     loadingLinksEntityIds,
     error: dataError,
@@ -383,8 +448,8 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     showHierarchy,
     isFlatFolderView,
     attribFields,
-    modules,
-    skipLinks,
+    skipFolderLinks: !isLinkColumnShown('primary', 'folder'),
+    skipTaskLinks: !isLinkColumnShown('primary', 'task'),
     showComments,
     isLoadingViews: isLoadingViews || isLicensePending || isResolvingListIds,
     onCollapseAll: () => setExpanded({}),
@@ -405,8 +470,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
     <ProjectOverviewContext.Provider
       value={{
         isInitialized: isInitialized,
-        isLoading: isLoadingAll || isLoadingData,
+        isLoading: isLoadingAll || isLoadingData || isLoadingGroups,
         isLoadingMore,
+        isLoadingMoreGroups,
         loadingTasks,
         error,
         softError, // shows a warning banner but doesn't block the table from rendering
@@ -468,7 +534,7 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         toggleExpanded,
         updateExpanded,
         setExpanded,
-        setLinksVisible,
+        onLinkColumnsVisibleChange,
         loadingLinksEntityIds,
         visibleEntityIds,
         setVisibleEntityIds,
@@ -477,7 +543,9 @@ export const ProjectOverviewProvider = ({ children, modules }: ProjectOverviewPr
         closeMoveDialog,
       }}
     >
-      {children}
+      <ProjectTableStateContext.Provider value={tableState}>
+        {children}
+      </ProjectTableStateContext.Provider>
     </ProjectOverviewContext.Provider>
   )
 }

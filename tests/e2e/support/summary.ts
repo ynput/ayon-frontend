@@ -43,3 +43,16 @@ export const rowLabels = (table: Locator) =>
   table
     .locator('tbody td.name .label')
     .evaluateAll((labels) => labels.map((label) => label.textContent?.trim() ?? ''))
+
+/** The footer cell of a column, e.g. `subType` */
+export const summaryCell = (table: Locator, columnId: string) =>
+  table.locator(`tfoot td.${columnId}`)
+
+/** Hover a footer cell and return its "Breakdown" popover (heading, then label, count and percent per row) */
+export const readBreakdown = async (table: Locator, columnId: string) => {
+  const page = table.page()
+  await summaryCell(table, columnId).hover()
+  const heading = page.getByText('Breakdown', { exact: true })
+  await expect(heading).toBeVisible()
+  return heading.locator('xpath=..')
+}

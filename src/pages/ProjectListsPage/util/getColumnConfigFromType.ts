@@ -3,10 +3,9 @@ type FunctionType = (entityType?: string) => StringStringArray
 
 export const getColumnConfigFromType: FunctionType = (entityType) => {
   switch (entityType) {
+    // a version's built-in attributes are locked per row by the table (isEntityAttribLocked)
     case 'product':
-      return [['assignees', 'subType'], ['attrib']] as StringStringArray
     case 'version':
-      return [['assignees', 'subType'], ['attrib']] as StringStringArray
     case 'folder':
       return [['assignees', 'subType'], []] as StringStringArray
     case 'task':
@@ -15,7 +14,3 @@ export const getColumnConfigFromType: FunctionType = (entityType) => {
       return [['subType'], []] as StringStringArray
   }
 }
-
-// the entities' attributes can't be changed from these lists (product and version lists)
-export const isEntityAttribReadOnly = (entityType?: string) =>
-  getColumnConfigFromType(entityType)[1].includes('attrib')

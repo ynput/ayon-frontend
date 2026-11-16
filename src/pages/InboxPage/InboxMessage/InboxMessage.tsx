@@ -279,7 +279,6 @@ const InboxMessage = ({
         shortName?: string
         icon?: string
         color?: string
-        colorLight?: string
       }>
       statusChanges = (changes?.map(
         (change) => statuses.find((status) => status.name === change) || {},

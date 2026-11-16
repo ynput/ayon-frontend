@@ -34,6 +34,22 @@ test.describe('activity feed', () => {
     await expect.poll(commentBodies(api, projectName, task.id)).toEqual(['First pass looks great'])
   })
 
+  test('a click anywhere in the comment box starts typing, not only on its first line', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await setup(api, projectName)
+    const panel = await openTask(page, projectName)
+    await panel.openCommentBox()
+    await panel.commentEditor.blur()
+    await expect(panel.commentEditor).not.toBeFocused()
+
+    const box = (await panel.commentEditor.locator('../..').boundingBox())!
+    await page.mouse.click(box.x + box.width / 2, box.y + box.height - 8)
+    await expect(panel.commentEditor).toBeFocused()
+  })
+
   test('edit a comment', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
     await api.createComment(projectName, 'task', task.id, 'Typo in this coment')

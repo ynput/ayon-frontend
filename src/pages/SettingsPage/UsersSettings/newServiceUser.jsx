@@ -7,9 +7,8 @@ import ApiKeyManager from '@components/ApiKeyManager'
 import useUserMutations from '@pages/SettingsPage/UsersSettings/useUserMutations'
 import { useAddUserMutation } from '@shared/api'
 import { copyToClipboard } from '@shared/util'
-import callbackOnKeyDown from '@helpers/callbackOnKeyDown'
 import { getPlatformShortcutKey, KeyMode } from '@shared/util/platform'
-import { getRequestErrorString } from '@shared/util'
+import { getDialogKeyDown, getRequestErrorString } from '@shared/util'
 
 import UserAttribForm from './UserAttribForm'
 import { uniqueId } from 'lodash'
@@ -105,12 +104,11 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
 
   return (
     <Dialog
-      onKeyDown={(e) =>
-        callbackOnKeyDown(e, {
-          validationPassed: validateFormData(formData) == null,
-          callback: handleSubmit,
-        })
-      }
+      onKeyDown={getDialogKeyDown(() => handleSubmit(true), {
+        onClose: handleClose,
+        disabled: validateFormData(formData) != null || isCreatingUser,
+        onContinue: () => handleSubmit(false),
+      })}
       isOpen
       size="full"
       style={{
@@ -133,7 +131,7 @@ const NewServiceUser = ({ onHide, open, onSuccess }) => {
             label="Create and close"
             disabled={validateFormData(formData) != null}
             saving={isCreatingUser}
-            data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
+            data-shortcut="Enter"
           />
         </>
       }

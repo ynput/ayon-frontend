@@ -1,10 +1,7 @@
-import { useCallback, useContext } from 'react'
-import { toast } from 'react-toastify'
 import { getHost } from './hostBridge'
 import { Missing } from './layout'
-import { reportContributionError } from './pieces'
-import { SlotReactContext } from './SlotContextInstance'
 import type { AddonMenuItem } from './slots'
+import { useMenuErrorHandler } from './useContextMenu'
 
 export interface MoreMenuProps {
   /** the menu's entries: the same items a `menu` piece returns (dividers, submenus, `danger`, ...) */
@@ -48,16 +45,7 @@ export interface HostMoreMenuProps extends MoreMenuProps {
  * ```
  */
 export const MoreMenu = (props: MoreMenuProps) => {
-  const contribution = useContext(SlotReactContext)?.contribution
-  const onError = useCallback(
-    (error: unknown) => {
-      if (contribution) return reportContributionError(contribution, error)
-      const message = error instanceof Error ? error.message : String(error)
-      console.error('[addon] menu item failed', error)
-      toast.error(message)
-    },
-    [contribution],
-  )
+  const onError = useMenuErrorHandler()
   const Host = getHost().components?.MoreMenu
   return Host ? <Host {...props} onError={onError} /> : <Missing name="MoreMenu" />
 }

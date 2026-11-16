@@ -3,7 +3,6 @@ import type { ProjectModel, Status } from '@shared/api'
 import { intersectionBy } from 'lodash'
 
 type EntityStatus = Status & {
-  colorLight?: string | null
   scope?: string[]
 }
 

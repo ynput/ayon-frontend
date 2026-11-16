@@ -14,6 +14,7 @@ export const viewTypes = [
   'lists',
   'reviews',
   'reports',
+  'events',
 ] as const
 export type ViewType = (typeof viewTypes)[number] | string
 

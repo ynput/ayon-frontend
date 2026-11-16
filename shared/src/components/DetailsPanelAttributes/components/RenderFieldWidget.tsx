@@ -1,11 +1,6 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
-import {
-  Icon,
-  getMixedCounts,
-  type MixedChange,
-  type UserColor,
-} from '@ynput/ayon-react-components'
+import { Icon, getMixedCounts, type MixedChange } from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -214,12 +209,11 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
       }
 
       // Use scoped statuses/types based on field name
-      let enumOptions: EnumItem[] = attributeEnumOptions.map((item: EnumItem & UserColor) => ({
+      let enumOptions: EnumItem[] = attributeEnumOptions.map((item) => ({
         value: item.value,
         label: item.label,
         icon: getEnumItemIcon(item.icon),
         color: item.color,
-        colorLight: item.colorLight,
         group: item.group,
         hidden: item.hidden,
       }))
@@ -234,7 +228,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           label: status.name,
           icon: status.icon,
           color: status.color,
-          colorLight: status.colorLight,
         }))
       }
       if (
@@ -248,7 +241,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           label: t.name,
           icon: t.icon,
           color: t.color,
-          colorLight: t.colorLight,
         }))
       }
 
@@ -269,10 +261,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           value={valueArray}
           options={enumOptions}
           type={type}
+          // coloured values as in the tables: a status filled, a type with only its icon coloured,
+          // other values tinted
+          pill={field.name === 'status' ? 'filled' : 'tinted'}
           pt={{
             template: {
               style: { height: 32 },
               className: 'enum',
+              iconOnlyColor: ['folderType', 'taskType', 'productType'].includes(field.name),
             },
           }}
           placeholder={
@@ -285,8 +281,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}
           align="right"
-          // coloured values are pills, as in the project tables
-          pill={field.name === 'status' ? 'filled' : 'tinted'}
           enableCustomValues={field.enableCustomValues}
           isLoadingOptions={isLoadingEnum}
           search={field.enableSearch ?? enumOptions.length >= 5}

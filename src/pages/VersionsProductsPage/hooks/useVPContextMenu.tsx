@@ -10,6 +10,7 @@ import {
   getEntityViewierIds,
   useAddonEntityMenuItems,
 } from '@shared/containers'
+import { useProjectTableState } from '@shared/containers/ProjectTreeTable'
 import { useVersionsDataContext } from '../context/vp-data'
 import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { useVersionUploadContext } from '@shared/components'
@@ -107,7 +108,11 @@ export const useVPContextMenu = (callbacks?: {
             const rowSelectionCellId = getCellId(entityId, ROW_SELECTION_COLUMN_ID)
             selectedRows.add(rowSelectionCellId)
           }
-          setSelectedCells(new Set<string>([...selectedCells, ...selectedRows]))
+          // drop other checkbox cells so unrelated rows do not join the details selection
+          const bodyCells = [...selectedCells].filter(
+            (id) => parseCellId(id)?.colId !== ROW_SELECTION_COLUMN_ID,
+          )
+          setSelectedCells(new Set<string>([...bodyCells, ...selectedRows]))
         } else {
           // For table view, select the row to open details
           const rowSelectionCellId = getCellId(cell.entityId, ROW_SELECTION_COLUMN_ID)
@@ -416,8 +421,9 @@ export const useVPContextMenu = (callbacks?: {
   )
 
   // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
-  const addonTopItems = useAddonEntityMenuItems('products', 'top')
-  const addonItems = useAddonEntityMenuItems('products')
+  const tableState = useProjectTableState()
+  const addonTopItems = useAddonEntityMenuItems('products', 'top', tableState)
+  const addonItems = useAddonEntityMenuItems('products', 'bottom', tableState)
 
   return {
     showDetailsItem,

@@ -10,7 +10,7 @@ import { toggleFullscreen, toggleUpload, updateSelection, updateProduct } from '
 import ViewerComponent from './ViewerComponent'
 import ViewerDetailsPanel from './ViewerDetailsPanel'
 import * as Styled from './Viewer.styled'
-import { ViewerProvider } from '@context'
+import { AnnotationModules, useAnnotationModules, ViewerProvider } from '@context'
 
 // shared
 import { useGetViewerReviewablesQuery, useGetEntitiesDetailsPanelQuery } from '@shared/api'
@@ -34,7 +34,10 @@ interface ViewerProps {
   canOpenInNew?: boolean
 }
 
-const ViewerBody = ({ onClose }: ViewerProps) => {
+const ViewerBody = ({
+  onClose,
+  annotationModules,
+}: ViewerProps & { annotationModules: AnnotationModules }) => {
   const [theater, setTheater] = useSessionStorage('viewer-theater-mode', false)
   const {
     productId,
@@ -78,8 +81,6 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
           label: product?.productName || 'Unknown product',
           icon: product?.productType && project.getProductType(product.productType).icon,
           color: product?.productType && project.getProductType(product.productType).color,
-          colorLight:
-            product?.productType && project.getProductType(product.productType).colorLight,
         }
       })
       .sort((a, b) => a.label.localeCompare(b.label))
@@ -387,7 +388,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
   const noVersions = !versionsAndReviewables.length && !isFetchingReviewables
 
   return (
-    <ViewerProvider selectedVersionId={selectedVersion?.id}>
+    <ViewerProvider selectedVersionId={selectedVersion?.id} annotationModules={annotationModules}>
       <Styled.Container className={theater ? 'grid minimized' : 'grid'}>
         {!theater && (
           <Styled.PlayerToolbar>
@@ -409,7 +410,7 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
                   valueProps={{ className: 'product-dropdown' }}
                   tooltip="Select a product to view its versions reviewables"
                   valueIcon={selectedProduct?.icon || ''}
-                  valueColor={selectedProduct}
+                  valueColor={selectedProduct?.color}
                 />
               )}
             </>
@@ -479,15 +480,19 @@ const ViewerBody = ({ onClose }: ViewerProps) => {
 
 const Viewer = ({ onClose }: ViewerProps) => {
   const { projectName } = useAppSelector((state) => state.viewer)
+  const annotationModules = useAnnotationModules()
 
   if (!projectName) {
     console.error('No project name provided to Viewer')
     return null
   }
 
+  // the viewer mounts once its annotation modules are in (useAnnotationModules)
+  if (annotationModules.isLoading) return null
+
   return (
     <ProjectContextProvider projectName={projectName}>
-      <ViewerBody onClose={onClose} />
+      <ViewerBody onClose={onClose} annotationModules={annotationModules} />
     </ProjectContextProvider>
   )
 }

@@ -96,7 +96,7 @@ export class OverviewPage {
     await createDialog.getByLabel('Label', { exact: true }).fill(label)
   }
 
-  private async pickCreateDialogType(type: string) {
+  async pickCreateDialogType(type: string) {
     // the dialog opens the type dropdown by itself shortly after it appears (NewEntity handleShow)
     const option = this.page.locator(`.options [data-value="${type}"]`)
     await option.waitFor({ timeout: 2_000 }).catch(async () => {
@@ -158,10 +158,12 @@ export class OverviewPage {
     const options = this.page.locator('.options')
     for (const value of values) {
       const option = options.locator(`[data-value="${value}"]`).first()
-      const selected = option.locator('.selected')
-      const wasSelected = (await selected.count()) > 0
+      // single-value items are marked `.selected`, multi-select lists (assignees) show a ticked checkbox
+      const marker = option.locator('.selected, .checkbox-icon.all')
+      const isSelected = async () => (await marker.count()) > 0
+      const wasSelected = await isSelected()
       await option.click()
-      await expect(selected).toHaveCount(wasSelected ? 0 : 1)
+      await expect.poll(isSelected).toBe(!wasSelected)
     }
     await closeBy.click()
     await expect(options).toBeHidden()
@@ -174,13 +176,19 @@ export class OverviewPage {
     await confirmDeleteEntities(this.page, label)
   }
 
-  async clickCell(label: string, columnId: string, { shift = false } = {}) {
+  /** `shift` selects the range from the last selected cell, `add` adds the cell to the selection */
+  async clickCell(label: string, columnId: string, { shift = false, add = false } = {}) {
     // click the left edge: the chevron on the right of enum cells opens their dropdown straight away
     await this.cell(label, columnId).click({
       position: { x: 4, y: 4 },
-      modifiers: shift ? ['Shift'] : [],
+      modifiers: shift ? ['Shift'] : add ? ['ControlOrMeta'] : [],
     })
     await expect(this.cell(label, columnId)).toHaveClass(/selected/)
+  }
+
+  /** Clear the selected cells with the Delete key: attributes go back to the inherited value */
+  async clearSelectedCells() {
+    await this.page.keyboard.press('Delete')
   }
 
   async pickForSelectedCells(value: string) {
@@ -395,10 +403,6 @@ export class OverviewPage {
 
   async addFilter(scope: 'Task' | 'Folder', field: string, value: string) {
     await this.filters.add(scope, field, value)
-  }
-
-  filterChip(label: string) {
-    return this.filters.chip(label)
   }
 
   async removeFilter(label: string) {

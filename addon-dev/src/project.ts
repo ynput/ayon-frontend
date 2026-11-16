@@ -2,6 +2,7 @@
 // where AYON runs, and how to sign in to it.
 import { spawnSync } from 'child_process'
 import { existsSync, readFileSync, writeFileSync } from 'fs'
+import type { IncomingHttpHeaders } from 'http'
 import { createRequire } from 'module'
 import path from 'path'
 import { createInterface } from 'readline/promises'
@@ -54,6 +55,8 @@ export interface AyonConnection {
   apiKey?: string
   /** where the key came from, for messages */
   apiKeySource?: string
+  /** the file it was read from: read it again for the key as it is now (`currentApiKey`) */
+  apiKeyFile?: string
 }
 
 // the addon's env files, in order: the first one that sets a variable wins, and the shell wins over both
@@ -88,9 +91,34 @@ export const findConnection = (root = process.cwd()): AyonConnection => {
   // another server named explicitly: never send it the local stack's key
   if (workbench && !process.env.AYON_SERVER_URL && !process.env.SERVER_URL) {
     const keyFile = path.join(workbench, 'data', 'local-api-key')
-    return { serverUrl, apiKey: readFileSync(keyFile, 'utf8').trim(), apiKeySource: keyFile }
+    return { serverUrl, apiKey: readFileSync(keyFile, 'utf8').trim(), apiKeySource: keyFile, apiKeyFile: keyFile }
   }
   return { serverUrl }
+}
+
+/**
+ * The connection's key as it is now. The workbench regenerates its key file with the local stack,
+ * so a long-running command reads it again; nothing when it is gone or empty.
+ */
+export const currentApiKey = (connection: AyonConnection): string | undefined => {
+  if (!connection.apiKeyFile) return connection.apiKey
+  try {
+    return readFileSync(connection.apiKeyFile, 'utf8').trim() || undefined
+  } catch {
+    return undefined
+  }
+}
+
+/**
+ * The x-api-key the dev server adds to a request it proxies to AYON: the key as it is now (read
+ * per request, the workbench regenerates it), and none when the request is signed in already: the
+ * user signed in on the page (a bearer token, or AYON's accessToken cookie), or the page sends its
+ * own key. The server checks x-api-key before the token, so a stale key would fail every request.
+ */
+export const proxyApiKey = (headers: IncomingHttpHeaders, readKey: () => string | undefined) => {
+  if (headers.authorization || headers['x-api-key']) return undefined
+  if (/(?:^|;\s*)accessToken=/.test(headers.cookie || '')) return undefined
+  return readKey()
 }
 
 // the .env that requireApiKey writes: the server, and the key when the user gave one

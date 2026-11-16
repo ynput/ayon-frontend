@@ -1,6 +1,6 @@
 import { expect, test } from '../fixtures'
 import { confirmDeleteCounts, OverviewPage } from '../pages/OverviewPage'
-import { dialog } from '@ynput/ayon-e2e'
+import { dialog, toast } from '@ynput/ayon-e2e'
 
 test.describe('project overview', () => {
   test('create a root folder', async ({ page, api, projectName }) => {
@@ -74,6 +74,44 @@ test.describe('project overview', () => {
         ['sh020', 'Shot'],
         ['sh030', 'Shot'],
       ])
+  })
+
+  test('Shift+Enter creates a sequence and keeps the dialog open for another', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const parent = await api.createFolder(projectName, { name: 'sq030', folderType: 'Sequence' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    await overview.selectRow('sq030')
+
+    await overview.openCreate('sequence')
+    const createDialog = overview.createDialog()
+    await expect(createDialog).toBeVisible()
+    await overview.pickCreateDialogType('Shot')
+    // FLAG: the folder sequence form's labels are not associated with their inputs
+    const base = createDialog.locator('input#base')
+    await base.fill('sh010')
+    await createDialog.locator('input#length').fill('2')
+    await base.press('Shift+Enter')
+
+    await expect(toast(page, '2 folders created')).toBeVisible()
+    await expect(base).toBeFocused()
+    await base.fill('sh030')
+    await base.press('Enter')
+    await expect(createDialog).toBeHidden()
+
+    await expect
+      .poll(async () =>
+        (
+          await api.listFolders(projectName)
+        )
+          .filter((f) => f.parentId === parent.id)
+          .map((f) => f.name)
+          .sort(),
+      )
+      .toEqual(['sh010', 'sh020', 'sh030', 'sh040'])
   })
 
   test('rename a folder', async ({ page, api, projectName }) => {
@@ -152,6 +190,44 @@ test.describe('project overview', () => {
     await expect
       .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
       .not.toContain(doomed.id)
+  })
+
+  test('a folder expanded while tasks are loading shows its tasks', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    for (const [shot, task] of [
+      ['sh010', 'anim'],
+      ['sh020', 'comp'],
+    ]) {
+      const folder = await api.createFolder(projectName, { name: shot, folderType: 'Shot' })
+      await api.createTask(projectName, { folderId: folder.id, name: task, taskType: 'Generic' })
+    }
+    // hold the tasks of the first expanded folder until the second one is expanded
+    let release: () => void = () => {}
+    const released = new Promise<void>((resolve) => (release = resolve))
+    let held = false
+    await page.route('**/graphql', async (route) => {
+      if (!held && route.request().postDataJSON()?.operationName === 'GetTasksByParent') {
+        held = true
+        await released
+      }
+      await route.continue()
+    })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    const firstTasks = page.waitForRequest(
+      (r) => r.url().includes('/graphql') && r.postDataJSON()?.operationName === 'GetTasksByParent',
+    )
+    await overview.expand('sh010')
+    await firstTasks
+
+    await overview.expand('sh020')
+    release()
+
+    await expect(overview.row('anim')).toBeVisible()
+    await expect(overview.row('comp')).toBeVisible()
   })
 })
 

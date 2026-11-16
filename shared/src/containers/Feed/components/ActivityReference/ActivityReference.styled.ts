@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { getReadableColor, getTextColor } from '@ynput/ayon-react-components'
+import { getTagColors, getTextColor } from '@ynput/ayon-react-components'
 
 export const Reference = styled.span<{
   $variant: 'surface' | 'filled' | 'text'
@@ -21,29 +21,44 @@ export const Reference = styled.span<{
 
   &,
   .icon {
-    color: ${({ $categoryPrimary }) =>
-      getReadableColor($categoryPrimary) || 'var(--md-sys-color-primary)'};
+    color: var(--md-sys-color-primary);
   }
 
   .icon {
     font-size: 20px;
   }
 
-  background-color: ${({ $categorySecondary }) =>
-    $categorySecondary || 'var(--md-sys-color-surface-container-high)'};
+  background-color: var(--md-sys-color-surface-container-high);
 
   &:hover {
-    background-color: ${({ $categorySecondary }) =>
-      $categorySecondary
-        ? `color-mix(in srgb, ${$categorySecondary} 85%, white)`
-        : 'var(--md-sys-color-surface-container-high-hover)'};
+    background-color: var(--md-sys-color-surface-container-high-hover);
   }
   &:active {
-    background-color: ${({ $categorySecondary }) =>
-      $categorySecondary
-        ? `color-mix(in srgb, ${$categorySecondary} 70%, white)`
-        : 'var(--md-sys-color-surface-container-high-active)'};
+    background-color: var(--md-sys-color-surface-container-high-active);
   }
+
+  /* in a comment with a category: tinted with its colour like a tag, never coloured text
+     (the filled variant has its own fill below) */
+  ${({ $categoryPrimary, $variant }) => {
+    if (!$categoryPrimary || $variant === 'filled') return ''
+    const colors = getTagColors($categoryPrimary)
+    return css`
+      &,
+      .icon {
+        color: ${colors.text};
+      }
+      ${$variant === 'surface' &&
+      css`
+        background-color: ${colors.background};
+        box-shadow: inset 0 0 0 1px ${colors.border};
+        &:hover,
+        &:active {
+          background-color: ${colors.background};
+          filter: brightness(0.97);
+        }
+      `}
+    `
+  }}
 
   ${({ $variant }) =>
     $variant === 'text' &&

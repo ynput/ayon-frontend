@@ -25,6 +25,11 @@ export interface StudioPageLayoutProps {
 export interface ProjectListProps {
   /** let the user select several projects */
   multiSelect?: boolean
+  /**
+   * An "All projects" row in its own section at the top, selected by default. While it is selected
+   * `selectedProjects` is empty, so the page reads an empty selection as every project.
+   */
+  allProjects?: boolean
 }
 
 /** Shown instead of a host component this AYON frontend doesn't provide. */

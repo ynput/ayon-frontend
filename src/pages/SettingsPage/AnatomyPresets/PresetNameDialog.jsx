@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import { Dialog, SaveButton, InputText } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 
 const PresetNameDialog = ({
   isOpen,
@@ -32,6 +33,7 @@ const PresetNameDialog = ({
       header={title}
       isOpen={isOpen}
       onClose={onClose}
+      onKeyDown={getDialogKeyDown(handleSave, { onClose, disabled: !value.trim() })}
       size="sm"
       footer={
         <SaveButton

@@ -1,4 +1,4 @@
-import { Icon, getReadableColor } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import { Fragment, forwardRef } from 'react'
 import styled from 'styled-components'
 import { ValuePill } from '@shared/components/ValuePill'
@@ -31,16 +31,16 @@ const ValueText = styled.span`
 interface FieldValueProps extends React.HTMLAttributes<HTMLDivElement> {
   icon?: string
   color?: string
-  colorLight?: string | null
   name: string
-  items?: { label: string; color?: string; colorLight?: string | null }[]
-  // a coloured value shows as a pill, like in the tables: filled for a status, tinted for others and for items
+  items?: { label: string; color?: string }[]
+  // a coloured value is a pill, like in the tables: filled for a status, tinted (the default) for others
+  // and for items; the colour is never the text colour
   pill?: PillStyle
 }
 
 export const FieldValue = forwardRef<HTMLDivElement, FieldValueProps>(
-  ({ icon, color, colorLight, name, items, pill, ...props }, ref) => {
-    if (pill && items?.some((item) => item.color)) {
+  ({ icon, color, name, items, pill, ...props }, ref) => {
+    if (items?.some((item) => item.color)) {
       return (
         <Value {...props} ref={ref}>
           {items.map((item, index) => (
@@ -50,22 +50,22 @@ export const FieldValue = forwardRef<HTMLDivElement, FieldValueProps>(
       )
     }
 
-    if (pill && color) {
+    if (color) {
       return (
         <Value {...props} ref={ref}>
-          <ValuePill variant={pill} label={name} {...{ icon, color, colorLight }} />
+          <ValuePill variant={pill ?? 'tinted'} label={name} {...{ icon, color }} />
         </Value>
       )
     }
 
     return (
       <Value {...props} ref={ref}>
-        {icon && <Icon icon={icon} style={{ color: getReadableColor({ color, colorLight }) }} />}
+        {icon && <Icon icon={icon} />}
         <ValueText title={name}>
           {items
             ? items.map((item, index) => (
                 <Fragment key={index}>
-                  <span style={{ color: getReadableColor(item) }}>{item.label}</span>
+                  <span>{item.label}</span>
                   {index < items.length - 1 && ', '}
                 </Fragment>
               ))

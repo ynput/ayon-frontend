@@ -1,4 +1,5 @@
 import { Page } from '@playwright/test'
+import { dialog } from '@ynput/ayon-e2e'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { requireAddon } from '../support/addons'
@@ -141,14 +142,16 @@ test.describe('details panel', () => {
     await search.click()
     await expect(search).toBeFocused()
     await search.fill('adhoc_tag')
+    // a new tag is created in the "Add tag" dialog, where it also gets a colour
     await search.press('Enter')
+    await dialog(page, 'Add tag').getByRole('button', { name: 'Add' }).click()
 
+    // the tags save when the dropdown closes. Escape would also close the panel, so click outside
+    await panel.attribute('Name').click()
+    await expect(panel.attribute('Tags')).toContainText('adhoc_tag')
     await expect
       .poll(async () => (await api.getTask(projectName, task.id)).tags)
       .toEqual(['adhoc_tag'])
-    // Escape would also close the panel, so the dropdown is closed by clicking outside
-    await panel.attribute('Name').click()
-    await expect(panel.attribute('Tags')).toContainText('adhoc_tag')
   })
 
   test('search subtasks for all words of any comma separated part', async ({

@@ -4,7 +4,6 @@
 
 import type { GroupCountsMap } from '@shared/api'
 import type { EntityGroup } from '@shared/api'
-import type { UserColor } from '@ynput/ayon-react-components'
 import { TableGroupBy } from '../context'
 import { EditorTaskNode, EntitiesMap, EntityMap, ProjectTableAttribute, TableRow } from '../types'
 import { useGetEntityTypeData } from './useGetEntityTypeData'
@@ -18,7 +17,6 @@ export type GroupData = {
   value: string
   label: string
   color?: string
-  colorLight?: string | null
   icon?: string
   img?: string
   count?: number
@@ -41,7 +39,7 @@ const valueToStringArray = (value?: any): string[] =>
 const getGroupData = (
   groupById: string,
   groupValue: string,
-  groups?: (EntityGroup & UserColor)[],
+  groups?: EntityGroup[],
   groupCounts?: GroupCountsMap,
   groupCountsComplete?: boolean,
 ): GroupData => {
@@ -53,7 +51,6 @@ const getGroupData = (
         value: group.value,
         label: group.label || group.value,
         color: group.color,
-        colorLight: group.colorLight,
         icon: group.icon,
         count: group.count,
         img: groupById === 'assignees' ? `/api/users/${group.value}/avatar` : undefined,
@@ -131,7 +128,6 @@ const defaultEntityToGroupRow = (
 
   row.primary.icon = typeData?.icon || null
   row.primary.color = typeData?.color || null
-  row.primary.colorLight = typeData?.colorLight || null
 
   return {
     ...row,
@@ -233,7 +229,11 @@ const useBuildGroupByTableData = ({
       }
 
       const canHaveUngrouped =
-        groupBy.id === 'tags' || groupBy.id === 'assignees' || groupBy.id.startsWith('attrib.')
+        groupBy.id === 'tags' ||
+        groupBy.id === 'assignees' ||
+        // folder groups come from the cached folder list, which can miss a folder's first version
+        groupBy.id === 'folderId' ||
+        groupBy.id.startsWith('attrib.')
       if (canHaveUngrouped) getUnGroupedGroup()
 
       for (const [, entity] of entities) {
@@ -249,6 +249,12 @@ const useBuildGroupByTableData = ({
           // folderType is nested under folder for task entities (from TaskPropsFragment)
           groupValues = valueToStringArray(
             (entity as EditorTaskNode & { folder?: { folderType?: string } }).folder?.folderType,
+          )
+        } else if (groupBy.id === 'folderId' && 'product' in entity) {
+          // versions reach their folder through the product
+          groupValues = valueToStringArray(
+            (entity as EditorTaskNode & { product?: { folder?: { id?: string } } }).product?.folder
+              ?.id,
           )
         } else {
           groupValues = valueToStringArray(entity[groupBy.id as keyof EntityMap])
@@ -327,9 +333,11 @@ const useBuildGroupByTableData = ({
       })
 
       // filter out empty groups — Ungrouped has no server count, keep it reachable
+      // an undefined count means stats haven't arrived yet, not an empty group
       const nonEmptyGroups = groupsList.filter(
         (group) =>
-          (group.group?.count ?? 0) > 0 ||
+          group.group?.count === undefined ||
+          group.group.count > 0 ||
           (group.subRows?.length ?? 0) > 0 ||
           group.group?.value === UNGROUPED_VALUE,
       )

@@ -197,11 +197,13 @@ const CommentInput: FC<CommentInputProps> = ({
   const hostFormatFrame = commentFrameLink?.formatFrame
   const formatFrame =
     hostFormatFrame ?? ((frame: number) => formatVersionFrame(frame, annotationFrameStart))
-  // typed frames are shown with the version offset, store them relative again
+  // typed frames are shown with the version offset, store them relative again.
+  // The offset can put the first media frame at zero or below, so accept signed frames here
+  // and let toStoredFrameRange reject anything before the first stored frame.
   const parseFrameInput = (value: string) =>
     hostFormatFrame
       ? parseFrameRange(value)
-      : toStoredFrameRange(parseFrameRange(value), annotationFrameStart)
+      : toStoredFrameRange(parseFrameRange(value, { signed: true }), annotationFrameStart)
   const frameLinkLabel = frameLink
     ? frameLink.endFrame > frameLink.startFrame
       ? `${formatFrame(frameLink.startFrame)}-${formatFrame(frameLink.endFrame)}`
@@ -804,7 +806,11 @@ const isEmpty =
     <ActivityCategorySelect
       value={category}
       categories={categoryOptions}
-      onChange={(c) => setCategory(c)}
+      onChange={(c) => {
+        setCategory(c)
+        // back to typing; after the dropdown has closed, it focuses its own button
+        requestAnimationFrame(() => editorRef.current?.focus())
+      }}
       isCompact={isEditing}
       hasPowerpack={hasLicense}
       onPowerFeature={onPowerFeature}

@@ -5,11 +5,10 @@ import { parseCellId } from '@shared/containers/ProjectTreeTable'
 import type { OperationWithRowId } from '@shared/containers/ProjectTreeTable'
 import type { ContextMenuItemConstructor } from '@shared/containers/ProjectTreeTable/hooks/useCellContextMenu'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
-import { confirmDelete, getRequestErrorString } from '@shared/util'
+import { confirmDelete, getRequestErrorString, isEntityAttribLocked } from '@shared/util'
 import useTableQueriesHelper from '@pages/ProjectOverviewPage/hooks/useTableQueriesHelper'
 import { useListValuesContext } from '../context/list-values'
 import { toListValuesItem } from '../listValues/listItemValueSources'
-import { isEntityAttribReadOnly } from '../util/getColumnConfigFromType'
 import type { ListValueActionsHost, ListValuesItem } from '../listValues/types'
 import type { ListItemsMap } from '../context/list-items-data/ListItemsDataContext'
 
@@ -17,6 +16,7 @@ type Props = {
   projectName: string
   listId?: string
   entityType?: string // the list's
+  attribFields: { name: string; builtin?: boolean | null }[]
   listItemsMap: ListItemsMap
   canEditList: boolean
 }
@@ -32,6 +32,7 @@ const useListValueActions = ({
   projectName,
   listId,
   entityType,
+  attribFields,
   listItemsMap,
   canEditList,
 }: Props) => {
@@ -40,12 +41,21 @@ const useListValueActions = ({
   const [getListItems] = useLazyGetListItemsQuery()
   const { updateEntities } = useTableQueriesHelper({ projectName })
 
+  // attributes that can't be applied to the list's entities (a version's built-in ones)
+  const isAttribLocked = useCallback(
+    (attrib: string) =>
+      isEntityAttribLocked(
+        entityType,
+        attribFields.find((field) => field.name === attrib),
+      ),
+    [entityType, attribFields],
+  )
+
   const host = useMemo<ListValueActionsHost | undefined>(() => {
     if (!listId || !canEditList) return undefined
     return {
       listId,
       context: rules,
-      canEditEntities: !isEntityAttribReadOnly(entityType),
       getItem: (rowId) => {
         const item = listItemsMap.get(rowId)
         return item && toListValuesItem(item)
@@ -75,6 +85,10 @@ const useListValueActions = ({
           .catch((error) => Promise.reject(readableError(error)))
       },
       updateEntities: async (items) => {
+        const locked = [
+          ...new Set(items.flatMap((item) => Object.keys(item.attrib).filter(isAttribLocked))),
+        ]
+        if (locked.length) throw new Error(`Read-only on ${entityType}s: ${locked.join(', ')}`)
         const operations: OperationWithRowId[] = items.map((item) => ({
           type: 'update',
           entityType: item.entityType as OperationWithRowId['entityType'],
@@ -111,6 +125,7 @@ const useListValueActions = ({
   }, [
     listId,
     entityType,
+    isAttribLocked,
     canEditList,
     rules,
     listItemsMap,
@@ -128,20 +143,25 @@ const useListValueActions = ({
       if (!rowId || !colId?.startsWith('attrib_') || !listItemsMap.has(rowId)) return []
       return [{ rowId, attrib: colId.replace('attrib_', '') }]
     })
-    return cells.length ? module.getCellMenuItems(cells, host) : undefined
+    if (!cells.length) return undefined
+    // nothing is applied to the entities when a selected attribute is locked on them
+    const canEditEntities = !cells.some(({ attrib }) => isAttribLocked(attrib))
+    return module.getCellMenuItems(cells, { ...host, canEditEntities })
   }
 
   const getColumnMenuItems = useCallback(
     (attrib: string): ColumnMenuItemType[] =>
       host
-        ? module.getColumnMenuItems(attrib, host).map((item) => ({
-            id: `list-value-${item.label}`,
-            label: item.label,
-            icon: item.icon,
-            onClick: item.command,
-          }))
+        ? module
+            .getColumnMenuItems(attrib, { ...host, canEditEntities: !isAttribLocked(attrib) })
+            .map((item) => ({
+              id: `list-value-${item.label}`,
+              label: item.label,
+              icon: item.icon,
+              onClick: item.command,
+            }))
         : [],
-    [host, module],
+    [host, module, isAttribLocked],
   )
 
   return { listValueMenuItem, getColumnMenuItems }

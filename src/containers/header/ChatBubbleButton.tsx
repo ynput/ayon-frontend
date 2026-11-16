@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import HeaderButton from './HeaderButton'
+import { HeaderButton } from '@shared/components'
 import { useFeedback, SupportBubble } from '@shared/components'
 import clsx from 'clsx'
 

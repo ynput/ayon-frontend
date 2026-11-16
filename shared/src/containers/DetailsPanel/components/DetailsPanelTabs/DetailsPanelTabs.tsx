@@ -4,6 +4,7 @@ import { FC } from 'react'
 import { Button, Spacer } from '@ynput/ayon-react-components'
 import type { IconType } from '@ynput/ayon-react-components'
 import { prefetchPiece } from '@ynput/ayon-addon'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { DetailsPanelTab } from '@shared/context'
 import type { DetailsPanelEntityType } from '@shared/api'
 import { useAddonTabs } from '../../hooks/useAddonTabs'
@@ -72,6 +73,8 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           onMouseEnter={() => prefetchPiece(tab.component)}
           data-addon-tab={tab.key}
           {...iconTabProps(tab.key, tab.label)}
+          // the slot inspector's tags, while it is on
+          {...contributionTags(tab)}
         />
       ))}
       <Spacer />

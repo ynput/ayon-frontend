@@ -377,6 +377,17 @@ export const getLinkLabel = (
 export const getLinkKey = (link: Pick<LinkTypeModel, 'name'>, direction: 'in' | 'out' | string) =>
   `${link.name.replaceAll('_', '').replaceAll('-', '').replaceAll('|', '_')}_${direction}`
 
+// parent columns only show the side of the link their entity is on
+export const getScopeLinkDirections = (
+  link: Pick<LinkTypeModel, 'inputType' | 'outputType'>,
+  scope: EntityScope,
+): ('in' | 'out')[] =>
+  scope === 'primary'
+    ? ['in', 'out']
+    : (['in', 'out'] as const).filter((direction) =>
+        direction === 'out' ? link.inputType === scope : link.outputType === scope,
+      )
+
 export const getLinkColumnId = (
   link: Pick<LinkTypeModel, 'name'>,
   direction: 'in' | 'out' | string,
@@ -418,7 +429,6 @@ export type BuildTreeTableColumnsProps = {
   options: BuiltInFieldOptions
   excluded?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
-  extraColumns?: TreeTableExtraColumn[]
   groupBy?: TableGroupBy
   nameLabel?: string
   includeParents?: EntityType[]
@@ -624,7 +634,6 @@ const buildTreeTableColumns = ({
   options,
   excluded,
   excludedSorting,
-  extraColumns,
   groupBy,
   nameLabel = 'Entity',
   includeParents = [],
@@ -740,7 +749,6 @@ const buildTreeTableColumns = ({
                 icon={row.original.group.icon}
                 img={row.original.group.img}
                 color={row.original.group.color}
-                colorLight={row.original.group.colorLight}
                 count={row.original.group.count}
                 percentage={row.original.group.percentage}
                 isExpanded={row.getIsExpanded()}
@@ -925,10 +933,10 @@ const buildTreeTableColumns = ({
         // product types the anatomy does not define look like its default one, so that every
         // value in the column starts at the same place
         if (isProductType && value && !options?.some((option) => option.value === value)) {
-          const { icon, color, colorLight } = meta?.defaultProductType || {}
+          const { icon, color } = meta?.defaultProductType || {}
           options = [
             ...(options || []),
-            { value, label: value, icon: icon || getEntityTypeIcon('product'), color, colorLight },
+            { value, label: value, icon: icon || getEntityTypeIcon('product'), color },
           ]
         }
         return (
@@ -1594,6 +1602,8 @@ const buildTreeTableColumns = ({
               isReadOnly={
                 // check attrib is not read only
                 attrib.readOnly ||
+                // or locked on this entity (a version's built-in attributes)
+                !!meta?.isAttribLocked?.(type, attrib.name) ||
                 // check if there is any other reason the cell should be read only
                 meta?.readOnly?.some(
                   (id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin),
@@ -1627,30 +1637,36 @@ const buildTreeTableColumns = ({
       return attribColumn
     })
 
-  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] =>
-    links
+  const createLinkColumns = (scope: EntityScope): ColumnDef<TableRow>[] => {
+    const linkScopes: string[] = scope === 'primary' ? scopes : [scope]
+    // a parent column on a row of that type (product links on a product row) is the row itself
+    const isOwnEntity = (row: TableRow) => scope !== 'primary' && row.primary.entityType === scope
+    const getLinkEntity = (row: TableRow) =>
+      isOwnEntity(row) ? row.primary : getScopedEntity(row, scope)
+    return links
       .filter((link) => {
         // Check if the link type is excluded
         if (!isIncluded(link.linkType) || !isIncluded('link')) return false
         // Check if inputType and outputType are in scopes
-        if (!scopes.includes(link.inputType) && !scopes.includes(link.outputType)) return false
+        if (!linkScopes.includes(link.inputType) && !linkScopes.includes(link.outputType))
+          return false
         return true
       })
       .flatMap((link) =>
-        (['in', 'out'] as const).map((direction) => {
+        getScopeLinkDirections(link, scope).map((direction) => {
           const linkColumnId = getLinkColumnId(link, direction)
           const columnId =
             scope === 'primary' ? linkColumnId : getScopedColumnId(scope, linkColumnId)
           return {
             id: columnId,
             accessorFn: (row) =>
-              row.group
-                ? undefined
-                : getScopedEntity(row, scope)?.links?.[getLinkKey(link, direction)],
+              row.group ? undefined : getLinkEntity(row)?.links?.[getLinkKey(link, direction)],
             header: () => (
               <LinkColumnHeader>
-                {scope === 'primary' ? '' : `${upperFirst(scope)} `}
-                {getLinkLabel(link, direction)}{' '}
+                <span className="label">
+                  {scope === 'primary' ? '' : `${upperFirst(scope)} `}
+                  {getLinkLabel(link, direction)}
+                </span>
                 <Icon
                   icon={getEntityTypeIcon(direction === 'in' ? link.inputType : link.outputType)}
                 />
@@ -1665,10 +1681,9 @@ const buildTreeTableColumns = ({
               if (row.original.group || row.original.metaType) return null
               const { id, value } = getValueIdType(row, column.id, 'links')
               const cellValue = value?.map((v: any) => v.label)
-              const entity = getScopedEntity(row.original, scope)
+              const entity = getLinkEntity(row.original)
               if (!entity) return null
-              const isLinksLoading =
-                scope === 'primary' && !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
+              const isLinksLoading = !!table.options.meta?.loadingLinksEntityIds?.has(entity.id)
               const valueData: LinkWidgetData = {
                 links: value,
                 direction,
@@ -1691,12 +1706,14 @@ const buildTreeTableColumns = ({
                   folderId={row.original.parents?.folder?.id}
                   attributeData={{ type: 'links' }}
                   isLinksLoading={isLinksLoading}
+                  isReadOnly={scope !== 'primary' && !isOwnEntity(row.original)}
                 />
               )
             },
           }
         }),
       )
+  }
 
   const linkColumns: ColumnDef<TableRow>[] = includeLinks ? createLinkColumns('primary') : []
   const parentColumnFields = new Set([
@@ -1749,7 +1766,7 @@ const buildTreeTableColumns = ({
       }),
     )
 
-  const allColumns = [
+  return [
     ...staticColumns,
     ...parentThumbnailColumns,
     ...genericParentColumns,
@@ -1759,22 +1776,6 @@ const buildTreeTableColumns = ({
     ...linkColumns,
     ...parentLinkColumns,
   ]
-
-  // Add extra columns if provided
-  if (extraColumns) {
-    extraColumns.forEach(({ column, position = -1, after }) => {
-      const afterIndex = after ? allColumns.findIndex((c) => c.id === after) : -1
-      if (afterIndex >= 0) {
-        allColumns.splice(afterIndex + 1, 0, column)
-      } else if (position >= 0 && position < allColumns.length) {
-        allColumns.splice(position, 0, column)
-      } else {
-        allColumns.push(column)
-      }
-    })
-  }
-
-  return allColumns
 }
 
 export default buildTreeTableColumns

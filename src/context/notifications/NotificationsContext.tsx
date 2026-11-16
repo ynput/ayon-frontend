@@ -10,7 +10,7 @@ import { NotificationsContext } from './NotificationsContextInstance'
 import type { SendNotificationOptions } from './NotificationsContextInstance'
 
 type InboxNotificationMessage = {
-  summary?: { isImportant?: boolean }
+  summary?: { isImportant?: boolean; desktopEnabled?: boolean }
   description: string
 }
 
@@ -86,10 +86,12 @@ function NotificationsProvider({ children }: { children: ReactNode }) {
   usePubSub(
     'inbox.message',
     (_topic: string, message: InboxNotificationMessage) => {
-      // only show notifications for important messages
-      if (!message.summary?.isImportant) return
+      // the server can decide for this user (desktopEnabled), by default
+      // only important messages are shown
+      const { isImportant = false, desktopEnabled } = message.summary || {}
+      if (!(desktopEnabled ?? isImportant)) return
 
-      console.log('IMPORTANT MESSAGE:', message)
+      const link = isImportant ? '/inbox/important' : '/inbox/other'
 
       if (notificationSound && !document.hasFocus()) {
         // play a notification sound
@@ -107,7 +109,7 @@ function NotificationsProvider({ children }: { children: ReactNode }) {
       // show a toast instead of a desktop notification
       if (document.hasFocus()) {
         const toastConfig = {
-          onClick: () => navigate('/inbox/important'),
+          onClick: () => navigate(link),
           icon: <Icon icon={'mark_email_unread'} />,
         }
 
@@ -125,7 +127,7 @@ function NotificationsProvider({ children }: { children: ReactNode }) {
         sendNotification({
           title: title,
           body: body,
-          link: '/inbox/important',
+          link,
         })
       }
     },

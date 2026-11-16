@@ -1,6 +1,6 @@
 import { forwardRef, useEffect, useState } from 'react'
 import * as Styled from './SimpleTable.styled'
-import { Icon, IconProps, InputText, Spacer, getReadableColor } from '@ynput/ayon-react-components'
+import { Icon, IconProps, InputText, Spacer } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 
 export interface TableRowAction extends IconProps {
@@ -42,7 +42,6 @@ export interface SimpleTableCellTemplateProps extends React.HTMLAttributes<HTMLD
   icon?: string
   parents?: string[]
   iconColor?: string
-  iconColorLight?: string | null
   iconFilled?: boolean
   img?: string | null
   imgShape?: 'square' | 'circle'
@@ -84,7 +83,6 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
       icon,
       parents,
       iconColor,
-      iconColorLight,
       iconFilled,
       img,
       imgShape = 'square',
@@ -177,7 +175,7 @@ export const SimpleTableCellTemplate = forwardRef<HTMLDivElement, SimpleTableCel
             icon={icon}
             className={clsx({ filled: iconFilled }, pt?.icon?.className)}
             style={{
-              color: getReadableColor({ color: iconColor, colorLight: iconColorLight }),
+              color: iconColor,
               ...pt?.icon?.style,
             }}
             {...pt?.icon}

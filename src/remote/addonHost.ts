@@ -7,7 +7,10 @@ import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
-import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
+import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
+import { AppProjectListHost } from './AddonLayout'
+import { LazyEntityTable } from './EntityTable/LazyEntityTable'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -45,17 +48,19 @@ export const provideAddonHost = () =>
     openViewer: (target) => {
       store.dispatch(openViewer(target))
     },
+    useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
-      ProjectList: ProjectListHost,
+      ProjectList: AppProjectListHost,
       EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
+      EntityTable: LazyEntityTable,
     },
   })
 
-// Gives the package the router's navigate (navigateToEntity). Render it inside <BrowserRouter>.
+// Gives the package the router's navigate (navigate, navigateToEntity). Render it inside <BrowserRouter>.
 export const AddonHostNavigation = () => {
   const navigate = useNavigate()
   useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])

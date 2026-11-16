@@ -1,4 +1,5 @@
 import { useMemo, useRef, useEffect, CSSProperties, useCallback, UIEventHandler, FC } from 'react' // Added useCallback
+import { TABLE_ID_ATTR } from './utils/tableOwnership'
 import { useVirtualizer, VirtualItem, Virtualizer } from '@tanstack/react-virtual'
 // TanStack Table imports
 import {
@@ -32,6 +33,7 @@ import buildTreeTableColumns, {
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
+import { insertExtraColumns } from './utils/insertExtraColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
@@ -92,6 +94,7 @@ import {
   MainCountLabels,
   MainBreakdownFields,
   SummaryCellContentProps,
+  IsAttribLocked,
 } from './types'
 import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
@@ -130,12 +133,19 @@ import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
-import { getRequestErrorString } from '@shared/util'
+import { getRequestErrorString, isEntityAttribLocked } from '@shared/util'
 import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
 import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
+import {
+  useAddonColumnMenuItems,
+  type GetAddonColumnMenuItems,
+  type PrefetchAddonColumnMenuItems,
+} from './addonColumnMenu/useAddonColumnMenuItems'
+import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -156,6 +166,7 @@ declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
+    isAttribLocked?: IsAttribLocked
     projectName?: string
     updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
@@ -163,9 +174,15 @@ declare module '@tanstack/react-table' {
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
     // the anatomy's look for product types it does not define
-    defaultProductType?: { icon?: string; color?: string; colorLight?: string | null }
+    defaultProductType?: { icon?: string; color?: string }
+    getAddonColumnMenuItems?: GetAddonColumnMenuItems
+    prefetchAddonColumnMenuItems?: PrefetchAddonColumnMenuItems
   }
 }
+
+// a column an addon contributes: its header and cells tagged for the slot inspector
+const addonColumnSlot = (meta: { addonColumn?: AddonColumnMeta } | undefined) =>
+  meta?.addonColumn ? contributionTags(meta.addonColumn.contribution) : undefined
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {
@@ -187,6 +204,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   readOnly?: (DefaultColumns | string)[]
+  // attribute edits don't go to the entities (list values), so the entities' locked attributes
+  // (a version's built-in ones) stay editable
+  ignoreEntityAttribLocks?: boolean
   excludedColumns?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
@@ -233,6 +253,7 @@ export const ProjectTreeTable = ({
   onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
+  ignoreEntityAttribLocks,
   excludedColumns,
   excludedSorting,
   extraColumns,
@@ -310,6 +331,7 @@ export const ProjectTreeTable = ({
     overrideGroupBy,
     loadingLinksEntityIds,
     queryFilters,
+    tableId,
   } = useProjectTableContext()
   const isGrouping = !!groupBy || !!overrideGroupBy
 
@@ -403,6 +425,17 @@ export const ProjectTreeTable = ({
     [attribFields, writableFields, readOnly],
   )
 
+  // attributes that can't be edited on this row's entity, whatever the column
+  const isAttribLocked: IsAttribLocked = useCallback(
+    (entityType, attribName) =>
+      !ignoreEntityAttribLocks &&
+      isEntityAttribLocked(
+        entityType,
+        attribFields.find((attrib) => attrib.name === attribName),
+      ),
+    [ignoreEntityAttribLocks, attribFields],
+  )
+
   const { selectedCells } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
 
@@ -429,6 +462,7 @@ export const ProjectTreeTable = ({
           const { rowId } = parseCellId(cellId) || {}
           const cellEntity = getEntityById(rowId || '')
           if (!rowId || !cellEntity) continue
+          if (isAttrib && isAttribLocked(cellEntity.entityType, field)) continue
           const currentValue = getEntityListValue(cellEntity, fieldColumnId)
           const nextValue = applyMixedChange(currentValue, listChange)
           if (isEqual(currentValue, nextValue)) continue
@@ -457,6 +491,7 @@ export const ProjectTreeTable = ({
             continue
           }
 
+          if (isAttrib && isAttribLocked(entity.entityType, field)) continue
           if (isFieldColumn(colId) && rowId) {
             entitiesToUpdate.push({
               field: field,
@@ -478,7 +513,7 @@ export const ProjectTreeTable = ({
 
       await updateEntities(entitiesToUpdate, true)
     },
-    [updateEntities, getEntityById, selectedCells],
+    [updateEntities, getEntityById, selectedCells, isAttribLocked],
   )
 
   const columnAttribs = useMemo(
@@ -499,23 +534,42 @@ export const ProjectTreeTable = ({
   const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
   const columnOptions = useMemo(() => options, [columnOptionsKey])
 
-  const columns = useMemo(() => {
-    const baseColumns = buildTreeTableColumns({
+  const builtColumns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        scopes,
+        attribs: columnAttribs,
+        links: linkTypes,
+        includeLinks,
+        includeParents: stableIncludeParents,
+        showHierarchy,
+        isFlatFolderView,
+        options: columnOptions,
+        excluded: excludedColumns,
+        excludedSorting,
+        groupBy,
+        nameLabel: getNameLabelHeader(),
+        parentColumns,
+      }),
+    [
       scopes,
-      attribs: columnAttribs,
-      links: linkTypes,
-      includeLinks,
-      includeParents: stableIncludeParents,
+      JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
       showHierarchy,
       isFlatFolderView,
-      options: columnOptions,
-      extraColumns,
-      excluded: excludedColumns,
+      isExpandable,
+      columnOptions,
+      linkTypes,
+      includeLinks,
+      stableIncludeParents,
+      parentColumns,
+      excludedColumns,
       excludedSorting,
       groupBy,
-      nameLabel: getNameLabelHeader(),
-      parentColumns,
-    })
+    ],
+  )
+
+  const columns = useMemo(() => {
+    const baseColumns = insertExtraColumns(builtColumns, extraColumns)
 
     if (sortableRows && enableSorting) {
       return [
@@ -535,24 +589,7 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [
-    scopes,
-    JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
-    showHierarchy,
-    isFlatFolderView,
-    isExpandable,
-    columnOptions,
-    linkTypes,
-    includeLinks,
-    stableIncludeParents,
-    parentColumns,
-    extraColumns,
-    excludedColumns,
-    excludedSorting,
-    sortableRows,
-    enableSorting,
-    groupBy,
-  ])
+  }, [builtColumns, extraColumns, sortableRows, enableSorting])
 
   // Extra columns placed after another column follow it, also in a saved column order. They are
   // always shown and not saved in the column settings (visibility, order).
@@ -595,6 +632,12 @@ export const ProjectTreeTable = ({
       explicitVisibility,
     )
   }, [columnVisibility, defaultColumnVisibility, columns, placedColumnIds])
+
+  const {
+    getColumnMenuItems: getAddonColumnMenuItems,
+    prefetchColumnMenuItems: prefetchAddonColumnMenuItems,
+    dialog: addonColumnMenuDialog,
+  } = useAddonColumnMenuItems(addonPage)
 
   const table = useReactTable({
     data: showLoadingRows ? loadingRows : tableData,
@@ -659,6 +702,7 @@ export const ProjectTreeTable = ({
       projectName,
       options,
       readOnly: readOnlyColumns,
+      isAttribLocked,
       updateEntities: handleCellUpdate,
       toggleExpandAll,
       loadMoreRows: fetchNextPage,
@@ -666,6 +710,8 @@ export const ProjectTreeTable = ({
       columnsConfig,
       loadingLinksEntityIds,
       defaultProductType: projectInfo.anatomy?.product_base_types?.default,
+      getAddonColumnMenuItems,
+      prefetchAddonColumnMenuItems,
     },
   })
 
@@ -808,17 +854,24 @@ export const ProjectTreeTable = ({
     return tableData.find((r) => r.id === dndActiveId) // Use dndActiveId
   }, [dndActiveId, tableData, sortableRows])
 
+  const lastScrollTopRef = useRef(0)
+
   const combinedScrollHandler: UIEventHandler<HTMLDivElement> = useCallback(
     (e) => {
       // Call the original onScroll if provided
       onScroll?.(e)
+
+      // horizontal scroll must not load more rows
+      const scrollTop = e.currentTarget.scrollTop
+      if (scrollTop === lastScrollTopRef.current) return
+      lastScrollTopRef.current = scrollTop
 
       if (onScrollBottom) {
         const containerRefElement = e.currentTarget
         // When not grouping (or when hierarchy+slicer relies on tasksList), we trigger standard fetchNextPage
         // The table itself handles showing tasks.
         if (containerRefElement && !groupBy && (!showHierarchy || !isFlatFolderView)) {
-          const { scrollHeight, scrollTop, clientHeight } = containerRefElement
+          const { scrollHeight, clientHeight } = containerRefElement
           //once the user has scrolled within 500px of the bottom of the table, fetch more data if we can
           if (scrollHeight - scrollTop - clientHeight < 500 && !isLoading) {
             onScrollBottom(e)
@@ -826,14 +879,15 @@ export const ProjectTreeTable = ({
         }
       }
 
-      // Handle scroll-to-bottom for grouped data
       if (onScrollBottomGroupBy && groupBy) {
-        const containerRefElement = e.currentTarget
-        // look for a load more button
-        const loadMoreButton = containerRefElement?.querySelector('.load-more')
-        // get load more button id
-        const loadMoreButtonId = loadMoreButton?.getAttribute('id')
-        const groupValue = loadMoreButtonId?.split('-')[2] // assuming the id is in the format 'load-more-groupValue'
+        const { top, bottom } = e.currentTarget.getBoundingClientRect()
+        const loadMore = Array.from(
+          e.currentTarget.querySelectorAll<HTMLElement>('.load-more'),
+        ).find((el) => {
+          const rect = el.getBoundingClientRect()
+          return rect.bottom > top && rect.top - bottom < 500
+        })
+        const groupValue = loadMore?.dataset.group
         if (groupValue) {
           onScrollBottomGroupBy(groupValue)
         }
@@ -872,13 +926,22 @@ export const ProjectTreeTable = ({
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      isAttribLocked={isAttribLocked}
       visibleColumns={visibleColumns}
     >
       {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}
       {addonPage && <AddonCellShortcuts page={addonPage} containerRef={tableContainerRef} />}
+      {addonColumnMenuDialog && (
+        <AddonDialog
+          contribution={addonColumnMenuDialog.contribution}
+          context={addonColumnMenuDialog.context}
+          title={addonColumnMenuDialog.title}
+        />
+      )}
       <Styled.TableWrapper {...props}>
         <Styled.TableContainer
           ref={tableContainerRef}
+          {...{ [TABLE_ID_ATTR]: tableId }}
           style={{ height: '100%', padding: 0 }}
           onScroll={combinedScrollHandler}
           {...pt?.container}
@@ -1356,8 +1419,10 @@ const TableHeadCell = ({
     <Styled.HeaderCell
       ref={setNodeRef}
       data-column-id={column.id}
+      {...addonColumnSlot(column.columnDef.meta)}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
+        pinned: !!column.getIsPinned(),
         'last-pinned-left': column.getIsPinned() === 'left' && column.getIsLastColumn('left'),
         resizing: column.getIsResizing(),
         dragging: isDragging,
@@ -1902,7 +1967,7 @@ const TD = ({
   rowHeight,
   ...props
 }: TableCellProps) => {
-  const { getEntityById, onOpenPlayer } = useProjectTableContext()
+  const { getEntityById, onOpenPlayer, isRowReadOnly, readOnly } = useProjectTableContext()
 
   const {
     isCellSelected,
@@ -1936,12 +2001,16 @@ const TD = ({
     cell.column.id,
   )
   const cellMark = cell.row.original.cellMarks?.[cell.column.id]
-  const isRowReadOnly = !!cell.row.original.readOnly
-  const cellContext = useMemo(() => ({ mark: cellMark, isRowReadOnly }), [cellMark, isRowReadOnly])
+  const rowReadOnly = isRowReadOnly(cell.row.id)
+  const cellContext = useMemo(
+    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly }),
+    [cellMark, rowReadOnly],
+  )
 
   return (
     <Styled.TD
       {...props}
+      {...addonColumnSlot(cell.column.columnDef.meta)}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
@@ -1960,6 +2029,7 @@ const TD = ({
             isEntityExpandable(cell.row.original.primary.entityType),
           'group-header': isGroup,
           'multiple-selected': isMultipleSelected,
+          'table-readonly': readOnly,
         },
         className,
         ...borderClasses,
@@ -2038,7 +2108,7 @@ const TD = ({
             }
           }
           // other cells: start editing
-          else {
+          else if (!rowReadOnly) {
             setEditingCellId(cellId)
           }
 
@@ -2051,9 +2121,7 @@ const TD = ({
 
         // check if this is a restricted entity - prevent editing
         const isRestricted =
-          isGroup ||
-          isEntityRestricted(cell.row.original.primary.entityType) ||
-          !!cell.row.original.readOnly
+          isGroup || isEntityRestricted(cell.row.original.primary.entityType) || rowReadOnly
 
         // if clicking on an edit trigger, start editing
         if (target.closest('.' + EDIT_TRIGGER_CLASS) && !isRestricted) {

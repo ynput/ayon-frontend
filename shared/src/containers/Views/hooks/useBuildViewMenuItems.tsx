@@ -121,26 +121,63 @@ const useBuildViewMenuItems = ({
     skip: !viewType || !powerLicense,
   })
 
-  const { myViews, sharedViews, allPrivateViews } = getCustomViews({
-    viewsList: extendedViewsList,
+  // Ownership takes priority over sharing when choosing a section.
+  const [ownedViewsList, sharedViewsList, notSharedViewsList] = useMemo(() => {
+    const owned: ViewListItemModelExtended[] = []
+    const shared: ViewListItemModelExtended[] = []
+    const notShared: ViewListItemModelExtended[] = []
+    extendedViewsList.forEach((view) => {
+      if (view.isOwner) owned.push(view)
+      else if (view.sharedWithMe === false) notShared.push(view)
+      else shared.push(view)
+    })
+    return [owned, shared, notShared]
+  }, [extendedViewsList])
+
+  // The addon groups owned views by visibility; both belong in My views.
+  const { myViews, sharedViews: mySharedViews } = getCustomViews({
+    viewsList: ownedViewsList,
     onEdit,
     onSelect,
     onSave: handleEditView,
   })
 
-  const toggleSection = useCallback(
-    (id: string) => {
-      setCollapsed({ ...collapsed, [id]: !collapsed[id] })
-    },
-    [collapsed, setCollapsed],
-  )
+  const { sharedViews, allPrivateViews } = getCustomViews({
+    viewsList: sharedViewsList,
+    onEdit,
+    onSelect,
+    onSave: handleEditView,
+  })
 
-  const sections: Array<{ id: string; title: string; items: ViewItem[] }> = useMemo(() => {
+  // they are all public, so getCustomViews returns them as shared views
+  const { sharedViews: notSharedViews } = getCustomViews({
+    viewsList: notSharedViewsList,
+    onEdit,
+    onSelect,
+    onSave: handleEditView,
+  })
+
+  const sections: Array<{
+    id: string
+    title: string
+    items: ViewItem[]
+    defaultCollapsed?: boolean
+  }> = useMemo(() => {
+    const ownedItemsById = new Map([...myViews, ...mySharedViews].map((item) => [item.id, item]))
+
     return [
-      { id: 'myViews', title: `My ${viewAlias.toLowerCase()}s`, items: myViews as ViewItem[] },
+      {
+        id: 'myViews',
+        title: `My ${viewAlias.toLowerCase()}s`,
+        // Preserve the API order across private and shared views.
+        items: ownedViewsList.flatMap((view) => {
+          const item = ownedItemsById.get(view.id)
+          return item ? [item] : []
+        }),
+      },
       {
         id: 'sharedViews',
-        title: `Shared ${viewAlias.toLowerCase()}s`,
+        title: 'Shared with me',
         items: sharedViews as ViewItem[],
       },
       {
@@ -148,8 +185,34 @@ const useBuildViewMenuItems = ({
         title: `All private ${viewAlias.toLowerCase()}s`,
         items: allPrivateViews as ViewItem[],
       },
+      {
+        id: 'notSharedViews',
+        title: 'All views (admin only)',
+        items: notSharedViews as ViewItem[],
+        defaultCollapsed: true,
+      },
     ]
-  }, [myViews, sharedViews, allPrivateViews])
+  }, [
+    myViews,
+    mySharedViews,
+    ownedViewsList,
+    sharedViews,
+    allPrivateViews,
+    notSharedViews,
+    viewAlias,
+  ])
+
+  const isSectionCollapsed = useCallback(
+    (id: string) => collapsed[id] ?? !!sections.find((s) => s.id === id)?.defaultCollapsed,
+    [collapsed, sections],
+  )
+
+  const toggleSection = useCallback(
+    (id: string) => {
+      setCollapsed({ ...collapsed, [id]: !isSectionCollapsed(id) })
+    },
+    [collapsed, setCollapsed, isSectionCollapsed],
+  )
 
   const workingViewItem: ViewMenuItem = useMemo(() => {
     return {
@@ -170,7 +233,7 @@ const useBuildViewMenuItems = ({
     if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
 
     visibleSections.forEach((section) => {
-      const isCollapsed = !!collapsed[section.id]
+      const isCollapsed = isSectionCollapsed(section.id)
       result.push({
         type: 'section',
         id: section.id,
@@ -187,7 +250,7 @@ const useBuildViewMenuItems = ({
     })
 
     return result
-  }, [workingViewItem, sections, collapsed, toggleSection, selectedId, powerLicense])
+  }, [workingViewItem, sections, isSectionCollapsed, toggleSection, selectedId, powerLicense])
 
   return viewItems
 }

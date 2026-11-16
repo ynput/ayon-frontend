@@ -24,7 +24,6 @@ import {
   Filter,
   SEARCH_FILTER_ID,
   SearchFilterGroupOption,
-  type UserColor,
 } from '@ynput/ayon-react-components'
 import { customRangeOption, generateDatePresetOptions } from './filterDates'
 import { isEmpty, upperFirst } from 'lodash'
@@ -346,14 +345,13 @@ export const useBuildFilterOptions = ({
           const statuses = project?.statuses || []
           statuses
             .filter((status) => status.scope?.includes(currentScope))
-            .forEach((status: Status & UserColor) => {
+            .forEach((status: Status) => {
               if (!statusOption.values?.some((value) => value.id === status.name)) {
                 statusOption.values?.push({
                   id: status.name,
                   label: status.name,
                   icon: status.icon,
                   color: status.color,
-                  colorLight: status.colorLight,
                 })
               }
             })
@@ -427,7 +425,7 @@ export const useBuildFilterOptions = ({
 
       if (tagsOption) {
         // reduce projectsInfo to get all tags
-        const tagsAnatomy = new Map<string, Tag & UserColor>()
+        const tagsAnatomy = new Map<string, Tag>()
         Object.values(projectsInfo).forEach((project) => {
           if (project?.tags) {
             project.tags.forEach((tag) => {
@@ -456,7 +454,6 @@ export const useBuildFilterOptions = ({
               label: tag,
               values: [],
               color: tagData?.color || null,
-              colorLight: tagData?.colorLight || null,
               count: 1,
             })
           }
@@ -772,7 +769,7 @@ const getSubTypes = (
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all task types and add them to the options (if they don't already exist)
       const taskTypes = project?.taskTypes || []
-      taskTypes.forEach((taskType: TaskType & UserColor) => {
+      taskTypes.forEach((taskType: TaskType) => {
         if (!options.some((option) => option.id === taskType.name)) {
           options.push({
             id: taskType.name,
@@ -780,7 +777,6 @@ const getSubTypes = (
             label: taskType.name,
             icon: taskType.icon,
             color: taskType.color,
-            colorLight: taskType.colorLight,
             inverted: false,
             values: [],
             allowsCustomValues: false,
@@ -797,7 +793,7 @@ const getSubTypes = (
     Object.values(projectsInfo).forEach((project) => {
       // for each project, get all folder types and add them to the options (if they don't already exist)
       const folderTypes = project?.folderTypes || []
-      folderTypes.forEach((folderType: FolderType & UserColor) => {
+      folderTypes.forEach((folderType: FolderType) => {
         if (!options.some((option) => option.id === folderType.name)) {
           options.push({
             id: folderType.name,
@@ -805,7 +801,6 @@ const getSubTypes = (
             label: folderType.name,
             icon: folderType.icon,
             color: folderType.color,
-            colorLight: folderType.colorLight,
             inverted: false,
             values: [],
             allowsCustomValues: false,
@@ -1175,7 +1170,7 @@ const getAttributeFieldOptionRoot = (
 
 const getAttributeOptions = (
   values?: AttributeDataValue[],
-  enums?: (EnumItem & UserColor)[],
+  enums?: EnumItem[],
   type?: AttributeData['type'],
 ): Option[] => {
   const enumOptions: Option[] = []
@@ -1196,7 +1191,6 @@ const getAttributeOptions = (
           icon: isImage ? null : icon,
           img: isImage ? icon : undefined,
           color: enumItem.color,
-          colorLight: enumItem.colorLight,
           pt: {
             style: { color: 'inherit' },
           },

@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback } from 'react'
 import clsx from 'clsx'
 import { useSelector, useDispatch } from 'react-redux'
-import { Section, Toolbar, Spacer, getReadableColor } from '@ynput/ayon-react-components'
+import { Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
 import SearchInput from '@components/SearchInput'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
 // shared
-import { DetailsDialog, EmptyPlaceholder } from '@shared/components'
+import { DetailsDialog, EmptyPlaceholder, ValuePill } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
@@ -334,14 +334,10 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const { color, colorLight } = project.getProductType(node.data.productType)
+          const { color } = project.getProductType(node.data.productType)
 
-          return (
-            <CellWithIcon
-              text={node.data.productType}
-              textStyle={{ color: getReadableColor({ color: color || '#cccccc', colorLight }) }}
-            />
-          )
+          // tinted with its colour like the other coloured values, never coloured text
+          return <ValuePill variant="tinted" label={node.data.productType} color={color} />
         },
       },
       {

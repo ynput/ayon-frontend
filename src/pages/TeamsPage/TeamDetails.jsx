@@ -8,8 +8,7 @@ import {
   LockedInput,
   Panel,
 } from '@ynput/ayon-react-components'
-import DetailHeader from '@components/DetailHeader'
-import { EmptyPlaceholderFlex } from '@shared/components'
+import { DetailHeader, EmptyPlaceholderFlex } from '@shared/components'
 import { pluralize } from '@shared/util'
 
 const TeamDetails = ({

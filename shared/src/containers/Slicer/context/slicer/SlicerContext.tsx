@@ -6,6 +6,7 @@ import {
   useEffect,
   useMemo,
   useRef,
+  useState,
 } from 'react'
 import { ExpandedState, RowSelectionState } from '@tanstack/react-table'
 import type { SliceType } from '../../types'
@@ -69,6 +70,14 @@ export interface SlicerContextValue {
   setPanelExpanded: (panelId: string, expanded: React.SetStateAction<ExpandedState>) => void
   collapsedPanels: string[]
   togglePanelCollapsed: (panelId: string) => void
+  // per panel search text: undefined is a closed search box, '' an open and empty one.
+  // Every panel's search also narrows the table (useSlicerPanelSelections).
+  searchByPanel: Record<string, string | undefined>
+  setSearchByPanel: React.Dispatch<React.SetStateAction<Record<string, string | undefined>>>
+  // ids of the rows a value panel's search leaves, as if they were all selected. Only set
+  // while that panel searches; the hierarchy panel matches against all folders instead.
+  searchMatchesByPanel: Record<string, string[]>
+  setSearchMatchesByPanel: React.Dispatch<React.SetStateAction<Record<string, string[]>>>
   getSliceSort: (sliceType: SliceType) => SliceSort
   setSliceSort: (sliceType: SliceType, sort: SliceSort) => void
   isViewSyncPending: boolean
@@ -392,6 +401,9 @@ export const SlicerProvider = ({
     [setExpanded],
   )
 
+  const [searchByPanel, setSearchByPanel] = useState<Record<string, string | undefined>>({})
+  const [searchMatchesByPanel, setSearchMatchesByPanel] = useState<Record<string, string[]>>({})
+
   // extra slices are loaded from the powerpack remote module, with a fallback to default empty functions
   const { useExtraSlices, isLoadingExtraSlices, SlicerDropdown } = useSlicerRemotes()
 
@@ -416,6 +428,10 @@ export const SlicerProvider = ({
       setPanelExpanded,
       collapsedPanels,
       togglePanelCollapsed,
+      searchByPanel,
+      setSearchByPanel,
+      searchMatchesByPanel,
+      setSearchMatchesByPanel,
       getSliceSort,
       setSliceSort,
       // ROW SELECTION
@@ -441,6 +457,8 @@ export const SlicerProvider = ({
       slices,
       collapsedPanels,
       togglePanelCollapsed,
+      searchByPanel,
+      searchMatchesByPanel,
       getSliceSort,
       setSliceSort,
       addSlicePanel,

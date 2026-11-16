@@ -16,6 +16,7 @@ export type PowerpackFeature =
   | 'listValues'
   | 'entityLinks'
   | 'tableExport'
+  | 'personalApiKeys'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -33,6 +34,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'listValues',
   'entityLinks',
   'tableExport',
+  'personalApiKeys',
 ]
 
 export const powerpackFeatures: {
@@ -116,5 +118,11 @@ export const powerpackFeatures: {
     description:
       'Export a table or the selected rows to Excel or CSV, with every row and inherited attribute, ready to import back.',
     bullet: 'Export tables to Excel and CSV',
+  },
+  personalApiKeys: {
+    label: 'Personal API Keys',
+    description:
+      'Create your own API keys on your profile, each with a name and an expiry, for scripts and tools that work as you.',
+    bullet: 'Personal API keys for scripts and tools',
   },
 }

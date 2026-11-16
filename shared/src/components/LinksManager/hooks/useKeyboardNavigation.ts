@@ -9,7 +9,6 @@ interface Entity {
 interface UseKeyboardNavigationProps {
   entities: Entity[]
   onSelect: (entity: Entity) => void
-  onClose: () => void
   isActive: boolean
   hasNextPage?: boolean
   isFetchingNextPage?: boolean
@@ -19,7 +18,6 @@ interface UseKeyboardNavigationProps {
 const useKeyboardNavigation = ({
   entities,
   onSelect,
-  onClose,
   isActive,
   hasNextPage = false,
   isFetchingNextPage = false,
@@ -98,13 +96,9 @@ const useKeyboardNavigation = ({
             onSelect(entities[selectedIndex])
           }
           break
-        case 'Escape':
-          event.preventDefault()
-          onClose()
-          break
       }
     },
-    [isActive, entities, selectedIndex, onSelect, onClose, hasNextPage],
+    [isActive, entities, selectedIndex, onSelect, hasNextPage],
   )
 
   useEffect(() => {

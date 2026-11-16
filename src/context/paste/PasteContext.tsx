@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react'
 import type { ReactNode } from 'react'
 import { Button, InputTextarea, Dialog } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 import { PasteContext, usePaste } from './PasteContextInstance'
 
 const PasteProvider = ({ children }: { children: ReactNode }) => {
@@ -92,6 +93,8 @@ const PasteModal = () => {
       isOpen
       size="lg"
       onClose={() => closeModal(null)}
+      // Enter in the textarea is a newline, elsewhere in the dialog it submits
+      onKeyDown={getDialogKeyDown(() => submit(pastedData), { onClose: () => closeModal(null) })}
       style={{ width: '600px', height: '600px' }}
     >
       <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>

@@ -16,6 +16,16 @@ export const useUser = (): AddonUser | undefined => {
 }
 
 /**
+ * Goes to an AYON URL without reloading the page, for code outside React such as `run` and `menu`
+ * pieces: `navigate('/dashboard/comments')`. Components use `useNavigate` instead.
+ */
+export const navigate = (to: string) => {
+  const hostNavigate = getHost().navigate
+  if (hostNavigate) hostNavigate(to)
+  else window.location.assign(to)
+}
+
+/**
  * Dispatches to AYON's store, for code outside React such as `run` and `menu` pieces:
  * `await dispatch(api.endpoints.getProject.initiate({ projectName })).unwrap()`. Components use
  * the api's hooks instead.

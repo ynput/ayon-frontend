@@ -9,6 +9,7 @@ import {
 import { ProjectAttribModel2 } from '../types/project'
 import { ProjectTableAttribute } from '../types'
 import { getEntityDataById } from '../utils/cellUtils'
+import { useOptionalProjectFoldersContext } from '@shared/context/project-folders/ProjectFoldersContextInstance'
 
 export interface InheritedDependent {
   entityId: string
@@ -43,6 +44,7 @@ export default function useFolderRelationships({
   projectAttrib,
   attribFields,
 }: UseFolderRelationshipsProps) {
+  const getProjectFolderById = useOptionalProjectFoldersContext()?.getFolderById
   // Pre-compute folder-children relationships
   const folderChildrenMap = useMemo(() => {
     const map = new Map<string, string[]>()
@@ -151,7 +153,10 @@ export default function useFolderRelationships({
       // Traverse up the folder hierarchy until we've found values for all attributes
       // or we've reached the root folder
       while (pendingAttribs.size > 0) {
-        const folder = getEntityById(currentId || '')
+        // filtered tables can omit ancestors, so fall back to the full folder list
+        const folder = currentId
+          ? getEntityById(currentId) ?? getProjectFolderById?.(currentId)
+          : undefined
         if (!folder || !currentId) {
           // use the project attrib
           for (const attribName of pendingAttribs) {
@@ -190,7 +195,7 @@ export default function useFolderRelationships({
 
       return result
     },
-    [getEntityById],
+    [getEntityById, getProjectFolderById, projectAttrib],
   )
 
   // Optimized implementation of getInheritedDependents

@@ -16,15 +16,22 @@ export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({
   onClose,
   onMoveComplete,
 }) => {
-  const { handleMoveSubmit, handleMoveToRoot, getDisabledFolderIds, getDisabledMessage } =
-    useMoveEntities({
-      projectName,
-      movingEntities: movingEntities ?? null,
-      onClose,
-      onMoveComplete,
-    })
+  const {
+    isLoadingFolders,
+    lastDestinationId,
+    handleMoveSubmit,
+    handleMoveToRoot,
+    getDisabledFolderIds,
+    getDisabledMessage,
+  } = useMoveEntities({
+    projectName,
+    movingEntities: movingEntities ?? null,
+    onClose,
+    onMoveComplete,
+  })
 
-  if (!movingEntities?.entities.length) {
+  // the picker reads its initial selection on mount, so wait for the folders to know the last destination
+  if (!movingEntities?.entities.length || isLoadingFolders) {
     return null
   }
 
@@ -39,6 +46,7 @@ export const MoveEntityDialog: FC<MoveEntityDialogProps> = ({
       )}
       onMoveToRoot={handleMoveToRoot}
       disabledIds={getDisabledFolderIds()}
+      initialSelection={lastDestinationId ? { folder: { [lastDestinationId]: true } } : undefined}
       getDisabledMessage={getDisabledMessage}
     />
   )

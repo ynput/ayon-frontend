@@ -68,7 +68,14 @@ export function useTableSelection<TData extends RowData>({
       e.preventDefault()
 
       const direction = e.key === 'ArrowDown' ? 1 : -1
-      let currentIndex = activeRowIndex < 0 ? (direction > 0 ? -1 : rows.length) : activeRowIndex
+      // With one selectable row the selection is the position: it can move without a click here,
+      // from outside the table or because new rows were added above it
+      const selectedIndex =
+        !multiSelection && selectedRows.length === 1
+          ? rows.findIndex((row) => row.id === selectedRows[0])
+          : -1
+      const activeIndex = selectedIndex >= 0 ? selectedIndex : activeRowIndex
+      const currentIndex = activeIndex < 0 ? (direction > 0 ? -1 : rows.length) : activeIndex
 
       let newIndex = currentIndex
       while (true) {
@@ -82,7 +89,7 @@ export function useTableSelection<TData extends RowData>({
         }
       }
 
-      if (newIndex === activeRowIndex || isGroupRow(rows[newIndex])) return
+      if (newIndex === activeIndex || isGroupRow(rows[newIndex])) return
 
       const newRowId = rows[newIndex]?.id
       if (!newRowId) return
@@ -105,7 +112,7 @@ export function useTableSelection<TData extends RowData>({
       setActiveRowIndex(newIndex)
       rowVirtualizer.scrollToIndex(newIndex, { behavior: 'smooth' })
     },
-    [activeRowIndex, rows, selectedRows, onSelectedRowsChange, rowVirtualizer],
+    [activeRowIndex, rows, selectedRows, onSelectedRowsChange, multiSelection, rowVirtualizer],
   )
 
   return { activeRowIndex, handleRowClick, handleKeyDown }

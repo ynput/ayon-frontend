@@ -4,6 +4,7 @@ import { AttributeField } from '../../DetailsPanelAttributes/DetailsPanelAttribu
 import type { EntityForm } from '../types'
 import { readOnlyFields, attributeFields } from '../types'
 import type { AttribAccess } from './useEntityEditing'
+import { isEntityAttribLocked } from '@shared/util'
 
 interface UseEntityFieldsProps {
   attributes: any[]
@@ -85,7 +86,6 @@ export const useEntityFields = ({
             label: status.name,
             icon: status.icon,
             color: status.color,
-            colorLight: status.colorLight,
           })),
         },
       },
@@ -99,7 +99,6 @@ export const useEntityFields = ({
             value: tag.name,
             label: tag.name,
             color: tag.color,
-            colorLight: tag.colorLight,
           })),
         },
       },
@@ -146,7 +145,7 @@ export const useEntityFields = ({
           .map((attr) => ({
             name: 'attrib.' + attr.name,
             data: attr.data,
-            ...(entityType === 'version' && attr.builtin ? { readonly: true } : {}),
+            ...(isEntityAttribLocked(entityType, attr) ? { readonly: true } : {}),
             ...(writableAttributes && !writableAttributes.includes(attr.name)
               ? { readonly: true }
               : {}),

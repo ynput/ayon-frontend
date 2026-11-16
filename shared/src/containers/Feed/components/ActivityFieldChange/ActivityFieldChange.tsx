@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import * as Styled from './ActivityFieldChange.styled'
 import ActivityDate from '../ActivityDate'
-import { Icon, type UserColor } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import useGetContextParents from './hooks/getContextParents'
 import { FieldValue } from './FieldValue'
 import { StatusLabel } from '@shared/components/StatusLabel'
@@ -16,19 +16,13 @@ type FieldDisplayValue = {
   shortName?: string
   icon?: string
   color?: string
-  colorLight?: string | null
-  items?: { label: string; color?: string; colorLight?: string | null }[]
+  items?: { label: string; color?: string }[]
 }
 
-const getEnumDisplay = (item: EnumItem & UserColor): FieldDisplayValue => {
+const getEnumDisplay = (item: EnumItem): FieldDisplayValue => {
   const icon = typeof item.icon === 'string' ? item.icon : item.icon?.name
   const color = item.color ?? (typeof item.icon === 'object' ? item.icon?.color : undefined)
-  return {
-    name: item.label,
-    icon: icon ?? undefined,
-    color: color ?? undefined,
-    colorLight: item.colorLight,
-  }
+  return { name: item.label, icon, color }
 }
 
 const formatSingleValue = (value: unknown, attribute?: AttributeModel): string => {
@@ -73,7 +67,7 @@ const formatValue = (
 interface ActivityFieldChangeProps {
   entityType?: string
   projectInfo?: {
-    tags?: { name: string; color?: string; colorLight?: string }[]
+    tags?: { name: string; color?: string }[]
     [key: string]: any
   }
   activity: {
@@ -129,16 +123,15 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
     shortName: status?.shortName,
     icon: status?.icon,
     color: status?.color,
-    colorLight: status?.colorLight,
   })
 
   const tagsDisplay = (value: unknown): FieldDisplayValue => {
     const tags = Array.isArray(value) ? value.map(String) : []
     if (!tags.length) return { name: 'none' }
-    const items = tags.map((tag) => {
-      const tagData = projectInfo?.tags?.find((t) => t.name === tag)
-      return { label: tag, color: tagData?.color, colorLight: tagData?.colorLight }
-    })
+    const items = tags.map((tag) => ({
+      label: tag,
+      color: projectInfo?.tags?.find((t) => t.name === tag)?.color,
+    }))
     return { name: tags.join(', '), items }
   }
 

@@ -20,7 +20,6 @@ const getMentionTasks = (tasks: TaskSuggestionItem[] = [], taskTypes: TaskType[]
       context,
       icon,
       color,
-      colorLight: taskType?.colorLight,
       keywords,
       relevance: task.relevance,
     }
