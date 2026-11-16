@@ -1584,6 +1584,8 @@ const buildTreeTableColumns = ({
               isReadOnly={
                 // check attrib is not read only
                 attrib.readOnly ||
+                // or locked on this entity (a version's built-in attributes)
+                !!meta?.isAttribLocked?.(type, attrib.name) ||
                 // check if there is any other reason the cell should be read only
                 meta?.readOnly?.some(
                   (id) => id === columnIdParsed || (id === 'attrib' && attrib.builtin),

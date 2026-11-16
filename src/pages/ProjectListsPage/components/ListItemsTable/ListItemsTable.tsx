@@ -70,14 +70,14 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
-  // with list values, attribute edits go to the list item, so the entities' read-only
-  // attributes (product and version lists) don't apply
-  const { isPowerFeature } = useListValuesContext()
+  // with list values, attribute edits go to the list item, so the entities' locked attributes
+  // don't apply
+  const { editsEntities } = useListValuesContext()
   const { canCompareLists, compareLists } = useCompareLists()
-  const [hiddenColumns, readOnly] = useMemo(() => {
-    const [hidden, readOnly] = getColumnConfigFromType(selectedList?.entityType)
-    return [hidden, isPowerFeature ? readOnly.filter((id) => id !== 'attrib') : readOnly]
-  }, [selectedList, isPowerFeature])
+  const [hiddenColumns, readOnly] = useMemo(
+    () => getColumnConfigFromType(selectedList?.entityType),
+    [selectedList],
+  )
 
   const listAttributesMenuItems = useMemo(
     () => [
@@ -144,6 +144,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         // pagination
         onScrollBottom={fetchNextPage}
         readOnly={readOnly}
+        ignoreEntityAttribLocks={!editsEntities}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         includeParents={includeParents}

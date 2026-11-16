@@ -1,6 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 import styled from 'styled-components'
+import { useProjectTableContext } from '../context/project-table/ProjectTableContextInstance'
 
 const LoadMore = styled.div`
   position: absolute;
@@ -20,10 +21,14 @@ interface LoadMoreWidgetProps {
 }
 
 const LoadMoreWidget: FC<LoadMoreWidgetProps> = ({ label = 'Load more', id, onLoadMore }) => {
+  const { isLoadingMoreGroups } = useProjectTableContext()
+
   return (
-    <LoadMore id={`load-more-${id}`} className="load-more">
+    <LoadMore id={`load-more-${id}`} className="load-more" data-group={id}>
       <Button
-        label={label}
+        icon={isLoadingMoreGroups ? 'progress_activity' : undefined}
+        label={isLoadingMoreGroups ? 'Loading…' : label}
+        disabled={isLoadingMoreGroups}
         onClick={(e) => {
           onLoadMore(id)
         }}
