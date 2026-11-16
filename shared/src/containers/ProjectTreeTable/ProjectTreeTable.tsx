@@ -86,6 +86,7 @@ import {
   MainCountLabels,
   MainBreakdownFields,
   SummaryCellContentProps,
+  IsAttribLocked,
 } from './types'
 import type { EnumItem } from '@shared/api'
 import { ToggleExpandAll, useProjectTableContext, parseRowId } from './context/project-table'
@@ -124,7 +125,7 @@ import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { EDIT_TRIGGER_CLASS } from './widgets/CellWidget'
 import { toast } from 'react-toastify'
 import { ColumnsConfig, getColumnConfig } from './types/columnConfig'
-import { getRequestErrorString } from '@shared/util'
+import { getRequestErrorString, isEntityAttribLocked } from '@shared/util'
 import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
@@ -156,6 +157,7 @@ declare module '@tanstack/react-table' {
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
     readOnly?: ProjectTreeTableProps['readOnly']
+    isAttribLocked?: IsAttribLocked
     projectName?: string
     updateEntities?: CellUpdate
     toggleExpandAll?: ToggleExpandAll
@@ -187,6 +189,9 @@ export interface ProjectTreeTableProps extends React.HTMLAttributes<HTMLDivEleme
   onScrollBottom?: React.HTMLAttributes<HTMLDivElement>['onScroll']
   onOpenNew?: (type: 'folder' | 'task', config?: NewEntityOpenConfig) => void
   readOnly?: (DefaultColumns | string)[]
+  // attribute edits don't go to the entities (list values), so the entities' locked attributes
+  // (a version's built-in ones) stay editable
+  ignoreEntityAttribLocks?: boolean
   excludedColumns?: (DefaultColumns | string)[]
   excludedSorting?: (DefaultColumns | string)[]
   extraColumns?: TreeTableExtraColumn[]
@@ -233,6 +238,7 @@ export const ProjectTreeTable = ({
   onScrollBottom, // when the user scrolls to the bottom of the table, this callback is called
   onOpenNew,
   readOnly,
+  ignoreEntityAttribLocks,
   excludedColumns,
   excludedSorting,
   extraColumns,
@@ -404,6 +410,17 @@ export const ProjectTreeTable = ({
     [attribFields, writableFields, readOnly],
   )
 
+  // attributes that can't be edited on this row's entity, whatever the column
+  const isAttribLocked: IsAttribLocked = useCallback(
+    (entityType, attribName) =>
+      !ignoreEntityAttribLocks &&
+      isEntityAttribLocked(
+        entityType,
+        attribFields.find((attrib) => attrib.name === attribName),
+      ),
+    [ignoreEntityAttribLocks, attribFields],
+  )
+
   const { selectedCells } = useSelectionCellsContext()
   const { updateEntities } = useCellEditing()
 
@@ -430,6 +447,7 @@ export const ProjectTreeTable = ({
           const { rowId } = parseCellId(cellId) || {}
           const cellEntity = getEntityById(rowId || '')
           if (!rowId || !cellEntity) continue
+          if (isAttrib && isAttribLocked(cellEntity.entityType, field)) continue
           const currentValue = getEntityListValue(cellEntity, fieldColumnId)
           const nextValue = applyMixedChange(currentValue, listChange)
           if (isEqual(currentValue, nextValue)) continue
@@ -458,6 +476,7 @@ export const ProjectTreeTable = ({
             continue
           }
 
+          if (isAttrib && isAttribLocked(entity.entityType, field)) continue
           if (isFieldColumn(colId) && rowId) {
             entitiesToUpdate.push({
               field: field,
@@ -479,7 +498,7 @@ export const ProjectTreeTable = ({
 
       await updateEntities(entitiesToUpdate, true)
     },
-    [updateEntities, getEntityById, selectedCells],
+    [updateEntities, getEntityById, selectedCells, isAttribLocked],
   )
 
   const columnAttribs = useMemo(
@@ -666,6 +685,7 @@ export const ProjectTreeTable = ({
       projectName,
       options,
       readOnly: readOnlyColumns,
+      isAttribLocked,
       updateEntities: handleCellUpdate,
       toggleExpandAll,
       loadMoreRows: fetchNextPage,
@@ -863,6 +883,7 @@ export const ProjectTreeTable = ({
       entitiesMap={entitiesMap}
       columnEnums={{ ...options, ...attribByField }}
       columnReadOnly={readOnlyAttribs}
+      isAttribLocked={isAttribLocked}
       visibleColumns={visibleColumns}
     >
       {/* outside the wrapper: its dialog's events would bubble into the table through the portal */}

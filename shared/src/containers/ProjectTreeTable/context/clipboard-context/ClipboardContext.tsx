@@ -69,6 +69,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
   entitiesMap,
   columnEnums,
   columnReadOnly,
+  isAttribLocked,
   visibleColumns,
 }) => {
   // Get selection information from SelectionContext
@@ -544,6 +545,11 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
           if (colId === 'subType' && isProductType) continue
           if (getParentLink(colId)) continue
           const pasteValue = mappedValues[colId] || ''
+          const attribName = colId.startsWith('attrib_') && colId.replace('attrib_', '')
+          if (pasteValue && attribName && isAttribLocked?.(rowEntityType, attribName)) {
+            clipboardError(`"${attribName}" is read-only on ${rowEntityType}s. Paste cancelled.`)
+            return
+          }
 
           const isValid = validateClipboardData({
             colId,
@@ -1043,6 +1049,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
       columnEnums,
       getEntityById,
       isRowReadOnly,
+      isAttribLocked,
       visibleColumns,
       attribFields,
       projectName,

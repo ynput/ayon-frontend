@@ -65,7 +65,6 @@ import { getCellIdForColumn } from './util/cellIds.ts'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { TableExportButton } from '@shared/containers/TableExport'
 import ListExportSource from './components/ListExportSource'
-import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -214,7 +213,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         ? 'Entity'
         : compareView.comparedList?.label,
     withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
-    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
+    entityType: selectedList?.entityType,
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })

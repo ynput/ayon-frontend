@@ -14,6 +14,9 @@ export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> 
   enumError?: string
 }
 
+// an attribute that can't be edited on this entity whatever the column (see isEntityAttribLocked)
+export type IsAttribLocked = (entityType: string | undefined, attribName: string) => boolean
+
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
 
 export type SoftErrorAction = {
