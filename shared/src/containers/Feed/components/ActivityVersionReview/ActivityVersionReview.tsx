@@ -9,6 +9,9 @@ import { CategoryTag } from '../ActivityCategorySelect'
 import { useCategoryData } from '../../hooks/useCategoryData'
 import { getActivityUserName } from '../../helpers/getActivityUserName'
 import { getVerbForFeedback, getIconForFeedback } from './ActivityVersionReviewHelpers'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu/useCreateContextMenu'
+import { useDetailsPanelContext } from '@shared/context'
+import { confirmDelete } from '../../../../util'
 
 interface ActivityVersionReviewProps {
   entityType?: string
@@ -17,18 +20,64 @@ interface ActivityVersionReviewProps {
     authorName?: string
     authorFullName?: string
     createdAt?: string
+    activityId?: string
+    entityId?: string
+    isOwner?: boolean
     activityData: {
       feedback: VersionReviewFeedback
       category: string
     }
     [key: string]: any
   }
+  onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
 }
 
 export const ANONYMOUS_GUEST_NAME_PREFIX = "anonymous.guest"
 
-const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, activity }) => {
-  const { authorName, authorFullName, createdAt, activityData } = activity || {}
+const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
+  isGuest,
+  activity,
+  onDelete,
+}) => {
+  const {
+    authorName,
+    authorFullName,
+    createdAt,
+    activityData,
+    activityId,
+    entityId,
+    isOwner,
+    referenceType,
+    origin,
+  } = activity || {}
+
+  const { user } = useDetailsPanelContext()
+  const [contextMenuShow] = useCreateContextMenu()
+  // same rule as comments: the author (guests included) or an admin
+  const canDelete = !!onDelete && !!activityId && (!!isOwner || !!user?.data?.isAdmin)
+
+  const handleContextMenu = (event: React.MouseEvent) => {
+    if (!canDelete) return
+    event.preventDefault()
+    contextMenuShow(event, [
+      {
+        label: 'Delete',
+        icon: 'delete',
+        danger: true,
+        command: () =>
+          confirmDelete({
+            title: 'Delete review',
+            message: 'Are you sure you want to delete this review?',
+            accept: async () => {
+              // a review shown as a reference also has to go from its origin's feed
+              const refs =
+                referenceType !== 'origin' && origin ? [{ id: origin.id, type: origin.type }] : []
+              await onDelete(activityId, entityId ?? '', refs)
+            },
+          }),
+      },
+    ])
+  }
 
   const label = useMemo(
     () =>
@@ -52,7 +101,10 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({ isGuest, 
   if (!activityData?.feedback) return
 
   return (
-    <Styled.VersionReview className={clsx(activityData.feedback)}>
+    <Styled.VersionReview
+      className={clsx(activityData.feedback, { deletable: canDelete })}
+      onContextMenu={handleContextMenu}
+    >
       <Styled.Body>
         {authorName && <UserImage
           name={authorName}

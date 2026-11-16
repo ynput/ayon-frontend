@@ -27,6 +27,11 @@ export const VersionReview = styled.li`
   &.request_changes .date, {
     color: var(--md-sys-color-error);
   }
+
+  /* right-click opens a menu: tint the item in its own colour on hover */
+  &.deletable:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
 `
 
 export const Body = styled.div`
