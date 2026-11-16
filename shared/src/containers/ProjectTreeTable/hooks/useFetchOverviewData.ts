@@ -38,6 +38,7 @@ import {
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
 import overviewApi from '@shared/api/queries/overview/getOverview'
+import { hasUnqueriedFolders } from '@shared/api/queries/overview/queriedFolders'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
 // prevents firing a request per folder while the user is quickly scrolling past them.
@@ -225,7 +226,6 @@ export const useFetchOverviewData = ({
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
-    originalArgs: requestedFoldersTasksArgs,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
     skip: skipExpandedFoldersTasks,
   })
@@ -233,9 +233,12 @@ export const useFetchOverviewData = ({
   // All expanded folders share one cache entry, and RTK Query ignores new args for an entry while
   // it is fetching. Folders expanded during a request would never load, so request them after it.
   useEffect(() => {
-    if (skipExpandedFoldersTasks || isFetchingExpandedFoldersTasks || !requestedFoldersTasksArgs)
-      return
-    if (JSON.stringify(requestedFoldersTasksArgs) === JSON.stringify(expandedFoldersTasksArgs))
+    if (
+      skipExpandedFoldersTasks ||
+      isFetchingExpandedFoldersTasks ||
+      expandedFoldersTasksError ||
+      !hasUnqueriedFolders(expandedFoldersTasksArgs)
+    )
       return
     dispatch(
       overviewApi.endpoints.getOverviewTasksByFolders.initiate(expandedFoldersTasksArgs, {
@@ -245,7 +248,7 @@ export const useFetchOverviewData = ({
   }, [
     skipExpandedFoldersTasks,
     isFetchingExpandedFoldersTasks,
-    requestedFoldersTasksArgs,
+    expandedFoldersTasksError,
     expandedFoldersTasksArgs,
     dispatch,
   ])
@@ -784,11 +787,7 @@ export const useFetchOverviewData = ({
     // @ts-expect-error: softError is a string
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     softErrorAction,
-    isLoadingAll:
-      isLoadingViews ||
-      isLoadingFolders ||
-      isLoadingTasksList ||
-      isLoadingTasksFolders, // these all show a full loading state
+    isLoadingAll: isLoadingViews || isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
     isLoadingMoreGroups: !!groupBy && isFetchingGroupedTasks,
     loadingTasks: loadingTasksForParents,
