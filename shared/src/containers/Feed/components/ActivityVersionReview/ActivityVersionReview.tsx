@@ -32,7 +32,7 @@ interface ActivityVersionReviewProps {
   onDelete?: (activityId: string, entityId: string, refs: any) => Promise<void>
 }
 
-export const ANONYMOUS_GUEST_NAME_PREFIX = "anonymous.guest"
+export const ANONYMOUS_GUEST_NAME_PREFIX = 'anonymous.guest'
 
 const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
   isGuest,
@@ -107,12 +107,15 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
       onContextMenu={openMenu}
     >
       <Styled.Body>
-        {authorName && <UserImage
-          name={authorName}
-          fullName={authorFullName}
-          src={userImageSrc}
-          size={22}
-        />}
+        {authorName && (
+          <UserImage
+            name={authorName}
+            fullName={authorFullName}
+            src={userImageSrc}
+            size={22}
+            data-tooltip={authorFullName + ' (Guest)'}
+          />
+        )}
         <Icon icon={getIconForFeedback(activityData.feedback)} />
         {categoryData && !isGuest && (
           <CategoryTag
@@ -126,10 +129,11 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
           />
         )}
         <Styled.Text>{label}</Styled.Text>
-        <ActivityDate date={createdAt} exactTooltip />
+        <Styled.End></Styled.End>
         {canDelete && (
           <Button className="more" icon="more_horiz" variant="text" onClick={openMenu} />
         )}
+        <ActivityDate date={createdAt} exactTooltip />
       </Styled.Body>
     </Styled.VersionReview>
   )

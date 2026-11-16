@@ -12,19 +12,24 @@ export const VersionReview = styled.li`
   border-radius: var(--border-radius-l);
   user-select: none;
 
-  .date, .user-image {
+  .date {
+    min-width: 50px;
+  }
+
+  .date,
+  .user-image {
     flex-shrink: 0;
   }
 
   &.approve,
   &.approve .icon,
-  &.approve .date, {
+  &.approve .date {
     color: var(--md-sys-color-tertiary);
   }
 
   &.request_changes,
   &.request_changes .icon,
-  &.request_changes .date, {
+  &.request_changes .date {
     color: var(--md-sys-color-error);
   }
 
@@ -41,7 +46,7 @@ export const VersionReview = styled.li`
     padding: 2px;
     color: inherit;
     background-color: transparent;
-    visibility: hidden;
+    display: none;
 
     .icon {
       color: inherit;
@@ -53,7 +58,7 @@ export const VersionReview = styled.li`
   }
 
   &:hover .more {
-    visibility: visible;
+    display: flex;
   }
 `
 
@@ -89,4 +94,11 @@ export const Text = styled.span`
     font-size: 12px;
     font-weight: 800;
   }
+`
+
+export const End = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  flex: 1;
 `
