@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useGetSecretsQuery, useSetSecretMutation, useDeleteSecretMutation } from '@queries/secrets'
 import styled from 'styled-components'
 import {
@@ -10,7 +10,12 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import { toast } from 'react-toastify'
-import { confirmDelete, getRequestErrorString } from '@shared/util'
+import {
+  confirmDelete,
+  getRequestErrorString,
+  isDialogConfirmKey,
+  isDialogContinueKey,
+} from '@shared/util'
 import { copyToClipboard } from '@shared/util'
 
 const SecretList = styled.div`
@@ -40,6 +45,7 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
   const [value, setValue] = useState(initialValue)
   const [setSecret] = useSetSecretMutation()
   const [deleteSecret] = useDeleteSecretMutation()
+  const nameRef = useRef(null)
 
   // console.log(isError, isLoading)
 
@@ -58,7 +64,12 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
       await setSecret({ name, value }).unwrap()
 
       if (!stored) {
+        // ready for the next secret
+        toast.success(`Secret ${name} added`)
         resetForm()
+        nameRef.current?.focus()
+      } else {
+        toast.success(`Secret ${name} saved`)
       }
     } catch (error) {
       const message = getRequestErrorString(error)
@@ -73,9 +84,19 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
     })
   }
 
+  const canSave = stored || (name.length > 0 && value.length > 0)
+
+  // Enter (or Shift+Enter, as in the create dialogs) saves the row, like its save button
+  const handleKeyDown = (e) => {
+    if (!canSave || !(isDialogConfirmKey(e) || isDialogContinueKey(e))) return
+    e.preventDefault()
+    handleSave()
+  }
+
   return (
-    <StyledSecretItem>
+    <StyledSecretItem onKeyDown={handleKeyDown}>
       <InputText
+        ref={nameRef}
         value={name}
         onChange={(e) => setName(e.target.value)}
         readOnly={stored}
@@ -92,7 +113,8 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
       {stored && <Button icon="content_copy" onClick={() => copyToClipboard(value)} />}
 
       <SaveButton
-        active={stored || (name.length > 0 && value.length > 0)}
+        active={canSave}
+        data-shortcut="Enter"
         icon={stored ? 'check' : 'add'}
         onClick={handleSave}
         variant={stored ? 'surface' : 'filled'}

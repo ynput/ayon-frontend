@@ -2,7 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { PROJECTS_LIST_WIDTH_KEY } from '@containers/ProjectsList/ProjectsList'
+import { PROJECTS_LIST_WIDTH_KEY } from '@shared/containers/ProjectsTable'
 
 const ProjectManagerPageLayout = ({
   projectList,

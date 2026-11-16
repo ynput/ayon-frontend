@@ -12,20 +12,53 @@ export const VersionReview = styled.li`
   border-radius: var(--border-radius-l);
   user-select: none;
 
-  .date, .user-image {
+  .date {
+    min-width: 50px;
+  }
+
+  .date,
+  .user-image {
     flex-shrink: 0;
   }
 
   &.approve,
   &.approve .icon,
-  &.approve .date, {
+  &.approve .date {
     color: var(--md-sys-color-tertiary);
   }
 
   &.request_changes,
   &.request_changes .icon,
-  &.request_changes .date, {
+  &.request_changes .date {
     color: var(--md-sys-color-error);
+  }
+
+  /* right-click opens a menu: tint the item in its own colour on hover */
+  &.deletable:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  /* the more button opens the right-click menu, shown only while the item is hovered,
+     in the item's own colour */
+  .more {
+    flex-shrink: 0;
+    margin: -4px 0;
+    padding: 2px;
+    color: inherit;
+    background-color: transparent;
+    display: none;
+
+    .icon {
+      color: inherit;
+    }
+
+    &:hover {
+      background-color: color-mix(in srgb, currentColor 20%, transparent);
+    }
+  }
+
+  &:hover .more {
+    display: flex;
   }
 `
 
@@ -61,4 +94,11 @@ export const Text = styled.span`
     font-size: 12px;
     font-weight: 800;
   }
+`
+
+export const End = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  flex: 1;
 `

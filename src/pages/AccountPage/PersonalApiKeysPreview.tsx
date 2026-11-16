@@ -59,7 +59,7 @@ export const PersonalApiKeysPreview = ({ needsUpdate = false }: { needsUpdate?: 
       $needsUpdate={needsUpdate}
       onClick={needsUpdate ? undefined : () => setPowerpackDialog('personalApiKeys')}
     >
-      <b className="title">
+      <b className="title profile-card-header">
         Personal API keys
         <Icon icon="bolt" filled className="bolt" />
       </b>

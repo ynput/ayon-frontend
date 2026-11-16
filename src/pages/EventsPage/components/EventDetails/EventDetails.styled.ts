@@ -64,43 +64,94 @@ export const Description = styled.p`
 export const Facts = styled.dl`
   display: grid;
   grid-template-columns: max-content minmax(0, 1fr);
-  column-gap: 12px;
-  row-gap: 6px;
-  margin: 0;
+  margin: 0 -6px;
+
+  /* one row per fact, a subgrid keeps the labels in one column */
+  .fact {
+    position: relative;
+    display: grid;
+    grid-template-columns: subgrid;
+    grid-column: 1 / -1;
+    column-gap: 16px;
+    /* label and the first value line share a 20px line, so a one line row is 32px */
+    align-items: start;
+    min-height: 32px;
+    padding: 6px;
+    border-radius: var(--border-radius-m);
+
+    &:hover,
+    &:focus-within {
+      background-color: var(--md-sys-color-surface-container);
+
+      .actions {
+        opacity: 1;
+        pointer-events: auto;
+      }
+    }
+  }
 
   dt {
     ${theme.labelMedium}
+    line-height: 20px;
     color: var(--md-sys-color-on-surface-variant);
-    padding-top: 7px;
   }
 
   dd {
     margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    min-height: 32px;
-    min-width: 0;
-  }
-
-  .value {
-    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    gap: 2px;
+    ${theme.bodyMedium}
     user-select: text;
     overflow-wrap: anywhere;
   }
 
+  .mono {
+    ${theme.bodySmall}
+    line-height: 20px;
+    font-family: monospace;
+  }
+
+  /* shown on row hover, over the end of the value so it keeps the full width */
   .actions {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
     display: flex;
-    flex-shrink: 0;
+    align-items: center;
+    gap: 2px;
+    padding: 0 2px;
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container);
+    opacity: 0;
+    pointer-events: none;
+
+    a {
+      display: flex;
+    }
+
+    button {
+      max-height: 28px;
+      padding: 4px;
+
+      .icon {
+        font-size: 20px;
+      }
+    }
   }
 
   .with-icon {
     display: flex;
     align-items: center;
     gap: 6px;
+    height: 20px;
+
+    .icon {
+      font-size: 18px;
+      line-height: 1;
+    }
   }
 
   .dot {
@@ -110,9 +161,6 @@ export const Facts = styled.dl`
   }
 
   .status {
-    .icon {
-      font-size: 18px;
-    }
     &.failed {
       color: var(--md-sys-color-error);
     }

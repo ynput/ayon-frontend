@@ -11,6 +11,7 @@ import { useAddonTableShortcuts } from '@shared/components/AddonLayout/useAddonT
 import { useSelectionCellsContext } from '../context/selection-cells'
 import { useCellEditing } from '../context/cell-editing'
 import { useProjectTableContext } from '../context/project-table'
+import { useProjectTableState } from '../context/project-table-state'
 import { parseCellId } from '../utils/cellUtils'
 import { ROW_SELECTION_COLUMN_ID } from '../constants'
 import { GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
@@ -30,6 +31,7 @@ interface AddonCellShortcutsProps {
 export const AddonCellShortcuts = ({ page, containerRef }: AddonCellShortcutsProps) => {
   const { projectName } = useProjectContext()
   const { getEntityById } = useProjectTableContext()
+  const tableState = useProjectTableState()
   const { focusedCellId, selectedCells } = useSelectionCellsContext()
   const { editingCellId } = useCellEditing()
   const { hasShortcuts, handleShortcut, dialog } = useAddonTableShortcuts(page)
@@ -92,6 +94,7 @@ export const AddonCellShortcuts = ({ page, containerRef }: AddonCellShortcutsPro
           rows,
           focused: { rowId: focusedRow.id, columnId: focused.colId },
           cells,
+          tableState,
         }
       })
     }
@@ -107,6 +110,7 @@ export const AddonCellShortcuts = ({ page, containerRef }: AddonCellShortcutsPro
     selectedCells,
     getEntityById,
     projectName,
+    tableState,
   ])
 
   return dialog ? <AddonDialog contribution={dialog.contribution} context={dialog.context} /> : null

@@ -32,7 +32,7 @@ export class ProjectsManagerPage {
     await expect(createDialog.getByRole('heading', { name: 'Entity Naming' })).toBeVisible()
     await createDialog.getByRole('button', { name: 'Create Project' }).click()
     // deploying a project creates a database schema, which can take a while on a busy server
-    await expect(toast(this.page, 'Project created')).toBeVisible({ timeout: 30_000 })
+    await expect(toast(this.page, `Project ${label} created`)).toBeVisible({ timeout: 30_000 })
     await expect(createDialog).toBeHidden()
   }
 

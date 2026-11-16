@@ -54,6 +54,7 @@ interface FolderSequenceProps extends SequenceValues {
   parentLabel?: string
   prefixDisabled?: boolean
   typeSelectRef?: React.RefObject<HTMLElement>
+  baseInputRef?: React.RefObject<HTMLInputElement> // the first name input, for the parent to focus
   onLastInputKeydown?: (event: React.KeyboardEvent<HTMLInputElement>) => void
   folders: SequenceTypeOption[]
 }
@@ -104,6 +105,7 @@ const FolderSequence: React.FC<FolderSequenceProps> = ({
   parentLabel,
   prefixDisabled,
   typeSelectRef,
+  baseInputRef,
   onLastInputKeydown,
   folders,
   ...props
@@ -120,7 +122,8 @@ const FolderSequence: React.FC<FolderSequenceProps> = ({
 
   const [sequence, setSequence] = useState<string[]>(initSeq)
 
-  const baseRef = useRef<HTMLInputElement>(null)
+  const ownBaseRef = useRef<HTMLInputElement>(null)
+  const baseRef = baseInputRef ?? ownBaseRef
   const prefixRef = useRef<HTMLInputElement>(null)
   const handleChange = (e: SequenceChangeEvent): void => {
     e?.preventDefault && e?.preventDefault()

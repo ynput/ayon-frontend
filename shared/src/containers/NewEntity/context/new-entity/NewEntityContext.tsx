@@ -18,6 +18,7 @@ import { useProjectDataContext } from '@shared/containers/ProjectTreeTable/conte
 import { parseAndFormatName } from '@shared/util'
 import { useSlicerContext } from '@shared/containers/Slicer/context/slicer/SlicerContextInstance'
 import { isEmpty } from 'lodash'
+import { readRememberedSequence, readRememberedType } from '../../util/newEntityMemory'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { NewEntityContext } from './NewEntityContextInstance'
 import { NewEntityType } from '../../util/entityDefinitions'
@@ -87,13 +88,15 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
 
   const initData: EntityForm = { label: '', subType: '', name: '' }
   const [entityForm, setEntityForm] = useState<EntityForm>(initData)
-  const [sequenceForm, setSequenceForm] = useState<SequenceForm>({
+  const [sequenceForm, setSequenceForm] = useState<SequenceForm>(() => ({
     active: false,
     increment: '',
     length: 10,
     prefix: false,
     prefixDepth: 0,
-  })
+    // the settings of the last sequence made this session
+    ...readRememberedSequence(),
+  }))
 
   // Helper functions for creating operations
   const createEntityOperation = (
@@ -439,8 +442,12 @@ export const NewEntityProvider: React.FC<NewEntityProviderProps> = ({ children }
     // set any default values
     const typeOptions =
       (type === 'folder' ? projectInfo?.folderTypes : projectInfo?.taskTypes) || []
-    const firstType = typeOptions[0]
-    const firstName = firstType.name || ''
+    // the type used last time in this project, while it still exists; else the first one
+    const rememberedType = readRememberedType(type, projectName)
+    const firstName =
+      typeOptions.find((option) => option.name === rememberedType)?.name ||
+      typeOptions[0]?.name ||
+      ''
     const label = generateLabel(type, firstName, projectInfo)
 
     // Use the helper function to generate the label

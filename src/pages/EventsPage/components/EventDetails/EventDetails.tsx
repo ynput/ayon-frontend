@@ -179,7 +179,6 @@ export const EventDetails: FC<EventDetailsProps> = ({
               <span className="dot" style={{ backgroundColor: category.color }} />
               {category.label}
             </span>
-            <span className="muted">{event.topic}</span>
           </Fact>
           <Fact
             label="Status"
@@ -189,10 +188,10 @@ export const EventDetails: FC<EventDetailsProps> = ({
                 <Button
                   icon="replay"
                   variant="text"
-                  label="Restart"
                   disabled={isRestarting}
                   onClick={handleRestart}
-                  data-tooltip="Set the event status to restarted"
+                  data-tooltip="Restart: set the event status to restarted"
+                  aria-label="Restart event"
                 />
               )
             }
@@ -245,6 +244,20 @@ export const EventDetails: FC<EventDetailsProps> = ({
               )}
             </Fact>
           )}
+          <Fact
+            label="ID"
+            action={
+              <Button
+                icon="content_copy"
+                variant="text"
+                onClick={() => copyToClipboard(event.id, true)}
+                data-tooltip="Copy event ID"
+                aria-label="Copy event ID"
+              />
+            }
+          >
+            <span className="mono">{event.id}</span>
+          </Fact>
         </Styled.Facts>
 
         {entity && (
@@ -348,13 +361,11 @@ const Fact: FC<{ label: string; children: ReactNode; action?: ReactNode }> = ({
   children,
   action,
 }) => (
-  <>
+  <div className="fact">
     <dt>{label}</dt>
-    <dd>
-      <div className="value">{children}</div>
-      {action && <div className="actions">{action}</div>}
-    </dd>
-  </>
+    <dd>{children}</dd>
+    {action && <div className="actions">{action}</div>}
+  </div>
 )
 
 const FilterButton: FC<{ label: string; onClick: () => void }> = ({ label, onClick }) => (

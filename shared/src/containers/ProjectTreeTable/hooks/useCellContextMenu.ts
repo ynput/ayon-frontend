@@ -292,7 +292,6 @@ const useCellContextMenu = ({
     const entitiesToInherit = getEntitiesToInherit(meta.selectedCells)
     const canInheritFromParent =
       entitiesToInherit.length > 0 &&
-      showHierarchy &&
       !(meta.selectedRows.length > 1 && meta.selectedColumns.length > 1)
 
     return {

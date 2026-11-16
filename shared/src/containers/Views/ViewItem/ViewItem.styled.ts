@@ -45,13 +45,15 @@ export const ViewItem = styled.li`
       }
     }
   }
-  /* hide save button by default */
-  .save {
-    display: none;
+  /* hide mode and save button by default */
+  .save,
+  .more {
+    visibility: hidden;
   }
   &:hover {
-    .save {
-      display: flex;
+    .save,
+    .more {
+      visibility: visible;
     }
   }
 `

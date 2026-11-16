@@ -9,7 +9,9 @@ const AnatomyPresetDropdown = ({ selectedPreset, setSelectedPreset }) => {
   useEffect(() => {
     if (isLoading || !isSuccess) return
     // this works because the default preset is always the first one
-    if (!selectedPreset) {
+    // a preset remembered from an earlier project may have been deleted since
+    const exists = selectedPreset === '_' || presetList.some((p) => p.name === selectedPreset)
+    if (!selectedPreset || !exists) {
       // find primary preset
       const primaryPreset = presetList.find((p) => p.primary)
 

@@ -181,6 +181,58 @@ test.describe('list folders', () => {
       .toEqual({ label: 'Hero shots', entityListFolderId: clientId, entityIds: [shot.id] })
   })
 
+  test('Shift+Enter creates another list in the same folder', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    const shot = await api.createFolder(projectName, { name: 'sh010', folderType: 'Shot' })
+    const dailiesId = await api.createEntityListFolder(projectName, { label: 'Dailies' })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+
+    await overview.selectRow('sh010')
+    await overview.nameCell('sh010').click({ button: 'right' })
+    await menuItem(page, 'Add to list').click()
+    const addDialog = dialog(page, 'Add to list')
+    await addDialog.getByRole('row').filter({ hasText: 'Dailies' }).click()
+    await addDialog.getByRole('button', { name: 'add', exact: true }).click()
+
+    const newList = dialog(page, 'Create New List')
+    const folderField = newList.locator('#entityListFolderId')
+    await expect(folderField).toContainText('Dailies')
+    const label = newList.getByLabel('List label')
+    await label.fill('Monday picks')
+    await label.press('Shift+Enter')
+
+    await expect(label).toHaveValue(/^List /)
+    await expect(folderField).toContainText('Dailies')
+    await label.fill('Tuesday picks')
+    await label.press('Shift+Enter')
+    await expect(label).toHaveValue(/^List /)
+    await newList.getByRole('button', { name: 'Cancel' }).click()
+    await expect(newList).toBeHidden()
+
+    await expect
+      .poll(async () =>
+        (
+          await Promise.all(
+            (
+              await api.listEntityLists(projectName)
+            ).map(async (l) => [
+              l.label,
+              (await api.getEntityList(projectName, l.id)).entityListFolderId,
+              l.entityIds,
+            ]),
+          )
+        ).sort(),
+      )
+      .toEqual([
+        ['Monday picks', dailiesId, [shot.id]],
+        ['Tuesday picks', dailiesId, [shot.id]],
+      ])
+  })
+
   // FLAG (app bug): searching the lists panel keeps folders collapsed, hiding the matches inside
   test.fixme('search finds lists inside collapsed folders', async ({ page, api, projectName }) => {
     const folderId = await api.createEntityListFolder(projectName, { label: 'Dailies' })

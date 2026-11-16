@@ -67,7 +67,7 @@ test.describe('overview table export', () => {
     await expect(exportDialog.root.getByText(/Not exported: Thumbnail/)).toBeVisible()
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'table', 'xlsx'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'table', 'xlsx'))
     // the table's columns in its order, with its header labels
     await expectTableHeaders(file, overview.table)
     // collapsed folders are exported too, tasks before subfolders
@@ -99,7 +99,7 @@ test.describe('overview table export', () => {
     await expect(exportDialog.root).toContainText("Folder (Import CSV can't read it)")
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'table', 'csv'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'table', 'csv'))
     // field names, the import columns first
     expect(file.rows[0].slice(0, 6)).toEqual([
       'entity_type',
@@ -246,7 +246,7 @@ test.describe('overview table export', () => {
     await exportDialog.choose('CSV')
     const selected = await exportDialog.export()
 
-    expect(selected.fileName).toBe(exportFileName(projectName, 'selection', 'csv'))
+    expect(selected.fileName).toBe(exportFileName(projectName, 'folders-tasks', 'selection', 'csv'))
     expect(selected.rows[0]).toEqual([NAME])
     expect(column(selected, NAME).sort()).toEqual(['anim', 'edit'])
 

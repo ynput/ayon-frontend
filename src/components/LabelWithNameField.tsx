@@ -26,6 +26,12 @@ export interface LabelWithNameFieldProps {
   onNameChange: (value: string) => void
   /** Called when name is committed (blur or Enter) — use for auto-save */
   onNameCommit?: (value: string) => void
+  /**
+   * Enter in the name editor, after the name is committed: gets that name and the key event, e.g. to
+   * confirm the dialog with it (the dialog's own state still holds the old name). Without it, Enter
+   * only commits the name.
+   */
+  onNameEnter?: (value: string, event: KeyboardEvent<HTMLInputElement>) => void
   variant?: 'inline' | 'stacked'
 }
 
@@ -49,6 +55,7 @@ export const LabelWithNameField = ({
   onLabelCommit,
   onNameChange,
   onNameCommit,
+  onNameEnter,
   variant = 'stacked',
 }: LabelWithNameFieldProps) => {
   const generatedName = getGeneratedName(labelValue)
@@ -101,6 +108,7 @@ export const LabelWithNameField = ({
     onNameCommit?.(resolvedName)
     setHasCustomName(Boolean(resolvedName) && resolvedName !== generatedName)
     setIsEditingName(false)
+    return resolvedName
   }
 
   const cancelEditingName = () => {
@@ -110,9 +118,11 @@ export const LabelWithNameField = ({
 
   const handleNameInputKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
     if (event.key === 'Enter') {
+      const committedName = commitName()
+      // before preventDefault, so the handler can tell an unhandled Enter
+      onNameEnter?.(committedName, event)
       event.preventDefault()
       event.stopPropagation()
-      commitName()
       return
     }
 

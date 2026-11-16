@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
-import HeaderButton from './HeaderButton'
+import { HeaderButton } from '@shared/components'
 import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'

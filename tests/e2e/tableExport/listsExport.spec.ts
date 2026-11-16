@@ -41,7 +41,7 @@ test.describe('lists table export', () => {
     await exportDialog.choose('CSV', 'Raw')
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'table', 'csv'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'entities', 'table', 'csv'))
     expect(names(file.rows)).toEqual(['t_c', 't_a', 't_b'])
     expect(pick(file, ['attrib.fps']).slice(1)).toEqual([['24.0'], ['30.0'], ['25.0']])
   })
@@ -84,7 +84,7 @@ test.describe('lists table export', () => {
     await expect(exportDialog.option('Selected rows')).toContainText('2 rows')
     const file = await exportDialog.export()
 
-    expect(file.fileName).toBe(exportFileName(projectName, 'selection', 'xlsx'))
+    expect(file.fileName).toBe(exportFileName(projectName, 'entities', 'selection', 'xlsx'))
     expect(names(file.rows).sort()).toEqual(['t_b', 't_c'])
   })
 

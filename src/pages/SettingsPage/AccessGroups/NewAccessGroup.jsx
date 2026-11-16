@@ -1,22 +1,28 @@
 import { FormLayout, FormRow, InputText, SaveButton, Dialog } from '@ynput/ayon-react-components'
-import { useMemo, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { useSaveAccessGroupMutation } from '@shared/api'
 import { toast } from 'react-toastify'
+import { getCreateAnotherTooltip, getDialogKeyDown } from '@shared/util'
 
 const NewAccessGroup = ({ onClose, accessGroupList }) => {
   const [accessGroupName, setAccessGroupName] = useState('')
-  const [createAccessGroup] = useSaveAccessGroupMutation()
+  const [createAccessGroup, { isLoading }] = useSaveAccessGroupMutation()
+  const inputRef = useRef(null)
 
   const accessGroupNames = useMemo(
     () => accessGroupList.map((i) => i?.name.toLowerCase()),
     [accessGroupList],
   )
 
+  // close = false (Shift+Enter): create it and keep the dialog open for the next one
   const onSubmit = async (close) => {
     try {
       await createAccessGroup({ accessGroupName, projectName: '_', permissions: {} }).unwrap()
 
-      close && onClose(accessGroupName)
+      if (close) return onClose(accessGroupName)
+      toast.success(`Access group "${accessGroupName}" created`)
+      setAccessGroupName('')
+      inputRef.current?.focus()
     } catch (error) {
       toast.error('Unable to create access group')
     }
@@ -27,15 +33,14 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
     error = 'This access group already exists'
   else if (!accessGroupName.match('^[a-zA-Z0-9_]([a-zA-Z0-9_.\\-]*[a-zA-Z0-9_])?$'))
     error = 'Invalid access group name'
+  const dialogKeyDown = getDialogKeyDown(() => onSubmit(true), {
+    onClose: () => onClose(),
+    disabled: !!error || isLoading,
+    onContinue: () => onSubmit(false),
+  })
   const handleKeyDown = (e) => {
-    e?.stopPropagation()
-    const isEnter = e.key === 'Enter'
-    const isEsc = e.key === 'Escape'
-    const isCtrlMeta = e.ctrlKey || e.metaKey
-    const isShift = e.shiftKey
-    if (isCtrlMeta && isEnter && !error) onSubmit(true)
-    if (isShift && isEnter && !error) onSubmit(false)
-    if (isEsc) onClose()
+    e.stopPropagation()
+    dialogKeyDown(e)
   }
 
   const footer = useMemo(
@@ -46,6 +51,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
           icon="group_add"
           active={!error && accessGroupName}
           onClick={() => onSubmit(true)}
+          {...getCreateAnotherTooltip()}
         />
       </div>
     ),
@@ -67,6 +73,7 @@ const NewAccessGroup = ({ onClose, accessGroupList }) => {
           <InputText
             value={accessGroupName}
             onChange={(e) => setAccessGroupName(e.target.value)}
+            ref={inputRef}
             autoFocus
           />
         </FormRow>

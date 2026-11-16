@@ -11,12 +11,14 @@ import { useCallback } from 'react'
 import { toast } from 'react-toastify'
 import { useProjectFoldersContext } from '@shared/context'
 import { OpenMoveDialog } from '@shared/containers/MoveEntityDialog'
+import type { ProjectTableState } from '@ynput/ayon-addon'
 
 type OverviewContextMenuProps = {
   openMoveDialog: OpenMoveDialog
+  tableState?: ProjectTableState
 }
 
-const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) => {
+const useOverviewContextMenu = ({ openMoveDialog, tableState }: OverviewContextMenuProps) => {
   //   groupBy
   const { updateGroupBy } = useColumnSettingsContext()
   // lists data; absent in an addon's EntityTable, which has a menu of its own
@@ -24,8 +26,8 @@ const useOverviewContextMenu = ({ openMoveDialog }: OverviewContextMenuProps) =>
 
   const { folders } = useProjectFoldersContext()
   // items addons contribute (entityMenuItem slot): `top` first, the rest above delete
-  const addonTopItems = useAddonEntityMenuItems('overview', 'top')
-  const addonItems = useAddonEntityMenuItems('overview')
+  const addonTopItems = useAddonEntityMenuItems('overview', 'top', tableState)
+  const addonItems = useAddonEntityMenuItems('overview', 'bottom', tableState)
 
   // right click on a group header to un group the tasks
   const unGroupTasksItem: ContextMenuItemConstructor = useCallback(

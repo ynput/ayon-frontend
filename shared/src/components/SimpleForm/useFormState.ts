@@ -4,11 +4,14 @@ import type { SimpleFormValue, SimpleFormValueDict } from './types'
 import { getDefaults } from './defaults'
 import { computeFieldPatches, type FieldPatchMap } from './ruleEngine'
 import { useResolvedOptions, type ResolvedOptionsState } from './useResolvedOptions'
+import { getFieldErrors, type SimpleFormErrors } from './validateFields'
 
 export interface FormStateApi {
   formData: SimpleFormValueDict | null
   patches: FieldPatchMap
   resolvedOptions: ResolvedOptionsState
+  /** constraint errors (regex, min, max) of the current values, by field name */
+  errors: SimpleFormErrors
   setFieldValue: (name: string, value: SimpleFormValue) => void
 }
 
@@ -42,6 +45,11 @@ export const useFormState = (
   // live options for every field with an `enum_resolver`, re-fetched whenever
   // its (template-resolved) params change
   const resolvedOptions = useResolvedOptions(fields, formData || {})
+
+  const errors = useMemo(
+    () => getFieldErrors(fields, patches, formData || {}),
+    [fields, patches, formData],
+  )
 
   // A rule can force a field's value (e.g. clear it while it's read-only) -
   // apply that back into formData so a stale value isn't silently submitted.
@@ -118,5 +126,5 @@ export const useFormState = (
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  return { formData, patches, resolvedOptions, setFieldValue }
+  return { formData, patches, resolvedOptions, errors, setFieldValue }
 }

@@ -56,6 +56,7 @@ const NewListDialogContainer: FC<NewListDialogContainerProps> = ({}) => {
       form={newList}
       onChange={setNewList}
       onSubmit={handleSubmit}
+      onSubmitAndContinue={() => createNewList(undefined, { keepOpen: true })}
       submitLoading={isCreatingList}
       dialogTitle={isReview ? 'Create New Review Session' : 'Create New List'}
       labels={{

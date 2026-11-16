@@ -1,4 +1,4 @@
-import React, { KeyboardEvent, useMemo, useRef, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { isEmpty } from 'lodash'
 import {
   Dialog,
@@ -17,8 +17,10 @@ import {
   checkName,
   checkLabel,
   parseAndFormatName,
-  getPlatformShortcutKey,
-  KeyMode,
+  getCreateAnotherTooltip,
+  isDialogConfirmKey,
+  isDialogContinueKey,
+  pluralize,
 } from '@shared/util'
 import type {
   EditorTaskNode,
@@ -38,6 +40,12 @@ import { InputLabel, InputsContainer } from './NewEntityForm.styled'
 import { toast } from 'react-toastify'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { newEntityDefinitions } from '../util/entityDefinitions'
+import {
+  readRememberedCreateMore,
+  rememberCreateMore,
+  rememberSequence,
+  rememberType,
+} from '../util/newEntityMemory'
 
 const StyledDialog = styled(Dialog)`
   .body {
@@ -137,7 +145,12 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     parentFolderIds,
   } = useNewEntityContext()
 
-  const [createMore, setCreateMore] = useState(false)
+  // remembered for the session: someone making many entities keeps it on
+  const [createMore, setCreateMoreState] = useState(readRememberedCreateMore)
+  const setCreateMore = (value: boolean) => {
+    setCreateMoreState(value)
+    rememberCreateMore(value)
+  }
   const { selectedCells } = useOptionalSelectionCellsContext() || {}
   const hierarchySelection = useHierarchySelection()
   const { getFolderById } = useProjectFoldersContext()
@@ -311,7 +324,13 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   }
 
   const handleSeqChange = (value: any) => {
-    setEntityForm({ ...entityForm, label: value.base, subType: value.type })
+    // the name is checked before creating, and a sequence has no name field to fill it
+    setEntityForm({
+      ...entityForm,
+      label: value.base,
+      name: parseAndFormatName(value.base, config),
+      subType: value.type,
+    })
     setSequenceForm({
       ...sequenceForm,
       increment: value.increment,
@@ -324,6 +343,7 @@ export const NewEntity: React.FC<NewEntityProps> = ({
   //   refs
   const typeSelectRef = useRef<DropdownRef>(null)
   const labelRef = useRef<HTMLInputElement>(null)
+  const sequenceBaseRef = useRef<HTMLInputElement>(null)
 
   const handleClose = () => {
     // reset state
@@ -358,15 +378,30 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     try {
       const resOperations = await onCreateNew(selectedFolderIds)
 
+      if (entityType && projectInfo.projectName) {
+        rememberType(entityType, entityForm.subType, projectInfo.projectName)
+      }
+      if (sequenceForm.active) {
+        const { increment, length, prefix, prefixDepth } = sequenceForm
+        rememberSequence({ increment, length, prefix, prefixDepth })
+      }
+
       // callback function
       onNewEntities?.(resOperations, stayOpen, selectedFolderIds)
 
       if (stayOpen) {
-        // focus and select the label input
-        if (labelRef.current) {
-          labelRef.current.focus()
-          labelRef.current.select()
+        // the dialog stays open, so say that the entities were made
+        if (entityType) {
+          const created = resOperations.filter((op) => op.entityType === entityType).length
+          const noun = newEntityDefinitions[entityType].label.toLowerCase()
+          toast.success(`${pluralize(created || 1, noun)} created`)
         }
+        // focus and select the label input (the first name input of a sequence)
+        const input = sequenceForm.active ? sequenceBaseRef.current : labelRef.current
+        input?.focus()
+        input?.select()
+        // clear the entity so the next one starts empty, but keep the type
+        setEntityForm((prev) => ({ ...prev, label: '', name: '' }))
         setNameManuallyEdited(false)
       } else {
         handleClose()
@@ -377,21 +412,21 @@ export const NewEntity: React.FC<NewEntityProps> = ({
     }
   }
 
-  const handleKeyDown = (e: KeyboardEvent, lastInput?: boolean) => {
-    e?.stopPropagation()
-    if (e.key === 'Enter') {
-      if (lastInput && !e.shiftKey) {
-        handleSubmit(false)
-        setCreateMore(false)
-      } else if (e.ctrlKey || e.metaKey) {
-        handleSubmit(false)
-        setCreateMore(false)
-      } else if (e.shiftKey) {
-        handleSubmit(true)
-        setCreateMore(true)
-      }
-    } else if (e.key === 'Escape') {
+  // Enter on any field creates and closes (the standard form behaviour, whatever the Create more switch says);
+  // Shift+Enter always creates and keeps the dialog open for the next one
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLElement>) => {
+    e.stopPropagation()
+    if (e.key === 'Escape') {
       handleClose()
+      return
+    }
+    if (isSubmitting || !entityForm.name || !entityForm.label || missingTaskParent) return
+    if (isDialogConfirmKey(e)) {
+      e.preventDefault()
+      handleSubmit(false)
+    } else if (isDialogContinueKey(e)) {
+      e.preventDefault()
+      handleSubmit(true)
     }
   }
 
@@ -522,13 +557,14 @@ export const NewEntity: React.FC<NewEntityProps> = ({
                 onClick={() => handleSubmit(createMore)}
                 active={!addDisabled || isSubmitting}
                 disabled={!entityForm.name || !entityForm.label || missingTaskParent}
-                data-tooltip={missingTaskParent ? 'Select a parent folder' : undefined}
-                data-shortcut={getPlatformShortcutKey('Enter', [KeyMode.Ctrl])}
+                {...(missingTaskParent
+                  ? { 'data-tooltip': 'Select a parent folder' }
+                  : getCreateAnotherTooltip())}
                 saving={isSubmitting}
               />
             </Toolbar>
           }
-          onKeyDown={(e: React.KeyboardEvent) => handleKeyDown(e as KeyboardEvent)}
+          onKeyDown={handleKeyDown}
           onClick={(e: React.MouseEvent) => {
             const target = e.target as HTMLElement
             target.tagName !== 'INPUT' && setNameFocused(false)
@@ -574,8 +610,9 @@ export const NewEntity: React.FC<NewEntityProps> = ({
                 isRoot={isRoot}
                 // @ts-ignore
                 typeSelectRef={typeSelectRef}
+                baseInputRef={sequenceBaseRef}
                 // @ts-ignore
-                onLastInputKeydown={(e) => handleKeyDown(e, true)}
+                onLastInputKeydown={handleKeyDown}
                 folders={projectInfo?.folderTypes || []}
               />
             ) : (

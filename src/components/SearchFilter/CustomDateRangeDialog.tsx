@@ -2,6 +2,7 @@ import { FC } from 'react'
 import { Dialog, FormRow, InputDate, SaveButton } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { format, parse } from 'date-fns'
+import { getDialogKeyDown } from '@shared/util'
 
 const DialogBody = styled.div`
   display: flex;
@@ -33,6 +34,11 @@ export const CustomDateRangeDialog: FC<CustomDateRangeDialogProps> = ({
   <Dialog
     isOpen={isOpen}
     onClose={onClose}
+    // Enter in an open date picker picks the date (it calls preventDefault), otherwise it confirms
+    onKeyDown={getDialogKeyDown(onApply, {
+      onClose,
+      disabled: !(startDate && endDate && endDate >= startDate),
+    })}
     header={header}
     size="sm"
     hideCancelButton
