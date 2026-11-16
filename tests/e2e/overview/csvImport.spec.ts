@@ -15,13 +15,10 @@ test.describe('overview CSV import', () => {
 
     await expect
       .poll(async () =>
-        (
-          await api.listFolders(projectName)
-        ).map((f) => ({
-          path: f.path,
-          folderType: f.folderType,
-          status: f.status,
-        })),
+        // the server does not promise an order
+        (await api.listFolders(projectName))
+          .map((f) => ({ path: f.path, folderType: f.folderType, status: f.status }))
+          .sort((a, b) => a.path.localeCompare(b.path)),
       )
       .toEqual([
         { path: 'sq100', folderType: 'Sequence', status: 'Not ready' },
@@ -47,7 +44,9 @@ test.describe('overview CSV import', () => {
 
     await expect
       .poll(async () =>
-        (await api.listFolders(projectName)).map((f) => [f.path, f.folderType, f.status]),
+        (await api.listFolders(projectName))
+          .map((f) => [f.path, f.folderType, f.status])
+          .sort((a, b) => a[0].localeCompare(b[0])),
       )
       .toEqual([
         ['sq100', 'Sequence', 'Not ready'],
