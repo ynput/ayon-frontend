@@ -54,7 +54,7 @@ export type CompareHighlight = 'different' | 'same'
 export type CompareSettings = {
   highlight?: CompareHighlight // which pairs get the tint
   color?: string
-  showBoth?: boolean // compared with another list: also show the entities only in it
+  showBoth?: boolean // compared with another list: also show the entities only in it (unset: on)
   // where attribute edits go: the entities, as on the Overview page (unset: lists edited the
   // entities before they had list values), or the list items
   editTarget?: ListValueEditTarget
