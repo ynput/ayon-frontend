@@ -16,6 +16,8 @@ const AccessGroupList = ({
   canCreateOrDelete,
 }) => {
   const [showNewAccessGroup, setShowNewAccessGroup] = useState(false)
+  // name of the access group being duplicated, opens the dialog in duplicate mode
+  const [duplicateSource, setDuplicateSource] = useState(null)
 
   // Load user list
   const { data: accessGroupList = [], isLoading } = useGetAccessGroupsQuery({
@@ -42,6 +44,9 @@ const AccessGroupList = ({
   const onNewAccessGroup = (name) => {
     // close form
     setShowNewAccessGroup(false)
+    setDuplicateSource(null)
+    // closed without creating anything
+    if (!name) return
     // select new access group
     onSelectAccessGroup({ name, isProjectLevel: true })
   }
@@ -68,6 +73,12 @@ const AccessGroupList = ({
 
   const ctxMenuItems = (eventData) => {
     const menuItems = [
+      {
+        label: 'Duplicate',
+        icon: 'content_copy',
+        hidden: !canCreateOrDelete,
+        command: () => setDuplicateSource(eventData.name),
+      },
       {
         label: 'Clear Overrides',
         icon: 'clear',
@@ -99,7 +110,7 @@ const AccessGroupList = ({
         danger: true,
       },
     ]
-    return menuItems
+    return menuItems.filter((item) => !item.hidden)
   }
 
   const [ctxMenuShow] = useCreateContextMenu([])
@@ -108,8 +119,12 @@ const AccessGroupList = ({
 
   return (
     <Section style={{ maxWidth: 400, flex: 2 }}>
-      {showNewAccessGroup && (
-        <NewAccessGroup onClose={onNewAccessGroup} accessGroupList={accessGroupList} />
+      {(showNewAccessGroup || duplicateSource) && (
+        <NewAccessGroup
+          onClose={onNewAccessGroup}
+          accessGroupList={accessGroupList}
+          sourceAccessGroup={duplicateSource}
+        />
       )}
 
       {canCreateOrDelete && (
@@ -118,6 +133,12 @@ const AccessGroupList = ({
             label="New access group"
             onClick={() => setShowNewAccessGroup(true)}
             icon="group_add"
+          />
+          <Button
+            label="Duplicate access group"
+            onClick={() => setDuplicateSource(selection?.name)}
+            icon="content_copy"
+            disabled={!selection}
           />
           <Spacer />
           <Button label="Delete access group" onClick={onDeleteGlobal} icon="delete" />
