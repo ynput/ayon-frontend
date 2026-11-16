@@ -26,6 +26,7 @@ export type ListRef = { id: string; label: string; entityType: string }
 export type ListValuesContext = {
   listAttributes: string[] // names of the list's own attributes
   formatValue: (attrib: string, value: unknown) => string
+  editTarget?: ListValueEditTarget // the view's choice, see CompareSettings.editTarget
 }
 
 export type ResolvedListItemValues = {
@@ -54,6 +55,8 @@ export type CompareSettings = {
   highlight?: CompareHighlight // which pairs get the tint
   color?: string
   showBoth?: boolean // compared with another list: also show the entities only in it
+  // where attribute edits go: the list items (default) or the entities, as on the Overview page
+  editTarget?: ListValueEditTarget
 }
 
 // The Lists page's query of a list's items, as a hook so it keeps the page's cache
@@ -132,6 +135,9 @@ export type ListValuesControlsProps = {
   view: CompareView<unknown>
   shownList?: ListRef
   ListPicker: ComponentType<ListPickerProps>
+  // the view's settings, to switch editTarget (without them the switch is hidden)
+  settings?: CompareSettings
+  onSettingsChange?: (settings: CompareSettings) => void
 }
 
 export type CompareSettingsProps = {
