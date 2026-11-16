@@ -51,7 +51,9 @@ What the module does, and what core gives it:
   one bulk `PATCH /lists/{id}/items`. `readsEntityValue` (edit target is the entity, i.e. without the
   powerpack) switches sort and filter keys from `attrib.*` to `entityAttrib.*` (`entityValueFilter.ts`).
 - The view's `editTarget` (the module's "Edit entities" toolbar switch, stored in the `listValues`
-  setting) reaches the module as `ListValuesContext.editTarget`. `ListValuesProvider` owns that setting
+  setting) reaches the module as `ListValuesContext.editTarget`, `'entity'` when the view has none (views
+  saved before the switch keep editing the entities). Core fills that default, not the module: a newer
+  module with an older core then still edits list values. `ListValuesProvider` owns that setting
   (each `useListsViewSettings` call keeps its own pending copy). `editsEntities` is what the module
   then does with the entities' attributes (an older module ignores the setting): it turns on the
   per-row attribute locks of the entities (`ignoreEntityAttribLocks`), and switching it clears the undo

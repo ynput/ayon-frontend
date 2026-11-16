@@ -68,7 +68,9 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   // a change at once (each useListsViewSettings keeps its own pending copy)
   const { listValues: storedSettings, onUpdateListValues: setSettings } = useListsViewSettings()
   const settings = (storedSettings as CompareSettings | undefined) || NO_SETTINGS
-  const editTarget = isPowerFeature ? settings.editTarget : undefined
+  // the entities unless the view chose list values: views saved before the switch keep editing
+  // the entities, as lists did before list values. Always passed, so a module never defaults it.
+  const editTarget = isPowerFeature ? settings.editTarget ?? 'entity' : undefined
 
   const formatValue = useCallback(
     (attrib: string, value: unknown) =>

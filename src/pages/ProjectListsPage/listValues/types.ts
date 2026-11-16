@@ -26,7 +26,7 @@ export type ListRef = { id: string; label: string; entityType: string }
 export type ListValuesContext = {
   listAttributes: string[] // names of the list's own attributes
   formatValue: (attrib: string, value: unknown) => string
-  editTarget?: ListValueEditTarget // the view's choice, see CompareSettings.editTarget
+  editTarget?: ListValueEditTarget // the view's choice, always set by the Lists page (see CompareSettings)
 }
 
 export type ResolvedListItemValues = {
@@ -55,7 +55,8 @@ export type CompareSettings = {
   highlight?: CompareHighlight // which pairs get the tint
   color?: string
   showBoth?: boolean // compared with another list: also show the entities only in it
-  // where attribute edits go: the list items (default) or the entities, as on the Overview page
+  // where attribute edits go: the entities, as on the Overview page (unset: lists edited the
+  // entities before they had list values), or the list items
   editTarget?: ListValueEditTarget
 }
 
