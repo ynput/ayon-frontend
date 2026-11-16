@@ -604,6 +604,65 @@ const openContextMenu = useContextMenu()
   `@ynput/ayon-react-components`) from its `onClick`. The `confirmDelete` of
   `@ynput/ayon-frontend-shared` needs a dialog AYON doesn't render for addons.
 
+## Forms, lists and buttons: `@ynput/ayon-react-components`
+
+Inputs, buttons and form rows are AYON's component library,
+[`@ynput/ayon-react-components`](https://github.com/ynput/ayon-react-components), not part of this
+package. Install it with its peer `react-datepicker`:
+`yarn add -D @ynput/ayon-react-components react-datepicker@4`. `ayonAddon()` shares it like React,
+so in AYON the addon gets AYON's copy, styles included. Import it as it is, don't wrap or re-export
+it. What AYON itself uses:
+
+```tsx
+import { Button, Dropdown, FormLayout, FormRow, InputSwitch, InputText, InputTextarea, SaveButton } from '@ynput/ayon-react-components'
+
+<FormLayout>
+  <FormRow label="Name">
+    <InputText value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+  </FormRow>
+  <FormRow label="Due">
+    <InputText type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+  </FormRow>
+  <FormRow label="Kind">
+    <Dropdown
+      options={[{ value: 'bug', label: 'Bug' }, { value: 'idea', label: 'Idea' }]}
+      value={kind ? [kind] : []}
+      onChange={([picked]) => setKind(picked)}
+      placeholder="Pick a kind"
+    />
+  </FormRow>
+  <FormRow label="Notes">
+    <InputTextarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 80 }} />
+  </FormRow>
+  <FormRow label="Billable">
+    <InputSwitch checked={billable} onChange={() => setBillable(!billable)} />
+  </FormRow>
+</FormLayout>
+<Button label="Cancel" variant="text" onClick={reset} />
+<SaveButton label="Save" active={isDirty} saving={isSaving} onClick={save} />
+```
+
+- `FormLayout` stacks `FormRow`s; `FormRow` takes `label` (required) and the field as children.
+- `InputText`, `InputNumber` and `InputTextarea` are styled native fields with the native props
+  (`value`, `onChange`, `placeholder`, `disabled`). `InputTextarea` is typed with input attributes:
+  no `rows`, size it with `style`. Dates: `<InputText type="date">`, value `YYYY-MM-DD`, as AYON does.
+- `Dropdown`: `options` (objects with `value` and `label`; other keys with `dataKey` / `labelKey`),
+  `value` is always an array (`[]` for none), `onChange(values)` gets the new array. `multiSelect`,
+  `search`, `placeholder`, `disabled`.
+- `InputSwitch`: `checked`, `onChange`. `Button`: `label`, `icon` (a Material Symbols name),
+  `variant` (`surface` default, `filled` for the main action, `text`, `tonal`, `danger`, ...),
+  `tooltip`, `disabled`, `selected`. `SaveButton`: a `Button` with `active` (highlighted, clickable)
+  and `saving` (spinner).
+- Lists and layout: `Toolbar` (a row of buttons; `Spacer` pushes what follows to the right),
+  `Panel` / `Section` (`direction`), `ScrollPanel` (scrolls its children), `TableRow` (a `name` /
+  `value` row, `onCopy`). Entities in a table: `EntityTable`. Icons: `<Icon icon="..." />`.
+  Confirmations: `Dialog` (`isOpen`, `onClose`, `header`, `footer`, `size`).
+- `react-datepicker` is imported as soon as the library loads: without it, any import of the
+  library fails to bundle (`Could not resolve "react-datepicker"`), in the dev shell and the build.
+- Avoid `InputDate`: it is `react-datepicker` itself, and its props type comes from
+  `@types/react-datepicker`, which nothing installs (AYON's own uses cast it). Use the native date
+  input above. The library's other peers (React, `styled-components`) are AYON's shared ones.
+
 ## Slot contexts: one shape
 
 The same thing has the same name and type in every slot that has it:
