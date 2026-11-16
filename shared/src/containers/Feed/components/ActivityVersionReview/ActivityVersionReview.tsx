@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react'
 import * as Styled from './ActivityVersionReview.styled'
 import ActivityDate from '../ActivityDate'
-import { Icon } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import { VersionReviewFeedback } from '../CommentInput/types'
 import { clsx } from 'clsx'
 import { UserImage } from '@ynput/ayon-react-components'
@@ -56,9 +56,10 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
   // same rule as comments: the author (guests included) or an admin
   const canDelete = !!onDelete && !!activityId && (!!isOwner || !!user?.data?.isAdmin)
 
-  const handleContextMenu = (event: React.MouseEvent) => {
+  const openMenu = (event: React.MouseEvent) => {
     if (!canDelete) return
     event.preventDefault()
+    event.stopPropagation()
     contextMenuShow(event, [
       {
         label: 'Delete',
@@ -103,7 +104,7 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
   return (
     <Styled.VersionReview
       className={clsx(activityData.feedback, { deletable: canDelete })}
-      onContextMenu={handleContextMenu}
+      onContextMenu={openMenu}
     >
       <Styled.Body>
         {authorName && <UserImage
@@ -126,6 +127,9 @@ const ActivityVersionReview: React.FC<ActivityVersionReviewProps> = ({
         )}
         <Styled.Text>{label}</Styled.Text>
         <ActivityDate date={createdAt} exactTooltip />
+        {canDelete && (
+          <Button className="more" icon="more_horiz" variant="text" onClick={openMenu} />
+        )}
       </Styled.Body>
     </Styled.VersionReview>
   )

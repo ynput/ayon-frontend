@@ -32,6 +32,29 @@ export const VersionReview = styled.li`
   &.deletable:hover {
     background-color: color-mix(in srgb, currentColor 12%, transparent);
   }
+
+  /* the more button opens the right-click menu, shown only while the item is hovered,
+     in the item's own colour */
+  .more {
+    flex-shrink: 0;
+    margin: -4px 0;
+    padding: 2px;
+    color: inherit;
+    background-color: transparent;
+    visibility: hidden;
+
+    .icon {
+      color: inherit;
+    }
+
+    &:hover {
+      background-color: color-mix(in srgb, currentColor 20%, transparent);
+    }
+  }
+
+  &:hover .more {
+    visibility: visible;
+  }
 `
 
 export const Body = styled.div`
