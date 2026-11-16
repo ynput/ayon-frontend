@@ -37,6 +37,7 @@ import {
 } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
+import overviewApi from '@shared/api/queries/overview/getOverview'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
 // prevents firing a request per folder while the user is quickly scrolling past them.
@@ -197,25 +198,57 @@ export const useFetchOverviewData = ({
     return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
   }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
-  const expandedFoldersTasksArgs = {
-    projectName,
-    parentIds: visibleFolderIdsToQuery,
-    filter: taskFilters.filterString,
-    folderFilter: folderFilters.filterString,
-    search: taskFilters.search,
-    showComments,
-  }
+  const expandedFoldersTasksArgs = useMemo(
+    () => ({
+      projectName,
+      parentIds: visibleFolderIdsToQuery,
+      filter: taskFilters.filterString,
+      folderFilter: folderFilters.filterString,
+      search: taskFilters.search,
+      showComments,
+    }),
+    [
+      projectName,
+      visibleFolderIdsToQuery,
+      taskFilters.filterString,
+      folderFilters.filterString,
+      taskFilters.search,
+      showComments,
+    ],
+  )
 
   // QUERY
+  const skipExpandedFoldersTasks =
+    isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView)
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
+    originalArgs: requestedFoldersTasksArgs,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip:
-      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip: skipExpandedFoldersTasks,
   })
+
+  // All expanded folders share one cache entry, and RTK Query ignores new args for an entry while
+  // it is fetching. Folders expanded during a request would never load, so request them after it.
+  useEffect(() => {
+    if (skipExpandedFoldersTasks || isFetchingExpandedFoldersTasks || !requestedFoldersTasksArgs)
+      return
+    if (JSON.stringify(requestedFoldersTasksArgs) === JSON.stringify(expandedFoldersTasksArgs))
+      return
+    dispatch(
+      overviewApi.endpoints.getOverviewTasksByFolders.initiate(expandedFoldersTasksArgs, {
+        subscribe: false,
+      }),
+    )
+  }, [
+    skipExpandedFoldersTasks,
+    isFetchingExpandedFoldersTasks,
+    requestedFoldersTasksArgs,
+    expandedFoldersTasksArgs,
+    dispatch,
+  ])
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
