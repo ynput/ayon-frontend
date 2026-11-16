@@ -75,6 +75,8 @@ The CLI, the dev shell and the preview scenes of other addons' slots are in
   import { StringParam, useQueryParam, withDefault } from '@ynput/ayon-addon'
   const [mode, setMode] = useQueryParam('mode', withDefault(StringParam, 'list'))
   ```
+- A studio page's `<ProjectList allProjects />` has an "All projects" row at the top, selected by
+  default: `selectedProjects` is empty while it is selected.
 - Links to an entity come from `entityUrl(entity, { activity? })`, never a hand-built URL: the page
   that opens it with its details panel (folders and tasks on Overview; products, versions and
   representations on Products), `undefined` for types without a page (e.g. `workfile`).
