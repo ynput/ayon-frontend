@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { toggleDevMode, updateUserPreferences } from '@state/user'
 import { FC, useMemo } from 'react'
 import { DeveloperSwitch } from './DeveloperSwitch'
+import { SlotInspectorMenu } from '@shared/components'
 import { toast } from 'react-toastify'
 import { useUpdateUserMutation } from '@shared/api'
 import { setSettingsVariantForDeveloperMode } from '@containers/AddonSettings/settingsVariant'
@@ -172,19 +173,23 @@ const BundleModeSelector: FC<BundleModeSelectorProps> = ({}) => {
     }
 
     return (
-      <StyledDropdown
-        options={options}
-        value={[bundleMode]}
-        valueTemplate={renderValue}
-        itemTemplate={renderItem}
-        onChange={(v) => handleBundleModeChange(v[0] as BundleMode)}
-      />
+      <>
+        <StyledDropdown
+          options={options}
+          value={[bundleMode]}
+          valueTemplate={renderValue}
+          itemTemplate={renderItem}
+          onChange={(v) => handleBundleModeChange(v[0] as BundleMode)}
+        />
+        {developerMode && <SlotInspectorMenu />}
+      </>
     )
   }
 
   return (
     <>
       {isDeveloper && <DeveloperSwitch value={developerMode} onChange={handleDeveloperMode} />}
+      {isDeveloper && developerMode && <SlotInspectorMenu />}
       {isStaging && (
         <DeveloperSwitch
           value={stagingMode}

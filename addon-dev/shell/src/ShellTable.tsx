@@ -1,139 +1,251 @@
-// The stand-in for AYON's project table: the picked entities as rows, with the addon's real
-// columns (cells and fetchValues through AYON's own column code) and right-click menu items.
-import { useMemo } from 'react'
-import type { MouseEvent } from 'react'
-import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table'
-import type { ColumnDef } from '@tanstack/react-table'
+// AYON's project table (ProjectTreeTable from the shared package) with the entities picked in
+// Context as its rows: Name and Status, then the addon's columns. Its header cells, column menus
+// (with the projectTable.columnMenuItem items), cell widgets, resizing, selection, right-click
+// menu (entityMenuItem) and shortcuts (table.shortcut) are AYON's own. The shell feeds the table's
+// providers from local state instead of a page: the rows from the Context form, the column
+// settings kept in memory, no edits saved.
+import { useEffect, useMemo, useState } from 'react'
+import type { ReactNode } from 'react'
+import type { ExpandedState } from '@tanstack/react-table'
+import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import type { EntityRef, ProjectTablePage, ProjectTableState } from '@ynput/ayon-addon'
+import { useGetEntitiesDetailsPanelQuery } from '@ynput/ayon-frontend-shared/api'
+import { usePowerpack } from '@ynput/ayon-frontend-shared/context'
 import {
-  AddonColumnDataScope,
+  CellEditingProvider,
+  ColumnDndProvider,
+  ColumnSettingsProvider,
+  DetailsPanelEntityProvider,
+  ENTITY_COLUMN_IDS,
+  LISTS_COLUMN_ID,
+  ProjectDataContext,
+  ProjectTableProvider,
+  ProjectTableQueriesProvider,
+  ProjectTableStateContext,
+  ProjectTreeTable,
+  REVIEW_SESSIONS_COLUMN_ID,
+  ROW_SELECTION_COLUMN_ID,
+  SelectedRowsProvider,
+  SelectionCellsProvider,
+  parseCellId,
   useAddonEntityMenuItems,
   useAddonTableColumns,
+  useOptionalProjectDataContext,
+  useSelectionCellsContext,
 } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { useCreateContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
-
-interface ShellRow {
-  id: string
-  primary: { id: string; entityType: string; name: string; label?: string }
-}
+import type {
+  ContextMenuItemConstructors,
+  EntitiesMap,
+  ProjectDataContextProps,
+  ProjectTableProviderProps,
+  TableRow,
+} from '@ynput/ayon-frontend-shared/ProjectTreeTable'
 
 interface ShellTableProps {
   page: ProjectTablePage
-  /** what the table shows, for the addon right-click menu items */
+  /** what the table shows, for the addon menu items */
   tableState?: ProjectTableState
   entities: EntityRef[]
-  selected: EntityRef[]
+  /** the rows of the selected cells */
   onSelect: (selected: EntityRef[]) => void
 }
 
-export const ShellTable = ({ page, tableState, entities, selected, onSelect }: ShellTableProps) => {
-  const { columns: addonColumns } = useAddonTableColumns(page)
-  const columns = useMemo<ColumnDef<ShellRow>[]>(
-    () => [
-      {
-        id: 'name',
-        header: 'Name',
-        size: 260,
-        cell: ({ row }) => row.original.primary.label || row.original.primary.name,
-      },
-      ...(addonColumns.map((extra) => extra.column) as unknown as ColumnDef<ShellRow>[]),
-    ],
-    [addonColumns],
+// AYON's columns other than Name and Status
+const EXCLUDED_COLUMNS = [
+  ROW_SELECTION_COLUMN_ID,
+  'thumbnail',
+  'entityType',
+  ENTITY_COLUMN_IDS.folder,
+  'subType',
+  'assignees',
+  'tags',
+  'createdAt',
+  'createdBy',
+  'updatedAt',
+  'updatedBy',
+  'comments',
+  LISTS_COLUMN_ID,
+  REVIEW_SESSIONS_COLUMN_ID,
+]
+
+const noop = () => undefined
+const noData = async () => undefined
+const NO_ROW_DATA: ProjectDataContextProps = {
+  isInitialized: true,
+  isLoading: false,
+  users: [],
+  attribFields: [],
+  writableFields: [],
+  canWriteNamePermission: false,
+  canWriteLabelPermission: false,
+}
+// the group-by settings are the Customize panel's, which the shell draws itself
+const MODULES = { GroupSettings: (() => null) as never, isLoading: false }
+
+interface Details {
+  id: string
+  name?: string
+  label?: string | null
+  status?: string
+  entitySubType?: string
+  path?: string
+}
+
+/** The selected cells' rows, as the shell's selection. */
+const SelectionSync = ({
+  entities,
+  onSelect,
+}: {
+  entities: EntityRef[]
+  onSelect: (selected: EntityRef[]) => void
+}) => {
+  const { selectedCells } = useSelectionCellsContext()
+  useEffect(() => {
+    const ids = new Set([...selectedCells].map((cellId) => parseCellId(cellId)?.rowId))
+    onSelect(entities.filter((entity) => ids.has(entity.id)))
+    // only when the selection changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCells])
+  return null
+}
+
+/** The project's attributes and users, or none in preview (no server to read them from). */
+const ProjectData = ({ children }: { children: ReactNode }) =>
+  useOptionalProjectDataContext() ? (
+    <>{children}</>
+  ) : (
+    <ProjectDataContext.Provider value={NO_ROW_DATA}>{children}</ProjectDataContext.Provider>
   )
-  const data = useMemo<ShellRow[]>(
+
+export const ShellTable = ({ page, tableState, entities, onSelect }: ShellTableProps) => {
+  const { columns: extraColumns } = useAddonTableColumns(page)
+  // shown: Name, Status and those columns (the others start hidden, as AYON's opt-in columns)
+  const defaultColumnVisibility = useMemo(
     () =>
-      entities.map((entity) => ({
-        id: entity.id,
-        primary: {
-          id: entity.id,
-          entityType: entity.entityType,
-          name: entity.name || entity.id,
-          label: entity.label,
-        },
-      })),
+      Object.fromEntries(
+        ['name', 'status', ...extraColumns.map((extra) => extra.column.id || '')].map((id) => [
+          id,
+          true,
+        ]),
+      ),
+    [extraColumns],
+  )
+
+  // the rows: the entities picked in Context, with their names and statuses from the server
+  const entityType = entities[0]?.entityType || 'task'
+  const { data: details = [] } = useGetEntitiesDetailsPanelQuery(
+    {
+      entityType: entityType as never,
+      entities: entities.map((e) => ({ id: e.id, projectName: e.projectName })),
+    },
+    { skip: !entities.length },
+  )
+  // the rows' types: the name column's label
+  const scopes = useMemo(
+    () => [...new Set(entities.map((entity) => entity.entityType))],
     [entities],
   )
-  const table = useReactTable({
-    data,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getRowId: (row) => row.id,
-    // AYON's table declares its own filter functions (ProjectTreeTable)
-    filterFns: {} as never,
-  })
+  const { rows, entitiesMap } = useMemo(() => {
+    const map: EntitiesMap = new Map()
+    const tableRows = entities.map((entity): TableRow => {
+      const found = (details as Details[]).find((d) => d.id === entity.id)
+      const primary = {
+        id: entity.id,
+        entityId: entity.id,
+        entityType: entity.entityType,
+        name: found?.name || entity.name || entity.id,
+        label: found?.label || entity.label,
+        status: found?.status,
+        subType: found?.entitySubType || '',
+        path: found?.path,
+      }
+      map.set(entity.id, primary as never)
+      return { id: entity.id, primary: primary as TableRow['primary'], readOnly: true }
+    })
+    return { rows: tableRows, entitiesMap: map }
+  }, [entities, details])
 
-  const buildAddonItems = useAddonEntityMenuItems(page, 'bottom', tableState)
-  const [openMenu] = useCreateContextMenu([])
-  const isSelected = (id: string) => selected.some((entity) => entity.id === id)
+  // the column settings, kept for the session (AYON saves them in the page's view)
+  const [columns, setColumns] = useState<Record<string, unknown>>({})
+  const [expanded, setExpanded] = useState<ExpandedState>({})
+  const queryFilters = useMemo(() => ({ filter: undefined, search: undefined }), [])
 
-  const onContextMenu = (e: MouseEvent, entity: EntityRef) => {
-    e.preventDefault()
-    const targets = isSelected(entity.id) ? selected : [entity]
-    if (!isSelected(entity.id)) onSelect([entity])
-    // the cells AYON's table would pass: one per selected row
-    const cells = targets.map((target) => ({
-      cellId: `${target.id}-name`,
-      entityId: target.id,
-      entityType: target.entityType,
-      isGroup: false,
-      data: { name: target.name, label: target.label },
-    }))
-    const cell = cells.find((c) => c.entityId === entity.id)!
-    const items = buildAddonItems(e as never, cell as never, cells as never, {
-      selectedCells: cells.map((c) => c.cellId),
-      selectedRows: [],
-      selectedColumns: [],
-      selectedFullRows: [],
-      selectedGroups: [],
-    }, {} as never)
-    if (Array.isArray(items) && items.length) openMenu(e, items as never)
+  // the right-click menu: the addon's items (entityMenuItem) around AYON's copy and paste
+  const addonTopItems = useAddonEntityMenuItems(page, 'top', tableState)
+  const addonItems = useAddonEntityMenuItems(page, 'bottom', tableState)
+  const contextMenuItems = useMemo<ContextMenuItemConstructors>(
+    () => [addonTopItems, 'copy-paste', addonItems],
+    [addonTopItems, addonItems],
+  )
+  const powerpack = usePowerpack()
+
+  const tableProps: Omit<ProjectTableProviderProps, 'children'> = {
+    isInitialized: true,
+    isLoading: false,
+    isLoadingMore: false,
+    users: [],
+    attribFields: [],
+    scopes,
+    tasksMap: new Map(),
+    foldersMap: new Map(),
+    entitiesMap,
+    tasksByFolderMap: new Map(),
+    tableRows: rows,
+    groups: [],
+    fetchNextPage: noop,
+    onSyncData: noop as never,
+    queryFilters,
+    showHierarchy: false,
+    updateShowHierarchy: noop,
+    expanded,
+    setExpanded,
+    toggleExpanded: noop,
+    updateExpanded: setExpanded as never,
+    contextMenuItems,
+    powerpack,
+    modules: MODULES,
+    readOnly: true,
+    useParams,
+    useNavigate,
+    useLocation,
+    useSearchParams,
   }
 
   return (
-    <table className="ayon-shell-table" data-shell-surface="table">
-      <thead>
-        {table.getHeaderGroups().map((group) => (
-          <tr key={group.id}>
-            {group.headers.map((header) => (
-              <th key={header.id} style={{ width: header.getSize() }}>
-                {flexRender(header.column.columnDef.header, header.getContext())}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <AddonColumnDataScope
-        columns={table.getAllLeafColumns() as never}
-        entities={data.map((row) => row.primary) as never}
-      >
-        <tbody>
-          {table.getRowModel().rows.map((row) => {
-            const entity = entities.find((e) => e.id === row.id)!
-            return (
-              <tr
-                key={row.id}
-                className={isSelected(row.id) ? 'selected' : undefined}
-                onClick={(e) =>
-                  onSelect(
-                    e.metaKey || e.ctrlKey
-                      ? isSelected(row.id)
-                        ? selected.filter((s) => s.id !== row.id)
-                        : [...selected, entity]
-                      : [entity],
-                  )
-                }
-                onContextMenu={(e) => onContextMenu(e, entity)}
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className={cell.column.id}>
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            )
-          })}
-        </tbody>
-      </AddonColumnDataScope>
-    </table>
+    <div className="ayon-shell-tree-table" data-shell-surface="table">
+      <ProjectTableStateContext.Provider value={tableState}>
+        <ProjectData>
+          <DetailsPanelEntityProvider>
+            <ColumnSettingsProvider
+              config={columns}
+              onChange={(next) => setColumns(next as Record<string, unknown>)}
+              defaultColumnVisibility={defaultColumnVisibility}
+            >
+              <ColumnDndProvider>
+                <ProjectTableQueriesProvider updateEntities={noData} getFoldersTasks={noData}>
+                  <ProjectTableProvider {...tableProps}>
+                    <SelectionCellsProvider>
+                      <SelectedRowsProvider>
+                        <CellEditingProvider>
+                          <ProjectTreeTable
+                            addonPage={page}
+                            scope={`addon-dev-${page}`}
+                            sliceId=""
+                            clientSorting
+                            excludedColumns={EXCLUDED_COLUMNS}
+                            extraColumns={extraColumns}
+                          />
+                          <SelectionSync entities={entities} onSelect={onSelect} />
+                        </CellEditingProvider>
+                      </SelectedRowsProvider>
+                    </SelectionCellsProvider>
+                  </ProjectTableProvider>
+                </ProjectTableQueriesProvider>
+              </ColumnDndProvider>
+            </ColumnSettingsProvider>
+          </DetailsPanelEntityProvider>
+        </ProjectData>
+      </ProjectTableStateContext.Provider>
+    </div>
   )
 }

@@ -7,7 +7,7 @@ import {
 } from '@shared/api/queries/projectFolders'
 import { toast } from 'react-toastify'
 import { RowSelectionState } from '@tanstack/react-table'
-import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
+import { parseProjectFolderRowId } from '../buildProjectsTableData'
 import { ProjectFolderModel } from '@shared/api'
 import { getEntityId } from '@shared/util'
 

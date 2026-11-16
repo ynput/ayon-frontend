@@ -154,8 +154,10 @@ export interface SlotMap {
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `fetchValues` load with the table. The host draws
    * the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
-   * right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable,
-   * and pasting into it changes nothing. When the values depend on data your mutations change, list
+   * right-click menu and Copy work as in other columns. Copy takes the cell's `value` as text, or
+   * the text `fetchValues` gives with `cellValue(value, { copy })`, so `value` can be data that
+   * only `cell` turns into text. Not sortable, and pasting into it changes nothing. When the
+   * values depend on data your mutations change, list
    * its cache tags in `providesTags` and the column refreshes itself when they are invalidated:
    * `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`.
    */
@@ -445,7 +447,10 @@ export type TableColumnTag = string | { type: string; id?: string | number }
 export interface TableCellContext extends ProjectNameScope {
   page: ProjectTablePage
   entity: EntityRef
-  /** what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` */
+  /**
+   * what the column's `fetchValues` returned for this entity (for a `cellValue(value, { copy })`,
+   * its `value`); `undefined` without `fetchValues`
+   */
   value: unknown
 }
 
@@ -459,7 +464,11 @@ export interface TableColumnFetchArgs extends ProjectNameScope {
 }
 
 /**
- * Gets a column's values, by entity id; each cell gets its own as `value`. AYON calls it with
+ * Gets a column's values, by entity id; each cell gets its own as `value`. A value is any plain
+ * data (no class instances or functions): the value itself, or `cellValue(value, { copy })` to
+ * give Copy its own text, such as `cellValue({ total: 12500, currency: 'EUR' }, { copy: '12500 EUR' })`.
+ * Copy takes `copy`, else the value as text (strings, numbers, booleans, lists joined with `, `;
+ * nothing for other objects). A plain `{ value, copy }` object is a value like any other. AYON calls it with
  * the rows that come on screen and that it has no value for yet, in batches once scrolling
  * pauses, and keeps what it returns: scrolling back costs nothing. A row whose entity changes
  * (here or by someone else) is asked for again; for anything else the values depend on, list its
@@ -776,9 +785,29 @@ export interface SlotDefinition {
 export interface SlotDeclaration extends SlotDefinition {
   /** `<addon>.<name>`, the name without dots, e.g. `example.cardMenuItem` */
   name: string
+  /**
+   * a short title for people, e.g. `Card menu item`: what the dev shell lists the slot as. Without
+   * one, the name after the dot in words (`cardMenuItem`: "Card menu item")
+   */
+  label?: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
+  /**
+   * a contribution of the slot's shape that AYON shows with Show slots on (developer mode), after
+   * the slot's real contributions: its description fields and, optionally, its pieces. A required
+   * field or piece left out is filled in: the label, and a piece that shows it in one line, with
+   * the slot and its context in its tooltip (`ExampleInline`), or, for `run`, says it was used.
+   * Its `run` is always AYON's, which only says it was used: using an example changes nothing. Its
+   * components are your code: keep them to display only
+   */
+  example?: SlotExample
 }
+
+/**
+ * A slot's example contribution: the fields of a contribution to the slot, without `id` (AYON
+ * gives it one). Pieces are optional loaders, like a contribution's.
+ */
+export type SlotExample = { readonly [field: string]: unknown }
 
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/

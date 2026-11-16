@@ -1,6 +1,6 @@
 // The standalone dev shell: the addon's contributions in AYON's real providers and surfaces,
 // signed in to a real server (live) or answering from fixtures (preview), with a developer panel.
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Provider } from 'react-redux'
 import {
@@ -14,7 +14,7 @@ import { ToastContainer } from 'react-toastify'
 import { QueryParamProvider } from 'use-query-params'
 import { ReactRouter6Adapter } from 'use-query-params/adapters/react-router-6'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
-import { createStandaloneStore, useGetCurrentUserQuery } from '@ynput/ayon-frontend-shared/api'
+import { createStandaloneStore, useGetCurrentUserQuery, useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
 import {
   DeleteEntitiesProvider,
   DetailsPanelProvider,
@@ -29,18 +29,26 @@ import {
 } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
-import { AddonServices, LoginPage, SplitterStyles } from '@ynput/ayon-frontend-shared/components'
+import {
+  AddonServices,
+  LoginPage,
+  setSlotInspectorAvailable,
+  SplitterStyles,
+} from '@ynput/ayon-frontend-shared/components'
 import { storeAccessToken } from '@ynput/ayon-frontend-shared/util'
 import { useDispatch } from 'react-redux'
-import { DevPanel } from './DevPanel'
+import { DevPanel, slotsHere } from './DevPanel'
 import { Stage } from './Stage'
-import { StageCaption } from './StageCaption'
+import { StageHeader } from './StageHeader'
 import { StageBoundary } from './StageBoundary'
-import { setStatus } from './status'
+import { PreviewInputs } from './PreviewInputs'
+import { clearMenus, setStatus } from './status'
 import type { ShellOptions, ShellSelection } from './types'
-import { readSelection, writeSelection } from './params'
+import { navigationKey, readSelection, rememberSceneValues, writeSelection } from './params'
 import { provideHost } from '@ynput/ayon-addon/host'
 import { getShellUser } from './host'
+import { getPlace, getPlaces, getUsedSlots } from './catalog'
+import { listedPlaces } from './places'
 
 const Centered = ({ children }: { children: ReactNode }) => (
   <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>{children}</div>
@@ -48,6 +56,7 @@ const Centered = ({ children }: { children: ReactNode }) => (
 
 // live: the user of the API key the dev server sends, or the login page (like AYON's)
 const SignedIn = ({ options, children }: { options: ShellOptions; children: ReactNode }) => {
+  // a stored token the server rejects was dropped before this (startShell)
   const { data: user, error, isLoading, refetch } = useGetCurrentUserQuery()
   if (isLoading) return <Centered>Connecting to {options.serverUrl}…</Centered>
   if (!user) {
@@ -128,40 +137,169 @@ const ProjectProviders = ({
     <>{children}</>
   )
 
+// the panels' open state, a viewer convenience only
+const INPUTS_OPEN = 'ayon-addon-shell-inputs'
+const LEFT_OPEN = 'ayon-addon-shell-left'
+const readOpen = (key: string, fallback: boolean) => {
+  try {
+    const stored = localStorage.getItem(key)
+    return stored === null ? fallback : stored === '1'
+  } catch {
+    return fallback
+  }
+}
+const useStoredToggle = (key: string, fallback: boolean) => {
+  const [open, setOpen] = useState(() => readOpen(key, fallback))
+  const toggle = useCallback(
+    (next?: boolean) =>
+      setOpen((current) => {
+        const value = next ?? !current
+        try {
+          localStorage.setItem(key, value ? '1' : '0')
+        } catch {
+          // a viewer convenience only
+        }
+        return value
+      }),
+    [key],
+  )
+  return [open, toggle] as const
+}
+
+/** Whether a key press goes to a field: then it is typing, not a shortcut. */
+const isTyping = (target: EventTarget | null) => {
+  const element = target as HTMLElement | null
+  if (!element) return false
+  return (
+    element.isContentEditable ||
+    ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName) ||
+    !!element.closest?.('[contenteditable=""], [contenteditable="true"]')
+  )
+}
+
+/** The selection in the URL; without a place, the first one this addon uses. */
+const initialSelection = () => {
+  const selection = readSelection(window.location.search, getPlaces())
+  if (selection.surface) return selection
+  const first = listedPlaces(getPlaces(), getUsedSlots(), !!selection.showAll)[0]
+  return { ...selection, surface: first?.id }
+}
+
 const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'preview' }) => {
-  const [selection, setSelection] = useState<ShellSelection>(readSelection)
-  useEffect(() => writeSelection(selection), [selection])
+  const [selection, setSelection] = useState<ShellSelection>(initialSelection)
+  const [search, setSearch] = useState('')
+  const [inputsOpen, toggleInputs] = useStoredToggle(INPUTS_OPEN, false)
+  const [panelOpen, togglePanel] = useStoredToggle(LEFT_OPEN, true)
+  const place = getPlace(selection.surface)
+
+  // the URL: a new history entry for another place, the same one for the inputs and switches
+  const shown = useRef(navigationKey(selection))
+  useEffect(() => {
+    const key = navigationKey(selection)
+    writeSelection(selection, key !== shown.current)
+    shown.current = key
+  }, [selection])
+  useEffect(() => {
+    const onPop = () => {
+      const next = readSelection(window.location.search, getPlaces())
+      shown.current = navigationKey(next)
+      setSelection(next)
+    }
+    window.addEventListener('popstate', onPop)
+    return () => window.removeEventListener('popstate', onPop)
+  }, [])
+  // AYON's slot inspector (its developer mode's Show slots): always available here, and a new
+  // session starts with it on
+  useEffect(() => {
+    setSlotInspectorAvailable(true, { showSlots: true })
+    return () => setSlotInspectorAvailable(false)
+  }, [])
+  // the menus opened in the last place are not this one's
+  useEffect(() => clearMenus(), [selection.surface])
   useEffect(() => setStatus({ selection, mode }), [selection, mode])
+  // the inputs of each scene, for when the developer comes back to it
+  useEffect(() => rememberSceneValues(selection.surface, selection.sceneValues), [selection.surface, selection.sceneValues])
+
+  // "," toggles the developer panel, "/" Context, unless typing
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented || isTyping(e.target)) return
+      if (e.key === ',') togglePanel()
+      else if (e.key === '/') toggleInputs()
+      else return
+      e.preventDefault()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [togglePanel, toggleInputs])
+
+  // a project to start with
+  const { data: projects = [] } = useListProjectsQuery({ active: true }, { skip: mode !== 'live' })
+  useEffect(() => {
+    if (mode === 'live' && !selection.projectName && projects.length) {
+      setSelection((current) => (current.projectName ? current : { ...current, projectName: projects[0].name, entities: [] }))
+    }
+  }, [mode, projects, selection.projectName])
 
   return (
     <>
       {/* the addon's services, once for the whole shell as in AYON; not remounted per selection */}
       <AddonServices projectName={selection.projectName ?? null} />
-      <Splitter className="ayon-shell" stateKey="ayon-addon-shell" stateStorage="local">
+      <Splitter
+        className={`ayon-shell${panelOpen ? '' : ' left-collapsed'}`}
+        stateKey="ayon-addon-shell"
+        stateStorage="local"
+      >
         <SplitterPanel size={22} minSize={12} style={{ overflow: 'hidden' }}>
           <StageBoundary what="developer panel">
-            <DevPanel options={options} mode={mode} selection={selection} onChange={setSelection} />
+            <DevPanel
+              options={options}
+              mode={mode}
+              selection={selection}
+              search={search}
+              onSearch={setSearch}
+              onChange={setSelection}
+            />
           </StageBoundary>
         </SplitterPanel>
         <SplitterPanel size={78} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-          <StageCaption mode={mode} selection={selection} />
-          <ProjectProviders
-            // preview renders the contribution alone: only the table columns need the project
-            projectName={
-              mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
-            }
-            light={mode === 'preview'}
+          <StageHeader mode={mode} selection={selection} panelOpen={panelOpen} onTogglePanel={() => togglePanel()} />
+          <Splitter
+            layout="vertical"
+            className={`ayon-shell-column${inputsOpen ? '' : ' inputs-collapsed'}`}
+            stateKey="ayon-addon-shell-inputs-split"
+            stateStorage="local"
           >
-            <StageBoundary key={`${selection.projectName}:${selection.slot}:${selection.id}`}>
-              {/* remounts per project: the project contexts and the slicer start fresh */}
-              <Stage
-                key={selection.projectName || ''}
+            <SplitterPanel size={70} minSize={20} style={{ overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+              <ProjectProviders
+                // preview renders the contribution alone: only the table columns need the project
+                projectName={
+                  mode === 'live' || selection.slot === 'tableColumn' ? selection.projectName : undefined
+                }
+                light={mode === 'preview'}
+              >
+                {/* a new place or project starts the project contexts and the slicer fresh */}
+                <StageBoundary key={`${selection.surface}:${place?.scene ? '' : selection.projectName || ''}`}>
+                  <Stage
+                    mode={mode}
+                    selection={selection}
+                    listedSlots={slotsHere(place, selection, search)}
+                    onChange={setSelection}
+                    onOpenInputs={() => toggleInputs(true)}
+                  />
+                </StageBoundary>
+              </ProjectProviders>
+            </SplitterPanel>
+            <SplitterPanel size={30} minSize={10} style={{ overflow: 'hidden' }}>
+              <PreviewInputs
                 mode={mode}
                 selection={selection}
                 onChange={setSelection}
+                open={inputsOpen}
+                onToggle={() => toggleInputs()}
               />
-            </StageBoundary>
-          </ProjectProviders>
+            </SplitterPanel>
+          </Splitter>
         </SplitterPanel>
       </Splitter>
     </>

@@ -1,6 +1,7 @@
 import { createElement, useEffect, useMemo } from 'react'
 import { prefetchPiece, useContributions } from '@ynput/ayon-addon'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
+import { isExample } from '@ynput/ayon-addon/host'
 import { useListAddonsQuery } from '@shared/api'
 import type { TreeTableExtraColumn } from '../buildTreeTableColumns'
 import { AddonColumnCell } from './AddonColumns'
@@ -48,8 +49,10 @@ export const useAddonTableColumns = (page: ProjectTablePage) => {
           enableSorting: false,
           enableResizing: true,
           enablePinning: true,
-          // hidden until the user shows it in Customize, like most columns
+          // hidden until the user shows it in Customize, like most columns; a slot's example
+          // (Show slots) shows at once
           enableHiding: true,
+          ...(isExample(contribution) && { visible: true }),
           meta: { addonColumn: { contribution, page } },
           cell: ({ row }) =>
             createElement(AddonColumnCell, { contribution, page, columnId: id, row }),

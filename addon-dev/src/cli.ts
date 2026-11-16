@@ -14,6 +14,7 @@ import { createServer, type Server } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
 import { readContractSlots } from './contractSlots.js'
+import type { ContractSlot } from './contractSlots.js'
 import { checkAddon, formatCheck } from './check.js'
 import { checkDevRequirements, formatChecks } from './devChecks.js'
 import {
@@ -204,12 +205,19 @@ const slots = async () => {
   const data = JSON.parse(readFileSync(path.join(pkgDir, 'dist', 'slots.json'), 'utf8'))
   const contract = await readContractSlots(root)
   contract.problems.forEach(({ reason }) => console.warn(reason))
-  data.addonSlots = contract.slots.map(({ name, version, description, package: from }) => ({
-    name,
-    version,
-    description,
-    package: from,
+  // a contract slot's example as a manifest entry, by the installed SDK (older ones can't)
+  const sdk = await importFromProject<{
+    exampleSnippet?: (slot: string, source: ContractSlot & { label?: string }) => string
+  }>(root, '@ynput/ayon-addon/check').catch(() => undefined)
+  data.addonSlots = contract.slots.map((slot) => ({
+    name: slot.name,
+    version: slot.version,
+    description: slot.description,
+    package: slot.package,
+    example: sdk?.exampleSnippet?.(slot.name, slot),
   }))
+  const examples = [...data.slots, ...data.addonSlots].filter((s: { example?: string }) => s.example)
+  const indent = (text: string) => text.replace(/^/gm, '    ')
   const text = [
     `@ynput/ayon-addon ${data.version}: ${data.slots.length} slots (details: node_modules/@ynput/ayon-addon/AGENTS.md)`,
     ...data.slots.map(
@@ -220,6 +228,10 @@ const slots = async () => {
       (s) =>
         `  ${s.name.padEnd(30)} from ${s.package}, version ${s.version}${s.description ? `: ${s.description}` : ''}`,
     ),
+    ...(examples.length
+      ? ['', "Examples (what developer mode's Show slots renders in each slot):"]
+      : []),
+    ...examples.map((s: { name: string; example: string }) => `  ${s.name}:\n${indent(s.example)}`),
   ].join('\n')
   print(data, text)
 }

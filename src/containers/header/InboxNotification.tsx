@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import HeaderButton from './HeaderButton'
+import { HeaderButton } from '@shared/components'
 import clsx from 'clsx'
 import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
 

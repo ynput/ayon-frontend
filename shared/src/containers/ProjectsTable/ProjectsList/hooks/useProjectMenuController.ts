@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { RowSelectionState } from '@tanstack/react-table'
 import { toast } from 'react-toastify'
 import {
@@ -10,11 +9,8 @@ import {
 } from '@shared/api'
 import { usePowerpack } from '@shared/context'
 import type { ListTableRowContextMenuContext } from '@shared/containers/ListTable'
-import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
-import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
-import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { buildProjectFolderRowId } from '@shared/containers/ProjectsTable'
-import type { ProjectFolderFormData } from '@pages/ProjectManagerPage/components/ProjectFolderFormDialog'
+import { buildProjectFolderRowId } from '../../buildProjectsTableData'
+import type { ProjectFolderFormData } from '../ProjectFolderFormDialog'
 import useProjectListUserPreferences from './useProjectListUserPreferences'
 import useProjectListMenuItems, { type Hidden } from './useProjectsListMenuItems'
 import { useProjectFolderActions } from './useProjectFolderActions'
@@ -52,6 +48,12 @@ interface UseProjectMenuControllerProps {
   onFolderCreated?: (folderId: string, hadProjects: boolean) => void
   onFoldersCreated?: (parentFolderIds: string[], areExpanding: boolean) => void
   folderGroupColumnId?: string
+  /** What the app adds: opening and managing a project (routes, store), and the user's permission
+   * to create projects. Without them, Open and Manage are not in the menus and only admins and
+   * managers may create projects. */
+  onOpenProject?: (projectName: string) => void
+  onManageProject?: (projectName: string) => void
+  canCreateProject?: boolean
 }
 
 export const useProjectMenuController = ({
@@ -68,15 +70,13 @@ export const useProjectMenuController = ({
   onFolderCreated,
   onFoldersCreated,
   folderGroupColumnId = 'projectFolder',
+  onOpenProject: openProject,
+  onManageProject,
+  canCreateProject: userCanCreateProject,
 }: UseProjectMenuControllerProps) => {
   const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
   const { powerLicense } = usePowerpack()
-  const { isLoading: userPermissionsLoading, permissions: userPermissions } =
-    useUserProjectPermissions(user?.data?.isUser || true)
-  const canCreateProject =
-    (!userPermissionsLoading && userPermissions?.canCreateProject()) ||
-    user?.data?.isAdmin ||
-    user?.data?.isManager
+  const canCreateProject = userCanCreateProject || user?.data?.isAdmin || user?.data?.isManager
   const canEditProjectLabel = !!(user?.data?.isAdmin || user?.data?.isManager)
   const [updateProject] = useUpdateProjectMutation()
   const [deleteProject] = useDeleteProjectMutation()
@@ -87,9 +87,6 @@ export const useProjectMenuController = ({
     // rows to create the folder for, the selection when not set
     rowIds?: string[]
   }>({ isOpen: false })
-  const navigate = useNavigate()
-  const { getDefaultTab } = useProjectDefaultTab()
-  const [handleProjectSelectionDispatches] = useProjectSelectDispatcher()
 
   const handleOpenFolderDialog = useCallback(
     (data?: Partial<ProjectFolderFormData>, folderId?: string, rowIds?: string[]) => {
@@ -130,20 +127,9 @@ export const useProjectMenuController = ({
   const onOpenProject = useCallback(
     (project: string) => {
       if ((user?.uiExposureLevel || 0) < 500) return
-
-      handleProjectSelectionDispatches(project)
-
-      const defaultTab = getDefaultTab()
-      navigate(`/projects/${project}/${defaultTab}`)
+      openProject?.(project)
     },
-    [getDefaultTab, handleProjectSelectionDispatches, navigate, user?.uiExposureLevel],
-  )
-
-  const onOpenProjectManage = useCallback(
-    (project: string) => {
-      navigate(`/manageProjects/anatomy?project=${project}`)
-    },
-    [navigate],
+    [openProject, user?.uiExposureLevel],
   )
 
   const handleArchive = useCallback(
@@ -183,6 +169,8 @@ export const useProjectMenuController = ({
       'delete-project': !canEditProjectLabel,
       'archive-project': !canEditProjectLabel,
       'edit-label': !canEditProjectLabel,
+      'open-project': !openProject,
+      'manage-projects': !onManageProject,
       ...hidden,
     },
     projects,
@@ -197,7 +185,7 @@ export const useProjectMenuController = ({
     onArchive: handleArchive,
     onDelete: handleDelete,
     onOpen: onOpenProject,
-    onManage: onOpenProjectManage,
+    onManage: onManageProject,
     onShowArchivedToggle,
     powerLicense,
     onCreateFolder: ({ folderId, projectNames, rowIds }) =>

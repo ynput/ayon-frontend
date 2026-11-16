@@ -5,6 +5,34 @@ The API for AYON addon frontends. An addon declares what it puts into AYON's **s
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
 when its slot needs it. Everything here is AYON's own copy at runtime.
 
+## Contributing in five steps
+
+1. Install: `yarn add -D @ynput/ayon-addon @ynput/ayon-addon-dev`, plus the contract package of
+   each addon whose slots you use (`@ynput/ayon-addon-<addon>`, see "Slots of other addons").
+2. Write the manifest, `src/manifest.ts`, with a helper per contribution (the slot list is at
+   the end, under "Slots"):
+
+   ```ts
+   import { defineAddon, entityMenuItem } from '@ynput/ayon-addon/manifest'
+   export default defineAddon({
+     contributes: [entityMenuItem({ id: 'copy_names', label: 'Copy names', icon: 'content_copy', run: () => import('./copyNames') })],
+   })
+   ```
+3. Write the piece file it imports, typed by its slot:
+
+   ```ts
+   // src/copyNames.ts
+   import type { RunPiece } from '@ynput/ayon-addon'
+   const copyNames: RunPiece<'entityMenuItem'> = ({ entities }) =>
+     navigator.clipboard.writeText(entities.map((entity) => entity.name ?? entity.id).join('\n'))
+   export default copyNames
+   ```
+4. Run `ayon-addon check`: the manifest as AYON reads it, the piece files and `tsc`.
+5. Run `ayon-addon dev` and open your contribution in the dev shell, without AYON.
+
+The CLI, the dev shell and the preview scenes of other addons' slots are in
+`@ynput/ayon-addon-dev`'s `AGENTS.md`.
+
 ## Rules
 
 - List `@ynput/ayon-addon` in the federation `shared` with `import: false` (`ayonAddon()` from
@@ -75,6 +103,9 @@ when its slot needs it. Everything here is AYON's own copy at runtime.
   `myaddonLog`). A `tableColumn` lists the tags its values depend on in `providesTags`
   (yours or AYON's, such as `task`) and refreshes when one is invalidated.
 - A crash stays inside the contribution: AYON wraps each one in an error boundary (menu items: a toast).
+- Hide a contribution from users below a role with `minExposureLevel: EXPOSURE.manager` in its
+  description, not with a check inside its code: AYON then loads none of it for them. It only hides
+  UI; see "Who sees a contribution".
 
 ## Table column ids
 
@@ -82,6 +113,29 @@ A `tableColumn` contribution shows up in the project tables as `addon__<addon>__
 name (anything but letters and digits becomes `_`), then the contribution's id. Columns are hidden
 until the user adds them in Customize. Build the id with `addonColumnId(addon, id)` (`ADDON_COLUMN_PREFIX`
 is the `addon__` part) in tests and saved views; do not write it out by hand.
+
+## Table column values and Copy
+
+`fetchValues` returns one value per entity id, and the cell gets it as `value`. Copy (and the
+cell selection's copy) takes the value as text: strings, numbers and booleans, lists joined with
+`, `, nothing for other objects. When the cell shows data that isn't text, return it with its Copy
+text, `cellValue(value, { copy })` from `@ynput/ayon-addon`: the cell gets `value`, Copy takes
+`copy`. Don't pack the data into a string for the cell to parse back.
+
+```ts
+import { cellValue, type TableColumnFetch } from '@ynput/ayon-addon'
+const fetchTotals: TableColumnFetch = async ({ projectName, entities }) => {
+  // one request for the batch: by entity id, { total: 12500, currency: 'EUR', count: 2, status: 'draft' }
+  const totals = await getTotals(projectName, entities)
+  return Object.fromEntries(
+    Object.entries(totals).map(([id, t]) => [id, cellValue(t, { copy: `${t.total} ${t.currency}` })]),
+  )
+}
+```
+
+Only `cellValue` makes a value with Copy text: a plain `{ value, copy }` object is a value like
+any other, so existing columns are unchanged. Values are kept while the table is open: return plain
+data, not class instances or functions.
 
 ## What a project table shows: `tableState`
 
@@ -150,13 +204,40 @@ A `dialog` piece (`header.item`, `projectTable.toolbarItem`, `projectTable.colum
 `dialogHeader: false` AYON draws no header and the piece draws its own toolbar, which must
 have a close button calling `close`. Escape and a click outside still close it.
 
+## Who sees a contribution: `minExposureLevel`
+
+Every contribution, in every slot (also the slots of other addons), can set `minExposureLevel`:
+users whose UI exposure level is lower don't see it. AYON hides it before loading any of its code:
+no tab button, column, menu item or header button, no `fetchValues` call, no service. Use the
+levels in `EXPOSURE` (from `@ynput/ayon-addon/manifest` in the manifest, `@ynput/ayon-addon`
+elsewhere): `guest` 100, `user` 500, `manager` 700, `admin` 900. A user's level comes from
+their role and they can lower their own; service users count as admins. A page's `access`
+(`manager`, `admin`) is the same check.
+
+```ts
+import { detailsPanelTab, EXPOSURE } from '@ynput/ayon-addon/manifest'
+detailsPanelTab({
+  id: 'invoices',
+  label: 'Invoices',
+  icon: 'receipt',
+  entityTypes: ['folder'],
+  minExposureLevel: EXPOSURE.manager,
+  component: () => import('./InvoicesTab'),
+})
+```
+
+It only hides UI. The addon's server must still check permissions on every endpoint: anyone can
+call it, and a hidden contribution's data must not depend on the frontend hiding it. A level that is
+not a whole number from 0 to 1000 skips the contribution; `ayon-addon check` notes one that is
+none of AYON's levels. The dev shell shows every contribution, whatever the level.
+
 ## Common errors
 
 Look in the browser console first: every message starts with `[addon <name>]`.
 
 | You see | Cause |
 |---|---|
-| nothing at all, the contribution is missing | The addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's `frontend_modules`. With `?addonDev=`, see "Developing inside AYON" in `@ynput/ayon-addon-dev`'s `AGENTS.md` |
+| nothing at all, the contribution is missing | The user's exposure level is below the contribution's `minExposureLevel` (or a page's `access`). Or the addon's server version with that frontend is not installed or enabled, or the manifest is not listed in the server's `frontend_modules`. With `?addonDev=`, see "Developing inside AYON" in `@ynput/ayon-addon-dev`'s `AGENTS.md` |
 | `skipped contribution "x": this AYON version has no such slot` | The slot is newer than the AYON you run (`ayon-addon slots` lists the installed package's). The rest of the addon works |
 | `...and no addon in the bundle declares it (it would be addon "y")` | The slot is addon `y`'s, and `y` isn't in the bundle or is too old to have it. The rest of the addon works |
 | `skipped contribution "x" (slot): invalid id …` / `missing …` / `invalid <field> …` | The description breaks the slot's rules. `ayon-addon check` prints the same reasons without AYON |
@@ -270,39 +351,250 @@ import { MoreMenu } from '@ynput/ayon-addon'
 
 An addon can declare its own slots, and other addons contribute to them the way they contribute to
 AYON's. Module federation doesn't change: every addon is still its own remote, and nothing of the
-declaring addon's code reaches the contributor. The examples use an addon named `example` with a
-menu of cards.
+declaring addon's code reaches the contributor.
 
-**Declaring.** List the slots in the manifest, and render them with `SlotOutlet` (components) or
-`useSlotMenuItems` (menu items) from this package:
+**The contract package.** The declarations and their types reach contributors through a small npm
+package, `@ynput/ayon-addon-<addon>`, with no code of the addon in it. It lists `@ynput/ayon-addon`
+as a `peerDependency`, never a dependency: a nested copy would get the `SlotMap` augmentation
+instead of the contributor's. Its `index.js` imports only from `@ynput/ayon-addon/manifest`: the
+contributor's manifest bundles it, and the manifest loads without React.
 
-```ts
-// src/manifest.ts of the addon "example"
-export default defineAddon({ slots, contributes: [...] }) // slots: from its contract package's slots.js
+### Example: the addon `example`
+
+The addon `example` has a board of cards. It declares a right-click menu item for the selected
+cards (`example.cardMenuItem`) and a badge in a card's header (`example.cardBadge`). Every file,
+by its path:
+
+<!-- contract-example -->
+
+`@ynput/ayon-addon-example/package.json`, the contract package:
+
+```json
+{
+  "name": "@ynput/ayon-addon-example",
+  "version": "1.0.0",
+  "type": "module",
+  "exports": {
+    ".": { "types": "./index.d.ts", "import": "./index.js" }
+  },
+  "files": ["index.js", "index.d.ts", "slots.js", "previews.js"],
+  "peerDependencies": { "@ynput/ayon-addon": "*", "react": ">=18" },
+  "ayonAddon": { "slots": "./slots.js", "previews": "./previews.js" }
+}
 ```
 
-```ts
-const buildSlotItems = useSlotMenuItems('example.cardMenuItem')
-// when the menu opens: a broken item is a toast, never a broken menu
-const { top, bottom } = buildSlotItems({ projectName, cards })
+`@ynput/ayon-addon-example/slots.js`, the declarations as data, a plain JS module that imports nothing:
+
+```js
+export const slots = [
+  {
+    name: 'example.cardMenuItem',
+    version: 1,
+    label: 'Card menu item',
+    description: 'an entry in the right-click menu of the selected cards',
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: { position: /^(top|bottom)$/ },
+  },
+  {
+    name: 'example.cardBadge',
+    version: 1,
+    label: 'Card badge',
+    description: 'a badge in the header of a card',
+    required: ['title'],
+    pieces: ['component'],
+  },
+]
 ```
 
-When a contribution can narrow where it shows, give the slot a description field for it and pass
-the second argument, which leaves out what doesn't apply (here `cardTypes`, all when not set).
-Different things get different slots, kinds of one thing get a field:
+`@ynput/ayon-addon-example/index.d.ts`, the types: the `SlotMap` augmentation and the helpers:
 
 ```ts
-buildSlotItems({ projectName, cards }, ({ cardTypes }) => !cardTypes || cards.every((c) => cardTypes.includes(c.cardType)))
+import type { ComponentType } from 'react'
+import type { Loader, MenuItemMeta, RunPiece, SlotDeclaration, SlotProps } from '@ynput/ayon-addon'
+import type { ContributionFields, ContributionInput } from '@ynput/ayon-addon/manifest'
+
+export interface ExampleCard {
+  id: string
+  title: string
+}
+
+declare module '@ynput/ayon-addon' {
+  interface SlotMap {
+    'example.cardMenuItem': {
+      version: 1
+      meta: MenuItemMeta
+      context: { projectName: string; cards: ExampleCard[] }
+      pieces: { run: Loader<RunPiece<'example.cardMenuItem'>> }
+    }
+    'example.cardBadge': {
+      version: 1
+      meta: { title: string }
+      context: { projectName: string; card: ExampleCard }
+      pieces: { component: Loader<ComponentType<SlotProps<'example.cardBadge'>>> }
+    }
+  }
+}
+
+export declare const slots: readonly SlotDeclaration[]
+export declare const exampleCardMenuItem: (
+  fields: ContributionFields<'example.cardMenuItem'>,
+) => ContributionInput<'example.cardMenuItem'>
+export declare const exampleCardBadge: (
+  fields: ContributionFields<'example.cardBadge'>,
+) => ContributionInput<'example.cardBadge'>
 ```
 
-`<SlotOutlet slot context />` renders no element of its own: each contribution's component is a
-direct child of the element around it, in manifest order, with nothing (or `loading`) while it loads.
-Lay them out with that element (a flex row in a header, a column in a panel). A contribution that
-fails shows an error box sized for a panel; in an inline place (a badge, a header button) pass
-`error={() => null}` to render nothing instead, or your own small fallback.
+`@ynput/ayon-addon-example/index.js`, one helper per slot:
 
-A declaration has `name`, `version`, `required`, `pieces` and optionally `optionalPieces`,
-`optional`, `check` and `description`: what AYON checks for its own slots.
+```js
+import { contribute } from '@ynput/ayon-addon/manifest'
+import { slots } from './slots.js'
+
+export { slots }
+
+// one helper per slot: it adds the slot's version from slots.js, so the version is written once
+const helper = (name) => {
+  const { version } = slots.find((slot) => slot.name === name)
+  return (fields) => contribute(name, { ...fields, slotVersion: version })
+}
+
+export const exampleCardMenuItem = helper('example.cardMenuItem')
+export const exampleCardBadge = helper('example.cardBadge')
+```
+
+`@ynput/ayon-addon-example/previews.js`, optional: scenes for the dev shell (see "Other addons' slots: preview scenes" in `@ynput/ayon-addon-dev`'s `AGENTS.md`):
+
+```js
+import { createElement as h, useMemo } from 'react'
+import { SlotOutlet } from '@ynput/ayon-addon'
+
+// a mock of the addon's card, with its badges in the header
+const Card = ({ values }) => {
+  const card = useMemo(() => ({ id: 'c1', title: values.title }), [values.title])
+  const context = useMemo(() => ({ projectName: values.project, card }), [values.project, card])
+  return h(
+    'div',
+    { style: { display: 'flex', gap: 8, padding: 8, background: 'var(--md-sys-color-surface-container)' } },
+    h('strong', null, card.title),
+    h(SlotOutlet, { slot: 'example.cardBadge', context }),
+  )
+}
+
+export const previews = [
+  {
+    id: 'card',
+    label: 'A card on the board',
+    slots: ['example.cardBadge'],
+    fields: [
+      { key: 'project', label: 'Project', type: 'project' },
+      { key: 'title', label: 'Title', type: 'text', default: 'Layout' },
+    ],
+    component: Card,
+  },
+]
+```
+
+`example/src/manifest.ts`, the declaring addon lists its slots:
+
+```ts
+import { defineAddon } from '@ynput/ayon-addon/manifest'
+import { slots } from '@ynput/ayon-addon-example'
+
+export default defineAddon({ slots, contributes: [] })
+```
+
+`example/src/Card.tsx`, and renders them where they show:
+
+```tsx
+import { type MouseEvent, useMemo } from 'react'
+import { SlotOutlet, useContextMenu, useSlotMenuItems } from '@ynput/ayon-addon'
+import type { ExampleCard } from '@ynput/ayon-addon-example'
+
+type CardProps = { projectName: string; card: ExampleCard; selected: ExampleCard[] }
+
+export const Card = ({ projectName, card, selected }: CardProps) => {
+  const context = useMemo(() => ({ projectName, card }), [projectName, card])
+  const buildSlotItems = useSlotMenuItems('example.cardMenuItem')
+  const openContextMenu = useContextMenu()
+  const onContextMenu = (event: MouseEvent) => {
+    const { top, bottom } = buildSlotItems({ projectName, cards: selected })
+    // an entry runs with `command`; useContextMenu and MoreMenu items take `onClick`
+    openContextMenu(event, [...top, ...bottom].map(({ command, ...item }) => ({ ...item, onClick: command })))
+  }
+  return (
+    <div onContextMenu={onContextMenu}>
+      <strong>{card.title}</strong>
+      <SlotOutlet slot="example.cardBadge" context={context} error={() => null} />
+    </div>
+  )
+}
+```
+
+`contributor/src/manifest.ts`, an addon that contributes, with `@ynput/ayon-addon-example` installed:
+
+```ts
+import { defineAddon } from '@ynput/ayon-addon/manifest'
+import { exampleCardBadge, exampleCardMenuItem } from '@ynput/ayon-addon-example'
+
+export default defineAddon({
+  contributes: [
+    exampleCardMenuItem({ id: 'copy_titles', label: 'Copy titles', icon: 'content_copy', run: () => import('./copyTitles') }),
+    exampleCardBadge({ id: 'due', title: 'Due date', component: () => import('./DueBadge') }),
+  ],
+})
+```
+
+`contributor/src/copyTitles.ts`:
+
+```ts
+import type { RunPiece } from '@ynput/ayon-addon'
+
+const copyTitles: RunPiece<'example.cardMenuItem'> = ({ cards }) =>
+  navigator.clipboard.writeText(cards.map((card) => card.title).join('\n'))
+export default copyTitles
+```
+
+`contributor/src/DueBadge.tsx`:
+
+```tsx
+import type { SlotProps } from '@ynput/ayon-addon'
+
+const DueBadge = ({ card }: SlotProps<'example.cardBadge'>) => <span title={card.title}>due</span>
+export default DueBadge
+```
+
+<!-- /contract-example -->
+
+- A declaration has `name`, `version`, `required`, `pieces` and optionally `optionalPieces`,
+  `optional`, `check` and `description`: what AYON checks for its own slots. It may also have a
+  `label`, a short title for people (`'Card menu item'`, a non-empty string): the dev shell lists the
+  slot by it, else by the name after the dot in words.
+- A declaration may also have an `example`: a contribution of the slot's shape without `id`
+  (`{ label: 'Example card action', icon: 'extension' }`), which AYON's developer mode shows in the
+  slot with Show slots on, owned by the declaring addon and after the real contributions. It is
+  filled in where it leaves something out: each required field gets the slot's label (`icon` an
+  icon), `run` says it was used, any other piece shows the label in one line, with the slot and its
+  context in its tooltip (`ExampleInline`). A piece of its own is a dynamic import in the contract
+  package, which may render `ExampleView` from `@ynput/ayon-addon` inside its own markup (a badge's
+  size, a button's look). An example's `run` is always AYON's, which only says it was used, even
+  when the example sets its own, so using an example changes nothing; its components are the
+  contract package's code, so keep them to display only.
+- With the types, `SlotName`, `SlotProps`, `useSlot` and `contribute` cover the slots of the
+  contract packages an addon has installed, in `@ynput/ayon-addon` and `@ynput/ayon-addon/manifest`
+  alike. Every contribution has an `id`, so `meta` only lists the slot's own fields.
+- The helper writes `slotVersion` from `slots.js`, so the version is written once. It works with
+  any AYON that has addon slots.
+- `useSlotMenuItems` builds the items when the menu opens: a broken item is a toast, never a broken
+  menu. When a contribution can narrow where it shows, give the slot a description field for it and
+  pass the second argument, which leaves out what doesn't apply (here a `cardTypes` field, all when
+  not set). Different things get different slots, kinds of one thing get a field:
+  `buildSlotItems({ projectName, cards }, ({ cardTypes }) => !cardTypes || cards.every((c) => cardTypes.includes(c.cardType)))`.
+- `<SlotOutlet slot context />` renders no element of its own: each contribution's component is a
+  direct child of the element around it, in manifest order, with nothing (or `loading`) while it
+  loads. Lay them out with that element (a flex row in a header, a column in a panel). A
+  contribution that fails shows an error box sized for a panel; in an inline place (a badge, a
+  header button) pass `error={() => null}` to render nothing instead, or your own small fallback.
 
 **Ownership.** The name is `<addon>.<name>`: the addon's name from `package.py`, a dot, then a letter
 followed by letters, digits and `_` (no more dots). Only that addon can declare it. A declaration with
@@ -310,55 +602,11 @@ another addon's name, a name AYON already has, or a name already declared is ski
 warning naming the addons. Names under the first parts of AYON's slots (`project.`, `studio.`,
 `header.`, ...) are AYON's: an addon with one of those names can't declare slots.
 
-**Contract package.** The types and declarations reach contributors through a small npm package,
-`@ynput/ayon-addon-<addon>`, with no code of the addon in it. It lists `@ynput/ayon-addon` as a
-`peerDependency`, never a dependency: a nested copy would get the `SlotMap` augmentation instead of the
-contributor's.
-
-- the declarations as data, in a plain JS module that imports without React, marked in its
-  `package.json`: `"ayonAddon": { "slots": "./slots.js" }`. The module exports `slots`:
-
-  ```js
-  // slots.js
-  export const slots = [
-    {
-      name: 'example.cardMenuItem',
-      version: 1,
-      description: 'an entry in the right-click menu of a card',
-      required: ['label', 'icon'],
-      pieces: ['run'],
-      optional: { position: /^(top|bottom)$/ },
-    },
-  ]
-  ```
-
-- the types: `declare module '@ynput/ayon-addon' { interface SlotMap { 'example.cardMenuItem': { meta, context, pieces } } }`.
-  `SlotName`, `SlotProps`, `useSlot` and `contribute` then cover the slots of the contract packages an
-  addon has installed, in `@ynput/ayon-addon` and `@ynput/ayon-addon/manifest` alike. Every
-  contribution has an `id`, so `meta` only lists the slot's own fields.
-- one helper per slot, which stamps `slotVersion` from the declaration in `slots.js`, so the version
-  is written once. Keep the helper in the contract package: the contributor's manifest bundles it,
-  and it works with any AYON that has addon slots.
-
-  ```ts
-  // index.ts
-  import type { SlotName } from '@ynput/ayon-addon'
-  import type { ContributionFields, ContributionInput } from '@ynput/ayon-addon/manifest'
-  import { slots } from './slots.js'
-
-  const slotHelper = <S extends SlotName>(slot: S) => {
-    const { version } = slots.find((declaration) => declaration.name === slot)!
-    return (fields: ContributionFields<S>) => ({ ...fields, slot, slotVersion: version }) as ContributionInput<S>
-  }
-  export const exampleCardMenuItem = slotHelper('example.cardMenuItem')
-  ```
-
-**Contributing.** Install the contract package and use its helper in the manifest:
-`exampleCardMenuItem({ id, label, icon, run: () => import('./openCard') })`. AYON registers each
-manifest as it arrives and works out declarations and contributions again from all of them, so the
-order they load in doesn't matter: a contribution appears once its slot's addon has loaded. When all
-manifests are in and no addon in the bundle declares the slot (the addon isn't installed, or is older),
-the contribution is skipped with a console warning and the rest of the addon works.
+**Contributing.** AYON registers each manifest as it arrives and works out declarations and
+contributions again from all of them, so the order they load in doesn't matter: a contribution
+appears once its slot's addon has loaded. When all manifests are in and no addon in the bundle
+declares the slot (the addon isn't installed, or is older), the contribution is skipped with a
+console warning and the rest of the addon works.
 
 **Versioning.** The declaration has `version`, and a contribution the `slotVersion` it was built
 against (the contract package's helper stamps it; one without counts as version 1). A contribution
@@ -409,6 +657,65 @@ const openContextMenu = useContextMenu()
   `@ynput/ayon-react-components`) from its `onClick`. The `confirmDelete` of
   `@ynput/ayon-frontend-shared` needs a dialog AYON doesn't render for addons.
 
+## Forms, lists and buttons: `@ynput/ayon-react-components`
+
+Inputs, buttons and form rows are AYON's component library,
+[`@ynput/ayon-react-components`](https://github.com/ynput/ayon-react-components), not part of this
+package. Install it with its peer `react-datepicker`:
+`yarn add -D @ynput/ayon-react-components react-datepicker@4`. `ayonAddon()` shares it like React,
+so in AYON the addon gets AYON's copy, styles included. Import it as it is, don't wrap or re-export
+it. What AYON itself uses:
+
+```tsx
+import { Button, Dropdown, FormLayout, FormRow, InputSwitch, InputText, InputTextarea, SaveButton } from '@ynput/ayon-react-components'
+
+<FormLayout>
+  <FormRow label="Name">
+    <InputText value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" />
+  </FormRow>
+  <FormRow label="Due">
+    <InputText type="date" value={due} onChange={(e) => setDue(e.target.value)} />
+  </FormRow>
+  <FormRow label="Kind">
+    <Dropdown
+      options={[{ value: 'bug', label: 'Bug' }, { value: 'idea', label: 'Idea' }]}
+      value={kind ? [kind] : []}
+      onChange={([picked]) => setKind(picked)}
+      placeholder="Pick a kind"
+    />
+  </FormRow>
+  <FormRow label="Notes">
+    <InputTextarea value={notes} onChange={(e) => setNotes(e.target.value)} style={{ minHeight: 80 }} />
+  </FormRow>
+  <FormRow label="Billable">
+    <InputSwitch checked={billable} onChange={() => setBillable(!billable)} />
+  </FormRow>
+</FormLayout>
+<Button label="Cancel" variant="text" onClick={reset} />
+<SaveButton label="Save" active={isDirty} saving={isSaving} onClick={save} />
+```
+
+- `FormLayout` stacks `FormRow`s; `FormRow` takes `label` (required) and the field as children.
+- `InputText`, `InputNumber` and `InputTextarea` are styled native fields with the native props
+  (`value`, `onChange`, `placeholder`, `disabled`). `InputTextarea` is typed with input attributes:
+  no `rows`, size it with `style`. Dates: `<InputText type="date">`, value `YYYY-MM-DD`, as AYON does.
+- `Dropdown`: `options` (objects with `value` and `label`; other keys with `dataKey` / `labelKey`),
+  `value` is always an array (`[]` for none), `onChange(values)` gets the new array. `multiSelect`,
+  `search`, `placeholder`, `disabled`.
+- `InputSwitch`: `checked`, `onChange`. `Button`: `label`, `icon` (a Material Symbols name),
+  `variant` (`surface` default, `filled` for the main action, `text`, `tonal`, `danger`, ...),
+  `tooltip`, `disabled`, `selected`. `SaveButton`: a `Button` with `active` (highlighted, clickable)
+  and `saving` (spinner).
+- Lists and layout: `Toolbar` (a row of buttons; `Spacer` pushes what follows to the right),
+  `Panel` / `Section` (`direction`), `ScrollPanel` (scrolls its children), `TableRow` (a `name` /
+  `value` row, `onCopy`). Entities in a table: `EntityTable`. Icons: `<Icon icon="..." />`.
+  Confirmations: `Dialog` (`isOpen`, `onClose`, `header`, `footer`, `size`).
+- `react-datepicker` is imported as soon as the library loads: without it, any import of the
+  library fails to bundle (`Could not resolve "react-datepicker"`), in the dev shell and the build.
+- Avoid `InputDate`: it is `react-datepicker` itself, and its props type comes from
+  `@types/react-datepicker`, which nothing installs (AYON's own uses cast it). Use the native date
+  input above. The library's other peers (React, `styled-components`) are AYON's shared ones.
+
 ## Slot contexts: one shape
 
 The same thing has the same name and type in every slot that has it:
@@ -445,7 +752,7 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 | `detailsPanel` | `boolean \| undefined` | Shows AYON's details panel next to the page, for the page to open with `openDetails`. The page is in a splitter while the panel is there; it only shows when the page opens it. |
 | `id` (required) | `string` | The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`. A built-in page with the same id wins. |
 | `title` (required) | `string` | the tab label |
-| `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them |
+| `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them. A shorthand for `minExposureLevel: EXPOSURE.manager` / `EXPOSURE.admin`; with both, the higher wins |
 | `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
 
 | Context (props, `useSlot`) | Type | |
@@ -460,6 +767,16 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 
 Pieces: `component`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectPage({
+  id: 'example',
+  title: 'Example page',
+  component: () => import('./Component'),
+})
+```
+
 ### `studio.page`: `studioPage`
 
 A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from the description; `component` loads when the page is first opened. Loads: first shown.
@@ -468,7 +785,7 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 |---|---|---|
 | `id` (required) | `string` | The page's URL segment and tab id: `/projects/<project>/<id>`, `/dashboard/<id>`. A built-in page with the same id wins. |
 | `title` (required) | `string` | the tab label |
-| `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them |
+| `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them. A shorthand for `minExposureLevel: EXPOSURE.manager` / `EXPOSURE.admin`; with both, the higher wins |
 | `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
 
 | Context (props, `useSlot`) | Type | |
@@ -479,6 +796,16 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 | `views` (required) | `PageViews \| undefined` | `undefined` when the page's description has no `viewType` |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+studioPage({
+  id: 'example',
+  title: 'Example page',
+  component: () => import('./Component'),
+})
+```
 
 ### `header.item`: `headerItem`
 
@@ -506,6 +833,18 @@ A button in the main header, drawn by the host like its own buttons. What a clic
 
 Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+headerItem({
+  id: 'example',
+  label: 'Example header item',
+  icon: 'extension',
+  placement: 'right',
+  run: () => import('./Run'),
+})
+```
+
 ### `detailsPanel.tab`: `detailsPanelTab`
 
 A tab in the details panel. The tab button shows from the description, for `entityTypes`; `component` loads when the tab is first opened. Loads: first shown.
@@ -527,6 +866,17 @@ A tab in the details panel. The tab button shows from the description, for `enti
 | `entities` (required) | `EntityRef[]` | the entities the slot is about, e.g. the ones the details panel shows |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+detailsPanelTab({
+  id: 'example',
+  label: 'Example tab',
+  icon: 'extension',
+  component: () => import('./Component'),
+})
+```
 
 ### `detailsPanel.menuItem`: `detailsPanelMenuItem`
 
@@ -552,6 +902,17 @@ An item in the details panel's "more" menu. It shows from the description; `run`
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+detailsPanelMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `projectList.menuItem`: `projectListMenuItem`
 
 An item in the project list's menus (dashboard, project menu, studio pages' ProjectList): the right-click menu, the "more" dropdown, or both (`in`). It acts on the selected projects. Loads: menu open / click.
@@ -573,6 +934,17 @@ An item in the project list's menus (dashboard, project menu, studio pages' Proj
 | `menu` (required) | `MenuKind` |  |
 
 Pieces: `run`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectListMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `slicer.menuItem`: `slicerMenuItem`
 
@@ -600,6 +972,17 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+slicerMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `entityMenuItem`: `entityMenuItem`
 
 An item in the right-click menu of the project tables' cells, for the selected entities. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
@@ -625,6 +1008,17 @@ An item in the right-click menu of the project tables' cells, for the selected e
 | `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+entityMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `projectTable.toolbarItem`: `projectTableToolbarItem`
 
@@ -653,6 +1047,17 @@ A button in the project tables' toolbar, before Customize (Overview, Products, L
 | `tableState` | `ProjectTableState \| undefined` | Overview and Products; `undefined` on the Lists page, in the panels' tables and on older hosts |
 
 Pieces: `run` (optional), `dialog` (optional), `menu` (optional), `popover` (optional), `component` (optional).
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableToolbarItem({
+  id: 'example',
+  label: 'Example',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
 
 ### `projectTable.columnMenuItem`: `projectTableColumnMenuItem`
 
@@ -684,6 +1089,17 @@ An item in the "more" menu of a project table column's header (Overview, Product
 
 Pieces: `run` (optional), `dialog` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableColumnMenuItem({
+  id: 'example',
+  label: 'Example for {column}',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `projectTable.customizeSection`: `projectTableCustomizeSection`
 
 A section in the project tables' Customize panel (Overview, Products, Lists). The entry shows from the description; `component` loads when the section is opened. Loads: first shown.
@@ -704,9 +1120,20 @@ A section in the project tables' Customize panel (Overview, Products, Lists). Th
 
 Pieces: `component`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+projectTableCustomizeSection({
+  id: 'example',
+  title: 'Example section',
+  icon: 'extension',
+  component: () => import('./Component'),
+})
+```
+
 ### `tableColumn`: `tableColumn`
 
-A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
+A read-only column in the project tables (Overview, Products, Lists). It is in the column settings from the description; `cell` and `fetchValues` load with the table. The host draws the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the right-click menu and Copy work as in other columns. Copy takes the cell's `value` as text, or the text `fetchValues` gives with `cellValue(value, { copy })`, so `value` can be data that only `cell` turns into text. Not sortable, and pasting into it changes nothing. When the values depend on data your mutations change, list its cache tags in `providesTags` and the column refreshes itself when they are invalidated: `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`. Loads: with the page.
 
 | Description field | Type | |
 |---|---|---|
@@ -725,10 +1152,21 @@ A read-only column in the project tables (Overview, Products, Lists). It is in t
 | `user` (required) | `AddonUser` | the signed-in user |
 | `page` (required) | `ProjectTablePage` |  |
 | `entity` (required) | `EntityRef` |  |
-| `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` |
+| `value` (required) | `unknown` | what the column's `fetchValues` returned for this entity (for a `cellValue(value, { copy })`, its `value`); `undefined` without `fetchValues` |
 | `projectName` (required) | `string` |  |
 
 Pieces: `cell`, `fetchValues` (optional).
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+tableColumn({
+  id: 'example',
+  label: 'Example column',
+  icon: 'extension',
+  cell: () => import('./Cell'),
+})
+```
 
 ### `table.shortcut`: `tableShortcut`
 
@@ -758,6 +1196,17 @@ A keyboard shortcut on the cells of AYON's tables: the project tables (Overview,
 
 Pieces: `run` (optional), `dialog` (optional).
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+tableShortcut({
+  id: 'example',
+  label: 'Example shortcut',
+  keys: 'alt+shift+e',
+  run: () => import('./Run'),
+})
+```
+
 ### `userDetails.section`: `userDetailsSection`
 
 A section in the user details panel (Settings → Users), below AYON's own forms, for the selected users. The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's Save button doesn't see it. Loads: first shown.
@@ -778,6 +1227,17 @@ A section in the user details panel (Settings → Users), below AYON's own forms
 | `users` (required) | `UserRef[]` | the users the slot is about, e.g. the ones selected in Settings → Users |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+userDetailsSection({
+  id: 'example',
+  title: 'Example section',
+  serviceUsers: true,
+  component: () => import('./Component'),
+})
+```
 
 ### `userDetails.menuItem`: `userDetailsMenuItem`
 
@@ -801,6 +1261,17 @@ An item in the user details panel's "more" menu (Settings → Users), for the se
 
 Pieces: `run`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+userDetailsMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `profile.section`: `profileSection`
 
 A section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens). The section shows from the description, titled like AYON's; `component` loads when it is first shown. Saving is the section's own: AYON's "Save profile" button doesn't see it. Loads: first shown.
@@ -819,6 +1290,16 @@ A section on the signed-in user's profile page (Account → Profile), next to AY
 
 Pieces: `component`.
 
+Example (what developer mode's Show slots renders here):
+
+```ts
+profileSection({
+  id: 'example',
+  title: 'Example section',
+  component: () => import('./Component'),
+})
+```
+
 ### `app.service`: `appService`
 
 Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.
@@ -834,3 +1315,12 @@ Code with no UI that runs while AYON is open, whatever the page: keeping a state
 | `projectName` (required) | `string \| null` | the project whose page is open, else `null` |
 
 Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+appService({
+  id: 'example',
+  component: () => import('./Component'),
+})
+```

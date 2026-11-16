@@ -1,4 +1,5 @@
 import type { AddonInfo, AnyContribution } from './contributions'
+import { exposureProblem } from './exposure'
 import { SLOTS } from './slots'
 import type { SlotDeclaration, SlotDefinition } from './slots'
 
@@ -73,8 +74,9 @@ const isStringList = (value: unknown) =>
   Array.isArray(value) && value.every((item) => typeof item === 'string')
 
 const declarationProblem = (declaration: Record<string, unknown>) => {
-  const { version, required, pieces, optionalPieces, optional, check } = declaration
+  const { version, label, required, pieces, optionalPieces, optional, check, example } = declaration
   if (!Number.isInteger(version) || (version as number) < 1) return 'version must be a whole number from 1'
+  if (label !== undefined && (typeof label !== 'string' || !label.trim())) return 'label must be a non-empty string'
   if (!isStringList(required)) return 'required must be a list of field names'
   if (!isStringList(pieces)) return 'pieces must be a list of piece names'
   if (optionalPieces !== undefined && !isStringList(optionalPieces))
@@ -88,6 +90,8 @@ const declarationProblem = (declaration: Record<string, unknown>) => {
   )
     return 'optional must map field names to patterns without the g or y flag'
   if (check !== undefined && typeof check !== 'function') return 'check must be a function'
+  if (example !== undefined && (!example || typeof example !== 'object' || Array.isArray(example)))
+    return "example must be an object: a contribution's fields"
 }
 
 /**
@@ -287,7 +291,11 @@ export const checkManifest = (
       )
       continue
     }
-    let problem: string | undefined
+    let problem = exposureProblem(item as Record<string, unknown>)
+    if (problem) {
+      skip(problem, slotName, idName)
+      continue
+    }
     try {
       problem = definition.check?.(item as Record<string, unknown>)
     } catch (error) {

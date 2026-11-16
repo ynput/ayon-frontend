@@ -1,19 +1,19 @@
 import { FC, useCallback, useEffect } from 'react'
-import { useAppSelector } from '@state/store'
 import { shouldBlockShortcuts } from '@shared/util'
 
 interface ProjectsShortcutsProps {
   onOpenFolderDialog: () => void
   disabled?: boolean
+  /** while true the keys do nothing (the app passes whether its viewer is open) */
+  paused?: boolean
 }
 
-const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({ onOpenFolderDialog, disabled }) => {
-  const viewerOpen = useAppSelector((state) => state.viewer.isOpen)
+const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({ onOpenFolderDialog, disabled, paused }) => {
 
   const handleKeyPress = useCallback(
     (e: KeyboardEvent) => {
       if (shouldBlockShortcuts(e)) return
-      if (viewerOpen) return
+      if (paused) return
 
       const key = e.key.toLowerCase()
       const isMeta = e.metaKey || e.ctrlKey
@@ -35,7 +35,7 @@ const ProjectsShortcuts: FC<ProjectsShortcutsProps> = ({ onOpenFolderDialog, dis
         e.stopPropagation()
       }
     },
-    [disabled, onOpenFolderDialog, viewerOpen],
+    [disabled, onOpenFolderDialog, paused],
   )
 
   useEffect(() => {

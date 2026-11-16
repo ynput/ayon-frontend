@@ -1,13 +1,14 @@
 // Preview: the contribution with the fixture's context, every request answered from the fixture.
 // Components render in a frame the size of their place in AYON; menu items are a menu to run.
-import { useCallback, useEffect, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { Button } from '@ynput/ayon-react-components'
 import { ContributionView, runContribution } from '@ynput/ayon-addon'
 import type { AnyContribution } from '@ynput/ayon-addon'
+import { SLOTS } from '@ynput/ayon-addon/check'
 import { getFixture } from './network'
 import { ShellTable } from './ShellTable'
-import { isMenuSlot } from './slotNeeds'
-import { setStage } from './status'
+import { declaredSlotPiece, isMenuSlot } from './slotNeeds'
+import { useSlotReport, useStageReady } from './status'
 import type { ShellSelection } from './types'
 import { ButtonItem, ServiceNote } from './parts'
 
@@ -30,21 +31,21 @@ export const PreviewStage = ({
     () => runContribution(contribution as never, context as never),
     [contribution, context],
   )
-  const onPopupContext = useCallback(
-    (popup: Record<string, unknown>) => setStage({ context: popup, ready: true }),
-    [],
-  )
+  // a header or toolbar item's popup passes its own context
+  const [popup, setPopup] = useState<Record<string, unknown>>()
   const isPopup = slot === 'header.item' || slot === 'projectTable.toolbarItem'
+  // another addon's slot: the piece the contribution has decides
+  const declared = !(slot in SLOTS)
+  const piece = declared ? declaredSlotPiece(contribution) : undefined
   // a table shortcut with a dialog: its content, as for a page
   const isDialog =
-    (slot === 'table.shortcut' || slot === 'projectTable.columnMenuItem') &&
-    !!(contribution as { dialog?: unknown }).dialog
-  const runs = isMenuSlot(slot) && !isDialog
+    ((slot === 'table.shortcut' || slot === 'projectTable.columnMenuItem') &&
+      !!(contribution as { dialog?: unknown }).dialog) ||
+    piece === 'dialog'
+  const runs = (isMenuSlot(slot) && !isDialog) || piece === 'run'
 
-  useEffect(() => {
-    if (!fixture) return
-    if (!isPopup) setStage({ context, ready: true, run: runs ? run : undefined })
-  }, [fixture, context, run, isPopup, runs])
+  useSlotReport(slot, fixture ? (isPopup ? popup : context) : undefined)
+  useStageReady(!!fixture)
 
   if (!fixture) {
     return (
@@ -66,7 +67,7 @@ export const PreviewStage = ({
       return (
         <div className="ayon-shell-bar">
           <span className="spacer" />
-          <ButtonItem contribution={contribution} context={context} autoOpen onContext={onPopupContext} />
+          <ButtonItem contribution={contribution} context={context} autoOpen onContext={setPopup} />
         </div>
       )
     }
@@ -91,13 +92,20 @@ export const PreviewStage = ({
     }
     // mounted once by the shell (Shell.tsx), not here
     if (slot === 'app.service') return <ServiceNote />
+    // an error box, so `ayon-addon-dev preview` fails instead of passing on an empty stage
+    if (declared && !piece) {
+      return (
+        <div role="alert" className="ayon-addon-error">
+          {contribution.key} has no component, dialog or run piece: the shell can&apos;t preview it.
+        </div>
+      )
+    }
     if (slot === 'tableColumn') {
       const entities = (context.entities || []) as never[]
       return (
         <ShellTable
           page={(context.page as never) || 'overview'}
           entities={entities}
-          selected={[]}
           onSelect={() => undefined}
         />
       )

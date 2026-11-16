@@ -1,7 +1,8 @@
+// The icon buttons of AYON's header (also in the addon dev shell's top bar).
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
-const HeaderButton = styled(Button)`
+export const HeaderButton = styled(Button)`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -60,4 +61,3 @@ const HeaderButton = styled(Button)`
   }
 `
 
-export default HeaderButton
