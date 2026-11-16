@@ -50,7 +50,7 @@ What the module does, and what core gives it:
   headers show the entity type's icon (`ColumnConfig.headerIcon`). Several list item edits are saved in
   one bulk `PATCH /lists/{id}/items`. `readsEntityValue` (edit target is the entity, i.e. without the
   powerpack) switches sort and filter keys from `attrib.*` to `entityAttrib.*` (`entityValueFilter.ts`).
-- The view's `editTarget` (the module's "Edit entities" toolbar switch, stored in the `listValues`
+- The view's `editTarget` (the module's "List values" toolbar switch, stored in the `listValues`
   setting) reaches the module as `ListValuesContext.editTarget`, `'entity'` when the view has none (views
   saved before the switch keep editing the entities). Core fills that default, not the module: a newer
   module with an older core then still edits list values. `ListValuesProvider` owns that setting
