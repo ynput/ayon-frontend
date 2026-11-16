@@ -112,7 +112,8 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
     })
   }
 
-  const canSave = stored || (name.length > 0 && value.length > 0)
+  // a stored secret saves only once its value changed
+  const canSave = stored ? value !== initialValue : name.length > 0 && value.length > 0
 
   // Enter (or Shift+Enter, as in the create dialogs) saves the row, like its save button
   const handleKeyDown = (e) => {
