@@ -34,6 +34,7 @@ import {
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
+  useCellEditing,
   type ProjectTreeTableProps,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
@@ -378,8 +379,23 @@ const ProjectLists: FC<ProjectListsProps> = ({
     useSelectionCellsContext()
 
   // list values (powerpack): the compare controls and the lists sidebar's menu items
-  const { module: listValues, isPowerFeature, outdated } = useListValuesContext()
+  const {
+    module: listValues,
+    isPowerFeature,
+    outdated,
+    settings: listValuesSettings,
+    setSettings: setListValuesSettings,
+    editsEntities,
+  } = useListValuesContext()
   const { compareView } = useListItemsDataContext()
+  // undo replays an edit where edits go now: switching between list values and entities would
+  // undo a list value onto the entity
+  const { history } = useCellEditing()
+  const clearHistory = history?.clearHistory
+  useEffect(() => {
+    clearHistory?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editsEntities])
   const { listsMap } = useListsDataContext()
   const shownList = useMemo<ListRef | undefined>(
     () =>
@@ -600,6 +616,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             view={compareView}
                             shownList={shownList}
                             ListPicker={CompareListPicker}
+                            settings={listValuesSettings}
+                            onSettingsChange={setListValuesSettings}
                           />
                         )}
                       </>
