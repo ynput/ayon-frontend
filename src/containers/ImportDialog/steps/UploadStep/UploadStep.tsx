@@ -1,4 +1,5 @@
-import { ImportSchema, itemsLabelForImportContext, StepProps } from '../common'
+import { ImportSchema, StepProps } from '../common'
+import { useImportDialogContext, useImportLabels } from '../../context/ImportDialogProviderInstance'
 import {
   Button,
   FileUpload,
@@ -72,6 +73,12 @@ export default function UploadStep({
   onBack,
   onNext,
 }: Props) {
+  const { addonImport } = useImportDialogContext()
+  const labels = useImportLabels()
+  // an addon's import offers the addon's template, if it has one
+  const template = addonImport
+    ? addonImport.templateUrl
+    : `/templates/${templateForImport(importContext, importMode)}`
   const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
   // an Excel file with several sheets waits for the user to pick one,
@@ -238,12 +245,11 @@ export default function UploadStep({
             errorMessage={error ? `Could not parse this file: ${error?.message}` : undefined}
           />
           <FileUploadButtons>
-            <a
-              href={`/templates/${templateForImport(importContext, importMode)}`}
-              download={templateForImport(importContext, importMode)}
-            >
-              <Button icon="download" variant="text" label="Download template" />
-            </a>
+            {template && (
+              <a href={template} download={template.split('/').pop()}>
+                <Button icon="download" variant="text" label="Download template" />
+              </a>
+            )}
             <label>
               <HiddenFileInput
                 ref={hiddenFileInputRef}
@@ -256,7 +262,7 @@ export default function UploadStep({
               />
               <Button
                 icon="upload_file"
-                label={`Choose a CSV or Excel file with ${itemsLabelForImportContext[importContext]}`}
+                label={`Choose a CSV or Excel file with ${labels.items}`}
                 onClick={() => hiddenFileInputRef.current?.click()}
               />
             </label>

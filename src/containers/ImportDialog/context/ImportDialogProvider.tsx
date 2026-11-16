@@ -1,4 +1,5 @@
 import { PropsWithChildren, useCallback, useState } from "react"
+import type { ImportTarget } from "@ynput/ayon-addon"
 import { ImportContext } from "../steps/common"
 import { ImportDialogContext } from "./ImportDialogProviderInstance"
 
@@ -10,6 +11,8 @@ export type ImportDialogContextType = {
   folderLabel?: string
   // the list folder a list created by the import goes into
   listFolderId?: string
+  // an addon's import (openImport in @ynput/ayon-addon), when importing is "addon"
+  addonImport?: ImportTarget
   openForContext: (
     c: ImportContext,
     projectName?: string,
@@ -17,6 +20,7 @@ export type ImportDialogContextType = {
     folderLabel?: string,
     listFolderId?: string,
   ) => void
+  openForAddon: (target: ImportTarget) => void
   close: () => void
 }
 
@@ -28,6 +32,7 @@ export const ImportDialogProvider = ({ children }: ImportDialogProviderProps) =>
   const [folderLabel, setFolderLabel] = useState<string | undefined>()
   const [listFolderId, setListFolderId] = useState<string | undefined>()
   const [projectName, setProjectName] = useState<string | undefined>()
+  const [addonImport, setAddonImport] = useState<ImportTarget | undefined>()
 
   const openForContext = useCallback((
     c: ImportContext,
@@ -41,6 +46,16 @@ export const ImportDialogProvider = ({ children }: ImportDialogProviderProps) =>
     setFolderLabel(folderLabel)
     setListFolderId(listFolderId)
     setProjectName(projectName)
+    setAddonImport(undefined)
+  }, [])
+
+  const openForAddon = useCallback((target: ImportTarget) => {
+    setImportContext("addon")
+    setFolderId(undefined)
+    setFolderLabel(undefined)
+    setListFolderId(undefined)
+    setProjectName(target.projectName)
+    setAddonImport(target)
   }, [])
 
   const close = useCallback(() => {
@@ -48,6 +63,7 @@ export const ImportDialogProvider = ({ children }: ImportDialogProviderProps) =>
     setFolderId(undefined)
     setFolderLabel(undefined)
     setListFolderId(undefined)
+    setAddonImport(undefined)
   }, [])
 
   return (
@@ -57,7 +73,9 @@ export const ImportDialogProvider = ({ children }: ImportDialogProviderProps) =>
       folderLabel,
       listFolderId,
       projectName,
+      addonImport,
       openForContext,
+      openForAddon,
       close,
     }}>
       {children}
