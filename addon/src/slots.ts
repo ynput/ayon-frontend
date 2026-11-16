@@ -154,8 +154,10 @@ export interface SlotMap {
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `fetchValues` load with the table. The host draws
    * the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
-   * right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable,
-   * and pasting into it changes nothing. When the values depend on data your mutations change, list
+   * right-click menu and Copy work as in other columns. Copy takes the cell's `value` as text, or
+   * the text `fetchValues` gives with `cellValue(value, { copy })`, so `value` can be data that
+   * only `cell` turns into text. Not sortable, and pasting into it changes nothing. When the
+   * values depend on data your mutations change, list
    * its cache tags in `providesTags` and the column refreshes itself when they are invalidated:
    * `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`.
    */
@@ -445,7 +447,10 @@ export type TableColumnTag = string | { type: string; id?: string | number }
 export interface TableCellContext extends ProjectNameScope {
   page: ProjectTablePage
   entity: EntityRef
-  /** what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` */
+  /**
+   * what the column's `fetchValues` returned for this entity (for a `cellValue(value, { copy })`,
+   * its `value`); `undefined` without `fetchValues`
+   */
   value: unknown
 }
 
@@ -459,7 +464,11 @@ export interface TableColumnFetchArgs extends ProjectNameScope {
 }
 
 /**
- * Gets a column's values, by entity id; each cell gets its own as `value`. AYON calls it with
+ * Gets a column's values, by entity id; each cell gets its own as `value`. A value is any plain
+ * data (no class instances or functions): the value itself, or `cellValue(value, { copy })` to
+ * give Copy its own text, such as `cellValue({ total: 12500, currency: 'EUR' }, { copy: '12500 EUR' })`.
+ * Copy takes `copy`, else the value as text (strings, numbers, booleans, lists joined with `, `;
+ * nothing for other objects). A plain `{ value, copy }` object is a value like any other. AYON calls it with
  * the rows that come on screen and that it has no value for yet, in batches once scrolling
  * pauses, and keeps what it returns: scrolling back costs nothing. A row whose entity changes
  * (here or by someone else) is asked for again; for anything else the values depend on, list its
