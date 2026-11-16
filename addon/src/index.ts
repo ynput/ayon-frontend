@@ -99,11 +99,13 @@ export type {
   AddonInfo,
   AddonManifest,
   AnyContribution,
+  CommonMeta,
   Contribution,
   ContributionFields,
   ContributionInput,
 } from './contributions'
 export { useSlot } from './useSlot'
+export { EXPOSURE } from './exposure'
 export { useContributions } from './registry'
 export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'

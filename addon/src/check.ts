@@ -14,6 +14,7 @@ export type {
   SkippedContribution,
   SkippedDeclaration,
 } from './validate'
+export { EXPOSURE, EXPOSURE_RANGE } from './exposure'
 export { SLOTS } from './slots'
 export type { SlotDeclaration, SlotDefinition, SlotExample } from './slots'
 export { exampleFields, exampleSnippet, SLOT_EXAMPLES } from './slotExamples'

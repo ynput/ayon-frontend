@@ -21,7 +21,10 @@ export interface CheckResult {
   contractPreviews: { package: string; scenes: { id: string; label: string; slots: string[] }[] }[]
   contributions: { slot: string; id: string; key: string; pieces: Record<string, string | null> }[]
   problems: { slot?: string; id?: string; reason: string }[]
-  /** worth knowing, not a failure: contributions no preview scene renders */
+  /**
+   * worth knowing, not a failure: contributions no preview scene renders, a `minExposureLevel`
+   * between AYON's levels
+   */
   notes: { slot?: string; id?: string; reason: string }[]
   types?: { ok: boolean; errors: string[] }
 }
@@ -34,6 +37,8 @@ interface SlotPieces {
 }
 interface CheckModule {
   SLOTS: Record<string, SlotPieces>
+  // older versions of the package have no exposure levels
+  EXPOSURE?: Record<string, number>
   // older versions of the package have no declarations
   checkSlotDeclarations?: (
     addon: { name: string; version: string; remote: string },
@@ -50,6 +55,16 @@ interface CheckModule {
     contributions: ({ slot: string; id: string; key: string } & Record<string, unknown>)[]
     skipped: { slot?: string; id?: string; reason: string }[]
   }
+}
+
+/**
+ * A note for a `minExposureLevel` that is none of AYON's levels (`EXPOSURE`): it works, but is
+ * likely a typo. `checkManifest` already skips one that is not a whole number in range.
+ */
+export const exposureNote = (level: unknown, levels: Record<string, number> | undefined) => {
+  if (typeof level !== 'number' || !levels || Object.values(levels).includes(level)) return
+  const known = Object.entries(levels).map(([role, value]) => `${role} ${value}`)
+  return `minExposureLevel ${level} is none of AYON's levels (${known.join(', ')}): use EXPOSURE.<role>`
 }
 
 const EXTENSIONS = ['', '.ts', '.tsx', '.js', '.jsx', '/index.ts', '/index.tsx', '/index.js']
@@ -172,6 +187,8 @@ export const checkAddon = async ({
         }
       }
       result.contributions.push({ slot: contribution.slot, id: contribution.id, key: contribution.key, pieces })
+      const exposure = exposureNote(contribution.minExposureLevel, sdk.EXPOSURE)
+      if (exposure) result.notes.push({ slot: contribution.slot, id: contribution.id, reason: exposure })
       const from = contract.slots.find((slot) => slot.name === contribution.slot)?.package
       const scenes = result.contractPreviews.find((p) => p.package === from)?.scenes || []
       if (from && !scenes.some((scene) => scene.slots.includes(contribution.slot))) {

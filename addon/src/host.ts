@@ -13,11 +13,13 @@ export {
   registerManifests,
   setContributionTags,
   setContributionWrappers,
+  setExposureLevel,
   setManifestsLoading,
   setSlotExamples,
   subscribeRegistry,
   unregisterAddon,
   useContributionWrappers,
+  useHiddenContributions,
 } from './registry'
 export type { ContributionTags, ManifestEntry } from './registry'
 export {
@@ -34,6 +36,7 @@ export type {
   SkippedContribution,
   SkippedDeclaration,
 } from './validate'
+export { contributionExposureLevel, EXPOSURE, isExposed } from './exposure'
 export { isKnownSlot, SLOTS } from './slots'
 export type { SlotDeclaration, SlotDefinition, SlotExample } from './slots'
 export { getHost, provideHost } from './hostBridge'

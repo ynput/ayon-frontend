@@ -24,7 +24,7 @@ import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { useContributions } from '@ynput/ayon-addon'
 import { contributionTags } from '@ynput/ayon-addon/host'
-import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import { useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
 import {
   StudioPageLayoutHost,
@@ -253,7 +253,6 @@ const UserDashboardPage: React.FC = () => {
         name: page.title,
         path: `/dashboard/${page.id}`,
         module: page.id,
-        accessLevels: pageAccessLevels(page.access),
         component: (
           <AddonStudioPage
             contribution={page}
