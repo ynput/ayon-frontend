@@ -2,15 +2,22 @@ import { ReactNode, useCallback, useMemo } from 'react'
 import { useLoadModule } from '@shared/hooks'
 import { usePowerpack } from '@shared/context'
 import { useProjectDataContext } from '@shared/containers/ProjectTreeTable'
+import { useListsViewSettings } from '@shared/containers/Views'
 import { useListsAttributesContext } from '../lists-attributes'
 import { communityListValues } from '../../listValues/communityListValues'
-import { LIST_VALUES_API_VERSION, type ListValuesModule } from '../../listValues/types'
+import {
+  LIST_VALUES_API_VERSION,
+  type CompareSettings,
+  type ListValuesModule,
+} from '../../listValues/types'
 import { formatListValue } from '../../listValues/formatListValue'
 import type { ListValuesOutdated } from '../../listValues/listValuesOutdated'
 import { ListValuesContext, type ListValuesContextValue } from './ListValuesContextInstance'
 
 // first powerpack version with the ListValues module
 const LIST_VALUES_MIN_VERSION = '1.6.8'
+
+const NO_SETTINGS: CompareSettings = {}
 
 type Props = { children: ReactNode }
 
@@ -57,6 +64,12 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
 
   const listAttributeNames = useMemo(() => listAttributes.map((a) => a.name), [listAttributes])
 
+  // stored with the view, shaped by the module; read here only, so every part of the page sees
+  // a change at once (each useListsViewSettings keeps its own pending copy)
+  const { listValues: storedSettings, onUpdateListValues: setSettings } = useListsViewSettings()
+  const settings = (storedSettings as CompareSettings | undefined) || NO_SETTINGS
+  const editTarget = isPowerFeature ? settings.editTarget : undefined
+
   const formatValue = useCallback(
     (attrib: string, value: unknown) =>
       formatListValue(
@@ -67,8 +80,8 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
   )
 
   const rules = useMemo(
-    () => ({ listAttributes: listAttributeNames, formatValue }),
-    [listAttributeNames, formatValue],
+    () => ({ listAttributes: listAttributeNames, formatValue, editTarget }),
+    [listAttributeNames, formatValue, editTarget],
   )
 
   const readsEntityValue = useCallback(
@@ -76,9 +89,31 @@ const ModuleProvider = ({ children, powerLicense }: Props & { powerLicense: bool
     [module, rules],
   )
 
+  // what the module does with the entities' attributes (an older one ignores editTarget)
+  const entityAttrib = attribFields.find((field) => !listAttributeNames.includes(field.name))
+  const editsEntities = !entityAttrib || readsEntityValue(entityAttrib.name)
+
   const value: ListValuesContextValue = useMemo(
-    () => ({ module, isPowerFeature, outdated: outdatedVersion, rules, readsEntityValue }),
-    [module, isPowerFeature, outdatedVersion, rules, readsEntityValue],
+    () => ({
+      module,
+      isPowerFeature,
+      outdated: outdatedVersion,
+      rules,
+      readsEntityValue,
+      editsEntities,
+      settings,
+      setSettings,
+    }),
+    [
+      module,
+      isPowerFeature,
+      outdatedVersion,
+      rules,
+      readsEntityValue,
+      editsEntities,
+      settings,
+      setSettings,
+    ],
   )
 
   if (isLoading) return null

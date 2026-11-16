@@ -72,7 +72,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
 
   // with list values, attribute edits go to the list item, so the entities' locked attributes
   // don't apply
-  const { isPowerFeature } = useListValuesContext()
+  const { editsEntities } = useListValuesContext()
   const { canCompareLists, compareLists } = useCompareLists()
   const [hiddenColumns, readOnly] = useMemo(
     () => getColumnConfigFromType(selectedList?.entityType),
@@ -144,7 +144,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         // pagination
         onScrollBottom={fetchNextPage}
         readOnly={readOnly}
-        ignoreEntityAttribLocks={isPowerFeature}
+        ignoreEntityAttribLocks={!editsEntities}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         includeParents={includeParents}

@@ -50,6 +50,12 @@ What the module does, and what core gives it:
   headers show the entity type's icon (`ColumnConfig.headerIcon`). Several list item edits are saved in
   one bulk `PATCH /lists/{id}/items`. `readsEntityValue` (edit target is the entity, i.e. without the
   powerpack) switches sort and filter keys from `attrib.*` to `entityAttrib.*` (`entityValueFilter.ts`).
+- The view's `editTarget` (the module's "Edit entities" toolbar switch, stored in the `listValues`
+  setting) reaches the module as `ListValuesContext.editTarget`. `ListValuesProvider` owns that setting
+  (each `useListsViewSettings` call keeps its own pending copy). `editsEntities` is what the module
+  then does with the entities' attributes (an older module ignores the setting): it turns on the
+  per-row attribute locks of the entities (`ignoreEntityAttribLocks`), and switching it clears the undo
+  history, which would otherwise replay an edit to the other target.
 - `useCompareView(host)` (called in `ListItemsDataContext`) owns the compare choice, loads the compared
   list through `host.useListItems` (`useListItemsForListValues`, the page's RTK cache) whole and once,
   not filtered to the rows on screen (that would be a new request for every page), and returns the
