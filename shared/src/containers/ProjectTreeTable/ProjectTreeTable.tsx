@@ -29,10 +29,10 @@ import type { EntityType, ParentColumnDefinition, TableRow } from './types/table
 import buildTreeTableColumns, {
   DefaultColumns,
   getNameColumnLabel,
-  insertExtraColumns,
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
+import { insertExtraColumns } from './utils/insertExtraColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
