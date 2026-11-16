@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react'
-import { Button, InputText } from '@ynput/ayon-react-components'
+import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
 import { upperFirst } from 'lodash'
@@ -62,45 +62,17 @@ const getUriTargetUrl = (uri: string, location: Location): string | null => {
   return `${pathname}?${params}`
 }
 
-// route segments named like the nav and tabs that lead to them
-const SECTION_LABELS: Record<string, string> = {
-  dashboard: 'Home',
-  settings: 'Studio settings',
-  manageProjects: 'Project manager',
-}
-const MODULE_LABELS: Record<string, Record<string, string>> = {
-  projects: { tasks: 'Task progress', reviews: 'Review', scheduler: 'Schedule' },
-  account: { downloads: 'Launchers' },
-  settings: {
-    server: 'Global',
-    studio: 'Studio settings',
-    site: 'Site settings',
-    anatomyPresets: 'Anatomy presets',
-    accessGroups: 'Permissions',
-  },
-  manageProjects: {
-    projectSettings: 'Project settings',
-    permissions: 'Project permissions',
-    projectAccess: 'Project access',
-    siteSettings: 'Site settings',
-  },
-}
+const getPathnameLabel = (pathname: string): string => {
+  const pageTitle = pathname.split('/')[1]
 
-const pathname2crumbs = (pathname: string): string[] => {
-  const [section, ...rest] = pathname.split('/').filter(Boolean)
-  if (!section) return []
-  const sectionLabel = SECTION_LABELS[section] || upperFirst(section)
-  if (section === 'projects') return [section, ...rest].map(upperFirst)
-  const modules = rest
-    .filter((segment) => segment !== 'addon')
-    .map((segment) => MODULE_LABELS[section]?.[segment] || upperFirst(segment))
-    // the "Studio settings" tab of Studio settings is not repeated
-    .filter((label) => label !== sectionLabel)
-  return [sectionLabel, ...modules]
+  if (pageTitle?.includes('settings')) return 'Studio settings'
+  if (pageTitle?.includes('manageProjects')) return 'Project manager'
+
+  return ''
 }
 
 // TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
-const uri2crumbs = (uri: string = '', pathname: string, collapse = false): string[] => {
+const uri2crumbs = (uri: string = '', pathname: string): string[] => {
   const [scope, pathAndQuery = ''] = (uri || '').split('://')
   const [path, query] = pathAndQuery.split('?')
   const crumbs: string[] = path.split('/').filter(Boolean)
@@ -109,16 +81,14 @@ const uri2crumbs = (uri: string = '', pathname: string, collapse = false): strin
   if (scope?.includes('ayon+settings')) {
     crumbs.unshift(getSettingsScopeLabel(query))
   } else if (scope?.includes('ayon+entity')) {
-    if (pathname.startsWith('/projects/')) {
-      crumbs.unshift('Project')
-    } else {
-      const [projectName = '', ...folders] = crumbs
-      const shownFolders =
-        collapse && folders.length > 2 ? ['…', folders[folders.length - 1]] : folders
-      crumbs.splice(0, crumbs.length, ...pathname2crumbs(pathname), projectName, ...shownFolders)
-    }
+    crumbs.unshift('Project')
   } else {
-    crumbs.unshift(...pathname2crumbs(pathname))
+    const pathnameLabel = getPathnameLabel(pathname)
+    if (pathnameLabel) {
+      crumbs.unshift(pathnameLabel)
+    } else {
+      crumbs.unshift(...pathname.slice(1).split('/').filter(Boolean).map(upperFirst))
+    }
   }
 
   // Add query parameter breadcrumbs
@@ -132,6 +102,27 @@ const uri2crumbs = (uri: string = '', pathname: string, collapse = false): strin
   })
 
   return crumbs
+}
+
+interface CrumbContext {
+  project?: string
+  path: string[]
+}
+
+// what the pill shows: the project in bold, then the path to the selected entity.
+// Pages outside a project keep their own crumbs; home without a selection has none.
+const getCrumbContext = (uri: string, pathname: string): CrumbContext => {
+  const crumbs = uri2crumbs(uri, pathname)
+  if (uri.startsWith('ayon+entity')) {
+    const [, project, ...path] = crumbs
+    return { project, path }
+  }
+
+  const [, root, projectName] = pathname.split('/')
+  if (root === 'projects' && projectName) return { project: projectName, path: [] }
+  if (root === 'dashboard' || !root) return { path: [] }
+
+  return { path: crumbs }
 }
 
 const Breadcrumbs = () => {
@@ -148,32 +139,16 @@ const Breadcrumbs = () => {
     setLocalUri(uri)
   }, [uri])
 
-  //   when editing, select all text
+  // when editing, focus and select all text
   useEffect(() => {
     if (!editMode) return
+    inputRef.current?.focus()
     inputRef.current?.select()
-
-    // reselect to counter mouse movement
-    const timeout = setTimeout(() => {
-      inputRef.current?.select()
-    }, 50)
-
-    // reselect again to really make sure
-    const timeout2 = setTimeout(() => {
-      inputRef.current?.select()
-    }, 400)
-
-    return () => {
-      clearTimeout(timeout)
-      clearTimeout(timeout2)
-    }
   }, [editMode])
 
   const goThere = (e?: React.SyntheticEvent) => {
     e?.preventDefault()
     setEditMode(false)
-    // blur input
-    inputRef.current?.blur()
 
     const target = getUriTargetUrl(localUri.trim(), location)
     if (!target) {
@@ -186,78 +161,59 @@ const Breadcrumbs = () => {
     location.assign(target)
   }
 
-  const onCopy = () => {
-    copyToClipboard(localUri)
-  }
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // if escape, cancel edit mode
-    if (['Escape', 'Enter'].includes(e.key)) {
+    if (e.key === 'Escape') {
       setEditMode(false)
       setLocalUri(uri)
-      inputRef.current?.blur()
-    }
-    if (e.key === 'Enter') {
-      goThere(e)
     }
   }
 
-  const uriDisplay = uri2crumbs(uri, location.pathname, true).join(' / ')
-  const uriFullDisplay = uri2crumbs(uri, location.pathname).join(' / ')
-  const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
+  const { project, path } = getCrumbContext(uri, location.pathname)
+  const isEmpty = !project && !path.length
+  // long entity paths keep the last level, the full path is in the tooltip
+  const shownPath = project && path.length > 2 ? ['…', path[path.length - 1]] : path
+  const fullText = [project, ...path].filter(Boolean).join(' / ')
 
   return (
-    <Styled.Wrapper>
-      <Styled.Crumbtainer>
-        <Styled.CrumbsForm onSubmit={goThere} className={clsx({ noUri: !uriDisplay || !localUri })}>
-          {uriDisplay && localUri && (
-            <Button
-              icon="edit"
-              style={{
-                padding: editMode ? 0 : '6px',
-                opacity: editMode ? 0 : 1,
-                width: editMode ? 0 : 'auto',
-              }}
-              onClick={(e) => {
-                e.preventDefault()
-                setEditMode(true)
-              }}
-              variant="tonal"
-            />
-          )}
-          <label data-value={inputValue}>
-            <InputText
-              value={inputValue}
-              onChange={(e) => setLocalUri(e.target.value)}
-              onBlur={() => setEditMode(false)}
-              onFocus={() => setEditMode(true)}
-              onKeyDown={handleKeyDown}
-              ref={inputRef}
-              style={{ borderRadius: '4px 0 0 4px' }}
-              data-tooltip={!editMode && uriFullDisplay !== uriDisplay ? uriFullDisplay : undefined}
-              data-tooltip-position="bottom"
-            />
-          </label>
-          <Button
-            icon="arrow_forward"
-            style={{
-              display: editMode ? 'inline-flex' : 'none',
-              borderRadius: '0 4px 4px 0',
-            }}
-            onMouseDown={goThere}
-            variant="tonal"
+    <Styled.Pill className={clsx({ empty: isEmpty && !editMode })}>
+      {editMode ? (
+        <Styled.Form onSubmit={goThere}>
+          <input
+            value={localUri}
+            placeholder="Go to URI..."
+            onChange={(e) => setLocalUri(e.target.value)}
+            onBlur={() => setEditMode(false)}
+            onKeyDown={handleKeyDown}
+            ref={inputRef}
+            aria-label="URI"
           />
-        </Styled.CrumbsForm>
-        {uriDisplay && localUri && (
-          <Button
-            icon="content_copy"
-            style={{ display: editMode ? 'none' : 'inline-flex' }}
-            onClick={onCopy}
-            variant="tonal"
-          />
-        )}
-      </Styled.Crumbtainer>
-    </Styled.Wrapper>
+          <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
+        </Styled.Form>
+      ) : (
+        <Styled.Display
+          onClick={() => setEditMode(true)}
+          data-tooltip={shownPath !== path ? `${fullText} (click to edit the URI)` : 'Click to edit the URI'}
+          data-tooltip-delay={500}
+        >
+          {(project || isEmpty) && <Icon icon="category" />}
+          <Styled.Text>
+            {project && <strong>{project}</strong>}
+            {project && shownPath.length > 0 && ' / '}
+            {shownPath.join(' / ')}
+            {isEmpty && 'No project context'}
+          </Styled.Text>
+        </Styled.Display>
+      )}
+      {!editMode && (
+        <Styled.PillButton
+          icon="content_copy"
+          onClick={() => copyToClipboard(localUri)}
+          disabled={!localUri}
+          variant="text"
+          data-tooltip={localUri ? 'Copy URI' : undefined}
+        />
+      )}
+    </Styled.Pill>
   )
 }
 

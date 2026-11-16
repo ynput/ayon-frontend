@@ -20,17 +20,43 @@ import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseIn
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
+import StudioBrand from './StudioBrand'
 
-const FlexWrapper = styled.div`
+const Side = styled.div`
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
+  align-items: center;
+  gap: var(--base-gap-large);
+
+  /* stop short of the centred studio brand (max 240px wide) */
+  @media (min-width: 1281px) {
+    max-width: calc(50% - 136px);
+  }
+`
+
+// the icons never shrink: on narrow windows the context pill truncates instead
+const SideEnd = styled.div`
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  justify-content: end;
   gap: var(--base-gap-small);
 `
 
-const FlexWrapperEnd = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-  justify-content: end;
-  align-items: center;
+// centred on the bar, not between the sides
+const Center = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+
+  /* the context pill needs the room more than the brand */
+  @media (max-width: 1280px) {
+    display: none;
+  }
 `
 
 const ProjectsButton = styled(HeaderButton)`
@@ -93,7 +119,7 @@ const Header: React.FC = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <FlexWrapper>
+      <Side>
         {user.uiExposureLevel >= 500 && (
           <ProjectsButton
             icon="left_panel_open"
@@ -115,18 +141,22 @@ const Header: React.FC = () => {
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
 
-        <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
-      </FlexWrapper>
+        <Breadcrumbs />
 
-      <Breadcrumbs />
-      <FlexWrapperEnd id="header-menu-right">
+        <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      </Side>
+
+      <Center>
+        <StudioBrand />
+      </Center>
+
+      <SideEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
         <BundleModeSelector />
 
         {!user.data.isGuest && (
           <>
-            <AddonHeaderItems placement="right" />
             <ChatBubbleButton />
 
             {/* help icon and menu vvv */}
@@ -141,6 +171,8 @@ const Header: React.FC = () => {
               <HelpMenu user={user} />
             </MenuContainer>
             {/* help icon and menu ^^^ */}
+
+            <AddonHeaderItems placement="right" />
 
             {/* Inbox icon */}
             <InboxNotificationIcon />
@@ -175,7 +207,7 @@ const Header: React.FC = () => {
           <UserMenu user={user} />
         </MenuContainer>
         {/* User icon and menu ^^^ */}
-      </FlexWrapperEnd>
+      </SideEnd>
     </nav>
   )
 }
