@@ -6,6 +6,7 @@ import {
   mergeQueryFilters,
   resolveFilterKeyScope,
   splitAdvancedFilterByScope,
+  toEditableConditions,
 } from '../../shared/src/containers/ProjectTreeTable/utils/advancedFilter'
 import { sanitizeQueryFilter } from '../../shared/src/containers/ProjectTreeTable/utils/sanitizeQueryFilter'
 import { expandRelativeDates } from '../../shared/src/containers/ProjectTreeTable/utils/expandRelativeDates'
@@ -471,5 +472,65 @@ test.describe('buildAdvancedFilterFields', () => {
     expect(buildAdvancedFilterFields(options).some((f) => f.key === 'version_hasReviewables')).toBe(
       true,
     )
+  })
+})
+
+test.describe('toEditableConditions', () => {
+  const fields = buildAdvancedFilterFields([
+    { id: 'shotType', type: 'string', label: 'Shot type', allowsCustomValues: true, values: [] },
+    {
+      id: 'kind',
+      type: 'string',
+      label: 'Kind',
+      allowsCustomValues: true,
+      values: [{ id: 'a', label: 'A' }],
+    },
+    { id: 'tags', type: 'list_of_strings', label: 'Tags' },
+  ])
+  const convert = (node: unknown) => toEditableConditions([tree(node) as never], fields)[0]
+
+  test('escapes typed text so it is matched as typed', () => {
+    expect(convert({ key: 'shotType', operator: 'like', value: '%sh_010%' })).toEqual({
+      key: 'shotType',
+      operator: 'like',
+      value: '%sh\\_010%',
+    })
+    expect(convert({ key: 'kind', operator: 'notlike', value: '%50%%' })).toEqual({
+      key: 'kind',
+      operator: 'notlike',
+      value: '%50\\%%',
+    })
+    expect(convert({ key: 'kind', operator: 'like', value: '%a\\b%' })).toEqual({
+      key: 'kind',
+      operator: 'like',
+      value: '%a\\\\b%',
+    })
+  })
+
+  test('keeps picked values and other patterns as they are', () => {
+    const picked = { key: 'kind', operator: 'in', value: ['a'] }
+    expect(convert(picked)).toEqual(picked)
+    const notWrapped = { key: 'kind', operator: 'like', value: 'sh%' }
+    expect(convert(notWrapped)).toEqual(notWrapped)
+    const unknown = { key: 'other', operator: 'like', value: '%a_b%' }
+    expect(convert(unknown)).toEqual(unknown)
+  })
+
+  test('converts typed text inside a group', () => {
+    expect(
+      convert({
+        operator: 'or',
+        conditions: [
+          { key: 'kind', operator: 'in', value: ['a'] },
+          { key: 'kind', operator: 'like', value: '%x_y%' },
+        ],
+      }),
+    ).toEqual({
+      operator: 'or',
+      conditions: [
+        { key: 'kind', operator: 'in', value: ['a'] },
+        { key: 'kind', operator: 'like', value: '%x\\_y%' },
+      ],
+    })
   })
 })

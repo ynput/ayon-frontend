@@ -113,7 +113,8 @@ const condition = (key: string, operator: QueryCondition['operator'], value: unk
 // The search bar's conditions in the shapes the editor edits, with the same meaning:
 // a picked value of a single-select enum is "is any of", picked numbers are one comparison
 // each, "No" on a boolean is "is false" and "excludes all" is an `or` of "has none of".
-// Anything else is kept as it is.
+// Typed text (`like "%text%"`) gets its \ % and _ escaped: the editor reads the text between
+// the % signs as it is. Anything else is kept as it is.
 export const toEditableConditions = (
   nodes: (QueryCondition | QueryFilter)[],
   fields: AdvancedFilterField[],
@@ -141,6 +142,16 @@ export const toEditableConditions = (
       if (typeof flag !== 'boolean') return node
       // the editor stores "is true" as eq true and "is false" as ne true
       return condition(key, flag !== isNegated ? 'eq' : 'ne', true)
+    }
+    if (
+      (type === 'string' || type === 'enum') &&
+      (operator === 'like' || operator === 'notlike') &&
+      typeof value === 'string' &&
+      value.length >= 2 &&
+      value.startsWith('%') &&
+      value.endsWith('%')
+    ) {
+      return condition(key, operator, `%${value.slice(1, -1).replace(/[\\%_]/g, '\\$&')}%`)
     }
     if (type === 'list' && operator === 'excludesall') {
       const conditions = asList(value).map((v) => condition(key, 'excludesany', [v]))
