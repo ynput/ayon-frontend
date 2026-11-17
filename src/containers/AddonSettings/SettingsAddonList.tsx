@@ -173,12 +173,14 @@ const SettingsAddonList: FC<SettingsAddonListProps> = ({
   }
 
   const rowDataClassNameFormatter = (rowData: Addon) => {
+    // the override colours win over "changed" in ARC's stylesheet, so unsaved edits drop them
+    const changed = !!(changedAddonKeys && rowData.key && changedAddonKeys.includes(rowData.key))
     return clsx({
-      changed: changedAddonKeys && rowData.key && changedAddonKeys.includes(rowData.key),
+      changed,
       'broken-addon-row': rowData.isBroken,
-      'changed-site': rowData.hasProjectSiteOverrides,
-      'changed-project': rowData.hasProjectOverrides,
-      'changed-studio': rowData.hasStudioOverrides,
+      'changed-site': !changed && rowData.hasProjectSiteOverrides,
+      'changed-project': !changed && rowData.hasProjectOverrides,
+      'changed-studio': !changed && rowData.hasStudioOverrides,
       loading: isLoading,
     })
   }
