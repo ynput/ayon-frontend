@@ -1,6 +1,8 @@
 import { FC, ReactNode } from 'react'
 import styled from 'styled-components'
 import { PowerpackDialog, PowerpackDialogProps } from '@shared/components'
+import AddonUnavailableDialog from './AddonUnavailableDialog'
+import { useAddonSplashState } from './SplashWrapperPageHelpers'
 
 const Container = styled.div`
   position: relative;
@@ -37,10 +39,28 @@ export const SplashWrapperPage: FC<SplashWrapperPageProps> = ({
   children,
   ...dialogProps
 }) => {
+  // the sales dialog only when the addon isn't installed: a studio with the addon installed
+  // but missing from its bundle has nothing to buy
+  const addonState = useAddonSplashState(dialogProps.addon?.name)
+
+  const renderDialog = () => {
+    if (addonState.status === 'loading') return null
+    if (dialogProps.addon && addonState.status !== 'notInstalled') {
+      return (
+        <AddonUnavailableDialog
+          label={dialogProps.label}
+          addon={dialogProps.addon}
+          state={addonState}
+        />
+      )
+    }
+    return <PowerpackDialog isCloseable={false} {...dialogProps} />
+  }
+
   return (
     <Container>
       <BGImage src={splashImage} alt="Addon Splash" />
-      <PowerpackDialog isCloseable={false} {...dialogProps} />
+      {renderDialog()}
       {children}
     </Container>
   )
