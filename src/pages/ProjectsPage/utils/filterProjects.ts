@@ -134,17 +134,23 @@ const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boo
     case 'notnull':
       return rowValue !== null && rowValue !== undefined
     case 'gt':
-      return compareValues(rowValue, resolvedValue) > 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order > 0)
     case 'gte':
-      return compareValues(rowValue, resolvedValue) >= 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order >= 0)
     case 'lt':
-      return compareValues(rowValue, resolvedValue) < 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order < 0)
     case 'lte':
-      return compareValues(rowValue, resolvedValue) <= 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order <= 0)
     default:
       return true
   }
 }
+
+const isMissing = (value: unknown) => value === null || value === undefined || value === ''
+
+// Without a value on either side an ordered comparison matches nothing, as on the server
+const compareOrdered = (a: unknown, b: unknown, test: (order: number) => boolean): boolean =>
+  !isMissing(a) && !isMissing(b) && test(compareValues(a, b))
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}T/
 
