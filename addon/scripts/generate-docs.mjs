@@ -230,6 +230,10 @@ The CLI, the dev shell and the preview scenes of other addons' slots are in
   openDetails(selected) // EntityRef[] of one type: folders, tasks, versions or representations
   openViewer({ projectName, versionIds: [version.id], productId: version.productId })
   \`\`\`
+- To import rows from CSV or Excel files or pasted tables, \`openImport(target)\` opens AYON's
+  import dialog, with its column and value mapping, presets and preview. Your server answers
+  \`target.fieldsUrl\` and \`target.importUrl\` with the contract of AYON's own imports
+  (\`/api/csv/export/{type}/fields\` and \`/api/csv/import/{type}\`); see \`ImportTarget\`.
 - Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
   one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
   \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
