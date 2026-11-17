@@ -1,5 +1,6 @@
 import { FC } from 'react'
 import { DateRangeCalendar, Dialog, SaveButton } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 
 interface CustomDateRangeDialogProps {
   isOpen: boolean
@@ -26,6 +27,11 @@ export const CustomDateRangeDialog: FC<CustomDateRangeDialogProps> = ({
   <Dialog
     isOpen={isOpen}
     onClose={onClose}
+    // Enter on a calendar day picks it (it calls preventDefault), otherwise it confirms
+    onKeyDown={getDialogKeyDown(onApply, {
+      onClose,
+      disabled: !(startDate && endDate && endDate >= startDate),
+    })}
     header={header}
     size="md"
     style={{ width: 'auto', maxHeight: 'none' }}
