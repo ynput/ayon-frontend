@@ -8,6 +8,7 @@ import {
   isRelativeDateValue,
   resolveRelativeValue,
 } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { compareOrdered } from './compareOrdered'
 
 /**
  * Applies a QueryFilter to a list of project rows, returning only matching rows.
@@ -144,25 +145,4 @@ const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boo
     default:
       return true
   }
-}
-
-const isMissing = (value: unknown) => value === null || value === undefined || value === ''
-
-// Without a value on either side an ordered comparison matches nothing, as on the server
-const compareOrdered = (a: unknown, b: unknown, test: (order: number) => boolean): boolean =>
-  !isMissing(a) && !isMissing(b) && test(compareValues(a, b))
-
-const ISO_DATE = /^\d{4}-\d{2}-\d{2}T/
-
-/** Numeric comparison, then dates (ISO strings with any offset), then text. */
-const compareValues = (a: unknown, b: unknown): number => {
-  const numA = Number(a)
-  const numB = Number(b)
-  if (!isNaN(numA) && !isNaN(numB)) return numA - numB
-  if (typeof a === 'string' && typeof b === 'string' && ISO_DATE.test(a) && ISO_DATE.test(b)) {
-    const dateA = Date.parse(a)
-    const dateB = Date.parse(b)
-    if (!isNaN(dateA) && !isNaN(dateB)) return dateA - dateB
-  }
-  return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0
 }
