@@ -35,6 +35,7 @@ export type AdvancedFilterField = {
   scopeLabel?: string
   values?: AdvancedFilterFieldValue[]
   loadValues?: () => Promise<AdvancedFilterFieldValue[]>
+  loadValuesKey?: string // what loadValues depends on (e.g. the project)
   allowsCustomValues?: boolean
 }
 
@@ -241,7 +242,7 @@ export const buildAdvancedFilterFields = (
     const scope = scopes.length > 1 ? scopes.find((s) => s === group?.name) : undefined
     // values are ids (strings), which only text and list fields can be compared with
     const hasValues = type === 'enum' || type === 'list' || type === 'string'
-    const { loadValues } = option
+    const { loadValues, loadValuesKey } = option
 
     const field: AdvancedFilterField = {
       key: option.id,
@@ -257,6 +258,7 @@ export const buildAdvancedFilterFields = (
       field.allowsCustomValues = !!option.allowsCustomValues
       if (option.values?.length) field.values = option.values.map(toFieldValue)
       if (loadValues) field.loadValues = async () => (await loadValues()).map(toFieldValue)
+      if (loadValues && loadValuesKey) field.loadValuesKey = loadValuesKey
     }
     return [field]
   })

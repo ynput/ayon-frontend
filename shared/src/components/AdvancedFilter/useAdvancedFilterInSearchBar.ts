@@ -72,7 +72,8 @@ export const useAdvancedFilterInSearchBar = ({
   const [openRequest, setOpenRequest] = useState(0)
 
   // The options are rebuilt on every render. The editor gets a new list only when a field
-  // changed (compared without `loadValues`, which is kept from the first list).
+  // changed. `loadValues` is compared by its `loadValuesKey` (e.g. the project): a new key
+  // gives a new list with the new loader.
   const builtFields = editor.Editor
     ? buildAdvancedFilterFields(options, { scopes, exclude })
     : NO_FIELDS

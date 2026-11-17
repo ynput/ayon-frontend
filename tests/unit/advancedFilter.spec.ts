@@ -464,6 +464,21 @@ test.describe('buildAdvancedFilterFields', () => {
     ])
   })
 
+  test('a loaded field carries the key its values depend on', () => {
+    const load = async () => []
+    const [loaded, plain] = buildAdvancedFilterFields([
+      { id: 'res', type: 'string', label: 'Res', loadValues: load, loadValuesKey: 'demo' },
+      { id: 'plain', type: 'string', label: 'Plain', loadValuesKey: 'demo' },
+    ])
+    expect(loaded.loadValuesKey).toBe('demo')
+    expect(plain.loadValuesKey).toBeUndefined()
+    // the key is part of the JSON the editor's field list is compared by
+    const [other] = buildAdvancedFilterFields([
+      { id: 'res', type: 'string', label: 'Res', loadValues: load, loadValuesKey: 'other' },
+    ])
+    expect(JSON.stringify(other)).not.toBe(JSON.stringify(loaded))
+  })
+
   test('scope comes from the group of a multi-scope page only', () => {
     expect(field('folder_attrib.fps')?.scope).toBe('folder')
     expect(field('task_name')?.scope).toBeUndefined()
