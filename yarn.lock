@@ -735,7 +735,7 @@
   dependencies:
     "@floating-ui/dom" "^1.8.0"
 
-"@floating-ui/react@^0.27.19":
+"@floating-ui/react@^0.27.15", "@floating-ui/react@^0.27.19":
   version "0.27.20"
   resolved "https://registry.yarnpkg.com/@floating-ui/react/-/react-0.27.20.tgz#353664b4a2b329e9f91f8d9150f7992b5ace20f4"
   integrity sha512-CMqMy7OaXl9W0eq1Uy7L7i2Y/anPvHmFmESd2CEw0t5YvZhcVCeo4MBevAmswRllX7Y2dEidA4ozGPunLSTQpw==
@@ -2098,7 +2098,7 @@
   dependencies:
     playwright "1.63.0"
 
-"@popperjs/core@^2.11.8", "@popperjs/core@^2.9.2":
+"@popperjs/core@^2.9.2":
   version "2.11.8"
   resolved "https://registry.yarnpkg.com/@popperjs/core/-/core-2.11.8.tgz#6b79032e760a0899cd4204710beede972a3a185f"
   integrity sha512-P1st0aksCrn9sGZhp8GMYwBnQsbvAWsZAX44oXNNvLHGqAOcoVxmjZiohstwQ7SqKnbR47akdNi+uleWD8+g6A==
@@ -2900,10 +2900,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.28.0":
-  version "1.28.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.28.0.tgz#6cde13e10b980df465982af370b7363fdec852d9"
-  integrity sha512-ezLEosKeSs28piridSCOhYhnDL7EdpLGSJ9S8gi2OmKEcBG2yZzuBL/7jLo40iFNZT3xevDDxyea66+EEB+qRA==
+"@ynput/ayon-react-components@^1.29.0":
+  version "1.29.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.29.0.tgz#5e879a8de5bce6b1684aac6bfcaaac1000824010"
+  integrity sha512-kKXZpASEJPh0WzDm3HBDWePqHCVoZdN01JsLrzXuCu1UWef6F032Qja6QLYrzIo7zpsA7koU7Ndk91nHPBjMJg==
   dependencies:
     clsx "^2.1.1"
     match-sorter "^8.2.0"
@@ -3670,12 +3670,17 @@ date-fns@3.6.0:
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-3.6.0.tgz#f20ca4fe94f8b754951b24240676e8618c0206bf"
   integrity sha512-fRHTG8g/Gif+kSh50gaGEdToemgfj74aRX3swtiouboip5JDLAyDE9F11nHMIcvOaXeOC6D7SpNhi7uFyB7Uww==
 
-date-fns@^2.24.0, date-fns@^2.30.0:
+date-fns@^2.24.0:
   version "2.30.0"
   resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-2.30.0.tgz#f367e644839ff57894ec6ac480de40cae4b0f4d0"
   integrity sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==
   dependencies:
     "@babel/runtime" "^7.21.0"
+
+date-fns@^4.1.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-4.4.0.tgz#806539edf45c616b2b76b5f78b88c56ed3c7e036"
+  integrity sha512-+1UMbeh68lH1SegH83CGWwpb6OHHbpSgr3+s5Eww5M4CAgswBpoWS0AjTOfEJ33HiYKz1hdj/KTFprzXHmq/6w==
 
 debounce@^3.0.0:
   version "3.0.0"
@@ -6678,17 +6683,14 @@ react-datepicker@4.11.0:
     react-onclickoutside "^6.12.2"
     react-popper "^2.3.0"
 
-react-datepicker@4.25.0:
-  version "4.25.0"
-  resolved "https://registry.yarnpkg.com/react-datepicker/-/react-datepicker-4.25.0.tgz#86b3ee8ac764bad1650046d0cf9280837bf6d845"
-  integrity sha512-zB7CSi44SJ0sqo8hUQ3BF1saE/knn7u25qEMTO1CQGofY1VAKahO8k9drZtp0cfW1DMfoYLR3uSY1/uMvbEzbg==
+react-datepicker@9.1.0:
+  version "9.1.0"
+  resolved "https://registry.yarnpkg.com/react-datepicker/-/react-datepicker-9.1.0.tgz#638c636780ae98f1930f87e1f76850de5fc37d5c"
+  integrity sha512-lOp+m5bc+ttgtB5MHEjwiVu4nlp4CvJLS/PG1OiOe5pmg9kV73pEqO8H0Geqvg2E8gjqTaL9eRhSe+ZpeKP3nA==
   dependencies:
-    "@popperjs/core" "^2.11.8"
-    classnames "^2.2.6"
-    date-fns "^2.30.0"
-    prop-types "^15.7.2"
-    react-onclickoutside "^6.13.0"
-    react-popper "^2.3.0"
+    "@floating-ui/react" "^0.27.15"
+    clsx "^2.1.1"
+    date-fns "^4.1.0"
 
 react-dom@18.3.1:
   version "18.3.1"
@@ -6759,7 +6761,7 @@ react-markdown@10.1.0:
     unist-util-visit "^5.0.0"
     vfile "^6.0.0"
 
-react-onclickoutside@^6.12.2, react-onclickoutside@^6.13.0:
+react-onclickoutside@^6.12.2:
   version "6.13.2"
   resolved "https://registry.yarnpkg.com/react-onclickoutside/-/react-onclickoutside-6.13.2.tgz#caa6df2c0cfe017506548fa810303fb85d13fb7c"
   integrity sha512-h6Hbf1c8b7tIYY4u90mDdBLY4+AGQVMFtIE89HgC0DtVCh/JfKl477gYqUtGLmjZBKK3MJxomP/lFiLbz4sq9A==
