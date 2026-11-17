@@ -49,6 +49,35 @@ test.describe('access groups', () => {
     }
   })
 
+  test('duplicate an access group with its permissions', async ({ page, api, accessGroup }) => {
+    await api.createAccessGroup(accessGroup, {
+      create: onlyFolders(assigned()),
+      read: onlyFolders(hierarchy('/gs_animation')),
+    })
+    const copy = `${accessGroup}_copy`
+    try {
+      const groups = new AccessGroupsPage(page)
+      await groups.goto()
+
+      await groups.row(accessGroup).click({ button: 'right' })
+      await menuItem(page, 'Duplicate').click()
+
+      const duplicate = dialog(page, 'Duplicate access group')
+      await expect(duplicate).toBeVisible()
+      // FLAG: the "Access group name" label is not associated with its input; it is the autofocused field
+      await expect(duplicate.locator('input:focus')).toHaveValue(copy)
+      await duplicate.getByRole('button', { name: 'Duplicate access group' }).click()
+
+      await expect(duplicate).toBeHidden()
+      await groups.expectSelected(copy)
+      await expect.poll(() => api.listAccessGroupNames()).toContain(copy)
+      const original = await api.getAccessGroup(accessGroup)
+      expect(await api.getAccessGroup(copy)).toEqual(original)
+    } finally {
+      await api.deleteAccessGroup(copy)
+    }
+  })
+
   test('restrict folder creation for an access group', async ({ page, api, accessGroup }) => {
     const groups = new AccessGroupsPage(page)
     await groups.goto()
