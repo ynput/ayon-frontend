@@ -3,35 +3,8 @@
 import { useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { HostOpenContextMenu } from '@ynput/ayon-addon/host'
-import type { MenuItemType } from '@shared/components/Menu/Menu'
-import {
-  useCreateContextMenu,
-  type CommandEvent,
-  type ContextMenuItemType,
-} from '@shared/containers/ContextMenu'
-import { toMenuItems } from './AddonButtonHelpers'
-
-/** The shared Menu's items (`toMenuItems`, as `MoreMenu` gets them) as context menu items. */
-const toContextMenuItems = (
-  items: MenuItemType[],
-  navigate: (to: string) => void,
-): ContextMenuItemType[] =>
-  items.map(({ id, label, icon, disabled, danger, link, target, onClick, items: subItems }) => {
-    if (id === 'divider') return { separator: true }
-    const command: ((event: CommandEvent) => void) | undefined = disabled
-      ? undefined
-      : link
-        ? () => (target ? window.open(link, target, 'noopener') : navigate(link))
-        : onClick && ((event) => onClick(event.originalEvent))
-    return {
-      label: label as string | undefined,
-      icon,
-      disabled,
-      danger,
-      ...(command ? { command } : {}),
-      ...(subItems?.length ? { items: toContextMenuItems(subItems, navigate) } : {}),
-    }
-  })
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { toContextMenuItems, toMenuItems } from './AddonButtonHelpers'
 
 export const useAddonContextMenu = (): HostOpenContextMenu => {
   const [open] = useCreateContextMenu()

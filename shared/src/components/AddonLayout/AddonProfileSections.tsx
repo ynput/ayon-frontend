@@ -3,6 +3,7 @@
 import { useMemo } from 'react'
 import { ContributionView, useContributions } from '@ynput/ayon-addon'
 import type { ProfileSectionContext } from '@ynput/ayon-addon'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import { Panel } from '@ynput/ayon-react-components'
 import { usePowerpack } from '@shared/context'
 
@@ -27,9 +28,9 @@ export const AddonProfileSections = () => {
   return (
     <>
       {sections.map((section) => (
-        <Panel key={section.key} data-addon-section={section.key}>
+        <Panel key={section.key} data-addon-section={section.key} {...contributionTags(section)}>
           <b className="profile-card-header">{section.title}</b>
-          <ContributionView contribution={section} context={context} />
+          <ContributionView contribution={section} context={context} untagged />
         </Panel>
       ))}
     </>

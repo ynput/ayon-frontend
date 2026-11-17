@@ -1,4 +1,9 @@
 import { dataImportApi } from "@shared/api";
+import type {
+  ColumnMapping,
+  ExportFieldsApiResponse,
+  ImportDataApiResponse,
+} from "@shared/api/generated/dataImport";
 
 const enhancedApi = dataImportApi.enhanceEndpoints({
   endpoints: {
@@ -41,8 +46,40 @@ const enhancedApi = dataImportApi.enhanceEndpoints({
   }
 })
 
+// An addon's import (openImport in @ynput/ayon-addon): the addon's endpoints, with the
+// contract of the ones above
+const addonImportApi = enhancedApi.injectEndpoints({
+  endpoints: (build) => ({
+    addonImportFields: build.query<
+      ExportFieldsApiResponse,
+      { url: string; projectName?: string }
+    >({
+      query: ({ url, projectName }) => ({ url, params: { project_name: projectName } }),
+    }),
+    addonImportData: build.mutation<
+      ImportDataApiResponse,
+      {
+        url: string
+        fileId: string
+        columnMapping: ColumnMapping[]
+        preview?: boolean
+        projectName?: string
+      }
+    >({
+      query: ({ url, fileId, columnMapping, preview, projectName }) => ({
+        url,
+        method: "POST",
+        body: columnMapping,
+        params: { file_id: fileId, preview, project_name: projectName },
+      }),
+    }),
+  }),
+})
+
 export const {
   useExportFieldsQuery,
   useUploadFileMutation,
   useImportDataMutation,
 } = enhancedApi
+
+export const { useAddonImportFieldsQuery, useAddonImportDataMutation } = addonImportApi

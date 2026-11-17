@@ -5,6 +5,7 @@ import MapColumnsStep from './steps/MapColumnsStep/MapColumnsStep'
 import {
   ColumnAction,
   ColumnMappings,
+  CoreImportContext,
   ImportContext,
   ImportStep,
   ValueMappings,
@@ -20,7 +21,13 @@ import {
 import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
 import { usePowerpack } from '@shared/context'
-import { useExportFieldsQuery, useImportDataMutation } from '../../services/dataImport'
+import {
+  useAddonImportDataMutation,
+  useAddonImportFieldsQuery,
+  useExportFieldsQuery,
+  useImportDataMutation,
+} from '../../services/dataImport'
+import { useImportDialogContext } from './context/ImportDialogProviderInstance'
 import { Breadcrumb, BreadcrumbButton, Breadcrumbs } from './ImportDialog.styled'
 import Loading from './steps/Loading'
 import { EmptyPlaceholder } from '@shared/components'
@@ -80,6 +87,9 @@ export default function ImportSteps({
   onClose,
 }: Props) {
   const [importData] = useImportDataMutation()
+  const [importAddonData] = useAddonImportDataMutation()
+  // an addon's import goes to the addon's endpoints
+  const { addonImport } = useImportDialogContext()
   // without the powerpack, list imports set the values on the listed entities
   const { powerLicense } = usePowerpack()
   const updateListedEntities = importContext === 'entity_list_item' && !powerLicense
@@ -102,21 +112,27 @@ export default function ImportSteps({
   const [submitted, setSubmitted] = useState(false)
   const [success, setSuccess] = useState(false)
 
-  const {
-    data: rawImportSchema,
-    isLoading: importSchemaLoading,
-    isError: importSchemaError,
-  } = useExportFieldsQuery(
+  const coreFields = useExportFieldsQuery(
     {
       projectName,
-      entityType: importContext,
+      // not requested for an addon's import
+      entityType: importContext as CoreImportContext,
       folderId,
       // a new list offers the values of the entity type it will hold
       listEntityType: creatingList ? newList.entityType : undefined,
     },
     // statuses, list attributes and comment categories can change in settings meanwhile
-    { refetchOnMountOrArgChange: true },
+    { refetchOnMountOrArgChange: true, skip: Boolean(addonImport) },
   )
+  const addonFields = useAddonImportFieldsQuery(
+    { url: addonImport?.fieldsUrl ?? '', projectName },
+    { refetchOnMountOrArgChange: true, skip: !addonImport },
+  )
+  const {
+    data: rawImportSchema,
+    isLoading: importSchemaLoading,
+    isError: importSchemaError,
+  } = addonImport ? addonFields : coreFields
 
   const importSchema = useMemo(() => {
     if (importContext === 'entity_list_item') {
@@ -142,10 +158,20 @@ export default function ImportSteps({
     async (columnMapping: ColumnMapping[], preview: boolean) => {
       if (!data) return
 
+      if (addonImport) {
+        return importAddonData({
+          url: addonImport.importUrl,
+          fileId: data.fileId,
+          columnMapping,
+          preview,
+          projectName,
+        })
+      }
+
       return importData({
         fileId: data.fileId,
         folderId,
-        importType: importContext,
+        importType: importContext as CoreImportContext,
         columnMapping,
         preview,
         projectName,
@@ -162,6 +188,8 @@ export default function ImportSteps({
       })
     },
     [
+      addonImport,
+      importAddonData,
       updateListedEntities,
       data,
       folderId,
@@ -228,8 +256,9 @@ export default function ImportSteps({
       }
       setImportResult(result.data)
       setSuccess(true)
+      addonImport?.onImported?.(result.data)
     })
-  }, [requestImport, columnMappings, valueMappings])
+  }, [requestImport, columnMappings, valueMappings, addonImport])
 
   // the mode can change after the columns were mapped, so the mapping may no longer be enough
   // the options can change after the columns were mapped, so the mapping may no longer fit:

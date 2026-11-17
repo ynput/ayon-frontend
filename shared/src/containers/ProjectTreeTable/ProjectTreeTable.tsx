@@ -32,6 +32,7 @@ import buildTreeTableColumns, {
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
+import { insertExtraColumns } from './utils/insertExtraColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
@@ -137,6 +138,7 @@ import {
   type PrefetchAddonColumnMenuItems,
 } from './addonColumnMenu/useAddonColumnMenuItems'
 import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -168,6 +170,10 @@ declare module '@tanstack/react-table' {
     prefetchAddonColumnMenuItems?: PrefetchAddonColumnMenuItems
   }
 }
+
+// a column an addon contributes: its header and cells tagged for the slot inspector
+const addonColumnSlot = (meta: { addonColumn?: AddonColumnMeta } | undefined) =>
+  meta?.addonColumn ? contributionTags(meta.addonColumn.contribution) : undefined
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {
@@ -519,23 +525,42 @@ export const ProjectTreeTable = ({
   const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
   const columnOptions = useMemo(() => options, [columnOptionsKey])
 
-  const columns = useMemo(() => {
-    const baseColumns = buildTreeTableColumns({
+  const builtColumns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        scopes,
+        attribs: columnAttribs,
+        links: linkTypes,
+        includeLinks,
+        includeParents: stableIncludeParents,
+        showHierarchy,
+        isFlatFolderView,
+        options: columnOptions,
+        excluded: excludedColumns,
+        excludedSorting,
+        groupBy,
+        nameLabel: getNameLabelHeader(),
+        parentColumns,
+      }),
+    [
       scopes,
-      attribs: columnAttribs,
-      links: linkTypes,
-      includeLinks,
-      includeParents: stableIncludeParents,
+      JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
       showHierarchy,
       isFlatFolderView,
-      options: columnOptions,
-      extraColumns,
-      excluded: excludedColumns,
+      isExpandable,
+      columnOptions,
+      linkTypes,
+      includeLinks,
+      stableIncludeParents,
+      parentColumns,
+      excludedColumns,
       excludedSorting,
       groupBy,
-      nameLabel: getNameLabelHeader(),
-      parentColumns,
-    })
+    ],
+  )
+
+  const columns = useMemo(() => {
+    const baseColumns = insertExtraColumns(builtColumns, extraColumns)
 
     if (sortableRows && enableSorting) {
       return [
@@ -555,24 +580,7 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [
-    scopes,
-    JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
-    showHierarchy,
-    isFlatFolderView,
-    isExpandable,
-    columnOptions,
-    linkTypes,
-    includeLinks,
-    stableIncludeParents,
-    parentColumns,
-    extraColumns,
-    excludedColumns,
-    excludedSorting,
-    sortableRows,
-    enableSorting,
-    groupBy,
-  ])
+  }, [builtColumns, extraColumns, sortableRows, enableSorting])
 
   // Extra columns placed after another column follow it, also in a saved column order. They are
   // always shown and not saved in the column settings (visibility, order).
@@ -1350,6 +1358,7 @@ const TableHeadCell = ({
     <Styled.HeaderCell
       ref={setNodeRef}
       data-column-id={column.id}
+      {...addonColumnSlot(column.columnDef.meta)}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         pinned: !!column.getIsPinned(),
@@ -1917,6 +1926,7 @@ const TD = ({
   return (
     <Styled.TD
       {...props}
+      {...addonColumnSlot(cell.column.columnDef.meta)}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(

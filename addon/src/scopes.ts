@@ -174,7 +174,10 @@ export interface ViewsScope {
   views: PageViews | undefined
 }
 
-/** Who sees a page: everyone when not set. Admins see manager pages too. */
+/**
+ * Who sees a page: everyone when not set. The same check as `minExposureLevel`: `manager` is
+ * `EXPOSURE.manager` (700), `admin` is `EXPOSURE.admin` (900), so admins see manager pages too.
+ */
 export type Access = 'manager' | 'admin'
 
 /** Description of a page contribution (`project.page`, `studio.page`). */
@@ -186,7 +189,10 @@ export interface PageMeta {
   id: string
   /** the tab label */
   title: string
-  /** `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them */
+  /**
+   * `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them. A
+   * shorthand for `minExposureLevel: EXPOSURE.manager` / `EXPOSURE.admin`; with both, the higher wins
+   */
   access?: Access
   /**
    * Gives the page views: the host shows the views menu and the page gets `views` in its context.
