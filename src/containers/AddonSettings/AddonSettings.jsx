@@ -523,29 +523,27 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     })
   }
 
-  const pushValueToPath = (addon, siteId, path, value) => {
-    // Push a value to a given path of the settings
-    // Validate that the value is compatible with the existing value
-
+  // Sets a value at a path of an addon's settings: a pasted one, or one edited as JSON
+  // (`verb` names that in the messages). Validates that it is compatible with the value there.
+  // Returns whether it was set: the JSON dialog stays open when it wasn't
+  const pushValueToPath = (addon, siteId, path, value, verb = 'paste') => {
     const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId || '_'}|${
       projectKey || '_'
     }`
     const allData = localData[key]
     if (!allData) {
-      toast.error('No data to paste')
-      return
+      toast.error(`No data to ${verb}`)
+      return false
     }
     const oldValue = path.length === 0 ? allData : getValueByPath(allData, path)
     if (oldValue === undefined) {
-      toast.error('No data to paste')
-      return
+      toast.error(`No data to ${verb}`)
+      return false
     }
 
     if (!sameKeysStructure(oldValue, value)) {
       toast.error('Incompatible data structure')
-      // console.log('Old value', oldValue)
-      // console.log('New value', value)
-      return
+      return false
     }
 
     let newData = { ...localData }
@@ -557,12 +555,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       newData[key] = setValueByPath(currentAddonData, path, value)
     }
 
-    const newChangedKeys = { ...changedKeys }
-    const no = compareObjects(localData[key], newData[key])
-    newChangedKeys[key] = no
+    // under the path, the changed keys are worked out again against the saved settings, so a
+    // value set back to what is saved is no longer a change; the addon's other changes stay
+    const isUnderPath = (keyPath) =>
+      keyPath.length >= path.length &&
+      path.every((part, index) => String(keyPath[index]) === String(part))
+    const kept = (changedKeys[key] || []).filter((keyPath) => !isUnderPath(keyPath))
+    const changed = compareObjects(originalData[key] || {}, newData[key]).filter(isUnderPath)
 
-    setChangedKeys(newChangedKeys)
+    setChangedKeys({ ...changedKeys, [key]: [...kept, ...changed] })
     setLocalData(newData)
+    return true
   }
 
   const onPasteValue = async (addon, siteId, path) => {
@@ -896,6 +899,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                               onPinOverride: (path) => onPinOverride(addon, siteId, path),
                               onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
                               onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                              onSetRawValue: (path, value) =>
+                                pushValueToPath(addon, siteId, path, value, 'update'),
                               includeStudioScope: !!addon.isProjectBundle,
                             }}
                           />

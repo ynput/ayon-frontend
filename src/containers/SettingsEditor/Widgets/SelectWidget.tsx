@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useRef, useState } from 'react'
 import {
   DefaultItemTemplate,
+  DefaultValueTemplate,
   Dropdown,
   DropdownRef,
   InputSwitch,
@@ -11,6 +12,7 @@ import { updateChangedKeys, equiv, parseContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
 import OrderedListWidget from './OrderedListWidget'
+import { MultiSelectValue } from './MultiSelectValue'
 import { isEqual } from 'lodash'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import {
@@ -93,6 +95,13 @@ const buildSelectOptions = ({
 const getRenderableValue = (value: $Any, multiple: boolean) => {
   if (value === null) return []
   return multiple ? value : [value]
+}
+
+// the selected options first, each group in the schema's order
+const sortSelectedFirst = (options: $Any[], selected: $Any) => {
+  const picked = new Set(Array.isArray(selected) ? selected : [])
+  if (!picked.size) return options
+  return [...options].sort((a, b) => Number(picked.has(b.value)) - Number(picked.has(a.value)))
 }
 
 const getHighlightStyle = (
@@ -239,6 +248,8 @@ const SelectWidget = (props: $Any) => {
   const [dropdownPlacement, setDropdownPlacement] = useState<CSSProperties>({})
   const [dropdownMaxHeight, setDropdownMaxHeight] = useState(300)
   const [dropdownHorizontalPlacement, setDropdownHorizontalPlacement] = useState<CSSProperties>({})
+  // a multi-select's value when its menu opened: the menu lists it first (flat layout)
+  const [openedSelection, setOpenedSelection] = useState<$Any[] | null>(null)
 
   const widget = props.schema?.widget
   // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
@@ -399,6 +410,56 @@ const SelectWidget = (props: $Any) => {
     : props.schema?.placeholder
   const disabled = props.schema?.disabled || isEnumOptionsLoading
 
+  // the flat layout shows a multi-select's values that fit and counts the others (+N), and
+  // lists the selected ones first in its menu, all of them in view when it opens
+  const isFlatMulti = !!props.formContext?.flatLayout && !!props.multiple
+  const menuOptions = isFlatMulti ? sortSelectedFirst(options, openedSelection ?? value) : options
+  const dropdownError = toDropdownErrorText(enumOptionsError)
+  const flatMultiProps = isFlatMulti
+    ? {
+        valueTemplate: (committed: string[], picked: string[], isOpen: boolean) => {
+          // while the menu is open it shows the values being picked
+          const shown = isOpen ? picked : committed
+          return (
+            <DefaultValueTemplate
+              value={shown}
+              placeholder={placeholder}
+              isOpen={isOpen}
+              hasError={!!dropdownError}
+              // the dropdown's own button runs the clear (onClear below); this shows its icon
+              onClear={shown.length ? () => undefined : undefined}
+              clearTooltip="Clear selection"
+            >
+              <MultiSelectValue
+                items={shown.map(
+                  (selected) =>
+                    options.find((option) => option.value === selected) ?? {
+                      value: selected,
+                      label: selected,
+                    },
+                )}
+              />
+            </DefaultValueTemplate>
+          )
+        },
+        // the menu closes on a clear without telling onClose
+        onClear: value?.length
+          ? () => {
+              setOpenedSelection(null)
+              handleValueChange([])
+            }
+          : undefined,
+        clearTooltip: 'Clear selection',
+        // the order the menu lists its options in is set when it opens: a value picked
+        // with the menu open (each pick saves) stays where it was clicked
+        onOpen: () => {
+          onDropdownOpen()
+          setOpenedSelection(value || [])
+        },
+        onClose: () => setOpenedSelection(null),
+      }
+    : {}
+
   if (isSortableMultiselect && props.multiple) {
     return (
       <OrderedListWidget
@@ -407,7 +468,7 @@ const SelectWidget = (props: $Any) => {
         onChange={handleValueChange}
         placeholder={placeholder}
         disabled={disabled}
-        dropdownProps={{ error: toDropdownErrorText(enumOptionsError), itemTemplate }}
+        dropdownProps={{ error: dropdownError, itemTemplate }}
       />
     )
   }
@@ -426,18 +487,19 @@ const SelectWidget = (props: $Any) => {
   return (
     <StyledDropdown
       widthExpand
-      options={options}
+      options={menuOptions}
       value={renderableValue}
       // @ts-ignore
       onSelectionChange={props.multiple ? handleValueChange : (e) => handleValueChange(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       placeholder={placeholder}
-      error={toDropdownErrorText(enumOptionsError)}
+      error={dropdownError}
       itemTemplate={itemTemplate}
       className={`form-field`}
       ref={dropdownRef}
       {...flatMenuProps}
+      {...flatMultiProps}
       multiSelect={props.multiple}
       style={hlstyle}
       disabled={disabled}

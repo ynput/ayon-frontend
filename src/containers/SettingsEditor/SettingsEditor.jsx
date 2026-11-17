@@ -17,6 +17,9 @@ import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
 import { SettingsOutline } from './SettingsOutline'
 import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContextInstance'
+import { SettingsJsonDialog } from './SettingsJsonDialog/SettingsJsonDialog'
+import { compareObjects, getValueByPath, setValueByPath } from '@containers/AddonSettings/utils'
+import cloneDeep from 'lodash/cloneDeep'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -112,6 +115,8 @@ const SettingsEditor = ({
   anchorScope,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+  // a group opened as JSON from its right-click menu: { path, title, value }
+  const [jsonEdit, setJsonEdit] = useState(null)
   const formWrapperRef = useRef()
   const sheetRef = useRef(null)
   // per-user choice between the classic nested panels and the flat card layout
@@ -184,9 +189,33 @@ const SettingsEditor = ({
     return <div></div>
   }
 
+  // Sets a group's value from the JSON dialog, through the editor's own setter when it has one
+  // (AddonSettings checks the value's shape and works out the changed keys), else as an edit
+  const applyJson = (value) => {
+    const path = jsonEdit?.path || []
+    if (context?.onSetRawValue) return context.onSetRawValue(path, value)
+    if (context?.onSetValue) {
+      context.onSetValue(path, value)
+      return true
+    }
+    const newData = setValueByPath(cloneDeep(formData), path, value)
+    onChange(newData)
+    // the keys the value changes, so an editor that saves only with changed keys can (a whole
+    // sheet edited has no path of its own); a group of anything but settings counts as one
+    const isGroup = (data) => !!data && typeof data === 'object' && !Array.isArray(data)
+    const oldValue = getValueByPath(formData, path)
+    const changed =
+      isGroup(oldValue) && isGroup(value) ? compareObjects(oldValue, value, path) : [path]
+    if (changed.length)
+      onSetChangedKeys?.(changed.map((keyPath) => ({ path: keyPath, isChanged: true })))
+    return true
+  }
+
   const fullContext = {
     ...context,
     ...formContext,
+    onEditJson: (path, title) =>
+      setJsonEdit({ path, title, value: cloneDeep(getValueByPath(formData, path)) }),
     onSetChangedKeys: onSetChangedKeys || noop,
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
@@ -237,6 +266,15 @@ const SettingsEditor = ({
         </div>
       ) : (
         form
+      )}
+      {jsonEdit && (
+        <SettingsJsonDialog
+          title={jsonEdit.title}
+          path={jsonEdit.path}
+          value={jsonEdit.value}
+          onApply={applyJson}
+          onClose={() => setJsonEdit(null)}
+        />
       )}
     </FormWrapper>
   )

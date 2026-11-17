@@ -116,13 +116,17 @@ type OverrideContextMenuArgs = {
   onPinOverride?: (path: $Any[]) => void
   onRemoveOverride?: (path: $Any[]) => void
   onPasteValue?: (path: $Any[]) => void
+  /** Groups only: opens the group's raw settings (SettingsJsonDialog), under this title */
+  onEditJson?: (path: $Any[], title: string) => void
+  jsonTitle?: string
   formData: ObjectFieldTemplateProps['formData']
   override?: $Any
   overrideLevel: string
   path?: $Any[]
 }
 
-/** The context menu of a field or group: pin or remove its override, copy and paste its value */
+/** The context menu of a field or group: pin or remove its override, copy and paste its value,
+ * and for a group, edit its raw settings */
 export const buildOverrideContextMenu = ({
   isRoot,
   level,
@@ -130,6 +134,8 @@ export const buildOverrideContextMenu = ({
   onPinOverride,
   onRemoveOverride,
   onPasteValue,
+  onEditJson,
+  jsonTitle,
   formData,
   override,
   overrideLevel,
@@ -178,5 +184,11 @@ export const buildOverrideContextMenu = ({
       command: () => onPasteValue?.(path || []),
     },
   )
+  if (onEditJson) {
+    model.push({
+      label: 'Edit raw settings...',
+      command: () => onEditJson(path || [], jsonTitle || 'Settings'),
+    })
+  }
   return model
 }

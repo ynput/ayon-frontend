@@ -207,41 +207,55 @@ $flat-row: '.form-inline-field:not(.form-inline-field-widget *, .layout-compact 
 // a field with a label of its own: a row, or one field of a compact row
 $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-header-enabled-toggler *)'
 
-// the outline rail and the sheet: one readable column with even margins, kept in line
-// with the toolbars above it. Narrow panels drop the rail and keep the sheet
+// the outline rail and the sheet: the sheet is one readable column centred in the panel, the
+// rail in the margin on its left. The rail's column is kept while it is hidden (toolbar
+// button), so the sheet never moves when it is shown or hidden. The
+// margin on the right grows with the left one: the sheet is centred while there is room for
+// the rail beside it, and takes the right margin first when there isn't. Narrow panels drop the
+// rail and keep the sheet
 .settings-flat:not(.rjsf)
-  max-width: 1296px
   padding-inline: 16px
   container-type: inline-size
 
 .settings-flat-layout
   display: grid
-  grid-template-columns: minmax(0, 1040px)
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1040px) minmax(0, 1fr)
+  column-gap: 24px
   align-items: start
 
+  // shown or hidden, the rail keeps its room: only a sheet too short for one goes without
   &:has(> .settings-outline)
-    grid-template-columns: 200px minmax(0, 1040px)
-    gap: 24px
-    transition: grid-template-columns 0.25s ease, gap 0.25s ease
+    grid-template-columns: minmax(200px, 1fr) minmax(0, 1040px) minmax(0, 1fr)
 
-    @media (prefers-reduced-motion: reduce)
-      transition: none
+  // beside the sheet however wide its margin grows
+  > .settings-outline
+    grid-column: 1
+    justify-self: end
+    width: 200px
 
-  // the rail is hidden with a toolbar button: its column closes and the sheet slides over
-  &:has(> .settings-outline.is-collapsed)
-    grid-template-columns: 0px minmax(0, 1040px)
-    gap: 0
+  > :not(.settings-outline)
+    grid-column: 2
 
-// editors stacked beside one shared rail (AddonSettings) take that layout's margins
+// editors stacked beside one shared rail (AddonSettings, SiteSettings) take that layout's
+// margins and column: their own layout holds just their sheet
 .settings-flat-layout .settings-flat:not(.rjsf)
-  max-width: none
   padding-inline: 0
 
+.settings-flat-layout .settings-flat-layout
+  grid-template-columns: minmax(0, 1fr)
+  column-gap: 0
+
+  > :not(.settings-outline)
+    grid-column: 1
+
 @container (max-width: 720px)
-  .settings-flat-layout:has(> .settings-outline),
-  .settings-flat-layout:has(> .settings-outline.is-collapsed)
+  .settings-flat-layout,
+  .settings-flat-layout:has(> .settings-outline)
     grid-template-columns: minmax(0, 1fr)
-    gap: 0
+    column-gap: 0
+
+    > :not(.settings-outline)
+      grid-column: 1
 
   // two classes, to beat the rail's own display
   .settings-flat-layout > .settings-outline
@@ -514,6 +528,11 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
     .dropdown.form-field
       width: 100%
+
+      // the widget gives its value no width of its own (StyledDropdown in SelectWidget),
+      // so in classic it fills the field; here the field is sized to it
+      > button > .template-value > div:first-child
+        width: auto
 
   // an ordered list's value has no width of its own (OrderedListWidget), so it takes the
   // row's second half like a text field
@@ -1038,6 +1057,11 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         // a dropdown draws its border on an inner element
         .dropdown.form-field .template-value
           border: 0
+
+        // a multi-select's clear button (SelectWidget) would sit by the row's own X: in a
+        // cell, its values clear from the menu
+        .dropdown.form-field .template-value > #clear
+          display: none
 
         // every cell starts at the room the row's layout counted for it (--settings-cell-width,
         // set from getRowCellWidth, the same numbers that decide whether a record is a row),

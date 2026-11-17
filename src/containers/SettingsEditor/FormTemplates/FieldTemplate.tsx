@@ -42,6 +42,15 @@ function FieldTemplate(props: FieldTemplateProps) {
   // Solve overrides for lists and leaves
 
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
+  // a list drawn as a group (renderFieldTemplate) can be edited as JSON from its title
+  const isListGroup =
+    props.schema.type === 'array' &&
+    // @ts-ignore
+    props.schema.items?.type !== 'string' &&
+    props.schema.layout !== 'compact'
+  // and only where its place in the data is known: any other would open the whole form
+  const onEditJson = isListGroup && override?.path ? props.formContext.onEditJson : undefined
+  const jsonTitle = props.schema.title || props.label
   const path = useMemo(() => override?.path || [], [override?.path])
 
   const fieldChanged = useMemo(() => {
@@ -61,6 +70,8 @@ function FieldTemplate(props: FieldTemplateProps) {
         onPinOverride,
         onRemoveOverride,
         onPasteValue,
+        onEditJson,
+        jsonTitle,
         formData: props.formData,
         override,
         overrideLevel,
@@ -69,6 +80,8 @@ function FieldTemplate(props: FieldTemplateProps) {
     [
       level,
       onPasteValue,
+      onEditJson,
+      jsonTitle,
       onPinOverride,
       onRemoveOverride,
       override,

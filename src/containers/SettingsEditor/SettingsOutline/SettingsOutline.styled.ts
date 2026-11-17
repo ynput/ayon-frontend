@@ -4,8 +4,7 @@ import styled from 'styled-components'
 export const Outline = styled.nav`
   position: sticky;
   top: 0;
-  /* the grid column shrinks to nothing when the rail is hidden (see SettingsEditor.sass),
-     so the rail clips its list instead of reflowing it */
+  /* hidden, the rail keeps its column (SettingsEditor.sass), so the sheet never moves */
   overflow-x: hidden;
   overflow-y: auto;
   /* at its ends, a scroll over the rail stops there instead of moving the sheet */

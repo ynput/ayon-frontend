@@ -34,8 +34,14 @@ const sameKeysStructure = (obj1, obj2, strict = false) => {
     }
   }
 
+  // an empty value takes anything; a group or list doesn't become empty (null)
+  if (obj1 === null) return true
+  if (obj2 === null) return false
+
   // just assume someone won't paste invalid array items here
   if (Array.isArray(obj1) && Array.isArray(obj2)) return true
+  // a list doesn't become a group, nor a group a list
+  if (Array.isArray(obj1) !== Array.isArray(obj2)) return false
 
   if (typeof obj1 !== 'object' || typeof obj2 !== 'object') return false
   // console.log('obj1', obj1)
@@ -56,6 +62,7 @@ const sameKeysStructure = (obj1, obj2, strict = false) => {
       // just assume someone won't paste invalid array items here
       if (Array.isArray(obj1[key]) && Array.isArray(obj2[key])) continue
 
+      // null is an object too: sameKeysStructure tells an emptied group or list apart
       if (!sameKeysStructure(obj1[key], obj2[key], strict)) {
         console.warn('Struct cond failed on ', obj1[key], obj2[key])
         return false

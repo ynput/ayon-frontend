@@ -102,6 +102,15 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const objectId = props.idSchema.$id
   const { level, onRemoveAllOverrides, onPinOverride, onRemoveOverride, onPasteValue } =
     props.formContext
+  // only where the group's place in the data is known: any other would open the whole form
+  const onEditJson = isRoot || path ? props.formContext.onEditJson : undefined
+  // the JSON dialog's title: the group's, a list item's name, or the sheet's
+  const named = 'name' in (props.schema.properties || {})
+  const jsonTitle: string =
+    (isRoot && props.formContext.formTitle) ||
+    (named && (props.formData?.label || props.formData?.name)) ||
+    props.title ||
+    'Settings'
 
   const contextMenuModel = useMemo(
     () =>
@@ -112,6 +121,8 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
         onPinOverride,
         onRemoveOverride,
         onPasteValue,
+        onEditJson,
+        jsonTitle,
         formData: props.formData,
         override,
         overrideLevel,
@@ -124,6 +135,8 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       onPinOverride,
       onRemoveOverride,
       onPasteValue,
+      onEditJson,
+      jsonTitle,
       props.formData,
       override,
       overrideLevel,

@@ -68,6 +68,57 @@ reordering a pair changes both lists.
 - The classic layout, and a mapping whose list is out of scope or disabled, draw the two lists.
 - The lasting fix is in the addons: a list of `{source, destination}` records.
 
+### Dropdowns and multi-selects
+
+- A dropdown on its label's line is sized to its value (up to half the row). `StyledDropdown`
+  in `SelectWidget` gives the value `width: 0` so it fills the classic field; the flat rule
+  undoes that, and only there.
+- A multi-select's closed value (`MultiSelectValue`, through ARC's `valueTemplate`) shows the
+  values that fit, then `+N`, and its tooltip lists them all. Every value stays laid out (the
+  others unseen), so the field's natural width is the whole list's. It measures with fractional
+  sizes: rounded ones put a list that fits exactly a pixel over and show a false `+1`.
+- A value too long to show beside the count (or a lone value too long for the field) is cut to
+  the room left, with an ellipsis. It keeps its width (`flex: none`): the unseen values after it
+  overflow the field and would squeeze it to nothing. A hidden spacer (`multi-select-sizer`) keeps
+  the width it lost in the field's natural width, or the field would shrink to the cut value.
+- It gets a clear button, except in a boxed row's cell, where it would sit by the row's own X.
+- Its menu lists the selected options first, in the order they had when it opened
+  (`openedSelection`): each pick saves at once, and ARC's `sortBySelected` would move the
+  option from under the pointer.
+
+### Raw settings of a group
+
+- The right-click menu of a group's title (cards, sections, list items, lists drawn as groups,
+  the sheet) has "Edit raw settings...", in both layouts, where the group's place in the data is
+  known. It opens `SettingsJsonDialog` with the group's value as it is in the form, unsaved edits
+  included.
+- The dialog refuses JSON that doesn't parse, or isn't of the value's kind (a group typed as a
+  list, or emptied to `null`; `getKindMismatch`): the form would draw it as empty and save it as
+  it is. A value that was empty takes any kind. Every editor gets this check, whatever its setter.
+- `SettingsEditor` holds the dialog, outside the RJSF form; the menus reach it through
+  `formContext.onEditJson`. Confirming sets the value through the editor's own setter:
+  - `context.onSetRawValue` (AddonSettings: `pushValueToPath`, shared with Paste). It checks the
+    shape (`sameKeysStructure`: no group or list turned into `null`, nor a list into a group at
+    any depth), then works the changed keys under the path out again against the saved settings,
+    so a value set back to what is saved is no longer a change. The addon's other changes stay.
+  - `context.onSetValue` (Anatomy).
+  - Else as an edit (`onChange`), marking the keys that changed: ServerConfig saves only with
+    changed keys, and a whole sheet edited has no path of its own.
+- The dialogs are portalled out of the form: settings tokens like `--space-2` don't reach them.
+  Use the app's (`--base-gap-large`).
+- It is not the addon list's "Low-level editor" (`RawSettingsDialog`): that one edits the saved
+  overrides of a whole addon and saves them at once. A failed load shows its error and can't be
+  saved over (it would read as "no overrides" and replace them). It opens behind a warning: the
+  editor is dimmed and `inert` (`JsonCodeEditor`'s `locked`) until "Continue", which has focus.
+- Both dialogs share `src/components/JsonCodeEditor`: the editor frame, its colours, the dialog's
+  size and layout, and 2-space JSON (the editor's Tab key indents by 2 as well). Change them
+  there, so the two don't drift apart.
+- The editor draws a coloured copy of the text under a transparent textarea. Every element in it
+  has to be monospace 12px (`!important`): the app's font reaches the coloured spans otherwise,
+  so indents look narrower and the colours no longer line up with the cursor.
+- JSON colours come from app tokens. The editor's own palette follows the system's light or dark
+  mode, not the app's, and colours keys and strings the same.
+
 ### Open state
 
 `useFoldState` is shared by list items (`useListItemFold`) and groups (`useGroupFold`). Open items
@@ -96,6 +147,12 @@ some of them out of view below the scroll. It is checked again as the sheet chan
 and when the sheet or its panel is resized. It can't flicker: the rail shows when the sheet
 overflows at full width, and narrowing the sheet only makes it taller; it hides when the sheet
 fits beside it, and widening the sheet only makes it shorter.
+
+The sheet is centred in its panel (`.settings-flat-layout`: margin, sheet, margin), and the rail
+sits in the left margin, against the sheet. The left margin is at least the rail's 200px while a
+rail is rendered, hidden or not, so hiding or showing it never moves the sheet. In a panel too
+narrow for both margins to hold the rail, the right one gives way first. Nested layouts (one per
+editor under a shared rail) are a single column.
 
 Addon settings and Site settings stack one editor per selected addon (and site). They share one
 outline (`AddonSettingsSheets`, editors get `outline={false}`), so every sheet starts at the same edge

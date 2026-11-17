@@ -21,7 +21,9 @@ export const AddonSettingsSheets = ({ flat, children }: AddonSettingsSheetsProps
     <div className="settings-flat">
       <div className="settings-flat-layout">
         <SettingsOutline sheetRef={sheetsRef} />
-        <div ref={sheetsRef}>{children}</div>
+        <div className="settings-flat-sheet" ref={sheetsRef}>
+          {children}
+        </div>
       </div>
     </div>
   )
