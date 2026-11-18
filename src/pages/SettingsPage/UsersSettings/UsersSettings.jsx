@@ -28,7 +28,9 @@ import DeleteUserDialog from './DeleteUserDialog'
 import InviteUserDialog from './InviteUserDialog'
 import LicensesDialog from '@components/LicensesDialog/LicensesDialog'
 import { useQueryParam } from 'use-query-params'
-import ImportDialogButton from '@containers/ImportDialog/ImportDialogButton'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import { TableExportButton } from '@shared/containers/TableExport'
+import UsersExportSource from './UsersExportSource'
 
 // what to show in the access column
 const formatAccessGroups = (rowData) => {
@@ -56,6 +58,11 @@ const formatAccessGroups = (rowData) => {
 
   return { ...rowData, accessGroups: res, accessGroupList: Object.keys(res) }
 }
+
+// stable fallback, so memos that depend on the user list don't rerun every render while loading
+const EMPTY_USERS = []
+
+const SEARCHABLE_FIELDS = ['name', 'attrib.fullName', 'attrib.email', 'accessGroupList', 'hasPassword']
 
 const UsersSettings = () => {
   // QUERY PARAMS STATE
@@ -85,6 +92,7 @@ const UsersSettings = () => {
   const [showInviteUser, setShowInviteUser] = useState(false)
   const [showSetPassword, setShowSetPassword] = useState(false)
   const [showLicenses, setShowLicenses] = useQueryParam('licenses', false)
+  const { openForContext: openImportDialog } = useImportDialogContext()
 
   // get user name from redux
   const selfName = useSelector((state) => state.user.name)
@@ -92,9 +100,11 @@ const UsersSettings = () => {
   const isSelfSelected = selectedUsers.includes(selfName)
 
   // RTK QUERY HOOKS
-  let { data: userList = [], isLoading, isError, isFetching } = useGetUsersQuery({ selfName })
+  let { data: userList = EMPTY_USERS, isLoading, isError, isFetching } = useGetUsersQuery({
+    selfName,
+  })
   if (isError || !Array.isArray(userList)) {
-    userList = []
+    userList = EMPTY_USERS
     toast.error('Unable to load users')
   }
 
@@ -160,21 +170,17 @@ const UsersSettings = () => {
     [userList],
   )
 
-  const searchableFields = [
-    'name',
-    'attrib.fullName',
-    'attrib.email',
-    'accessGroupList',
-    'hasPassword',
-  ]
-
   const [search, setSearch, filteredData] = useSearchFilter(
-    searchableFields,
+    SEARCHABLE_FIELDS,
     userListWithAccessGroups,
     'users',
   )
 
-  const selectedUserList = userList.filter((user) => selectedUsers.includes(user.name))
+  // keep the same array between renders: the detail panel rebuilds its form whenever it changes
+  const selectedUserList = useMemo(() => {
+    const selected = new Set(selectedUsers)
+    return userList.filter((user) => selected.has(user.name))
+  }, [userList, selectedUsers])
 
   const levels = useMemo(() => {
     let levels = []
@@ -252,7 +258,12 @@ const UsersSettings = () => {
               icon="mail"
               disabled={!selectedUsers.length}
             />
-            <ImportDialogButton importContext="user" />
+            <TableExportButton onImport={() => openImportDialog('user')} />
+            <UsersExportSource
+              users={userListWithAccessGroups}
+              tableUsers={filteredData}
+              selectedUsers={selectedUsers}
+            />
             <Button label="Licenses" icon="groups" onClick={() => setShowLicenses(true)} />
           </Toolbar>
           <Splitter

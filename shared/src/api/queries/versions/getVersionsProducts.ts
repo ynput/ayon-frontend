@@ -41,6 +41,7 @@ import {
   transformVersionsResponse,
 } from './getVersionsProductsUtils'
 import { normalizeQueryError } from '@shared/api/base/queryError'
+import { getCachedGroupItems } from '../actions/getCachedGroupItems'
 import { parseJSONField } from '../overview'
 import {
   getSupportedEntityPatch,
@@ -1135,8 +1136,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
 
     // Grouped versions query - fetches versions for multiple group filters
     getGroupedVersionsList: build.query<GetGroupedVersionsListResult, GetGroupedVersionsListArgs>({
-      queryFn: async (
-        {
+      queryFn: async (args, api) => {
+        const {
           projectName,
           groups,
           groupFilterKey = 'versionFilter',
@@ -1154,12 +1155,20 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           featuredOnlyEntityType,
           latestPerFolder,
           hasReviewables,
-        },
-        api,
-      ) => {
+        } = args
         try {
           const promises = []
+          // a refresh reloads every group, otherwise only the new or grown ones
+          const cachedGroups = api.forced
+            ? new Map<string, VersionNode[]>()
+            : getCachedGroupItems<VersionNode>(
+                api.getState(),
+                'getGroupedVersionsList',
+                args,
+                (data) => data?.versions,
+              )
           for (const group of groups) {
+            if (cachedGroups.has(group.value)) continue
             const count = group.count || 500
 
             const queryParams = {
@@ -1201,7 +1210,8 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           }
 
           const result = await Promise.all(promises)
-          const versions: VersionNode[] = []
+          promises.forEach((promise) => promise.unsubscribe())
+          const fetchedGroups = new Map<string, VersionNode[]>()
 
           for (const res of result) {
             if (res.error) throw res.error
@@ -1224,8 +1234,17 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
                 ],
               })) || []
 
-            versions.push(...groupVersions)
+            fetchedGroups.set(groupValue, groupVersions)
           }
+
+          // read the cache again: reused groups may have been patched while fetching
+          const latestGroups = cachedGroups.size
+            ? getCachedGroupItems<VersionNode>(api.getState(), 'getGroupedVersionsList', args, (data) => data?.versions)
+            : cachedGroups
+          const versions = groups.flatMap(
+            ({ value }) =>
+              fetchedGroups.get(value) ?? latestGroups.get(value) ?? cachedGroups.get(value) ?? [],
+          )
 
           return {
             data: {

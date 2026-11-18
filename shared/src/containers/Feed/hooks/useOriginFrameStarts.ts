@@ -1,18 +1,22 @@
 import { useMemo } from 'react'
 import { useGetVersionsFrameStartQuery } from '@shared/api'
 import { getActivityFrameLink } from '@shared/context'
+import { getVersionMediaStart } from '../helpers/versionFrames'
 
 type Props = {
   projectName: string
   entityType: string
-  entities: Array<{ id: string; attrib?: { frameStart?: number | null } }>
+  entities: Array<{
+    id: string
+    attrib?: { frameStart?: number | null; handleStart?: number | null }
+  }>
   activities: any[]
 }
 
 const hasFrames = (activity: any) =>
   !!activity.activityData?.annotations?.length || !!getActivityFrameLink(activity)
 
-// frameStart of the version each framed comment was made on, keyed by version id
+// first frame of the media of the version each framed comment was made on, keyed by version id
 export const useOriginFrameStarts = ({ projectName, entityType, entities, activities }: Props) => {
   const feedVersions = useMemo<Record<string, number | null>>(
     () =>
@@ -20,7 +24,10 @@ export const useOriginFrameStarts = ({ projectName, entityType, entities, activi
         ? Object.fromEntries(
             entities
               .filter((entity) => entity.attrib)
-              .map((entity) => [entity.id, entity.attrib?.frameStart ?? null]),
+              .map((entity) => [
+                entity.id,
+                getVersionMediaStart(entity.attrib?.frameStart, entity.attrib?.handleStart),
+              ]),
           )
         : {},
     [entityType, entities],

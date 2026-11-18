@@ -8,10 +8,24 @@ import {
 import { toast } from 'react-toastify'
 import semver from 'semver'
 import { useNavigate } from 'react-router-dom'
+import { readDialogMemory, writeDialogMemory } from '@shared/util'
+import {
+  listEntityTypes,
+  type ListEntityType,
+} from '../components/NewListDialog/NewListDialogHelpers'
 
 const MIN_REVIEW_VERSION = '0.0.3'
 
 export interface NewListForm extends EntityListPostModel {}
+
+// the entity type the last list was created with, offered again the next time
+const NEW_LIST_MEMORY = 'new-list'
+type NewListMemory = { entityType: ListEntityType }
+
+const getRememberedEntityType = (): ListEntityType => {
+  const { entityType } = readDialogMemory<NewListMemory>(NEW_LIST_MEMORY)
+  return entityType && listEntityTypes.includes(entityType) ? entityType : 'folder'
+}
 
 export interface UseNewListProps {
   onCreateNewList: (list: EntityListPostModel) => Promise<EntityListSummary>
@@ -31,7 +45,11 @@ export interface UseNewListReturn {
   setNewList: React.Dispatch<React.SetStateAction<NewListForm | null>>
   openNewList: (init?: Partial<NewListForm>) => void
   closeNewList: () => void
-  createNewList: (list?: NewListForm) => Promise<EntityListSummary>
+  /** keepOpen: the dialog stays open with a fresh label to create another list */
+  createNewList: (
+    list?: NewListForm,
+    options?: { keepOpen?: boolean },
+  ) => Promise<EntityListSummary>
   createReviewSessionList?: (
     listId: string,
     config?: CreateReviewSessionListConfig,
@@ -58,7 +76,7 @@ const useNewList = ({
     setNewList({
       label: listDefaultName(isReview ? 'Review' : undefined),
       entityListType: isReview ? 'review-session' : 'generic',
-      entityType: isReview ? 'version' : 'folder',
+      entityType: isReview ? 'version' : getRememberedEntityType(),
       access: {},
       ...init,
     })
@@ -67,16 +85,35 @@ const useNewList = ({
   const closeNewList: V['closeNewList'] = React.useCallback(() => setNewList(null), [])
 
   const createNewList: V['createNewList'] = React.useCallback(
-    async (listData) => {
+    async (listData, { keepOpen } = {}) => {
       try {
         const dataToUse = listData ?? newList
         if (!dataToUse) throw new Error('New list or listData is not set')
         // create the new list using data provided in the function or from the state
         const res = await onCreateNewList(dataToUse)
-        // close the dialog
-        closeNewList()
+        if (dataToUse.entityListType !== 'review-session' && dataToUse.entityType) {
+          writeDialogMemory<NewListMemory>(NEW_LIST_MEMORY, {
+            entityType: dataToUse.entityType as ListEntityType,
+          })
+        }
 
+        // select the new list
         onCreated?.(res)
+
+        if (keepOpen) {
+          // the list is created in the background: say so, and get the form ready for the next one
+          const isReviewSession = dataToUse.entityListType === 'review-session'
+          toast.success(
+            `${isReviewSession ? 'Review session' : 'List'} "${dataToUse.label}" created`,
+          )
+          setNewList(
+            (prev) =>
+              prev && { ...prev, label: listDefaultName(isReviewSession ? 'Review' : undefined) },
+          )
+          return res
+        }
+
+        closeNewList()
         return res
       } catch (error: any) {
         toast.error(`Failed to create list: ${error.data?.detail}`)

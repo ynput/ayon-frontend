@@ -72,6 +72,7 @@ type NewBundleProps = {
   installers: Installer[]
   isDev: boolean
   developerMode?: boolean
+  isDeveloper?: boolean
 }
 
 const NewBundle: React.FC<NewBundleProps> = ({
@@ -80,6 +81,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   installers,
   isDev,
   developerMode,
+  isDeveloper,
 }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState<LocalBundleFormData | null>(null)
@@ -223,7 +225,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
       return
     }
 
-    if (!developerMode) data.isDev = false
+    if (!isDeveloper) data.isDev = false
 
     try {
       await createBundle({ data: data, force: data.isDev }).unwrap()
@@ -387,7 +389,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
         }}
         formData={formData}
         onAddonDevChange={handleAddonDevChange}
-        developerMode={developerMode}
+        developerMode={isDeveloper}
         addonListRef={addonListRef}
         createdAt={isDev ? initBundle?.createdAt : undefined}
         updatedAt={isDev ? initBundle?.updatedAt : undefined}

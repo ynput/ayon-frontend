@@ -84,6 +84,7 @@ export interface ProjectTableContextType {
   readOnly?: boolean // the whole table: nothing can be edited
   tableId: string // marks the table's container, so its key handlers skip other tables' keys
   loadingLinksEntityIds?: Set<string>
+  isLoadingMoreGroups: boolean
 
   // grouping
   groups: ProjectTableProviderProps['groups']
@@ -160,6 +161,7 @@ export interface ProjectTableProviderProps {
   // loading
   isLoading: boolean
   isLoadingMore: boolean
+  isLoadingMoreGroups?: boolean // a group's next page is loading
   loadingTasks?: LoadingTasks
   error?: string
   softError?: string // shows a warning banner but doesn't block the table from rendering
@@ -223,6 +225,8 @@ export interface ProjectTableProviderProps {
 
   groupByConfig?: {
     entityType?: GroupByEntityType
+    // drops empty groups whatever the user setting, when a filter already decides the groups
+    hideEmpty?: boolean
   }
 
   // Custom hierarchy-like options for the group-by settings panel
@@ -274,6 +278,7 @@ export const ProjectTableProvider = ({
   showHierarchy,
   loadingTasks,
   isLoadingMore,
+  isLoadingMoreGroups = false,
   isLoading,
   error,
   softError,
@@ -348,7 +353,7 @@ export const ProjectTableProvider = ({
     entityType: groupByConfig?.entityType || 'unknown',
     groups: groups,
     attribFields,
-    showEmpty: showEmptyGroups,
+    showEmpty: showEmptyGroups && !groupByConfig?.hideEmpty,
     groupRowFunc,
     groupCounts,
     groupCountsComplete,
@@ -510,6 +515,7 @@ export const ProjectTableProvider = ({
         overrideGroupBy,
         queryFilters,
         loadingLinksEntityIds,
+        isLoadingMoreGroups,
         // hierarchy
         showHierarchy,
         updateShowHierarchy,

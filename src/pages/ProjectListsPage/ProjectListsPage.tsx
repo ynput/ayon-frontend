@@ -34,6 +34,7 @@ import {
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
+  useCellEditing,
   type ProjectTreeTableProps,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
@@ -65,7 +66,6 @@ import { getCellIdForColumn } from './util/cellIds.ts'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { TableExportButton } from '@shared/containers/TableExport'
 import ListExportSource from './components/ListExportSource'
-import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -214,7 +214,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         ? 'Entity'
         : compareView.comparedList?.label,
     withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
-    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
+    entityType: selectedList?.entityType,
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })
@@ -379,8 +379,23 @@ const ProjectLists: FC<ProjectListsProps> = ({
     useSelectionCellsContext()
 
   // list values (powerpack): the compare controls and the lists sidebar's menu items
-  const { module: listValues, isPowerFeature, outdated } = useListValuesContext()
+  const {
+    module: listValues,
+    isPowerFeature,
+    outdated,
+    settings: listValuesSettings,
+    setSettings: setListValuesSettings,
+    editsEntities,
+  } = useListValuesContext()
   const { compareView } = useListItemsDataContext()
+  // undo replays an edit where edits go now: switching between list values and entities would
+  // undo a list value onto the entity
+  const { history } = useCellEditing()
+  const clearHistory = history?.clearHistory
+  useEffect(() => {
+    clearHistory?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editsEntities])
   const { listsMap } = useListsDataContext()
   const shownList = useMemo<ListRef | undefined>(
     () =>
@@ -601,6 +616,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             view={compareView}
                             shownList={shownList}
                             ListPicker={CompareListPicker}
+                            settings={listValuesSettings}
+                            onSettingsChange={setListValuesSettings}
                           />
                         )}
                       </>

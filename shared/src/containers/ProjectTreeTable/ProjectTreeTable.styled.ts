@@ -149,6 +149,11 @@ export const HeaderCell = styled.th`
     }
   }
 
+  /* the pin icon stays visible, keep the title out from under it */
+  &.pinned .header {
+    padding-right: 32px;
+  }
+
   /* Styling for the last pinned left column */
   &.last-pinned-left {
     box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container),
@@ -552,7 +557,13 @@ export const LinkColumnHeader = styled.div`
   display: flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  .label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
   .icon {
+    flex-shrink: 0;
     font-size: 18px;
     color: var(--md-sys-color-outline);
   }

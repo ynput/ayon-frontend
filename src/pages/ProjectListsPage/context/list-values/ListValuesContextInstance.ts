@@ -1,5 +1,6 @@
 import { createContext, useContext } from 'react'
 import type {
+  CompareSettings,
   ListValuesContext as ListValuesRulesContext,
   ListValuesModule,
 } from '../../listValues/types'
@@ -14,6 +15,11 @@ export interface ListValuesContextValue {
   // the table shows the entity's value of this attribute (not the list value), so the query
   // sorts and filters by it
   readsEntityValue: (attrib: string) => boolean
+  // the entities' attributes are edited on the entities (always without the powerpack)
+  editsEntities: boolean
+  // the module's settings, stored with the view
+  settings: CompareSettings
+  setSettings: (settings: CompareSettings) => void
 }
 
 export const ListValuesContext = createContext<ListValuesContextValue | undefined>(undefined)

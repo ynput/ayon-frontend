@@ -21,6 +21,7 @@ import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxj
 import type { ChecklistCount } from './types'
 import { normalizeQueryError } from '@shared/api/base/queryError'
 import type { UserAttrib } from '../users/getUsers'
+import { getVersionMediaStart } from '@shared/containers/Feed/helpers/versionFrames'
 
 type ActivityUserNode = Omit<GetActivityUsersQuery['users']['edges'][0]['node'], 'attrib'> & {
   attrib: UserAttrib
@@ -55,10 +56,10 @@ const enhanceActivitiesApi = gqlApi.enhanceEndpoints<TagTypes, UpdatedDefinition
     GetVersionsFrameStart: {
       transformResponse: (res: GetVersionsFrameStartQuery) =>
         Object.fromEntries(
-          res.project.versions.edges.map(({ node }) => [
-            node.id,
-            (node.attrib as { frameStart: number | null }).frameStart,
-          ]),
+          res.project.versions.edges.map(({ node }) => {
+            const attrib = node.attrib as { frameStart: number | null; handleStart: number | null }
+            return [node.id, getVersionMediaStart(attrib.frameStart, attrib.handleStart)]
+          }),
         ),
     },
     GetEntitiesChecklists: {

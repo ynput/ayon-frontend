@@ -1,13 +1,6 @@
 import { FC } from 'react'
-import { Dialog, FormRow, InputDate, SaveButton } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
-import { format, parse } from 'date-fns'
-
-const DialogBody = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-`
+import { DateRangeCalendar, Dialog, SaveButton } from '@ynput/ayon-react-components'
+import { getDialogKeyDown } from '@shared/util'
 
 interface CustomDateRangeDialogProps {
   isOpen: boolean
@@ -20,6 +13,7 @@ interface CustomDateRangeDialogProps {
   onClose: () => void
 }
 
+// the first and last day picked on one calendar (two clicks), then confirmed
 export const CustomDateRangeDialog: FC<CustomDateRangeDialogProps> = ({
   isOpen,
   header,
@@ -33,8 +27,14 @@ export const CustomDateRangeDialog: FC<CustomDateRangeDialogProps> = ({
   <Dialog
     isOpen={isOpen}
     onClose={onClose}
+    // Enter on a calendar day picks it (it calls preventDefault), otherwise it confirms
+    onKeyDown={getDialogKeyDown(onApply, {
+      onClose,
+      disabled: !(startDate && endDate && endDate >= startDate),
+    })}
     header={header}
-    size="sm"
+    size="md"
+    style={{ width: 'auto', maxHeight: 'none' }}
     hideCancelButton
     footer={
       <SaveButton
@@ -45,27 +45,12 @@ export const CustomDateRangeDialog: FC<CustomDateRangeDialogProps> = ({
       />
     }
   >
-    <DialogBody>
-      <FormRow label="Start date">
-        <InputDate
-          {...({
-            selected: startDate ? parse(startDate, 'yyyy-MM-dd', new Date()) : undefined,
-            onChange: (date: Date | null) =>
-              onStartDateChange(date ? format(date, 'yyyy-MM-dd') : ''),
-            autoFocus: true,
-          } as any)}
-        />
-      </FormRow>
-      <FormRow label="End date">
-        <InputDate
-          {...({
-            selected: endDate ? parse(endDate, 'yyyy-MM-dd', new Date()) : undefined,
-            onChange: (date: Date | null) =>
-              onEndDateChange(date ? format(date, 'yyyy-MM-dd') : ''),
-            openToDate: startDate ? new Date(startDate) : undefined,
-          } as any)}
-        />
-      </FormRow>
-    </DialogBody>
+    <DateRangeCalendar
+      value={{ from: startDate, to: endDate }}
+      onChange={({ from, to }) => {
+        onStartDateChange(from)
+        onEndDateChange(to)
+      }}
+    />
   </Dialog>
 )

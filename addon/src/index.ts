@@ -7,6 +7,9 @@
 export type {
   Loader,
   SlotContext,
+  SlotDeclaration,
+  SlotDefinition,
+  SlotExample,
   SlotMap,
   SlotName,
   SlotProps,
@@ -21,6 +24,7 @@ export type {
   MenuItemPosition,
   AddonMenuItem,
   ButtonMeta,
+  DialogMeta,
   ButtonPieces,
   ButtonScope,
   DialogScope,
@@ -34,6 +38,9 @@ export type {
   ProjectTableCustomizeSectionContext,
   ProjectTableCustomizeSectionMeta,
   ProjectTableToolbarItemContext,
+  ProjectTableColumnMenuItemContext,
+  ProjectTableColumnMenuItemMeta,
+  ProjectTableColumnMenuItemPieces,
   ProjectTableToolbarItemMeta,
   SlicerMenuItemContext,
   SlicerMenuItemMeta,
@@ -72,35 +79,52 @@ export type {
   ProjectFoldersScope,
   ProjectInfo,
   ProjectTablePage,
+  ProjectTableScope,
+  ProjectTableState,
   ProjectNameScope,
+  QueryCondition,
+  QueryFilter,
   ProjectScope,
   SlicerScope,
   SlicerSelection,
+  TableFilterEntity,
+  TableGroupBy,
   UserRef,
   UserScope,
   UsersScope,
+  VersionQueryArgs,
   ViewsScope,
 } from './scopes'
 export type {
   AddonInfo,
   AddonManifest,
   AnyContribution,
+  CommonMeta,
   Contribution,
   ContributionFields,
   ContributionInput,
 } from './contributions'
 export { useSlot } from './useSlot'
+export { EXPOSURE } from './exposure'
 export { useContributions } from './registry'
 export type { ContributionsResult } from './registry'
 export { ContributionView, ContributionErrorBoundary } from './ContributionView'
 export type { ContributionViewProps } from './ContributionView'
 export { prefetchPiece, runContribution } from './pieces'
-export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX } from './tableColumns'
+export { SlotOutlet, useSlotMenuItems } from './SlotOutlet'
+export { ExampleView } from './ExampleViewLazy'
+export type { ExampleViewProps } from './ExampleView'
+export type { SlotMenuItem, SlotMenuItems, SlotOutletProps } from './SlotOutlet'
+export { refreshTableColumn, addonColumnId, ADDON_COLUMN_PREFIX, cellValue } from './tableColumns'
+export type { CellValue } from './tableColumns'
 export { entityUrl, navigateToEntity } from './entityLinks'
 export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 // AYON's details panel and viewer, opened from addon code
 export { closeDetails, openDetails, openViewer } from './openInHost'
 export type { ViewerTarget } from './openInHost'
+// AYON's import dialog (CSV, Excel, pasted tables), for rows the addon's server imports
+export { openImport } from './openImport'
+export type { ImportResult, ImportTarget } from './openImport'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'

@@ -4,7 +4,7 @@ import clsx from 'clsx'
 import { Button, Dialog, FormLayout, Icon, Spacer } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import Shortcuts from '@containers/Shortcuts'
-import { getPlatformShortcutKey, KeyMode } from '@shared/util'
+import { getDialogKeyDown, getPlatformShortcutKey, KeyMode } from '@shared/util'
 import { mapInitialAccessGroupStates } from './mappers'
 import { AccessGroupUsers, SelectionStatus } from './types'
 import * as Styled from './ProjectUserAccessAssignDialog.styled'
@@ -142,6 +142,7 @@ const ProjectUserAccessAssignDialog = ({
         }
         isOpen={true}
         onClose={handleClose}
+        onKeyDown={getDialogKeyDown(handleSave, { onClose: handleClose })}
       >
         <FormLayout>
           <Styled.List>

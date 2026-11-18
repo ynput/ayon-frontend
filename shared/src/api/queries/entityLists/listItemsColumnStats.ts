@@ -1,13 +1,15 @@
 import { gqlApi } from '@shared/api/generated'
 import type { GetListItemsColumnStatsQuery } from '@shared/api/generated'
 import { DefinitionsFromApi, OverrideResultType, TagTypesFromApi } from '@reduxjs/toolkit/query'
-import type { FieldStats, MetricTarget } from '../columnStats'
+import type { FieldStats, MetricTarget, StatsEntity } from '../columnStats'
 import { normalizeFieldStats, mergeFieldStats, hasNewTargetFields } from '../columnStats'
 
 // The list items query aliases entity columns `_entity_{col}` and merges
 // entity+item attribs into `_all_attrib`, so canonical target fields must be
 // translated out and stat column names translated back (ayon-backend#943).
-const toBackendField = (field: string): string => {
+const toBackendField = (field: string, entity: StatsEntity): string => {
+  // a version's product type comes from the joined product, not the version row
+  if (entity === 'version' && field === 'product_type') return '_parent_product_type'
   if (field.startsWith('attrib.')) {
     return `_all_attrib.${field.slice('attrib.'.length)}`
   }
@@ -20,11 +22,14 @@ const toBackendField = (field: string): string => {
 const toCanonicalColumn = (name: string): string => {
   if (name.startsWith('_all_attrib_')) return `attrib_${name.slice('_all_attrib_'.length)}`
   if (name.startsWith('_entity_')) return name.slice('_entity_'.length)
+  if (name === '_parent_product_type') return 'product_type'
   return name
 }
 
-export const toListItemsStatsTargets = (targets: MetricTarget[]): MetricTarget[] =>
-  targets.map((t) => ({ ...t, field: toBackendField(t.field) }))
+export const toListItemsStatsTargets = (
+  targets: MetricTarget[],
+  entity: StatsEntity,
+): MetricTarget[] => targets.map((t) => ({ ...t, field: toBackendField(t.field, entity) }))
 
 type Definitions = DefinitionsFromApi<typeof gqlApi>
 type TagTypes = TagTypesFromApi<typeof gqlApi>

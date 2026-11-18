@@ -18,13 +18,20 @@ interface ColumnHeaderMenuUIProps {
   menuItems: ColumnMenuItemType[]
   menuId: string
   className?: string
+  /** the addon slot the menu holds: names it on the button for the slot inspector */
+  slot?: string
 }
 
 /**
  * Self-contained column header menu UI.
  * Uses the shared MenuContainer/Menu infrastructure and MenuContext for open state.
  */
-export const ColumnHeaderMenuUI = ({ menuItems, menuId, className }: ColumnHeaderMenuUIProps) => {
+export const ColumnHeaderMenuUI = ({
+  menuItems,
+  menuId,
+  className,
+  slot,
+}: ColumnHeaderMenuUIProps) => {
   const { toggleMenuOpen, menuOpen } = useMenuContext()
   const buttonRef = useRef<HTMLButtonElement>(null)
   const isOpen = menuOpen === menuId
@@ -35,6 +42,7 @@ export const ColumnHeaderMenuUI = ({ menuItems, menuId, className }: ColumnHeade
     <>
       <ColumnMenuButton
         ref={buttonRef}
+        data-ayon-trigger={slot}
         className={className}
         onClick={(e) => {
           e.stopPropagation()

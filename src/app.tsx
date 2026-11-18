@@ -71,6 +71,7 @@ import { usersApi } from '@shared/api/generated'
 import { systemQueries } from '@shared/api'
 import { takeEarlySiteInfo } from '@helpers/earlySiteInfo'
 import { withServiceUserAccess } from '@helpers/serviceUser'
+import { getAuthReturn } from '@helpers/authReturn'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
@@ -82,7 +83,7 @@ import { DetailsPanelFloating } from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import AppAddonServices from './remote/AppAddonServices'
-import { AddonHostNavigation } from './remote/addonHost'
+import { AddonHostImport, AddonHostNavigation } from './remote/addonHost'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
@@ -275,6 +276,7 @@ const App = () => {
                                                 <AppRemoteLoader />
                                                 <AppAddonServices />
                                                 <AddonHostNavigation />
+                                                <AddonHostImport />
                                                 <TrialBanner />
                                               </TableExportProvider>
                                             </DeleteEntitiesProvider>
@@ -309,6 +311,13 @@ const App = () => {
       //dispatch(clearRedirectUrl())
     }
   }, [user.name, user.redirectUrl, dispatch])
+
+  // The authorization server sent the browser here to log in: go back to it.
+  // The login stored the access token cookie, which is how it knows the user.
+  const authReturn = getAuthReturn(window.location.search, window.location.origin)
+  useEffect(() => {
+    if (user.name && authReturn) window.location.replace(authReturn)
+  }, [user.name, authReturn])
 
   const errorComponent = useMemo(
     () => <ErrorPage message="Server connection failed" />,
@@ -375,6 +384,9 @@ const App = () => {
   if (isTokenAuth()) {
     return <LoginPage isFirstTime={isOnboarding} />
   }
+
+  // Logged in and on the way back to the authorization server (see the effect above)
+  if (user.name && authReturn) return loadingComponent
 
   // Trial has finished and it's a cloud-managed instance, show trial ended page
   if (isTrialing && left?.finished && ynputConnect?.managed) {

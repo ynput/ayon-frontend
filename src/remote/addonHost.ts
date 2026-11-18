@@ -8,8 +8,10 @@ import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayou
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
-import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
+import { AppProjectListHost } from './AddonLayout'
 import { LazyEntityTable } from './EntityTable/LazyEntityTable'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -52,7 +54,7 @@ export const provideAddonHost = () =>
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
-      ProjectList: ProjectListHost,
+      ProjectList: AppProjectListHost,
       EntityPicker: AddonEntityPicker,
       MoreMenu: AddonMoreMenu,
       EntityTable: LazyEntityTable,
@@ -63,5 +65,12 @@ export const provideAddonHost = () =>
 export const AddonHostNavigation = () => {
   const navigate = useNavigate()
   useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])
+  return null
+}
+
+// Gives the package AYON's import dialog (openImport). Render it inside <ImportDialogProvider>.
+export const AddonHostImport = () => {
+  const { openForAddon } = useImportDialogContext()
+  useEffect(() => provideHost({ openImport: openForAddon }), [openForAddon])
   return null
 }

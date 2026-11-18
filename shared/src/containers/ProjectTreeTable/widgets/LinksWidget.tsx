@@ -53,6 +53,7 @@ export interface LinksWidgetProps extends WidgetBaseProps {
 export const LinksWidget: FC<LinksWidgetProps> = ({
   value,
   isEditing,
+  isReadOnly,
   cellId,
   projectName,
   disabled,
@@ -157,10 +158,11 @@ export const LinksWidget: FC<LinksWidgetProps> = ({
             }
           }) || []
         }
-        pt={{ chip: { className: EDIT_TRIGGER_CLASS } }}
+        pt={{ chip: { className: isReadOnly ? undefined : EDIT_TRIGGER_CLASS } }}
         disabled={disabled}
+        readOnly={isReadOnly}
       />
-      {isEditing && value && (
+      {isEditing && value && (disabled || !isReadOnly) && (
         <CellEditingDialog isEditing={isEditing} anchorId={cellId} onClose={onCancelEdit}>
           {disabled ? (
             <Container style={{ color: 'var(--md-sys-color-outline)' }}>

@@ -1,4 +1,4 @@
-import { ReactNode, useMemo, useCallback, useState, useEffect } from 'react'
+import { ReactNode, useMemo, useCallback, useEffect } from 'react'
 import { toast } from 'react-toastify'
 import {
   checkColumnVisibility,
@@ -27,7 +27,12 @@ import { useEntityListsContext } from '../entity-lists/EntityListsContextInstanc
 import useReorderListItem, { UseReorderListItemReturn } from '../../hooks/useReorderListItem'
 import useBuildListItemsTableData from '../../hooks/useBuildListItemsTableData'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
-import { ListsViewSettings, useListsViewSettings, useViewsContext } from '@shared/containers'
+import {
+  ListsViewSettings,
+  useLinkColumnsVisibility,
+  useListsViewSettings,
+  useViewsContext,
+} from '@shared/containers'
 import { SortingState, VisibilityState } from '@tanstack/react-table'
 import { useProjectContext, OnSyncDataCallback } from '@shared/context'
 import type { FieldStats } from '@shared/api'
@@ -50,8 +55,6 @@ import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 export type TableEntity = EntityListItemWithLinks & { attrib: Record<string, unknown> }
-
-const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
 
 // the module marks attributes; the table marks cells by column id
 const toCellMarks = (marks: Record<string, CellMark> = {}): Record<string, CellMark> =>
@@ -124,7 +127,7 @@ export interface ListItemsDataContextValue {
   refetch: () => void
   onSyncData: OnSyncDataCallback
   // links visibility
-  setLinksVisible: (visible: boolean) => void
+  onLinkColumnsVisibleChange: (changes: Record<string, boolean>) => void
   // column summaries footer (powerpack)
   fieldStats: FieldStats[]
   fieldStatsLoading: boolean
@@ -146,7 +149,7 @@ const reviewSortKeys = new Map([
 // fetch all items and provide methods to update the items
 export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) => {
   // Get project data from the new context
-  const { projectName } = useProjectContext()
+  const { projectName, linkTypes } = useProjectContext()
   const { attribFields, users, isInitialized, isLoading: isLoadingData } = useProjectDataContext()
   const { displayStyle } = useReviewCardsSettingsContext()
 
@@ -159,31 +162,28 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     [listEntityType],
   )
 
-  const [linksVisible, setLinksVisible] = useState(false)
+  const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
 
   const { isLoadingViews } = useViewsContext()
-  const { module: listValues, rules: listValuesRules, readsEntityValue } = useListValuesContext()
+  const {
+    module: listValues,
+    rules: listValuesRules,
+    readsEntityValue,
+    // stored with the view, shaped by the ListValues module
+    settings: listValuesSettings,
+    setSettings: setListValuesSettings,
+  } = useListValuesContext()
   const { listsMap } = useListsDataContext()
   const {
     filters: listItemsFilters,
     onUpdateFilters: setListItemsFilters,
     columns,
     onUpdateColumns,
-    listValues: storedListValuesSettings,
-    onUpdateListValues: setListValuesSettings,
   } = useListsViewSettings()
-  // stored with the view, shaped by the ListValues module
-  const listValuesSettings =
-    (storedListValuesSettings as CompareSettings | undefined) || NO_LIST_VALUES_SETTINGS
-
-  const hasLinkColumn = useMemo(
-    () => checkColumnVisibility(columns.columnVisibility, 'link_', defaultColumnVisibility),
-    [columns, defaultColumnVisibility],
-  )
 
   // non-review lists are always shown as a table, only review lists use the display style
   const isTableView = !isReview || displayStyle === 'table'
-  const skipLinks = !isTableView || !hasLinkColumn || !linksVisible
+  const skipLinks = !isTableView || !listEntityType || !isLinkColumnShown('primary', listEntityType)
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown
   const showComments = useMemo(
@@ -440,6 +440,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       projectName,
       listId: selectedListId,
       entityType: listEntityType,
+      attribFields,
       listItemsMap,
       canEditList: (selectedList?.accessLevel || 0) >= 20,
     })
@@ -546,7 +547,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         resetFilters,
         refetch,
         onSyncData,
-        setLinksVisible,
+        onLinkColumnsVisibleChange,
         fieldStats,
         fieldStatsLoading,
         fieldStatsError,
