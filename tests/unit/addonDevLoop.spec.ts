@@ -78,6 +78,9 @@ test('the overrides from the URL replace the stored ones, and off clears them', 
     { override: timetracker },
   ])
   expect(readStoredAddonDevOverrides(storage)).toEqual([planner, timetracker])
+  // a URL with only bad entries keeps them for the next page
+  expect(readAddonDevRequests('?addonDev=nope', storage)[0]).toHaveProperty('reason')
+  expect(readStoredAddonDevOverrides(storage)).toEqual([planner, timetracker])
   // a later page without the parameter keeps them
   expect(readAddonDevRequests('', storage)).toEqual([
     { override: planner },
@@ -128,22 +131,12 @@ test('only developer-mode and service users may use the override', () => {
 })
 
 const override = { addon: 'timetracker', url: 'http://localhost:5173' }
-const info = {
-  name: 'timetracker',
-  version: '0.1.0',
-  remote: 'timetracker',
-  modules: ['manifest'],
-  buildId: 'x',
-}
+const info = { name: 'timetracker', version: '0.1.0', remote: 'timetracker', modules: ['manifest'], buildId: 'x' }
 
 test('/ayon-addon.json must be complete and name the requested addon', () => {
   expect(addonDevInfoProblem(info, override)).toBeNull()
-  expect(addonDevInfoProblem({ ...info, buildId: undefined }, override)).toContain(
-    'invalid (no buildId)',
-  )
-  expect(addonDevInfoProblem({ name: 'timetracker' }, override)).toContain(
-    'no version, remote, buildId, modules',
-  )
+  expect(addonDevInfoProblem({ ...info, buildId: undefined }, override)).toContain('invalid (no buildId)')
+  expect(addonDevInfoProblem({ name: 'timetracker' }, override)).toContain('no version, remote, buildId, modules')
   expect(addonDevInfoProblem('html', override)).toContain('invalid')
   expect(addonDevInfoProblem({ ...info, name: 'other' }, override)).toContain(
     'serves "other", not "timetracker": open ?addonDev=other@http://localhost:5173',
@@ -152,13 +145,10 @@ test('/ayon-addon.json must be complete and name the requested addon', () => {
 
 test('a dev server that is down, not the CLI, or serves something else says why', async () => {
   const realFetch = globalThis.fetch
-  const answer = (response: () => Promise<Response>) =>
-    (globalThis.fetch = response as typeof fetch)
+  const answer = (response: () => Promise<Response>) => (globalThis.fetch = response as typeof fetch)
   try {
     answer(() => Promise.reject(new TypeError('Failed to fetch')))
-    await expect(fetchAddonDevInfo(override)).rejects.toThrow(
-      'no answer from http://localhost:5173',
-    )
+    await expect(fetchAddonDevInfo(override)).rejects.toThrow('no answer from http://localhost:5173')
     answer(async () => new Response('not found', { status: 404 }))
     await expect(fetchAddonDevInfo(override)).rejects.toThrow('has no /ayon-addon.json')
     answer(async () => new Response('<html>', { status: 200 }))
@@ -192,15 +182,9 @@ const fakeServer = (answers: Answers) =>
     return Response.json(answer)
   }) as typeof fetch
 
-const connection = {
-  serverUrl: 'http://localhost:5100',
-  apiKey: 'key',
-  apiKeySource: 'data/local-api-key',
-}
+const connection = { serverUrl: 'http://localhost:5100', apiKey: 'key', apiKeySource: 'data/local-api-key' }
 const serviceUser = { name: 'workbench', attrib: {}, data: { isService: true } }
-const installed = (versions: Record<string, object>) => ({
-  addons: [{ name: 'timetracker', versions }],
-})
+const installed = (versions: Record<string, object>) => ({ addons: [{ name: 'timetracker', versions }] })
 const summary = (checks: { id: string; ok: boolean; severity?: string }[]) =>
   checks.map((check) => `${check.id}:${check.ok ? 'ok' : check.severity}`)
 
@@ -218,11 +202,7 @@ test('everything in place passes', async () => {
 })
 
 test('a server that does not answer stops the checks', async () => {
-  const checks = await checkDevRequirements({
-    project: makeProject('0.1.0'),
-    connection,
-    fetch: fakeServer({}),
-  })
+  const checks = await checkDevRequirements({ project: makeProject('0.1.0'), connection, fetch: fakeServer({}) })
   expect(summary(checks)).toEqual(['server:error'])
   expect(checks[0].fix).toContain('AYON_SERVER_URL')
 })
@@ -273,9 +253,7 @@ test('the addon missing on the server, or in the version the frontend calls, fai
     connection,
     fetch: fakeServer({ ...answers, '/api/addons': installed({ '0.1.0': {} }) }),
   })
-  expect(otherVersion[2].message).toContain(
-    'timetracker 0.2.0 is not installed (the server has 0.1.0)',
-  )
+  expect(otherVersion[2].message).toContain('timetracker 0.2.0 is not installed (the server has 0.1.0)')
 
   // no server code: nothing calls its endpoints, so only a warning
   const frontendOnly = await checkDevRequirements({

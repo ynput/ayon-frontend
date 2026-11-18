@@ -7,6 +7,7 @@
 
 export const ADDON_DEV_PARAM = 'addonDev'
 const STORAGE_KEY = 'ayon-addon-dev'
+const INFO_TIMEOUT_MS = 5000
 const LOCAL_HOSTS = ['localhost', '127.0.0.1', '[::1]']
 const USAGE = `use ?${ADDON_DEV_PARAM}=<addon>@http://localhost:<port>`
 
@@ -126,10 +127,11 @@ export const readAddonDevRequests = (
   }
   if (params.length) {
     const requests = parseAddonDevParams(params)
-    storeAddonDevOverrides(
-      requests.flatMap((request) => ('override' in request ? [request.override] : [])),
-      storage,
+    const overrides = requests.flatMap((request) =>
+      'override' in request ? [request.override] : [],
     )
+    // a URL with no valid entry keeps the stored ones for the next page, as with a single one
+    if (overrides.length) storeAddonDevOverrides(overrides, storage)
     for (const request of requests) {
       if ('reason' in request)
         console.warn(
@@ -202,7 +204,11 @@ export const fetchAddonDevInfo = async (override: AddonDevOverride): Promise<Add
   const { url } = override
   let response: Response
   try {
-    response = await fetch(`${url}/ayon-addon.json`, { cache: 'no-store' })
+    // bounded: the remotes of every addon wait for this answer
+    response = await fetch(`${url}/ayon-addon.json`, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(INFO_TIMEOUT_MS),
+    })
   } catch {
     throw new Error(`no answer from ${url}: is \`ayon-addon dev --ayon\` running on that port?`)
   }
