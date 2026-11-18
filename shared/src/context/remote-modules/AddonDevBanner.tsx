@@ -18,7 +18,6 @@ const Corner = styled.div`
   display: flex;
   flex-direction: column-reverse;
   align-items: flex-start;
-  gap: 4px;
   max-width: calc(100vw - 16px);
   pointer-events: none;
 
@@ -52,6 +51,16 @@ const Toggle = styled(Button)`
   }
 `
 
+// the padding is the gap above the icon: hoverable, so the pointer can cross it slowly
+const PanelArea = styled.div`
+  padding-bottom: 4px;
+  max-width: 100%;
+
+  &:not(.open) {
+    display: none;
+  }
+`
+
 const Panel = styled.div`
   display: flex;
   flex-direction: column;
@@ -65,10 +74,6 @@ const Panel = styled.div`
   color: var(--md-sys-color-on-surface);
   background: var(--md-sys-color-surface-container-high);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-
-  &:not(.open) {
-    display: none;
-  }
 `
 
 const Row = styled.div`
@@ -142,11 +147,13 @@ export const AddonDevBanner = ({ states }: { states: AddonDevState[] }) => {
         aria-expanded={isOpen}
         data-addon-dev-toggle
       />
-      <Panel className={isOpen ? 'open' : undefined}>
-        {states.map((state) => (
-          <AddonDevRow key={addonDevStateKey(state)} state={state} />
-        ))}
-      </Panel>
+      <PanelArea className={isOpen ? 'open' : undefined}>
+        <Panel>
+          {states.map((state) => (
+            <AddonDevRow key={addonDevStateKey(state)} state={state} />
+          ))}
+        </Panel>
+      </PanelArea>
     </Corner>
   )
 }
@@ -165,6 +172,7 @@ const AddonDevRow = ({ state }: { state: AddonDevState }) => {
           setIsReloading(true)
           // from the stored overrides, not this tab's ?addonDev=: another tab may have closed one
           const url = new URL(window.location.href)
+          if (!url.searchParams.has(ADDON_DEV_PARAM)) return window.location.reload()
           url.searchParams.delete(ADDON_DEV_PARAM)
           window.location.replace(url.toString())
         },
