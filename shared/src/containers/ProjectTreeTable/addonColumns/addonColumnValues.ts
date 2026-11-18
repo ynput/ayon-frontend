@@ -1,4 +1,5 @@
 import { useCallback, useSyncExternalStore } from 'react'
+import { cellCopyText } from '@ynput/ayon-addon/host'
 
 // What each addon column's fetchValues returned (tableColumn slot), by column id, then entity id.
 // A store outside React: each cell subscribes to its own entry, so a batch arriving re-renders
@@ -12,6 +13,8 @@ export interface AddonColumnEntry {
   version: string
   /** the last value; kept while a changed entity loads again */
   value?: unknown
+  /** the value's Copy text, when fetchValues gave one (cellValue); else Copy uses the value */
+  copy?: string
   error?: Error
 }
 
@@ -73,12 +76,9 @@ export const useAddonColumnEntry = (columnId: string, entityId: string) => {
   return useSyncExternalStore(subscribe, () => getAddonColumnEntry(columnId, entityId))
 }
 
-/** An addon cell's value as copied text: strings, numbers and booleans, lists joined with `, `. */
-export const getAddonColumnText = (columnId: string, entityId: string): string => {
-  const value = getAddonColumnEntry(columnId, entityId)?.value
-  if (Array.isArray(value)) return value.filter((item) => typeof item !== 'object').join(', ')
-  if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-    return String(value)
-  }
-  return ''
-}
+/**
+ * An addon cell as copied text: the Copy text fetchValues gave (cellValue), else the value's
+ * strings, numbers and booleans, lists joined with `, `.
+ */
+export const getAddonColumnText = (columnId: string, entityId: string): string =>
+  cellCopyText(getAddonColumnEntry(columnId, entityId) || {})

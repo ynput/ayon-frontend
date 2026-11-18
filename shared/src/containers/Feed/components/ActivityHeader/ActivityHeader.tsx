@@ -85,6 +85,9 @@ const ActivityHeader: React.FC<ActivityHeaderProps> = ({
         )}
         {noUser && <Icon icon="account_circle" />}
         <h5>{fullName || activity.activityData?.author || 'Unknown'}</h5>
+        {isGuest && (
+          <Icon icon="badge" className="guest" data-tooltip="Guest" data-tooltip-delay={0} />
+        )}
         {isRef && (
           <>
             <Styled.Text>

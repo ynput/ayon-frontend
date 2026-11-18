@@ -20,7 +20,8 @@ export const useRemoteBundle = () => {
     (addonName: string): RemotePageBundle | undefined => {
       if (bundleVariant === 'production') return undefined
       // an addon from its dev server isn't from any bundle; the dev banner marks it
-      if (addonDev.status === 'active' && addonDev.override.addon === addonName) return undefined
+      if (addonDev.some((dev) => dev.status === 'active' && dev.override.addon === addonName))
+        return undefined
       const addonVersion = modules.find((m) => m.addonName === addonName)?.addonVersion
       if (!addonVersion) return undefined
       return { variant: bundleVariant, addonName, addonVersion }

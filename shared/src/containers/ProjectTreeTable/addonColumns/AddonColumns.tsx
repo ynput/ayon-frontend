@@ -2,7 +2,12 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Column, Row } from '@tanstack/react-table'
 import { ContributionView } from '@ynput/ayon-addon'
 import type { EntityRef } from '@ynput/ayon-addon'
-import { onTableColumnRefresh, reportContributionError, usePiece } from '@ynput/ayon-addon/host'
+import {
+  onTableColumnRefresh,
+  readCellValue,
+  reportContributionError,
+  usePiece,
+} from '@ynput/ayon-addon/host'
 import { Icon } from '@ynput/ayon-react-components'
 import { useProjectContext } from '@shared/context'
 import type { TableRow } from '../types'
@@ -80,6 +85,8 @@ export const AddonColumnCell = ({ contribution, page, columnId, row }: AddonColu
             contribution={contribution}
             piece="cell"
             context={context}
+            // the cell is tagged for the slot inspector (ProjectTreeTable)
+            untagged
             loading={<div className="readonly loading" />}
             error={(error) => <CellError error={error} />}
           />
@@ -150,7 +157,7 @@ const ColumnValuesFetcher = ({
         loading[id] = {
           status: 'loading',
           version,
-          ...(previous && 'value' in previous ? { value: previous.value } : {}),
+          ...(previous && 'value' in previous ? { value: previous.value, copy: previous.copy } : {}),
         }
       })
       setAddonColumnEntries(columnId, loading)
@@ -177,7 +184,8 @@ const ColumnValuesFetcher = ({
       )
       Promise.resolve()
         .then(() => fetchValues({ projectName, page, entities: entityRefs, signal }))
-        .then((values) => settle((id) => ({ status: 'loaded', value: values?.[id] })))
+        // a cellValue(value, { copy }) is kept as its value and its Copy text
+        .then((values) => settle((id) => ({ status: 'loaded', ...readCellValue(values?.[id]) })))
         .catch((error: unknown) => {
           if (signal.aborted) return
           const err = error instanceof Error ? error : new Error(String(error))

@@ -9,6 +9,7 @@ import {
   ProjectTreeTable,
   useAddonTableColumns,
 } from '@shared/containers/ProjectTreeTable'
+import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { useOptionalNewEntityContext } from '@shared/containers/NewEntity'
 import { useProjectContext } from '@shared/context'
 import { mergeFieldStats, totalRowsFromStats } from '@shared/api'
@@ -16,6 +17,8 @@ import type { FieldStats } from '@shared/api'
 import { useProjectOverviewContext } from '../context/project-overview'
 import { AddColumnButton } from '@shared/components'
 import styled from 'styled-components'
+
+const MAIN_BREAKDOWN_FIELDS: MainBreakdownFields = { primary: 'folderType', secondary: 'taskType' }
 
 const TableWrapper = styled.div`
   position: relative;
@@ -32,7 +35,7 @@ type Props = {
 const ProjectOverviewTable = ({ excludedColumns }: Props) => {
   const { projectName } = useProjectContext()
   const {
-    setLinksVisible,
+    onLinkColumnsVisibleChange,
     setVisibleEntityIds,
     folderStats,
     taskStats,
@@ -89,19 +92,13 @@ const ProjectOverviewTable = ({ excludedColumns }: Props) => {
           onOpenNew={onOpenNew}
           clientSorting={showHierarchy || isFlatFolderView}
           onColumnVisibleChangeSubscribed={['link_*']}
-          onColumnVisibleChange={(changes) => {
-            if (Object.values(changes).some((v) => v)) {
-              setLinksVisible(true)
-            } else {
-              setLinksVisible(false)
-            }
-          }}
+          onColumnVisibleChange={onLinkColumnsVisibleChange}
           showColumnSummaries
           fieldStats={fieldStats}
           groupFieldStats={folderStats}
           fieldStatsLoading={folderStatsLoading || taskStatsLoading}
           fieldStatsError={folderStatsError || taskStatsError}
-          mainBreakdownFields={{ primary: 'folderType', secondary: 'taskType' }}
+          mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
           onVisibleRowsChange={setVisibleEntityIds}
           extraColumns={addonColumns}
           excludedColumns={excludedColumns}

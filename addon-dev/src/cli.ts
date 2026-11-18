@@ -13,6 +13,8 @@ import { createReadStream, existsSync, readdirSync, readFileSync, statSync } fro
 import { createServer, type Server } from 'http'
 import path from 'path'
 import { browse, formatBrowse } from './browse.js'
+import { readContractSlots } from './contractSlots.js'
+import type { ContractSlot } from './contractSlots.js'
 import { checkAddon, formatCheck } from './check.js'
 import { checkDevRequirements, formatChecks } from './devChecks.js'
 import {
@@ -188,8 +190,8 @@ const dev = async () => {
           formatChecks(results),
           'Open AYON with this addon from here (your user needs developer mode on):',
           `  ${open}`,
-          'The page reloads after every rebuild. If it shows the installed addon, its banner says why.',
-          '?addonDev=off goes back to the installed addon.',
+          'The page reloads after every rebuild. If it shows the installed addon, the icon in the bottom left corner says why.',
+          'Addons already loaded from other dev servers stay loaded. ?addonDev=off goes back to the installed addons.',
         ].join('\n'),
       )
       if (flag('open')) openInBrowser(open)
@@ -201,12 +203,35 @@ const slots = async () => {
   const pkgDir = findPackageDir(root, '@ynput/ayon-addon')
   if (!pkgDir) throw new Error('@ynput/ayon-addon is not installed here')
   const data = JSON.parse(readFileSync(path.join(pkgDir, 'dist', 'slots.json'), 'utf8'))
+  const contract = await readContractSlots(root)
+  contract.problems.forEach(({ reason }) => console.warn(reason))
+  // a contract slot's example as a manifest entry, by the installed SDK (older ones can't)
+  const sdk = await importFromProject<{
+    exampleSnippet?: (slot: string, source: ContractSlot & { label?: string }) => string
+  }>(root, '@ynput/ayon-addon/check').catch(() => undefined)
+  data.addonSlots = contract.slots.map((slot) => ({
+    name: slot.name,
+    version: slot.version,
+    description: slot.description,
+    package: slot.package,
+    example: sdk?.exampleSnippet?.(slot.name, slot),
+  }))
+  const examples = [...data.slots, ...data.addonSlots].filter((s: { example?: string }) => s.example)
+  const indent = (text: string) => text.replace(/^/gm, '    ')
   const text = [
     `@ynput/ayon-addon ${data.version}: ${data.slots.length} slots (details: node_modules/@ynput/ayon-addon/AGENTS.md)`,
     ...data.slots.map(
       (s: { name: string; helper: string; loads: string; where: string }) =>
         `  ${s.name.padEnd(30)} ${s.helper.padEnd(28)} ${s.loads.padEnd(18)} ${s.where}`,
     ),
+    ...contract.slots.map(
+      (s) =>
+        `  ${s.name.padEnd(30)} from ${s.package}, version ${s.version}${s.description ? `: ${s.description}` : ''}`,
+    ),
+    ...(examples.length
+      ? ['', "Examples (what developer mode's Show slots renders in each slot):"]
+      : []),
+    ...examples.map((s: { name: string; example: string }) => `  ${s.name}:\n${indent(s.example)}`),
   ].join('\n')
   print(data, text)
 }
@@ -288,7 +313,8 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
                                checks the server (reachable, the API key's user, the addon
                                installed in the version the frontend calls) and prints the
                                URL that loads it, <server or --frontend>/?addonDev=<addon>@
-                               http://localhost:5173 (--open: opens it)
+                               http://localhost:5173 (--open: opens it); addons already
+                               loaded from other dev servers stay loaded
   slots [--json]               the slots of the installed @ynput/ayon-addon
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
   open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 export const Scrollable = styled.div`
   overflow: auto;
-  max-height: 40vh;
+  max-height: 60vh;
 `
 
 export const ViewsMenu = styled.ul`

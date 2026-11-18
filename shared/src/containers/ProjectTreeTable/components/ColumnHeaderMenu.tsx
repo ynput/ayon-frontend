@@ -7,6 +7,8 @@ import { useColumnGroupBy } from '../hooks'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
+const SLOT = 'projectTable.columnMenuItem'
+
 interface ColumnHeaderMenuProps {
   header: Header<TableRow, unknown>
   canHide?: boolean
@@ -207,6 +209,7 @@ export const ColumnHeaderMenu = ({
       className={className}
       menuItems={menuItems}
       menuId={menuId || `column-menu-${header.id}`}
+      slot={SLOT}
     />
   )
 }

@@ -2,13 +2,13 @@ import { DialogProps } from "@ynput/ayon-react-components";
 import { useCallback, useState } from "react";
 import { DialogContainer, DialogHeading, ImportContextWrapper, ImportTarget, TemplatesSelector } from "./ImportDialog.styled";
 import { ImportData } from "./utils";
-import { contextLabelForImportContext, ImportStep, itemsLabelForImportContext } from "./steps/common";
+import { ImportStep } from "./steps/common";
 import clsx from "clsx";
 import { ViewsMenuContainer, ViewsProvider, ViewsButton } from "@shared/containers";
 import { useDispatch } from "react-redux";
 import ViewsDialogContainer from "@shared/containers/Views/ViewsDialogContainer/ViewsDialogContainer";
 import ImportSteps from "./Steps";
-import { useImportDialogContext } from "./context/ImportDialogProviderInstance"
+import { useImportDialogContext, useImportLabels } from "./context/ImportDialogProviderInstance"
 
 const dialogSizeForStep: Record<ImportStep, DialogProps["size"]> = {
   [ImportStep.UPLOAD]: "lg",
@@ -29,8 +29,12 @@ export default function ImportDialog() {
     folderLabel,
     listFolderId,
     projectName,
+    addonImport,
     close,
   } = useImportDialogContext()
+  const labels = useImportLabels()
+  // the mapping presets of an addon's import are its own
+  const presetsType = `import.${addonImport ? addonImport.id : importContext}`
 
   const [step, setStep] = useState<ImportStep>(ImportStep.UPLOAD)
   const [data, setData] = useState<ImportData | null>(null)
@@ -51,15 +55,15 @@ export default function ImportDialog() {
         size={dialogSizeForStep[step]}
         header={(
           <DialogHeading>
-            Import {itemsLabelForImportContext[importContext]}
+            Import {labels.items}
             {folderLabel && <>{" into "}<ImportTarget>{folderLabel}</ImportTarget></>}
             <TemplatesSelector
               className={clsx({ shown: step > ImportStep.UPLOAD && step < ImportStep.PREVIEW })}
             >
-              <span id={`import.${importContext}-views-portal`}></span>
+              <span id={`${presetsType}-views-portal`}></span>
             </TemplatesSelector>
             <ImportContextWrapper>
-              {contextLabelForImportContext[importContext]}
+              {labels.context}
               {
                 data
                   ? ` - ${data.fileName}${data.sheetName ? `, ${data.sheetName}` : ''}`
@@ -71,7 +75,7 @@ export default function ImportDialog() {
       >
         <ViewsProvider
           projectName={projectName}
-          viewType={`import.${importContext}`}
+          viewType={presetsType}
           viewAlias="Preset"
           dispatch={dispatch}
         >

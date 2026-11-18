@@ -8,7 +8,7 @@ import type {
   ProjectTableColumnMenuItemContext,
   ProjectTablePage,
 } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, getHost, menuItemsAt } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 import { useProjectTableState } from '../context/project-table-state'
@@ -70,24 +70,46 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
     [items],
   )
 
+  const contextFor = useCallback(
+    (column: AddonMenuColumn): ProjectTableColumnMenuItemContext | undefined => {
+      const columnLabel = columnLabelOf(column)
+      if (!page || !columnLabel) return undefined
+      return {
+        projectName,
+        page,
+        columnId: column.columnId,
+        columnLabel,
+        groupField: column.groupField,
+        tableState,
+      }
+    },
+    [page, projectName, tableState],
+  )
+
   const prefetchColumnMenuItems = useCallback<PrefetchAddonColumnMenuItems>(
-    (column) => itemsFor(column).forEach((item) => prefetchPiece(item.dialog || item.run)),
-    [itemsFor],
+    (column) => {
+      const columnItems = itemsFor(column)
+      columnItems.forEach((item) => prefetchPiece(item.dialog || item.run))
+      // the dev shell shows the context a column's menu gives its items, also with none yet; AYON
+      // has no devSlots
+      const context = getHost().devSlots && contextFor(column)
+      if (context) {
+        getHost().devSlots?.menuBuilt?.(
+          'projectTable.columnMenuItem',
+          context,
+          columnItems.map((item) => item.key),
+        )
+      }
+    },
+    [contextFor, itemsFor],
   )
 
   const getColumnMenuItems = useCallback<GetAddonColumnMenuItems>(
     (column) => {
-      const columnLabel = columnLabelOf(column)
-      if (!page || !columnLabel) return []
+      const context = contextFor(column)
+      if (!context) return []
+      const { columnLabel } = context
       return itemsFor(column).map((item) => {
-        const context: ProjectTableColumnMenuItemContext = {
-          projectName,
-          page,
-          columnId: column.columnId,
-          columnLabel,
-          groupField: column.groupField,
-          tableState,
-        }
         const label = withColumnLabel(item.label, columnLabel)
         return {
           id: item.key,
@@ -105,15 +127,18 @@ export const useAddonColumnMenuItems = (page: ProjectTablePage | undefined) => {
               title: item.dialogTitle ? withColumnLabel(item.dialogTitle, columnLabel) : label,
             })
           },
+          ...contributionTags(item),
         }
       })
     },
-    [itemsFor, page, projectName, tableState],
+    [contextFor, itemsFor],
   )
 
   return {
     getColumnMenuItems: items.length ? getColumnMenuItems : undefined,
-    prefetchColumnMenuItems: items.length ? prefetchColumnMenuItems : undefined,
+    // also without items in the dev shell, which reports the menu's context when it opens
+    prefetchColumnMenuItems:
+      items.length || getHost().devSlots ? prefetchColumnMenuItems : undefined,
     dialog,
   }
 }

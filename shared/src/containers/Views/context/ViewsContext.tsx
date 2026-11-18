@@ -154,8 +154,8 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   )
 
   // anything extra to do when a view is created successfully
-  const handleOnViewCreated = (view: ViewData) => {
-    const key = view.visibility === 'private' ? 'myViews' : 'sharedViews'
+  const handleOnViewCreated = () => {
+    const key = 'myViews'
     // if the section is collapsed, expand it
     if (collapsedSections[key]) {
       const newCollapsedSections = { ...collapsedSections }

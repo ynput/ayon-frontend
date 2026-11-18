@@ -6,6 +6,7 @@
 import { existsSync, readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import type { Plugin, PluginOption, UserConfig } from 'vite'
+import { ADDON_API, DEDUPE, HOST_PACKAGES, SHARED_PACKAGE } from './packages.js'
 import { findPackageDir, importFromProject, installedVersion, readAddonProject } from './project.js'
 import type { RestOptions } from './rest.js'
 import { standalonePlugin } from './standalone.js'
@@ -36,20 +37,7 @@ export interface AddonDevInfo {
   buildId: string
 }
 
-// packages AYON provides to addons (vite federation config and src/remote/hostSharedModules.ts)
-export const HOST_PACKAGES = [
-  'react',
-  'react-dom',
-  'styled-components',
-  '@ynput/ayon-react-components',
-  '@reduxjs/toolkit',
-  'react-redux',
-  'react-router',
-  'react-router-dom',
-  'react-toastify',
-]
-export const SHARED_PACKAGE = '@ynput/ayon-frontend-shared'
-export const ADDON_API = '@ynput/ayon-addon'
+export { ADDON_API, DEDUPE, HOST_PACKAGES, SHARED_PACKAGE } from './packages.js'
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf8'))
 
@@ -132,10 +120,7 @@ export const ayonAddon = async (options: AyonAddonOptions): Promise<PluginOption
     config(_config, { command, mode }): UserConfig {
       return {
         base: '',
-        resolve: {
-          // a linked SDK must use the addon's React, router and store, never the checkout's
-          dedupe: [...HOST_PACKAGES, SHARED_PACKAGE, ADDON_API],
-        },
+        resolve: { dedupe: DEDUPE },
         build:
           command === 'build'
             ? {

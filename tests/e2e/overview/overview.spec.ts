@@ -191,6 +191,44 @@ test.describe('project overview', () => {
       .poll(async () => (await api.listFolders(projectName)).map((f) => f.id))
       .not.toContain(doomed.id)
   })
+
+  test('a folder expanded while tasks are loading shows its tasks', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    for (const [shot, task] of [
+      ['sh010', 'anim'],
+      ['sh020', 'comp'],
+    ]) {
+      const folder = await api.createFolder(projectName, { name: shot, folderType: 'Shot' })
+      await api.createTask(projectName, { folderId: folder.id, name: task, taskType: 'Generic' })
+    }
+    // hold the tasks of the first expanded folder until the second one is expanded
+    let release: () => void = () => {}
+    const released = new Promise<void>((resolve) => (release = resolve))
+    let held = false
+    await page.route('**/graphql', async (route) => {
+      if (!held && route.request().postDataJSON()?.operationName === 'GetTasksByParent') {
+        held = true
+        await released
+      }
+      await route.continue()
+    })
+    const overview = new OverviewPage(page)
+    await overview.goto(projectName)
+    const firstTasks = page.waitForRequest(
+      (r) => r.url().includes('/graphql') && r.postDataJSON()?.operationName === 'GetTasksByParent',
+    )
+    await overview.expand('sh010')
+    await firstTasks
+
+    await overview.expand('sh020')
+    release()
+
+    await expect(overview.row('anim')).toBeVisible()
+    await expect(overview.row('comp')).toBeVisible()
+  })
 })
 
 test.describe('project overview editing', () => {

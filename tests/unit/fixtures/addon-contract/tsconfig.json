@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "noEmit": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "target": "esnext",
+    "jsx": "react-jsx",
+    "lib": ["DOM", "ESNext"],
+    "skipLibCheck": false,
+    "types": [],
+    "baseUrl": ".",
+    "paths": {
+      "@ynput/ayon-addon": ["../../../../addon/dist/types/index.d.ts"],
+      "@ynput/ayon-addon/manifest": ["../../../../addon/dist/types/manifest.d.ts"]
+    }
+  },
+  "files": ["contributor.ts"]
+}

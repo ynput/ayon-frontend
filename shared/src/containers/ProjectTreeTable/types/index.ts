@@ -14,6 +14,9 @@ export interface ProjectTableAttribute extends Omit<AttributeModel, 'position'> 
   enumError?: string
 }
 
+// an attribute that can't be edited on this entity whatever the column (see isEntityAttribLocked)
+export type IsAttribLocked = (entityType: string | undefined, attribName: string) => boolean
+
 export type LoadingTasks = Record<string, number> // show number of loading tasks per folder or root
 
 export type SoftErrorAction = {
@@ -65,6 +68,9 @@ export interface SummaryCellContentProps {
   onFormatChange: (format: SummaryFormat) => void
   scope?: RowScope
   onScopeChange: (scope: RowScope) => void
+  // breakdown item keys hidden from the bar and hover; enum values, `__empty__`, or `field:type` on the name column
+  hiddenItems?: string[]
+  onHiddenItemsChange?: (hidden: string[]) => void
   mainCountLabels?: MainCountLabels
   fieldOptions?: BuiltInFieldOptions
   // false when no parent entity (folder/product) is on screen; addon hides + disables the parent scope

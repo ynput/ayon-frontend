@@ -37,6 +37,7 @@ import { SortableContext, verticalListSortingStrategy, arrayMove } from '@dnd-ki
 
 // Notification imports
 import { toast } from 'react-toastify'
+import { upperFirst } from 'lodash'
 import { checkColumnVisibility } from '../../containers/ProjectTreeTable/utils'
 import { useMenuContext } from '@shared/context'
 import type { MenuItemType } from '../Menu'
@@ -61,6 +62,9 @@ const NO_SCOPES: string[] = []
 
 // attributes and parent columns are named exactly as their table header, so they need no section path
 const getColumnSettingsPath = (column: AddColumnItem, scopes: string[]) => {
+  if (column.parentScope && column.isLink) {
+    return `${upperFirst(column.parentScope)} links`
+  }
   if (column.attrib || column.parentScope) return undefined
   return getAddColumnSection(column, scopes)?.label ?? column.menu
 }
@@ -131,6 +135,7 @@ interface ColumnsSettingsProps {
   columnSummaries?: ColumnsConfig['columnSummaries']
   columnSummaryScopes?: ColumnsConfig['columnSummaryScopes']
   columnSummaryFormats?: ColumnsConfig['columnSummaryFormats']
+  columnSummaryHidden?: ColumnsConfig['columnSummaryHidden']
   groupByConfig?: ColumnsConfig['groupByConfig']
   addColumnMenuItems?: MenuItemType[]
   onColumnDragStart?: (column: AddColumnItem, event: React.PointerEvent) => void
@@ -158,6 +163,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
   columnSummaries,
   columnSummaryScopes,
   columnSummaryFormats,
+  columnSummaryHidden,
   groupByConfig,
   addColumnMenuItems,
   onColumnDragStart,
@@ -365,6 +371,7 @@ export const ColumnsSettings: FC<ColumnsSettingsProps> = ({
     columnSummaries,
     columnSummaryScopes,
     columnSummaryFormats,
+    columnSummaryHidden,
     groupBy,
     groupByConfig,
     sorting,
@@ -705,6 +712,7 @@ export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (
     columnSummaries,
     columnSummaryScopes,
     columnSummaryFormats,
+    columnSummaryHidden,
   } = useColumnSettingsContext()
 
   return (
@@ -725,6 +733,7 @@ export const ColumnsSettingsWithContext: FC<ColumnsSettingsWithContextProps> = (
       columnSummaries={columnSummaries}
       columnSummaryScopes={columnSummaryScopes}
       columnSummaryFormats={columnSummaryFormats}
+      columnSummaryHidden={columnSummaryHidden}
     />
   )
 }

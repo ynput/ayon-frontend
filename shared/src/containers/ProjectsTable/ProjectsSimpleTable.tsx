@@ -11,6 +11,9 @@ import { useNavigate } from 'react-router-dom'
 import { parseProjectFolderRowId } from './buildProjectsTableData'
 import clsx from 'clsx'
 
+/** the "All projects" row: not a project, so it has no project actions */
+export const ALL_PROJECTS_ROW_ID = 'all-projects'
+
 interface ProjectsSimpleTableProps extends React.HTMLAttributes<HTMLDivElement> {
   tableData: SimpleTableRow[]
   search?: string
@@ -115,7 +118,7 @@ export const ProjectsSimpleTable: FC<ProjectsSimpleTableProps> = ({
       const isFolder = !!parseProjectFolderRowId(row.id || '')
       const isPinned = row.getIsPinned() === 'top'
 
-      const actions: TableRowAction[] = !isFolder
+      const actions: TableRowAction[] = !isFolder && row.id !== ALL_PROJECTS_ROW_ID
         ? [
             {
               icon: 'settings_applications',

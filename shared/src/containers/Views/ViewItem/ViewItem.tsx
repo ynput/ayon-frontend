@@ -103,3 +103,5 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
     )
   },
 )
+
+ViewItem.displayName = 'ViewItem'

@@ -7,7 +7,6 @@ import {
   shouldSkipColumnStats,
   toListItemsStatsTargets,
   totalRowsFromStats,
-  useGetEntityLinksInBatchesQuery,
   useGetListItemsColumnStatsQuery,
   useGetListItemsInfiniteInfiniteQuery,
   SubTaskNode,
@@ -16,7 +15,7 @@ import type { EntityListItem, FieldStats, GetListItemsResult, StatsEntity } from
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
 import { SortingState } from '@tanstack/react-table'
 import { useMemo } from 'react'
-import type { EntityLink } from '@shared/api/queries/links/getEntityLinks'
+import type { EntityLink, GetEntityLinksArgs } from '@shared/api/queries/links/getEntityLinks'
 import {
   RESTRICTED_ENTITY_TYPE,
   RESTRICTED_ENTITY_NAME,
@@ -27,7 +26,12 @@ import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
-import { useListsViewSettings, useProjectDataContext, useViewsContext } from '@shared/containers'
+import {
+  useEntityLinks,
+  useListsViewSettings,
+  useProjectDataContext,
+  useViewsContext,
+} from '@shared/containers'
 import { getColumnSortKey } from '@shared/containers/ProjectTreeTable/buildTreeTableColumns'
 import { useAppDispatch } from '@state/store'
 import { COMPARE_ENTITY_COLUMN_PREFIX } from '../listValues/columns'
@@ -323,27 +327,13 @@ const useGetListItemsData = ({
     return new Set(data.map((item) => item.entityId))
   }, [data])
 
-  // Get all links for visible entities
-  const linksArgs = {
+  const entityLinks = useEntityLinks({
     projectName,
-    entityIds: Array.from(visibleEntityIds),
-    entityType: entityType as
-      | 'folder'
-      | 'task'
-      | 'product'
-      | 'version'
-      | 'representation'
-      | 'workfile',
-  }
-  const { data: linksData = [], isUninitialized: isLinksUninitialized } =
-    useGetEntityLinksInBatchesQuery(linksArgs, {
-      skip: visibleEntityIds.size === 0 || !entityType || skip || skipLinks, // Skip if no visible entities, no entity type, or if skipLinks is true
-    })
-
-  // Create a map of links by entity ID for efficient lookups
-  const linksMap = useMemo(() => {
-    return new Map(linksData.map((entityWithLinks) => [entityWithLinks.id, entityWithLinks.links]))
-  }, [linksData])
+    entityType: entityType as GetEntityLinksArgs['entityType'],
+    entityIds: visibleEntityIds,
+    skip: !entityType || skip || skipLinks,
+  })
+  const linksMap = entityLinks.links
 
   // Enhance data with links
   const dataWithLinks = useMemo(() => {
@@ -360,14 +350,16 @@ const useGetListItemsData = ({
     )
     const hasLinkUpdates = updates.some((update) => update.topic.startsWith('link'))
 
-    const syncLinks = (isFullSync || hasLinkUpdates) && !isLinksUninitialized
+    const syncLinks = (isFullSync || hasLinkUpdates) && !entityLinks.isUninitialized
     const syncListItems = isFullSync || hasListItemUpdates
     const syncStats = (isFullSync || hasListItemUpdates) && !isStatsUninitialized
 
     if (!syncLinks && !syncListItems && !syncStats) return
 
     const queriesToRefresh: { endpointName: string; args: unknown }[] = []
-    if (syncLinks) queriesToRefresh.push({ endpointName: 'getEntityLinks', args: linksArgs })
+    if (syncLinks) {
+      queriesToRefresh.push({ endpointName: 'getEntityLinks', args: entityLinks.args })
+    }
     if (syncListItems) {
       queriesToRefresh.push({ endpointName: 'getListItemsInfinite', args: listItemsArgs })
     }
