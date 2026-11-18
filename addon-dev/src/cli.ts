@@ -190,8 +190,8 @@ const dev = async () => {
           formatChecks(results),
           'Open AYON with this addon from here (your user needs developer mode on):',
           `  ${open}`,
-          'The page reloads after every rebuild. If it shows the installed addon, its banner says why.',
-          '?addonDev=off goes back to the installed addon.',
+          'The page reloads after every rebuild. If it shows the installed addon, the icon in the bottom left corner says why.',
+          'Addons already loaded from other dev servers stay loaded. ?addonDev=off goes back to the installed addons.',
         ].join('\n'),
       )
       if (flag('open')) openInBrowser(open)
@@ -313,7 +313,8 @@ const HELP = `ayon-addon: tools for AYON addon frontends (run in the addon's fro
                                checks the server (reachable, the API key's user, the addon
                                installed in the version the frontend calls) and prints the
                                URL that loads it, <server or --frontend>/?addonDev=<addon>@
-                               http://localhost:5173 (--open: opens it)
+                               http://localhost:5173 (--open: opens it); addons already
+                               loaded from other dev servers stay loaded
   slots [--json]               the slots of the installed @ynput/ayon-addon
   check [--json] [--no-types]  the manifest as AYON reads it, the pieces' files, the types
   open <slot> <id> [--project <name>] [--entities type:id,...] [--page overview|products|lists]

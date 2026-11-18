@@ -44,8 +44,14 @@ chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
 1. `ayon-addon dev --ayon --open` in the addon (`yarn dev:ayon` in the template and the time tracker).
 2. It checks the server, builds, and opens the URL it prints (without `--open`, open it yourself).
    The page loads your addon from the dev server instead of the installed version (also when it
-   isn't installed) and shows a banner. It reloads after every rebuild.
-3. `?addonDev=off`, or the banner's close button, goes back to the installed addon.
+   isn't installed) and shows a small icon in the bottom left corner: hover or click it for the
+   addon's dev server, build and status. It reloads after every rebuild.
+3. `?addonDev=off`, or the close button on the addon's row, goes back to the installed addon.
+
+Two addons at once (a feature that spans both): run `ayon-addon dev --ayon --port <p>` in each and
+open both printed URLs: each URL adds its addon to the ones already loaded. One URL for both works
+too: `?addonDev=a@http://localhost:5173,b@http://localhost:5174`. Each gets its own row; closing
+one keeps the other, `?addonDev=off` drops them all.
 
 - `--frontend http://localhost:3000` puts that page in the URL instead of the server (an
   ayon-frontend dev server in front of it).
@@ -69,7 +75,8 @@ The checks never stop the dev server: fix them while it runs.
 
 ### Why isn't my addon loading?
 
-The page always says why in the banner at the bottom left (also in the console). What it says, and
+The page always says why in the dev panel: the icon in the bottom left corner turns the error
+colour, hover or click it (also in the console). What it says, and
 the fix:
 
 - **ignored ... only users in developer mode**: turn on Developer Mode in AYON's header (a user
@@ -84,13 +91,13 @@ the fix:
   `ayon-addon dev` without `--ayon`), or the first build hasn't finished. The page reloads once it
   answers.
 - **could not load ... serves "x", not "y"**: the name in the URL isn't the addon's name in
-  `package.py`; use the URL the CLI prints.
+  `package.py`: close that row, then use the URL the CLI prints.
 - **its manifest failed to load**: the build is broken or the remote didn't start: see the
   console and the CLI's output; the page reloads after the next build.
 - **The addon loads but its requests answer 404**: the server doesn't have the addon in the
   version the frontend calls. `ayon-addon dev --ayon` reports it (`addon` check); install that
   version.
-- **No banner at all**: the page isn't a frontend with the dev override (an older AYON), or
+- **No icon at all**: the page isn't a frontend with the dev override (an older AYON), or
   `?addonDev=off` cleared it.
 
 ## Developing without AYON: the dev shell (`dev`, the default)
