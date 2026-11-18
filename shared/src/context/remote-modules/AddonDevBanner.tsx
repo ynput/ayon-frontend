@@ -58,6 +58,8 @@ const Panel = styled.div`
   gap: 2px;
   padding: 4px;
   max-width: min(640px, 100%);
+  max-height: calc(100vh - 56px);
+  overflow-y: auto;
   border-radius: 8px;
   font-size: 13px;
   color: var(--md-sys-color-on-surface);
@@ -84,6 +86,8 @@ const Row = styled.div`
 `
 
 const POLL_MS = 2000
+// lets the pointer cross the gap between the icon and the panel
+const HOVER_CLOSE_MS = 200
 
 // The dev overrides behind a small icon in the bottom left corner (the error colour when one of
 // them can't load); hover or click it for one row per ?addonDev= entry: the addon loaded from its
@@ -94,34 +98,43 @@ export const AddonDevBanner = ({ states }: { states: AddonDevState[] }) => {
   const [isHovered, setIsHovered] = useState(false)
   const [isPinned, setIsPinned] = useState(false)
   const corner = useRef<HTMLDivElement>(null)
+  const toggle = useRef<HTMLButtonElement>(null)
+  const hoverTimer = useRef<ReturnType<typeof setTimeout>>()
   const hasError = states.some((state) => state.status === 'rejected' || 'error' in state)
   const isOpen = isHovered || isPinned
 
+  const hover = (isOver: boolean) => {
+    clearTimeout(hoverTimer.current)
+    if (isOver) setIsHovered(true)
+    else hoverTimer.current = setTimeout(() => setIsHovered(false), HOVER_CLOSE_MS)
+  }
+  useEffect(() => () => clearTimeout(hoverTimer.current), [])
+
   useEffect(() => {
-    if (!isPinned) return
-    const close = (event: MouseEvent | KeyboardEvent) => {
-      if (
-        event instanceof KeyboardEvent
-          ? event.key === 'Escape'
-          : !corner.current?.contains(event.target as Node)
-      )
-        setIsPinned(false)
+    if (!isOpen) return
+    const close = () => {
+      // focus on a row's button would stay on a hidden element
+      if (corner.current?.contains(document.activeElement)) toggle.current?.focus()
+      clearTimeout(hoverTimer.current)
+      setIsHovered(false)
+      setIsPinned(false)
     }
-    document.addEventListener('mousedown', close)
-    document.addEventListener('keydown', close)
+    const onKey = (event: KeyboardEvent) => event.key === 'Escape' && close()
+    const onPointer = (event: MouseEvent) => {
+      if (isPinned && !corner.current?.contains(event.target as Node)) setIsPinned(false)
+    }
+    document.addEventListener('mousedown', onPointer)
+    document.addEventListener('keydown', onKey)
     return () => {
-      document.removeEventListener('mousedown', close)
-      document.removeEventListener('keydown', close)
+      document.removeEventListener('mousedown', onPointer)
+      document.removeEventListener('keydown', onKey)
     }
-  }, [isPinned])
+  }, [isOpen, isPinned])
 
   return (
-    <Corner
-      ref={corner}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-    >
+    <Corner ref={corner} onMouseEnter={() => hover(true)} onMouseLeave={() => hover(false)}>
       <Toggle
+        ref={toggle}
         icon={hasError ? 'error' : 'code'}
         className={[hasError && 'error', isOpen && 'open'].filter(Boolean).join(' ')}
         onClick={() => setIsPinned((pinned) => !pinned)}
@@ -150,7 +163,10 @@ const AddonDevRow = ({ state }: { state: AddonDevState }) => {
         (info) => {
           if (info.buildId === buildId) return
           setIsReloading(true)
-          window.location.reload()
+          // from the stored overrides, not this tab's ?addonDev=: another tab may have closed one
+          const url = new URL(window.location.href)
+          url.searchParams.delete(ADDON_DEV_PARAM)
+          window.location.replace(url.toString())
         },
         () => undefined, // the dev server restarting or still failing; keep polling
       )

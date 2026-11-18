@@ -91,7 +91,7 @@ the fix:
   `ayon-addon dev` without `--ayon`), or the first build hasn't finished. The page reloads once it
   answers.
 - **could not load ... serves "x", not "y"**: the name in the URL isn't the addon's name in
-  `package.py`; use the URL the CLI prints.
+  `package.py`: close that row, then use the URL the CLI prints.
 - **its manifest failed to load**: the build is broken or the remote didn't start: see the
   console and the CLI's output; the page reloads after the next build.
 - **The addon loads but its requests answer 404**: the server doesn't have the addon in the
