@@ -86,6 +86,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     columnSummaries: columnSummariesInit = {},
     columnSummaryScopes: columnSummaryScopesInit = {},
     columnSummaryFormats: columnSummaryFormatsInit = {},
+    columnSummaryHidden: columnSummaryHiddenInit = {},
   } = columnsConfig || {}
 
   // one row height per user for every table, not per view
@@ -326,6 +327,13 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     })
   }
 
+  const updateColumnSummaryHidden = (columnId: string, hidden: string[]) => {
+    const columnSummaryHidden = { ...columnSummaryHiddenInit, [columnId]: hidden }
+    // an empty list drops the key so untouched columns persist nothing
+    if (!hidden.length) delete columnSummaryHidden[columnId]
+    onChangeWithColumns({ ...columnsConfig, columnSummaryHidden })
+  }
+
   const updateGroupBy = (groupBy: TableGroupBy | undefined) => {
     onChangeWithColumns({
       ...columnsConfig,
@@ -490,6 +498,8 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
         // column summary display format
         columnSummaryFormats: columnSummaryFormatsInit,
         updateColumnSummaryFormat,
+        columnSummaryHidden: columnSummaryHiddenInit,
+        updateColumnSummaryHidden,
         // sorting
         sorting,
         updateSorting,

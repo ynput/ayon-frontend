@@ -357,6 +357,11 @@ main.ayon-shell-stage {
   min-height: 0;
   overflow: hidden;
 }
+/* AYON's page around a project or studio page (#root > main in its index.scss) */
+.ayon-shell-body[data-shell-surface='project-page'],
+.ayon-shell-body[data-shell-surface='studio-page'] {
+  padding: 8px;
+}
 .ayon-shell-table {
   width: 100%;
   border-collapse: collapse;

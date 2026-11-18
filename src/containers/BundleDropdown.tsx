@@ -147,7 +147,7 @@ const BundleDropdown = ({
   ...props
 }: BundleDropdownProps) => {
   const { data: { bundles = [] } = {}, isLoading, isError } = useListBundlesQuery({})
-  const devMode = useSelector((state: $Any) => state.user.attrib.developerMode)
+  const devMode = useSelector((state: $Any) => state.user.data.isDeveloper)
 
   const bundleFilter = (b: BundleModel) => {
     if (exclude?.length && exclude.includes(b.name)) return false

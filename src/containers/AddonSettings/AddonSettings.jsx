@@ -108,6 +108,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
   const developerMode = useMemo(() => user?.attrib?.developerMode, [JSON.stringify(user?.attrib)])
+  const isDeveloper = user?.data?.isDeveloper
   const userName = useSelector((state) => state.user.name)
 
   const [showHelp, setShowHelp] = useState(false)
@@ -173,10 +174,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
-  // 'dev' is the user's dev bundle; a dev bundle falls back to production without developer mode
+  // 'dev' is the user's dev bundle; a dev bundle falls back to production for non-developers
   const selectedBundle = useMemo(() => {
     const production = { variant: 'production', bundleName: null, projectBundleName: undefined }
-    if (!developerMode && !['production', 'staging'].includes(storedBundle.variant)) {
+    if (!isDeveloper && !['production', 'staging'].includes(storedBundle.variant)) {
       return production
     }
     if (storedBundle.variant === 'dev') {
@@ -186,7 +187,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         : production
     }
     return storedBundle
-  }, [storedBundle, devBundles, developerMode])
+  }, [storedBundle, devBundles, isDeveloper])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`

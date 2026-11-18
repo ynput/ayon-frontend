@@ -26,6 +26,7 @@ import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-s
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
+  const isDeveloper = useSelector((state) => state.user.data.isDeveloper)
   const dispatch = useDispatch()
   // addon upload dialog
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -73,13 +74,13 @@ const Bundles = () => {
     return bundles
   }, [bundles, showArchived])
 
-  // filter out isDev bundles if developerMode off
+  // filter out isDev bundles for non-developers
   bundleList = useMemo(() => {
-    if (!developerMode) {
+    if (!isDeveloper) {
       return [...bundleList].filter((bundle) => !bundle.isDev)
     }
     return bundleList
-  }, [bundleList, developerMode])
+  }, [bundleList, isDeveloper])
 
   // filter out isProject bundles if showProject is false
   bundleList = useMemo(() => {
@@ -98,7 +99,7 @@ const Bundles = () => {
       return bundleList.find((b) => b.isProduction)
     } else if (param) {
       return bundleList.find((b) => b.name === param)
-    } else if (developerMode) {
+    } else if (isDeveloper) {
       return bundleList.find((b) => b.isDev && b.activeUser === userName)
     }
   }
@@ -283,7 +284,7 @@ const Bundles = () => {
         oldBundle ||
         bundleList.find((b) => b.name !== name && b.isProduction) ||
         bundleList.find((b) => b.name !== name && b.isStaging) ||
-        (developerMode && bundleList.find((b) => b.name !== name && b.isDev))
+        (isDeveloper && bundleList.find((b) => b.name !== name && b.isDev))
 
       if (hasSource) {
         // Open dialog — let user confirm, cancel, or copy
@@ -421,7 +422,7 @@ const Bundles = () => {
         bundle={copySettingsBundle.bundle}
         previousBundle={copySettingsBundle.previous}
         envTarget={copySettingsBundle.env}
-        devMode={developerMode}
+        devMode={isDeveloper}
         onCancel={closeCopySettings}
         onFinish={closeCopySettings}
         onSetTag={copySettingsBundle.pendingChange ? handleConfirmTagChange : undefined}
@@ -493,7 +494,7 @@ const Bundles = () => {
                 onDuplicate={handleDuplicateBundle}
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
-                developerMode={developerMode}
+                developerMode={isDeveloper}
                 onCopySettings={handleCopySettingsFrom}
               />
             </Section>
@@ -509,6 +510,7 @@ const Bundles = () => {
                     onSave={handleNewBundleEnd}
                     installers={installerVersions}
                     developerMode={developerMode}
+                    isDeveloper={isDeveloper}
                   />
                 ) : (
                   !!bundlesData.length &&
@@ -526,7 +528,7 @@ const Bundles = () => {
                       isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                       installers={installerVersions}
                       toggleBundleStatus={toggleBundleStatus}
-                      developerMode={developerMode}
+                      developerMode={isDeveloper}
                     />
                   ))
                 )}
