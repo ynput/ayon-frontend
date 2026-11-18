@@ -18,6 +18,7 @@ import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
 import { getInvitationState, getInvitationText } from './InvitationStatusHelpers'
 import { useStableColumnWidths } from './useStableColumnWidths'
+import { useAddonUserMenuItemsFor } from '@shared/components/AddonLayout/addonUserDetailsHelpers'
 
 // fixed row height, needed by the virtual scroller
 const ROW_HEIGHT = 33
@@ -154,12 +155,21 @@ const UserList = ({
     const ctxSelection = userList.filter((u) => newSelectedUsers.includes(u.name))
     const ctxSelfSelected = newSelectedUsers.includes(selfName)
     const ctxHasInvitable = ctxSelection.some((u) => !!u.attrib?.email)
+    // the addons' items of the details panel's "more" menu (userDetails.menuItem)
+    const addonMenu = addonMenuItemsFor(ctxSelection)
+    addonMenu.prefetch()
+    const toCtxItem = (item) => ({
+      label: item.label,
+      icon: item.icon,
+      command: withSelection(item.onClick),
+    })
     const inviteLabel =
       ctxSelection.length === 1 && getInvitationState(ctxSelection[0]) === 'pending'
         ? 'Resend'
         : 'Invite'
 
     return [
+      ...addonMenu.topItems.map(toCtxItem),
       {
         label: 'Set username',
         disabled: ctxSelection.length !== 1,
@@ -185,6 +195,7 @@ const UserList = ({
         disabled: !ctxSelection.length,
         command: withSelection(() => tableExport?.openExport('selection')),
       },
+      ...addonMenu.items.map(toCtxItem),
       {
         label: 'Delete selected',
         disabled: !ctxSelection.length || ctxSelfSelected,
@@ -196,6 +207,7 @@ const UserList = ({
   }
 
   const [ctxMenuShow] = useCreateContextMenu()
+  const addonMenuItemsFor = useAddonUserMenuItemsFor(!!managerDisabled)
 
   const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
