@@ -1,5 +1,5 @@
 // `ayon-addon dev --ayon`: what AYON's dev override needs that the CLI can check against the server.
-// The page ignores the override (and says why in its banner) when one of these doesn't hold, and an
+// The page ignores the override (and says why in its dev panel) when one of these doesn't hold, and an
 // addon whose server version isn't installed loads, but its endpoint calls answer 404.
 import { existsSync, readFileSync } from 'fs'
 import path from 'path'

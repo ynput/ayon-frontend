@@ -1,7 +1,9 @@
 import { EnumItem, ExportFieldsApiArg, ImportableColumn } from "@shared/api/generated/dataImport"
 import type { StatsItem } from "./Stats"
 
-export type ImportContext = ExportFieldsApiArg["entityType"]
+export type CoreImportContext = ExportFieldsApiArg["entityType"]
+// "addon": an addon's import (openImport in @ynput/ayon-addon), into the addon's endpoints
+export type ImportContext = CoreImportContext | "addon"
 
 export type ExtendedEnumItem = EnumItem & {
   entityType?: "folder" | "task"
@@ -88,6 +90,8 @@ export const itemsLabelForImportContext: Record<ImportContext, string> = {
   folder: "folders",
   task: "tasks",
   entity_list_item: "list items",
+  // the addon names its items (useImportLabels)
+  addon: "items",
 }
 
 export const contextLabelForImportContext: Record<ImportContext, string> = {
@@ -96,6 +100,7 @@ export const contextLabelForImportContext: Record<ImportContext, string> = {
   folder: "Folders",
   task: "Tasks",
   entity_list_item: "List items",
+  addon: "Addon",
 }
 
 export type ImportDataStartSummary = {

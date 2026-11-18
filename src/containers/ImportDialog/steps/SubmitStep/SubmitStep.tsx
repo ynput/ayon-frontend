@@ -3,10 +3,9 @@ import {
   ImportContext,
   ImportDataMessage,
   ImportDataProcessSummary,
-  ImportDataStartSummary,
-  itemsLabelForImportContext,
   StepProps
 } from "../common";
+import { useImportLabels } from "../../context/ImportDialogProviderInstance";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { ProgressBar, StepContainer } from "../common.styled";
 import { ImportData } from "../../utils";
@@ -46,7 +45,8 @@ const ErrorState = styled(EmptyPlaceholder)`
   margin: auto;
 `
 
-export default function SubmitStep({ data, result, error, importContext, importMode, projectName, onNext  }: Props) {
+export default function SubmitStep({ data, result, error, importMode, projectName, onNext  }: Props) {
+  const labels = useImportLabels()
   const navigate = useNavigate()
   const [importProgress, setImportProgress] = useState(0)
   const [importDescription, setImportDescription] = useState<string | null>(null)
@@ -87,8 +87,8 @@ export default function SubmitStep({ data, result, error, importContext, importM
               <Stats
                 heading={data.fileName}
                 subtitle={importMode === ImportMode.UPDATE_ONLY
-                  ? `Updated existing ${itemsLabelForImportContext[importContext]}`
-                  : `Imported ${itemsLabelForImportContext[importContext]}`}
+                  ? `Updated existing ${labels.items}`
+                  : `Imported ${labels.items}`}
                 size={getFileSizeString(data.fileSize)}
                 items={getImportStatsItems(importResult, true)}
               />

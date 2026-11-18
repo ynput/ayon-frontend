@@ -1,5 +1,5 @@
 // The slot inspector's Show slots switch and its legend of addons: in AYON's header while developer mode is
-// on, and in the addon dev shell. Internal, like slotInspector.
+// on. Internal, like slotInspector.
 import { useSyncExternalStore } from 'react'
 import { InputSwitch } from '@ynput/ayon-react-components'
 import { getRegistry, subscribeRegistry } from '@ynput/ayon-addon/host'

@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 1.0.1
+# @ynput/ayon-addon 1.1.0
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
@@ -100,6 +100,10 @@ The CLI, the dev shell and the preview scenes of other addons' slots are in
   openDetails(selected) // EntityRef[] of one type: folders, tasks, versions or representations
   openViewer({ projectName, versionIds: [version.id], productId: version.productId })
   ```
+- To import rows from CSV or Excel files or pasted tables, `openImport(target)` opens AYON's
+  import dialog, with its column and value mapping, presets and preview. Your server answers
+  `target.fieldsUrl` and `target.importUrl` with the contract of AYON's own imports
+  (`/api/csv/export/{type}/fields` and `/api/csv/import/{type}`); see `ImportTarget`.
 - Endpoints you inject and tag types you add (`enhanceEndpoints({ addTagTypes })`) go into AYON's
   one api, where names are global: prefix them with your addon name (`myaddonGetLogs`,
   `myaddonLog`). A `tableColumn` lists the tags its values depend on in `providesTags`

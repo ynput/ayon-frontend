@@ -1,4 +1,5 @@
-import { getImportStatsItems, ImportContext, ImportDataMessage, ImportDataStartSummary, itemsLabelForImportContext, StepProps } from "../common";
+import { getImportStatsItems, ImportContext, ImportDataMessage, ImportDataStartSummary, StepProps } from "../common";
+import { useImportLabels } from "../../context/ImportDialogProviderInstance";
 import { Button, getFileSizeString } from "@ynput/ayon-react-components";
 import { ProgressBar, StepContainer, StepNavButtons } from "../common.styled";
 import { ImportData } from "../../utils";
@@ -17,7 +18,8 @@ type Props = StepProps<void> & {
   importMode: ImportMode
 }
 
-export default function PreviewStep({ data, previewStatus, error, importContext, importMode, onBack, onNext }: Props) {
+export default function PreviewStep({ data, previewStatus, error, importMode, onBack, onNext }: Props) {
+  const labels = useImportLabels()
   const [previewProgress, setPreviewProgress] = useState(0)
 
   usePubSub(
@@ -39,8 +41,8 @@ export default function PreviewStep({ data, previewStatus, error, importContext,
             <Stats
               heading={data.fileName}
               subtitle={importMode === ImportMode.UPDATE_ONLY
-                ? `Updating existing ${itemsLabelForImportContext[importContext]}`
-                : `Importing ${itemsLabelForImportContext[importContext]}`}
+                ? `Updating existing ${labels.items}`
+                : `Importing ${labels.items}`}
               size={getFileSizeString(data.fileSize)}
               items={getImportStatsItems(previewStatus, false)}
             />

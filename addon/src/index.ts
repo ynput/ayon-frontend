@@ -122,6 +122,9 @@ export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 // AYON's details panel and viewer, opened from addon code
 export { closeDetails, openDetails, openViewer } from './openInHost'
 export type { ViewerTarget } from './openInHost'
+// AYON's import dialog (CSV, Excel, pasted tables), for rows the addon's server imports
+export { openImport } from './openImport'
+export type { ImportResult, ImportTarget } from './openImport'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
