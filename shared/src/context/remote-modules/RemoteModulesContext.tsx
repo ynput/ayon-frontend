@@ -30,7 +30,7 @@ type Module = {
 }
 
 // an addon loaded from its dev server (?addonDev=...), one per addon; every way it can fail is
-// shown in the banner
+// shown in the dev panel
 export type AddonDevState =
   // the request can't be used: a malformed or non-local URL, or a user without developer mode
   | { status: 'rejected'; request: string; reason: string }

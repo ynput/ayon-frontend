@@ -68,23 +68,34 @@ test('several overrides: comma separated, repeated, the last per addon wins', ()
   expect(good).toEqual({ override: planner })
 })
 
-test('the overrides from the URL replace the stored ones, and off clears them', () => {
-  const storage = memoryStorage({
-    'ayon-addon-dev': JSON.stringify([{ addon: 'old', url: 'http://localhost:1' }]),
-  })
+test('the overrides from the URL are added to the stored ones, and off clears them', () => {
+  const old = { addon: 'old', url: 'http://localhost:1' }
+  const storage = memoryStorage({ 'ayon-addon-dev': JSON.stringify([old]) })
   const both = '?addonDev=planner@http://localhost:5173&addonDev=timetracker@http://localhost:5174'
   expect(readAddonDevRequests(both, storage)).toEqual([
+    { override: old },
     { override: planner },
     { override: timetracker },
   ])
-  expect(readStoredAddonDevOverrides(storage)).toEqual([planner, timetracker])
-  // a URL with only bad entries keeps them for the next page
-  expect(readAddonDevRequests('?addonDev=nope', storage)[0]).toHaveProperty('reason')
-  expect(readStoredAddonDevOverrides(storage)).toEqual([planner, timetracker])
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, planner, timetracker])
+  // the URL `ayon-addon dev --ayon` prints names one addon: the others stay, its own port wins
+  const moved = { addon: 'planner', url: 'http://localhost:5175' }
+  expect(readAddonDevRequests('?addonDev=planner@http://localhost:5175', storage)).toEqual([
+    { override: old },
+    { override: timetracker },
+    { override: moved },
+  ])
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, timetracker, moved])
+  // a URL with only bad entries keeps the stored ones, and loads them
+  const [rejected, ...rest] = readAddonDevRequests('?addonDev=nope', storage).reverse()
+  expect(rejected).toHaveProperty('reason')
+  expect(rest).toHaveLength(3)
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, timetracker, moved])
   // a later page without the parameter keeps them
   expect(readAddonDevRequests('', storage)).toEqual([
-    { override: planner },
+    { override: old },
     { override: timetracker },
+    { override: moved },
   ])
   expect(readAddonDevRequests('?addonDev=off', storage)).toEqual([])
   expect(storage.raw()).toBeUndefined()

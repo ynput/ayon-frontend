@@ -1,9 +1,10 @@
 // Developing addons inside the real frontend: `?addonDev=<addon>@http://localhost:5173` loads
 // that addon from the addon's dev server (`ayon-addon dev --ayon`) instead of the server, kept in
 // localStorage until `?addonDev=off`. Several addons: comma separated
-// (`?addonDev=a@http://localhost:5173,b@http://localhost:5174`) or the parameter repeated. Only for developer-mode and service users, only from this
-// machine. When one of these doesn't hold, the reason is shown in the dev banner (never only in the
-// console). See src/remote/AGENTS.md.
+// (`?addonDev=a@http://localhost:5173,b@http://localhost:5174`), the parameter repeated, or one URL
+// per addon (each is added to the stored ones). Only for developer-mode and service users, only
+// from this machine. When one of these doesn't hold, the reason is shown in the dev panel (never
+// only in the console). See src/remote/AGENTS.md.
 
 export const ADDON_DEV_PARAM = 'addonDev'
 const STORAGE_KEY = 'ayon-addon-dev'
@@ -26,7 +27,7 @@ export interface AddonDevInfo {
   buildId: string
 }
 
-/** The override asked for, or why it can't be used: shown in the banner. */
+/** The override asked for, or why it can't be used: shown in the dev panel. */
 export type AddonDevRequest = { override: AddonDevOverride } | { request: string; reason: string }
 
 export const isLocalDevUrl = (url: string) => {
@@ -113,7 +114,8 @@ export const storeAddonDevOverrides = (
 }
 
 /**
- * The overrides from the URL (stored for later, replacing the stored ones) or from a previous page.
+ * The overrides from the URL added to the stored ones (an addon in the URL replaces its stored
+ * entry), stored for later pages, so a URL with one addon keeps the others loaded.
  * `?addonDev=off` clears them all.
  */
 export const readAddonDevRequests = (
@@ -125,29 +127,24 @@ export const readAddonDevRequests = (
     storeAddonDevOverrides([], storage)
     return []
   }
-  if (params.length) {
-    const requests = parseAddonDevParams(params)
-    const overrides = requests.flatMap((request) =>
-      'override' in request ? [request.override] : [],
-    )
-    // a URL with no valid entry keeps the stored ones for the next page, as with a single one
-    if (overrides.length) storeAddonDevOverrides(overrides, storage)
-    for (const request of requests) {
-      if ('reason' in request)
-        console.warn(
-          `[addon dev] ignored ?${ADDON_DEV_PARAM}=${request.request}: ${request.reason}`,
-        )
-    }
-    return requests
+  const requests = parseAddonDevParams(params)
+  const fromUrl = requests.flatMap((request) => ('override' in request ? [request.override] : []))
+  const kept = readStoredAddonDevOverrides(storage).filter(
+    (stored) => !fromUrl.some((override) => override.addon === stored.addon),
+  )
+  if (fromUrl.length) storeAddonDevOverrides([...kept, ...fromUrl], storage)
+  for (const request of requests) {
+    if ('reason' in request)
+      console.warn(`[addon dev] ignored ?${ADDON_DEV_PARAM}=${request.request}: ${request.reason}`)
   }
-  return readStoredAddonDevOverrides(storage).map((override) => ({ override }))
+  return [...kept.map((override) => ({ override })), ...requests]
 }
 
-/** The request as written in the URL, the banner row's key. */
+/** The request as written in the URL, the dev panel row's key. */
 export const addonDevRequestKey = (request: AddonDevRequest) =>
   'override' in request ? `${request.override.addon}@${request.override.url}` : request.request
 
-/** The key of a banner row: an override's request, or the rejected request as given. */
+/** The key of a dev panel row: an override's request, or the rejected request as given. */
 export const addonDevStateKey = (state: { override: AddonDevOverride } | { request: string }) =>
   'override' in state ? addonDevRequestKey({ override: state.override }) : state.request
 
