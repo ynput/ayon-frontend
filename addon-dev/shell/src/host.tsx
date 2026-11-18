@@ -6,6 +6,7 @@ import type { AddonUser, ProjectListProps } from '@ynput/ayon-addon'
 import { useGetCurrentUserQuery, usersApi } from '@ynput/ayon-frontend-shared/api'
 import {
   AddonEntityPicker,
+  AddonListPicker,
   AddonMoreMenu,
   ProjectListHost,
   ProjectPageLayoutHost,
@@ -84,6 +85,7 @@ export const provideShellHost = () =>
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList,
       EntityPicker: AddonEntityPicker,
+      ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
     },
   })

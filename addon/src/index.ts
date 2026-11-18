@@ -138,6 +138,8 @@ export type {
 // AYON's entity picker, usable anywhere
 export { EntityPicker } from './EntityPicker'
 export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+export { ListPicker } from './ListPicker'
+export type { EntityListRef, ListPickerProps, PickableEntityListType } from './ListPicker'
 // AYON's project table for given rows, usable anywhere
 export { EntityTable } from './EntityTable'
 export type {
