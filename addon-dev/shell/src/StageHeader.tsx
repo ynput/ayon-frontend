@@ -1,10 +1,11 @@
 // The line above the stage: the place on it, with where it comes from behind (i), and a warning
 // when the stage isn't showing a server's live data. One fixed height: nothing in it changes the
 // stage's size. Everything under it is AYON (its surfaces, or stand-ins for the app's); the
-// header is the shell's, except the slot menu on the right, which is AYON's header menu.
+// header is the shell's. Show slots on the right drives AYON's slot inspector (developer mode).
 import { useEffect, useRef, useState } from 'react'
 import { Button, Icon } from '@ynput/ayon-react-components'
-import { SlotInspectorMenu } from '@ynput/ayon-frontend-shared/components'
+import { SlotInspectorCard, setShowSlots, useSlotInspector } from '@ynput/ayon-frontend-shared/components'
+import { Switch } from './DevPanel'
 import { getPlace } from './catalog'
 import type { ShellSelection } from './types'
 
@@ -55,6 +56,7 @@ export const StageHeader = ({
   onTogglePanel: () => void
 }) => {
   const place = getPlace(selection.surface)
+  const { showSlots } = useSlotInspector()
   // where the place comes from and what it is: behind (i)
   const about = place
     ? ([
@@ -89,8 +91,15 @@ export const StageHeader = ({
           Preview: {selection.preview}, not live
         </span>
       )}
-      {/* developer mode's slot menu from AYON's header */}
-      <SlotInspectorMenu />
+      <Switch
+        label="Show slots"
+        action="show-slots"
+        title="Every slot shows its example contribution, after the real ones, and every contribution is outlined in the colour of its addon"
+        checked={showSlots}
+        onChange={setShowSlots}
+      />
+      {/* the card of the contribution under the pointer, while Show slots is on */}
+      <SlotInspectorCard />
     </header>
   )
 }
