@@ -53,7 +53,6 @@ interface InboxSearchFilterProps {
   filter: QueryFilter
   onChange: (filter: QueryFilter) => void
   projectName?: string | null
-  isImportant?: boolean | null
   isLoading?: boolean
 }
 
@@ -61,7 +60,6 @@ const InboxSearchFilter = ({
   filter,
   onChange,
   projectName,
-  isImportant,
   isLoading,
 }: InboxSearchFilterProps) => {
   const isDisabled = !projectName
@@ -132,8 +130,7 @@ const InboxSearchFilter = ({
         icon: 'notifications',
         type: 'list_of_strings' as const,
         operator: 'OR' as const,
-        // the Important tab already pins mention + watching, so relation would return nothing
-        values: isImportant === true ? REASON_VALUES.slice(0, 2) : REASON_VALUES,
+        values: REASON_VALUES,
       },
       {
         id: 'origin_type',
@@ -163,7 +160,7 @@ const InboxSearchFilter = ({
         values: generateDateOptions(),
       },
     ]
-  }, [users, categories, isImportant, isLoadingCategories, hasSavedCategory])
+  }, [users, categories, isLoadingCategories, hasSavedCategory])
 
   const filters = useMemo(() => feedFilterToClientFilters(filter, options), [filter, options])
 

@@ -5,6 +5,7 @@ query GetProjectInbox(
   $activityTypes: [String!]
   $activityIds: [String!]
   $filter: String
+  $important: Boolean
   $last: Int
   $cursor: String
 ) {
@@ -15,6 +16,7 @@ query GetProjectInbox(
       activityTypes: $activityTypes
       activityIds: $activityIds
       filter: $filter
+      important: $important
       last: $last
       before: $cursor
     ) {

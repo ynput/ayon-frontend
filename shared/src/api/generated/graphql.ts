@@ -862,6 +862,7 @@ export type ProjectNodeActivitiesArgs = {
   entityType?: InputMaybe<Scalars['String']['input']>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
+  important?: InputMaybe<Scalars['Boolean']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
   referenceTypes?: InputMaybe<Array<Scalars['String']['input']>>;
   tags?: InputMaybe<Array<Scalars['String']['input']>>;
@@ -2297,6 +2298,7 @@ export type GetProjectInboxQueryVariables = Exact<{
   activityTypes?: Array<string> | string | null | undefined;
   activityIds?: Array<string> | string | null | undefined;
   filter?: string | null | undefined;
+  important?: boolean | null | undefined;
   last?: number | null | undefined;
   cursor?: string | null | undefined;
 }>;
@@ -4573,7 +4575,7 @@ export const GetInboxUnreadCountDocument = new TypedDocumentString(`
 }
     `);
 export const GetProjectInboxDocument = new TypedDocumentString(`
-    query GetProjectInbox($projectName: String!, $userName: String!, $referenceTypes: [String!], $activityTypes: [String!], $activityIds: [String!], $filter: String, $last: Int, $cursor: String) {
+    query GetProjectInbox($projectName: String!, $userName: String!, $referenceTypes: [String!], $activityTypes: [String!], $activityIds: [String!], $filter: String, $important: Boolean, $last: Int, $cursor: String) {
   project(name: $projectName) {
     activities(
       entityNames: [$userName]
@@ -4581,6 +4583,7 @@ export const GetProjectInboxDocument = new TypedDocumentString(`
       activityTypes: $activityTypes
       activityIds: $activityIds
       filter: $filter
+      important: $important
       last: $last
       before: $cursor
     ) {
