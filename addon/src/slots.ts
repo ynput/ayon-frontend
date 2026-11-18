@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import type {
+  EntityListRef,
   EntityRef,
   EntityScope,
   ProjectTablePage,
@@ -84,6 +85,17 @@ export interface SlotMap {
     meta: DetailsPanelMenuItemMeta
     context: DetailsPanelMenuItemContext
     pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
+  }
+  /**
+   * A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's
+   * sidebar in Review. The tab button shows from the description, after the panel's own tabs;
+   * `component` loads when the tab is first opened.
+   */
+  'listDetails.tab': {
+    version: 1
+    meta: ListDetailsTabMeta
+    context: ListDetailsTabContext
+    pieces: { component: Loader<ComponentType<SlotProps<'listDetails.tab'>>> }
   }
   /**
    * An item in the project list's menus (dashboard, project menu, studio pages' ProjectList): the
@@ -406,6 +418,27 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 
 /** Context of a details panel menu item. */
 export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
+
+/** Description of a `listDetails.tab` contribution. */
+export interface ListDetailsTabMeta {
+  /** the tab id is `<addon>.<id>` */
+  id: string
+  /** the tab button's label */
+  label: string
+  /** a Material Symbols icon name, on the tab button */
+  icon: string
+}
+
+/** Context of a list details tab. */
+export interface ListDetailsTabContext extends ProjectNameScope {
+  /** the list the panel shows */
+  list: EntityListRef
+  /**
+   * where the panel is: `lists` (the Lists page), `reviews` (the Reviews page) or `review` (a
+   * review session in Review)
+   */
+  scope: string
+}
 
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {
@@ -895,6 +928,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkButton,
   },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'listDetails.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
   'detailsPanel.menuItem': {
     version: 1,
     required: ['label', 'icon'],

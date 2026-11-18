@@ -13,6 +13,7 @@ export {
   detailsPanelTab,
   entityMenuItem,
   headerItem,
+  listDetailsTab,
   profileSection,
   projectListMenuItem,
   projectPage,

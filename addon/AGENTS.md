@@ -739,6 +739,9 @@ The same thing has the same name and type in every slot that has it:
   one type), `entityMenuItem`, `table.shortcut` (the project tables' rows; empty in the panels'
   tables) and `slicer.menuItem` (hierarchy rows; empty for other slice types). A table cell is one
   entity: `tableColumn` has `entity`.
+- **`list`** (`EntityListRef`: `id`, `projectName`, `label?`, `entityType?` of its items,
+  `entityListType?`, `review-session` for a review session), in `listDetails.tab`: the list the
+  panel shows.
 - **`users`** (`UserRef[]`: `name`, `fullName?`, `email?`, `active` and the flags of
   `user` without `isDeveloper`), in slots about other users: `userDetails.section` and
   `userDetails.menuItem` (the users selected in Settings → Users). Not the signed-in user: that is
@@ -916,6 +919,37 @@ detailsPanelMenuItem({
   label: 'Example menu item',
   icon: 'extension',
   run: () => import('./Run'),
+})
+```
+
+### `listDetails.tab`: `listDetailsTab`
+
+A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's sidebar in Review. The tab button shows from the description, after the panel's own tabs; `component` loads when the tab is first opened. Loads: first shown.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | the tab id is `<addon>.<id>` |
+| `label` (required) | `string` | the tab button's label |
+| `icon` (required) | `string` | a Material Symbols icon name, on the tab button |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'listDetails.tab'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `list` (required) | `EntityListRef` | the list the panel shows |
+| `scope` (required) | `string` | where the panel is: `lists` (the Lists page), `reviews` (the Reviews page) or `review` (a review session in Review) |
+| `projectName` (required) | `string` |  |
+
+Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+listDetailsTab({
+  id: 'example',
+  label: 'Example tab',
+  icon: 'extension',
+  component: () => import('./Component'),
 })
 ```
 

@@ -869,6 +869,9 @@ The same thing has the same name and type in every slot that has it:
   one type), \`entityMenuItem\`, \`table.shortcut\` (the project tables' rows; empty in the panels'
   tables) and \`slicer.menuItem\` (hierarchy rows; empty for other slice types). A table cell is one
   entity: \`tableColumn\` has \`entity\`.
+- **\`list\`** (\`EntityListRef\`: \`id\`, \`projectName\`, \`label?\`, \`entityType?\` of its items,
+  \`entityListType?\`, \`review-session\` for a review session), in \`listDetails.tab\`: the list the
+  panel shows.
 - **\`users\`** (\`UserRef[]\`: \`name\`, \`fullName?\`, \`email?\`, \`active\` and the flags of
   \`user\` without \`isDeveloper\`), in slots about other users: \`userDetails.section\` and
   \`userDetails.menuItem\` (the users selected in Settings → Users). Not the signed-in user: that is

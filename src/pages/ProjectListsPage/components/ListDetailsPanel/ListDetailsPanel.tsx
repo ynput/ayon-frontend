@@ -1,4 +1,4 @@
-import { FC } from 'react'
+import { FC, useEffect, useMemo } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -7,7 +7,12 @@ import { ListAttributeForm, ListMetaData } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
-import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
+import ListDetailsTabs, {
+  LIST_DETAILS_TABS,
+  ListDetailsTab,
+} from '../ListDetailsTabs/ListDetailsTabs'
+import { ContributionView, useContributions } from '@ynput/ayon-addon'
+import type { ListDetailsTabContext } from '@ynput/ayon-addon'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
@@ -41,6 +46,38 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     withDefault(StringParam, 'details') as unknown as any,
   )
 
+  // tabs addons contribute (listDetails.tab slot, @ynput/ayon-addon); the tab id is the
+  // contribution key, `<addon>.<id>`
+  const { contributions: addonTabs, isLoading: isLoadingAddonTabs } =
+    useContributions('listDetails.tab')
+  const activeAddonTab = addonTabs.find((tab) => tab.key === selectedTab)
+  // a tab in the URL whose addon is gone (known once the manifests have loaded)
+  const isUnknownTab =
+    !LIST_DETAILS_TABS.some((tab) => tab.id === selectedTab) &&
+    !activeAddonTab &&
+    !isLoadingAddonTabs
+  useEffect(() => {
+    if (isUnknownTab) setSelectedTab('details')
+  }, [isUnknownTab, setSelectedTab])
+
+  const addonTabContext = useMemo<ListDetailsTabContext | undefined>(
+    () =>
+      list?.id
+        ? {
+            projectName,
+            list: {
+              id: list.id,
+              projectName,
+              label: list.label,
+              entityType: list.entityType,
+              entityListType: list.entityListType,
+            },
+            scope: isReview ? 'reviews' : 'lists',
+          }
+        : undefined,
+    [projectName, list?.id, list?.label, list?.entityType, list?.entityListType, isReview],
+  )
+
   // derive error message
   let errorMessage: string | null = null
   if (error && 'status' in error) {
@@ -65,7 +102,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     )
 
   return (
-    <Styled.Panel>
+    <Styled.Panel data-testid="list-details-panel">
       <Styled.Header>
         <Styled.Titles>
           <h2 className={clsx('title', { loading: isLoadingList })}>
@@ -76,29 +113,46 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             {upperFirst(list?.entityType)}s {isReview && '(Review)'}
           </span>
         </Styled.Titles>
-        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
+        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} addonTabs={addonTabs} />
         <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
       </Styled.Header>
-      <Styled.Scrollable>
-        {selectedTab === 'details' && (
-          <>
-            <Styled.Section>
-              <ListAttributeForm list={list} isLoading={isLoadingList} projectName={projectName} />
-            </Styled.Section>
-            <Styled.Section>
-              <ListMetaData list={list} isLoading={isLoadingList} />
-            </Styled.Section>
-          </>
-        )}
-        {selectedTab === 'access' && list && (
-          <ListAccessForm
-            list={list}
-            projectName={projectName}
-            isLoading={isLoadingList}
-            isReview={isReview}
-          />
-        )}
-      </Styled.Scrollable>
+      {activeAddonTab ? (
+        // an addon's tab fills the panel below the header, in the place of the panel's own tabs
+        addonTabContext && (
+          <Styled.AddonTabContent>
+            <ContributionView
+              key={activeAddonTab.key}
+              contribution={activeAddonTab}
+              context={addonTabContext}
+            />
+          </Styled.AddonTabContent>
+        )
+      ) : (
+        <Styled.Scrollable>
+          {selectedTab === 'details' && (
+            <>
+              <Styled.Section>
+                <ListAttributeForm
+                  list={list}
+                  isLoading={isLoadingList}
+                  projectName={projectName}
+                />
+              </Styled.Section>
+              <Styled.Section>
+                <ListMetaData list={list} isLoading={isLoadingList} />
+              </Styled.Section>
+            </>
+          )}
+          {selectedTab === 'access' && list && (
+            <ListAccessForm
+              list={list}
+              projectName={projectName}
+              isLoading={isLoadingList}
+              isReview={isReview}
+            />
+          )}
+        </Styled.Scrollable>
+      )}
     </Styled.Panel>
   )
 }

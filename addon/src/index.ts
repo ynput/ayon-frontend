@@ -32,6 +32,8 @@ export type {
   PopoverButtonScope,
   MenuPiece,
   RunPiece,
+  ListDetailsTabContext,
+  ListDetailsTabMeta,
   ListMenuItemMeta,
   MenuKind,
   ProjectListMenuItemContext,
@@ -69,6 +71,7 @@ export type {
 export type {
   Access,
   AddonUser,
+  EntityListRef,
   EntityRef,
   EntityScope,
   FolderInfo,

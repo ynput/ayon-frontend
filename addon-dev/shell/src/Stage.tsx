@@ -15,6 +15,7 @@ import {
   Panel,
   SaveButton,
 } from '@ynput/ayon-react-components'
+import type { IconType } from '@ynput/ayon-react-components'
 import { ContributionView, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
@@ -27,6 +28,7 @@ import type {
 import { contributionTags, contributionTitle, getHost, slotInfo } from '@ynput/ayon-addon/host'
 import {
   useGetCurrentUserQuery,
+  useGetListsInfiniteInfiniteQuery,
   useGetProjectQuery,
   useGetUsersAssigneeQuery,
   useGetUsersQuery,
@@ -485,6 +487,100 @@ const DetailsPanelStage = ({ selection }: StageProps) => {
   )
 }
 
+// listDetails.tab: a stand-in for the list details panel of the Lists and Reviews pages (it lives in
+// the ayon-frontend app; Review's session sidebar has the same tabs), for a list of the project
+// picked here
+const ListDetailsStage = ({ selection }: StageProps) => {
+  const projectName = selection.projectName!
+  const { contributions: tabs } = useContributions('listDetails.tab')
+  const { data, isLoading } = useGetListsInfiniteInfiniteQuery(
+    { projectName },
+    { initialPageParam: { cursor: '' } },
+  )
+  const lists = useMemo(() => data?.pages.flatMap((page) => page.lists) ?? [], [data])
+  const [listId, setListId] = useState<string>()
+  const list = lists.find((l) => l.id === listId) ?? lists[0]
+  const [tabKey, setTabKey] = useState<string>()
+  const tab = tabs.find((t) => t.key === tabKey) ?? tabs[0]
+
+  const context = useMemo<Context | undefined>(
+    () =>
+      list && {
+        projectName,
+        list: {
+          id: list.id,
+          projectName,
+          label: list.label,
+          entityType: list.entityType,
+          entityListType: list.entityListType,
+        },
+        scope: DETAILS_SCOPE,
+      },
+    [projectName, list],
+  )
+  useSlotReport('listDetails.tab', context)
+  useStageReady(!isLoading)
+
+  if (isLoading) return <Hint>Loading the lists of {projectName}…</Hint>
+  if (!list || !context) return <Hint>{projectName} has no lists: create one on its Lists or Reviews page.</Hint>
+  return (
+    <div className="ayon-shell-body ayon-shell-lists" data-shell-surface="list-details">
+      <table className="ayon-shell-table ayon-shell-lists-list">
+        <thead>
+          <tr>
+            <th className="ayon-shell-th">
+              <div className="ayon-shell-th-content">List</div>
+            </th>
+            <th className="ayon-shell-th">
+              <div className="ayon-shell-th-content">Type</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {lists.map((l) => (
+            <tr key={l.id} className={l.id === list.id ? 'selected' : undefined} onClick={() => setListId(l.id)}>
+              <td>
+                <div className="ayon-shell-td-content">{l.label}</div>
+              </td>
+              <td>
+                <div className="ayon-shell-td-content">
+                  {l.entityListType === 'review-session' ? 'Review session' : `${l.entityType}s`}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <section className="ayon-shell-list-detail">
+        <div className="ayon-shell-bar">
+          <strong>{list.label}</strong>
+        </div>
+        <div className="ayon-shell-bar">
+          {tabs.map((t) => (
+            <Button
+              key={t.key}
+              // addons name any Material Symbols icon
+              icon={t.icon as IconType}
+              label={t.label}
+              variant={t.key === tab?.key ? 'surface' : 'text'}
+              selected={t.key === tab?.key}
+              onClick={() => setTabKey(t.key)}
+              {...contributionTags(t)}
+            />
+          ))}
+        </div>
+        {tab ? (
+          <div className="ayon-shell-list-tab">
+            <ContributionView key={`${tab.key}:${list.id}`} contribution={tab} context={context as never} />
+          </div>
+        ) : (
+          <Hint>This addon has no list details tabs.</Hint>
+        )}
+      </section>
+    </div>
+  )
+}
+
 // slicer.menuItem: AYON's slicer; the items are in its right-click menu and dropdown
 const SlicerBody = ({ selection }: StageProps) => {
   const { rowSelection, sliceType } = useSlicerContext()
@@ -778,6 +874,8 @@ export const Stage = ({
         return <StudioPagesStage {...props} />
       case 'details-panel':
         return <DetailsPanelStage {...props} />
+      case 'list-details':
+        return <ListDetailsStage {...props} />
       case 'slicer':
         return <SlicerStage {...props} />
       case 'project-list':
