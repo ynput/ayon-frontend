@@ -311,6 +311,7 @@ A scene is `{ id, label, description?, slots, fields, component }`:
 | `json` | `default?` | any JSON (null); text that doesn't parse is shown as an error and not applied |
 | `project` | `optional?`, `default?` (a name, or null with `optional`) | a project name; without a default the shell's project, or null when optional |
 | `entity` | `entityType` (`task`, `folder`, `product`, `version`), `project` (the key of a project field) | `{ id, name, label?, entityType, projectName }` or null, picked with AYON's entity picker; cleared when that project changes |
+| `list` | `project` (the key of a project field), `entityListTypes?` (`['generic']` lists, `['review-session']` review sessions; both by default) | `{ id, projectName, label, entityListType, entityType, count }` or null, picked with AYON's list picker (the SDK's `ListPicker`); cleared when that project changes. Read a session's name and item count from it rather than adding fields for them |
 | `pick` | `load(api, values)` returning `[{ value, label, values }]` | an option's `value`; choosing it also merges its `values`. Loaded when the list opens, errors shown under it |
 
 - `api` is `{ fetch(path, init), addonUrl(name) }`: `fetch` reaches the server the shell uses,
