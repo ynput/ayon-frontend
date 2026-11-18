@@ -25,6 +25,7 @@ interface ListDetailsPanelProps {
 const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) => {
   const {
     data: list,
+    currentData: currentList,
     isFetching,
     isLoading,
     error,
@@ -60,22 +61,30 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     if (isUnknownTab) setSelectedTab('details')
   }, [isUnknownTab, setSelectedTab])
 
+  // the selected list only (currentData): while another list loads, a tab must not act on the last one
   const addonTabContext = useMemo<ListDetailsTabContext | undefined>(
     () =>
-      list?.id
+      currentList?.id
         ? {
             projectName,
             list: {
-              id: list.id,
+              id: currentList.id,
               projectName,
-              label: list.label,
-              entityType: list.entityType,
-              entityListType: list.entityListType,
+              label: currentList.label,
+              entityType: currentList.entityType,
+              entityListType: currentList.entityListType,
             },
             scope: isReview ? 'reviews' : 'lists',
           }
         : undefined,
-    [projectName, list?.id, list?.label, list?.entityType, list?.entityListType, isReview],
+    [
+      projectName,
+      currentList?.id,
+      currentList?.label,
+      currentList?.entityType,
+      currentList?.entityListType,
+      isReview,
+    ],
   )
 
   // derive error message

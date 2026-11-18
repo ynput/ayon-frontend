@@ -514,7 +514,8 @@ const ListDetailsStage = ({ selection }: StageProps) => {
           entityType: list.entityType,
           entityListType: list.entityListType,
         },
-        scope: DETAILS_SCOPE,
+        // what the Lists and Reviews pages pass
+        scope: list.entityListType === 'review-session' ? 'reviews' : 'lists',
       },
     [projectName, list],
   )
