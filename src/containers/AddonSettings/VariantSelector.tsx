@@ -39,11 +39,11 @@ const VariantSelector = ({
   disabled = false,
 }: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
-  const devMode = useAppSelector((state) => state.user.attrib.developerMode)
+  const isDeveloper = useAppSelector((state) => state.user.data.isDeveloper)
   const userName = useAppSelector((state) => state.user.name)
 
   const buttons =
-    devMode && showDev
+    isDeveloper && showDev
       ? (['production', 'staging', 'dev'] as const)
       : (['production', 'staging'] as const)
 
