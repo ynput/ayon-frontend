@@ -1,5 +1,5 @@
 // Developer mode's slot inspector in the header: Show slots and the addons' colours. AYON's header
-// shows it while developer mode is on; the addon dev shell's top bar shows the same menu. It also renders the card of the contribution under the pointer
+// shows it while developer mode is on (the addon dev shell has only the switch). It also renders the card of the contribution under the pointer
 // (SlotInspectorCard). Internal, like slotInspector.
 import { useEffect, useRef } from 'react'
 import clsx from 'clsx'

@@ -112,7 +112,7 @@ const PlacesHeader = ({ search, onSearch }: Pick<DevPanelProps, 'search' | 'onSe
   )
 }
 
-const Switch = ({
+export const Switch = ({
   label,
   action,
   title,
