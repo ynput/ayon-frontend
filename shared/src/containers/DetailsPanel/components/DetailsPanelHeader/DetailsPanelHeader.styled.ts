@@ -162,17 +162,18 @@ interface StatusSelectProps {
 }
 export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
   width: fit-content;
+  /* centred in its row, which the 32px buttons set */
+  align-self: center;
   .status-field.value {
     position: relative;
     left: 1px;
-    /* the same size as the status pill in the tables and the attribute list; the component
-       sets its height inline */
-    height: 22px !important;
+    /* the header's main value: a step up from the status pill in the tables, so it fills its row;
+       the component sets its height inline */
+    height: 28px !important;
     min-height: 0;
-    padding: 1px 6px 1px 4px;
+    padding: 2px 10px 2px 6px;
     font-size: 14px;
     width: calc(100% - 1px);
-    margin-bottom: 2px;
     color: ${(props) => props.$textColor};
   }
 `
