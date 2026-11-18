@@ -1,16 +1,11 @@
 import { FC, useCallback, useState } from 'react'
 import { Button, Dialog } from '@ynput/ayon-react-components'
-import styled from 'styled-components'
-import { ListsDataProvider, useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
-import { ListsProvider, useListsContext } from '@pages/ProjectListsPage/context/lists'
 import { ProjectContextProvider, useOptionalProjectContext } from '@shared/context'
-import ListsTable from '../ListsTable/ListsTable'
+import { ListPicker } from '@shared/containers/ListPicker'
 import type { ListEntityInput } from '../../hooks/useBuildListMenuItems'
 import { type ListEntityType } from '../NewListDialog/NewListDialog'
 import { listEntityTypes } from '../NewListDialog/NewListDialogHelpers'
 import { ACCESS_LEVEL } from '../../util/listAccessControl'
-import { getNewListFolderId } from '../../util/listFolders'
-import { parseListFolderRowId } from '../../util/buildListsTableData'
 import type { NewListOptions } from '../../context/entity-lists/EntityListsContext'
 import type { EntityList } from '@shared/api'
 
@@ -26,31 +21,6 @@ const getDisabledReason = (
     return `This list only accepts ${list.entityType} items`
   return undefined
 }
-
-const TableContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-
-  /* type-mismatch rows: muted, not struck through; the reason gets the space it needs (name truncates first) so it never paints over other text (&& outranks SimpleTable's disabled rule) */
-  && .disabled {
-    .value {
-      text-decoration: none;
-    }
-    .text {
-      min-width: 0;
-    }
-    .badges {
-      flex-shrink: 0;
-    }
-    .badges span {
-      white-space: nowrap;
-    }
-  }
-`
 
 export interface AddToListDialogProps {
   entityType: string
@@ -78,13 +48,26 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
   entityType,
   entities,
   isReview,
+  listFilter,
   addToList,
   openCreateNewList,
   onClose,
 }) => {
-  const { selectedLists, selectedRows } = useListsContext()
-  const { listsMap } = useListsDataContext()
+  const [selectedLists, setSelectedLists] = useState<EntityList[]>([])
   const [isLoading, setIsLoading] = useState(false)
+
+  const listsFilter = useCallback(
+    (list: EntityList) => {
+      if ((list.accessLevel ?? 0) < ACCESS_LEVEL.EDITOR) return false
+      if (listFilter && !listFilter(list)) return false
+      return true
+    },
+    [listFilter],
+  )
+  const listDisabled = useCallback(
+    (list: EntityList) => getDisabledReason(list, entities, isReview),
+    [entities, isReview],
+  )
 
   const addTo = async (lists: EntityList[]) => {
     if (!lists.length) return
@@ -100,28 +83,16 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
     if (results.every((r) => r.status === 'fulfilled')) onClose()
   }
 
-  const handleRowSubmit = (listId: string) => {
-    // double-click can hit a disabled row (SimpleTable only blocks click/keyboard selection)
-    const list = listsMap.get(listId)
-    if (!list || getDisabledReason(list, entities, isReview)) return
-    addTo([list])
-  }
-
   // creating a list is only supported for the types NewListDialog knows (no 'product')
   const canCreateList = listEntityTypes.includes(entityType as ListEntityType)
-  const handleCreateList = () => {
+  // the new list starts in the folder the user is looking at (they can change it in the dialog)
+  const handleCreateList = (entityListFolderId?: string) => {
     onClose()
-    // the new list starts in the folder the user is looking at (they can change it in the dialog)
     openCreateNewList(
       entityType as ListEntityType,
       entities,
       isReview ? 'review-session' : undefined,
-      {
-        entityListFolderId: getNewListFolderId(
-          selectedRows.map(parseListFolderRowId).filter((id): id is string => !!id),
-          selectedLists,
-        ),
-      },
+      { entityListFolderId },
     )
   }
 
@@ -146,53 +117,32 @@ const AddToListDialogInner: FC<AddToListDialogProps> = ({
         />
       }
     >
-      <TableContainer>
-        <ListsTable
-          picker
-          isReview={isReview}
-          onRowSubmit={handleRowSubmit}
-          onCreateList={canCreateList ? handleCreateList : undefined}
-        />
-      </TableContainer>
+      <ListPicker
+        multiSelect
+        entityListTypes={isReview ? ['review-session'] : ['generic']}
+        listFilter={listsFilter}
+        isListDisabled={listDisabled}
+        onSelect={setSelectedLists}
+        // double-click a list (or Enter) adds right away
+        onSubmit={addTo}
+        onCreateList={canCreateList ? handleCreateList : undefined}
+      />
     </Dialog>
   )
 }
 
 export const AddToListDialog: FC<AddToListDialogProps> = (props) => {
-  const { entities, isReview, listFilter, projectName } = props
   const existingProject = useOptionalProjectContext()
+  const { projectName } = props
 
-  const listsFilter = useCallback(
-    (list: EntityList) => {
-      if ((list.accessLevel ?? 0) < ACCESS_LEVEL.EDITOR) return false
-      if (listFilter && !listFilter(list)) return false
-      return true
-    },
-    [listFilter],
+  // the picker reads useProjectContext; supply one where the page doesn't
+  // (e.g. UserDashboard details panel) using the owning provider's projectName
+  if (existingProject) return <AddToListDialogInner {...props} />
+  return (
+    <ProjectContextProvider projectName={projectName ?? ''}>
+      <AddToListDialogInner {...props} />
+    </ProjectContextProvider>
   )
-  const listDisabled = useCallback(
-    (list: EntityList) => getDisabledReason(list, entities, isReview),
-    [entities, isReview],
-  )
-
-  const tree = (
-    <ListsDataProvider
-      picker
-      isReview={isReview}
-      entityListTypes={isReview ? ['review-session'] : ['generic']}
-      listsFilter={listsFilter}
-      listDisabled={listDisabled}
-    >
-      <ListsProvider picker isReview={isReview}>
-        <AddToListDialogInner {...props} />
-      </ListsProvider>
-    </ListsDataProvider>
-  )
-
-  // ListsDataProvider/ListsProvider read useProjectContext; supply one where the page
-  // doesn't (e.g. UserDashboard details panel) using the owning provider's projectName
-  if (existingProject) return tree
-  return <ProjectContextProvider projectName={projectName ?? ''}>{tree}</ProjectContextProvider>
 }
 
 export default AddToListDialog

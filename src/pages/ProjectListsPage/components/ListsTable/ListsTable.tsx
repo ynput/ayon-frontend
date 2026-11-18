@@ -4,9 +4,10 @@ import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { useProjectContext } from '@shared/context'
 import SimpleTable, {
   Container,
-  SimpleTableCellTemplate,
+  SimpleTableProps,
   SimpleTableProvider,
 } from '@shared/containers/SimpleTable'
+import { ListsTableCell } from '@shared/containers/ListPicker'
 import ListsTableHeader, { ButtonType } from './ListsTableHeader'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import useListContextMenu, {
@@ -18,15 +19,13 @@ import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
 interface ListsTableProps {
   isReview?: boolean
   rowContextMenuBuilders?: ListRowContextMenuBuilder[]
-  // picker mode: reuse the table inside the add-to-list dialog
+  // picker mode: the folder picker of the move-to-folder dialog (list pickers: shared ListPicker)
   picker?: boolean
   // folders-only picker: rows are folders and onRowSubmit receives a folder id
   foldersOnly?: boolean
   singleSelect?: boolean
   hiddenButtons?: ButtonType[]
   onRowSubmit?: (id: string) => void
-  onCreateList?: () => void
-  scrollToRowId?: string
   getRowTag?: (listId: string) => ReactNode // shown left of the count
 }
 
@@ -38,8 +37,6 @@ const ListsTable: FC<ListsTableProps> = ({
   singleSelect = false,
   hiddenButtons,
   onRowSubmit,
-  onCreateList,
-  scrollToRowId,
   getRowTag,
 }) => {
   const { projectName } = useProjectContext()
@@ -71,15 +68,9 @@ const ListsTable: FC<ListsTableProps> = ({
   const handleRowDoubleClick = useCallback(
     (id: string) => {
       if (picker) {
+        // the folders-only picker submits folder rows
         const folderId = parseListFolderRowId(id)
-        // folders-only picker submits folder rows, the list picker submits list rows
-        if (foldersOnly) {
-          if (folderId) onRowSubmit?.(folderId)
-          return
-        }
-        // ignore folder rows; double-click a list = instant add + close
-        if (folderId) return
-        onRowSubmit?.(id)
+        if (foldersOnly && folderId) onRowSubmit?.(folderId)
         return
       }
       setListDetailsOpen(true)
@@ -87,39 +78,16 @@ const ListsTable: FC<ListsTableProps> = ({
     [picker, foldersOnly, onRowSubmit, setListDetailsOpen],
   )
 
-  const renderCell = useCallback(
-    (props: any, row: any) => {
-      const listId = row.original.id
-      const { isDisabled, disabledMessage, inactive, data } = row.original
-      // no lists are fetched in folders-only mode, so every count would read 0
-      const badge = isDisabled
-        ? disabledMessage
-        : inactive
-        ? '(archived)'
-        : foldersOnly
-        ? undefined
-        : data.count
-      const tag = picker ? undefined : getRowTag?.(listId)
-
-      return (
-        <SimpleTableCellTemplate
-          {...props}
-          key={listId}
-          iconColor={data.color}
-          enableNonFolderIndent={false}
-          badge={
-            tag ? (
-              <>
-                {tag}
-                {badge !== undefined && <span>{badge}</span>}
-              </>
-            ) : (
-              badge
-            )
-          }
-        />
-      )
-    },
+  const renderCell: NonNullable<SimpleTableProps['children']> = useCallback(
+    (props, row) => (
+      <ListsTableCell
+        {...props}
+        key={row.id}
+        row={row.original}
+        hideCount={foldersOnly}
+        tag={picker ? undefined : getRowTag?.(row.id)}
+      />
+    ),
     [foldersOnly, picker, getRowTag],
   )
 
@@ -155,13 +123,12 @@ const ListsTable: FC<ListsTableProps> = ({
                     'duplicate-list',
                     'delete',
                     'filter',
-                    ...(onCreateList ? [] : ['new-list']),
+                    'new-list',
                     ...(foldersOnly ? ['select-all-lists', 'show-archived'] : []),
                   ]
                 : []
             }
             menuId={picker ? pickerMenuId : undefined}
-            onCreateList={onCreateList}
             search={clientSearch}
             onSearch={setClientSearch}
             isReview={isReview}
@@ -174,7 +141,6 @@ const ListsTable: FC<ListsTableProps> = ({
             isLoading={isLoadingAll}
             error={isError ? 'Error loading lists' : undefined}
             onScrollBottom={fetchNextPage}
-            scrollToRowId={scrollToRowId}
             isMultiSelect={!singleSelect}
             enableClickToDeselect={false}
             rowContextMenuBuilders={rowContextMenuBuildersAll}

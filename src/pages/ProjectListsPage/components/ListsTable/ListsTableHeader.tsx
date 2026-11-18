@@ -1,9 +1,15 @@
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
-import { Header, HeaderButton } from '@shared/containers/SimpleTable'
-import { SearchFilterRef, theme } from '@ynput/ayon-react-components'
+import { HeaderButton } from '@shared/containers/SimpleTable'
+import { SearchFilterRef } from '@ynput/ayon-react-components'
 import { FC, useMemo, useRef } from 'react'
 import styled from 'styled-components'
+import {
+  ListsHeader,
+  ListsHeaderButtons,
+  ListsHeaderTitle,
+  ListsHeaderTop,
+} from '@shared/containers/ListPicker/ListPicker.styled'
 import ListsFiltersBar from './ListsFiltersBar'
 import {
   buildSortMenuItem,
@@ -26,16 +32,7 @@ import {
 
 export const MENU_ID = 'lists-table-menu'
 
-const HeaderStyled = styled(Header)`
-  flex-direction: column;
-  /* rows bring their own padding, the flex gap would double it */
-  gap: 0;
-`
-
-const HeaderTop = styled(Header)`
-  padding: 0;
-  border: none;
-
+const HeaderTop = styled(ListsHeaderTop)`
   container-type: inline-size;
 
   /* when this container gets smaller than */
@@ -58,22 +55,6 @@ const HeaderTop = styled(Header)`
       display: none;
     }
   }
-`
-
-const StyledTitle = styled.span`
-  display: flex;
-  align-items: center;
-  ${theme.labelLarge}
-  height: 32px;
-  padding-left: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  width: 100%;
-`
-
-const StyledButtons = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
 `
 
 interface ButtonCustomization {
@@ -106,8 +87,6 @@ interface ListsTableHeaderProps {
   hiddenMenuItemIds?: string[]
   // unique DOM/menu id so a second instance (e.g. picker dialog) doesn't collide with the sidepanel
   menuId?: string
-  // overrides the default create-list flow (picker pre-populates the selected entities)
-  onCreateList?: () => void
   isReview?: boolean
   // main lists mode: inline filter bar under the header, stacked below the search input
   filtersBar?: boolean
@@ -121,7 +100,6 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   hiddenButtons = [],
   hiddenMenuItemIds = [],
   menuId = MENU_ID,
-  onCreateList,
   isReview = false,
   filtersBar = false,
 }) => {
@@ -250,10 +228,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       label: isReview ? 'Create review session' : 'Create list',
       icon: 'add',
       shortcut: 'N',
-      onClick: async () => {
-        if (onCreateList) return onCreateList()
-        openNewList()
-      },
+      onClick: () => openNewList(),
       isPinned: true,
       buttonProps: {
         icon: 'add',
@@ -363,11 +338,11 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   const pinnedItems = visibleMenuItems.filter((item) => item.isPinned)
 
   return (
-    <HeaderStyled>
+    <ListsHeader>
       <HeaderTop>
-        <StyledTitle>{title}</StyledTitle>
+        <ListsHeaderTitle>{title}</ListsHeaderTitle>
 
-        <StyledButtons>
+        <ListsHeaderButtons>
           <HeaderButton
             icon="more_horiz"
             onClick={() => toggleMenu?.(true)}
@@ -397,13 +372,13 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
                   />
                 ),
             )}
-        </StyledButtons>
+        </ListsHeaderButtons>
       </HeaderTop>
       {typeof search === 'string' && (
         <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
       )}
       {barVisible && <ListsFiltersBar ref={filtersBarRef} onClose={closeFiltersBar} />}
-    </HeaderStyled>
+    </ListsHeader>
   )
 }
 

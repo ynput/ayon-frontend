@@ -10,7 +10,11 @@ import type { EntityListPatchModel, EntityListPostModel, EntityListSummary } fro
 import useDeleteList from '../../hooks/useDeleteList'
 import useDuplicateList from '../../hooks/useDuplicateList'
 import useUpdateList from '../../hooks/useUpdateList'
-import { useListsDataContext } from '../lists-data/ListsDataContextInstance'
+import {
+  getListsToSelectAll,
+  useInitialListsExpanded,
+  useListsDataContext,
+} from '@shared/containers/ListPicker'
 import { useQueryParam, withDefault, QueryParamConfig } from 'use-query-params'
 import ListsContext, {
   ListDetailsOpenState,
@@ -20,7 +24,6 @@ import ListsContext, {
 import { useGetBundleAddon } from '@shared/hooks'
 import { useSessionStorage } from '@shared/hooks'
 import { buildListFolderRowId, parseListFolderRowId } from '../../util/buildListsTableData'
-import useInitialListsExpanded from '../../hooks/useInitialListsExpanded'
 import { usePowerpack, useProjectContext } from '@shared/context'
 
 // Custom param for RowSelectionState
@@ -51,16 +54,9 @@ interface ListsProviderProps {
   isReview?: boolean
   // picker mode keeps selection in local state instead of URL query params
   picker?: boolean
-  // picker mode: rows selected when it opens
-  initialSelection?: string[]
 }
 
-export const ListsProvider = ({
-  children,
-  isReview,
-  picker,
-  initialSelection,
-}: ListsProviderProps) => {
+export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps) => {
   const { powerLicense, setPowerpackDialog } = usePowerpack()
   const { projectName } = useProjectContext()
   const { listsMap, listsData, listFolders, disabledListIds } = useListsDataContext()
@@ -83,9 +79,7 @@ export const ListsProvider = ({
   const reviewVersion = getBundleAddonVersion('review')
 
   // picker mode: selection lives in local state, never touches the URL
-  const [pickerSelection, setPickerSelection] = useState<RowSelectionState>(() =>
-    Object.fromEntries((initialSelection || []).map((id) => [id, true])),
-  )
+  const [pickerSelection, setPickerSelection] = useState<RowSelectionState>({})
 
   const rowSelection = useMemo(
     () => (picker ? pickerSelection : isReview ? unstableReviewSelection : unstableListSelection),
@@ -318,63 +312,13 @@ export const ListsProvider = ({
   const selectAllLists = useCallback(
     ({ rowIds }: { rowIds?: string[] } = {}) => {
       // Use provided rowIds (row ids from table) or fallback to current selectedRows
-      const activeRowIds = rowIds ?? selectedRows
-
-      // Extract folder ids from active row ids
-      const selectedFolderIds = activeRowIds
-        .map((id) => parseListFolderRowId(id))
-        .filter((id): id is string => !!id)
-
-      // BFS to collect descendant folder ids
-      const getDescendantFolderIds = (folderIds: string[]) => {
-        const queue = [...folderIds]
-        const result = new Set(folderIds)
-        while (queue.length) {
-          const current = queue.shift()!
-          ;(listFolders || [])
-            .filter((f) => f.parentId === current)
-            .forEach((child) => {
-              if (!result.has(child.id)) {
-                result.add(child.id)
-                queue.push(child.id)
-              }
-            })
-        }
-        return [...result]
-      }
-
-      let listsToSelect = [] as EntityListSummary[]
-
-      if (selectedFolderIds.length) {
-        const allFolderIds = getDescendantFolderIds(selectedFolderIds)
-        // Build a map for quick parent lookup
-        const folderMap = new Map<string, (typeof listFolders)[number]>(
-          listFolders.map((f) => [f.id, f]),
-        )
-
-        // Helper to check if the full ancestor chain is expanded
-        const isFolderChainExpanded = (folderId: string): boolean => {
-          let currentId: string | undefined = folderId
-          while (currentId) {
-            const rowId = buildListFolderRowId(currentId)
-            // If this folder itself isn't marked expanded and it's not a root in the selection path, stop
-            if (!(expanded as Record<string, boolean>)[rowId]) return false
-            const parentId: string | undefined = folderMap.get(currentId)?.parentId
-            currentId = parentId
-          }
-          return true
-        }
-
-        listsToSelect = listsData.filter((l) => {
-          if (disabledListIds.has(l.id)) return false
-          if (!l.entityListFolderId) return false
-          if (!allFolderIds.includes(l.entityListFolderId)) return false
-          return isFolderChainExpanded(l.entityListFolderId)
-        })
-      } else {
-        // No folders selected: select all root lists (lists without folder)
-        listsToSelect = listsData.filter((l) => !l.entityListFolderId && !disabledListIds.has(l.id))
-      }
+      const listsToSelect = getListsToSelectAll({
+        rowIds: rowIds ?? selectedRows,
+        lists: listsData,
+        folders: listFolders,
+        expanded,
+        disabledListIds,
+      })
 
       const selection = listsToSelect.reduce(
         (acc, l) => ({ ...acc, [l.id as string]: true }),
