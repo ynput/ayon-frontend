@@ -48,6 +48,8 @@ export type GetViewerReviewablesParams = AtLeastOne<{
   productId: string
   taskId: string
   folderId: string
+  // several versions at once, e.g. rows selected in a table (played as a timeline)
+  versionIds: string[]
 }> & {
   projectName: string
 }

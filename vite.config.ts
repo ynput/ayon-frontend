@@ -133,6 +133,11 @@ export default ({ mode }) => {
       // as ESM during the scan, which forces an extra full reload once the real optimization finishes.
       // @ynput/ayon-react-components is ESM with no default export, so it must not be listed here.
       needsInterop: ['react', 'react-dom'],
+      // @ynput/ayon-player imports @ynput/ayon-frontend-shared, aliased to ./shared/src below.
+      // Pre-bundled, it would carry its own copy of that source with its own React contexts
+      // (e.g. its reviewable cards would not find the app's ContextMenuProvider).
+      exclude: ['@ynput/ayon-player'],
+      include: ['@ynput/ayon-player > lodash', '@ynput/ayon-player > mediabunny'],
     },
     build: {
       target: 'chrome89',
@@ -211,6 +216,10 @@ export default ({ mode }) => {
         {
           find: '@ynput/ayon-frontend-shared/context',
           replacement: fileURLToPath(new URL('./shared/src/context', import.meta.url)),
+        },
+        {
+          find: '@ynput/ayon-frontend-shared/hooks',
+          replacement: fileURLToPath(new URL('./shared/src/hooks', import.meta.url)),
         },
       ],
       // @ynput/ayon-player asks for a newer styled-components, which yarn installs nested —

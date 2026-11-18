@@ -10,16 +10,24 @@ import { version as addonApiVersion } from '../../addon/package.json'
 import { routerExports } from './hostRouterExports'
 
 // Addons import @ynput/ayon-frontend-shared, @reduxjs/toolkit, react-redux, react-router,
-// react-toastify, primereact/confirmdialog and @ynput/ayon-addon. Providing the host's own modules
-// under those names makes addons that share them use the host's instances: one RTK Query api and
-// cache, one root reducer, the same React contexts, the host's router, its toast container, its
-// confirm dialog and one slot registry.
+// react-toastify, primereact/confirmdialog, @ynput/ayon-addon and @ynput/ayon-player. Providing the
+// host's own modules under those names makes addons that share them use the host's instances: one
+// RTK Query api and cache, one root reducer, the same React contexts, the host's router, its toast
+// container, its confirm dialog, one slot registry and the player the viewer renders (so player
+// plugins see its contexts).
 // See src/remote/AGENTS.md.
 
 const PACKAGE = '@ynput/ayon-frontend-shared'
 
 // The shared entries, all in one lazy module (hostSharedEntries.ts)
 const loadEntries = () => import('./hostSharedEntries').then((module) => module.entries)
+
+// @ynput/ayon-player and its subpaths, in their own lazy module: only player plugins load them
+const PLAYER = '@ynput/ayon-player'
+const PLAYER_ENTRIES = ['', '/plugins', '/model', '/utils', '/attributes', '/color']
+const loadPlayerEntries = () => import('./hostPlayerEntries').then((module) => module.entries)
+// a range in package.json ("^1.1.0"), the share needs a version
+const playerVersion = dependencies[PLAYER].replace(/^[~^]/, '')
 const ENTRY_NAMES = [
   'index',
   'api',
@@ -81,6 +89,13 @@ export const shareHostModules = () =>
       ENTRY_NAMES.map((entry) => [
         entry === 'index' ? PACKAGE : `${PACKAGE}/${entry}`,
         share(version, () => loadEntries().then((entries) => asLib(entries[entry]))),
+      ]),
+    ),
+    // the player: addon player plugins use its contexts, so they must get the host's copy
+    ...Object.fromEntries(
+      PLAYER_ENTRIES.map((entry) => [
+        `${PLAYER}${entry}`,
+        share(playerVersion, () => loadPlayerEntries().then((entries) => asLib(entries[entry]))),
       ]),
     ),
   })

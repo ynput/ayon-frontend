@@ -23,6 +23,25 @@ test('the host provides every published @ynput/ayon-frontend-shared entry', () =
   expect(registeredNames).toEqual(libEntries.map(([name]) => name))
 })
 
+// The same for @ynput/ayon-player: Review's player plugins read the player's contexts, so an entry
+// left out gives them their own copy of it, outside the viewer's <Player>.
+test('the host provides every @ynput/ayon-player entry', () => {
+  const { exports } = JSON.parse(read('node_modules/@ynput/ayon-player/package.json'))
+  const published = Object.keys(exports)
+    .filter((key) => key !== './styles')
+    .map((key) => key.replace(/^\./, ''))
+    .sort()
+
+  const listBlock = read('src/remote/hostSharedModules.ts').match(/PLAYER_ENTRIES = \[([^\]]*)\]/)
+  const registered = [...(listBlock?.[1] ?? '').matchAll(/'([\w/]*)'/g)].map(([, entry]) => entry)
+  const imported = [
+    ...read('src/remote/hostPlayerEntries.ts').matchAll(/from '@ynput\/ayon-player([\w/]*)'/g),
+  ].map(([, entry]) => entry)
+
+  expect(registered.sort()).toEqual(published)
+  expect(imported.sort()).toEqual(published)
+})
+
 // Addons that share react-router render their routes in the host's router, e.g. Reports pages
 // under /projects/<project>/reports/*: it checks for a router above it and falls back to a
 // MemoryRouter, takes its base path from the splat params and navigates with the host's history.

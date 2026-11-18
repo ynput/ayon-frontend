@@ -225,8 +225,23 @@ const getReviewApi = enhancedApi.injectEndpoints({
     // utilizes getReviewablesForProduct, getReviewablesForTask, getReviewablesForFolder
     getViewerReviewables: build.query<GetReviewablesResponse[], GetViewerReviewablesParams>({
       keepUnusedDataFor: 5,
-      queryFn: async ({ productId, taskId, folderId, projectName }, { dispatch }) => {
+      queryFn: async ({ productId, taskId, folderId, versionIds, projectName }, { dispatch }) => {
         let query: any
+
+        if (versionIds?.length) {
+          const request = dispatch(
+            reviewablesApi.endpoints.getReviewablesForEntities.initiate({
+              projectName,
+              entityType: 'versions',
+              reviewablesRequestModel: { entityIds: versionIds },
+            }),
+          )
+          const result = await request
+          // a mutation used as a read: drop its entry from the mutations state
+          request.reset()
+          if ('error' in result) return { error: normalizeQueryError(result.error) }
+          return { data: result.data as GetReviewablesResponse[] }
+        }
 
         if (productId) {
           query = reviewablesApi.endpoints.getReviewablesForProduct.initiate(
@@ -275,26 +290,38 @@ const getReviewApi = enhancedApi.injectEndpoints({
           return { data }
         }
       },
-      providesTags: (result, _error, args) => getViewerReviewablesTags(result, args, true),
+      providesTags: (result, _error, args) => [
+        ...getViewerReviewablesTags(result, args, true),
+        ...(args.versionIds ?? []).map((id) => ({ type: 'viewer', id })),
+      ],
       async onCacheEntryAdded(
-        { productId, taskId, folderId },
+        { productId, taskId, folderId, versionIds: requestedVersionIds },
         { cacheDataLoaded, cacheEntryRemoved, dispatch, getCacheEntry },
       ) {
         let token
         const mediaProcessingBatcher = createRealtimeBatcher(
           (messages: { message: any }[]) => {
-            const versionIds = new Set(getCacheEntry().data?.map((version) => version.id) || [])
+            const versionIds = new Set([
+              ...(getCacheEntry().data?.map((version) => version.id) || []),
+              ...(requestedVersionIds ?? []),
+            ])
             const entityId = productId || taskId || folderId
-            if (!entityId) return
+            if (!entityId && !requestedVersionIds?.length) return
 
             const shouldInvalidate = messages.some(
               ({ message }) =>
                 message.status === 'finished' &&
                 versionIds.has((message?.summary as Summary)?.versionId || ''),
             )
-            if (shouldInvalidate) {
-              dispatch(reviewablesApi.util.invalidateTags([{ type: 'review', id: entityId }]))
-            }
+            if (!shouldInvalidate) return
+            dispatch(
+              reviewablesApi.util.invalidateTags(
+                entityId
+                  ? [{ type: 'review', id: entityId }]
+                  : // several versions (a timeline) are tagged by each version
+                    (requestedVersionIds ?? []).map((id) => ({ type: 'viewer' as const, id })),
+              ),
+            )
           },
           ({ message }) => message?.summary?.versionId || message?.id || '',
         )
