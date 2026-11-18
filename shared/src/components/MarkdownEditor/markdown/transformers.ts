@@ -51,6 +51,9 @@ export const MENTION: TextMatchTransformer = {
   dependencies: [MentionNode],
   export: (node) => {
     if (!$isMentionNode(node)) return null
+    // not found yet: the link it came from
+    const url = node.getPendingURL()
+    if (url) return `[${url}](${url})`
     const label = sanitizeMentionLabel(node.getLabel())
     return `[${label}](${node.getMentionType()}:${encodeMentionId(node.getMentionId())})`
   },

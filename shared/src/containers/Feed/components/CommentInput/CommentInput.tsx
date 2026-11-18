@@ -13,12 +13,13 @@ import { Button, Icon, SaveButton, type IconType } from '@ynput/ayon-react-compo
 import {
   MarkdownEditor,
   createFeedMentionSource,
+  useProjectMentionLookup,
+  useProjectMentionSearch,
   getInlineMediaFileIds,
   getSourceLink,
   normalizeLegacyMarkdown,
   type EditorCommand,
   type MarkdownEditorHandle,
-  type MentionTrigger,
   type UploadMedia,
 } from '@shared/components/MarkdownEditor'
 import FilesGrid from '../FilesGrid'
@@ -92,10 +93,12 @@ const getProjectFileUrl = (projectName: string, id: string) =>
 const isReferenced = (id: string, markdown: string) =>
   !!id && getInlineMediaFileIds(markdown).has(id)
 
-const MENTION_BUTTONS: { trigger: MentionTrigger; icon: IconType; tooltip: string }[] = [
-  { trigger: '@', icon: 'person', tooltip: 'Mention user' },
-  { trigger: '@@', icon: 'layers', tooltip: 'Mention version' },
-  { trigger: '@@@', icon: 'check_circle', tooltip: 'Mention task' },
+// open the mention picker filtered to one type, a typed `@` lists them all
+const MENTION_BUTTONS: { filter: string; icon: IconType; tooltip: string; shortcut?: string }[] = [
+  { filter: 'user', icon: 'alternate_email', tooltip: 'Mention user', shortcut: '@' },
+  { filter: 'folder', icon: 'folder', tooltip: 'Mention folder' },
+  { filter: 'task', icon: 'check_circle', tooltip: 'Mention task' },
+  { filter: 'version', icon: 'layers', tooltip: 'Mention version' },
 ]
 
 const CommentInput: FC<CommentInputProps> = ({
@@ -341,7 +344,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
-const isEmpty =
+  const isEmpty =
     !hasText &&
     !files.length &&
     !filesUploading.length &&
@@ -366,9 +369,16 @@ const isEmpty =
   }, [isOpen, isEditing, isChecklistsFilter])
 
   // MENTIONS
-  const entityType = entities[0]?.entityType
   // keep the source stable, a new one resets the highlighted option of the picker
   const productTypes = project?.productTypes
+  const mentionProject = {
+    projectName: isGuest ? undefined : projectName,
+    productTypes,
+    taskTypes: projectInfo?.taskTypes,
+    folderTypes: project?.folderTypes,
+  }
+  const mentionSearch = useProjectMentionSearch(mentionProject)
+  const mentionLookup = useProjectMentionLookup(mentionProject)
   const mentions = useMemo(
     () =>
       isGuest
@@ -378,12 +388,24 @@ const isEmpty =
               suggestions: mentionSuggestionsData,
               project: { productTypes },
               taskTypes: projectInfo?.taskTypes,
-              entityType,
+              folderTypes: project?.folderTypes,
+              search: mentionSearch,
+              projectName,
+              lookup: mentionLookup,
             }),
             // keep the picker short
             limit: 5,
           },
-    [isGuest, mentionSuggestionsData, productTypes, projectInfo?.taskTypes, entityType],
+    [
+      isGuest,
+      mentionSuggestionsData,
+      productTypes,
+      projectInfo?.taskTypes,
+      project?.folderTypes,
+      mentionSearch,
+      projectName,
+      mentionLookup,
+    ],
   )
 
   const handleMentionClick = ({ type, id }: { type: string; id: string }) => {
@@ -951,15 +973,16 @@ const isEmpty =
             {(!isGuest || showFrameLink) && (
               <Styled.Buttons>
                 {!isGuest &&
-                  MENTION_BUTTONS.map(({ trigger, icon, tooltip }) => (
+                  MENTION_BUTTONS.map(({ filter, icon, tooltip, shortcut }) => (
                     <Button
-                      key={trigger}
+                      key={filter}
                       icon={icon}
                       variant="text"
                       onMouseDown={(e) => e.preventDefault()}
-                      onClick={() => editorRef.current?.insertMentionTrigger(trigger)}
+                      onClick={() => editorRef.current?.insertMentionTrigger('@', filter)}
                       data-tooltip={tooltip}
-                      data-shortcut={trigger}
+                      data-shortcut={shortcut}
+                      aria-label={tooltip}
                     />
                   ))}
                 {showFrameLink && (

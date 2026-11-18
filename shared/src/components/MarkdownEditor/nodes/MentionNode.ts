@@ -10,10 +10,10 @@ import {
   type SerializedTextNode,
   type Spread,
 } from 'lexical'
-import { MENTION_REF_TYPES, getMentionTrigger } from '../types'
+import { MENTION_REF_TYPES } from '../types'
 
 export type SerializedMentionNode = Spread<
-  { mentionType: string; mentionId: string },
+  { mentionType: string; mentionId: string; url?: string },
   SerializedTextNode
 >
 
@@ -53,17 +53,26 @@ const convertMentionElement = (domNode: HTMLElement): DOMConversionOutput | null
 /**
  * An inline reference to a user, team, task, version... rendered as `@label` and stored in
  * markdown as `[label](type:id)`. It is a token so it can only be selected and deleted as a whole.
+ * A pending mention (pasted or dropped, its entity not found yet) keeps the link it came from,
+ * and is stored as that link until it is found.
  */
 export class MentionNode extends TextNode {
   __mentionType: string
   __mentionId: string
+  __url: string | undefined
 
   static getType(): string {
     return 'mention'
   }
 
   static clone(node: MentionNode): MentionNode {
-    return new MentionNode(node.__mentionType, node.__mentionId, node.__text, node.__key)
+    return new MentionNode(
+      node.__mentionType,
+      node.__mentionId,
+      node.__text,
+      node.__key,
+      node.__url,
+    )
   }
 
   static importJSON(serializedNode: SerializedMentionNode): MentionNode {
@@ -71,13 +80,15 @@ export class MentionNode extends TextNode {
       serializedNode.mentionType,
       serializedNode.mentionId,
       stripTrigger(serializedNode.text),
+      serializedNode.url,
     ).updateFromJSON(serializedNode)
   }
 
-  constructor(mentionType: string, mentionId: string, text: string, key?: NodeKey) {
+  constructor(mentionType: string, mentionId: string, text: string, key?: NodeKey, url?: string) {
     super(text, key)
     this.__mentionType = mentionType
     this.__mentionId = mentionId
+    this.__url = url
   }
 
   exportJSON(): SerializedMentionNode {
@@ -85,7 +96,13 @@ export class MentionNode extends TextNode {
       ...super.exportJSON(),
       mentionType: this.__mentionType,
       mentionId: this.__mentionId,
+      ...(this.__url ? { url: this.__url } : {}),
     }
+  }
+
+  // the link of a pending mention
+  getPendingURL(): string | undefined {
+    return this.getLatest().__url
   }
 
   getMentionType(): string {
@@ -108,6 +125,7 @@ export class MentionNode extends TextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config)
     dom.classList.add('mention', `mention-${this.__mentionType}`)
+    if (this.__url) dom.classList.add('mention-pending')
     dom.setAttribute('data-mention-value', `${this.__mentionType}:${this.__mentionId}`)
     dom.setAttribute('data-mention-label', stripTrigger(this.__text))
     dom.spellcheck = false
@@ -116,6 +134,12 @@ export class MentionNode extends TextNode {
 
   exportDOM(): DOMExportOutput {
     const element = document.createElement('a')
+    if (this.__url) {
+      // copied before it is found
+      element.setAttribute('href', this.__url)
+      element.textContent = this.__url
+      return { element }
+    }
     element.setAttribute('href', `@${this.__mentionType}:${this.__mentionId}`)
     element.setAttribute('data-mention-value', `${this.__mentionType}:${this.__mentionId}`)
     element.setAttribute('data-mention-label', stripTrigger(this.__text))
@@ -154,8 +178,15 @@ export class MentionNode extends TextNode {
   }
 }
 
-export const $createMentionNode = (type: string, id: string, label: string): MentionNode => {
-  const node = new MentionNode(type, id, getMentionTrigger(type) + stripTrigger(label))
+export const $createMentionNode = (
+  type: string,
+  id: string,
+  label: string,
+  // the link of a pending mention
+  url?: string,
+): MentionNode => {
+  // every mention reads `@label`, whatever its type
+  const node = new MentionNode(type, id, '@' + stripTrigger(label), undefined, url)
   node.setMode('token').toggleDirectionless()
   return $applyNodeReplacement(node)
 }

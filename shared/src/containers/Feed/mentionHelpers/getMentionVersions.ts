@@ -26,6 +26,8 @@ const getMentionVersions = (
       id: v.id,
       createdAt: v.createdAt,
       label,
+      // the folder and product too, the mention is read outside of them
+      mentionLabel: [v.parent?.parent?.name, context, label].filter(Boolean).join('/'),
       icon,
       context,
       suffix,

@@ -24,6 +24,7 @@ Stored markdown is read by the feed renderer, the table cells, the backend (chec
 | Content | Markdown | Code |
 | --- | --- | --- |
 | Mention | `[label](type:id)`. Only spaces in the id are encoded (`%20`), e.g. `[Sons of thunder](team:Sons%20of%20thunder)`. Legacy `[label](@type:id)` is also read. | `MENTION` in `markdown/transformers.ts`, `nodes/MentionNode.ts` |
+| Pending mention | A pasted or dropped entity not found yet is written as the link it came from: `[url](url)`. | `MENTION`, `MentionNode.getPendingURL`, `registerPendingMentions` in `plugins/MentionsPlugin.tsx` |
 | Mention types | `user team task version folder representation workfile product` | `MENTION_REF_TYPES` in `types.ts` |
 | Image or video block | A standalone image line, with the mime type as its title: `![clip.mp4](/api/projects/p/files/id "video/mp4")`. An image inside a line of text stays text. Media still uploading is not written. | `MEDIA`, `nodes/MediaNode.tsx` |
 | YouTube embed | The url on its own line, imported only. A pasted or typed url becomes an embed through `YouTubePlugin`. | `YOUTUBE`, `nodes/YouTubeNode.tsx` |

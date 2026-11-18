@@ -225,13 +225,20 @@ export const TextContentWidget: FC<TextContentWidgetProps> = ({
   )
 
   // mention the users, sibling tasks and versions of the row entity
-  const { projectName, productTypes, taskTypes } = useProjectContext()
+  const { projectName, productTypes, taskTypes, folderTypes } = useProjectContext()
   const mentionsContext = useMemo(
     () =>
       mentionEntity?.entityId && mentionEntity.entityType && projectName
-        ? { projectName, ...mentionEntity, productTypes, taskTypes }
+        ? { projectName, ...mentionEntity, productTypes, taskTypes, folderTypes }
         : undefined,
-    [mentionEntity?.entityId, mentionEntity?.entityType, projectName, productTypes, taskTypes],
+    [
+      mentionEntity?.entityId,
+      mentionEntity?.entityType,
+      projectName,
+      productTypes,
+      taskTypes,
+      folderTypes,
+    ],
   )
   const mentions = useDescriptionMentions(mentionsContext, { skip: isPreview || !isRichText })
 

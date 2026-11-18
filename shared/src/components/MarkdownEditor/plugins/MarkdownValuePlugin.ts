@@ -58,8 +58,10 @@ const MarkdownValuePlugin = ({ value, onChange, handleRef }: MarkdownValuePlugin
         editor.update(() => $getRoot().clear())
       },
       isEmpty: () => editor.getEditorState().read(() => $isEditorEmpty()),
-      insertMentionTrigger: (trigger) => {
-        editor.focus(() => editor.dispatchCommand(INSERT_MENTION_TRIGGER_COMMAND, trigger))
+      insertMentionTrigger: (trigger, filter) => {
+        editor.focus(() =>
+          editor.dispatchCommand(INSERT_MENTION_TRIGGER_COMMAND, { trigger, filter }),
+        )
       },
     }),
     [editor],
