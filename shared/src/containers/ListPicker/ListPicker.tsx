@@ -10,7 +10,7 @@ import { DEFAULT_LISTS_SORT, ListsSort } from '@shared/util/sortLists'
 import { ListsDataProvider, useListsDataContext } from './context'
 import { useInitialListsExpanded } from './hooks'
 import { getListsToSelectAll, getNewListFolderId, parseListFolderRowId } from './util'
-import { ListPickerHeader } from './ListPickerHeader'
+import { ListsTableHeader } from './ListsTableHeader'
 import { ListsTableCell } from './ListsTableCell'
 import { PickerTableContainer } from './ListPicker.styled'
 
@@ -152,18 +152,17 @@ const ListPickerTable: FC<
         {...{ expanded, setExpanded, rowSelection, onRowSelectionChange: setRowSelection }}
       >
         <Container>
-          <ListPickerHeader
-            title={title ?? (isReview ? 'Review sessions' : 'Lists')}
+          <ListsTableHeader
+            title={title}
             isReview={isReview}
             search={search}
             onSearch={setSearch}
+            selectedRows={selectedRows}
             onSelectAll={multiSelect ? handleSelectAll : undefined}
             onCreateList={
               onCreateList &&
               (() => onCreateList(getNewListFolderId(selectedFolderIds, selectedLists)))
             }
-            // a new list goes in one folder
-            createDisabled={selectedFolderIds.length > 1}
           />
           <SimpleTable
             data={listsTableData}

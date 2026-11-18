@@ -118,8 +118,6 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
   const selectedList = selectedLists[0]
 
   // dialogs
-  const [listsFiltersOpen, setListsFiltersOpen] = useState(false)
-
   const [listDetailsOpen, setListDetailsOpen] = useSessionStorage<boolean>(
     'list-details-open',
     true,
@@ -365,9 +363,6 @@ export const ListsProvider = ({ children, isReview, picker }: ListsProviderProps
         // info dialog
         listDetailsOpen,
         setListDetailsOpen,
-        // Lists filters dialog
-        listsFiltersOpen,
-        setListsFiltersOpen,
         // List folders dialog
         listFolderOpen,
         setListFolderOpen,

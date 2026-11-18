@@ -64,9 +64,6 @@ export interface ListsContextType {
   // Info dialog
   listDetailsOpen: boolean
   setListDetailsOpen: (open: boolean) => void
-  // Lists filters dialog
-  listsFiltersOpen: boolean
-  setListsFiltersOpen: React.Dispatch<React.SetStateAction<boolean>>
   // List folders dialog
   listFolderOpen: ListDetailsOpenState
   setListFolderOpen: React.Dispatch<React.SetStateAction<ListDetailsOpenState>>

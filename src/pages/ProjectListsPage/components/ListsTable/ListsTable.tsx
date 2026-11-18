@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useCallback, useId } from 'react'
+import { FC, ReactNode, useState, useCallback } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { useProjectContext } from '@shared/context'
@@ -8,13 +8,20 @@ import SimpleTable, {
   SimpleTableProvider,
 } from '@shared/containers/SimpleTable'
 import { ListsTableCell } from '@shared/containers/ListPicker'
-import ListsTableHeader, { ButtonType } from './ListsTableHeader'
+import {
+  ListsTableHeader,
+  ListsTableHeaderProps,
+} from '@shared/containers/ListPicker/ListsTableHeader'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
 import useListContextMenu, {
   ListRowContextMenuBuilder,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu'
 import ListFolderFormDialog from '../ListFolderFormDialog'
 import { parseListFolderRowId } from '@pages/ProjectListsPage/util'
+
+// the page's lists menu (the picker dialog's header gets an id of its own)
+const MENU_ID = 'lists-table-menu'
 
 interface ListsTableProps {
   isReview?: boolean
@@ -24,7 +31,6 @@ interface ListsTableProps {
   // folders-only picker: rows are folders and onRowSubmit receives a folder id
   foldersOnly?: boolean
   singleSelect?: boolean
-  hiddenButtons?: ButtonType[]
   onRowSubmit?: (id: string) => void
   getRowTag?: (listId: string) => ReactNode // shown left of the count
 }
@@ -35,7 +41,6 @@ const ListsTable: FC<ListsTableProps> = ({
   picker = false,
   foldersOnly = false,
   singleSelect = false,
-  hiddenButtons,
   onRowSubmit,
   getRowTag,
 }) => {
@@ -50,12 +55,34 @@ const ListsTable: FC<ListsTableProps> = ({
     setListDetailsOpen,
     expanded,
     setExpanded,
+    selectedRows,
+    selectAllLists,
+    openNewList,
+    onOpenFolderList,
+    duplicateLists,
+    deleteLists,
+    onDeleteListFolders,
   } = useListsContext()
+  const { openForContext: openImportDialog } = useImportDialogContext()
   const { listsTableData, isLoadingAll, isError, fetchNextPage } = useListsDataContext()
   // folder picker opens with search ready — the destination list is often long
   const [clientSearch, setClientSearch] = useState<null | string>(picker && foldersOnly ? '' : null)
-  // unique menu id in picker mode so the dialog's header menu doesn't collide with the sidepanel's
-  const pickerMenuId = useId()
+
+  // the move-to-folder picker only picks a folder: no list actions
+  const listActions: Partial<ListsTableHeaderProps> = picker
+    ? {}
+    : {
+        onCreateList: () => openNewList(),
+        onCreateFolder: () => onOpenFolderList({}),
+        onDeleteLists: deleteLists,
+        onDeleteFolders: onDeleteListFolders,
+        // the Reviews page has no duplicate, import or filters
+        ...(!isReview && {
+          onDuplicateLists: duplicateLists,
+          onImportLists: () => openImportDialog('entity_list_item', projectName),
+          filtersBar: true,
+        }),
+      }
 
   const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, !picker)
 
@@ -98,41 +125,16 @@ const ListsTable: FC<ListsTableProps> = ({
       >
         <Container>
           <ListsTableHeader
-            title={foldersOnly ? 'Folders' : isReview ? 'Review sessions' : undefined}
-            buttonLabels={{
-              delete: {
-                tooltip: isReview ? `Delete selected review sessions` : 'Delete selected lists',
-              },
-              add: {
-                tooltip: isReview ? `Create new review sessions` : 'Create new list',
-              },
-              search: {
-                tooltip: foldersOnly
-                  ? 'Search folders'
-                  : isReview
-                  ? `Search review sessions`
-                  : 'Search lists',
-              },
-            }}
-            hiddenButtons={hiddenButtons ?? (isReview ? ['filter'] : [])}
-            hiddenMenuItemIds={
-              picker
-                ? [
-                    'new-folder',
-                    'import-list',
-                    'duplicate-list',
-                    'delete',
-                    'filter',
-                    'new-list',
-                    ...(foldersOnly ? ['select-all-lists', 'show-archived'] : []),
-                  ]
-                : []
-            }
-            menuId={picker ? pickerMenuId : undefined}
+            title={foldersOnly ? 'Folders' : undefined}
+            isReview={isReview}
             search={clientSearch}
             onSearch={setClientSearch}
-            isReview={isReview}
-            filtersBar={!picker && !isReview}
+            selectedRows={selectedRows}
+            onSelectAll={foldersOnly ? undefined : () => selectAllLists()}
+            {...listActions}
+            hiddenMenuItemIds={foldersOnly ? ['show-archived'] : undefined}
+            buttonLabels={foldersOnly ? { search: { tooltip: 'Search folders' } } : undefined}
+            menuId={picker ? undefined : MENU_ID}
           />
           <SimpleTable
             data={listsTableData}
