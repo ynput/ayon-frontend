@@ -2,20 +2,33 @@ import { useEffect, useState } from 'react'
 import styled from 'styled-components'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import type { AddonDevState } from './RemoteModulesContext'
-import { clearAddonDevOverride, fetchAddonDevInfo } from './addonDevOverride'
+import {
+  ADDON_DEV_PARAM,
+  addonDevStateKey,
+  fetchAddonDevInfo,
+  removeAddonDevEntry,
+} from './addonDevOverride'
 
-const Banner = styled.div`
+const Rows = styled.div`
   position: fixed;
   left: 8px;
   bottom: 8px;
   z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  max-width: calc(100vw - 16px);
+`
+
+const Banner = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
   padding: 4px 4px 4px 12px;
   border-radius: 8px;
   font-size: 13px;
-  max-width: calc(100vw - 16px);
+  max-width: 100%;
   color: var(--md-sys-color-on-tertiary-container);
   background: var(--md-sys-color-tertiary-container);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -28,10 +41,18 @@ const Banner = styled.div`
 
 const POLL_MS = 2000
 
-// Shown while an addon is loaded from its dev server, or when ?addonDev= was asked for and can't
-// be used (with the reason). Reloads the page when the dev build changes: federation can't swap a
-// remote that is already registered.
-export const AddonDevBanner = ({ state }: { state: Exclude<AddonDevState, { status: 'off' }> }) => {
+// One row per ?addonDev= entry: the addon loaded from its dev server, or why it can't be (with the
+// reason). Each row reloads the page when its dev build changes (federation can't swap a remote
+// that is already registered), and its close button drops only that addon.
+export const AddonDevBanner = ({ states }: { states: AddonDevState[] }) => (
+  <Rows>
+    {states.map((state) => (
+      <AddonDevRow key={addonDevStateKey(state)} state={state} />
+    ))}
+  </Rows>
+)
+
+const AddonDevRow = ({ state }: { state: AddonDevState }) => {
   const [isReloading, setIsReloading] = useState(false)
   const buildId = state.status === 'active' ? state.info.buildId : undefined
 
@@ -52,14 +73,23 @@ export const AddonDevBanner = ({ state }: { state: Exclude<AddonDevState, { stat
   }, [state, buildId])
 
   const stop = () => {
-    clearAddonDevOverride()
     const url = new URL(window.location.href)
-    url.searchParams.delete('addonDev')
+    const rest = removeAddonDevEntry(
+      addonDevStateKey(state),
+      url.searchParams.getAll(ADDON_DEV_PARAM),
+    )
+    url.searchParams.delete(ADDON_DEV_PARAM)
+    if (rest) url.searchParams.set(ADDON_DEV_PARAM, rest)
     window.location.href = url.toString()
   }
 
   const closeButton = (
-    <Button variant="text" icon="close" onClick={stop} data-tooltip="Stop: load the installed addon" />
+    <Button
+      variant="text"
+      icon="close"
+      onClick={stop}
+      data-tooltip="Stop: load the installed addon"
+    />
   )
 
   if (state.status === 'rejected') {

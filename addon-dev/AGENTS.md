@@ -47,6 +47,10 @@ chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
    isn't installed) and shows a banner. It reloads after every rebuild.
 3. `?addonDev=off`, or the banner's close button, goes back to the installed addon.
 
+Two addons at once (a feature that spans both): run `ayon-addon dev --ayon --port <p>` in each, then
+join the entries: `?addonDev=a@http://localhost:5173,b@http://localhost:5174`. Each gets its own
+banner row; closing one keeps the other.
+
 - `--frontend http://localhost:3000` puts that page in the URL instead of the server (an
   ayon-frontend dev server in front of it).
 - `--port` is the addon's dev server port (5173 by default; a port in use stops it with an error).
