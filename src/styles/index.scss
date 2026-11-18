@@ -86,6 +86,11 @@ strong {
   --size-header: 34px;
   --size-row: 34px;
 
+  // hover and press of the top bar's buttons and the page tabs. They sit on the page background, which is also the
+  // nav buttons' own hover colour, so a shade of the text colour instead, visible on both themes
+  --color-nav-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  --color-nav-active: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
+
   // table colors
   --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
   --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
@@ -179,6 +184,16 @@ nav.primary {
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);
+
+  // an open menu and the current page keep their own background
+  button.nav:not(.active, .selected) {
+    &:hover {
+      background-color: var(--color-nav-hover);
+    }
+    &:active {
+      background-color: var(--color-nav-active);
+    }
+  }
 }
 
 .section-header {

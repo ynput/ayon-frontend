@@ -77,6 +77,14 @@ export const NavItem = styled.li`
       max-height: unset;
       /* the active tab is the one in semibold */
       font-weight: 500;
+
+      /* a shade behind the name, the active tab too, clear of the underline */
+      &:hover {
+        background-color: var(--color-nav-hover);
+      }
+      &:active {
+        background-color: var(--color-nav-active);
+      }
     }
 
     /* each name keeps the width of its semibold form, so the tabs don't move when the active one changes */
@@ -101,10 +109,6 @@ export const NavItem = styled.li`
 
       button {
         font-weight: 600;
-
-        &:hover {
-          background-color: unset;
-        }
       }
     }
   }
