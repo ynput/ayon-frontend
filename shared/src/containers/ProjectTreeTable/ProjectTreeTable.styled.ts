@@ -153,6 +153,9 @@ export const trailingSlotShadow = css`
   }
 `
 
+// the header is the colour of the body's cell lines, so its column separators use the outline colour
+const headerSeparator = `inset 1px 0 0 0 var(--md-sys-color-outline-variant)`
+
 // pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
 // in its own space after the last column. Only the header row is covered: body and footer rows
 // end with a plain TrailingCell of the same width, so every row is as wide as the header.
@@ -166,7 +169,7 @@ export const AddColumnSlot = styled.th`
   justify-content: center;
   flex-shrink: 0;
   background-color: var(--color-table-header);
-  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  box-shadow: ${headerSeparator};
   ${trailingSlotShadow}
 `
 
@@ -190,7 +193,7 @@ export const TrailingCell = styled.td`
 export const HeaderCell = styled.th`
   position: relative;
   background-color: var(--color-table-header);
-  box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container);
+  box-shadow: ${headerSeparator};
   display: flex;
   align-items: center;
   min-height: fit-content;
@@ -232,8 +235,7 @@ export const HeaderCell = styled.th`
 
   /* Styling for the last pinned left column */
   &.last-pinned-left {
-    box-shadow: inset 1px -1px 0 0 var(--md-sys-color-surface-container),
-      inset -2px 0 0 0 var(--md-sys-color-surface-container);
+    box-shadow: ${headerSeparator}, inset -2px 0 0 0 var(--md-sys-color-outline-variant);
   }
 
   /* special styles for the left selection column */
