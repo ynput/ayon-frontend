@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo } from 'react'
+import { menuSection } from '@shared/components/Menu/menuSections'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
 import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
@@ -312,7 +313,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         }))
       : []
     const context = { projectName, sliceType, selected, entities, menu }
-    return menuItemsAt(items, position)
+    // addon items are a section of their own
+    const menuItems = menuItemsAt(items, position)
       .filter((item) => !item.in?.length || item.in.includes(menu))
       .map((item) => ({
         id: item.key,
@@ -321,6 +323,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
         ...contributionTags(item),
       }))
+    return menuSection(menuItems)
   }
   // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
   const addonRowContextMenu =

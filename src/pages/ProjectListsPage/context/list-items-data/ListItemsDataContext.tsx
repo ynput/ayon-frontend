@@ -485,12 +485,15 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const contextMenuItems: ContextMenuItemConstructors = [
     addonEntityTopItems,
     'copy-paste',
+    'separator',
     'show-details',
     'open-viewer',
-    'export',
+    'separator',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     addToShownListMenuItem,
+    'export',
+    'separator',
     forListItems(replaceItemContextMenu),
     forListItems(viewDataContextMenu),
     forListItems(listValueMenuItem),

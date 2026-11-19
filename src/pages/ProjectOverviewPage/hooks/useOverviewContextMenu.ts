@@ -129,20 +129,24 @@ const useOverviewContextMenu = ({ openMoveDialog, tableState }: OverviewContextM
     }
   }
 
-  // inject in custom add to list context menu items
+  // sections: clipboard, view, edit, lists and files, create; addon items and Delete get their own
   const contextMenuItems: ContextMenuItemConstructors = [
     addonTopItems,
     'copy-paste',
+    'separator',
     'show-details',
-    'rename',
     'open-viewer',
     'expand-collapse',
-    ...(menuItemsAddToList ? [menuItemsAddToList()] : []),
     unGroupTasksItem,
+    'separator',
+    'rename',
     'inherit',
+    moveItem,
+    'separator',
+    ...(menuItemsAddToList ? [menuItemsAddToList()] : []),
     'export',
     uploadVersionItem,
-    moveItem,
+    'separator',
     'create-folder',
     'create-task',
     addonItems,
