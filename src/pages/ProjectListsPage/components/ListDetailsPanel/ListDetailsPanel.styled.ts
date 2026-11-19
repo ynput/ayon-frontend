@@ -44,20 +44,6 @@ export const Section = styled.div`
     padding-left: 3px;
   }
 
-  /* fields that can be edited in place look like inputs, so an empty one doesn't read as missing */
-  .field-value:not(.readonly):not(:has(> input[type='checkbox'])) {
-    background-color: var(--md-sys-color-surface-container-low);
-    box-shadow: inset 0 0 0 1px var(--md-sys-color-outline-variant);
-
-    &:hover {
-      background-color: var(--md-sys-color-surface-container-low-hover);
-    }
-
-    &.editing {
-      background-color: var(--md-sys-color-surface-container);
-    }
-  }
-
   /* the "-" of an empty read-only field */
   .field-value.readonly > div:not(:has(*)) {
     color: var(--md-sys-color-outline);
