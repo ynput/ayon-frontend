@@ -346,7 +346,11 @@ export const UploadVersionForm: FC<UploadVersionFormProps> = ({
                     <Button
                       icon="inventory_2"
                       variant="text"
-                      data-tooltip="Browse existing products"
+                      data-tooltip={
+                        !isFolderProductsLoading && folderProducts.length === 0
+                          ? 'This folder has no products yet'
+                          : 'Browse existing products'
+                      }
                       selected={isOpen}
                       tabIndex={-1}
                       disabled={isFolderProductsLoading || folderProducts.length === 0}
