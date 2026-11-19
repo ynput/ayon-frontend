@@ -60,6 +60,7 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { ProjectNewEntityHost } from './ProjectNewEntityHost'
+import SearchDialog from './SearchDialog'
 
 const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -243,6 +244,7 @@ const ProjectPageInner = () => {
   const { onOpenImage, onGoToFrame, onOpenViewer, onUpdateEntity } = useDetailsPanelContext()
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
+  const [showSearchDialog, setShowSearchDialog] = useState(false)
 
   // addons in the bundle the user's addon modules come from (production, staging or dev)
   const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
@@ -394,6 +396,9 @@ const ProjectPageInner = () => {
           module: addon.name,
         })),
       { node: 'spacer' },
+      {
+        node: <Button icon="search" onClick={() => setShowSearchDialog(true)} variant="text" />,
+      },
       {
         node: <HelpButton module={addonName || module} />,
       },
@@ -580,6 +585,11 @@ const ProjectPageInner = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
+      <SearchDialog
+        projectName={projectName}
+        isOpen={showSearchDialog}
+        onClose={() => setShowSearchDialog(false)}
+      />
       <AppNavLinks links={links} currentModule={module} projectName={projectName} />
       <VersionUploadProvider
         projectName={projectName}
