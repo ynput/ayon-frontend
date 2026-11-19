@@ -2,8 +2,8 @@
 // that has a slot this addon uses (all of them with Show all), and Slots (bottom), a read-only
 // overview of the selected place's slots with this addon's contributions to each. A place opens
 // the UI around all its slots on the stage; the slot inspector's Show slots (AYON's developer mode
-// menu, in the top bar) shows the slots' examples and outlines contributions there. Each half
-// scrolls on its own. Everything here is also settable from the URL (params.ts).
+// switch, at the right of the top bar) shows the slots' examples and outlines contributions there.
+// Each half scrolls on its own. Everything here is also settable from the URL (params.ts).
 import { useState } from 'react'
 import { Splitter, SplitterPanel } from 'primereact/splitter'
 import { Button, Icon, InputSwitch, InputText } from '@ynput/ayon-react-components'
@@ -112,7 +112,7 @@ const PlacesHeader = ({ search, onSearch }: Pick<DevPanelProps, 'search' | 'onSe
   )
 }
 
-const Switch = ({
+export const Switch = ({
   label,
   action,
   title,

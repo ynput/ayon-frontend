@@ -92,6 +92,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
   const developerMode = user?.attrib?.developerMode
+  const isDeveloper = user?.data?.isDeveloper
   const userName = useSelector((state) => state.user.name)
   // per-user choice between the classic nested panels and the flat card layout
   const flatLayout = useSelector(
@@ -162,10 +163,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
-  // 'dev' is the user's dev bundle; a dev bundle falls back to production without developer mode
+  // 'dev' is the user's dev bundle; a dev bundle falls back to production for non-developers
   const selectedBundle = useMemo(() => {
     const production = { variant: 'production', bundleName: null, projectBundleName: undefined }
-    if (!developerMode && !['production', 'staging'].includes(storedBundle.variant)) {
+    if (!isDeveloper && !['production', 'staging'].includes(storedBundle.variant)) {
       return production
     }
     if (storedBundle.variant === 'dev') {
@@ -175,7 +176,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         : production
     }
     return storedBundle
-  }, [storedBundle, devBundles, developerMode])
+  }, [storedBundle, devBundles, isDeveloper])
 
   // the dev bundle is only known once the bundles load: until then the addon list waits,
   // rather than loading production's whole settings payload for nothing

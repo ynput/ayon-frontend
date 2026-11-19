@@ -7,6 +7,10 @@ import {
   addonDevUserProblem,
   fetchAddonDevInfo,
   parseAddonDevParam,
+  parseAddonDevParams,
+  readAddonDevRequests,
+  readStoredAddonDevOverrides,
+  removeAddonDevEntry,
 } from '../../shared/src/context/remote-modules/addonDevOverride'
 import { checkDevRequirements } from '../../addon-dev/src/devChecks'
 
@@ -31,6 +35,103 @@ test('a malformed or non-local override says why', () => {
   expect(reason('a@ftp://localhost:5173')).toContain('http(s)')
   expect(reason('a@http://192.168.1.4:5173')).toContain('192.168.1.4 is not this machine')
   expect(reason('a@https://evil.example.com')).toContain('evil.example.com is not this machine')
+})
+
+// localStorage as the page has it
+const memoryStorage = (initial: Record<string, string> = {}) => {
+  const items = new Map(Object.entries(initial))
+  return {
+    getItem: (key: string) => items.get(key) ?? null,
+    setItem: (key: string, value: string) => void items.set(key, value),
+    removeItem: (key: string) => void items.delete(key),
+    raw: () => items.get('ayon-addon-dev'),
+  } as unknown as Storage & { raw: () => string | undefined }
+}
+const planner = { addon: 'planner', url: 'http://localhost:5173' }
+const timetracker = { addon: 'timetracker', url: 'http://localhost:5174' }
+
+test('several overrides: comma separated, repeated, the last per addon wins', () => {
+  expect(
+    parseAddonDevParams(['planner@http://localhost:5173,timetracker@http://localhost:5174']),
+  ).toEqual([{ override: planner }, { override: timetracker }])
+  expect(
+    parseAddonDevParams(['planner@http://localhost:5173', ' timetracker@http://localhost:5174/ ']),
+  ).toEqual([{ override: planner }, { override: timetracker }])
+  expect(
+    parseAddonDevParams(['planner@http://localhost:9999,planner@http://localhost:5173']),
+  ).toEqual([{ override: planner }])
+  // a bad entry is rejected on its own, the others still load
+  const [bad, good] = parseAddonDevParams([
+    'a@http://192.168.1.4:5173,planner@http://localhost:5173',
+  ])
+  expect(bad).toHaveProperty('reason')
+  expect(good).toEqual({ override: planner })
+})
+
+test('the overrides from the URL are added to the stored ones, and off clears them', () => {
+  const old = { addon: 'old', url: 'http://localhost:1' }
+  const storage = memoryStorage({ 'ayon-addon-dev': JSON.stringify([old]) })
+  const both = '?addonDev=planner@http://localhost:5173&addonDev=timetracker@http://localhost:5174'
+  expect(readAddonDevRequests(both, storage)).toEqual([
+    { override: old },
+    { override: planner },
+    { override: timetracker },
+  ])
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, planner, timetracker])
+  // the URL `ayon-addon dev --ayon` prints names one addon: the others stay, its own port wins
+  const moved = { addon: 'planner', url: 'http://localhost:5175' }
+  expect(readAddonDevRequests('?addonDev=planner@http://localhost:5175', storage)).toEqual([
+    { override: old },
+    { override: timetracker },
+    { override: moved },
+  ])
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, timetracker, moved])
+  // a URL with only bad entries keeps the stored ones, and loads them
+  const [rejected, ...rest] = readAddonDevRequests('?addonDev=nope', storage).reverse()
+  expect(rejected).toHaveProperty('reason')
+  expect(rest).toHaveLength(3)
+  expect(readStoredAddonDevOverrides(storage)).toEqual([old, timetracker, moved])
+  // a later page without the parameter keeps them
+  expect(readAddonDevRequests('', storage)).toEqual([
+    { override: old },
+    { override: timetracker },
+    { override: moved },
+  ])
+  expect(readAddonDevRequests('?addonDev=off', storage)).toEqual([])
+  expect(storage.raw()).toBeUndefined()
+  expect(readAddonDevRequests('?addonDev=', memoryStorage())).toEqual([])
+})
+
+test('a single override stored before several were supported still loads; non-local ones do not', () => {
+  expect(
+    readStoredAddonDevOverrides(memoryStorage({ 'ayon-addon-dev': JSON.stringify(planner) })),
+  ).toEqual([planner])
+  const stored = JSON.stringify([planner, { addon: 'x', url: 'http://evil.example.com' }])
+  expect(readStoredAddonDevOverrides(memoryStorage({ 'ayon-addon-dev': stored }))).toEqual([
+    planner,
+  ])
+  expect(readStoredAddonDevOverrides(memoryStorage({ 'ayon-addon-dev': '{' }))).toEqual([])
+})
+
+test("closing one addon's row keeps the others", () => {
+  const storage = memoryStorage({ 'ayon-addon-dev': JSON.stringify([planner, timetracker]) })
+  const params = ['planner@http://localhost:5173/,timetracker@http://localhost:5174']
+  expect(removeAddonDevEntry('planner@http://localhost:5173', params, storage)).toBe(
+    'timetracker@http://localhost:5174',
+  )
+  expect(readStoredAddonDevOverrides(storage)).toEqual([timetracker])
+  expect(
+    removeAddonDevEntry(
+      'timetracker@http://localhost:5174',
+      ['timetracker@http://localhost:5174'],
+      storage,
+    ),
+  ).toBeNull()
+  expect(storage.raw()).toBeUndefined()
+  // a rejected entry goes by what was written
+  expect(removeAddonDevEntry('nope', ['nope,planner@http://localhost:5173'], memoryStorage())).toBe(
+    'planner@http://localhost:5173',
+  )
 })
 
 test('only developer-mode and service users may use the override', () => {

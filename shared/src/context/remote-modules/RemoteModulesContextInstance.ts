@@ -5,7 +5,7 @@ export const RemoteModulesContext = createContext<RemoteModulesContextType>({
   isLoading: true,
   modules: [],
   remotesInitialized: false,
-  addonDev: { status: 'off' },
+  addonDev: [],
 })
 
 export const useRemoteModules = () => {
