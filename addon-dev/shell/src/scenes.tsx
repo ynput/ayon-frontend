@@ -15,8 +15,15 @@ import {
 import { EntityPicker } from '@ynput/ayon-addon'
 import type { PickableEntityType } from '@ynput/ayon-addon'
 import { useListProjectsQuery } from '@ynput/ayon-frontend-shared/api'
+import { AddonListPicker } from '@ynput/ayon-frontend-shared/components'
 import { sceneDefaults } from '../../src/contractPreviews'
-import type { PreviewApi, PreviewEntity, PreviewField, PreviewPickOption } from '../../src/contractPreviews'
+import type {
+  PreviewApi,
+  PreviewEntity,
+  PreviewField,
+  PreviewList,
+  PreviewPickOption,
+} from '../../src/contractPreviews'
 import type { Scene } from './contractModel'
 import { useStageReady } from './status'
 import type { ShellSelection } from './types'
@@ -187,6 +194,59 @@ const EntityInput = ({
   )
 }
 
+// picked with AYON's list picker, the one addons get (ListPicker)
+const ListInput = ({
+  field,
+  value,
+  projectName,
+  onChange,
+}: {
+  field: PreviewField & { type: 'list' }
+  value: PreviewList | null
+  projectName: unknown
+  onChange: (value: PreviewList | null) => void
+}) => {
+  const [picking, setPicking] = useState(false)
+  const project = typeof projectName === 'string' ? projectName : undefined
+  const items = value && `${value.count} ${value.count === 1 ? 'item' : 'items'}`
+  return (
+    <>
+      <div className="ayon-shell-entities">
+        <span className="ayon-shell-entity-value" title={value?.id}>
+          {value ? (
+            <>
+              {value.label} <span className="ayon-shell-note">· {items}</span>
+            </>
+          ) : (
+            <span className="ayon-shell-note">None</span>
+          )}
+        </span>
+        <Button
+          icon="ads_click"
+          label={value ? 'Change' : 'Pick'}
+          disabled={!project}
+          data-tooltip={project ? undefined : 'Pick a project first'}
+          data-shell-action="pick-list"
+          onClick={() => setPicking(true)}
+        />
+        {value && <Button icon="close" variant="text" aria-label="Clear" onClick={() => onChange(null)} />}
+      </div>
+      {picking && project && (
+        <AddonListPicker
+          projectName={project}
+          entityListTypes={field.entityListTypes}
+          initialSelection={value ? [value] : []}
+          onClose={() => setPicking(false)}
+          onSubmit={([picked]) => {
+            setPicking(false)
+            onChange(picked ?? null)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
 // edited as JSON: what doesn't parse is shown as an error and not applied
 const JsonInput = ({ value, onChange }: { value: unknown; onChange: (value: unknown) => void }) => {
   const show = (v: unknown) => (v === undefined ? '' : JSON.stringify(v, null, 2))
@@ -289,12 +349,14 @@ export const SceneForm = ({
   onChange: OnChange
 }) => {
   const { values, setValues, reset, changed } = useSceneValues(scene, selection, onChange)
-  // a project changed: the entities picked in the old one no longer apply
+  // a project changed: the entities and lists picked in the old one no longer apply
   const setProject = (key: string, projectName: string | null) =>
     setValues({
       [key]: projectName,
       ...Object.fromEntries(
-        scene.fields.filter((f) => f.type === 'entity' && f.project === key).map((f) => [f.key, null]),
+        scene.fields
+          .filter((f) => (f.type === 'entity' || f.type === 'list') && f.project === key)
+          .map((f) => [f.key, null]),
       ),
     })
   const input = (field: PreviewField) => {
@@ -339,6 +401,15 @@ export const SceneForm = ({
           <EntityInput
             field={field}
             value={(value as PreviewEntity | null) ?? null}
+            projectName={values[field.project]}
+            onChange={set}
+          />
+        )
+      case 'list':
+        return (
+          <ListInput
+            field={field}
+            value={(value as PreviewList | null) ?? null}
             projectName={values[field.project]}
             onChange={set}
           />

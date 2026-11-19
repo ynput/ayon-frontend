@@ -90,7 +90,11 @@ ts.forEachChild(slotsFile, (node) => {
       ],
       pieces,
       // complete: every required field and piece is in it
-      example: exampleSnippet(name, { required: [], pieces: [], example: SLOT_EXAMPLES[name] }, slotDocs[name]?.helper),
+      example: exampleSnippet(
+        name,
+        { required: [], pieces: [], example: SLOT_EXAMPLES[name] },
+        slotDocs[name]?.helper,
+      ),
     })
   }
 })
@@ -485,6 +489,37 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
 - No title prop: the title is always the tab's \`label\`.
 - An AYON older than this component has no such export (\`undefined\`): an addon that supports one
   checks \`DetailsPanelTabHeader &&\` before rendering it.
+
+## Picking lists: \`ListPicker\`
+
+AYON's list picker (the dialog of Add to list and Compare with list): the project's lists and review
+sessions in their folders, with search, sorting and item counts. Like \`EntityPicker\`, it loads the
+project itself: render it anywhere with no providers around it.
+
+\`\`\`tsx
+import { ListPicker, type EntityListRef } from '@ynput/ayon-addon'
+
+{picking && (
+  <ListPicker
+    projectName={projectName}
+    initialSelection={list ? [list] : undefined}
+    onClose={() => setPicking(false)}
+    onSubmit={([picked]: EntityListRef[]) => {
+      setPicking(false)
+      setList(picked) // { id, projectName, label, entityListType, entityType, count }
+    }}
+  />
+)}
+\`\`\`
+
+- \`entityListTypes\`: \`['generic']\` for lists, \`['review-session']\` for review sessions; both by
+  default, in one table.
+- \`onSubmit\` gets \`EntityListRef[]\`: the list's \`label\`, \`entityListType\`, the type of its items
+  (\`entityType\`) and how many it has (\`count\`). One list unless \`multiSelect\`. The picker stays
+  open until you stop rendering it: close it in \`onSubmit\` and \`onClose\`.
+- \`initialSelection\`: lists (\`{ id }\` is enough) selected when it opens.
+- An older AYON frontend has no list picker: there \`ListPicker\` renders "ListPicker is not
+  available in this AYON frontend." instead of the dialog.
 
 ## A "more" menu: \`MoreMenu\`
 

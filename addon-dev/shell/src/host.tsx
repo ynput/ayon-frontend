@@ -7,6 +7,7 @@ import { useGetCurrentUserQuery, usersApi } from '@ynput/ayon-frontend-shared/ap
 import {
   AddonDetailsPanelTabHeader,
   AddonEntityPicker,
+  AddonListPicker,
   AddonMoreMenu,
   ProjectListHost,
   ProjectPageLayoutHost,
@@ -85,6 +86,7 @@ export const provideShellHost = () =>
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList,
       EntityPicker: AddonEntityPicker,
+      ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
       DetailsPanelTabHeader: AddonDetailsPanelTabHeader,
     },

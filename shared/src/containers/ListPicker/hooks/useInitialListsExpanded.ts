@@ -18,7 +18,7 @@ interface useInitialListsExpandedProps {
  *  - For every selected list, all parent folders up to root are expanded.
  *  - For every selected folder, its parent chain is expanded.
  */
-const useInitialListsExpanded = ({
+export const useInitialListsExpanded = ({
   selectedRows,
   lists,
   listFolders,

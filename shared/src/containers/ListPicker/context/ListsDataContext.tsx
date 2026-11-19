@@ -3,8 +3,9 @@ import { EntityList, EntityListFolderModel, useGetEntityListFoldersQuery } from 
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { Filter } from '@ynput/ayon-react-components'
 import { useQueryArgumentChangeLoading, useUserProjectConfig, useLocalStorage } from '@shared/hooks'
-import useGetListsData from '../../hooks/useGetListsData'
-import { buildListsTableData, DEFAULT_LISTS_SORT, isFolderInScope, ListsSort } from '../../util'
+import { DEFAULT_LISTS_SORT, ListsSort } from '@shared/util/sortLists'
+import { useGetListsData } from '../hooks/useGetListsData'
+import { buildListsTableData, isFolderInScope } from '../util'
 import { usePowerpack, useProjectContext } from '@shared/context'
 import { ListsDataContext } from './ListsDataContextInstance'
 
@@ -37,7 +38,9 @@ interface ListsDataProviderProps {
   children: ReactNode
   listsSort?: ListsSort
   setListsSort?: (sort: ListsSort) => void
+  // the list types shown, and the folders of those types (all types when not set)
   entityListTypes?: string[]
+  // the review sessions page: no saved list filters
   isReview?: boolean
   // picker mode: ignore the page's saved list filters (selection dialog, not the Lists page)
   picker?: boolean
@@ -80,11 +83,12 @@ export const ListsDataProvider = ({
     { skip: !projectName },
   )
 
-  // filter out folders by scope (right now we only have 'generic' and 'review-session')
-  // we only show 'generic' folders in non-review mode, and 'review-session' in review mode
+  // only the folders of the list types shown ('generic', 'review-session' or both)
+  const listTypesKey = entityListTypes?.join(',')
   const listFolders = useMemo(
-    () => listFoldersAll.filter((f) => isFolderInScope(f, isReview)),
-    [isReview, listFoldersAll],
+    () => listFoldersAll.filter((f) => isFolderInScope(f, entityListTypes)),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [listTypesKey, listFoldersAll],
   )
 
   const [pageConfig, updatePageConfig, { isSuccess: columnsConfigReady }] = useUserProjectConfig({
