@@ -5,7 +5,9 @@ import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
 import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-components'
-import RenderFieldWidget, { isAllDayEndDate } from './components/RenderFieldWidget'
+import RenderFieldWidget from './components/RenderFieldWidget'
+import { isAllDayEndDate } from './components/RenderFieldWidgetHelpers'
+import { NoMatches } from './DetailsPanelAttributesEditor.styled'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 import { matchesFieldSearch } from './fieldSearch'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
@@ -94,14 +96,6 @@ const FieldTools = styled.div`
     height: 32px;
     padding: 2px;
   }
-`
-
-// no field matches the Details tab's search
-export const NoMatches = styled.div`
-  color: var(--md-sys-color-outline);
-  min-height: 32px;
-  display: flex;
-  align-items: center;
 `
 
 const ShimmerRow = styled(FormRow)`

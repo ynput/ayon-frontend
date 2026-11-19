@@ -22,6 +22,7 @@ import {
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
+import { isAllDayEndDate } from './RenderFieldWidgetHelpers'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -63,12 +64,6 @@ const StyledTagsWidget = styled(TagsWidget)`
     background-color: unset;
   }
 `
-
-// an all-day event ends at the midnight after its last day: its end date shows that last day
-export const isAllDayEndDate = (fieldName: string, entities: DetailsPanelEntityData[]) =>
-  fieldName === 'attrib.endDate' &&
-  entities.length > 0 &&
-  entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
 
 interface RenderFieldWidgetProps {
   field: AttributeField

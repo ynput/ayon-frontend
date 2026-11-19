@@ -1,9 +1,7 @@
 import React from 'react'
 import styled from 'styled-components'
-import {
-  NoMatches,
-  type AttributeField,
-} from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
+import type { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
+import { NoMatches } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor.styled'
 import { matchesFieldSearch } from '../DetailsPanelAttributes/fieldSearch'
 import { copyToClipboard, formatDateTime } from '@shared/util'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
