@@ -21,9 +21,10 @@ export const Headings = styled.div`
 `
 
 const LEVEL_COLORS: Record<string, string> = {
-  studio: 'var(--color-hl-studio)',
-  project: 'var(--color-hl-project)',
-  site: 'var(--color-hl-site)',
+  // the label colours (SettingsEditor.sass), darker than the accents on the light theme
+  studio: 'var(--settings-text-studio)',
+  project: 'var(--settings-text-project)',
+  site: 'var(--settings-text-site)',
   edit: 'var(--color-changed)',
 }
 

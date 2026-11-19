@@ -116,8 +116,8 @@ reordering a pair changes both lists.
 - The editor draws a coloured copy of the text under a transparent textarea. Every element in it
   has to be monospace 12px (`!important`): the app's font reaches the coloured spans otherwise,
   so indents look narrower and the colours no longer line up with the cursor.
-- JSON colours come from app tokens. The editor's own palette follows the system's light or dark
-  mode, not the app's, and colours keys and strings the same.
+- JSON colours come from app tokens. The editor's own palette follows the app's theme (the
+  `data-color-mode` that `applyTheme` sets on `<html>`), and colours keys and strings the same.
 
 ### Open state
 
@@ -193,6 +193,18 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
   page without a size container. It hides below 720px with an `@container` query.
 - The colour scheme picker (`ListColorScheme/`) needs `formContext.onSetValue`, which only
   `AnatomyEditor` provides. Other editors don't show it.
+- The flat sheet takes the colour of the panel the editor sits on (`--settings-sheet-bg`, which is
+  ARC's `--panel-background`). Sticky titles paint it, and settings panels sit one step off it.
+  A page that hosts the editor puts it on a panel (a `ScrollPanel` without `transparent`, or a
+  wrapper with `--panel-background`, as in the New project dialog). On any other surface the
+  sticky titles show as bands.
+- Sticky titles stop below their scroll container's padding, and content scrolls through
+  that strip above them. The editor's scroll container has no top padding: a `nopad`
+  `ScrollPanel`, or a wrapper that scrolls itself (`AnatomyEditorPanel` in the New project
+  dialog, not the padded dialog body).
+- Override levels as text (labels, group titles, directory mapping headings) use
+  `--settings-text-studio/project/site`, defined on `.rjsf`. On the light theme they are darker
+  shades of the accents, which are too pale for text there. Bars and box edges keep the accents.
 - `isGroupSchema` mirrors the branches in `FieldTemplate` and `ObjectFieldTemplate` that draw a
   panel, and `getSettingFieldKind` mirrors `TextWidget` and the widget map in `SettingsEditor.jsx`.
   Change them together.

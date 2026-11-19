@@ -122,11 +122,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         )}
         <SaveButton onClick={onSave} label="Save changes" active={isChanged} saving={saving} />
       </Toolbar>
-      <ScrollPanel
-        className="nopad transparent"
-        scrollStyle={{ padding: 0 }}
-        style={{ flexGrow: 1 }}
-      >
+      {/* a panel, like the list beside it: the flat settings sheet takes the panel's colour */}
+      <ScrollPanel className="nopad" scrollStyle={{ padding: 0 }} style={{ flexGrow: 1 }}>
         {permissionsEditor}
       </ScrollPanel>
     </Section>

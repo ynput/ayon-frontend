@@ -104,6 +104,20 @@ const AnatomyEditorSection = styled.div`
   flex: 1;
 `
 
+// the editor sits on a panel, as on the settings pages: the flat settings sheet takes the
+// panel's colour, and the dialog's own surface is a different one
+const AnatomyEditorPanel = styled.div`
+  /* it scrolls itself, as the editor does on the settings pages: sticky titles stick to
+     its top edge, which has no padding (they stop below a scroller's padding, and
+     content showed above them). Short windows scroll the dialog instead */
+  flex: 1;
+  min-height: 240px;
+  overflow: auto;
+  padding: 0 var(--padding-m);
+  border-radius: var(--border-radius-m);
+  background-color: var(--panel-background);
+`
+
 const NewProjectDialog = ({ onHide, redirect = true }) => {
   const [remembered] = useState(() => readDialogMemory(PROJECT_MEMORY))
   const namesRef = useRef(null)
@@ -385,7 +399,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
             </FieldGroup>
             <AnatomyEditorSection>
               <FieldLabel>Project anatomy</FieldLabel>
-              {anatomyEditor}
+              <AnatomyEditorPanel>{anatomyEditor}</AnatomyEditorPanel>
             </AnatomyEditorSection>
           </AnatomySection>
         )}

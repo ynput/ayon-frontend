@@ -36,7 +36,7 @@ export const Header = styled.header`
     z-index: 4;
     min-height: var(--settings-card-title-height);
     padding: 0 var(--settings-gutter);
-    background-color: var(--md-sys-color-background);
+    background-color: var(--settings-sheet-bg);
   }
 
   /* deeper titles stick under the ones above; the innermost covers its parents' */
@@ -119,6 +119,11 @@ export const Title = styled.h4`
     align-items: center;
     gap: var(--base-gap-small);
     font-size: var(--md-sys-typescale-title-large-font-size);
+
+    /* Badge takes its parent's font size: keep it at body size, not the title's */
+    .settings-title-badges {
+      font-size: var(--md-sys-typescale-body-medium-font-size);
+    }
   }
 
   .settings-group-card > header > & {
