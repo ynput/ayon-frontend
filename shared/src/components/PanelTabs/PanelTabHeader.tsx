@@ -1,16 +1,16 @@
-// The header of a details panel tab: its title on the left, an optional "more" menu on the right,
-// then a search button at the far right that shows or hides the search and filter bar below it
-// (hidden by default, it takes room on small screens), then any other content of the header.
-// Every tab with icon-only buttons (Activity, Subtasks, Files, addon tabs) has one, so the open tab is named
-// here and not in its button. Addon tabs fill theirs through the SDK's `DetailsPanelTabHeader`
-// (AddonDetailsPanelTabHeader), which renders into the slots this exposes.
-import type { ReactNode } from 'react'
+// The header of a panel tab: its title on the left, an optional "more" menu on the right, then a
+// search button at the far right that shows or hides the search and filter bar below it (hidden by
+// default, it takes room on small screens), then any other content of the header. Every tab with an
+// icon-only button (PanelTabs) has one, so the open tab is named here and not in its button. Addon
+// tabs fill theirs through the SDK's `PanelTabHeader` (AddonPanelTabHeader), which renders into
+// the slots this exposes.
+import { useRef, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { useLocalStorage } from '@shared/hooks'
-import { TAB_SEARCH_OPEN_KEY } from './DetailsPanelTabHeaderContextInstance'
-import * as Styled from './DetailsPanelTabHeader.styled'
+import { TAB_SEARCH_OPEN_KEY } from './PanelTabHeaderContextInstance'
+import * as Styled from './PanelTabHeader.styled'
 
-export interface DetailsPanelTabHeaderProps {
+export interface PanelTabHeaderProps {
   title?: ReactNode
   /** right of the title, usually a "more" menu button */
   menu?: ReactNode
@@ -32,7 +32,7 @@ export interface DetailsPanelTabHeaderProps {
   }
 }
 
-export const DetailsPanelTabHeader = ({
+export const PanelTabHeader = ({
   title,
   menu,
   search,
@@ -41,8 +41,16 @@ export const DetailsPanelTabHeader = ({
   children,
   menuClassName,
   slotRefs,
-}: DetailsPanelTabHeaderProps) => {
+}: PanelTabHeaderProps) => {
   const [searchOpen, setSearchOpen] = useLocalStorage(TAB_SEARCH_OPEN_KEY, false)
+  const searchRef = useRef<HTMLDivElement | null>(null)
+
+  const toggleSearch = () => {
+    const open = !searchOpen
+    setSearchOpen(open)
+    // opening: focus the bar's input once it is shown (it is hidden, not unmounted, until then)
+    if (open) requestAnimationFrame(() => searchRef.current?.querySelector('input')?.focus())
+  }
 
   return (
     <Styled.Header className="panel-tab-header">
@@ -57,7 +65,7 @@ export const DetailsPanelTabHeader = ({
             variant="text"
             selected={searchOpen}
             className={clsx({ active: searchActive && !searchOpen })}
-            onClick={() => setSearchOpen(!searchOpen)}
+            onClick={toggleSearch}
             data-tooltip={searchOpen ? 'Hide search and filter' : 'Search and filter'}
             data-tooltip-delay={0}
             aria-label={searchOpen ? 'Hide search and filter' : 'Search and filter'}
@@ -66,7 +74,13 @@ export const DetailsPanelTabHeader = ({
         )}
       </Styled.TitleRow>
       {/* hidden, not unmounted: the bar keeps its chips and filters while closed */}
-      <Styled.Search ref={slotRefs?.search} className={clsx({ hidden: !searchOpen })}>
+      <Styled.Search
+        ref={(el) => {
+          searchRef.current = el
+          slotRefs?.search?.(el)
+        }}
+        className={clsx({ hidden: !searchOpen })}
+      >
         {search}
       </Styled.Search>
       <Styled.Extra ref={slotRefs?.extra}>{children}</Styled.Extra>

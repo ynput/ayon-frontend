@@ -22,6 +22,7 @@ import {
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
+import { isAllDayEndDate } from './RenderFieldWidgetHelpers'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -137,10 +138,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     onMixedChange: (change: MixedChange) => onMixedChange?.(field.name, change),
   }
 
-  const isMidnightExclusive =
-    field.name === 'attrib.endDate' &&
-    entities.length > 0 &&
-    entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
+  const isMidnightExclusive = isAllDayEndDate(field.name, entities)
 
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value

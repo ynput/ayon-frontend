@@ -23,7 +23,7 @@ import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
-import { DetailsPanelTabHeader } from '@shared/components/DetailsPanelTabHeader'
+import { PanelTabHeader } from '@shared/components/PanelTabs'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
 import { isValid } from 'date-fns'
 import { formatDateTime } from '@shared/util/formatDate'
@@ -388,7 +388,7 @@ export const Feed = ({
           </Styled.Warning>
         )}
         {title ? (
-          <DetailsPanelTabHeader
+          <PanelTabHeader
             title={title}
             search={searchFilter}
             searchActive={!!feedFilter.conditions?.length || !!searchText}

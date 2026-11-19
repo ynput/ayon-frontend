@@ -1,6 +1,6 @@
 import { createContext, useContext } from 'react'
 
-export interface DetailsPanelTabHeaderSlots {
+export interface PanelTabHeaderSlots {
   menu: HTMLElement | null
   search: HTMLElement | null
   extra: HTMLElement | null
@@ -13,11 +13,10 @@ export interface TabSearchState {
   active: boolean
 }
 
-// whether the tab headers show their search bar: one choice for every tab, kept per browser
+// whether the tab headers show their search bar: one choice for every tab of every panel, kept
+// per browser (the key is from when only the details panel had tab headers)
 export const TAB_SEARCH_OPEN_KEY = 'details-panel-tab-search-open'
 
 // set around an addon tab: the elements its header items render into
-export const DetailsPanelTabHeaderSlotsContext = createContext<DetailsPanelTabHeaderSlots | null>(
-  null,
-)
-export const useDetailsPanelTabHeaderSlots = () => useContext(DetailsPanelTabHeaderSlotsContext)
+export const PanelTabHeaderSlotsContext = createContext<PanelTabHeaderSlots | null>(null)
+export const usePanelTabHeaderSlots = () => useContext(PanelTabHeaderSlotsContext)

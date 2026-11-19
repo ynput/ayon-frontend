@@ -5,10 +5,11 @@ import { provideHost } from '@ynput/ayon-addon/host'
 import type { AddonUser, ProjectListProps } from '@ynput/ayon-addon'
 import { useGetCurrentUserQuery, usersApi } from '@ynput/ayon-frontend-shared/api'
 import {
-  AddonDetailsPanelTabHeader,
   AddonEntityPicker,
   AddonListPicker,
   AddonMoreMenu,
+  AddonPanelTabHeader,
+  PanelAddonTab,
   ProjectListHost,
   ProjectPageLayoutHost,
   SlicerHost,
@@ -88,6 +89,7 @@ export const provideShellHost = () =>
       EntityPicker: AddonEntityPicker,
       ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
-      DetailsPanelTabHeader: AddonDetailsPanelTabHeader,
+      PanelTabHeader: AddonPanelTabHeader,
+      ContributionTab: PanelAddonTab,
     },
   })

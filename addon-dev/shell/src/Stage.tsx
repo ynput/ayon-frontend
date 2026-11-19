@@ -27,6 +27,7 @@ import type {
 import { contributionTags, contributionTitle, getHost, slotInfo } from '@ynput/ayon-addon/host'
 import {
   useGetCurrentUserQuery,
+  useGetListsInfiniteInfiniteQuery,
   useGetProjectQuery,
   useGetUsersAssigneeQuery,
   useGetUsersQuery,
@@ -57,8 +58,11 @@ import {
   StudioPageSelectionProvider,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
+  PanelSlotTab,
+  PanelTabs,
+  usePanelSlotTabs,
 } from '@ynput/ayon-frontend-shared/components'
-import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
+import type { PanelTabSlot, UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, findContribution, getPlace, idOf, onStage, slotSnippet } from './catalog'
 import { contractSlot, getContracts, noSceneNote } from './contractModel'
 import type { Place } from './places'
@@ -485,6 +489,91 @@ const DetailsPanelStage = ({ selection }: StageProps) => {
   )
 }
 
+const LIST_DETAILS_SLOT: PanelTabSlot<'listDetails.tab'> = { name: 'listDetails.tab' }
+
+// listDetails.tab: a stand-in for the list details panel of the Lists and Reviews pages (it lives in
+// the ayon-frontend app; Review's session sidebar has the same tabs), for a list of the project
+// picked here
+const ListDetailsStage = ({ selection }: StageProps) => {
+  const projectName = selection.projectName!
+  const { tabs } = usePanelSlotTabs(LIST_DETAILS_SLOT)
+  const { data, isLoading } = useGetListsInfiniteInfiniteQuery(
+    { projectName },
+    { initialPageParam: { cursor: '' } },
+  )
+  const lists = useMemo(() => data?.pages.flatMap((page) => page.lists) ?? [], [data])
+  const [listId, setListId] = useState<string>()
+  const list = lists.find((l) => l.id === listId) ?? lists[0]
+  const [tabKey, setTabKey] = useState<string>()
+  const selectedTab = tabs.some((t) => t.key === tabKey) ? tabKey! : (tabs[0]?.key ?? '')
+
+  const context = useMemo<Context | undefined>(
+    () =>
+      list && {
+        projectName,
+        list: {
+          id: list.id,
+          projectName,
+          label: list.label,
+          entityType: list.entityType,
+          entityListType: list.entityListType,
+        },
+        // what the Lists and Reviews pages pass
+        scope: list.entityListType === 'review-session' ? 'reviews' : 'lists',
+      },
+    [projectName, list],
+  )
+  useSlotReport('listDetails.tab', context)
+  useStageReady(!isLoading)
+
+  if (isLoading) return <Hint>Loading the lists of {projectName}…</Hint>
+  if (!list || !context) return <Hint>{projectName} has no lists: create one on its Lists or Reviews page.</Hint>
+  return (
+    <div className="ayon-shell-body ayon-shell-lists" data-shell-surface="list-details">
+      <table className="ayon-shell-table ayon-shell-lists-list">
+        <thead>
+          <tr>
+            <th className="ayon-shell-th">
+              <div className="ayon-shell-th-content">List</div>
+            </th>
+            <th className="ayon-shell-th">
+              <div className="ayon-shell-th-content">Type</div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {lists.map((l) => (
+            <tr key={l.id} className={l.id === list.id ? 'selected' : undefined} onClick={() => setListId(l.id)}>
+              <td>
+                <div className="ayon-shell-td-content">{l.label}</div>
+              </td>
+              <td>
+                <div className="ayon-shell-td-content">
+                  {l.entityListType === 'review-session' ? 'Review session' : `${l.entityType}s`}
+                </div>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <section className="ayon-shell-list-detail">
+        <div className="ayon-shell-bar">
+          <strong>{list.label}</strong>
+        </div>
+        {tabs.length ? (
+          <>
+            {/* the app's panel has its Details and Share tabs before these */}
+            <PanelTabs tabs={[]} slot={LIST_DETAILS_SLOT} selected={selectedTab} onChange={setTabKey} />
+            <PanelSlotTab slot={LIST_DETAILS_SLOT} selected={selectedTab} context={context as never} />
+          </>
+        ) : (
+          <Hint>This addon has no list details tabs.</Hint>
+        )}
+      </section>
+    </div>
+  )
+}
+
 // slicer.menuItem: AYON's slicer; the items are in its right-click menu and dropdown
 const SlicerBody = ({ selection }: StageProps) => {
   const { rowSelection, sliceType } = useSlicerContext()
@@ -778,6 +867,8 @@ export const Stage = ({
         return <StudioPagesStage {...props} />
       case 'details-panel':
         return <DetailsPanelStage {...props} />
+      case 'list-details':
+        return <ListDetailsStage {...props} />
       case 'slicer':
         return <SlicerStage {...props} />
       case 'project-list':

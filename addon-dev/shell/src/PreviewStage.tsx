@@ -14,6 +14,7 @@ import { ButtonItem, ServiceNote } from './parts'
 
 const FRAME_WIDTH: Partial<Record<string, number>> = {
   'detailsPanel.tab': 620,
+  'listDetails.tab': 420,
   'projectTable.customizeSection': 320,
 }
 

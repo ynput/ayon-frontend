@@ -107,6 +107,14 @@ export const AYON_PLACES: readonly CatalogPlace[] = [
     ],
   },
   {
+    id: 'list-details',
+    label: 'List details',
+    icon: 'list_alt',
+    area: 'Project',
+    simplified: true,
+    slots: [{ slot: 'listDetails.tab', label: 'Tab' }],
+  },
+  {
     id: 'user-details',
     label: 'User details',
     icon: 'person',

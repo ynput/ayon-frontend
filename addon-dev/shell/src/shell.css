@@ -795,6 +795,27 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   min-height: 0;
   overflow: auto;
 }
+.ayon-shell-lists {
+  gap: 8px;
+  padding: 8px;
+  background: var(--md-sys-color-surface-container-lowest);
+}
+.ayon-shell-lists-list {
+  flex: 1;
+  align-self: flex-start;
+  min-width: 0;
+  cursor: pointer;
+}
+.ayon-shell-list-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 420px;
+  flex-shrink: 0;
+  min-height: 0;
+  background: var(--md-sys-color-surface-container-low);
+  border-radius: 4px;
+}
 .ayon-shell-panel-buttons.ayon-shell-panel-buttons {
   flex-direction: row;
   justify-content: flex-end;

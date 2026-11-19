@@ -8,7 +8,8 @@ import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayou
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
 import { AddonListPicker } from '@shared/components/AddonLayout/AddonListPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
-import { AddonDetailsPanelTabHeader } from '@shared/components/AddonLayout/AddonDetailsPanelTabHeader'
+import { AddonPanelTabHeader } from '@shared/components/AddonLayout/AddonPanelTabHeader'
+import { PanelAddonTab } from '@shared/components/PanelTabs'
 import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
 import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
 import { AppProjectListHost } from './AddonLayout'
@@ -60,7 +61,8 @@ export const provideAddonHost = () =>
       EntityPicker: AddonEntityPicker,
       ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
-      DetailsPanelTabHeader: AddonDetailsPanelTabHeader,
+      PanelTabHeader: AddonPanelTabHeader,
+      ContributionTab: PanelAddonTab,
       EntityTable: LazyEntityTable,
     },
   })
