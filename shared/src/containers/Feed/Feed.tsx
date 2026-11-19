@@ -23,6 +23,7 @@ import type { DetailsPanelEntityType } from '@shared/api'
 import mergeAnnotationAttachments from './helpers/mergeAnnotationAttachments'
 import type { SavedAnnotationMetadata } from './index'
 import FeedSearchFilter from './components/FeedSearchFilter'
+import { DetailsPanelTabHeader } from '@shared/components/DetailsPanelTabHeader'
 import { useLastVersionReview } from './hooks/useLastVersionReview'
 import { isValid } from 'date-fns'
 import { formatDateTime } from '@shared/util/formatDate'
@@ -34,6 +35,8 @@ import { useOriginFrameStarts } from './hooks/useOriginFrameStarts'
 export const activitiesLast = 30
 
 export type FeedProps = {
+  /** a details panel tab header with this title above the search bar */
+  title?: string
   disabled?: boolean
   readOnly: boolean
   statuses: Status[]
@@ -45,6 +48,7 @@ export type FeedProps = {
 }
 
 export const Feed = ({
+  title,
   disabled,
   readOnly,
   statuses = [],
@@ -358,6 +362,19 @@ export const Feed = ({
 
   let warningMessage
 
+  const searchFilter = (
+    <FeedSearchFilter
+      feedFilter={feedFilter}
+      setFeedFilter={setFeedFilter}
+      users={users}
+      categories={categories}
+      supportsReviewSession={supportsReviewSession}
+      isLoading={isLoadingNew}
+      onSearchTextChange={setSearchText}
+      checklistCount={checklistCount}
+    />
+  )
+
   return (
     <>
       <Styled.FeedContainer
@@ -370,16 +387,7 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        <FeedSearchFilter
-          feedFilter={feedFilter}
-          setFeedFilter={setFeedFilter}
-          users={users}
-          categories={categories}
-          supportsReviewSession={supportsReviewSession}
-          isLoading={isLoadingNew}
-          onSearchTextChange={setSearchText}
-          checklistCount={checklistCount}
-        />
+        {title ? <DetailsPanelTabHeader title={title} search={searchFilter} /> : searchFilter}
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders

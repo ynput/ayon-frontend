@@ -35,18 +35,15 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
   // the buttons show from the descriptions; a tab's code loads when it is opened
   const { tabs: addonTabs } = useAddonTabs(entityType)
 
-  // icon tabs look alike (two speech bubbles), so the open one also shows its name;
-  // the others keep it as a tooltip
-  const iconTabProps = (tab: string, label: string) => {
-    const selected = currentTab === tab
-    return {
-      selected,
-      children: selected ? label : undefined,
-      'data-tooltip': selected ? undefined : label,
-      'data-tooltip-delay': 0,
-      variant: 'text' as const,
-    }
-  }
+  // icon-only tabs keep their width whichever is open; the open tab's name is the title of its
+  // header (DetailsPanelTabHeader)
+  const iconTabProps = (tab: string, label: string) => ({
+    selected: currentTab === tab,
+    'data-tooltip': label,
+    'data-tooltip-delay': 0,
+    'aria-label': label,
+    variant: 'text' as const,
+  })
 
   return (
     <Styled.TabsContainer className={isLoading ? 'loading' : ''}>

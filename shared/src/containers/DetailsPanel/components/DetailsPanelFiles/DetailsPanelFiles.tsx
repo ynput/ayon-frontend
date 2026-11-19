@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { RepresentationsList } from '@shared/containers/RepresentationsList/RepresentationsList'
 import ReviewablesList from '@shared/components/ReviewablesList/ReviewablesList'
 import type { DetailsPanelEntityData } from '@shared/api'
+import { DetailsPanelTabHeader } from '@shared/components/DetailsPanelTabHeader'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -23,8 +24,8 @@ const StyledSection = styled.div`
   padding: var(--padding-m);
   overflow: auto;
 
-  &:first-child {
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  & + & {
+    border-top: 1px solid var(--md-sys-color-outline-variant);
   }
 `
 
@@ -49,6 +50,7 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
 
   return (
     <StyledContainer>
+      <DetailsPanelTabHeader title="Files" />
       <StyledSection>
         <h4>{reviewablesTitle}</h4>
         <ReviewablesList
