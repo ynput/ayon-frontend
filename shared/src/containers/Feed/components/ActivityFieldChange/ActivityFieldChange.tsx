@@ -158,7 +158,10 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
           </Styled.Text>
         )}
         {isStatus ? (
-          <StatusLabel statuses={[oldDisplay, newDisplay].filter((status) => status.name)} />
+          <StatusLabel
+            className="status-change"
+            statuses={[oldDisplay, newDisplay].filter((status) => status.name)}
+          />
         ) : (
           <>
             <FieldValue {...oldDisplay} pill="tinted" />
