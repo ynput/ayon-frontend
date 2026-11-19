@@ -31,15 +31,16 @@ function FieldTemplate(props: FieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
 
   // Do not render the field if it belongs to a different scope (studio/project/local) or if it is hidden
-    const validScopes = [...props.schema.scope || ['studio', 'project']]
-    if (validScopes.includes('studio') && props.formContext.includeStudioScope && !validScopes.includes('site')) {
-      validScopes.push('project')
-    }
-
+  const validScopes = [...(props.schema.scope || ['studio', 'project'])]
   if (
-    props.schema.scope !== undefined &&
-    !(validScopes.includes(props.formContext.level))
+    validScopes.includes('studio') &&
+    props.formContext.includeStudioScope &&
+    !validScopes.includes('site')
   ) {
+    validScopes.push('project')
+  }
+
+  if (props.schema.scope !== undefined && !validScopes.includes(props.formContext.level)) {
     return null
   }
   const filterKeys = props.formContext.filterKeys
@@ -53,7 +54,9 @@ function FieldTemplate(props: FieldTemplateProps) {
       props.id,
     )
     if (props.schema.section && matches) {
-      return <Divider> {props.schema.section !== '---' && props.schema.section} </Divider>
+      // without a title the divider is a plain line; any child, even a space, makes it a titled one
+      const title = props.schema.section !== '---' ? props.schema.section : undefined
+      return <Divider>{title}</Divider>
     }
 
     return <></>

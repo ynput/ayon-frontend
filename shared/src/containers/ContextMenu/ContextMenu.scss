@@ -3,13 +3,29 @@
   min-width: 12.5rem;
   width: unset;
   padding: 0;
+  border-radius: var(--border-radius-m);
   z-index: 4000 !important;
   // an overlay, like dropdown lists and dialogs (raised above the rows on dark too)
   background-color: var(--md-sys-color-surface-overlay);
   border-color: var(--md-sys-color-outline-variant);
 
+  // the lists are inset so the hovered item shows as a pill inside the menu
+  & > ul,
   .p-submenu-list {
-    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    padding: 4px 0;
+  }
+
+  .p-menuitem {
+    padding: 0 4px;
+  }
+
+  // the line between sections, in the menu's border colour (the theme's is too close to the background)
+  .p-menu-separator {
+    margin: 4px 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
   }
 
   .p-menuitem.p-menuitem-active > .p-menuitem-link {
@@ -40,6 +56,15 @@
         background-color: var(--md-sys-color-surface-overlay);
       }
 
+      &.danger:not(.p-disabled) {
+        background-color: var(--md-sys-color-error-container);
+        &,
+        .icon,
+        span {
+          color: var(--md-sys-color-on-error-container);
+        }
+      }
+
       &.save {
         background-color: var(--md-sys-color-primary-hover);
         span {
@@ -48,8 +73,11 @@
       }
     }
 
+    // compact rows (32px), like other AYON menus and inputs
     & > .p-menuitem-link {
-      padding-right: 10px;
+      min-height: 32px;
+      padding: 4px 8px;
+      border-radius: var(--border-radius-m);
 
       &,
       .icon {
@@ -61,14 +89,22 @@
         color: var(--md-sys-color-on-surface-variant);
       }
 
+      // red text, tinted only while hovered or focused, so it doesn't look hovered all the time
       &.danger {
-        background-color: var(--md-sys-color-error-container);
+        &,
+        .icon,
         span {
-          color: var(--md-sys-color-on-error-container);
+          color: var(--md-sys-color-error);
         }
 
-        &:hover {
-          background-color: var(--md-sys-color-error-container-hover);
+        &:hover,
+        &:focus-visible {
+          background-color: var(--md-sys-color-error-container);
+          &,
+          .icon,
+          span {
+            color: var(--md-sys-color-on-error-container);
+          }
         }
         &:active {
           background-color: var(--md-sys-color-error-container-active);
@@ -99,5 +135,15 @@
   .p-menuitem-shortcut {
     margin-left: auto;
     padding-left: 32px;
+
+    // plain text, not a tag, so it doesn't compete with the label
+    & > * {
+      padding: 0;
+      background-color: transparent;
+      color: var(--md-sys-color-outline);
+      font-size: var(--md-sys-typescale-body-small-font-size);
+      line-height: var(--md-sys-typescale-body-small-line-height);
+      letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+    }
   }
 }

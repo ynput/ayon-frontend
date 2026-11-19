@@ -7,6 +7,8 @@ import type { Status, QueryFilter } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 
 interface FeedWrapperProps {
+  /** the tab header's title; no header without it (the floating panel has no tabs) */
+  title?: string
   entities: any[]
   activeUsers: any[]
   projectInfo: any

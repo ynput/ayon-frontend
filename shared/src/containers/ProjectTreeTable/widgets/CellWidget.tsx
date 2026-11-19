@@ -52,14 +52,17 @@ const Cell = styled.div`
     outline: none;
   }
 
+  /* faded just enough to tell inherited values apart, while pills and numbers stay readable */
   &.inherited {
-    opacity: 0.6;
-    font-style: italic;
+    opacity: 0.75;
 
-    /* light fades less: at 0.6, coloured values drop below readable contrast there */
     [data-theme='light'] & {
       opacity: 0.8;
     }
+  }
+
+  &.placeholder {
+    color: var(--md-sys-color-outline);
   }
 
   &.loading {
@@ -538,7 +541,7 @@ export const CellWidget: FC<EditorCellProps> = ({ mark: markProp, isReadOnly, ..
       <CellWidgetContent
         rowId={props.rowId}
         columnId={props.columnId}
-        className={props.className}
+        className={clsx(props.className, 'placeholder')}
         value={mark.placeholder}
         attributeData={{ type: 'string' }}
         mark={mark}

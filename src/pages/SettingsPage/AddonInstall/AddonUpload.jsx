@@ -79,7 +79,7 @@ const AddonUpload = ({
   const [uploadPackages] = useUploadDependencyPackagesMutation()
 
   const typeLabel =
-    type === 'package' ? 'Dependency Package' : type === 'addon' ? 'Addon' : 'Installer'
+    type === 'package' ? 'dependency package' : type === 'addon' ? 'addon' : 'installer'
 
   // first create the installer using the .json file
   const handleCreateInstaller = async (files) => {

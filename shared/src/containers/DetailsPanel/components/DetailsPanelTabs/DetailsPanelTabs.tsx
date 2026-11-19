@@ -35,26 +35,30 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
   // the buttons show from the descriptions; a tab's code loads when it is opened
   const { tabs: addonTabs } = useAddonTabs(entityType)
 
+  // icon-only tabs keep their width whichever is open; the open tab's name is the title of its
+  // header (DetailsPanelTabHeader)
+  const iconTabProps = (tab: string, label: string) => ({
+    selected: currentTab === tab,
+    'data-tooltip': label,
+    'data-tooltip-delay': 0,
+    'aria-label': label,
+    variant: 'text' as const,
+  })
+
   return (
     <Styled.TabsContainer className={isLoading ? 'loading' : ''}>
       {showFeedTab && (
         <Button
           icon="forum"
-          selected={currentTab === 'feed'}
           onClick={() => onTabChange('feed')}
-          data-tooltip="Activity Feed"
-          data-tooltip-delay={0}
-          variant="text"
+          {...iconTabProps('feed', 'Activity')}
         />
       )}
       {showSubtasksTab && (
         <Button
           icon="checklist"
-          selected={currentTab === 'subtasks'}
           onClick={() => onTabChange('subtasks')}
-          data-tooltip="Subtasks"
-          data-tooltip-delay={0}
-          variant="text"
+          {...iconTabProps('subtasks', 'Subtasks')}
         />
       )}
       {addonTabs.map((tab) => (
@@ -62,13 +66,10 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           key={tab.key}
           // addons name any Material Symbols icon
           icon={tab.icon as IconType}
-          selected={currentTab === tab.key}
           onClick={() => onTabChange(tab.key as DetailsPanelTab)}
           onMouseEnter={() => prefetchPiece(tab.component)}
-          data-tooltip={tab.label}
-          data-tooltip-delay={0}
           data-addon-tab={tab.key}
-          variant="text"
+          {...iconTabProps(tab.key, tab.label)}
           // the slot inspector's tags, while it is on
           {...contributionTags(tab)}
         />
@@ -78,16 +79,13 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
         <Button
           icon="order_play"
           onClick={() => onTabChange('files')}
-          selected={currentTab === 'files'}
-          data-tooltip="Version files"
-          data-tooltip-delay={0}
-          variant="text"
+          {...iconTabProps('files', 'Files')}
         />
       )}
       <Button
+        icon="lists"
         onClick={() => onTabChange('details')}
         selected={currentTab === 'details'}
-        style={{ padding: '6px 8px' }}
         variant="text"
       >
         Details

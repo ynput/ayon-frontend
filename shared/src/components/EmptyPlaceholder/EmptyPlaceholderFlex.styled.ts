@@ -12,12 +12,17 @@ export const EmptyPlaceholderFlex = styled(EmptyPlaceholder)`
   top: 0;
   left: 0;
   transform: none;
-  gap: 8px;
-  .icon {
-    font-size: 34px;
-  }
-  h3 {
-    font-size: 18px;
+
+  /* smaller by default; className "full" keeps the base size for a placeholder that fills a page,
+     "compact" the base compact size */
+  &:not(.full):not(.compact) {
+    gap: 8px;
+    .icon {
+      font-size: 34px;
+    }
+    h3 {
+      font-size: 18px;
+    }
   }
 `
 export const EmptyPlaceholderFlexWrapper = styled.div`

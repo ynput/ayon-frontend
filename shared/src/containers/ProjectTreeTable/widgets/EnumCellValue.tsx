@@ -262,6 +262,8 @@ export const EnumCellValue = ({
                       : iconOnlyColor || themeColor
                       ? option.color ?? undefined
                       : undefined,
+                    // filled on a pill, as in the table, the header and the feed
+                    ...(pill && { fontVariationSettings: "'FILL' 1" }),
                     ...iconStyle,
                   }}
                   className={iconClassName}

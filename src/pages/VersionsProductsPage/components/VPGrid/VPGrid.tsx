@@ -388,7 +388,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   if (groupBy && !groups.length) {
     return (
       <GridContainer>
-        <EmptyPlaceholder message="No groups available for the selected grouping criteria." />
+        <EmptyPlaceholder message="No groups available for the selected grouping criteria" />
       </GridContainer>
     )
   }
@@ -396,7 +396,7 @@ const VPGrid: FC<VPGridProps> = ({ contextMenuItems }) => {
   if (!gridData.length && !groupBy) {
     return (
       <GridContainer>
-        <EmptyPlaceholder message="No versions or products found." />
+        <EmptyPlaceholder message="No versions or products found" />
       </GridContainer>
     )
   }

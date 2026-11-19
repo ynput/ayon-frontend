@@ -53,6 +53,7 @@ import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenVie
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
 import { useSlicerContext, useViewsContext, useViewsState } from '@shared/containers/index.ts'
+import { getSidebarDefaultSize } from '@shared/containers/Slicer'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
@@ -504,6 +505,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
     onUpdateDisplayStyleWithPersistence('table')
   }, [reviewSessionCardsOutdated])
 
+  // only the first visit: the splitter keeps the sizes the user drags to
+  const sidebarSize = getSidebarDefaultSize()
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -512,7 +516,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
         stateKey="overview-splitter-table"
         stateStorage="local"
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel size={sidebarSize} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
             <ListsTable
               isReview={isReview}
@@ -521,7 +525,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={100 - sidebarSize}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <ProviderFill>
               <ReviewSessionCardsProvider

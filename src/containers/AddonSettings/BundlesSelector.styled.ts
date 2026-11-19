@@ -1,4 +1,12 @@
 import styled from 'styled-components'
+import { Dropdown } from '@ynput/ayon-react-components'
+
+// read-only in project settings: greyed like other locked fields, but upright like the studio one
+export const BundleDropdown = styled(Dropdown)`
+  .button {
+    font-style: normal;
+  }
+`
 
 export const DropdownBadge = styled.span`
   border-radius: 3px;
@@ -16,6 +24,7 @@ export const DropdownBadge = styled.span`
 
   &.staging {
     background-color: var(--color-hl-staging);
+    color: var(--color-on-hl-staging);
   }
 
   &.production {

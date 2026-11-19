@@ -23,7 +23,7 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
     .filter((status) => statusCounts[status.name] > 0)
     .map((status) => {
       const count = statusCounts[status.name] || 0
-      const percentage = Math.round((count / total) * 100 * 10) / 10
+      const percentage = Math.round((count / total) * 100)
 
       return `${status.name}: ${count} (${percentage}%)`
     })
@@ -39,7 +39,11 @@ export const TaskStatusBar: FC<TaskStatusBarProps> = ({ statuses = [], statusCou
           return (
             <Styled.Status
               key={status.name}
-              style={{ flex: count, backgroundColor: status.color, color:getTextColor(status.color) }}
+              style={{
+                flex: count,
+                backgroundColor: status.color,
+                color: getTextColor(status.color),
+              }}
             />
           )
         })}

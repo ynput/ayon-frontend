@@ -1,7 +1,8 @@
 import React from 'react'
 import * as Styled from './ReleasePreset.styled'
 import { Icon } from '@ynput/ayon-react-components'
-import { format, formatDistanceToNow } from 'date-fns'
+import { formatDistanceToNow } from 'date-fns'
+import { formatDate } from '@shared/util'
 import Type from '@/theme/typography.module.css'
 import clsx from 'clsx'
 
@@ -27,7 +28,7 @@ const ReleasePreset = ({
     if (!createdAt) return ''
     const date = new Date(createdAt)
     if (showExactDate) {
-      return format(date, 'dd-MM-yy')
+      return formatDate(date)
     } else {
       const fuzzyDate = formatDistanceToNow(date, { addSuffix: true })
       return fuzzyDate.includes('hour') ? 'Today' : fuzzyDate

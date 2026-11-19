@@ -2,7 +2,8 @@ import * as Styled from './projectMenu.styled'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetProjectFoldersQuery, useSetFrontendPreferencesMutation } from '@shared/api'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { InputText, Section } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { useLocalStorage } from '@shared/hooks'
 import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context'
@@ -332,8 +333,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
           {!searchOpen ? (
             <Styled.Search icon="search" variant="text" onClick={handleSearchClick} />
           ) : (
-            <InputText
-              placeholder="Search projects..."
+            <SearchInput
+              placeholder="Search projects"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               autoFocus

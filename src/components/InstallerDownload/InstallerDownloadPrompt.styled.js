@@ -1,5 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
-import styled, { css } from 'styled-components'
+import styled from 'styled-components'
 
 export const Container = styled.div`
   position: relative;
@@ -8,24 +8,15 @@ export const Container = styled.div`
   z-index: 50;
 `
 
-export const ButtonColors = css`
-  background-color: var(--md-sys-color-primary-fixed);
-
-  &:hover {
-    background-color: var(--md-sys-color-primary-fixed-hover);
-  }
-  &,
-  .icon {
-    color: var(--md-sys-color-on-primary-fixed);
-  }
-`
-
+// a quiet surface button on every page: the primary icon keeps it findable without outshining the page
 export const DownloadButton = styled(Button)`
   border-radius: 4px 0 0 4px;
   flex: 1;
   max-height: unset;
 
-  ${ButtonColors}
+  .icon {
+    color: var(--md-sys-color-primary);
+  }
 `
 
 export const CloseButton = styled(Button)`
@@ -33,5 +24,7 @@ export const CloseButton = styled(Button)`
   left: -4px;
   position: relative;
 
-  ${ButtonColors}
+  .icon {
+    color: var(--md-sys-color-on-surface-variant);
+  }
 `

@@ -1,5 +1,6 @@
 // Context and menu items of the user details slots (userDetails.section, userDetails.menuItem,
 // @ynput/ayon-addon). The sections themselves are AddonUserDetailsSections.
+import { menuSection } from '@shared/components/Menu/menuSections'
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { Contribution, UserDetailsContext, UserRef, UserSelection } from '@ynput/ayon-addon'
@@ -70,11 +71,12 @@ export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMen
     [context],
   )
   const topItems = useMemo(
-    () => menuItemsAt(applicable, 'top').map(toMenuItem),
+    // addon items are a section of their own
+    () => menuSection(menuItemsAt(applicable, 'top').map(toMenuItem)),
     [applicable, toMenuItem],
   )
   const items = useMemo(
-    () => menuItemsAt(applicable, 'bottom').map(toMenuItem),
+    () => menuSection(menuItemsAt(applicable, 'bottom').map(toMenuItem)),
     [applicable, toMenuItem],
   )
   const prefetch = useCallback(

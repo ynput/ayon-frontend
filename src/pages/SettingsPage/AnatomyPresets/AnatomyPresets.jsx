@@ -151,7 +151,7 @@ const AnatomyPresets = () => {
   const openCreatePresetDialog = () => {
     setDialogConfig({
       isOpen: true,
-      title: 'Create New Preset',
+      title: 'Create new preset',
       placeholder: 'Preset name',
       initialValue: '',
       onSubmit: (name) => {
@@ -163,7 +163,7 @@ const AnatomyPresets = () => {
   const openRenamePresetDialog = (currentName) => {
     setDialogConfig({
       isOpen: true,
-      title: 'Rename Preset',
+      title: 'Rename preset',
       placeholder: 'New preset name',
       initialValue: currentName,
       onSubmit: (newName) => {
@@ -246,7 +246,7 @@ const AnatomyPresets = () => {
           />
 
           <SaveButton
-            label="Save Current Preset"
+            label="Save current preset"
             saving={isUpdating}
             active={isChanged && selectedPreset !== '_'}
             onClick={() => savePreset(selectedPreset)}

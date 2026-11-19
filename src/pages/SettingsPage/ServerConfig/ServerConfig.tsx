@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import ReactDOM from 'react-dom'
 import ServerConfigUpload from './ServerConfigUpload'
 import SettingsEditor from '@containers/SettingsEditor'
-import { Spacer, Section, Toolbar, ScrollPanel, SaveButton } from '@ynput/ayon-react-components'
+import { Spacer, Toolbar, SaveButton } from '@ynput/ayon-react-components'
 import {
   useGetServerConfigQuery,
   useGetServerConfigOverridesQuery,
@@ -13,31 +13,19 @@ import { ServerConfigModel } from '@shared/api'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
 import usePortalElements from '@hooks/usePortalElements'
+import {
+  SettingsFormSection,
+  SettingsFormTitle,
+  SettingsFormScrollPanel,
+  SettingsFormContent,
+} from '../SettingsFormPage.styled'
 
-const StyledSection = styled(Section)`
-  padding: var(--padding-m);
-  align-items: center;
-  background-color: var(--panel-background);
-  border-radius: var(--border-radius-m);
-  & > * {
-    max-width: 800px;
-  }
+const StyledContent = styled(SettingsFormContent)`
   [data-schema-id='root_customization_login_background'],
   [data-schema-id='root_customization_studio_logo'] {
     .form-field {
       display: none;
     }
-  }
-`
-
-const StyledScrollPanel = styled(ScrollPanel)`
-  flex-grow: 1;
-  padding: 8px;
-  height: 100%;
-  overflow: auto;
-  & > * {
-    overflow: visible;
-    position: relative;
   }
 `
 
@@ -153,21 +141,24 @@ const ServerConfig = () => {
 
   return (
     <>
-      <StyledSection direction="column" style={{ overflow: 'hidden', paddingBottom: 0 }}>
-        <Toolbar>
-          <Spacer />
-          <SaveButton
-            active={!!changedKeys.length}
-            onClick={onSave}
-            saving={isSaving}
-            label="Save server config"
-          />
-        </Toolbar>
+      <main>
+        <SettingsFormSection direction="column">
+          <Toolbar>
+            <SettingsFormTitle>Global settings</SettingsFormTitle>
+            <Spacer />
+            <SaveButton
+              active={!!changedKeys.length}
+              onClick={onSave}
+              saving={isSaving}
+              label="Save changes"
+            />
+          </Toolbar>
 
-        <StyledScrollPanel className="transparent" ref={containerRef}>
-          {settingsEditor}
-        </StyledScrollPanel>
-      </StyledSection>
+          <SettingsFormScrollPanel className="transparent">
+            <StyledContent ref={containerRef}>{settingsEditor}</StyledContent>
+          </SettingsFormScrollPanel>
+        </SettingsFormSection>
+      </main>
       {bgElement &&
         ReactDOM.createPortal(
           <ServerConfigUpload

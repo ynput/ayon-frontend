@@ -1,4 +1,4 @@
-import { ArrayFieldTemplateProps } from '@rjsf/utils'
+import { ArrayFieldTemplateProps, RJSFSchema } from '@rjsf/utils'
 import { Button } from '@ynput/ayon-react-components'
 import { useEffect, useRef, useState } from 'react'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -9,6 +9,7 @@ import ArrayItemTemplate from './ArrayFieldItemTemplate'
 import styled from 'styled-components'
 import { $Any } from '@types'
 import { ArrayItemControls } from './ArrayFieldTemplate.styled'
+import clsx from 'clsx'
 
 const FormArrayField = styled.div`
   flex-grow: 1;
@@ -21,6 +22,11 @@ const FormArrayField = styled.div`
 const DndContextWrapper = styled.div`
   min-width: 100%;
   width: max-content;
+
+  /* rows of compact items fit the panel, their fields shrink instead */
+  &.compact-rows {
+    width: auto;
+  }
 `
 
 const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
@@ -32,6 +38,15 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   }
 
   const canAddItems = props.canAdd && !props.schema?.disabled
+
+  // a list of compact objects reads as a table: the field labels show once, above the first row
+  const { items: itemsRef } = props.schema
+  const itemsSchema =
+    itemsRef && typeof itemsRef === 'object' && !Array.isArray(itemsRef)
+      ? props.registry.schemaUtils.retrieveSchema(itemsRef as RJSFSchema)
+      : undefined
+  const compactRows = itemsSchema?.type === 'object' && itemsSchema?.layout === 'compact'
+
   // index of the added item, which takes the focus when it mounts so typing goes there
   const [itemToFocus, setItemToFocus] = useState<number | null>(null)
 
@@ -85,49 +100,57 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   const draggedItem = items.find((item) => item.id === draggedItemId)
 
   return (
-    <DndContextWrapper onKeyDownCapture={handleKeyDown}>
-    <DndContext
-      collisionDetection={closestCenter}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+    <DndContextWrapper
+      onKeyDownCapture={handleKeyDown}
+      className={clsx({ 'compact-rows': compactRows })}
     >
-      <SortableContext items={items} strategy={verticalListSortingStrategy}>
-        {items.map((item, idx) => (
-          <DraggableItem id={item.id} isVisible={item.id !== draggedItemId} key={idx}>
-            <FormArrayFieldWrapper
-              onChange={onArrayChanged(item)}
-              item={item}
-              arrayId={props.idSchema.$id}
-              focusOnMount={idx === itemToFocus}
-              onFocused={() => setItemToFocus(null)}
-            />
-          </DraggableItem>
-        ))}
-      </SortableContext>
-
-      {canAddItems && (
-        <ArrayItemControls>
-          <Button
-            onClick={onAddItem}
-            icon="add"
-            data-tooltip="Add item"
-            data-shortcut="Shift+Enter"
-          />
-        </ArrayItemControls>
-      )}
-
-      {draggedItem &&
-        createPortal(
-          //class needed to inherit styling defined in settings editor sass file
-          <DragOverlay className="rjsf">
-            <DraggableItem id={draggedItem!.id} isOverlay>
-              <FormArrayFieldWrapper item={draggedItem} />
+      <DndContext
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+      >
+        <SortableContext items={items} strategy={verticalListSortingStrategy}>
+          {items.map((item, idx) => (
+            <DraggableItem
+              id={item.id}
+              isVisible={item.id !== draggedItemId}
+              key={idx}
+              className={clsx({ 'header-row': compactRows && idx === 0 })}
+            >
+              <FormArrayFieldWrapper
+                onChange={onArrayChanged(item)}
+                item={item}
+                arrayId={props.idSchema.$id}
+                focusOnMount={idx === itemToFocus}
+                onFocused={() => setItemToFocus(null)}
+              />
             </DraggableItem>
-          </DragOverlay>,
-          document.body,
+          ))}
+        </SortableContext>
+
+        {canAddItems && (
+          <ArrayItemControls>
+            <Button
+              onClick={onAddItem}
+              icon="add"
+              data-tooltip="Add item"
+              data-shortcut="Shift+Enter"
+            />
+          </ArrayItemControls>
         )}
-    </DndContext>
-  </DndContextWrapper>
+
+        {draggedItem &&
+          createPortal(
+            //class needed to inherit styling defined in settings editor sass file
+            <DragOverlay className={clsx('rjsf', { 'compact-rows': compactRows })}>
+              <DraggableItem id={draggedItem!.id} isOverlay>
+                <FormArrayFieldWrapper item={draggedItem} />
+              </DraggableItem>
+            </DragOverlay>,
+            document.body,
+          )}
+      </DndContext>
+    </DndContextWrapper>
   )
 }
 

@@ -8,6 +8,7 @@ import { StatusLabel } from '@shared/components/StatusLabel'
 import { useGetAttributeListQuery } from '@shared/api'
 import type { AttributeModel, EnumItem } from '@shared/api'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { DATE_FORMAT } from '@shared/util/formatDate'
 import { markdownToPlainText } from '@shared/components/MarkdownEditor/markdown/plainText'
 
 type FieldDisplayValue = {
@@ -29,7 +30,7 @@ const formatSingleValue = (value: unknown, attribute?: AttributeModel): string =
   if (enumLabel) return enumLabel
   if (attribute?.data.type === 'datetime') {
     const date = new Date(String(value))
-    if (!isNaN(date.getTime())) return formatUTCDate(date, 'dd-MM-yyyy')
+    if (!isNaN(date.getTime())) return formatUTCDate(date, DATE_FORMAT)
   }
   return String(value)
 }
@@ -157,7 +158,10 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
           </Styled.Text>
         )}
         {isStatus ? (
-          <StatusLabel statuses={[oldDisplay, newDisplay].filter((status) => status.name)} />
+          <StatusLabel
+            className="status-change"
+            statuses={[oldDisplay, newDisplay].filter((status) => status.name)}
+          />
         ) : (
           <>
             <FieldValue {...oldDisplay} pill="tinted" />

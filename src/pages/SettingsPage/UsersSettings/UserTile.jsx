@@ -76,7 +76,7 @@ const UserTile = ({
       if (user.accessGroups) {
         user.accessGroups = JSON.parse(user.accessGroups)
       }
-    } else if (isError) return <PanelStyled>Not Found</PanelStyled>
+    } else if (isError) return <PanelStyled>Not found</PanelStyled>
   }
 
   const { name, attrib, updatedAt, isManager, isAdmin, isService, accessGroups } = user || {}

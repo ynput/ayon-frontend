@@ -18,7 +18,7 @@ export interface UserDetailsHeaderProps {
   onClose?: () => void
   subTitle?: ReactNode
   style?: CSSProperties
-  /** the more menu's items; "View data" is added after them */
+  /** the more menu's items; "View data" is added after them, above Delete */
   menuItems?: MenuItemType[]
   /** called when the more menu opens */
   onMenuOpen?: () => void
@@ -37,14 +37,18 @@ export const UserDetailsHeader = ({
 
   const getUserName = (user: UserDetailsHeaderUser) => user?.attrib?.fullName || user?.name
 
-  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} Users Selected`
+  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} users selected`
 
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
   const [showContext, setShowContext] = useState(false)
 
   const menuId = useMemo(() => {
-    const seed = users.map((u) => u?.name).filter(Boolean).join(',') || 'none'
+    const seed =
+      users
+        .map((u) => u?.name)
+        .filter(Boolean)
+        .join(',') || 'none'
     return `user-detail-more-menu-${seed}`
   }, [users])
 
@@ -53,15 +57,19 @@ export const UserDetailsHeader = ({
     if (isOpen) onMenuOpen?.()
   }, [isOpen, onMenuOpen])
   const hasMenu = Array.isArray(menuItems) && menuItems.length > 0
+  // View data goes above Delete, so Delete stays last in a section of its own
+  const deleteAt = hasMenu ? menuItems.findIndex((item) => item.danger) : -1
+  const splitAt = deleteAt < 0 ? menuItems?.length ?? 0 : deleteAt
   const fullItems: MenuItemType[] = hasMenu
     ? [
-        ...menuItems,
+        ...menuItems.slice(0, splitAt),
         {
           id: 'view-data',
           label: 'View data',
           icon: 'data_object',
           onClick: () => setShowContext(true),
         },
+        ...menuItems.slice(splitAt),
       ]
     : []
 

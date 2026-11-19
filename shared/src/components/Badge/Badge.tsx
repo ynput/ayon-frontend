@@ -10,7 +10,9 @@ const BaseBadge = styled.span`
   align-items: center;
   justify-content: center;
   border-radius: var(--border-radius-m);
-  padding: 0px 4px;
+  /* the size of the status pills in the project tables */
+  padding: 1px 6px;
+  line-height: 20px;
 
   &.placeholder {
     color: var(--md-sys-color-outline);
@@ -19,7 +21,7 @@ const BaseBadge = styled.span`
 
 const WELL_KNOWN_BADGES = ['studio', 'project', 'production', 'staging', 'developer']
 // these are darker in the light theme, so they take white text there
-const THEMED_BADGES = ['staging', 'developer']
+const THEMED_BADGES = ['developer']
 
 interface BadgeProps {
   label?: string
@@ -50,6 +52,8 @@ export const Badge = (props: BadgeProps) => {
     ? 'light-dark(var(--md-sys-color-on-surface), #e0e0e0)'
     : wellKnown === 'production'
     ? 'var(--color-on-hl-production)'
+    : wellKnown === 'staging'
+    ? 'var(--color-on-hl-staging)'
     : wellKnown && THEMED_BADGES.includes(wellKnown)
     ? `light-dark(white, ${getTextColor(backgroundColor)})`
     : getTextColor(backgroundColor)
@@ -57,17 +61,8 @@ export const Badge = (props: BadgeProps) => {
   nstyle.backgroundColor = backgroundColor
   nstyle.color = foregroundColor
 
-  if (backgroundColor) {
-    nstyle.fontSize= '0.9rem';
-  }
-
   return (
-    <BaseBadge
-      style={nstyle}
-      className={className}
-      aria-label={label}
-      {...additionalProps}
-    >
+    <BaseBadge style={nstyle} className={className} aria-label={label} {...additionalProps}>
       {label}
     </BaseBadge>
   )

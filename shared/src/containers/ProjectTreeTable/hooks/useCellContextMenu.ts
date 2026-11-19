@@ -24,6 +24,7 @@ import {
   type NewEntityType,
 } from '@shared/containers/NewEntity/util/entityDefinitions'
 import type { NewEntityOpenConfig } from '@shared/containers/NewEntity/context/new-entity'
+import { MENU_DIVIDER } from '@shared/components/Menu/menuSections'
 
 type ContextEvent = React.MouseEvent<HTMLTableSectionElement, MouseEvent>
 
@@ -54,6 +55,7 @@ type DefaultMenuItem =
   | 'create-folder'
   | 'create-task'
   | 'open-viewer'
+  | 'separator' // a line between sections; the menu drops it when a section has nothing to show
 export type ContextMenuItemConstructor = (
   e: ContextEvent,
   cell: TableCellContextData,
@@ -413,6 +415,7 @@ const useCellContextMenu = ({
     ['create-folder']: createFolderItems,
     ['create-task']: createTaskItem,
     ['open-viewer']: openViewerItem,
+    ['separator']: () => MENU_DIVIDER,
   }
 
   const getCellData = (cellId: string): TableCellContextData | undefined => {

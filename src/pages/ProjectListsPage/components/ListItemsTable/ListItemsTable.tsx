@@ -99,7 +99,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   if (!selectedList)
     return (
       <EmptyPlaceholderFlexWrapper>
-        <EmptyPlaceholder message="Start by selecting or importing a list.">
+        <EmptyPlaceholder message="Select a list to see its items">
           <ImportDialogButton importContext="entity_list_item" projectName={projectName} />
         </EmptyPlaceholder>
       </EmptyPlaceholderFlexWrapper>
@@ -109,7 +109,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
     const [shown, compared] = selectedLists
     const tooBig = isTooBigToCompare(compared)
     return (
-      <EmptyPlaceholder message="Please select one list to view its items.">
+      <EmptyPlaceholder message="Select a single list to see its items">
         {selectedLists.length === 2 && canCompareLists(shown, compared) && (
           <Button
             icon="compare_arrows"

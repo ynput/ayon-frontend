@@ -77,7 +77,10 @@ export const BundleBadges = ({
     stagBadge = (
       <DropdownBadge
         className={clsx('badge', { disabled: previous === 'staging' })}
-        style={{ backgroundColor: 'var(--color-hl-staging)' }}
+        style={{
+          backgroundColor: 'var(--color-hl-staging)',
+          color: 'var(--color-on-hl-staging)',
+        }}
       >
         {startContent}
         Staging
