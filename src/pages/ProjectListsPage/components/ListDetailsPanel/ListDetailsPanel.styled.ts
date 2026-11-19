@@ -25,32 +25,6 @@ export const Section = styled.div`
     }
   }
 
-  /* the panel is the card: the attribute and detail groups inside are plain, with a title */
-  > div {
-    border: none;
-    border-radius: 0;
-
-    > :first-child:not(.with-padding) {
-      min-height: 0;
-      margin-top: 4px;
-      padding: 4px 0 8px;
-
-      span {
-        font-weight: 600;
-        color: var(--md-sys-color-on-surface);
-      }
-    }
-
-    > .with-padding {
-      padding: 0;
-    }
-  }
-
-  & + &:has(> *) {
-    margin-top: var(--padding-m);
-    border-top: 1px solid var(--md-sys-color-outline-variant);
-  }
-
   /* labels in a fixed column with their values right next to them */
   .with-padding > div {
     grid-template-columns: 120px minmax(0, 1fr) 32px;
