@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
-import { Button, Dialog } from '@ynput/ayon-react-components'
+import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import VersionsProductsPage from '../VersionsProductsPage'
@@ -16,7 +16,6 @@ import ProjectListsPage from '../ProjectListsPage'
 import { selectProject, setOpenProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
-import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
@@ -34,7 +33,7 @@ import {
   useGlobalContext,
   useProjectContext,
 } from '@shared/context'
-import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
+import { VersionUploadProvider, UploadVersionDialog, JsonViewer } from '@shared/components'
 import { productSelected } from '@state/context'
 import { useGetBundleAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
@@ -125,15 +124,25 @@ const ProjectContextInfo = () => {
    */
   const context = useAppSelector((state) => state.context)
   const project = useAppSelector((state) => state.project)
+  const [tab, setTab] = useState<'context' | 'project'>('context')
   return (
-    <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
-      <TabPanel header="context" style={{ overflow: 'hidden' }}>
-        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ context }, null, 2)}</pre>
-      </TabPanel>
-      <TabPanel header="project" style={{ overflow: 'hidden' }}>
-        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ project }, null, 2)}</pre>
-      </TabPanel>
-    </TabView>
+    <>
+      <Toolbar style={{ marginBottom: 8 }}>
+        {(['context', 'project'] as const).map((id) => (
+          <Button
+            key={id}
+            variant={tab === id ? 'surface' : 'text'}
+            selected={tab === id}
+            aria-pressed={tab === id}
+            onClick={() => setTab(id)}
+            style={{ textTransform: 'capitalize' }}
+          >
+            {id}
+          </Button>
+        ))}
+      </Toolbar>
+      <JsonViewer value={tab === 'context' ? { context } : { project }} wrap />
+    </>
   )
 }
 

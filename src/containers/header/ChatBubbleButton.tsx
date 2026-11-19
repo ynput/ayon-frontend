@@ -9,7 +9,7 @@ const ChatBubbleButton = () => {
   if (!messengerLoaded) return null
   return (
     <HeaderButton
-      style={{ padding: '7px 5.5px' }}
+      style={{ padding: '7.5px 6px' }}
       onClick={() => openSupport(hasUnreadMessages ? 'Messages' : 'NewMessage')}
       variant="nav"
       className={clsx({ notification: hasUnreadMessages })}

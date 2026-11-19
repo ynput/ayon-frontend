@@ -14,7 +14,7 @@ export const HeaderButton = styled(Button)`
   z-index: 20;
 
   & > span {
-    font-size: 24px !important;
+    font-size: 25px !important;
   }
   /* set home icon filled */
   &#home-button {
