@@ -60,7 +60,7 @@ export const SearchButton = styled(Button)`
 
 // the gap under the search bar: the tab's content scrolls below it, not right up to the bar
 export const Search = styled.div`
-  padding-bottom: 4px;
+  padding-bottom: 8px;
 
   &:empty,
   &.hidden {
