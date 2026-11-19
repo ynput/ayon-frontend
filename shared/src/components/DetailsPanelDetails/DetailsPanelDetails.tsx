@@ -24,7 +24,6 @@ const StyledContainer = styled.div`
   overflow-y: auto;
   padding-right: 8px;
   padding-left: 8px;
-  margin-top: 4px;
 `
 
 const DESCRIPTION_FIELD = { name: 'description', data: { title: 'Description' } }
