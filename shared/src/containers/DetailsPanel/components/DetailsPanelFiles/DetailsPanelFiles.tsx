@@ -50,9 +50,9 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
 
   return (
     <StyledContainer>
-      <DetailsPanelTabHeader title="Files" />
+      {/* the tab button's tooltip stays "Files" (DetailsPanelTabs) */}
+      <DetailsPanelTabHeader title={reviewablesTitle} />
       <StyledSection>
-        <h4>{reviewablesTitle}</h4>
         <ReviewablesList
           projectName={firstVersion.projectName}
           // @ts-expect-error - entityType is a version and will have a product

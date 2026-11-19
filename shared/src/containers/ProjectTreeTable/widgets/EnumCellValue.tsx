@@ -36,8 +36,9 @@ const StyledWidget = styled.div`
     border-radius: 0;
     overflow: hidden;
 
+    /* the open list is on the overlay surface */
     &:hover {
-      background-color: var(--md-sys-color-surface-container-hover);
+      background-color: var(--md-sys-color-surface-overlay-hover);
     }
   }
 

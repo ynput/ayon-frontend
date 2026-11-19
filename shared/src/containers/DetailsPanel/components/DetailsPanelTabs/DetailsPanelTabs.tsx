@@ -69,7 +69,7 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
           onClick={() => onTabChange(tab.key as DetailsPanelTab)}
           onMouseEnter={() => prefetchPiece(tab.component)}
           data-addon-tab={tab.key}
-          {...iconTabProps(tab.key, tab.label)}
+          {...iconTabProps(tab.key, tab.tooltip || tab.label)}
           // the slot inspector's tags, while it is on
           {...contributionTags(tab)}
         />

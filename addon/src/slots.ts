@@ -358,8 +358,10 @@ export interface HeaderItemContext extends ButtonScope {
 export interface DetailsPanelTabMeta {
   /** the tab id is `<addon>.<id>` */
   id: string
-  /** the tab button's tooltip and the title of the tab's header */
+  /** the title of the tab's header, and the tab button's tooltip unless `tooltip` is set */
   label: string
+  /** the tab button's tooltip; the label when not set */
+  tooltip?: string
   /** a Material Symbols icon name, the tab button */
   icon: string
   /** entity types the tab shows for; all when not set */

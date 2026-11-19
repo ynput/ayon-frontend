@@ -896,7 +896,8 @@ A tab in the details panel. The tab button shows from the description, for `enti
 | Description field | Type | |
 |---|---|---|
 | `id` (required) | `string` | the tab id is `<addon>.<id>` |
-| `label` (required) | `string` | the tab button's tooltip and the title of the tab's header |
+| `label` (required) | `string` | the title of the tab's header, and the tab button's tooltip unless `tooltip` is set |
+| `tooltip` | `string \| undefined` | the tab button's tooltip; the label when not set |
 | `icon` (required) | `string` | a Material Symbols icon name, the tab button |
 | `entityTypes` | `string[] \| undefined` | entity types the tab shows for; all when not set |
 
