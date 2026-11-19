@@ -3,6 +3,7 @@
   min-width: 12.5rem;
   width: unset;
   padding: 0;
+  border-radius: var(--border-radius-m);
   z-index: 4000 !important;
   // an overlay, like dropdown lists and dialogs (raised above the rows on dark too)
   background-color: var(--md-sys-color-surface-overlay);
@@ -57,8 +58,10 @@
       }
     }
 
+    // compact rows (32px), like other AYON menus and inputs
     & > .p-menuitem-link {
-      padding-right: 10px;
+      min-height: 32px;
+      padding: 4px 10px 4px 12px;
 
       &,
       .icon {
@@ -116,5 +119,11 @@
   .p-menuitem-shortcut {
     margin-left: auto;
     padding-left: 32px;
+
+    & > * {
+      font-size: var(--md-sys-typescale-body-small-font-size);
+      line-height: var(--md-sys-typescale-body-small-line-height);
+      letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+    }
   }
 }
