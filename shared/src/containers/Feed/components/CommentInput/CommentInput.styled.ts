@@ -295,10 +295,6 @@ export const VersionReviewButtons = styled.div`
   grid-template-columns: 1fr 1fr;
 `
 
-export const VersionReviewButtonsSpacer = styled.div`
-  margin-top: var(--padding-m);
-`
-
 export const VersionReviewButton = styled(Button)`
   background: transparent;
   border: solid 1px currentColor;
