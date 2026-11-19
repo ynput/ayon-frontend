@@ -22,10 +22,21 @@ export interface TabHeaderFilter {
   inverted?: boolean
 }
 
-/** AYON's search and filter bar under the tab's title. */
+/** AYON's search bar under the tab's title. */
 export interface TabHeaderSearch {
-  /** the search text when the user confirms it (Enter) or removes it; `''` when cleared */
+  /**
+   * `filter` (default): AYON's search and filter bar. `text`: a plain text input, like the search of
+   * AYON's own Details tabs, without `options` and `filters`. An AYON older than `text` shows the
+   * search and filter bar.
+   */
+  variant?: 'filter' | 'text'
+  /**
+   * the search text when the user confirms it (Enter) or removes it, as it is typed for `text`; `''`
+   * when cleared
+   */
   onSearch: (text: string) => void
+  /** the text input's placeholder (`text`) */
+  placeholder?: string
   /** filters the user can add; search only when not set */
   options?: TabHeaderFilterOption[]
   /** the filters set now (controlled) */
@@ -36,7 +47,10 @@ export interface TabHeaderSearch {
 export interface PanelTabHeaderProps {
   /** the "more" (…) menu right of the title: the items a `menu` piece returns */
   menu?: AddonMenuItem[]
-  /** AYON's search and filter bar under the title, shown and hidden with the header's search button */
+  /**
+   * AYON's search and filter bar, or a plain text search (`variant: 'text'`), under the title, shown
+   * and hidden with the header's search button
+   */
   search?: TabHeaderSearch
   /** anything else for the header, under the search bar (counts, a toggle, a summary) */
   children?: ReactNode

@@ -13,7 +13,11 @@ import {
 import type { Filter, Option } from '@ynput/ayon-react-components'
 import type { TabHeaderFilter, TabHeaderSearch } from '@ynput/ayon-addon'
 import type { HostPanelTabHeaderProps } from '@ynput/ayon-addon/host'
-import { PanelTabHeader, usePanelTabHeaderSlots } from '@shared/components/PanelTabs'
+import {
+  PanelTabHeader,
+  PanelTabSearch,
+  usePanelTabHeaderSlots,
+} from '@shared/components/PanelTabs'
 import { AddonMoreMenu } from './AddonMoreMenu'
 
 const toOptions = (options: TabHeaderSearch['options'] = []): Option[] =>
@@ -60,6 +64,35 @@ const toTabHeaderFilters = (filters: Filter[], options: Option[]): TabHeaderFilt
 
 const isSearchChip = (filter: Filter) => getFilterFromId(filter.id) === SEARCH_FILTER_ID
 
+// the header's search button: shown while a search bar exists, marked while it is set
+const useHeaderSearchState = (active: boolean) => {
+  const slots = usePanelTabHeaderSlots()
+  useEffect(() => {
+    slots?.setSearchState({ has: true, active })
+  }, [slots, active])
+  useEffect(() => () => slots?.setSearchState({ has: false, active: false }), [slots])
+}
+
+// `variant: 'text'`: the plain text search of AYON's own Details tabs, applied as it is typed
+const TabHeaderTextSearch = ({ search }: { search: TabHeaderSearch }) => {
+  const [text, setText] = useState('')
+  useHeaderSearchState(!!text)
+
+  return (
+    // where the search and filter bar is
+    <div style={{ paddingTop: 4 }}>
+      <PanelTabSearch
+        value={text}
+        placeholder={search.placeholder}
+        onChange={(value) => {
+          setText(value)
+          search.onSearch(value)
+        }}
+      />
+    </div>
+  )
+}
+
 const TabHeaderSearchBar = ({ search }: { search: TabHeaderSearch }) => {
   // keyed by content: addons pass these inline, and rebuilt chips get new ids, which would close
   // a filter the user is editing
@@ -78,13 +111,7 @@ const TabHeaderSearchBar = ({ search }: { search: TabHeaderSearch }) => {
     setFilters((current) => [...current.filter(isSearchChip), ...controlled])
   }, [controlled, filtersKey])
 
-  // the header's search button: shown while this bar exists, marked while filters are set
-  const slots = usePanelTabHeaderSlots()
-  const active = filters.some((f) => !!f.values?.length)
-  useEffect(() => {
-    slots?.setSearchState({ has: true, active })
-  }, [slots, active])
-  useEffect(() => () => slots?.setSearchState({ has: false, active: false }), [slots])
+  useHeaderSearchState(filters.some((f) => !!f.values?.length))
 
   const handleFinish = (next: Filter[]) => {
     setFilters(next)
@@ -120,7 +147,11 @@ export const AddonPanelTabHeader = ({
 }: HostPanelTabHeaderProps) => {
   const slots = usePanelTabHeaderSlots()
   const menuNode = menu?.length ? <AddonMoreMenu items={menu} onError={onError} /> : null
-  const searchNode = search ? <TabHeaderSearchBar search={search} /> : null
+  const searchNode = !search ? null : search.variant === 'text' ? (
+    <TabHeaderTextSearch search={search} />
+  ) : (
+    <TabHeaderSearchBar search={search} />
+  )
   const extraNode = children ? <div style={{ padding: '4px 8px' }}>{children}</div> : null
 
   if (!slots) {

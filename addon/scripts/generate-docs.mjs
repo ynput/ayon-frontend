@@ -90,7 +90,11 @@ ts.forEachChild(slotsFile, (node) => {
       ],
       pieces,
       // complete: every required field and piece is in it
-      example: exampleSnippet(name, { required: [], pieces: [], example: SLOT_EXAMPLES[name] }, slotDocs[name]?.helper),
+      example: exampleSnippet(
+        name,
+        { required: [], pieces: [], example: SLOT_EXAMPLES[name] },
+        slotDocs[name]?.helper,
+      ),
     })
   }
 })
@@ -482,7 +486,10 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
   right. The user shows or hides it (one choice for every tab, hidden by default); while hidden with
   filters set, the button is marked. \`onSearch\` gets the text when the user
   confirms it (Enter) or removes it. \`options\` are the filters the user can add, \`filters\` (\`{ id, values, inverted? }\`,
-  value ids) the ones set now; the bar is search-only without \`options\`.
+  value ids) the ones set now; the bar is search-only without \`options\`. \`variant: 'text'\` shows a plain
+  text input instead, like the search of AYON's own Details tabs: \`onSearch\` gets the text as it is
+  typed, \`placeholder\` is its placeholder, and there are no filters. An AYON older than \`text\` shows
+  the search and filter bar.
 - \`children\`: anything else for the header, under the search bar.
 - No title prop: the title is always the tab's \`label\`.
 - An AYON older than this component has no such export (\`undefined\`): an addon that supports one
