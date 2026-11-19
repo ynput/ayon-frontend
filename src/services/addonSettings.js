@@ -279,3 +279,5 @@ export const {
   useSetRawAddonSettingsOverridesMutation,
   useLazyGetRawAddonSettingsOverridesQuery,
 } = addonSettings
+
+export { addonSettings as addonSettingsApi }

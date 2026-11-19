@@ -132,7 +132,9 @@ function FieldTemplate(props: FieldTemplateProps) {
 
   const onContextMenu = (e: $Any) => {
     e.preventDefault()
-    contextMenu(e, contextMenuModel)
+    // while comparing with the settings history, it can revert this setting
+    const historyItems = props.formContext.getHistoryMenuItems?.(path) ?? []
+    contextMenu(e, [...historyItems, ...contextMenuModel])
     if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
   }
 
