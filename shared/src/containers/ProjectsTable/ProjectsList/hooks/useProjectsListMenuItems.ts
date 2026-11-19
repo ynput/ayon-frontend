@@ -1,4 +1,5 @@
 import { useCallback, useMemo } from 'react'
+import { menuSection } from '@shared/components/Menu/menuSections'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition } from '@ynput/ayon-addon'
 import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
@@ -86,7 +87,7 @@ type MenuItem = {
 
 export type BuildMenuItems = (
   selection: string[],
-  config?: { command?: boolean; dividers?: boolean; hidden?: Hidden },
+  config?: { command?: boolean; hidden?: Hidden },
 ) => MenuItem[]
 
 const CONTEXT_MENU_HIDDEN: Hidden = {
@@ -217,7 +218,7 @@ const useProjectsListMenuItems = ({
 
   const buildMenuItems = useCallback<BuildMenuItems>(
     (selection, config) => {
-      const { command, dividers = true, hidden = {} } = config || {}
+      const { command, hidden = {} } = config || {}
       const allPinned = selection.every((id) => pinned.includes(id))
       const allSelected = selection.length === projects.length
       const singleProject =
@@ -358,7 +359,9 @@ const useProjectsListMenuItems = ({
       // tagged for the slot inspector; the slot's example (Show slots) also shows without a
       // selected project
       const buildAddonItems = (position: MenuItemPosition): MenuItem[] => {
-        const shown = selectedProjectNames.length ? addonMenuItems : addonMenuItems.filter(isExample)
+        const shown = selectedProjectNames.length
+          ? addonMenuItems
+          : addonMenuItems.filter(isExample)
         return menuItemsAt(shown, position)
           .filter((item) => !item.in?.length || item.in.includes(menu))
           .map((item) => {
@@ -373,6 +376,7 @@ const useProjectsListMenuItems = ({
             }
           })
       }
+      // addon items are a section of their own
       // `top` items first in the menu, the rest (default) above Archive and Delete
       const addonTopItems = buildAddonItems('top')
       const addonItems = buildAddonItems('bottom')
@@ -395,8 +399,7 @@ const useProjectsListMenuItems = ({
         : null
 
       const allItems: MenuItem[] = [
-        ...addonTopItems,
-        ...(addonTopItems.length ? [{ id: 'divider' }] : []),
+        ...menuSection(addonTopItems),
         {
           id: 'search',
           label: 'Search',
@@ -491,9 +494,7 @@ const useProjectsListMenuItems = ({
         },
 
         ...(moveMenuItem ? [moveMenuItem] : []),
-        { id: 'divider' },
-        ...addonItems,
-        { id: 'divider' },
+        ...menuSection(addonItems),
         {
           id: 'archive-project',
           label: `${singleActive ? 'Archive' : 'Activate'}`,
@@ -524,7 +525,7 @@ const useProjectsListMenuItems = ({
       // dividers around a section whose items are all hidden would render as dangling <hr>s
       const visible = allItems.reduce<MenuItem[]>((acc, item) => {
         if (item.id === 'divider') {
-          if (dividers && acc.length && acc[acc.length - 1].id !== 'divider') acc.push(item)
+          if (acc.length && acc[acc.length - 1].id !== 'divider') acc.push(item)
           return acc
         }
         if (item.hidden) return acc
@@ -579,7 +580,6 @@ const useProjectsListMenuItems = ({
     (_e, context) =>
       buildMenuItems(context.selectedRows, {
         command: true,
-        dividers: false,
         hidden: CONTEXT_MENU_HIDDEN,
       }),
     [buildMenuItems],

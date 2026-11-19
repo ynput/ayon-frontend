@@ -2,11 +2,22 @@
 import sh from 'searchhash'
 
 import SearchDropdown, { type Suggestion } from '@components/SearchDropdown/SearchDropdown'
-import { Button, Spacer, Toolbar } from '@ynput/ayon-react-components'
+import { SearchField } from '@components/SearchInput/SearchInput.styled'
+import { Button, Icon, Spacer, Toolbar } from '@ynput/ayon-react-components'
 import { useCallback, useEffect, useRef } from 'react'
+import styled from 'styled-components'
 import { $Any } from '@types'
 import { generateResultsAndFilterIds } from './searchTools'
 import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
+
+// the shared search field look around the dropdown search; the icon sits above its raised input
+const SettingsSearchField = styled(SearchField)`
+  width: 100%;
+
+  .search-icon {
+    z-index: 11;
+  }
+`
 
 const NO_SUGGESTIONS: Suggestion[] = []
 
@@ -93,23 +104,26 @@ const SettingsListHeader = ({
 
   return (
     <Toolbar>
-      <SearchDropdown
-        placeholder="Search and filter settings"
-        suggestions={NO_SUGGESTIONS}
-        suggestionsLimit={10}
-        isLoading={false}
-        hideSuggestions={true}
-        onSubmit={() => applySearchRef.current(search.current)}
-        onClear={() => {
-          clearTimeout(pending.current)
-          search.current = ''
-          applied.current = { text: '' }
-          searchCallback()
-        }}
-        onFocus={() => {}}
-        onClose={() => {}}
-        filter={handleFilter}
-      />
+      <SettingsSearchField>
+        <Icon icon="search" className="search-icon" />
+        <SearchDropdown
+          placeholder="Search and filter settings"
+          suggestions={NO_SUGGESTIONS}
+          suggestionsLimit={10}
+          isLoading={false}
+          hideSuggestions={true}
+          onSubmit={() => applySearchRef.current(search.current)}
+          onClear={() => {
+            clearTimeout(pending.current)
+            search.current = ''
+            applied.current = { text: '' }
+            searchCallback()
+          }}
+          onFocus={() => {}}
+          onClose={() => {}}
+          filter={handleFilter}
+        />
+      </SettingsSearchField>
 
       <Spacer />
 

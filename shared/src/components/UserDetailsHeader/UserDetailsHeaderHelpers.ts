@@ -16,11 +16,11 @@ export interface UserDetailsHeaderUser {
 export const usersAccessLabel = (users: UserDetailsHeaderUser[]) => {
   const access = users.reduce<string[]>((acc, user) => {
     let groups = Object.keys(user.accessGroups || {})
-    // an admin is also a manager
-    if (user.isManager && !user.isAdmin) groups = ['manager']
-    if (user.isManager && user.isAdmin) groups = ['admin']
-    if (user.isService) groups = ['service']
+    // an admin is also a manager; named like the access level control
+    if (user.isManager && !user.isAdmin) groups = ['Manager']
+    if (user.isManager && user.isAdmin) groups = ['Admin']
+    if (user.isService) groups = ['Service']
     return [...new Set([...acc, ...groups])]
   }, [])
-  return access.length ? access.join(', ') : 'No AccessGroups'
+  return access.length ? access.join(', ') : 'No access groups'
 }

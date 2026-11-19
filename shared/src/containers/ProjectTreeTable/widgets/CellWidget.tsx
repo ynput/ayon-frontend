@@ -52,9 +52,17 @@ const Cell = styled.div`
     outline: none;
   }
 
+  /* faded just enough to tell inherited values apart, while pills and numbers stay readable */
   &.inherited {
-    opacity: 0.6;
-    font-style: italic;
+    opacity: 0.75;
+
+    [data-theme='light'] & {
+      opacity: 0.8;
+    }
+  }
+
+  &.placeholder {
+    color: var(--md-sys-color-outline);
   }
 
   &.loading {
@@ -389,6 +397,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
           return (
             <EnumCellValue
               selectedOptions={selectedOptions}
+              pill={columnId === 'status' ? 'filled' : 'tinted'}
               isReadOnly
               hasMultipleValues={enumValue.length > 1}
               isMultiSelect={type?.includes('list')}
@@ -404,6 +413,7 @@ const CellWidgetContent: FC<EditorCellProps> = ({
             onOpen={() => setEditingCellId(cellId)}
             enableCustomValues={enableCustomValues}
             isLoadingOptions={isLoadingOptions}
+            pill={columnId === 'status' ? 'filled' : 'tinted'}
             {...mixedProps}
             {...sharedProps}
             {...pt?.enum}
@@ -531,7 +541,7 @@ export const CellWidget: FC<EditorCellProps> = ({ mark: markProp, isReadOnly, ..
       <CellWidgetContent
         rowId={props.rowId}
         columnId={props.columnId}
-        className={props.className}
+        className={clsx(props.className, 'placeholder')}
         value={mark.placeholder}
         attributeData={{ type: 'string' }}
         mark={mark}

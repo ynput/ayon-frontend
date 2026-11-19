@@ -1,11 +1,10 @@
-import { Dropdown } from '@ynput/ayon-react-components'
 import { useAppSelector } from '@state/store'
 import { useMemo } from 'react'
 import { useListBundlesQuery } from '@shared/api'
 import styled from 'styled-components'
 import type { BundleModel } from '@shared/api/generated/bundles'
 import clsx from 'clsx'
-import { DropdownBadge } from './BundlesSelector.styled'
+import { BundleDropdown, DropdownBadge } from './BundlesSelector.styled'
 
 type BundleType = 'production' | 'staging' | 'dev' | 'project' | 'default'
 
@@ -204,7 +203,7 @@ const BundlesSelector = ({ selected, onChange, disabled }: BundlesSelectorProps)
   }
 
   return (
-    <Dropdown
+    <BundleDropdown
       options={bundleOptions}
       value={selectedBundle ? [selectedBundle?.value] : []}
       style={{ width: '100%' }}

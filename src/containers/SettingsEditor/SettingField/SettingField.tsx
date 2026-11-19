@@ -56,7 +56,8 @@ export const SettingField = ({
       <div className={`form-inline-field-label ${level}`}>
         {/* a span, as in the classic markup: e2e tests take a field's first button as its control */}
         <span onClick={onLabelClick} style={labelStyle}>
-          {label}
+          {/* classic layout: the text itself, so a wrapped label hugs it (SettingsEditor.sass) */}
+          {kind ? label : <span className="label-text">{label}</span>}
         </span>
       </div>
     )}

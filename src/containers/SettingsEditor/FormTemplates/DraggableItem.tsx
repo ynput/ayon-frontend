@@ -56,6 +56,7 @@ type Props = {
   /** How the item is drawn in the flat layout: the box's class (is-row, is-card, is-fold,
    * is-plain, is-simple) that SettingsEditor.sass styles it by */
   layout?: ListItemLayout
+  className?: string
 }
 
 // the class of an item's box in the flat layout
@@ -69,6 +70,7 @@ const DraggableItem = ({
   isOverlay,
   flatLayout,
   layout,
+  className,
   children,
 }: Props) => {
   const boxClass = getItemBoxClass(flatLayout, layout)
@@ -77,7 +79,7 @@ const DraggableItem = ({
   }
 
   return (
-    <SortableDraggableItem id={id} isVisible={isVisible} boxClass={boxClass}>
+    <SortableDraggableItem id={id} isVisible={isVisible} boxClass={boxClass} className={className}>
       {children}
     </SortableDraggableItem>
   )
@@ -104,11 +106,13 @@ const SortableDraggableItem = ({
   id,
   isVisible,
   boxClass,
+  className,
   children,
 }: {
   id: string
   isVisible: boolean
   boxClass?: string | false
+  className?: string
   children: ReactNode
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
@@ -124,6 +128,7 @@ const SortableDraggableItem = ({
   return (
     <div
       ref={setNodeRef}
+      className={className}
       style={{
         ...dndStyle,
         opacity: isVisible ? 1 : 0,

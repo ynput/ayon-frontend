@@ -403,6 +403,15 @@ const SelectWidget = (props: $Any) => {
   const hlstyle = getHighlightStyle(value, props.multiple, formValue, originalValue)
   const renderableValue = getRenderableValue(value, props.multiple)
 
+  // every value of a multiselect, for when they don't fit (in the order the dropdown shows them)
+  const valueTooltip =
+    props.multiple && Array.isArray(value) && value.length > 1
+      ? options
+          .filter((opt) => value.includes(opt.value))
+          .map((opt) => opt.label)
+          .join(', ')
+      : undefined
+
   const placeholder = enumOptionsError
     ? 'Could not load options'
     : isEnumOptionsLoading
@@ -508,7 +517,10 @@ const SelectWidget = (props: $Any) => {
           ? () => handleValueChange(options.map((opt) => opt.value))
           : undefined
       }
-      valueIconMode="all"
+      // without icons the values are one comma separated text, cut with an ellipsis
+      valueIconMode={options.some((opt) => opt.icon) ? 'all' : undefined}
+      // the flat layout's value lists the values in its own tooltip, only when they don't fit
+      data-tooltip={isFlatMulti ? undefined : valueTooltip}
     />
   )
 }

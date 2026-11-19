@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { Button, getTextColor, InputText } from '@ynput/ayon-react-components'
+import { Button, getTagColors, getTextColor, InputText } from '@ynput/ayon-react-components'
 
 export const AutoHeight = styled.div`
   /* use grid tick for auto height transition */
@@ -44,6 +44,10 @@ export const categoryColorCss = (
     --button-color-secondary: ${$categorySecondary};
     --button-text-color: ${getTextColor($categoryPrimary)};
     --border-color: ${$categoryPrimary};
+    /* mentions and the active format button are tinted like tags, never in the category colour itself */
+    --tint-text: ${getTagColors($categoryPrimary).text};
+    --tint-background: ${getTagColors($categoryPrimary).background};
+    --tint-border: ${getTagColors($categoryPrimary).border};
   `
 
 export const Comment = styled.div<CommentProps>`
@@ -100,17 +104,18 @@ export const Comment = styled.div<CommentProps>`
         background-color: var(--button-color-secondary);
       }
       &.active {
-        background-color: var(--button-color-secondary);
-        color: var(--button-color);
+        background-color: var(--tint-background, var(--button-color-secondary));
+        color: var(--tint-text, var(--button-color));
       }
     }
 
     .mention {
-      color: var(--button-color);
-      background-color: var(--button-color-secondary);
+      color: var(--tint-text, var(--button-color));
+      background-color: var(--tint-background, var(--button-color-secondary));
+      box-shadow: inset 0 0 0 1px var(--tint-border, transparent);
 
       &:hover {
-        background-color: color-mix(in srgb, var(--button-color-secondary) 85%, white);
+        filter: brightness(0.97);
       }
     }
   }
@@ -268,7 +273,7 @@ export const Dropzone = styled.div`
     opacity: 1;
   }
 
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: light-dark(rgba(255, 255, 255, 0.7), rgba(0, 0, 0, 0.5));
 
   z-index: 300;
 
@@ -288,10 +293,6 @@ export const VersionReviewButtons = styled.div`
   display: grid;
   gap: var(--base-gap-medium);
   grid-template-columns: 1fr 1fr;
-`
-
-export const VersionReviewButtonsSpacer = styled.div`
-  margin-top: var(--padding-m);
 `
 
 export const VersionReviewButton = styled(Button)`

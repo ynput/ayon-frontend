@@ -1,5 +1,8 @@
 export const GROUP_BY_FOLDER_KEY = 'projectFolder'
 
+// shown in a project's thumbnail slot while it has no thumbnail
+export const PROJECT_ICON = 'deployed_code'
+
 const CORE_DEFAULT_COLUMNS = {
   thumbnail: true,
   name: true,

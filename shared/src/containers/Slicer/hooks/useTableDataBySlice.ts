@@ -97,17 +97,17 @@ export const defaultSliceOptions: SliceTypeField[] = [
     icon: 'arrow_circle_right',
   },
   {
-    label: 'Task Type',
+    label: 'Task type',
     value: 'taskType' as SliceType,
     icon: getEntityTypeIcon('task'),
   },
   {
-    label: 'Folder Type',
+    label: 'Folder type',
     value: 'folderType' as SliceType,
     icon: getEntityTypeIcon('folder'),
   },
   {
-    label: 'Product Type',
+    label: 'Product type',
     value: 'productType' as SliceType,
     icon: getEntityTypeIcon('product'),
   },

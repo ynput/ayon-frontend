@@ -94,7 +94,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
         )
       }
     >
-      <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+      <ScrollPanel style={{ flexGrow: 1 }}>
         {isLoading || userPermissions.canViewAnatomy(projectName) ? (
           <AnatomyEditor
             projectName={projectName}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { DATE_FORMAT } from '@shared/util/formatDate'
 import { InputDate } from '@ynput/ayon-react-components'
 
 import { updateChangedKeys, parseContext } from '../helpers'
@@ -6,7 +7,7 @@ import { $Any } from '@types'
 
 // react-datepicker creates this element under the body when it's missing
 const DATE_PICKER_PORTAL_ID = 'settings-date-picker-portal'
-const fieldProps: $Any = { className: 'form-field' }
+const fieldProps: $Any = { className: 'form-field', dateFormat: DATE_FORMAT }
 
 const DateTimeWidget = (props: $Any) => {
   const { originalValue, path } = parseContext(props)

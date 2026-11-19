@@ -6,7 +6,7 @@ export class WorkfilesPage {
 
   async goto(project: string) {
     await this.page.goto(`/projects/${project}/workfiles`)
-    await expect(this.page.getByPlaceholder('Filter folders...')).toBeVisible({ timeout: 30_000 })
+    await expect(this.page.getByPlaceholder('Filter folders')).toBeVisible({ timeout: 30_000 })
   }
 
   row(text: string): Locator {

@@ -1,5 +1,6 @@
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { ReactNode } from 'react'
+import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { $Any } from '@types'
 import { Badge, BadgeWrapper } from '@shared/components'
@@ -88,10 +89,10 @@ export const buildObjectTitle = ({
 
   let titleComponent = stringTitle
   if (objectId === 'root') {
-    const envColor =
-      headerVariant && ['production', 'staging'].includes(headerVariant)
-        ? headerVariant
-        : 'developer'
+    const isMainVariant = !!headerVariant && ['production', 'staging'].includes(headerVariant)
+    const envColor = isMainVariant ? headerVariant : 'developer'
+    // production and staging are named like the variant buttons, a dev bundle by its name
+    const envLabel = isMainVariant ? upperFirst(headerVariant) : headerVariant
     titleComponent = (
       <>
         {stringTitle}
@@ -99,7 +100,7 @@ export const buildObjectTitle = ({
         <BadgeWrapper className="settings-title-badges">
           {headerProjectName && <Badge color="project" label={headerProjectName} />}
           {headerSiteId && <Badge color="site" label={headerSiteId} />}
-          {headerVariant && <Badge color={envColor} label={headerVariant} />}
+          {headerVariant && <Badge color={envColor} label={envLabel} />}
         </BadgeWrapper>
       </>
     )

@@ -8,7 +8,14 @@ export const TrialEndContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background-image: linear-gradient(to right top, #1f292f, #232e35, #28323b, #2c3741, #313c47);
+  background-image: linear-gradient(
+    to right top,
+    light-dark(var(--md-sys-color-surface-container-low), #1f292f),
+    light-dark(var(--md-sys-color-surface-container-low), #232e35),
+    light-dark(var(--md-sys-color-surface-container), #28323b),
+    light-dark(var(--md-sys-color-surface-container), #2c3741),
+    light-dark(var(--md-sys-color-surface-container-high), #313c47)
+  );
   nav {
     position: fixed;
     left: 0;

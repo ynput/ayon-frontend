@@ -12,10 +12,6 @@ export const PanelContainer = styled(Panel)`
   min-width: 250px;
   padding: var(--padding-l);
 
-  &.noData {
-    background-color: unset;
-  }
-
   @media (max-width: 768px) {
     flex-direction: column;
     gap: var(--base-gap-large);

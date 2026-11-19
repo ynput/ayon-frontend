@@ -1,4 +1,4 @@
-import { ArrayFieldTemplateProps } from '@rjsf/utils'
+import { ArrayFieldTemplateProps, RJSFSchema } from '@rjsf/utils'
 import { Button } from '@ynput/ayon-react-components'
 import {
   closestCenter,
@@ -40,6 +40,11 @@ const FormArrayField = styled.div`
 const DndContextWrapper = styled.div`
   min-width: 100%;
   width: max-content;
+
+  /* rows of compact items fit the panel, their fields shrink instead */
+  &.compact-rows {
+    width: auto;
+  }
 `
 
 // Below this distance the dragged item is still over its own slot
@@ -71,6 +76,16 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   }
 
   const canAddItems = props.canAdd && !props.schema?.disabled
+
+  // classic layout: a list of compact objects reads as a table, the field labels show once,
+  // above the first row. The flat layout draws its own rows (getListItemLayout)
+  const { items: itemsRef } = props.schema
+  const itemsSchema =
+    !flatLayout && itemsRef && typeof itemsRef === 'object' && !Array.isArray(itemsRef)
+      ? props.registry.schemaUtils.retrieveSchema(itemsRef as RJSFSchema)
+      : undefined
+  const compactRows = itemsSchema?.type === 'object' && itemsSchema?.layout === 'compact'
+
   const [itemToFocus, setItemToFocus] = useState<number | null>(null)
   const openItemsPrefix = getListItemsPrefix(props.formContext, props.idSchema.$id)
   const listRef = useRef<HTMLDivElement>(null)
@@ -135,7 +150,11 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
   )
 
   return (
-    <DndContextWrapper ref={listRef} className="array-dnd" onKeyDownCapture={handleKeyDown}>
+    <DndContextWrapper
+      ref={listRef}
+      className={clsx('array-dnd', compactRows && 'compact-rows')}
+      onKeyDownCapture={handleKeyDown}
+    >
       <DndContext
         collisionDetection={listCollisionDetection}
         onDragStart={handleDragStart}
@@ -150,6 +169,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
               flatLayout={flatLayout}
               layout={layouts?.items[item.index]}
               key={item.id}
+              className={clsx(compactRows && idx === 0 && 'header-row')}
             >
               <FormArrayFieldWrapper
                 onChange={onArrayChanged(item)}
@@ -186,7 +206,9 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
         {draggedItem &&
           createPortal(
-            <DragOverlay className={clsx('rjsf', flatLayout && 'settings-flat')}>
+            <DragOverlay
+              className={clsx('rjsf', flatLayout && 'settings-flat', compactRows && 'compact-rows')}
+            >
               <div className={clsx(flatLayout && overlayContextClass)}>
                 <DraggableItem
                   id={draggedItem.id}

@@ -1,3 +1,4 @@
+import { MENU_DIVIDER } from '@shared/components/Menu/menuSections'
 import { newEntityDefinitions } from '@shared/containers/NewEntity/util/entityDefinitions'
 import { useNewEntityContext } from '@shared/containers/NewEntity/context/new-entity'
 import type {
@@ -17,6 +18,8 @@ import {
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import { useOptionalVersionUploadContext } from '@shared/components/VersionUploader/context/version-upload'
 import { SliceMap } from '../types'
+
+const divider: SimpleTableRowContextMenuBuilder = () => MENU_DIVIDER
 
 const toggleChildren = (row: any, expanded: boolean) => {
   row.toggleExpanded(expanded)
@@ -136,6 +139,7 @@ export const useHierarchyContextMenuItems = (
     [projectName, renamingRow, updateEntities],
   )
 
+  // sections: view, edit, lists and files, create (the menu drops the lines of empty sections)
   const rowContextMenuBuilders = useMemo<SimpleTableRowContextMenuBuilder[]>(
     () => [
       (_e, { row, selectedRows }) => ({
@@ -143,12 +147,6 @@ export const useHierarchyContextMenuItems = (
         icon: 'dock_to_left',
         shortcut: getPlatformShortcutKey('click', [KeyMode.Alt]),
         command: () => actions.onShowDetails(row.original, selectedRows),
-      }),
-      (_e, { row }) => ({
-        label: 'Rename label',
-        icon: 'titlecase',
-        shortcut: 'R',
-        command: () => actions.onRename(row.original),
       }),
       (_e, { row }) => ({
         label: 'Open in viewer',
@@ -178,6 +176,20 @@ export const useHierarchyContextMenuItems = (
           (selectedRow) => selectedRow.getCanExpand() && selectedRow.getIsExpanded(),
         ),
       }),
+      divider,
+      (_e, { row }) => ({
+        label: 'Rename label',
+        icon: 'titlecase',
+        shortcut: 'R',
+        command: () => actions.onRename(row.original),
+      }),
+      (_e, { row, selectedRows }) => ({
+        label: 'Move',
+        icon: 'drive_file_move',
+        command: () => actions.onMove(getSelectedRows(row.original, selectedRows)),
+        hidden: !openMoveDialog,
+      }),
+      divider,
       (_e, { row, selectedRows }) => {
         const items = actions.onAddToList?.(row.original, selectedRows)
         return items ? (Array.isArray(items) ? items : [items]) : undefined
@@ -187,12 +199,7 @@ export const useHierarchyContextMenuItems = (
         icon: 'upload',
         command: () => actions.onUploadVersion(row.original),
       }),
-      (_e, { row, selectedRows }) => ({
-        label: 'Move',
-        icon: 'drive_file_move',
-        command: () => actions.onMove(getSelectedRows(row.original, selectedRows)),
-        hidden: !openMoveDialog,
-      }),
+      divider,
       (_e, { row, selectedRows }) => ({
         label: newEntityDefinitions.folder.createLabel,
         icon: newEntityDefinitions.folder.icon,

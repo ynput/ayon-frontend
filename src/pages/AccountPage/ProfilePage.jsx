@@ -1,14 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import {
-  FormRow,
-  Section,
-  Panel,
-  LockedInput,
-  SaveButton,
-  InputText,
-  InputSwitch,
-} from '@ynput/ayon-react-components'
+import { FormRow, Section, Panel, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
@@ -25,7 +17,8 @@ import { useContributions } from '@ynput/ayon-addon'
 import { AddonProfileSections } from '@shared/components'
 import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
-import { AvatarName } from './ProfilePage.styled'
+import { AvatarName, ReadOnlyInput } from './ProfilePage.styled'
+import { EditableLockedInput } from '../SettingsPage/UsersSettings/userDetail.styled'
 import { DividerSmallStyled } from '../SettingsPage/UsersSettings/UserAttribForm.styled'
 
 const FormsStyled = styled.section`
@@ -268,7 +261,13 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
   return (
     <main>
-      <Section style={{ paddingTop: 16 }}>
+      <Section
+        style={{
+          paddingTop: 16,
+          backgroundColor: 'var(--panel-background)',
+          borderRadius: 'var(--border-radius-m)',
+        }}
+      >
         <FormsStyled>
           <Avatar user={user} />
           <AvatarName className={clsx({ loading: !userName || isLoading }, 'shimmer-lightest')}>
@@ -288,7 +287,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
                 />
               </header>
               <FormRow label="Username" key="Username">
-                <InputText value={name} disabled />
+                <ReadOnlyInput value={name} readOnly />
               </FormRow>
               <UserAttribForm
                 formData={formData}
@@ -299,7 +298,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
               {!user?.data?.disablePasswordLogin && (
                 <FormRow label="Password" key="Password">
-                  <LockedInput
+                  <EditableLockedInput
                     label="Password"
                     value={password}
                     type="password"

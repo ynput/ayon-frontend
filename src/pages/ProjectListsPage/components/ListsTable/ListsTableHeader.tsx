@@ -38,22 +38,22 @@ const HeaderTop = styled(Header)`
 
   container-type: inline-size;
 
-  /* when this container gets smaller than */
-  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
-  @container (max-width: 188px) {
+  /* the title comes first: buttons go as the container gets smaller (all are in the more menu) */
+  /* 250px remove folder button (keep the primary add-list action) */
+  @container (max-width: 250px) {
     .add-folder {
       display: none;
     }
   }
-  /* 155px remove add-list button */
-  @container (max-width: 155px) {
+  /* 200px remove add-list button */
+  @container (max-width: 200px) {
     .add-list {
       display: none;
     }
   }
 
-  /* 125px remove search */
-  @container (max-width: 125px) {
+  /* 160px remove search */
+  @container (max-width: 160px) {
     .search-lists {
       display: none;
     }
@@ -61,14 +61,15 @@ const HeaderTop = styled(Header)`
 `
 
 const StyledTitle = styled.span`
-  display: flex;
-  align-items: center;
   ${theme.labelLarge}
   height: 32px;
+  line-height: 32px;
   padding-left: 4px;
   white-space: nowrap;
   overflow: hidden;
-  width: 100%;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 `
 
 const StyledButtons = styled.div`
@@ -365,7 +366,7 @@ const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   return (
     <HeaderStyled>
       <HeaderTop>
-        <StyledTitle>{title}</StyledTitle>
+        <StyledTitle data-tooltip={title}>{title}</StyledTitle>
 
         <StyledButtons>
           <HeaderButton

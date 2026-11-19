@@ -88,11 +88,13 @@ export const Tag = styled(Button)`
   &.finished {
     background-color: unset;
     user-select: none;
+    /* plain status text: it ends where the filled Update buttons do */
+    padding-right: 0;
+    justify-content: flex-end;
   }
 
   &.downloaded {
-    opacity: 0.5;
-    font-style: italic;
+    color: var(--md-sys-color-on-surface-variant);
   }
 
   &.downloading,

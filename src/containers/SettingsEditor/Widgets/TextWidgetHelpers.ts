@@ -1,13 +1,8 @@
-import {
-  IconSelect,
-  InputColor,
-  InputNumber,
-  InputText,
-  InputTextarea,
-} from '@ynput/ayon-react-components'
+import { InputColor, InputNumber, InputText, InputTextarea } from '@ynput/ayon-react-components'
 import { $Any } from '@types'
 import { getDefaultValue, updateChangedKeys } from '../helpers'
 import { PermissionWidget, SettingsCodeEditor } from './TextWidgetInputs'
+import { IconWidget } from './IconWidget'
 
 type TextWidgetInputConfigArgs = {
   props: $Any
@@ -72,7 +67,7 @@ export const getTextWidgetInputConfig = ({
       props.onChange(event.target.value)
     }
   } else if (props.schema.widget === 'icon') {
-    Input = IconSelect
+    Input = IconWidget
     opts.value = value ? [value] : []
     opts.onChange = (nextValue: $Any) => props.onChange(nextValue[0])
   } else if (props.schema.widget === 'label') {
