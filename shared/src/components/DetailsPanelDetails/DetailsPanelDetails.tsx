@@ -178,7 +178,8 @@ export const DetailsPanelDetails = ({
 
   return (
     <StyledContainer>
-      {showDescription && (
+      {/* hidden, not removed: a description being edited keeps its draft */}
+      <div hidden={!showDescription}>
         <DescriptionSection
           description={formData?.description || ''}
           isMixed={mixedFields.includes('description')}
@@ -189,7 +190,7 @@ export const DetailsPanelDetails = ({
           onMentionClick={handleMentionClick}
           onMentionHover={handleMentionHover}
         />
-      )}
+      </div>
       <ActivityReferenceTooltip />
 
       <DetailsPanelAttributesEditor

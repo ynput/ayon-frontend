@@ -8,6 +8,7 @@ import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-com
 import RenderFieldWidget from './components/RenderFieldWidget'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 import { matchesFieldSearch } from './fieldSearch'
+import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 
 const FormRow = styled.div`
   display: grid;
@@ -156,6 +157,13 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
+  // while searching: the options of enums from a resolver, so their values match by the labels
+  // shown (the same project as RenderFieldWidget)
+  const searchFields = useAttributeEnums(fields, {
+    projectName: projectName || entities[0]?.projectName,
+    request: search ? 'all' : [],
+  })
+
   const entitySelectionKey = useMemo(
     () => entities.map((entity) => entity?.id).join('|'),
     [entities],
@@ -204,7 +212,8 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   }
 
   const shownFields = fields.filter(
-    (field) => !field.hidden && matchesFieldSearch(field, form[field.name], search),
+    (field, index) =>
+      !field.hidden && matchesFieldSearch(searchFields[index], form[field.name], search),
   )
 
   return (
