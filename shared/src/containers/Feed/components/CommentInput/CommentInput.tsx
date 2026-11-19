@@ -341,7 +341,7 @@ const CommentInput: FC<CommentInputProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
 
   const hasText = !!editorValue.trim()
-const isEmpty =
+  const isEmpty =
     !hasText &&
     !files.length &&
     !filesUploading.length &&
@@ -1042,7 +1042,6 @@ const isEmpty =
           </Styled.Dropzone>
         </Styled.Comment>
 
-        <Styled.VersionReviewButtonsSpacer />
         {versionReviewButtons}
       </Styled.AutoHeight>
     </>

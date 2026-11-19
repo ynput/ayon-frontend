@@ -122,7 +122,7 @@ const BundleList = ({
 
     // duplicate and edit
     ctxMenuItems.push({
-      label: 'Duplicate and Edit',
+      label: 'Duplicate and edit',
       icon: 'edit_document',
       shortcut: getPlatformShortcutKey('D', [KeyMode.Shift]),
       command: () => onDuplicate(activeBundleName),
@@ -189,14 +189,7 @@ const BundleList = ({
 
   const formatStatus = (rowData) => {
     return (
-      <BadgeWrapper
-        style={{
-          justifyContent: 'flex-end',
-          width: '100%',
-          padding: '0 8px',
-          marginLeft: 0,
-        }}
-      >
+      <BadgeWrapper style={{ justifyContent: 'flex-start', marginLeft: 0, padding: 0 }}>
         {rowData.isProduction && (
           <Badge data-testid={`${rowData.name}-production`} label="Production" />
         )}
@@ -232,7 +225,7 @@ const BundleList = ({
         onContextMenu={onContextMenu}
         selection={selectedBundles.map((name) => ({ name }))}
         onSelectionChange={handleSelect}
-        className={clsx('bundles-table', { loading: isLoading })}
+        className={clsx('bundles-table', 'standard-rows', { loading: isLoading })}
         rowClassName={(rowData) => ({ archived: rowData?.isArchived, loading: isLoading })}
         resizableColumns
         emptyMessage={errorMessage ? 'Error: ' + errorMessage : 'No bundles found'}

@@ -6,7 +6,11 @@ import clsx from 'clsx'
 import { Button, Icon } from '@ynput/ayon-react-components'
 
 import type { TableRow } from '../types/table'
-import { DRAG_HANDLE_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from '../constants'
+import {
+  ADD_COLUMN_BUTTON_SPACE,
+  DRAG_HANDLE_COLUMN_ID,
+  ROW_SELECTION_COLUMN_ID,
+} from '../constants'
 import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
 
@@ -42,6 +46,18 @@ const FooterCell = styled.td`
       inset -2px 0 0 0 var(--md-sys-color-surface-container);
   }
 
+  /* the main summary ("160 folders | 265 tasks | 1 selected") can be wider than the name
+     column: let it run over the next cells instead of cutting it off */
+  &.name {
+    > button {
+      flex-shrink: 0;
+      overflow: visible;
+      width: max-content;
+      min-width: 100%;
+      background-color: var(--md-sys-color-surface-container-lowest);
+    }
+  }
+
   /* match the special fixed widths used by header/body cells */
   &.__row_selection__ {
     width: 20px !important;
@@ -51,6 +67,15 @@ const FooterCell = styled.td`
     width: 24px !important;
     min-width: unset;
   }
+`
+
+// the space of the header's add column slot, like the body rows' trailing cell
+const FooterTrailingCell = styled.td`
+  flex-shrink: 0;
+  height: 34px !important;
+  padding: 0 !important;
+  background-color: var(--md-sys-color-surface-container-lowest);
+  box-shadow: inset 1px 1px 0 0 var(--md-sys-color-surface-container);
 `
 
 const CellContent = styled.div`
@@ -159,7 +184,12 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
             <FooterCell
               key={column.id}
               className={clsx(column.id, { 'last-pinned-left': isLastPinnedLeft })}
-              style={{ ...getCommonPinningStyles(column), width: getColumnWidth(column.id) }}
+              style={{
+                ...getCommonPinningStyles(column),
+                width: getColumnWidth(column.id),
+                // above the next cells, which the summary may run over
+                ...(column.id === 'name' && !column.getIsPinned() && { zIndex: 1 }),
+              }}
             >
               {isLoading ? (
                 <CellSkeleton
@@ -203,6 +233,7 @@ export const TableFooterRow: FC<TableFooterRowProps> = ({
         {virtualPaddingRight ? (
           <td style={{ display: 'flex', width: virtualPaddingRight }} />
         ) : null}
+        <FooterTrailingCell aria-hidden style={{ width: ADD_COLUMN_BUTTON_SPACE }} />
       </FooterRowEl>
     </Footer>
   )

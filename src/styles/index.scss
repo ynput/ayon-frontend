@@ -42,51 +42,88 @@ strong {
   font-weight: 800;
 }
 
-:root {
+// the AYON logo is white: dark letters (and the same green) on light surfaces
+[data-theme='light'] img[src='/AYON.svg'] {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+:root,
+[data-theme] {
+  // light-dark() picks the value for the theme of the element using the variable, and the
+  // tokens resolve there too: declared on every theme scope so a nested one recomputes them
+
   // developer colors
-  --color-hl-developer-container: hsl(272, 23%, 22%);
-  --color-hl-developer-container-hover: hsl(272, 23%, 25%);
+  --color-hl-developer: light-dark(#7b3fc4, #c78fff);
+  --color-hl-developer-container: light-dark(hsl(272, 60%, 95%), hsl(272, 23%, 22%));
+  --color-hl-developer-container-hover: light-dark(hsl(272, 60%, 91%), hsl(272, 23%, 25%));
   --color-hl-developer-hover: hsl(272, 96%, 83%);
   --color-hl-developer-surface: hsl(272, 30%, 70%);
   --color-hl-developer-surface-hover: hsl(272, 30%, 75%);
-  --color-hl-dev: hsl(272 100% 78%);
+  --color-hl-dev: light-dark(#7b3fc4, hsl(272 100% 78%));
 
-  // production colors
-  --color-hl-production: var(--md-sys-color-tertiary);
-  --color-hl-production-hover: var(--md-sys-color-tertiary-hover);
-  --color-hl-production-active: var(--md-sys-color-tertiary-active);
+  // production colors: the brand mint on both themes, with dark text on it
+  --color-hl-production: var(--md-sys-color-tertiary-fixed);
+  --color-hl-production-hover: var(--md-sys-color-tertiary-fixed-hover);
+  --color-hl-production-active: var(--md-sys-color-tertiary-fixed-active);
+  --color-on-hl-production: var(--md-sys-color-on-tertiary-fixed);
 
   // staging colors
-  --color-hl-staging-container: hsl(21deg 83.13% 20.94%);
-  --color-hl-staging-container-hover: hsl(21deg 83.13% 23.94%);
+  --color-hl-staging-container: light-dark(hsl(21, 85%, 94%), hsl(21deg 83.13% 20.94%));
+  --color-hl-staging-container-hover: light-dark(hsl(21, 85%, 90%), hsl(21deg 83.13% 23.94%));
+  // the fill of a staging badge: the same salmon on both themes, with dark text on it
   --color-hl-staging: hsl(357, 100%, 76%);
   --color-hl-staging-hover: hsl(357, 100%, 73%);
   --color-hl-staging-active: hsl(357, 100%, 70%);
+  --color-on-hl-staging: black;
+  // staging as text or an icon on a pale container: darker in the light theme to stay readable
+  --color-hl-staging-text: light-dark(#c8323c, hsl(357, 100%, 76%));
+
+  // text on a badge filled with --color-hl-production, -staging or -developer
+  --color-on-hl: light-dark(white, black);
+
+  // shared sizes, so lines line up across panels: headers (tables, kanban columns, list groups) and the rows of
+  // fixed-height lists such as the slicer. Table rows follow the user's row height instead
+  --size-header: 34px;
+  --size-row: 34px;
+
+  // hover and press of the top bar's buttons and the page tabs. They sit on the page background, which is also the
+  // nav buttons' own hover colour, so a shade of the text colour instead, visible on both themes
+  --color-nav-hover: color-mix(in srgb, var(--md-sys-color-on-surface) 8%, transparent);
+  --color-nav-active: color-mix(in srgb, var(--md-sys-color-on-surface) 12%, transparent);
 
   // table colors
-  --color-table-border: hsl(210 8% 18%);
-  --color-table-row: hsl(216 15% 11.5%);
-  --color-table-row-high: var(--md-sys-color-surface-container-low);
-  --color-table-hover: var(--md-sys-color-surface-container);
-  --color-table-row-hover: hsl(215 14% 15%);
-  --color-table-selected: var(--md-sys-color-secondary-container);
+  --color-table-border: light-dark(var(--md-sys-color-surface-container), hsl(210 8% 18%));
+  --color-table-row: light-dark(var(--md-sys-color-surface-container-lowest), hsl(216 15% 11.5%));
+  // rows that group others and the header: a visible but light step off the rows
+  --color-table-row-high: light-dark(#f6f7f9, #20242b);
+  --color-table-header: var(--md-sys-color-surface-container);
+  --color-table-header-hover: var(--md-sys-color-surface-container-hover);
+  // hover is grey and a step past the group rows; selection is the one blue used by the tree, lists and cards
+  --color-table-row-hover: var(--md-sys-color-surface-container);
+  --color-table-hover: var(--md-sys-color-surface-container-hover);
+  --color-table-selected: var(--md-sys-color-primary-container);
   --color-table-selected-row: var(--md-sys-color-surface-container-high);
-  --color-table-readonly-focused: hsl(212 15% 18%);
-  --color-table-collapsed-widget: hsl(0 0% 100%);
-  --color-table-boolean-border: hsl(212.31deg 16.83% 74.65%);
-  --color-table-status-border: #21252b;
+  --color-table-selected-row-hover: var(--md-sys-color-surface-container-high-hover);
+  --color-table-selected-row-cell-hover: var(--md-sys-color-surface-container-high-active);
+  --color-table-readonly-focused: var(--md-sys-color-surface-container);
+  --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
+  --color-table-boolean-border: light-dark(
+    var(--md-sys-color-on-surface-variant),
+    hsl(212.31deg 16.83% 74.65%)
+  );
+  --color-table-status-border: light-dark(var(--md-sys-color-surface-container), #21252b);
 
   // row highlight colors (for matching products/tasks)
-  --color-row-hl-1: #01cc34;
+  --color-row-hl-1: light-dark(#00801d, #01cc34);
   --color-row-hl-2: #9b00ff;
-  --color-row-hl-3: #ffea02;
-  --color-row-hl-4: #dc1d83;
-  --color-row-hl-5: #fd9a04;
-  --color-row-hl-6: #ff5e50;
-  --color-row-hl-7: #009b77;
-  --color-row-hl-8: #dd4124;
-  --color-row-hl-9: #d65076;
-  --color-row-hl-10: #efc050;
+  --color-row-hl-3: light-dark(#7a6f00, #ffea02);
+  --color-row-hl-4: light-dark(#d30a7c, #dc1d83);
+  --color-row-hl-5: light-dark(#9f5f00, #fd9a04);
+  --color-row-hl-6: light-dark(#d02e27, #ff5e50);
+  --color-row-hl-7: light-dark(#007d60, #009b77);
+  --color-row-hl-8: light-dark(#ce3213, #dd4124);
+  --color-row-hl-9: light-dark(#c13c65, #d65076);
+  --color-row-hl-10: light-dark(#8b6800, #efc050);
   --color-row-hl-11: #5b5ea6;
 
   // row status colors
@@ -98,9 +135,9 @@ strong {
   --color-sub-pro: var(--md-sys-color-tertiary);
   --color-sub-pro-hover: var(--md-sys-color-tertiary-hover);
   --color-on-sub-pro: var(--md-sys-color-on-tertiary);
-  --color-sub-studio: hsl(42, 100%, 50%);
-  --color-on-sub-studio: hsl(53, 100%, 11%);
-  --color-sub-studio-hover: hsl(42, 100%, 45%);
+  --color-sub-studio: light-dark(#936500, hsl(42, 100%, 50%));
+  --color-on-sub-studio: light-dark(white, hsl(53, 100%, 11%));
+  --color-sub-studio-hover: light-dark(#7f5700, hsl(42, 100%, 45%));
 
   // tag colors
   --color-tag-text: hsl(180, 5%, 96%);
@@ -136,14 +173,27 @@ strong {
     // Navigation
   }
 }
+// the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
 nav.primary {
-  background-color: var(--panel-background);
-  padding: 8px;
-  display: flex;
-  flex-direction: row;
+  background-color: var(--md-sys-color-surface-container-low);
+  padding: 6px;
+  // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
+  // page's centre line on every page; a side wider than its half pushes them over, never under it
+  display: grid;
+  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);
+
+  // an open menu and the current page keep their own background
+  button.nav:not(.active, .selected) {
+    &:hover {
+      background-color: var(--color-nav-hover);
+    }
+    &:active {
+      background-color: var(--color-nav-active);
+    }
+  }
 }
 
 .section-header {
@@ -397,8 +447,8 @@ a {
 
 // keep the right-clicked row looking hovered while its context menu is open
 .p-datatable .p-datatable-tbody > tr[data-context-menu-target]:not(.p-highlight) {
-  background: rgba(255, 255, 255, 0.03);
-  color: #ffffffde;
+  background: var(--color-table-row-hover);
+  color: light-dark(var(--md-sys-color-on-surface), #ffffffde);
 }
 
 // right-clicked entity card (grid, kanban) while its context menu is open
@@ -421,6 +471,77 @@ a {
       border-left: none;
     }
   }
+}
+
+// legacy PrimeReact tables of the settings, events and services pages: rows as tall as the project tables'
+// (opt in per table, so tables sized elsewhere, such as the compact Browser and Workfiles ones, keep theirs)
+.standard-rows .p-datatable-tbody > tr:not(.compact) > td,
+.standard-rows .p-treetable-tbody > tr:not(.compact) > td {
+  height: var(--size-row);
+
+  // values start where their header's title does (the first cell has the row's 4px left border for that)
+  &:not(:first-child) {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+}
+
+// legacy PrimeReact tables: match the header of the new project tables
+.p-datatable .p-datatable-thead > tr > th,
+.p-treetable .p-treetable-thead > tr > th {
+  height: var(--size-header);
+  padding-top: 0;
+  padding-bottom: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  .p-column-header-content {
+    min-width: 0;
+  }
+
+  .p-column-title {
+    display: inline-block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    vertical-align: middle;
+  }
+
+  // sort icons only on hover/focus and on the sorted column; hidden, not removed, so titles don't shift
+  &.p-sortable-column:not(.p-highlight):not(:hover):not(:focus-visible) .p-sortable-column-icon {
+    visibility: hidden;
+  }
+
+  .p-sortable-column-icon {
+    flex-shrink: 0;
+    vertical-align: middle;
+  }
+}
+
+// legacy PrimeReact tables and trees: the focus ring is for keyboard focus only,
+// a click shows the selection fill alone (like the project tables)
+.p-treetable .p-treetable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr,
+.p-datatable .p-datatable-tbody > tr > td,
+.p-treetable .p-sortable-column {
+  &:focus:not(:focus-visible) {
+    outline: none !important;
+  }
+}
+.p-tree .p-treenode-content,
+.p-datatable .p-sortable-column,
+.p-treetable-toggler,
+.p-row-toggler,
+.p-tree-toggler {
+  &:focus:not(:focus-visible) {
+    box-shadow: none !important;
+  }
+}
+
+// navigation trees (folder hierarchy, task list) read as one list, without row dividers
+.p-treetable.no-row-dividers .p-treetable-tbody > tr > td {
+  box-shadow: none;
 }
 
 // project list styles for collapsed
@@ -535,8 +656,7 @@ a {
 }
 
 .broken-addon-row {
-  color: red !important;
-  font-style: italic;
+  color: var(--md-sys-color-error) !important;
 }
 
 .p-sidebar-left .p-sidebar {
@@ -552,4 +672,40 @@ a {
 .sort-desc-icon .icon,
 .sort-desc-icon svg {
   transform: none !important;
+}
+
+// the main action of a page or dialog: the primary blue, brighter on hover. The Create dropdown
+// in the tables (shared/src/containers/NewEntity) uses the same two colours.
+button.filled:not(:disabled) {
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+
+  &:hover,
+  &:active {
+    background-color: color-mix(in srgb, var(--md-sys-color-primary) 82%, white);
+  }
+
+  &:focus-visible {
+    outline-color: var(--md-sys-color-on-surface-strong);
+  }
+
+  .shortcut {
+    background-color: var(--md-sys-color-on-primary);
+    color: var(--md-sys-color-primary);
+  }
+}
+
+// disabled filled buttons looked more clickable than enabled secondary ones
+button.filled:disabled,
+button.tonal:disabled,
+button.tertiary:disabled {
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+  opacity: 0.5;
+  cursor: default;
+
+  .shortcut {
+    background-color: var(--md-sys-color-on-surface);
+    color: var(--md-sys-color-surface-container-highest);
+  }
 }

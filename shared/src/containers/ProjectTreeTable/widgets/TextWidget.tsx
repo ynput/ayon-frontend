@@ -415,7 +415,7 @@ export const TextWidget = forwardRef<HTMLSpanElement, TextWidgetProps>(
       <>
         <StyledBaseTextWidget
           className={combinedClassName}
-          style={{ color: option?.color, ...style }}
+          style={style}
           {...props}
           ref={(node) => {
             // Merge external ref with internal ref

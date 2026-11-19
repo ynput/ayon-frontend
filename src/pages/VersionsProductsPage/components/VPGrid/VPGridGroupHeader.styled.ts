@@ -39,6 +39,11 @@ export const Content = styled.div`
     margin: 0;
     ${theme.titleMedium}
   }
+
+  .group-pill {
+    ${theme.titleMedium}
+    line-height: 24px;
+  }
 `
 
 export const Label = styled.h2`

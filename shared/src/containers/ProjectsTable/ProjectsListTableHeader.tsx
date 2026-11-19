@@ -19,37 +19,38 @@ const HeaderTop = styled(Header)`
 
   container-type: inline-size;
 
-  /* when this container gets smaller than */
-  /* 188px remove add-project button  */
-  @container (max-width: 188px) {
-    .add-project {
+  /* the title comes first: buttons go as the container gets smaller (all are in the more menu) */
+  /* 250px remove folder button (keep the primary add-list action) */
+  @container (max-width: 250px) {
+    .add-folder {
       display: none;
     }
   }
-  /* 155px remove select all button */
-  @container (max-width: 155px) {
-    .select-all {
+  /* 200px remove add-list button */
+  @container (max-width: 200px) {
+    .add-list {
       display: none;
     }
   }
 
-  /* 125px remove search */
-  @container (max-width: 125px) {
-    .search-projects {
+  /* 160px remove search */
+  @container (max-width: 160px) {
+    .search-lists {
       display: none;
     }
   }
 `
 
 const StyledTitle = styled.span`
-  display: flex;
-  align-items: center;
   ${theme.labelLarge}
   height: 32px;
+  line-height: 32px;
   padding-left: 4px;
   white-space: nowrap;
   overflow: hidden;
-  width: 100%;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
 `
 
 const StyledButtons = styled.div`

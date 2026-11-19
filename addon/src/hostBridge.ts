@@ -9,6 +9,7 @@ import type { EntityPickerProps } from './EntityPicker'
 import type { ListPickerProps } from './ListPicker'
 import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
+import type { HostDetailsPanelTabHeaderProps } from './DetailsPanelTabHeader'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
@@ -45,6 +46,8 @@ export interface HostComponents {
   MoreMenu: ComponentType<HostMoreMenuProps>
   /** AYON's project table with the providers it needs (`EntityTable`); not in the dev shell */
   EntityTable?: ComponentType<EntityTableProps>
+  /** fills the header of the details panel tab it is rendered in (`DetailsPanelTabHeader`) */
+  DetailsPanelTabHeader?: ComponentType<HostDetailsPanelTabHeaderProps>
 }
 
 /**

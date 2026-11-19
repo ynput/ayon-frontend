@@ -18,6 +18,8 @@ const ProjectManagerPageLayout = ({
     return (
       <main>
         <Section
+          // legacy tables in every tab take the standard row height (index.scss)
+          className="standard-rows"
           style={{
             alignItems: 'start',
             ...sectionStyle,
@@ -44,6 +46,7 @@ const ProjectManagerPageLayout = ({
       <SplitterPanel size={15}>{projectList}</SplitterPanel>
       <SplitterPanel size={100} style={{ display: 'flex', height: '100%', overflow: 'hidden' }}>
         <Section
+          className="standard-rows"
           style={{
             alignItems: 'start',
             ...sectionStyle,

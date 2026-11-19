@@ -91,6 +91,8 @@ const ProjectUserAccessUserList = ({
               'shimmer-light': shimmerEnabled && isLoading,
             })
           }
+          // fixed: the name column is as wide in the body as in the header, long names are cut
+          tableStyle={{ tableLayout: 'fixed' }}
           onContextMenu={!readOnly && onContextMenu}
           onSelectionChange={(selection) => onSelectUsers && onSelectionChange(selection)}
         >
@@ -108,9 +110,7 @@ const ProjectUserAccessUserList = ({
                   showAddMoreButton={showAddMoreButton}
                   readOnly={readOnly}
                   onAdd={(user: string) => onAdd({ accessGroup, users: [user] })}
-                  onRemove={() => {
-                    onRemove && onRemove([rowData.name])
-                  }}
+                  onRemove={onRemove && (() => onRemove([rowData.name]))}
                   showButtonsOnHover={!showAccessGroups && selectedUnassignedUsers.length == 0}
                   addButtonDisabled={selectedProjects.length === 0}
                   selected={selectedUnassignedUserNames.includes(rowData.name)}

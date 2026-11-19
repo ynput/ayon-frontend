@@ -90,7 +90,11 @@ ts.forEachChild(slotsFile, (node) => {
       ],
       pieces,
       // complete: every required field and piece is in it
-      example: exampleSnippet(name, { required: [], pieces: [], example: SLOT_EXAMPLES[name] }, slotDocs[name]?.helper),
+      example: exampleSnippet(
+        name,
+        { required: [], pieces: [], example: SLOT_EXAMPLES[name] },
+        slotDocs[name]?.helper,
+      ),
     })
   }
 })
@@ -449,6 +453,43 @@ import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
   left to load it.
 - One fixed project: put your own project field next to it if the user picks the project.
 
+## A details panel tab's header: \`DetailsPanelTabHeader\`
+
+AYON puts a header above every details panel tab: the tab's \`label\` as the title, then what the
+tab adds. Built-in tabs (Activity, Subtasks) use the same header, so a tab that fills its header this
+way looks like them. Render it once in the tab's component; it takes no room where it is rendered.
+
+\`\`\`tsx
+import { DetailsPanelTabHeader } from '@ynput/ayon-addon'
+import type { TabHeaderFilter } from '@ynput/ayon-addon'
+
+const [search, setSearch] = useState('')
+const [filters, setFilters] = useState<TabHeaderFilter[]>([])
+
+<DetailsPanelTabHeader
+  menu={[{ id: 'add', label: 'Add time manually', icon: 'more_time', onClick: () => setAdding(true) }]}
+  search={{
+    onSearch: setSearch,
+    options: [{ id: 'user', label: 'User', icon: 'person', values: users }],
+    filters,
+    onFiltersChange: setFilters,
+  }}
+>
+  <Total logs={logs} />
+</DetailsPanelTabHeader>
+\`\`\`
+
+- \`menu\`: the "…" button right of the title, items as in \`MoreMenu\`.
+- \`search\`: AYON's search and filter bar under the title, behind a search button at the header's
+  right. The user shows or hides it (one choice for every tab, hidden by default); while hidden with
+  filters set, the button is marked. \`onSearch\` gets the text when the user
+  confirms it (Enter) or removes it. \`options\` are the filters the user can add, \`filters\` (\`{ id, values, inverted? }\`,
+  value ids) the ones set now; the bar is search-only without \`options\`.
+- \`children\`: anything else for the header, under the search bar.
+- No title prop: the title is always the tab's \`label\`.
+- An AYON older than this component has no such export (\`undefined\`): an addon that supports one
+  checks \`DetailsPanelTabHeader &&\` before rendering it.
+
 ## Picking lists: \`ListPicker\`
 
 AYON's list picker (the dialog of Add to list and Compare with list): the project's lists and review
@@ -484,7 +525,8 @@ import { ListPicker, type EntityListRef } from '@ynput/ayon-addon'
 
 An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
 one component. Don't build one: \`MoreMenu\` looks and works like AYON's menus everywhere (pages,
-details panel tabs, popovers, dialogs, the dev shell).
+details panel tabs, popovers, dialogs, the dev shell). A details panel tab's own "…" goes in its
+header: \`DetailsPanelTabHeader\`'s \`menu\`.
 
 \`\`\`tsx
 import { MoreMenu } from '@ynput/ayon-addon'

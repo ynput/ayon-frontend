@@ -1,4 +1,5 @@
 import { Section } from '@ynput/ayon-react-components'
+import { EmptyPlaceholder, EmptyPlaceholderFlexWrapper } from '@shared/components'
 import MarketFilters from './MarketFilters'
 import { getMarketFilter } from './MarketFiltersHelpers'
 import { useEffect, useMemo, useState } from 'react'
@@ -440,9 +441,9 @@ const MarketPage = () => {
             />
           )}
           {!selectedItemId && (
-            <div
-              style={{ flex: 1, maxWidth: 800, minWidth: 250, padding: 'var(--padding-l)' }}
-            ></div>
+            <EmptyPlaceholderFlexWrapper style={{ flex: 1, maxWidth: 800, minWidth: 250 }}>
+              <EmptyPlaceholder icon="extension" message="Select an addon to see its details" />
+            </EmptyPlaceholderFlexWrapper>
           )}
         </Section>
       </main>

@@ -745,6 +745,7 @@ const Inbox = ({ filter }: InboxProps) => {
                           entityId={group.entityId ?? undefined}
                           projectName={group.projectName}
                           date={group.date}
+                          timeOnly={showDayDividers}
                           userName={group.userName}
                           isRead={group.read || group.active}
                           unReadCount={group.unRead}
@@ -791,7 +792,7 @@ const Inbox = ({ filter }: InboxProps) => {
                   {!isLoadingAny && (errorInbox || !messagesData.length) && (
                     <EmptyPlaceholder
                       icon="done_all"
-                      message="All caught up! No messages to show."
+                      message="All caught up, no messages to show"
                       error={errorInbox || globalError.projects}
                     />
                   )}

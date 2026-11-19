@@ -15,7 +15,7 @@ export const StyledDropdown = styled(Dropdown)`
   &.staging {
     --button-bg: var(--color-hl-staging-container);
     --button-bg-hover: var(--color-hl-staging-container-hover);
-    --icon-color: var(--color-hl-staging);
+    --icon-color: var(--color-hl-staging-text);
   }
 
   height: unset;

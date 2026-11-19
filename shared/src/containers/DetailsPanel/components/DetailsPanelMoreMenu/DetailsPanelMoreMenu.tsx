@@ -1,4 +1,5 @@
 import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { menuSection } from '@shared/components/Menu/menuSections'
 import clsx from 'clsx'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
@@ -192,11 +193,12 @@ export const DetailsPanelMoreMenu = ({
     [applicableAddonItems],
   )
   const addonTopItems = useMemo(
-    () => menuItemsAt(menuAddonItems, 'top').map(toMenuItem),
+    // addon items are a section of their own
+    () => menuSection(menuItemsAt(menuAddonItems, 'top').map(toMenuItem)),
     [menuAddonItems, toMenuItem],
   )
   const addonItems = useMemo(
-    () => menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem),
+    () => menuSection(menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem)),
     [menuAddonItems, toMenuItem],
   )
   // the items draw from their descriptions; their code loads when the menu opens

@@ -1,4 +1,5 @@
-import { Button, InputText, SortingDropdown, Spacer } from '@ynput/ayon-react-components'
+import { Button, SortingDropdown, Spacer } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import React, { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
@@ -35,7 +36,6 @@ const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) 
   const canViewOtherUsers = useMemo(() => {
     if (!permissions) return false
     if (permissions.hasElevatedPrivileges) return true
-    
 
     // every selected project must have read restrictions disabled (read.enabled !== true)
     return selectedProjectNames.every((projectName) => {
@@ -99,8 +99,8 @@ const DashboardTasksToolbar = ({ isLoading, view, setView, projectUsers = [] }) 
         onChange={(v) => handleGroupBy(v[0])}
         multiSelect={false}
       />
-      <InputText
-        placeholder="Filter tasks..."
+      <SearchInput
+        placeholder="Filter tasks"
         value={filterValue}
         onChange={(e) => setFilterValue(e.target.value)}
       />

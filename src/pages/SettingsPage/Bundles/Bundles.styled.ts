@@ -1,4 +1,4 @@
-import { AssigneeSelect, Button, Toolbar, Icon, InputText } from '@ynput/ayon-react-components'
+import { AssigneeSelect, Button, Toolbar, Icon } from '@ynput/ayon-react-components'
 import styled, { css } from 'styled-components'
 
 const platformColors: Record<string, string> = {
@@ -39,10 +39,10 @@ export const BadgeButton = styled(Button)<BadgeButtonProps>`
     css`
       gap: 2px;
       background-color: ${`var(--color-hl-${$hl})`};
-      color: black;
+      color: ${`var(--color-on-hl-${$hl}, var(--color-on-hl))`};
 
       .icon {
-        color: black;
+        color: inherit;
       }
 
       &:hover {
@@ -117,10 +117,4 @@ export const LatestIcon = styled(Icon)`
   &:hover {
     color: var(--md-sys-color-on-surface);
   }
-`
-export const StyledInput = styled(InputText)`
-  grid-column: 1 / -1;
-  background-color: var(--md-sys-color-surface-container-low);
-  color: inherit;
-  border-radius: var(--border-radius-m);
 `

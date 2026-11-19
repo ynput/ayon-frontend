@@ -9,10 +9,23 @@ export const SLICER_SPLITTER_PANEL_CONFIG = {
   size: 12,
 }
 
+// Splitter sizes are percentages: the default sidebar is about 240px wide, enough for its header
+// and most names, whatever the window width.
+const SIDEBAR_DEFAULT_WIDTH = 240
+export const getSidebarDefaultSize = () => {
+  const width = typeof window === 'undefined' ? 0 : window.innerWidth
+  if (!width) return SLICER_SPLITTER_PANEL_CONFIG.size
+  return Math.min(
+    25,
+    Math.max(SLICER_SPLITTER_PANEL_CONFIG.size, (SIDEBAR_DEFAULT_WIDTH / width) * 100),
+  )
+}
+
 const useSlicerSplitter = () => {
+  const defaultSize = getSidebarDefaultSize()
   const [slicerSize, setSlicerSize] = useSessionStorage<number[]>(SLICER_SPLITTER_STATE_KEY, [
-    SLICER_SPLITTER_PANEL_CONFIG.size,
-    100 - SLICER_SPLITTER_PANEL_CONFIG.size,
+    defaultSize,
+    100 - defaultSize,
   ])
 
   const handleResizeEnd = (props: { sizes: number[] }) => {

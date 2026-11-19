@@ -29,6 +29,7 @@ import {
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import { AddonTabFrame } from './components/AddonTabFrame/AddonTabFrame'
 import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
 import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
@@ -539,6 +540,7 @@ DetailsPanelProps) => {
         <ProjectContextProvider projectName={firstProject}>
           {isFeed && !isError && (
             <FeedWrapper
+              title="Activity"
               entityType={activeEntityType}
               entities={entityDetailsData}
               activeUsers={activeProjectUsers || []}
@@ -571,13 +573,11 @@ DetailsPanelProps) => {
               />
             )}
           {activeAddonTab && (
-            <Styled.AddonTabContent>
-              <ContributionView
-                key={activeAddonTab.key}
-                contribution={activeAddonTab}
-                context={addonTabContext}
-              />
-            </Styled.AddonTabContent>
+            <AddonTabFrame key={activeAddonTab.key} title={activeAddonTab.label}>
+              <Styled.AddonTabContent>
+                <ContributionView contribution={activeAddonTab} context={addonTabContext} />
+              </Styled.AddonTabContent>
+            </AddonTabFrame>
           )}
           {currentTab === 'files' && (
             <DetailsPanelFiles

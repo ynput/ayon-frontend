@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { MENU_DIVIDER } from '@shared/components/Menu/menuSections'
 import { entityUrl } from '@ynput/ayon-addon'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import type { DeletableEntity } from '@shared/context'
@@ -106,6 +107,9 @@ export const useMenuOptions = ({
       })
     }
 
+    // sections: view, upload, lists and sharing, addon items, data; the menu drops empty ones
+    items.push(MENU_DIVIDER)
+
     if (canUploadThumbnail) {
       items.push({
         id: 'upload-thumbnail',
@@ -123,6 +127,8 @@ export const useMenuOptions = ({
         onClick: onUploadVersion,
       })
     }
+
+    items.push(MENU_DIVIDER)
 
     if (entityListsContext?.openAddToListDialog && projectName && normalizedSelected.length) {
       const targetEntityType = normalizedSelected[0]?.entityType || entityType
@@ -170,7 +176,7 @@ export const useMenuOptions = ({
       })
     }
 
-    items.push(...extraItems)
+    items.push(...extraItems, MENU_DIVIDER)
 
     items.push({
       id: 'view-data',

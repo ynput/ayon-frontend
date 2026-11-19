@@ -1,4 +1,5 @@
 import { FC, useCallback, useEffect, useMemo } from 'react'
+import { menuSection } from '@shared/components/Menu/menuSections'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
 import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
@@ -55,9 +56,31 @@ const HeaderActions = styled.div`
 
 // the column is narrow: the dimension name shrinks rather than being pushed out
 const PanelHeader = styled(Header)`
+  container-type: inline-size;
+
   .slicer-dropdown {
     flex: 0 1 auto;
     min-width: 48px;
+
+    /* sized by its text: with the dropdown's 0 basis the label came out a few pixels short and
+       was cut to "Hierarc…" with room to spare */
+    .template-value > div {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  /* the dimension name and the search come first: in a narrow panel the split button goes, then
+     the remove button; both are in the more menu too */
+  @container (max-width: 240px) {
+    .split-action {
+      display: none;
+    }
+  }
+  @container (max-width: 200px) {
+    .quick-action {
+      display: none;
+    }
   }
 
   &.collapsed {
@@ -290,7 +313,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         }))
       : []
     const context = { projectName, sliceType, selected, entities, menu }
-    return menuItemsAt(items, position)
+    // addon items are a section of their own
+    const menuItems = menuItemsAt(items, position)
       .filter((item) => !item.in?.length || item.in.includes(menu))
       .map((item) => ({
         id: item.key,
@@ -299,6 +323,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
         ...contributionTags(item),
       }))
+    return menuSection(menuItems)
   }
   // the right-clicked row, or the selection it is part of; `run` loads when the menu opens
   const addonRowContextMenu =
@@ -320,7 +345,10 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         ...(isHierarchy ? [hierarchyContextMenu.deleteContextMenuBuilder] : []),
       ]
     : isHierarchy
-    ? [...hierarchyContextMenu.rowContextMenuBuilders, hierarchyContextMenu.deleteContextMenuBuilder]
+    ? [
+        ...hierarchyContextMenu.rowContextMenuBuilders,
+        hierarchyContextMenu.deleteContextMenuBuilder,
+      ]
     : []
 
   const unusedSliceTypes = useMemo(
@@ -435,6 +463,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
               sliceTypes={sliceFields.map((field) => field.value)}
               onChange={(value) => handleDropdownChange(value)}
               className={clsx('slicer-dropdown', { 'single-option': dropdownOptions.length === 1 })}
+              data-tooltip={sliceTypeLabel}
               disableOpen={dropdownOptions.length === 1}
             />
           )
@@ -481,7 +510,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           {canSplit && isPrimary && !isSearching && (
             <HeaderButton
               icon="splitscreen_add"
-              className={clsx({ 'power-feature': !powerLicense })}
+              className={clsx('split-action', { 'power-feature': !powerLicense })}
               data-tooltip={powerLicense ? 'Split slicer' : 'Power feature - Slicer'}
               data-tooltip-delay={0}
               onClick={handleSplit}
@@ -490,6 +519,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
           {!isPrimary && !isSearching && (
             <HeaderButton
               icon="close"
+              className="quick-action"
               data-tooltip="Remove panel"
               data-tooltip-delay={0}
               onClick={() => removeSlicePanel(panel.id)}

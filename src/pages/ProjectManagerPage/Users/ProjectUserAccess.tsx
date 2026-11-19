@@ -383,15 +383,17 @@ const ProjectUserAccess = () => {
         {filteredAccessGroups
           .map((item: { name: string }) => item.name)
           .map((accessGroup) => {
+            const members = filteredNonManagerUsers.filter(
+              (user: UserNode) =>
+                mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
+            )
             return (
               <ProjectUserAccessAccessGroupPanel
                 key={`panel-${accessGroup}`}
                 header={accessGroup}
-                isExpanded={
-                  expandedAccessGroups[accessGroup] !== undefined
-                    ? expandedAccessGroups[accessGroup]
-                    : true
-                }
+                count={members.length}
+                // a group nobody is in starts collapsed, so the groups with people stay in view
+                isExpanded={expandedAccessGroups[accessGroup] ?? members.length > 0}
                 onToggleExpand={(value: boolean) => {
                   handleToggleExpandedAccessGroup(accessGroup, value)
                 }}
@@ -404,10 +406,7 @@ const ProjectUserAccess = () => {
                   accessGroup={accessGroup}
                   emptyMessage="No users assigned"
                   onContextMenu={(e: $Any) => handleContextMenu(accessGroup)(e)}
-                  tableList={filteredNonManagerUsers.filter(
-                    (user: UserNode) =>
-                      mappedUsers[accessGroup] && mappedUsers[accessGroup].includes(user.name),
-                  )}
+                  tableList={members}
                   onSelectUsers={(selection: string[]) =>
                     updateSelectedAccessGroupUsers(accessGroup, selection)
                   }

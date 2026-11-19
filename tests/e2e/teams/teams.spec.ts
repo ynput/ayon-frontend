@@ -5,13 +5,13 @@ import { confirmDialog, dialog, expectRowSelection, menuItem, toast } from '@ynp
 test.describe('project teams', () => {
   test('create a team', async ({ page, api, projectName }) => {
     await page.goto(`/manageProjects/teams?project=${projectName}`)
-    await page.getByRole('button', { name: 'Add New Team' }).click()
-    const newTeam = dialog(page, 'Create New Team')
+    await page.getByRole('button', { name: 'Add new team' }).click()
+    const newTeam = dialog(page, 'Create new team')
     await expect(newTeam).toBeVisible()
     // FLAG: the "Team Name" label is not associated with its input; it is the autofocused field
     const teamName = newTeam.locator('input:focus')
     await teamName.fill('lighting_team')
-    await newTeam.getByRole('button', { name: 'Create New Team' }).click()
+    await newTeam.getByRole('button', { name: 'Create new team' }).click()
 
     await expect(toast(page, 'Created lighting_team')).toBeVisible()
     await expect(page.getByRole('row', { name: /lighting_team/ })).toBeVisible()
@@ -27,7 +27,7 @@ test.describe('project teams', () => {
 
     const row = page.getByRole('row', { name: /old_team/ })
     await row.click({ button: 'right' })
-    await menuItem(page, 'Delete Team').click()
+    await menuItem(page, 'Delete team').click()
     await confirmDialog(page).getByRole('button', { name: 'Delete' }).click()
 
     await expect(row).toBeHidden()
@@ -142,8 +142,8 @@ test.describe('project teams', () => {
     const other = await createUser(access)
     const teams = new TeamsPage(page)
     await teams.goto(projectName)
-    await page.getByRole('button', { name: 'Add New Team' }).click()
-    const newTeam = dialog(page, 'Create New Team')
+    await page.getByRole('button', { name: 'Add new team' }).click()
+    const newTeam = dialog(page, 'Create new team')
     const userRow = (name: string) => newTeam.getByRole('row').filter({ hasText: name })
     await userRow(picked.name).click()
     await expectRowSelection([userRow(picked.name)])
@@ -170,7 +170,7 @@ test.describe('project teams', () => {
 
     await teams.setLeader(true)
 
-    await expect(page.getByText('0 Members - 1 Leaders')).toBeVisible()
+    await expect(page.getByText('0 members · 1 leader')).toBeVisible()
     await expect
       .poll(async () => (await api.getTeamMembers(projectName, 'comp_team'))?.[0]?.leader)
       .toBe(true)

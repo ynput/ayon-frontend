@@ -1,7 +1,6 @@
 import { BorderedSection, InputSwitch, InputText } from '@ynput/ayon-react-components'
 import React, { useMemo } from 'react'
 import { SplitterPanel } from 'primereact/splitter'
-import { format, isValid } from 'date-fns'
 import BundlesAddonList from './BundlesAddonList'
 import * as BundleStyled from './Bundles.styled'
 import * as Styled from './BundleForm.styled'
@@ -10,6 +9,7 @@ import { AddonSearchInput } from './AddonSearchInput'
 import { useAppSelector } from '@state/store'
 import { useGetUsersQuery } from '@shared/api'
 import { FieldLabel } from '@shared/components/DetailsPanelDetails'
+import { formatDateTime } from '@shared/util'
 import type { Addon } from './types'
 
 type Installer = { version: string; platforms?: string[] }
@@ -45,10 +45,7 @@ type BundleFormProps = {
   updatedAt?: string
 }
 
-const formatTimestamp = (value?: string) => {
-  const date = value ? new Date(value) : null
-  return date && isValid(date) ? format(date, 'PPpp') : 'Unknown'
-}
+const formatTimestamp = (value?: string) => formatDateTime(value) || 'Unknown'
 
 const ReadOnlyRow = ({ name, title, value }: { name: string; title: string; value: string }) => (
   <Styled.FieldRow>
@@ -192,7 +189,7 @@ const BundleForm: React.FC<BundleFormProps> = ({
       <ReadOnlyRow
         name="installerVersion"
         title="Launcher version"
-        value={formData.installerVersion || 'NONE'}
+        value={formData.installerVersion || 'None'}
       />
       {dateRows}
     </BorderedSection>

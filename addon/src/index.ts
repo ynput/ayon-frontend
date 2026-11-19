@@ -153,6 +153,13 @@ export type {
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+export { DetailsPanelTabHeader } from './DetailsPanelTabHeader'
+export type {
+  DetailsPanelTabHeaderProps,
+  TabHeaderFilter,
+  TabHeaderFilterOption,
+  TabHeaderSearch,
+} from './DetailsPanelTabHeader'
 // AYON's right-click menu, with the same items
 export { useContextMenu } from './useContextMenu'
 export type { OpenContextMenu } from './useContextMenu'
