@@ -42,6 +42,7 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
       <DetailsPanelTabHeader
         title={`Subtasks (${totalCount})`}
         menuClassName="panel-header-filters"
+        searchActive={!!subtasksFilters.conditions?.length || !!searchText}
         search={
           <SubtasksSearchFilter
             subtasksFilter={subtasksFilters}

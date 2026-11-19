@@ -36,7 +36,7 @@ export interface TabHeaderSearch {
 export interface DetailsPanelTabHeaderProps {
   /** the "more" (…) menu right of the title: the items a `menu` piece returns */
   menu?: AddonMenuItem[]
-  /** AYON's search and filter bar under the title */
+  /** AYON's search and filter bar under the title, shown and hidden with the header's search button */
   search?: TabHeaderSearch
   /** anything else for the header, under the search bar (counts, a toggle, a summary) */
   children?: ReactNode

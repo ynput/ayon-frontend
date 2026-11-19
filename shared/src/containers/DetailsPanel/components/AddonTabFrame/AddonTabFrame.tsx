@@ -6,6 +6,7 @@ import {
   DetailsPanelTabHeader,
   DetailsPanelTabHeaderSlotsContext,
 } from '@shared/components/DetailsPanelTabHeader'
+import type { TabSearchState } from '@shared/components/DetailsPanelTabHeader'
 
 interface AddonTabFrameProps {
   title: string
@@ -16,12 +17,15 @@ export const AddonTabFrame = ({ title, children }: AddonTabFrameProps) => {
   const [menu, setMenu] = useState<HTMLElement | null>(null)
   const [search, setSearch] = useState<HTMLElement | null>(null)
   const [extra, setExtra] = useState<HTMLElement | null>(null)
-  const slots = useMemo(() => ({ menu, search, extra }), [menu, search, extra])
+  const [searchState, setSearchState] = useState<TabSearchState>({ has: false, active: false })
+  const slots = useMemo(() => ({ menu, search, extra, setSearchState }), [menu, search, extra])
 
   return (
     <DetailsPanelTabHeaderSlotsContext.Provider value={slots}>
       <DetailsPanelTabHeader
         title={title}
+        hasSearch={searchState.has}
+        searchActive={searchState.active}
         slotRefs={{ menu: setMenu, search: setSearch, extra: setExtra }}
       />
       {children}

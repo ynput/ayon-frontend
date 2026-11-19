@@ -346,7 +346,9 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
 ```
 
 - `menu`: the "…" button right of the title, items as in `MoreMenu`.
-- `search`: AYON's search and filter bar under the title. `onSearch` gets the text when the user
+- `search`: AYON's search and filter bar under the title, behind a search button at the header's
+  right. The user shows or hides it (one choice for every tab, hidden by default); while hidden with
+  filters set, the button is marked. `onSearch` gets the text when the user
   confirms it (Enter) or removes it. `options` are the filters the user can add, `filters` (`{ id, values, inverted? }`,
   value ids) the ones set now; the bar is search-only without `options`.
 - `children`: anything else for the header, under the search bar.

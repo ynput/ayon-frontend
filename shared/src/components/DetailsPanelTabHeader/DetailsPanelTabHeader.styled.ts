@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
 
 export const Header = styled.div`
   display: flex;
@@ -37,8 +38,25 @@ export const Menu = styled.div`
 
 // the search bar and the extra content bring their own padding: the tabs' own search bars
 // (Activity, Subtasks) line up with their content below
+export const SearchButton = styled(Button)`
+  position: relative;
+
+  /* filters are set while the bar is hidden */
+  &.active::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--md-sys-color-primary);
+  }
+`
+
 export const Search = styled.div`
-  &:empty {
+  &:empty,
+  &.hidden {
     display: none;
   }
 `

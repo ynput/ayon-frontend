@@ -387,7 +387,15 @@ export const Feed = ({
             {warningMessage}
           </Styled.Warning>
         )}
-        {title ? <DetailsPanelTabHeader title={title} search={searchFilter} /> : searchFilter}
+        {title ? (
+          <DetailsPanelTabHeader
+            title={title}
+            search={searchFilter}
+            searchActive={!!feedFilter.conditions?.length || !!searchText}
+          />
+        ) : (
+          searchFilter
+        )}
         <Styled.FeedContent ref={feedRef} className={clsx({ loading: isLoadingNew }, 'no-shimmer')}>
           {isLoadingNew
             ? loadingPlaceholders

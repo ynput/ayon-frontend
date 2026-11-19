@@ -81,6 +81,14 @@ const TabHeaderSearchBar = ({ search }: { search: TabHeaderSearch }) => {
     setFilters((current) => [...current.filter(isSearchChip), ...controlled])
   }, [controlled, filtersKey])
 
+  // the header's search button: shown while this bar exists, marked while filters are set
+  const slots = useDetailsPanelTabHeaderSlots()
+  const active = filters.some((f) => !!f.values?.length)
+  useEffect(() => {
+    slots?.setSearchState({ has: true, active })
+  }, [slots, active])
+  useEffect(() => () => slots?.setSearchState({ has: false, active: false }), [slots])
+
   const handleFinish = (next: Filter[]) => {
     setFilters(next)
     const text = next
