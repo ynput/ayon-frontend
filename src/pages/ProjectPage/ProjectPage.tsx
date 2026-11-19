@@ -133,6 +133,7 @@ const ProjectContextInfo = () => {
             key={id}
             variant={tab === id ? 'surface' : 'text'}
             selected={tab === id}
+            aria-pressed={tab === id}
             onClick={() => setTab(id)}
             style={{ textTransform: 'capitalize' }}
           >
