@@ -169,7 +169,7 @@ const Header: React.FC = () => {
           ref={userButtonRef}
           variant="nav"
         >
-          <UserImage size={26} name={user?.name} imageKey={avatarKey} />
+          <UserImage size={24} name={user?.name} imageKey={avatarKey} />
         </UserButton>
         <MenuContainer id="user" target={userButtonRef.current}>
           <UserMenu user={user} />

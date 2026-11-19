@@ -176,7 +176,7 @@ strong {
 // the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
 nav.primary {
   background-color: var(--md-sys-color-background);
-  padding: 8px;
+  padding: 6px;
   // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
   // page's centre line on every page; a side wider than its half pushes them over, never under it
   display: grid;
