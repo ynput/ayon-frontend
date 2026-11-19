@@ -15,10 +15,7 @@ import { useDateRangeFilter } from '@shared/components/SearchFilter/useDateRange
 import { CustomDateRangeDialog } from '@shared/components/SearchFilter/CustomDateRangeDialog'
 
 const Wrapper = styled.div`
-  padding: 4px 8px;
-  padding-bottom: 0;
-  /* ends where the activity cards below do, they leave room for a scrollbar */
-  padding-right: calc(8px + var(--feed-scrollbar-width, 0px));
+  padding: 0 8px;
   z-index: 10;
   position: relative;
 
@@ -119,7 +116,6 @@ const FeedSearchFilter = forwardRef<SearchFilterRef, FeedSearchFilterProps>(
       checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
     }
 
-    // @ts-expect-error - using string is fine
     const quickActions: SearchFilterQuickAction[] = useMemo(
       () => ['comments', { id: 'checklists', label: checklistsLabel, tooltip: 'Checklists' }],
       [checklistsLabel],
