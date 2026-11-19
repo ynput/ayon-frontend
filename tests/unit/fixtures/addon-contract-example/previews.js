@@ -70,6 +70,7 @@ export const previews = [
       },
       { key: 'attrib', label: 'Attributes', type: 'json', default: { priority: 'high' } },
       { key: 'task', label: 'Task', type: 'entity', entityType: 'task', project: 'project' },
+      { key: 'list', label: 'List', type: 'list', entityListTypes: ['generic'], project: 'project' },
       {
         key: 'card',
         label: 'A real card',

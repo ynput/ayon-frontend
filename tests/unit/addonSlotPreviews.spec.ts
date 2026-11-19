@@ -101,6 +101,7 @@ test('check reports what is wrong in previews', () => {
           { key: 'p', label: 'P', type: 'project', default: null },
           { key: 'e', label: 'E', type: 'entity', entityType: 'shot', project: 'n' },
           { key: 'k', label: 'K', type: 'pick' },
+          { key: 'l', label: 'L', type: 'list', entityListTypes: ['playlist'], project: 'p', default: {} },
           { label: 'no key', type: 'color' },
         ],
       },
@@ -127,10 +128,12 @@ test('check reports what is wrong in previews', () => {
     { scene: 'fields', reason: 'field "e": entityType must be one of task, folder, product, version' },
     { scene: 'fields', reason: 'field "e": project must be the key of a project field of the scene, not "n"' },
     { scene: 'fields', reason: 'field "k": load must be a function, not undefined' },
-    { scene: 'fields', reason: 'field 7: key must be a string' },
+    { scene: 'fields', reason: 'field "l": entityListTypes must be a list of generic, review-session' },
+    { scene: 'fields', reason: 'field "l": a list field has no default: it starts empty' },
+    { scene: 'fields', reason: 'field 8: key must be a string' },
     {
       scene: 'fields',
-      reason: 'field 7: type must be one of text, number, boolean, select, multiselect, json, project, entity, pick, not "color"',
+      reason: 'field 8: type must be one of text, number, boolean, select, multiselect, json, project, entity, list, pick, not "color"',
     },
   ])
   // what still renders: the scenes with an id, a label, a component and slots of the package
@@ -155,6 +158,7 @@ test('values start from the defaults; the changed ones go in the URL', async () 
     'tags',
     'attrib',
     'task',
+    'list',
     'card',
   ])
   expect(sceneDefaults(scene.fields, 'demo')).toEqual({
@@ -166,6 +170,7 @@ test('values start from the defaults; the changed ones go in the URL', async () 
     tags: [],
     attrib: { priority: 'high' },
     task: null,
+    list: null,
     card: null,
   })
   // a project field that must have one starts with the shell's project

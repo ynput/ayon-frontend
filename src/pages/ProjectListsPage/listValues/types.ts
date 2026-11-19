@@ -124,7 +124,7 @@ export type ListValueActionsHost = {
   confirm: (options: { header: string; message: string; acceptLabel: string }) => Promise<boolean>
 }
 
-// The Lists page's list picker (lists table in picker mode), used by the module's dialog
+// The Lists page's list picker (the shared ListPicker, single select), used by the module's dialog
 export type ListPickerProps = {
   isDisabled: (list: ListRef) => string | undefined // why a list can't be picked
   initialSelection?: string // a list id, selected, scrolled to and focused

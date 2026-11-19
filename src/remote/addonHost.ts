@@ -6,6 +6,7 @@ import store from '@state/store'
 import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
+import { AddonListPicker } from '@shared/components/AddonLayout/AddonListPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { AddonPanelTabHeader } from '@shared/components/AddonLayout/AddonPanelTabHeader'
 import { PanelAddonTab } from '@shared/components/PanelTabs'
@@ -58,6 +59,7 @@ export const provideAddonHost = () =>
       StudioPageLayout: StudioPageLayoutHost,
       ProjectList: AppProjectListHost,
       EntityPicker: AddonEntityPicker,
+      ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
       PanelTabHeader: AddonPanelTabHeader,
       ContributionTab: PanelAddonTab,

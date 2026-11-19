@@ -18,7 +18,7 @@ export interface UseGetListsDataReturn {
   refetch: () => void
 }
 
-const useGetListsData = ({
+export const useGetListsData = ({
   projectName,
   filters,
   skip,

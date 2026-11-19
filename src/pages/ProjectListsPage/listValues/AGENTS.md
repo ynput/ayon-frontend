@@ -67,7 +67,8 @@ What the module does, and what core gives it:
 - `Controls` (toolbar) and `CompareSettings` (Customize > Compare) are the module's components. The
   compare settings are stored in the view as one opaque `listValues` setting
   (`useListsViewSettings`); the module defines its shape. The list picker dialog is the module's, around
-  core's `ListPicker` (the lists table in picker mode).
+  core's `ListPicker` (`components/ListPicker`: the shared `ListPicker` from
+  `shared/src/containers/ListPicker`, single select, with the page's list type).
 - `getCellMenuItems` and `getColumnMenuItems` are the list value actions in the cell context menu and in
   attribute column header menus (`ColumnConfig.menuItems`); `useListValueActions` gives them the
   requests, loading every list item, toasts and the confirm dialog (`ListValueActionsHost`).

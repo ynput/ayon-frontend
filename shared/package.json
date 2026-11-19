@@ -78,6 +78,10 @@
       "types": "./dist/types/EntityPickerDialog.d.ts",
       "import": "./dist/EntityPickerDialog.es.js"
     },
+    "./ListPicker": {
+      "types": "./dist/types/ListPicker.d.ts",
+      "import": "./dist/ListPicker.es.js"
+    },
     "./ListTable": {
       "types": "./dist/types/ListTable.d.ts",
       "import": "./dist/ListTable.es.js"
