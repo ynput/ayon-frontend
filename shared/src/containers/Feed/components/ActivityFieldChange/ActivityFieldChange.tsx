@@ -4,13 +4,16 @@ import ActivityDate from '../ActivityDate'
 import { Icon } from '@ynput/ayon-react-components'
 import useGetContextParents from './hooks/getContextParents'
 import { FieldValue } from './FieldValue'
+import { StatusLabel } from '@shared/components/StatusLabel'
 import { useGetAttributeListQuery } from '@shared/api'
 import type { AttributeModel, EnumItem } from '@shared/api'
 import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { DATE_FORMAT } from '@shared/util/formatDate'
 import { markdownToPlainText } from '@shared/components/MarkdownEditor/markdown/plainText'
 
 type FieldDisplayValue = {
   name: string
+  shortName?: string
   icon?: string
   color?: string
   items?: { label: string; color?: string }[]
@@ -27,7 +30,7 @@ const formatSingleValue = (value: unknown, attribute?: AttributeModel): string =
   if (enumLabel) return enumLabel
   if (attribute?.data.type === 'datetime') {
     const date = new Date(String(value))
-    if (!isNaN(date.getTime())) return formatUTCDate(date, 'dd-MM-yyyy')
+    if (!isNaN(date.getTime())) return formatUTCDate(date, DATE_FORMAT)
   }
   return String(value)
 }
@@ -117,6 +120,7 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
 
   const statusDisplay = (status?: FieldDisplayValue): FieldDisplayValue => ({
     name: status?.name || '',
+    shortName: status?.shortName,
     icon: status?.icon,
     color: status?.color,
   })
@@ -138,6 +142,8 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
     return formatValue(value, attribute, key)
   }
 
+  // a status change shows as status labels (icon in a square of its colour, then the name), other coloured
+  // values as tinted pills like in the tables
   const oldDisplay = getDisplay(oldValue, oldStatus)
   const newDisplay = getDisplay(newValue, newStatus)
 
@@ -151,9 +157,18 @@ const ActivityFieldChange: React.FC<ActivityFieldChangeProps> = ({
             <strong>{fieldTitle}</strong>
           </Styled.Text>
         )}
-        <FieldValue {...oldDisplay} />
-        <Icon icon="trending_flat" />
-        <FieldValue {...newDisplay} />
+        {isStatus ? (
+          <StatusLabel
+            className="status-change"
+            statuses={[oldDisplay, newDisplay].filter((status) => status.name)}
+          />
+        ) : (
+          <>
+            <FieldValue {...oldDisplay} pill="tinted" />
+            <Icon icon="trending_flat" />
+            <FieldValue {...newDisplay} pill="tinted" />
+          </>
+        )}
       </Styled.Body>
       <ActivityDate date={createdAt} />
     </Styled.FieldChange>

@@ -37,7 +37,7 @@ test.describe('task progress', () => {
     await seed(api, projectName)
     const progress = new TasksProgressPage(page)
     await progress.goto(projectName)
-    await expect(page.getByText('Select a folder to begin.')).toBeVisible()
+    await expect(page.getByText('Select a folder to see its tasks')).toBeVisible()
 
     await progress.selectFolder('sq010')
 

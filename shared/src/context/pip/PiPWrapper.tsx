@@ -15,8 +15,8 @@ const StyledDialog = styled(Dialog)`
   border: solid 1px var(--md-sys-color-outline-variant);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 0 1px 1px #000, 0 11px 15px -7px #0003, 0 24px 38px 3px #00000024,
-    0 9px 46px 8px #0000001f;
+  box-shadow: 0 0 1px 1px light-dark(var(--md-sys-color-outline-variant), #000),
+    0 11px 15px -7px #0003, 0 24px 38px 3px #00000024, 0 9px 46px 8px #0000001f;
   &:hover {
     .close {
       opacity: 1;
@@ -38,7 +38,7 @@ const StyledClose = styled(Button)`
   border-radius: 100%;
   transition: opacity 400ms, background-color 400ms;
   &:hover {
-    background-color: #3d3e40;
+    background-color: light-dark(var(--md-sys-color-surface-container-high-hover), #3d3e40);
   }
 `
 
@@ -58,7 +58,7 @@ export const PiPWrapper: FC<PiPWrapperProps> = ({ children }) => {
         header={<StyledClose icon="close" className="close" onClick={closePipWindow} />}
         headerStyle={{
           padding: 4,
-          backgroundColor: '#202124',
+          backgroundColor: 'light-dark(var(--md-sys-color-surface-container-low), #202124)',
           border: 'none',
           height: 33,
         }}

@@ -1,9 +1,10 @@
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
-import { Section, TablePanel } from '@ynput/ayon-react-components'
+import { Section } from '@ynput/ayon-react-components'
 import { CellWithIcon } from '@components/icons'
 import { useDispatch, useSelector } from 'react-redux'
 import { useGetWorkfileListQuery } from '@queries/getWorkfiles'
+import { useGetTasksQuery } from '@queries/getTasks'
 import NoEntityFound from '@components/NoEntityFound'
 import { setFocusedWorkfiles } from '@state/context'
 import { useCallback, useRef, useState } from 'react'
@@ -15,14 +16,17 @@ import { useDeleteWorkfileMutation } from '@queries/workfiles/deleteWorkfile'
 import { DetailsDialog } from '@shared/components'
 import { useGetAllProjectUsersAsAssigneeQuery } from '@shared/api'
 import { WorkfileUsers } from './WorkfileUsers'
+import { FlatHeaderTablePanel } from '@containers/FlatHeaderTablePanel.styled'
 
 const WorkfileList = ({ style }) => {
   const tableRef = useRef(null)
   const dispatch = useDispatch()
+  const folderIds = useSelector((state) => state.context.focused.folders)
   const taskIds = useSelector((state) => state.context.focused.tasks)
   const pairing = useSelector((state) => state.context.pairing)
   const projectName = useSelector((state) => state.project.name)
   const focusedWorkfiles = useSelector((state) => state.context.focused.workfiles)
+  const userName = useSelector((state) => state.user.name)
   const [showDetail, setShowDetail] = useState(false)
 
   const {
@@ -31,6 +35,14 @@ const WorkfileList = ({ style }) => {
     isError,
     error,
   } = useGetWorkfileListQuery({ projectName, taskIds }, { skip: !taskIds.length })
+
+  // the task list's query with the same args, so it comes from the cache:
+  // the prompt stays muted while there is no task to pick
+  const { data: folderTasks = [], isFetching: isFetchingTasks } = useGetTasksQuery(
+    { projectName, folderIds, userName },
+    { skip: !folderIds.length },
+  )
+  const noTasksToPick = !folderIds.length || (!isFetchingTasks && !folderTasks.length)
 
   const { data: users = [] } = useGetAllProjectUsersAsAssigneeQuery(
     { projectName },
@@ -57,6 +69,7 @@ const WorkfileList = ({ style }) => {
         iconClassName={className}
         text={rowData.name}
         name={rowData.path}
+        style={{ display: 'flex' }}
       />
     )
   }
@@ -107,9 +120,8 @@ const WorkfileList = ({ style }) => {
           command: () => setShowDetail(true),
           icon: 'database',
         },
-        ,
         {
-          label: 'Delete File',
+          label: 'Delete file',
           icon: 'delete',
           command: () => handleDeleteWorkfile(workfile),
           danger: true,
@@ -144,9 +156,13 @@ const WorkfileList = ({ style }) => {
 
   return (
     <Section style={style}>
-      <TablePanel loading={isLoading}>
+      <FlatHeaderTablePanel loading={isLoading}>
         {!taskIds.length || !data.length ? (
-          <NoEntityFound type="workfile" />
+          <NoEntityFound
+            type="workfile"
+            label={!taskIds.length ? 'Select a task to see its workfiles' : undefined}
+            muted={noTasksToPick}
+          />
         ) : (
           <DataTable
             ref={tableRef}
@@ -161,11 +177,14 @@ const WorkfileList = ({ style }) => {
             onKeyDown={handleTableKeyDown}
             onContextMenu={onContextMenu}
             rowClassName={(rowData) => ({ ['id-' + rowData.id]: true })}
+            // fixed layout keeps the table inside the pane; the name and author cut with an ellipsis
+            tableStyle={{ tableLayout: 'fixed', width: '100%' }}
           >
             <Column field="name" header="Name" body={formatName} />
             <Column
               field="author"
               header="Author"
+              style={{ width: 120 }}
               body={(rowData) => (
                 <WorkfileUsers
                   users={users}
@@ -178,7 +197,7 @@ const WorkfileList = ({ style }) => {
             />
           </DataTable>
         )}
-      </TablePanel>
+      </FlatHeaderTablePanel>
       <DetailsDialog
         projectName={projectName}
         entityType={'workfile'}

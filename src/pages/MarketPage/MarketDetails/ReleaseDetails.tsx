@@ -5,7 +5,7 @@ import clsx from 'clsx'
 import ReactMarkdown from 'react-markdown'
 import MetaPanelRow from './MetaPanelRow'
 import { ReleaseListItemModel } from '@shared/api'
-import { format } from 'date-fns'
+import { formatDate } from '@shared/util'
 import AddonIcon from '@components/AddonIcon/AddonIcon'
 import { PowerpackButton } from '@shared/components/Powerpack'
 
@@ -89,7 +89,7 @@ const ReleaseDetails = ({ release, isLoading, onDownload }: ReleaseDetailsProps)
                 <span>Ynput</span>
               </MetaPanelRow>
               <MetaPanelRow label="Released" valueDirection="row">
-                <span>{createdAt ? format(new Date(createdAt), 'd / MM / y') : 'Unknown'}</span>
+                <span>{formatDate(createdAt) || 'Unknown'}</span>
               </MetaPanelRow>
             </Styled.MetaPanel>
           </Styled.Right>

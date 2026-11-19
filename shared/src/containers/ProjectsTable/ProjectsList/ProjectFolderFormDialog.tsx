@@ -45,35 +45,41 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
   const mode = folderId ? 'edit' : 'create'
 
   // Analyze selection context when creating folders
-  const { projectNamesToAdd, parentIdsToCreateIn, foldersToCreateIn, projectCount } = useMemo(() => {
-    if (mode !== 'create') {
-      return { projectNamesToAdd: [], parentIdsToCreateIn: [], foldersToCreateIn: [], projectCount: 0 }
-    }
+  const { projectNamesToAdd, parentIdsToCreateIn, foldersToCreateIn, projectCount } =
+    useMemo(() => {
+      if (mode !== 'create') {
+        return {
+          projectNamesToAdd: [],
+          parentIdsToCreateIn: [],
+          foldersToCreateIn: [],
+          projectCount: 0,
+        }
+      }
 
-    // Parse selection to separate projects from folders
-    const selectedProjectNames = Object.keys(rowSelection).filter(
-      (rowId) => !parseProjectFolderRowId(rowId)
-    )
-    const selectedFolderIds = Object.keys(rowSelection)
-      .map((rowId) => parseProjectFolderRowId(rowId))
-      .filter((id): id is string => !!id)
+      // Parse selection to separate projects from folders
+      const selectedProjectNames = Object.keys(rowSelection).filter(
+        (rowId) => !parseProjectFolderRowId(rowId),
+      )
+      const selectedFolderIds = Object.keys(rowSelection)
+        .map((rowId) => parseProjectFolderRowId(rowId))
+        .filter((id): id is string => !!id)
 
-    // Determine context: if folders are selected, create subfolders
-    // Otherwise if projects are selected, put them in the new folder
-    const projectNamesToAdd = selectedFolderIds.length === 0 ? selectedProjectNames : []
-    const parentIdsToCreateIn = selectedFolderIds.length > 0 ? selectedFolderIds : []
+      // Determine context: if folders are selected, create subfolders
+      // Otherwise if projects are selected, put them in the new folder
+      const projectNamesToAdd = selectedFolderIds.length === 0 ? selectedProjectNames : []
+      const parentIdsToCreateIn = selectedFolderIds.length > 0 ? selectedFolderIds : []
 
-    const foldersToCreateIn = parentIdsToCreateIn
-      .map((id) => folders?.find((f) => f.id === id))
-      .filter((f): f is ProjectFolderModel => !!f)
+      const foldersToCreateIn = parentIdsToCreateIn
+        .map((id) => folders?.find((f) => f.id === id))
+        .filter((f): f is ProjectFolderModel => !!f)
 
-    return {
-      projectNamesToAdd,
-      parentIdsToCreateIn,
-      foldersToCreateIn,
-      projectCount: projectNamesToAdd.length,
-    }
-  }, [mode, rowSelection, folders])
+      return {
+        projectNamesToAdd,
+        parentIdsToCreateIn,
+        foldersToCreateIn,
+        projectCount: projectNamesToAdd.length,
+      }
+    }, [mode, rowSelection, folders])
 
   const initFolderForm: ProjectFolderFormData = {
     label: '',
@@ -118,7 +124,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
           folderId,
           projectFolderPatchModel: {
             label,
-            data: { icon: icon|| "", color: color || "" },
+            data: { icon: icon || '', color: color || '' },
           },
         }).unwrap()
         toast.success('Project folder updated successfully')
@@ -128,7 +134,6 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
 
         // Create new folder - handle different scenarios
         if (parentIdsToCreateIn.length > 0) {
-
           onFoldersCreated?.(parentIdsToCreateIn, true)
 
           Promise.all(
@@ -139,14 +144,14 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
                   data: { icon, color },
                   parentId,
                 },
-              }).unwrap()
-            )
+              }).unwrap(),
+            ),
           )
             .then(() => {
               toast.success(
                 parentIdsToCreateIn.length === 1
                   ? 'Subfolder created successfully'
-                  : `${parentIdsToCreateIn.length} subfolders created successfully`
+                  : `${parentIdsToCreateIn.length} subfolders created successfully`,
               )
             })
             .catch((error) => {
@@ -155,7 +160,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
               toast.error(errorMessage)
             })
         } else if (projectNamesToAdd.length > 0) {
-          const folderId =  getEntityId()
+          const folderId = getEntityId()
           // Scenario 2: Create folder and assign selected projects to it
           onFolderCreated?.(folderId, true)
           onPutProjectsInFolder?.(projectNamesToAdd, folderId)
@@ -257,7 +262,7 @@ export const ProjectFolderFormDialog: FC<ProjectFolderFormDialogProps> = ({
     if (projectCount > 1) {
       return `Create Folder for ${projectCount} Projects`
     }
-    return 'Create Folder'
+    return 'Create folder'
   }
 
   return (

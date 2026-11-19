@@ -15,6 +15,7 @@ import { isEqual } from 'lodash'
 import { checkColumnVisibility } from '../../utils'
 import { ColumnIdAliases, normalizeColumnsConfig } from '../../utils/columnIds'
 import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from '../../constants'
+import { useTableRowHeight } from '@shared/hooks/useTableRowHeight'
 
 interface ColumnSettingsProviderProps {
   children: ReactNode
@@ -82,12 +83,14 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     sorting: sortingInit = [],
     groupBy,
     groupByConfig = {},
-    rowHeight: configRowHeight = 34,
     columnSummaries: columnSummariesInit = {},
     columnSummaryScopes: columnSummaryScopesInit = {},
     columnSummaryFormats: columnSummaryFormatsInit = {},
     columnSummaryHidden: columnSummaryHiddenInit = {},
   } = columnsConfig || {}
+
+  // one row height per user for every table, not per view
+  const { rowHeight: configRowHeight, saveRowHeight } = useTableRowHeight()
 
   // Clear internal row height when config changes (e.g., when switching views)
   // This happens during render, before the component uses the value
@@ -391,10 +394,10 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
 
       // Debounce API call to avoid excessive requests
       rowHeightTimeoutRef.current = setTimeout(() => {
-        // Persist to API
+        // Persist to API: the height for the user, the thumbnail width for the view
+        saveRowHeight(newRowHeight)
         onChangeWithColumns({
           ...columnsConfig,
-          rowHeight: newRowHeight,
           columnSizing: {
             ...columnsSizingExternal,
             thumbnail: newThumbnailWidth,
@@ -410,6 +413,7 @@ export const ColumnSettingsProvider: React.FC<ColumnSettingsProviderProps> = ({
     [
       columnsConfig,
       onChangeWithColumns,
+      saveRowHeight,
       columnsSizingExternal,
       configRowHeight,
       internalColumnSizing,

@@ -6,6 +6,7 @@ import {
   InputText,
 } from '@ynput/ayon-react-components'
 import { isEmpty, isEqual } from 'lodash'
+import { DATE_FORMAT } from '@shared/util/formatDate'
 import React from 'react'
 
 const AttribFormType = ({
@@ -73,7 +74,7 @@ const AttribFormType = ({
           onChange={() => console.log('date changed')}
           selected={!!value && new Date(value)}
           onSelect={(v) => handleChange(null, v)}
-          dateFormat={'dd/MM/yyyy'}
+          dateFormat={DATE_FORMAT}
         />
       )
     case 'array':

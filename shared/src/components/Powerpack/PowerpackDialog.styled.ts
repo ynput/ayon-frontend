@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 export const PowerpackDialog = styled(Dialog)`
   background: linear-gradient(180deg, rgb(0 121 181 / 0%) -12.03%, rgb(4 255 227 / 26%) 105.38%),
-    #15171c;
+    light-dark(var(--md-sys-color-surface-container-lowest), #15171c);
 
   width: 550px;
   max-height: unset;

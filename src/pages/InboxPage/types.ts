@@ -96,6 +96,7 @@ export interface InboxStatusChange {
   icon?: string
   color?: string
   name?: string
+  shortName?: string
 }
 
 // Modifier keys that drive multi-selection, sourced from a mouse or keyboard event

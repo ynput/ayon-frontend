@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Button, Panel, Section } from '@ynput/ayon-react-components'
-import { format } from 'date-fns'
+import { BooleanValue } from '@shared/components'
+import { formatDateTime } from '@shared/util'
 import styled from 'styled-components'
 import ServiceDialog from './NewServiceDialog'
 
@@ -9,6 +10,7 @@ const Header = styled.header`
   justify-content: space-between;
   align-items: center;
   width: 100%;
+  margin-bottom: 8px;
 `
 
 const ButtonGroup = styled.div`
@@ -25,7 +27,7 @@ const DetailRow = styled.div`
 const Label = styled.div`
   font-weight: 600;
   min-width: 140px;
-  color: var(--text-color-secondary);
+  color: light-dark(var(--md-sys-color-outline), var(--text-color-secondary));
 `
 
 const Value = styled.div`
@@ -39,11 +41,11 @@ const JsonWrapper = styled.div`
 `
 
 const JsonDisplay = styled.pre`
-  background-color: var(--surface-ground);
+  background-color: light-dark(var(--md-sys-color-surface-container-lowest), var(--surface-ground));
   padding: 12px;
   border-radius: 4px;
   overflow-x: auto;
-  color: var(--text-color);
+  color: light-dark(var(--md-sys-color-on-surface), var(--text-color));
   font-family: monospace;
   font-size: 0.9rem;
   overflow-y: auto;
@@ -63,38 +65,42 @@ const ServiceDetailsPanel = ({ service, onClose, onEdit }) => {
           </ButtonGroup>
         </Header>
         <DetailRow>
-          <Label>Host:</Label>
+          <Label>Host</Label>
           <Value>{service.hostname}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Addon:</Label>
+          <Label>Addon</Label>
           <Value>{service.addonName}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Addon Version:</Label>
+          <Label>Addon version</Label>
           <Value>{service.addonVersion}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Service Type:</Label>
+          <Label>Service type</Label>
           <Value>{service.service}</Value>
         </DetailRow>
         <DetailRow>
-          <Label>Should Run:</Label>
-          <Value>{service.shouldRun ? 'Yes' : 'No'}</Value>
+          <Label>Should run</Label>
+          <Value>
+            <BooleanValue value={!!service.shouldRun} style={{ justifyContent: 'flex-start' }} />
+          </Value>
         </DetailRow>
         <DetailRow>
-          <Label>Is Running:</Label>
-          <Value>{service.isRunning ? 'Yes' : 'No'}</Value>
+          <Label>Is running</Label>
+          <Value>
+            <BooleanValue value={!!service.isRunning} style={{ justifyContent: 'flex-start' }} />
+          </Value>
         </DetailRow>
         {service.lastSeen && (
           <DetailRow>
-            <Label>Last Seen:</Label>
-            <Value>{format(service.lastSeen, 'dd/MM/yy hh:mm')}</Value>
+            <Label>Last seen</Label>
+            <Value>{formatDateTime(service.lastSeen)}</Value>
           </DetailRow>
         )}
         {service.data && (
           <JsonWrapper>
-            <h4>Service Data</h4>
+            <h4>Service data</h4>
             <JsonDisplay>{JSON.stringify(service.data, null, 2)}</JsonDisplay>
           </JsonWrapper>
         )}

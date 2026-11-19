@@ -32,6 +32,7 @@ export interface EnumWidgetProps
   isReadOnly?: boolean
   enableCustomValues?: boolean
   isLoadingOptions?: boolean
+  pill?: EnumTemplateProps['pill']
   pt?: {
     template?: Partial<EnumTemplateProps>
   }
@@ -50,6 +51,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
       isReadOnly,
       enableCustomValues,
       isLoadingOptions,
+      pill,
       onOpen,
       onChange,
       onCancelEdit,
@@ -147,6 +149,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           valueTemplate={(_value, selected, isOpen) => (
             <EnumCellValue
               selectedOptions={selectedOptions}
+              pill={pill}
               hasMultipleValues={selected.length > 1}
               isOpen={isOpen}
               isReadOnly={isReadOnly}
@@ -159,6 +162,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
           itemTemplate={(option, _isActive, isSelected) => (
             <EnumCellValue
               selectedOptions={[option]}
+              pill={pill}
               hasMultipleValues={false}
               isOpen={false}
               isItem
@@ -188,6 +192,7 @@ export const EnumWidget = forwardRef<HTMLDivElement, EnumWidgetProps>(
     return (
       <EnumCellValue
         selectedOptions={selectedOptions}
+        pill={pill}
         hasMultipleValues={hasMultipleValues}
         isMultiSelect={isMultiSelect}
         isReadOnly={isReadOnly}

@@ -203,7 +203,6 @@ export const useProjectMenuController = ({
     (contextSelection: string[], hiddenOverrides: Hidden = {}) =>
       buildMenuItems(contextSelection, {
         command: true,
-        dividers: false,
         hidden: {
           search: true,
           'add-project': true,

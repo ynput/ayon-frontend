@@ -18,7 +18,7 @@ export interface UserDetailsHeaderProps {
   onClose?: () => void
   subTitle?: ReactNode
   style?: CSSProperties
-  /** the more menu's items; "View data" is added after them */
+  /** the more menu's items; "View data" is added after them, above Delete */
   menuItems?: MenuItemType[]
   /** called when the more menu opens */
   onMenuOpen?: () => void
@@ -37,14 +37,18 @@ export const UserDetailsHeader = ({
 
   const getUserName = (user: UserDetailsHeaderUser) => user?.attrib?.fullName || user?.name
 
-  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} Users Selected`
+  const title = singleUserEdit ? getUserName(singleUserEdit) : `${users.length} users selected`
 
   const buttonRef = useRef<HTMLButtonElement>(null)
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
   const [showContext, setShowContext] = useState(false)
 
   const menuId = useMemo(() => {
-    const seed = users.map((u) => u?.name).filter(Boolean).join(',') || 'none'
+    const seed =
+      users
+        .map((u) => u?.name)
+        .filter(Boolean)
+        .join(',') || 'none'
     return `user-detail-more-menu-${seed}`
   }, [users])
 
@@ -53,15 +57,19 @@ export const UserDetailsHeader = ({
     if (isOpen) onMenuOpen?.()
   }, [isOpen, onMenuOpen])
   const hasMenu = Array.isArray(menuItems) && menuItems.length > 0
+  // View data goes above Delete, so Delete stays last in a section of its own
+  const deleteAt = hasMenu ? menuItems.findIndex((item) => item.danger) : -1
+  const splitAt = deleteAt < 0 ? menuItems?.length ?? 0 : deleteAt
   const fullItems: MenuItemType[] = hasMenu
     ? [
-        ...menuItems,
+        ...menuItems.slice(0, splitAt),
         {
           id: 'view-data',
           label: 'View data',
           icon: 'data_object',
           onClick: () => setShowContext(true),
         },
+        ...menuItems.slice(splitAt),
       ]
     : []
 
@@ -123,15 +131,15 @@ export const UserDetailsHeader = ({
         >
           <style>{`
             .details-dialog__code { position: relative; }
-            .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: rgba(0,0,0,0.5); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+            .details-dialog__copy { position: absolute; right: 12px; top: 24px; z-index: 10; background: light-dark(var(--md-sys-color-surface-container-lowest), rgba(0,0,0,0.5)); border-radius: 4px; padding: 6px; cursor: pointer; display: none; align-items: center; justify-content: center; }
             .details-dialog__code:hover .details-dialog__copy, .details-dialog__code:focus-within .details-dialog__copy { display: flex; }
-            .w-tc-editor .token.property { color: #c9a5f7 !important; }
-            .w-tc-editor .token.string { color: #6bc985 !important; }
-            .w-tc-editor .token.number { color: #e5a66b !important; }
-            .w-tc-editor .token.boolean { color: #e5a66b !important; }
-            .w-tc-editor .token.null { color: #7a8a99 !important; }
-            .w-tc-editor .token.punctuation { color: #b0bec5 !important; }
-            .w-tc-editor .token.operator { color: #b0bec5 !important; }
+            .w-tc-editor .token.property { color: light-dark(#a626a4, #c9a5f7) !important; }
+            .w-tc-editor .token.string { color: light-dark(#50a14f, #6bc985) !important; }
+            .w-tc-editor .token.number { color: light-dark(#986801, #e5a66b) !important; }
+            .w-tc-editor .token.boolean { color: light-dark(#986801, #e5a66b) !important; }
+            .w-tc-editor .token.null { color: light-dark(#a0a1a7, #7a8a99) !important; }
+            .w-tc-editor .token.punctuation { color: light-dark(#383a42, #b0bec5) !important; }
+            .w-tc-editor .token.operator { color: light-dark(#383a42, #b0bec5) !important; }
             .details-dialog__code .w-tc-editor textarea { display: none !important; }
           `}</style>
           <div className="details-dialog__code">
@@ -149,7 +157,6 @@ export const UserDetailsHeader = ({
               language="json"
               placeholder="Please enter JS code."
               readOnly
-              data-color-mode="dark"
             />
           </div>
         </Dialog>

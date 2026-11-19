@@ -10,6 +10,7 @@ import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host
 import { useProjectContext } from '@shared/context'
 import type { ContextMenuItemConstructor } from './useCellContextMenu'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
+import { menuSection } from '@shared/components/Menu/menuSections'
 
 /**
  * Items addons contribute to the cells' right-click menu (entityMenuItem slot, @ynput/ayon-addon),
@@ -28,9 +29,7 @@ export const useAddonEntityMenuItems = (
 
   return useCallback<ContextMenuItemConstructor>(
     (_e, cell, selectedCells, meta) => {
-      const items = menuItemsAt(contributions, position).filter((item) =>
-        appliesToPage(item, page),
-      )
+      const items = menuItemsAt(contributions, position).filter((item) => appliesToPage(item, page))
       if (!items.length) return undefined
 
       // like the built-in items: the selected cells (not row checkboxes), else the selected rows,
@@ -57,7 +56,8 @@ export const useAddonEntityMenuItems = (
       if (!shown.length) return undefined
 
       const context = { projectName, page, entities: selection, tableState }
-      return shown
+      // addon items are a section of their own
+      const menuItems = shown
         .filter(
           (item) =>
             (item.selection !== 'single' || selection.length === 1) &&
@@ -74,6 +74,7 @@ export const useAddonEntityMenuItems = (
             ...contributionTags(item),
           }
         })
+      return menuSection(menuItems)
     },
     [contributions, projectName, page, tableState],
   )

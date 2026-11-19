@@ -15,15 +15,9 @@ import { useDateRangeFilter } from '@shared/components/SearchFilter/useDateRange
 import { CustomDateRangeDialog } from '@shared/components/SearchFilter/CustomDateRangeDialog'
 
 const Wrapper = styled.div`
-  padding: 4px 8px;
-  padding-bottom: 0;
-  filter: drop-shadow(0px 1px 2px rgba(0, 0, 0, 0.25));
+  padding: 0 8px;
   z-index: 10;
-
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: relative;
 
   &.loading {
     opacity: 0.5;
@@ -122,7 +116,6 @@ const FeedSearchFilter = forwardRef<SearchFilterRef, FeedSearchFilterProps>(
       checklistsLabel = `${checklistCount.checked}/${checklistCount.total}`
     }
 
-    // @ts-expect-error - using string is fine
     const quickActions: SearchFilterQuickAction[] = useMemo(
       () => ['comments', { id: 'checklists', label: checklistsLabel, tooltip: 'Checklists' }],
       [checklistsLabel],

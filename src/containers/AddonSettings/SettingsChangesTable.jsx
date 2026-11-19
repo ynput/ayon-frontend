@@ -4,7 +4,7 @@ import { TreeTable } from 'primereact/treetable'
 import { Column } from 'primereact/column'
 import { Section, TablePanel, Button } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { Badge, BadgeWrapper } from '@shared/components'
+import { Badge, BadgeWrapper, EmptyPlaceholder } from '@shared/components'
 import { useURIContext } from '@shared/context'
 
 const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
@@ -101,7 +101,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
 
     if (onRevert) {
       result.push({
-        label: 'Clear Selected',
+        label: 'Clear selected',
         icon: 'delete',
         command: () => {
           const result = {}
@@ -164,22 +164,26 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
   return (
     <Section>
       <TablePanel>
-        <TreeTable
-          value={changesTree}
-          expandedKeys={expandedKeys}
-          onToggle={(e) => setExpandedKeys(e.value)}
-          selectionMode="multiple"
-          selectionKeys={selectedKeys}
-          onSelectionChange={handleSelectionChange}
-          onContextMenuSelectionChange={handleSelectionChange}
-          onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
-          emptyMessage="No changes"
-          scrollable="true"
-          scrollHeight="100%"
-        >
-          <Column header="Name" body={changeNameRenderer} field="key" expander />
-          <Column header="" body={actionRenderer} style={{ width: 28 }} />
-        </TreeTable>
+        {changesTree.length ? (
+          <TreeTable
+            className="standard-rows"
+            value={changesTree}
+            expandedKeys={expandedKeys}
+            onToggle={(e) => setExpandedKeys(e.value)}
+            selectionMode="multiple"
+            selectionKeys={selectedKeys}
+            onSelectionChange={handleSelectionChange}
+            onContextMenuSelectionChange={handleSelectionChange}
+            onContextMenu={(event) => ctxMenuShow(event.originalEvent)}
+            scrollable="true"
+            scrollHeight="100%"
+          >
+            <Column header="Name" body={changeNameRenderer} field="key" expander />
+            <Column header="" body={actionRenderer} style={{ width: 28 }} />
+          </TreeTable>
+        ) : (
+          <EmptyPlaceholder className="compact" icon="edit_off" message="No changes" />
+        )}
       </TablePanel>
     </Section>
   )

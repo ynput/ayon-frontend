@@ -1,18 +1,15 @@
-import { FC } from 'react'
 import { HeaderButton } from '@shared/components'
 import { useFeedback, SupportBubble } from '@shared/components'
 import clsx from 'clsx'
 
-interface ChatBubbleButtonProps {}
-
-const ChatBubbleButton: FC<ChatBubbleButtonProps> = ({}) => {
+const ChatBubbleButton = () => {
   const { openSupport, messengerLoaded, unreadCount } = useFeedback()
   const hasUnreadMessages = unreadCount > 0
 
   if (!messengerLoaded) return null
   return (
     <HeaderButton
-      style={{ padding: '8px 6px' }}
+      style={{ padding: '7px 5.5px' }}
       onClick={() => openSupport(hasUnreadMessages ? 'Messages' : 'NewMessage')}
       variant="nav"
       className={clsx({ notification: hasUnreadMessages })}

@@ -148,7 +148,11 @@ const CompleteProfilePrompt: FC<CompleteProfilePromptProps> = () => {
         {user && <Avatar user={user} />}
         <span
           className="avatar-label"
-          style={{ fontSize: '12px', color: 'var(--text-color-secondary)', marginTop: '8px' }}
+          style={{
+            fontSize: '12px',
+            color: 'light-dark(var(--md-sys-color-outline), var(--text-color-secondary))',
+            marginTop: '8px',
+          }}
         >
           Upload a profile picture
         </span>
