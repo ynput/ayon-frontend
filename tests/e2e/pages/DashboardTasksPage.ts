@@ -11,7 +11,7 @@ export class DashboardTasksPage {
 
   async goto() {
     await this.page.goto('/dashboard/tasks')
-    await expect(this.page.getByPlaceholder('Filter tasks...')).toBeVisible({ timeout: 30_000 })
+    await expect(this.page.getByPlaceholder('Filter tasks')).toBeVisible({ timeout: 30_000 })
   }
 
   /** Show only the tasks of one project */
@@ -20,7 +20,7 @@ export class DashboardTasksPage {
   }
 
   async filter(text: string) {
-    await this.page.getByPlaceholder('Filter tasks...').fill(text)
+    await this.page.getByPlaceholder('Filter tasks').fill(text)
   }
 
   /** A kanban card; its element id is the task id */

@@ -63,6 +63,11 @@ export const Header = styled.header`
     min-width: fit-content;
   }
 
+  /* an entity without a thumbnail shows its type icon, sized like the stacked ones */
+  .thumbnail .type-icon {
+    font-size: 24px;
+  }
+
   &.loading {
     .playable {
       display: none;
@@ -133,7 +138,7 @@ export const Content = styled.div`
   .sub-title {
     display: flex;
     align-items: center;
-    gap: var(--base-gap-medium);
+    gap: var(--base-gap-small);
   }
 `
 
@@ -157,13 +162,18 @@ interface StatusSelectProps {
 }
 export const StatusSelect = styled(StatusSelectComponent)<StatusSelectProps>`
   width: fit-content;
+  /* centred in its row, which the 32px buttons set */
+  align-self: center;
   .status-field.value {
     position: relative;
     left: 1px;
-    height: 28px;
-    padding-right: 8px;
+    /* the header's main value: a step up from the status pill in the tables, so it fills its row;
+       the component sets its height inline */
+    height: 28px !important;
+    min-height: 0;
+    padding: 2px 10px 2px 6px;
+    font-size: 14px;
     width: calc(100% - 1px);
-    margin-bottom: 2px;
     color: ${(props) => props.$textColor};
   }
 `
@@ -224,6 +234,11 @@ export const PriorityEnumDropdown = styled(EnumDropdown)`
     padding: 0;
     & > div {
       justify-content: center;
+    }
+
+    /* the same size as the status pill and the pills in the tables */
+    span:has(> .value-label) {
+      padding: 1px 6px 1px 4px;
     }
   }
 

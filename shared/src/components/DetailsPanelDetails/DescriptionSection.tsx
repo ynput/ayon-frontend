@@ -95,7 +95,8 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
       showHeader={!isEditing}
       enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
-      description={isLarge}
+      // the large layout only once there is text: an empty one stays a one line prompt
+      description={isLarge && (!!description || isEditing)}
     >
       <StyledContent className={clsx({ editing: isEditing })} onClick={handleContentClick}>
         <StyledEditor className="block-shortcuts">

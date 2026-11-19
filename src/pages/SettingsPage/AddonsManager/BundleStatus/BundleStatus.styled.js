@@ -1,21 +1,44 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
+
+const marks = css`
+  .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .error {
+    font-size: 16px;
+    color: var(--md-sys-color-error);
+  }
+`
 
 export const StatusDots = styled.div`
   display: flex;
   justify-content: center;
+  align-items: center;
+  gap: 4px;
   width: 100%;
 
-  span {
-    font-size: 2rem;
-  }
+  ${marks}
+`
 
-  .wrapper {
-    width: 30px;
+export const Legend = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 12px;
+  padding: 0 4px;
+  font-size: 12px;
+  color: var(--md-sys-color-on-surface-variant);
+
+  .legend-item {
     display: flex;
-    justify-content: flex-end;
+    align-items: center;
+    gap: 6px;
+    white-space: nowrap;
   }
 
-  span:not(:first-child) {
-    margin-left: -7px; // Adjust this value as needed
-  }
+  ${marks}
 `

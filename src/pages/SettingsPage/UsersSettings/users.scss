@@ -1,20 +1,20 @@
 .role {
   margin-right: 4px;
   &.admin {
-    color: #ffddaa;
+    color: light-dark(var(--md-sys-color-warning), #ffddaa);
   }
   &.manager {
-    color: #ffddaa;
+    color: light-dark(var(--md-sys-color-warning), #ffddaa);
   }
   &.default {
-    color: #e0e0e0;
+    color: light-dark(var(--md-sys-color-on-surface), #e0e0e0);
   }
   &.all {
-    color: #e0e0e0;
+    color: light-dark(var(--md-sys-color-on-surface), #e0e0e0);
   }
   &.partial {
     font-style: italic;
-    color: #909090;
+    color: light-dark(var(--md-sys-color-outline), #909090);
   }
 }
 

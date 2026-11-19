@@ -2,6 +2,7 @@ import { useCallback, useMemo, MouseEvent, RefObject } from 'react'
 import ContextMenuItem, { ContextMenuItemProps } from './ContextMenuItem'
 import { useContextMenu } from './context/context-menu'
 import type { PowerpackContextType, PowerpackFeature } from '@shared/context'
+import { isMenuDivider, tidyMenuSections } from '@shared/components/Menu/menuSections'
 
 // Extend the item type based on the ContextMenuItemProps
 export interface ContextMenuItemType extends Omit<ContextMenuItemProps, 'contextMenuRef'> {
@@ -19,7 +20,9 @@ const addTemplateToItems = (
     setPowerpackDialog?: (feature: PowerpackFeature | null) => void
   },
 ): ContextMenuItemType[] => {
-  return items.map((item) => {
+  return tidyMenuSections(items).map((item) => {
+    // a divider is the context menu's own line, not an item
+    if (isMenuDivider(item)) return { separator: true }
     const newItem: ContextMenuItemType = {
       ...item,
       template: (
@@ -58,10 +61,10 @@ export const useCreateContextMenu = (
       menuList: ContextMenuItemType[],
       ref: RefObject<{ hide: () => void }>,
     ): ContextMenuItemType[] => {
-      // a separator is the context menu's own line, not an item
-      return menuList.filter(Boolean).map((item) =>
-        item.separator
-          ? item
+      // a divider is the context menu's own line, not an item
+      return tidyMenuSections(menuList).map((item) =>
+        isMenuDivider(item)
+          ? { separator: true }
           : {
               template: (
                 <ContextMenuItem

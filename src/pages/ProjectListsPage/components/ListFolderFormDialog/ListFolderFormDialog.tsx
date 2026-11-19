@@ -247,7 +247,7 @@ export const ListFolderFormDialog: FC<ListFolderFormDialogProps> = ({}) => {
           scopeConfig={{
             options: [
               { value: 'generic', label: 'Lists' },
-              { value: 'review-session', label: 'Review Sessions' },
+              { value: 'review-session', label: 'Review sessions' },
             ],
             filter: isReview ? ['review-session'] : ['generic'],
           }}

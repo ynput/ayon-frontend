@@ -26,9 +26,10 @@ export const FieldLabel: React.FC<FieldLabelProps> = ({
   ...props
 }) => {
   const displayTitle = data.title ? humanizeField(data.title) : humanizeField(name)
+  const description = data.description?.trim()
   const tooltipText = showDetailedTooltip
-    ? `${displayTitle} (${name}) ${data.description ? '-' : ''} ${data.description || ''}`
-    : data.description || displayTitle
+    ? `${displayTitle} (${name})${description ? ` — ${description}` : ''}`
+    : description || displayTitle
 
   return (
     <StyledFieldLabel

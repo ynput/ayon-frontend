@@ -68,7 +68,9 @@ export interface SlotMap {
   }
   /**
    * A tab in the details panel. The tab button shows from the description, for `entityTypes`;
-   * `component` loads when the tab is first opened.
+   * `component` loads when the tab is first opened. AYON puts a header above it with `label` as its
+   * title; `DetailsPanelTabHeader` adds a "more" menu, a search and filter bar and other content
+   * to that header.
    */
   'detailsPanel.tab': {
     version: 1
@@ -368,8 +370,10 @@ export interface HeaderItemContext extends ButtonScope {
 export interface DetailsPanelTabMeta {
   /** the tab id is `<addon>.<id>` */
   id: string
-  /** the tab button's tooltip */
+  /** the title of the tab's header, and the tab button's tooltip unless `tooltip` is set */
   label: string
+  /** the tab button's tooltip; the label when not set */
+  tooltip?: string
   /** a Material Symbols icon name, the tab button */
   icon: string
   /** entity types the tab shows for; all when not set */

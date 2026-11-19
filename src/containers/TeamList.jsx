@@ -67,7 +67,7 @@ const TeamList = ({
   const globalContextItems = useMemo(
     () => [
       {
-        label: 'Create Team',
+        label: 'Create team',
         icon: 'group_add',
         command: onNewTeam,
       },
@@ -81,12 +81,12 @@ const TeamList = ({
   // built from the right-clicked row, which is acted on alone when it is not selected
   const buildTableContextItems = (ctxSelection) => [
     {
-      label: 'Create Team',
+      label: 'Create team',
       icon: 'group_add',
       command: onNewTeam,
     },
     {
-      label: 'Duplicate Team',
+      label: 'Duplicate team',
       icon: 'content_copy',
       // duplicating copies the selected team
       command: () => {
@@ -96,7 +96,7 @@ const TeamList = ({
       disabled: ctxSelection.length > 1,
     },
     {
-      label: `Delete Team${ctxSelection.length > 1 ? 's' : ''}`,
+      label: `Delete team${ctxSelection.length > 1 ? 's' : ''}`,
       icon: 'delete',
       command: () => onDelete(ctxSelection),
       danger: true,

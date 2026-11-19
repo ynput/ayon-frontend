@@ -164,7 +164,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
   } else if (isFinished) {
     actionButton = (
       <Button disabled icon={'check_circle'}>
-        Downloaded !
+        Downloaded
       </Button>
     )
   } else if (isUpdatingAll) {
@@ -276,7 +276,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
               )}
             </Styled.Download>
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>
-              <MetaPanelRow label="Downloaded Versions">
+              <MetaPanelRow label="Downloaded versions">
                 {versionsToShow.length
                   ? versionsToShow.map((version) => <span key={version}>{version}</span>)
                   : 'Not downloaded'}
@@ -288,9 +288,9 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
               </MetaPanelRow>
             </Styled.MetaPanel>
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>
-              <MetaPanelRow label="Production Usage" valueDirection="row">
+              <MetaPanelRow label="Production usage" valueDirection="row">
                 <span>
-                  {currentProductionVersion ? currentProductionVersion : 'Not used in Production'}
+                  {currentProductionVersion ? currentProductionVersion : 'Not used in production'}
                 </span>
                 {currentProductionVersion &&
                   (isProductionOutdated ? (
@@ -315,7 +315,7 @@ const AddonDetails = ({ addon, isLoading, onDownload, isUpdatingAll }: AddonDeta
 
             <Styled.MetaPanel className={clsx({ loading: isLoading })}>
               <MetaPanelRow label="Author">{orgTitle}</MetaPanelRow>
-              <MetaPanelRow label="Latest Version">
+              <MetaPanelRow label="Latest version">
                 {latestVersion && <span>{latestVersion}</span>}
                 {warning && <span>{warning}</span>}
               </MetaPanelRow>

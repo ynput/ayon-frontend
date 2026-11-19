@@ -7,5 +7,5 @@ export const getPlaceholderMessage = (sliceType: SliceType) => {
   if (!excludedTypes.includes(type)) {
     type = type.replace(/s$/, '')
   }
-  return `No tasks found, try selecting another ${type} or expanding your filters.`
+  return `No tasks found, try selecting another ${type} or expanding your filters`
 }

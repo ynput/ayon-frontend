@@ -19,7 +19,7 @@ const StyledStatus = styled.span<{ $color: string }>`
 
   &,
   .icon {
-    color: $color;
+    color: ${({ $color }) => $color};
   }
 
   .icon {

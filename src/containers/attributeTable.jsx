@@ -1,8 +1,7 @@
 import styled from 'styled-components'
 import { TableRow } from '@ynput/ayon-react-components'
 import { useGetAttributeListQuery } from '@shared/api'
-import { copyToClipboard } from '@shared/util'
-import { format } from 'date-fns'
+import { copyToClipboard, formatDate } from '@shared/util'
 
 const AttributeTableContainer = styled.div`
   display: flex;
@@ -62,7 +61,7 @@ const AttributeTable = ({
           let value = data[name]
 
           if (value && name.includes('Date') && !value.includes('Mixed')) {
-            value = format(new Date(value), 'dd/MM/yyyy')
+            value = formatDate(value)
           }
 
           // if value is an array
