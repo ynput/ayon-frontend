@@ -1,4 +1,4 @@
-// The host's DetailsPanelTabHeader (@ynput/ayon-addon): an addon tab's menu, search bar and extra
+// The host's PanelTabHeader (@ynput/ayon-addon): an addon tab's menu, search bar and extra
 // content, rendered into the header the details panel puts above the tab (its title is the tab's
 // label). Portals keep them in the addon's React tree, so its own contexts still apply. Outside a
 // details panel tab (the dev shell's preview of the component alone) it renders a header in place.
@@ -12,11 +12,8 @@ import {
 } from '@ynput/ayon-react-components'
 import type { Filter, Option } from '@ynput/ayon-react-components'
 import type { TabHeaderFilter, TabHeaderSearch } from '@ynput/ayon-addon'
-import type { HostDetailsPanelTabHeaderProps } from '@ynput/ayon-addon/host'
-import {
-  DetailsPanelTabHeader,
-  useDetailsPanelTabHeaderSlots,
-} from '@shared/components/DetailsPanelTabHeader'
+import type { HostPanelTabHeaderProps } from '@ynput/ayon-addon/host'
+import { PanelTabHeader, usePanelTabHeaderSlots } from '@shared/components/PanelTabs'
 import { AddonMoreMenu } from './AddonMoreMenu'
 
 const toOptions = (options: TabHeaderSearch['options'] = []): Option[] =>
@@ -82,7 +79,7 @@ const TabHeaderSearchBar = ({ search }: { search: TabHeaderSearch }) => {
   }, [controlled, filtersKey])
 
   // the header's search button: shown while this bar exists, marked while filters are set
-  const slots = useDetailsPanelTabHeaderSlots()
+  const slots = usePanelTabHeaderSlots()
   const active = filters.some((f) => !!f.values?.length)
   useEffect(() => {
     slots?.setSearchState({ has: true, active })
@@ -115,22 +112,22 @@ const TabHeaderSearchBar = ({ search }: { search: TabHeaderSearch }) => {
   )
 }
 
-export const AddonDetailsPanelTabHeader = ({
+export const AddonPanelTabHeader = ({
   menu,
   search,
   children,
   onError,
-}: HostDetailsPanelTabHeaderProps) => {
-  const slots = useDetailsPanelTabHeaderSlots()
+}: HostPanelTabHeaderProps) => {
+  const slots = usePanelTabHeaderSlots()
   const menuNode = menu?.length ? <AddonMoreMenu items={menu} onError={onError} /> : null
   const searchNode = search ? <TabHeaderSearchBar search={search} /> : null
   const extraNode = children ? <div style={{ padding: '4px 8px' }}>{children}</div> : null
 
   if (!slots) {
     return (
-      <DetailsPanelTabHeader menu={menuNode} search={searchNode}>
+      <PanelTabHeader menu={menuNode} search={searchNode}>
         {extraNode}
-      </DetailsPanelTabHeader>
+      </PanelTabHeader>
     )
   }
 
@@ -142,3 +139,6 @@ export const AddonDetailsPanelTabHeader = ({
     </>
   )
 }
+
+/** @deprecated the dev shell of `@ynput/ayon-addon-dev` 0.5 imports it: use `AddonPanelTabHeader` */
+export const AddonDetailsPanelTabHeader = AddonPanelTabHeader

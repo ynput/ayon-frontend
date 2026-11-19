@@ -1,10 +1,7 @@
 import styled from 'styled-components'
-import { Toolbar } from '@ynput/ayon-react-components'
+import { PanelTabs } from '@shared/components/PanelTabs'
 
-export const TabsContainer = styled(Toolbar)`
-  border-radius: 8px 8px 0 0;
-  gap: var(--base-gap-small) !important;
-  position: relative;
-  z-index: 100;
+// the whole width of the header's grid
+export const Tabs = styled(PanelTabs)`
   grid-column: span 2;
 `

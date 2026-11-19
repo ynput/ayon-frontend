@@ -15,7 +15,6 @@ import {
   Panel,
   SaveButton,
 } from '@ynput/ayon-react-components'
-import type { IconType } from '@ynput/ayon-react-components'
 import { ContributionView, useContributions, useUser } from '@ynput/ayon-addon'
 import type {
   AnyContribution,
@@ -59,8 +58,11 @@ import {
   StudioPageSelectionProvider,
   useProjectPageSlotContext,
   useStudioPageSlotContext,
+  PanelSlotTab,
+  PanelTabs,
+  usePanelSlotTabs,
 } from '@ynput/ayon-frontend-shared/components'
-import type { UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
+import type { PanelTabSlot, UserDetailsSource } from '@ynput/ayon-frontend-shared/components'
 import { contributionsTo, findContribution, getPlace, idOf, onStage, slotSnippet } from './catalog'
 import { contractSlot, getContracts, noSceneNote } from './contractModel'
 import type { Place } from './places'
@@ -487,12 +489,14 @@ const DetailsPanelStage = ({ selection }: StageProps) => {
   )
 }
 
+const LIST_DETAILS_SLOT: PanelTabSlot<'listDetails.tab'> = { name: 'listDetails.tab' }
+
 // listDetails.tab: a stand-in for the list details panel of the Lists and Reviews pages (it lives in
 // the ayon-frontend app; Review's session sidebar has the same tabs), for a list of the project
 // picked here
 const ListDetailsStage = ({ selection }: StageProps) => {
   const projectName = selection.projectName!
-  const { contributions: tabs } = useContributions('listDetails.tab')
+  const { tabs } = usePanelSlotTabs(LIST_DETAILS_SLOT)
   const { data, isLoading } = useGetListsInfiniteInfiniteQuery(
     { projectName },
     { initialPageParam: { cursor: '' } },
@@ -501,7 +505,7 @@ const ListDetailsStage = ({ selection }: StageProps) => {
   const [listId, setListId] = useState<string>()
   const list = lists.find((l) => l.id === listId) ?? lists[0]
   const [tabKey, setTabKey] = useState<string>()
-  const tab = tabs.find((t) => t.key === tabKey) ?? tabs[0]
+  const selectedTab = tabs.some((t) => t.key === tabKey) ? tabKey! : (tabs[0]?.key ?? '')
 
   const context = useMemo<Context | undefined>(
     () =>
@@ -556,24 +560,12 @@ const ListDetailsStage = ({ selection }: StageProps) => {
         <div className="ayon-shell-bar">
           <strong>{list.label}</strong>
         </div>
-        <div className="ayon-shell-bar">
-          {tabs.map((t) => (
-            <Button
-              key={t.key}
-              // addons name any Material Symbols icon
-              icon={t.icon as IconType}
-              label={t.label}
-              variant={t.key === tab?.key ? 'surface' : 'text'}
-              selected={t.key === tab?.key}
-              onClick={() => setTabKey(t.key)}
-              {...contributionTags(t)}
-            />
-          ))}
-        </div>
-        {tab ? (
-          <div className="ayon-shell-list-tab">
-            <ContributionView key={`${tab.key}:${list.id}`} contribution={tab} context={context as never} />
-          </div>
+        {tabs.length ? (
+          <>
+            {/* the app's panel has its Details and Share tabs before these */}
+            <PanelTabs tabs={[]} slot={LIST_DETAILS_SLOT} selected={selectedTab} onChange={setTabKey} />
+            <PanelSlotTab slot={LIST_DETAILS_SLOT} selected={selectedTab} context={context as never} />
+          </>
         ) : (
           <Hint>This addon has no list details tabs.</Hint>
         )}

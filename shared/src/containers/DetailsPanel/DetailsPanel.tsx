@@ -29,7 +29,6 @@ import {
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
-import { AddonTabFrame } from './components/AddonTabFrame/AddonTabFrame'
 import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
 import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
@@ -44,8 +43,8 @@ import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
-import { useAddonTabs } from './hooks/useAddonTabs'
-import { ContributionView } from '@ynput/ayon-addon'
+import { useDetailsPanelTabSlot } from './hooks/useDetailsPanelTabSlot'
+import { PanelSlotTab } from '@shared/components/PanelTabs'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 
@@ -162,7 +161,11 @@ DetailsPanelProps) => {
   }, [])
 
   // addon tabs (detailsPanel.tab slot) for this entity type
-  const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = useAddonTabs(activeEntityType)
+  const {
+    slot: addonTabSlot,
+    tabs: addonTabs,
+    isLoading: isLoadingAddonTabs,
+  } = useDetailsPanelTabSlot(activeEntityType)
   const activeAddonTab = addonTabs.find((tab) => tab.key === currentTab)
   // a stored addon tab is only known once the manifests have loaded
   const isPendingAddonTab = isAddonDetailsPanelTab(currentTab) && isLoadingAddonTabs
@@ -572,13 +575,7 @@ DetailsPanelProps) => {
                 onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
               />
             )}
-          {activeAddonTab && (
-            <AddonTabFrame key={activeAddonTab.key} title={activeAddonTab.label}>
-              <Styled.AddonTabContent>
-                <ContributionView contribution={activeAddonTab} context={addonTabContext} />
-              </Styled.AddonTabContent>
-            </AddonTabFrame>
-          )}
+          <PanelSlotTab slot={addonTabSlot} selected={currentTab} context={addonTabContext} />
           {currentTab === 'files' && (
             <DetailsPanelFiles
               entities={entityDetailsData}

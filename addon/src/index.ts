@@ -34,6 +34,7 @@ export type {
   RunPiece,
   ListDetailsTabContext,
   ListDetailsTabMeta,
+  PanelTabMeta,
   ListMenuItemMeta,
   MenuKind,
   ProjectListMenuItemContext,
@@ -154,13 +155,17 @@ export type {
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
-export { DetailsPanelTabHeader } from './DetailsPanelTabHeader'
+// AYON's header and frame of a panel tab (detailsPanel.tab, listDetails.tab)
+export { DetailsPanelTabHeader, PanelTabHeader } from './PanelTabHeader'
+export { ContributionTab } from './ContributionTab'
+export type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
 export type {
   DetailsPanelTabHeaderProps,
+  PanelTabHeaderProps,
   TabHeaderFilter,
   TabHeaderFilterOption,
   TabHeaderSearch,
-} from './DetailsPanelTabHeader'
+} from './PanelTabHeader'
 // AYON's right-click menu, with the same items
 export { useContextMenu } from './useContextMenu'
 export type { OpenContextMenu } from './useContextMenu'

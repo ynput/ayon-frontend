@@ -3,15 +3,18 @@ import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@shared/util'
-import { ListAttributeForm, ListMetaData } from '@shared/components'
+import {
+  ListAttributeForm,
+  ListMetaData,
+  PanelSlotTab,
+  PanelTabHeader,
+  PanelTabs,
+  usePanelSlotTabs,
+} from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
-import ListDetailsTabs, {
-  LIST_DETAILS_TABS,
-  ListDetailsTab,
-} from '../ListDetailsTabs/ListDetailsTabs'
-import { ContributionView, useContributions } from '@ynput/ayon-addon'
+import type { PanelTab, PanelTabSlot } from '@shared/components'
 import type { ListDetailsTabContext } from '@ynput/ayon-addon'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
@@ -26,6 +29,14 @@ const showFullValueIfCut = (event: MouseEvent<HTMLElement>) => {
   if (value.scrollWidth > value.clientWidth) value.dataset.tooltip = value.textContent || ''
   else delete value.dataset.tooltip
 }
+
+// the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
+// the contribution key, `<addon>.<id>`
+const LIST_DETAILS_TABS: PanelTab[] = [
+  { id: 'details', label: 'Details', icon: 'lists' },
+  { id: 'access', label: 'Share', icon: 'share' },
+]
+const LIST_DETAILS_SLOT: PanelTabSlot<'listDetails.tab'> = { name: 'listDetails.tab' }
 
 interface ListDetailsPanelProps {
   listId: string
@@ -52,21 +63,16 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   // Combine initial loading with argument change loading
   const isLoadingList = isLoading || isLoadingOnArgChange
 
-  const [selectedTab, setSelectedTab] = useQueryParam<ListDetailsTab>(
+  const [selectedTab, setSelectedTab] = useQueryParam(
     'listTab',
-    withDefault(StringParam, 'details') as unknown as any,
+    withDefault(StringParam, 'details'),
   )
 
-  // tabs addons contribute (listDetails.tab slot, @ynput/ayon-addon); the tab id is the
-  // contribution key, `<addon>.<id>`
-  const { contributions: addonTabs, isLoading: isLoadingAddonTabs } =
-    useContributions('listDetails.tab')
-  const activeAddonTab = addonTabs.find((tab) => tab.key === selectedTab)
+  const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = usePanelSlotTabs(LIST_DETAILS_SLOT)
+  const ownTab = LIST_DETAILS_TABS.find((tab) => tab.id === selectedTab)
   // a tab in the URL whose addon is gone (known once the manifests have loaded)
   const isUnknownTab =
-    !LIST_DETAILS_TABS.some((tab) => tab.id === selectedTab) &&
-    !activeAddonTab &&
-    !isLoadingAddonTabs
+    !ownTab && !addonTabs.some((tab) => tab.key === selectedTab) && !isLoadingAddonTabs
   useEffect(() => {
     if (isUnknownTab) setSelectedTab('details')
   }, [isUnknownTab, setSelectedTab])
@@ -132,45 +138,45 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
             {upperFirst(list?.entityType)}s {isReview && '(Review)'}
           </span>
         </Styled.Titles>
-        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} addonTabs={addonTabs} />
+        <PanelTabs
+          tabs={LIST_DETAILS_TABS}
+          slot={LIST_DETAILS_SLOT}
+          selected={selectedTab}
+          onChange={setSelectedTab}
+        />
         <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
       </Styled.Header>
-      {activeAddonTab ? (
-        // an addon's tab fills the panel below the header, in the place of the panel's own tabs
-        addonTabContext && (
-          <Styled.AddonTabContent>
-            <ContributionView
-              key={activeAddonTab.key}
-              contribution={activeAddonTab}
-              context={addonTabContext}
-            />
-          </Styled.AddonTabContent>
-        )
-      ) : (
-        <Styled.Scrollable>
-          {selectedTab === 'details' && (
-            <>
-              <Styled.Section>
-                <ListAttributeForm
-                  list={list}
-                  isLoading={isLoadingList}
-                  projectName={projectName}
-                />
-              </Styled.Section>
-              <Styled.Section onMouseOver={showFullValueIfCut}>
-                <ListMetaData list={list} isLoading={isLoadingList} />
-              </Styled.Section>
-            </>
-          )}
-          {selectedTab === 'access' && list && (
-            <ListAccessForm
-              list={list}
-              projectName={projectName}
-              isLoading={isLoadingList}
-              isReview={isReview}
-            />
-          )}
-        </Styled.Scrollable>
+      {/* an addon's tab, with its own header; it gets the selected list only */}
+      <PanelSlotTab slot={LIST_DETAILS_SLOT} selected={selectedTab} context={addonTabContext} />
+      {ownTab && (
+        <>
+          {/* the tab buttons are icons: the open tab is named here */}
+          <PanelTabHeader title={ownTab.label} />
+          <Styled.Scrollable>
+            {ownTab.id === 'details' && (
+              <>
+                <Styled.Section>
+                  <ListAttributeForm
+                    list={list}
+                    isLoading={isLoadingList}
+                    projectName={projectName}
+                  />
+                </Styled.Section>
+                <Styled.Section onMouseOver={showFullValueIfCut}>
+                  <ListMetaData list={list} isLoading={isLoadingList} />
+                </Styled.Section>
+              </>
+            )}
+            {ownTab.id === 'access' && list && (
+              <ListAccessForm
+                list={list}
+                projectName={projectName}
+                isLoading={isLoadingList}
+                isReview={isReview}
+              />
+            )}
+          </Styled.Scrollable>
+        </>
       )}
     </Styled.Panel>
   )

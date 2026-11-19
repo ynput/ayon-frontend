@@ -15,15 +15,6 @@ export const Scrollable = styled.div`
   flex: 1;
 `
 
-// an addon tab's content (listDetails.tab), in the place of the panel's own tabs
-export const AddonTabContent = styled.div`
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-  display: flex;
-  flex-direction: column;
-`
-
 export const Section = styled.div`
   &:has(> *) {
     padding: var(--padding-m);

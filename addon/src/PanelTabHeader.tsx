@@ -33,7 +33,7 @@ export interface TabHeaderSearch {
   onFiltersChange?: (filters: TabHeaderFilter[]) => void
 }
 
-export interface DetailsPanelTabHeaderProps {
+export interface PanelTabHeaderProps {
   /** the "more" (…) menu right of the title: the items a `menu` piece returns */
   menu?: AddonMenuItem[]
   /** AYON's search and filter bar under the title, shown and hidden with the header's search button */
@@ -42,30 +42,35 @@ export interface DetailsPanelTabHeaderProps {
   children?: ReactNode
 }
 
-/** What the host's `DetailsPanelTabHeader` gets: the addon's props and where to report a failing menu item. */
-export interface HostDetailsPanelTabHeaderProps extends DetailsPanelTabHeaderProps {
+/** What the host's `PanelTabHeader` gets: the addon's props and where to report a failing menu item. */
+export interface HostPanelTabHeaderProps extends PanelTabHeaderProps {
   onError: (error: unknown) => void
 }
 
 /**
- * Fills the header of a `detailsPanel.tab`: AYON shows the tab's `label` as its title and puts
- * these in the header, so every tab looks alike. Render it once, anywhere in the tab's component;
+ * Fills the header of a panel tab (`detailsPanel.tab`, `listDetails.tab`): AYON shows the tab's
+ * `label` as its title and puts these in the header, so every tab looks alike. Render it once, anywhere in the tab's component;
  * it takes no room where it is rendered. Without it, the header has the title only. An AYON older
  * than this component has no such export (`undefined`): an addon that supports one checks
- * `DetailsPanelTabHeader &&` before rendering it.
+ * `PanelTabHeader &&` before rendering it.
  *
  * ```tsx
  * const [search, setSearch] = useState('')
- * <DetailsPanelTabHeader
+ * <PanelTabHeader
  *   menu={[{ id: 'add', label: 'Add time', icon: 'more_time', onClick: add }]}
  *   search={{ onSearch: setSearch }}
  * >
  *   <Total logs={logs} />
- * </DetailsPanelTabHeader>
+ * </PanelTabHeader>
  * ```
  */
-export const DetailsPanelTabHeader = (props: DetailsPanelTabHeaderProps) => {
+export const PanelTabHeader = (props: PanelTabHeaderProps) => {
   const onError = useMenuErrorHandler()
-  const Host = getHost().components?.DetailsPanelTabHeader
+  const Host = getHost().components?.PanelTabHeader
   return Host ? <Host {...props} onError={onError} /> : <>{props.children}</>
 }
+
+/** @deprecated renamed `PanelTabHeader`: it fills the header of any panel tab */
+export const DetailsPanelTabHeader = PanelTabHeader
+/** @deprecated renamed `PanelTabHeaderProps` */
+export type DetailsPanelTabHeaderProps = PanelTabHeaderProps

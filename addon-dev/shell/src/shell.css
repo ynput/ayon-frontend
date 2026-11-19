@@ -816,13 +816,6 @@ div.ayon-shell-no-preview[data-shell-surface='service'] {
   background: var(--md-sys-color-surface-container-low);
   border-radius: 4px;
 }
-.ayon-shell-list-tab {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0;
-  overflow: auto;
-}
 .ayon-shell-panel-buttons.ayon-shell-panel-buttons {
   flex-direction: row;
   justify-content: flex-end;

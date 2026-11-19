@@ -69,8 +69,8 @@ export interface SlotMap {
   /**
    * A tab in the details panel. The tab button shows from the description, for `entityTypes`;
    * `component` loads when the tab is first opened. AYON puts a header above it with `label` as its
-   * title; `DetailsPanelTabHeader` adds a "more" menu, a search and filter bar and other content
-   * to that header.
+   * title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to
+   * that header.
    */
   'detailsPanel.tab': {
     version: 1
@@ -91,7 +91,9 @@ export interface SlotMap {
   /**
    * A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's
    * sidebar in Review. The tab button shows from the description, after the panel's own tabs;
-   * `component` loads when the tab is first opened.
+   * `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header
+   * above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter
+   * bar and other content to that header.
    */
   'listDetails.tab': {
     version: 1
@@ -366,8 +368,8 @@ export interface HeaderItemContext extends ButtonScope {
   projectName: string | null
 }
 
-/** Description of a `detailsPanel.tab` contribution. */
-export interface DetailsPanelTabMeta {
+/** Description of a panel tab: `detailsPanel.tab`, `listDetails.tab`. */
+export interface PanelTabMeta {
   /** the tab id is `<addon>.<id>` */
   id: string
   /** the title of the tab's header, and the tab button's tooltip unless `tooltip` is set */
@@ -376,6 +378,10 @@ export interface DetailsPanelTabMeta {
   tooltip?: string
   /** a Material Symbols icon name, the tab button */
   icon: string
+}
+
+/** Description of a `detailsPanel.tab` contribution. */
+export interface DetailsPanelTabMeta extends PanelTabMeta {
   /** entity types the tab shows for; all when not set */
   entityTypes?: string[]
 }
@@ -424,14 +430,7 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
 /** Description of a `listDetails.tab` contribution. */
-export interface ListDetailsTabMeta {
-  /** the tab id is `<addon>.<id>` */
-  id: string
-  /** the tab button's label */
-  label: string
-  /** a Material Symbols icon name, on the tab button */
-  icon: string
-}
+export type ListDetailsTabMeta = PanelTabMeta
 
 /** Context of a list details tab. */
 export interface ListDetailsTabContext extends ProjectNameScope {
