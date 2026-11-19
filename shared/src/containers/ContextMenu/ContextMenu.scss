@@ -22,6 +22,12 @@
     padding: 0 4px;
   }
 
+  // the line between sections, in the menu's border colour (the theme's is too close to the background)
+  .p-menu-separator {
+    margin: 4px 0;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
+
   .p-menuitem.p-menuitem-active > .p-menuitem-link {
     &.p-menuitem-icon,
     &.p-menuitem-text {
