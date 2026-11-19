@@ -102,9 +102,9 @@ strong {
   --color-table-row-hover: var(--md-sys-color-surface-container);
   --color-table-hover: var(--md-sys-color-surface-container-hover);
   --color-table-selected: var(--md-sys-color-primary-container);
-  --color-table-selected-row: var(--md-sys-color-primary-container);
-  --color-table-selected-row-hover: var(--md-sys-color-primary-container-hover);
-  --color-table-selected-row-cell-hover: var(--md-sys-color-primary-container-active);
+  --color-table-selected-row: var(--md-sys-color-surface-container-high);
+  --color-table-selected-row-hover: var(--md-sys-color-surface-container-high-hover);
+  --color-table-selected-row-cell-hover: var(--md-sys-color-surface-container-high-active);
   --color-table-readonly-focused: var(--md-sys-color-surface-container);
   --color-table-collapsed-widget: light-dark(var(--md-sys-color-on-surface), hsl(0 0% 100%));
   --color-table-boolean-border: light-dark(
