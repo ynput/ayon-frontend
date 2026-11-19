@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
 import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-components'
-import RenderFieldWidget from './components/RenderFieldWidget'
+import RenderFieldWidget, { isAllDayEndDate } from './components/RenderFieldWidget'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 import { matchesFieldSearch } from './fieldSearch'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
@@ -213,7 +213,14 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
 
   const shownFields = fields.filter(
     (field, index) =>
-      !field.hidden && matchesFieldSearch(searchFields[index], form[field.name], search),
+      !field.hidden &&
+      matchesFieldSearch(
+        searchFields[index],
+        form[field.name],
+        search,
+        [],
+        isAllDayEndDate(field.name, entities),
+      ),
   )
 
   return (

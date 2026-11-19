@@ -64,6 +64,12 @@ const StyledTagsWidget = styled(TagsWidget)`
   }
 `
 
+// an all-day event ends at the midnight after its last day: its end date shows that last day
+export const isAllDayEndDate = (fieldName: string, entities: DetailsPanelEntityData[]) =>
+  fieldName === 'attrib.endDate' &&
+  entities.length > 0 &&
+  entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
+
 interface RenderFieldWidgetProps {
   field: AttributeField
   value: any
@@ -137,10 +143,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     onMixedChange: (change: MixedChange) => onMixedChange?.(field.name, change),
   }
 
-  const isMidnightExclusive =
-    field.name === 'attrib.endDate' &&
-    entities.length > 0 &&
-    entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
+  const isMidnightExclusive = isAllDayEndDate(field.name, entities)
 
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
