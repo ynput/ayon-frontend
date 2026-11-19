@@ -154,7 +154,7 @@ export const trailingSlotShadow = css`
 `
 
 // the header is the colour of the body's cell lines, so its column separators use the outline colour
-const headerSeparator = `inset 1px 0 0 0 var(--md-sys-color-outline-variant)`
+const headerSeparator = `inset 1px 0 1px 0 var(--md-sys-color-outline-variant)`
 
 // pinned to the right edge so the button stays in view on wide tables; at full scroll it sits
 // in its own space after the last column. Only the header row is covered: body and footer rows
