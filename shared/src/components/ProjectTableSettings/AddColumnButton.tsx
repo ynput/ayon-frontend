@@ -2,7 +2,7 @@ import { FC, useLayoutEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled, { css } from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
-import { useMenuContext, useSettingsPanel } from '@shared/context'
+import { useMenuContext } from '@shared/context'
 import { ADD_COLUMN_SLOT_ATTRIBUTE } from '@shared/containers/ProjectTreeTable/constants'
 import { useAddColumnsMenu } from './useAddColumnsMenu'
 import { useProjectTableColumnItems } from './useProjectTableColumnItems'
@@ -72,7 +72,6 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
   parentColumns,
   parentLinkScopes,
 }) => {
-  const { isPanelOpen } = useSettingsPanel()
   const { toggleMenuOpen } = useMenuContext()
   const { visibleColumns, scopes } = useProjectTableColumnItems({
     extraColumns,
@@ -88,8 +87,6 @@ export const AddColumnButton: FC<AddColumnButtonProps> = ({
   })
   const [anchor, setAnchor] = useState<HTMLSpanElement | null>(null)
   const slot = useAddColumnSlot(anchor)
-
-  if (isPanelOpen) return null
 
   const button = (
     <Button
