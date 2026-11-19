@@ -16,9 +16,11 @@ const listTypeLabels: Record<string, string> = {
 interface ListMetaDataProps {
   list?: EntityListModel
   isLoading?: boolean
+  /** the Details tab's search: only the details whose label or value match */
+  search?: string
 }
 
-export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
+export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading, search }) => {
   // data also holds structured entries (list attribute definitions, review session
   // sections/grouping) which have no meaningful string rendering, and the thumbnail hash
   const listData = Object.fromEntries(
@@ -67,5 +69,5 @@ export const ListMetaData: FC<ListMetaDataProps> = ({ list, isLoading }) => {
     hidden: false,
   }))
 
-  return <DetailsSection form={metaData} fields={fields} isLoading={!!isLoading} />
+  return <DetailsSection form={metaData} fields={fields} isLoading={!!isLoading} search={search} />
 }

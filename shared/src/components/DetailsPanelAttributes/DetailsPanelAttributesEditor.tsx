@@ -7,6 +7,7 @@ import clsx from 'clsx'
 import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
+import { matchesFieldSearch } from './fieldSearch'
 
 const FormRow = styled.div`
   display: grid;
@@ -94,6 +95,14 @@ const FieldTools = styled.div`
   }
 `
 
+// no field matches the Details tab's search
+export const NoMatches = styled.div`
+  color: var(--md-sys-color-outline);
+  min-height: 32px;
+  display: flex;
+  align-items: center;
+`
+
 const ShimmerRow = styled(FormRow)`
   &.loading {
     width: 100%;
@@ -128,6 +137,7 @@ export interface DetailsPanelAttributesEditorProps {
   entities?: any[] // entities data for scoped statuses
   projectName?: string // enum resolver scope when there are no entities
   entityType?: string // entity type for scoped statuses
+  search?: string // the Details tab's search: only the fields whose label, name or value match
 }
 
 export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
@@ -142,6 +152,7 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   entities = [],
   projectName,
   entityType = 'task',
+  search,
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
 
@@ -192,6 +203,10 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
     )
   }
 
+  const shownFields = fields.filter(
+    (field) => !field.hidden && matchesFieldSearch(field, form[field.name], search),
+  )
+
   return (
     <BorderedSection
       title="Attributes"
@@ -200,75 +215,74 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
       withPadding
       pt={{ content: { style: { minHeight: 'unset' } } }}
     >
-      {fields
-        .filter((f) => !f.hidden)
-        .map((field) => {
-          const fieldValue = form[field.name]
-          const isEditing = editingField === field.name
-          const isReadOnly = field.readonly || !enableEditing
-          const isMixed = mixedFields?.includes(field.name) || false
+      {!shownFields.length && search && <NoMatches>No matching attributes</NoMatches>}
+      {shownFields.map((field) => {
+        const fieldValue = form[field.name]
+        const isEditing = editingField === field.name
+        const isReadOnly = field.readonly || !enableEditing
+        const isMixed = mixedFields?.includes(field.name) || false
 
-          return (
-            <FormRow
-              key={field.name}
-              className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
+        return (
+          <FormRow
+            key={field.name}
+            className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
+          >
+            <FieldLabel
+              name={field.name}
+              data={field.data}
+              showDetailedTooltip
+              className="field-label"
+            />
+            <FieldValue
+              className={clsx('field-value', {
+                editing: isEditing,
+                readonly: isReadOnly,
+              })}
+              onClick={(e) => {
+                // Allow links to work normally - don't intercept clicks on anchor elements
+                if ((e.target as HTMLElement).closest('a')) {
+                  return
+                }
+                e.preventDefault()
+                if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
+                  handleStartEditing(field.name)
+                }
+              }}
             >
-              <FieldLabel
-                name={field.name}
-                data={field.data}
-                showDetailedTooltip
-                className="field-label"
-              />
-              <FieldValue
-                className={clsx('field-value', {
-                  editing: isEditing,
-                  readonly: isReadOnly,
-                })}
-                onClick={(e) => {
-                  // Allow links to work normally - don't intercept clicks on anchor elements
-                  if ((e.target as HTMLElement).closest('a')) {
-                    return
-                  }
-                  e.preventDefault()
-                  if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
-                    handleStartEditing(field.name)
-                  }
+              <RenderFieldWidget
+                field={field}
+                value={fieldValue}
+                isEditing={isEditing}
+                isReadOnly={isReadOnly}
+                isMixed={isMixed}
+                onChange={handleValueChange}
+                onMixedChange={onMixedChange && handleMixedChange}
+                onCancelEdit={handleCancelEdit}
+                onExpand={() => {
+                  // opens full markdown text editor dialog
                 }}
-              >
-                <RenderFieldWidget
-                  field={field}
-                  value={fieldValue}
-                  isEditing={isEditing}
-                  isReadOnly={isReadOnly}
-                  isMixed={isMixed}
-                  onChange={handleValueChange}
-                  onMixedChange={onMixedChange && handleMixedChange}
-                  onCancelEdit={handleCancelEdit}
-                  onExpand={() => {
-                    // opens full markdown text editor dialog
-                  }}
-                  entities={entities}
-                  projectName={projectName}
-                  entityType={entityType}
-                />
-              </FieldValue>
-              <FieldTools className="field-tools">
-                <Button
-                  className="tool"
-                  variant="text"
-                  icon="content_copy"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    const valueToDisplay =
-                      fieldValue === null || fieldValue === undefined ? '' : fieldValue
-                    copyToClipboard(valueToDisplay.toString(), true)
-                  }}
-                />
-              </FieldTools>
-            </FormRow>
-          )
-        })}
+                entities={entities}
+                projectName={projectName}
+                entityType={entityType}
+              />
+            </FieldValue>
+            <FieldTools className="field-tools">
+              <Button
+                className="tool"
+                variant="text"
+                icon="content_copy"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  const valueToDisplay =
+                    fieldValue === null || fieldValue === undefined ? '' : fieldValue
+                  copyToClipboard(valueToDisplay.toString(), true)
+                }}
+              />
+            </FieldTools>
+          </FormRow>
+        )
+      })}
     </BorderedSection>
   )
 }

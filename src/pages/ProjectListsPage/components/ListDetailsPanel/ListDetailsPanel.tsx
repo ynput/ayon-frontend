@@ -1,4 +1,4 @@
-import { FC, MouseEvent, useEffect, useMemo } from 'react'
+import { FC, MouseEvent, useEffect, useMemo, useState } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
@@ -8,6 +8,7 @@ import {
   ListMetaData,
   PanelSlotTab,
   PanelTabHeader,
+  PanelTabSearch,
   PanelTabs,
   usePanelSlotTabs,
 } from '@shared/components'
@@ -67,6 +68,9 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     'listTab',
     withDefault(StringParam, 'details'),
   )
+
+  // the Details tab's search: it stays while another list is selected
+  const [detailsSearch, setDetailsSearch] = useState('')
 
   const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = usePanelSlotTabs(LIST_DETAILS_SLOT)
   const ownTab = LIST_DETAILS_TABS.find((tab) => tab.id === selectedTab)
@@ -151,7 +155,19 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
       {ownTab && (
         <>
           {/* the tab buttons are icons: the open tab is named here */}
-          <PanelTabHeader title={ownTab.label} />
+          <PanelTabHeader
+            title={ownTab.label}
+            searchActive={ownTab.id === 'details' && !!detailsSearch}
+            search={
+              ownTab.id === 'details' && (
+                <PanelTabSearch
+                  value={detailsSearch}
+                  onChange={setDetailsSearch}
+                  placeholder="Search attributes and details..."
+                />
+              )
+            }
+          />
           <Styled.Scrollable>
             {ownTab.id === 'details' && (
               <>
@@ -160,10 +176,11 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
                     list={list}
                     isLoading={isLoadingList}
                     projectName={projectName}
+                    search={detailsSearch}
                   />
                 </Styled.Section>
                 <Styled.Section onMouseOver={showFullValueIfCut}>
-                  <ListMetaData list={list} isLoading={isLoadingList} />
+                  <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
                 </Styled.Section>
               </>
             )}

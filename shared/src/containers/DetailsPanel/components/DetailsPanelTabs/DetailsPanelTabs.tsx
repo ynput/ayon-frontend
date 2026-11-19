@@ -35,7 +35,7 @@ const DetailsPanelTabs: FC<DetailsPanelTabsProps> = ({
       result.push({ id: 'subtasks', label: 'Subtasks', icon: 'checklist' })
     if (entityType === 'version')
       result.push({ id: 'files', label: 'Files', icon: 'order_play', end: true })
-    // the default tab, named on its button: it has no header
+    // the default tab, named on its button as well as in its header
     result.push({ id: 'details', label: 'Details', icon: 'lists', end: true, showLabel: true })
     return result
   }, [entityType])

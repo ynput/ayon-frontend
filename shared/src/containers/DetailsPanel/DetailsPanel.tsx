@@ -44,7 +44,7 @@ import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
 import { useDetailsPanelTabSlot } from './hooks/useDetailsPanelTabSlot'
-import { PanelSlotTab } from '@shared/components/PanelTabs'
+import { PanelSlotTab, PanelTabHeader, PanelTabSearch } from '@shared/components/PanelTabs'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 
@@ -134,6 +134,8 @@ DetailsPanelProps) => {
     useNavigate,
   } = useDetailsPanelContext()
   const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  // the Details tab's search: it stays while the selection changes, as the feed's filters do
+  const [detailsSearch, setDetailsSearch] = useState('')
   const [_searchParams, setSearchParams] = useSearchParams()
   const hasCalledOnOpen = useRef(false)
 
@@ -584,6 +586,19 @@ DetailsPanelProps) => {
             />
           )}
           {currentTab === 'details' && (
+            <PanelTabHeader
+              title="Details"
+              searchActive={!!detailsSearch}
+              search={
+                <PanelTabSearch
+                  value={detailsSearch}
+                  onChange={setDetailsSearch}
+                  placeholder="Search attributes and details..."
+                />
+              }
+            />
+          )}
+          {currentTab === 'details' && (
             <FeedContextWrapper
               entityType={activeEntityType}
               entities={entityDetailsData}
@@ -601,6 +616,7 @@ DetailsPanelProps) => {
               <DetailsPanelDetails
                 entities={entityDetailsData}
                 isLoading={isFetchingEntitiesDetails}
+                search={detailsSearch}
               />
             </FeedContextWrapper>
           )}

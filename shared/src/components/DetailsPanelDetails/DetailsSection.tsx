@@ -1,6 +1,10 @@
 import React from 'react'
 import styled from 'styled-components'
-import type { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
+import {
+  NoMatches,
+  type AttributeField,
+} from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
+import { matchesFieldSearch } from '../DetailsPanelAttributes/fieldSearch'
 import { copyToClipboard, formatDateTime } from '@shared/util'
 import { Button, BorderedSection } from '@ynput/ayon-react-components'
 import { FieldLabel } from './FieldLabel'
@@ -75,6 +79,8 @@ interface DetailsSectionProps {
   mixedFields?: string[]
   isLoading: boolean
   users?: { name: string; fullName?: string | null }[]
+  /** the Details tab's search: only the fields whose label, name or value as shown match */
+  search?: string
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -83,6 +89,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   mixedFields = [],
   isLoading,
   users = [],
+  search,
 }) => {
   const formatValue = (value: any, fieldName: string): string => {
     if (value === null || value === undefined) {
@@ -110,48 +117,56 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     )
   }
 
+  const rows = fields
+    .filter((field) => !field.hidden)
+    .map((field) => {
+      const fieldValue = form[field.name]
+      const isMixed = mixedFields.includes(field.name)
+      const displayValue = isMixed ? 'Multiple values' : formatValue(fieldValue, field.name)
+      const isAuthor = ['createdBy', 'updatedBy'].includes(field.name)
+      const author =
+        isAuthor && !isMixed ? users.find((user) => user.name === fieldValue) : undefined
+      return { field, fieldValue, isMixed, displayValue, author }
+    })
+    // found by what the row shows too: a formatted date, an author's full name
+    .filter(({ field, fieldValue, displayValue, author }) =>
+      matchesFieldSearch(field, fieldValue, search, [displayValue, author?.fullName]),
+    )
+
   return (
     <BorderedSection title="Details" autoHeight showHeader withPadding>
-      {fields
-        .filter((field) => !field.hidden)
-        .map((field) => {
-          const fieldValue = form[field.name]
-          const isMixed = mixedFields.includes(field.name)
-          const displayValue = isMixed ? 'Multiple values' : formatValue(fieldValue, field.name)
-          const isAuthor = ['createdBy', 'updatedBy'].includes(field.name)
-          const author =
-            isAuthor && !isMixed ? users.find((user) => user.name === fieldValue) : undefined
-
-          return (
-            <StyledRow key={field.name}>
-              <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
-              <StyledValue
-                style={{
-                  color: isMixed
-                    ? 'var(--md-sys-color-on-surface-variant)'
-                    : 'var(--md-sys-color-on-surface)',
-                  fontStyle: isMixed ? 'italic' : 'normal',
-                }}
-              >
-                {author && (
-                  <UserImage name={author.name} fullName={author.fullName || undefined} size={20} />
-                )}
-                {author ? author.fullName || author.name : displayValue}
-              </StyledValue>
-              <Button
-                className="copy-icon"
-                variant="text"
-                icon="content_copy"
-                onClick={(e) => {
-                  e.stopPropagation()
-                  const valueToDisplay =
-                    fieldValue === null || fieldValue === undefined ? '' : fieldValue
-                  copyToClipboard(valueToDisplay.toString(), true)
-                }}
-              />
-            </StyledRow>
-          )
-        })}
+      {!rows.length && search && <NoMatches>No matching details</NoMatches>}
+      {rows.map(({ field, fieldValue, isMixed, displayValue, author }) => {
+        return (
+          <StyledRow key={field.name}>
+            <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
+            <StyledValue
+              style={{
+                color: isMixed
+                  ? 'var(--md-sys-color-on-surface-variant)'
+                  : 'var(--md-sys-color-on-surface)',
+                fontStyle: isMixed ? 'italic' : 'normal',
+              }}
+            >
+              {author && (
+                <UserImage name={author.name} fullName={author.fullName || undefined} size={20} />
+              )}
+              {author ? author.fullName || author.name : displayValue}
+            </StyledValue>
+            <Button
+              className="copy-icon"
+              variant="text"
+              icon="content_copy"
+              onClick={(e) => {
+                e.stopPropagation()
+                const valueToDisplay =
+                  fieldValue === null || fieldValue === undefined ? '' : fieldValue
+                copyToClipboard(valueToDisplay.toString(), true)
+              }}
+            />
+          </StyledRow>
+        )
+      })}
     </BorderedSection>
   )
 }
