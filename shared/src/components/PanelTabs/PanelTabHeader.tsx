@@ -4,7 +4,7 @@
 // icon-only button (PanelTabs) has one, so the open tab is named here and not in its button. Addon
 // tabs fill theirs through the SDK's `PanelTabHeader` (AddonPanelTabHeader), which renders into
 // the slots this exposes.
-import type { ReactNode } from 'react'
+import { useRef, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { useLocalStorage } from '@shared/hooks'
 import { TAB_SEARCH_OPEN_KEY } from './PanelTabHeaderContextInstance'
@@ -43,6 +43,14 @@ export const PanelTabHeader = ({
   slotRefs,
 }: PanelTabHeaderProps) => {
   const [searchOpen, setSearchOpen] = useLocalStorage(TAB_SEARCH_OPEN_KEY, false)
+  const searchRef = useRef<HTMLDivElement | null>(null)
+
+  const toggleSearch = () => {
+    const open = !searchOpen
+    setSearchOpen(open)
+    // opening: focus the bar's input once it is shown (it is hidden, not unmounted, until then)
+    if (open) requestAnimationFrame(() => searchRef.current?.querySelector('input')?.focus())
+  }
 
   return (
     <Styled.Header className="panel-tab-header">
@@ -57,7 +65,7 @@ export const PanelTabHeader = ({
             variant="text"
             selected={searchOpen}
             className={clsx({ active: searchActive && !searchOpen })}
-            onClick={() => setSearchOpen(!searchOpen)}
+            onClick={toggleSearch}
             data-tooltip={searchOpen ? 'Hide search and filter' : 'Search and filter'}
             data-tooltip-delay={0}
             aria-label={searchOpen ? 'Hide search and filter' : 'Search and filter'}
@@ -66,7 +74,13 @@ export const PanelTabHeader = ({
         )}
       </Styled.TitleRow>
       {/* hidden, not unmounted: the bar keeps its chips and filters while closed */}
-      <Styled.Search ref={slotRefs?.search} className={clsx({ hidden: !searchOpen })}>
+      <Styled.Search
+        ref={(el) => {
+          searchRef.current = el
+          slotRefs?.search?.(el)
+        }}
+        className={clsx({ hidden: !searchOpen })}
+      >
         {search}
       </Styled.Search>
       <Styled.Extra ref={slotRefs?.extra}>{children}</Styled.Extra>
