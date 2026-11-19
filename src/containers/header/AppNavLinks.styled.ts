@@ -4,7 +4,7 @@ export const NavBar = styled.nav`
   padding-right: 8px;
   /* the line the tabs stand on, the edge of the page */
   border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--md-sys-color-background);
+  background-color: var(--md-sys-color-surface-container-low);
   padding: 0 8px;
   display: flex;
   align-items: center;
