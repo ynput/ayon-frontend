@@ -12,7 +12,7 @@ export const Bar = styled.label`
   gap: var(--base-gap-small);
   height: 28px;
   padding: 1px 6px;
-  font-size: 12px;
+  font-size: 14px;
 
   border-radius: var(--border-radius-m);
   border: 1px solid var(--md-sys-color-outline-variant);
