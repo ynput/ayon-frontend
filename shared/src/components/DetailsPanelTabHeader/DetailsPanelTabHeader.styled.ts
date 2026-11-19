@@ -41,12 +41,16 @@ export const Menu = styled.div`
 export const SearchButton = styled(Button)`
   position: relative;
 
+  &.hasIcon {
+    padding: 4px;
+  }
+
   /* filters are set while the bar is hidden */
   &.active::after {
     content: '';
     position: absolute;
-    top: 4px;
-    right: 4px;
+    top: 2px;
+    right: 2px;
     width: 6px;
     height: 6px;
     border-radius: 50%;
