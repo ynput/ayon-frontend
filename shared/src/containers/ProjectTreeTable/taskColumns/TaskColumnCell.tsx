@@ -1,4 +1,4 @@
-import { CSSProperties, memo, useMemo } from 'react'
+import { CSSProperties, memo, useMemo, useRef } from 'react'
 import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Row } from '@tanstack/react-table'
 import clsx from 'clsx'
@@ -160,7 +160,11 @@ export const TaskColumnCell = ({
     ? NO_TASKS
     : context?.getTasks(folder.id, taskType.name)
   // as on Task progress, a card is edited once it is selected: the first click only selects
-  const canEdit = isCellSelected(cellId) && !isTableReadOnly && !isRowReadOnly(row.id)
+  const isSelected = isCellSelected(cellId)
+  const canEdit = isSelected && !isTableReadOnly && !isRowReadOnly(row.id)
+  // the press that selects the cell makes its cards editable before the click arrives, which
+  // would open the picker under the pointer on that same click
+  const wasSelectedOnPress = useRef(false)
 
   const isExpanded = !!folder && !!context?.isRowExpanded(row.id)
   // the cell is the row less its borders
@@ -189,6 +193,8 @@ export const TaskColumnCell = ({
       className={clsx('readonly', 'task-column-cell', { loading: isLoading, expanded: isExpanded })}
       style={{ '--task-type-color': taskType.color } as CSSProperties}
       tabIndex={0}
+      onMouseDownCapture={() => (wasSelectedOnPress.current = isSelected)}
+      onClickCapture={(e) => !wasSelectedOnPress.current && e.stopPropagation()}
     >
       {folder &&
         context &&

@@ -303,7 +303,9 @@ const injectedApi = enhancedApi.injectEndpoints({
                     first: TASKS_PER_PAGE,
                     after: cursor,
                   },
-                  { forceRefetch: true },
+                  // a scoped cache asks again on every scroll: its batches are copied out
+                  // below and must not stay subscribed
+                  { forceRefetch: true, ...(scope && { subscribe: false }) },
                 ),
               )
 

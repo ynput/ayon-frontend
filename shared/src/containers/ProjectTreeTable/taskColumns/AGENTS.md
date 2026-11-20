@@ -31,9 +31,11 @@ other `ProjectTreeTable` pages can adopt it.
   selection a status edit goes to the Status column of the other selected rows. `entityData` is what undo
   and error messages use while the folder is collapsed (the task is not in the table's entity map).
 - **The cell is read-only to the table** (`readonly` class, no `editable`): no cell editor on double click
-  or Enter, no clear. Paste skips the ids (`ClipboardContext`), and the Overview's Delete button ignores
-  cells of these columns (`OverviewActions`), since everything selection-based acts on the row's folder.
-- **A card is edited once its cell is selected**, as on Task progress: the first click selects.
+  or Enter, no clear. Paste writes nothing to these cells but keeps their place in the selection, so
+  the values after them land in their own columns (`ClipboardContext`). The Overview's Delete button and the
+  menu's Delete ignore cells of these columns, since everything selection-based acts on the row's folder.
+- **A card is edited once its cell is selected**, as on Task progress: the first click selects. The cell
+  swallows the click of the press that selected it, or the card (editable by then) opens a picker on it.
 - **Tall rows**: `useDynamicRowHeight` returns the tall height for folder rows with tasks. Per-row toggles
   live in the provider for the visit; "expand all" is the view's `expandRows`.
 - The card is designed for a 34px row. Below that the collapsed card is scaled (`zoom`) instead of clipped.

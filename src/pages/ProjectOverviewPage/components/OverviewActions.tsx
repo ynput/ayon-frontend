@@ -67,6 +67,7 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
   // swept in alongside an unrelated cell selection
   const cellEntities: string[] = []
   const rowEntities: string[] = []
+  let hasBodyCells = false
   Array.from(selectedCells).forEach((cellId) => {
     const { rowId, colId } = parseCellId(cellId) || {}
     if (!rowId) return
@@ -74,11 +75,12 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
       if (!rowEntities.includes(rowId)) rowEntities.push(rowId)
       return
     }
+    hasBodyCells = true
     // a task column's cell is the folder's tasks, not the folder: Delete must not take the row
     if (colId && isTaskColumnId(colId)) return
     if (!cellEntities.includes(rowId)) cellEntities.push(rowId)
   })
-  const selectedEntities = cellEntities.length ? cellEntities : rowEntities
+  const selectedEntities = hasBodyCells ? cellEntities : rowEntities
 
   const builtInActions: Record<ActionType, ActionItem> = {
     undo: {

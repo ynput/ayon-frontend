@@ -499,8 +499,6 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
         // addon columns are read-only, and their ids are no field names (`split('_').pop()`)
         if (isAddonColumnId(colId)) return
-        // a task column's cell holds the folder's tasks: a paste would go to the folder
-        if (isTaskColumnId(colId)) return
         // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
         if (isRowReadOnly(rowId)) return
 
@@ -546,7 +544,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // Validate each mapped value
         for (const colId of selectedColIds) {
           if (colId === 'subType' && isProductType) continue
-          if (getParentLink(colId)) continue
+          if (getParentLink(colId) || isTaskColumnId(colId)) continue
           const pasteValue = mappedValues[colId] || ''
           const attribName = colId.startsWith('attrib_') && colId.replace('attrib_', '')
           if (pasteValue && attribName && isAttribLocked?.(rowEntityType, attribName)) {
@@ -592,6 +590,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         // Skip special handling for 'name' which we don't want to paste
         if (colId === 'name' || getParentLink(colId)) continue
+        // a task column's cell holds the folder's tasks: a paste would go to the folder. It keeps
+        // its place in the selection, so the values after it land in their own columns
+        if (isTaskColumnId(colId)) continue
 
         // Special handling for subtasks column
         if (colId === 'subtasks') {
