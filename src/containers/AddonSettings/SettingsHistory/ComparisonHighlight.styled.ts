@@ -1,7 +1,7 @@
 import styled, { css } from 'styled-components'
 import { COMPARE_COLOR, formatValue, getFieldId, OverrideDiff } from './settingsHistoryHelpers'
 
-const selector = (id: string) => `[data-fieldid='${id.replace(/'/g, "\\'")}']`
+const selector = (id: string) => `[data-fieldid="${CSS.escape(id)}"]`
 
 /** CSS string literal, the values can hold any text */
 const cssString = (text: string) =>
