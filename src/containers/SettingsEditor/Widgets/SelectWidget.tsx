@@ -1,5 +1,6 @@
 import { useMemo, useCallback, useRef, useState } from 'react'
 import {
+  Button,
   DefaultItemTemplate,
   DefaultValueTemplate,
   Dropdown,
@@ -135,30 +136,11 @@ const SwitchboxGrid = styled.div`
   gap: 12px 16px;
 `
 
+// Select all and Deselect all, at the end of the line above the options
 const SwitchboxButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
-`
-
-const SwitchboxButton = styled.button`
-  padding: 6px 12px;
-  font-size: 12px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-s);
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background: var(--md-sys-color-surface-container-highest);
-    border-color: var(--md-sys-color-outline);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  justify-content: flex-end;
+  gap: var(--base-gap-small);
 `
 
 const SwitchboxMessage = styled.div`
@@ -206,16 +188,18 @@ const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
       {message && <SwitchboxMessage>{message}</SwitchboxMessage>}
       {options.length > 0 && (
         <SwitchboxButtonGroup>
-          <SwitchboxButton onClick={selectAll} disabled={allSelected} title="Select all options">
-            Select All
-          </SwitchboxButton>
-          <SwitchboxButton
+          <Button
+            label="Select all"
+            onClick={selectAll}
+            disabled={allSelected}
+            data-tooltip="Select all options"
+          />
+          <Button
+            label="Deselect all"
             onClick={deselectAll}
             disabled={noneSelected}
-            title="Deselect all options"
-          >
-            Deselect All
-          </SwitchboxButton>
+            data-tooltip="Deselect all options"
+          />
         </SwitchboxButtonGroup>
       )}
       <SwitchboxGrid className="settings-switchbox-options">
