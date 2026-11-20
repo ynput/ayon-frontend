@@ -10,6 +10,8 @@ export interface DetailHeaderProps {
   style?: CSSProperties
   /** shown as JSON from a "more" button, when there are no rightActions */
   context?: unknown
+  /** the "more" button opens the host's own dialog for the context, instead of the one here */
+  onViewContext?: () => void
   dialogTitle?: string
   rightActions?: ReactNode
 }
@@ -19,6 +21,7 @@ export const DetailHeader = ({
   onClose,
   style,
   context,
+  onViewContext,
   dialogTitle = '',
   rightActions,
 }: DetailHeaderProps) => {
@@ -32,7 +35,7 @@ export const DetailHeader = ({
         <Button
           icon="more_vert"
           variant="text"
-          onClick={() => setShowContext(!showContext)}
+          onClick={() => (onViewContext ? onViewContext() : setShowContext(!showContext))}
           data-tooltip="Full context data"
         />
       )}

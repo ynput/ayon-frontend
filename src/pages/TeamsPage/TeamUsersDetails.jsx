@@ -12,6 +12,8 @@ import {
 import { EmptyPlaceholderFlex } from '@shared/components'
 import addRemoveMembers from './addRemoveMembers'
 import UserSubtitle from './UserSubtitle'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import UserDataDialog from '../SettingsPage/UsersSettings/UserDataDialog'
 
 const getFieldValues = (users, field, selectedTeams) => {
   let values = []
@@ -71,6 +73,9 @@ const TeamUsersDetails = ({
 }) => {
   // STATES
   const [leader, setLeader] = useState(false)
+  const flatLayout = useFlatSettingsLayout()
+  // the members' JSON ("User Context"), read only
+  const [showData, setShowData] = useState(false)
 
   const noUsers = users.length === 0
 
@@ -197,6 +202,45 @@ const TeamUsersDetails = ({
     onUpdateTeams(updatedTeamsWithNewLeaders)
   }
 
+  const teamsRow = (
+    <FormRow label="On teams" style={{ overflow: 'hidden' }}>
+      <Dropdown
+        value={teamsValue}
+        options={teams}
+        dataKey="name"
+        widthExpand
+        multiSelect
+        isMultiple={teamMultiple}
+        disabled={noUsers || isFetching}
+        onChange={handleTeamChange}
+      />
+    </FormRow>
+  )
+  const rolesRow = (
+    <FormRow label="Roles" style={{ overflow: 'hidden' }}>
+      <Dropdown
+        value={rolesValue}
+        options={rolesOptions}
+        dataKey="name"
+        widthExpand
+        multiSelect
+        isMultiple={rolesMultiple}
+        disabled={disableForm}
+        search
+        searchFields={['name']}
+        onChange={handleRolesChange}
+        valueTemplate={'tags'}
+        editable
+        placeholder="Add a role..."
+      />
+    </FormRow>
+  )
+  const leaderRow = (
+    <FormRow label="Leader" style={{ overflow: 'hidden' }}>
+      <InputSwitch checked={leader} onChange={handleLeaderChange} disabled={disableForm} />
+    </FormRow>
+  )
+
   if (noUsers)
     return (
       <Panel>
@@ -225,44 +269,37 @@ const TeamUsersDetails = ({
             />
           }
           subItem={<div style={{ display: 'inline' }}>Test</div>}
+          onViewData={() => setShowData(true)}
         />
-        <Divider style={{ margin: '10px 0' }} />
-        <FormLayout>
-          <FormRow label="On teams" style={{ overflow: 'hidden' }}>
-            <Dropdown
-              value={teamsValue}
-              options={teams}
-              dataKey="name"
-              widthExpand
-              multiSelect
-              isMultiple={teamMultiple}
-              disabled={noUsers || isFetching}
-              onChange={handleTeamChange}
-            />
-          </FormRow>
-          <h2>{formSubtitle}</h2>
-          <FormRow label="Roles" style={{ overflow: 'hidden' }}>
-            <Dropdown
-              value={rolesValue}
-              options={rolesOptions}
-              dataKey="name"
-              widthExpand
-              multiSelect
-              isMultiple={rolesMultiple}
-              disabled={disableForm}
-              search
-              searchFields={['name']}
-              onChange={handleRolesChange}
-              valueTemplate={'tags'}
-              editable
-              placeholder="Add a role..."
-            />
-          </FormRow>
-          <FormRow label="Leader" style={{ overflow: 'hidden' }}>
-            <InputSwitch checked={leader} onChange={handleLeaderChange} disabled={disableForm} />
-          </FormRow>
-        </FormLayout>
+        {flatLayout ? (
+          // flat settings layout: cards of rows, like a flat settings page
+          <div className="flat-form" style={{ marginTop: 'var(--base-gap-large)' }}>
+            <section>
+              <h3 className="flat-form-title">Teams</h3>
+              <FormLayout>{teamsRow}</FormLayout>
+            </section>
+            <section>
+              <h3 className="flat-form-title">Roles</h3>
+              <FormLayout>
+                <p className="flat-form-note">{formSubtitle}</p>
+                {rolesRow}
+                {leaderRow}
+              </FormLayout>
+            </section>
+          </div>
+        ) : (
+          <>
+            <Divider style={{ margin: '10px 0' }} />
+            <FormLayout>
+              {teamsRow}
+              <h2>{formSubtitle}</h2>
+              {rolesRow}
+              {leaderRow}
+            </FormLayout>
+          </>
+        )}
       </Panel>
+      {showData && <UserDataDialog users={users} onClose={() => setShowData(false)} />}
     </>
   )
 }

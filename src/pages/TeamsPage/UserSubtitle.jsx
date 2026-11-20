@@ -6,14 +6,26 @@ const StyledSubtitle = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  height: 20px;
+  min-height: 22px;
 `
 
+// a team the user isn't on yet: a small pill that adds them to it
 const AddButton = styled(Button)`
-  min-height: unset;
-  padding: 1px 0;
-  padding-right: 4px;
-  gap: 0;
+  /* doubled: ARC's icon button padding (.hasIcon) weighs two classes */
+  && {
+    flex: none;
+    min-height: 0;
+    height: 22px;
+    padding: 0 10px 0 6px;
+    gap: 2px;
+    border-radius: 11px;
+    font-size: var(--md-sys-typescale-label-medium-font-size);
+    line-height: 1;
+  }
+
+  .icon {
+    font-size: 16px;
+  }
 `
 
 const UserSubtitle = ({ users, teams, onAddTeam, teamsValue }) => {
@@ -32,7 +44,12 @@ const UserSubtitle = ({ users, teams, onAddTeam, teamsValue }) => {
       {users.length === 1 &&
         !!teamsUserNotIn.length &&
         teamsUserNotIn.map((team) => (
-          <AddButton key={team} icon="add" onClick={() => onAddTeam([...teamsValue, team])}>
+          <AddButton
+            key={team}
+            icon="add"
+            data-tooltip={`Add to ${team}`}
+            onClick={() => onAddTeam([...teamsValue, team])}
+          >
             {team}
           </AddButton>
         ))}

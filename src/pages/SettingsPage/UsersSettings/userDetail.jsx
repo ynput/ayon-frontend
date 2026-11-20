@@ -11,12 +11,13 @@ import {
 } from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
-import { useAppSelector } from '@state/store'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import clsx from 'clsx'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
+import UserDataDialog from './UserDataDialog'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
@@ -208,14 +209,14 @@ const UserDetail = ({
   const [initData, setInitData] = useState({})
   const [changesMade, setChangesMade] = useState([])
   const [formUsers, setFormUsers] = useState([])
+  // "View data": the users' JSON, read only
+  const [showData, setShowData] = useState(false)
   const toastId = useRef(null)
 
   const attributes = ayonClient.getAttribsByScope('user')
   const dispatch = useDispatch()
   // the user's flat settings layout preference draws these forms like a flat settings sheet
-  const flatLayout = useAppSelector(
-    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
-  )
+  const flatLayout = useFlatSettingsLayout()
 
   useEffect(() => {
     // have the selected users changed?
@@ -404,9 +405,10 @@ const UserDetail = ({
         subTitle={usersAccessLabel(formUsers)}
         menuItems={headerMenuItems}
         onMenuOpen={addonMenu.prefetch}
+        onViewData={() => setShowData(true)}
       />
       {hasServiceUser && singleUserEdit ? (
-        <FormsStyled className={clsx({ flat: flatLayout })}>
+        <FormsStyled className={clsx({ 'flat-form': flatLayout })}>
           <ServiceDetails
             editName={() => setShowRenameUser(true)}
             user={singleUserEdit}
@@ -415,10 +417,10 @@ const UserDetail = ({
           <AddonUserDetailsSections context={addonContext} />
         </FormsStyled>
       ) : (
-        <FormsStyled className={clsx({ flat: flatLayout })}>
+        <FormsStyled className={clsx({ 'flat-form': flatLayout })}>
           {singleUserEdit && (
             <Panel>
-              {flatLayout && <b className="user-detail-title">Profile</b>}
+              {flatLayout && <b className="flat-form-title">Profile</b>}
               <FormLayout>
                 <FormRow label="Username" key="Username">
                   <EditableLockedInput
@@ -490,6 +492,7 @@ const UserDetail = ({
           disabled={isUpdating || isFetchingUsers || !changesMade.length}
         />
       </PanelButtonsStyled>
+      {showData && <UserDataDialog users={formUsers} onClose={() => setShowData(false)} />}
     </Section>
   )
 }

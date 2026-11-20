@@ -1,6 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { FormRow, Section, Panel, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
+import {
+  FormLayout,
+  FormRow,
+  Section,
+  Panel,
+  SaveButton,
+  InputSwitch,
+} from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
@@ -17,6 +24,7 @@ import { useContributions } from '@ynput/ayon-addon'
 import { AddonProfileSections } from '@shared/components'
 import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import { AvatarName, ReadOnlyInput } from './ProfilePage.styled'
 import { EditableLockedInput } from '../SettingsPage/UsersSettings/userDetail.styled'
 import { DividerSmallStyled } from '../SettingsPage/UsersSettings/UserAttribForm.styled'
@@ -81,6 +89,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
   const attributes = useMemo(() => ayonClient.getAttribsByScope('user'), [])
   const [showSetPassword, setShowSetPassword] = useState(false)
+  const flatLayout = useFlatSettingsLayout()
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
@@ -259,6 +268,84 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     ? 'Browser notifications only work over HTTPS'
     : 'Get notifications on your device'
 
+  const saveButton = (
+    <SaveButton
+      onClick={handleSaveAll}
+      label="Save profile"
+      active={changesMade || preferenceChanges}
+      saving={isUpdatingUser || isUpdatingPreferences}
+      style={{ marginLeft: 'auto' }}
+    />
+  )
+
+  const profileRows = (
+    <>
+      <FormRow label="Username" key="Username">
+        <ReadOnlyInput className="flat-form-plain" value={name} readOnly />
+      </FormRow>
+      <UserAttribForm
+        formData={formData}
+        setFormData={setFormData}
+        attributes={attributes}
+        showAvatarUrl={false}
+      />
+
+      {!user?.data?.disablePasswordLogin && (
+        <FormRow label="Password" key="Password">
+          <EditableLockedInput
+            label="Password"
+            value={password}
+            type="password"
+            onEdit={() => setShowSetPassword(true)}
+          />
+        </FormRow>
+      )}
+    </>
+  )
+
+  const preferenceRows = (
+    <>
+      <FormRow label="Desktop notifications" key="notifications">
+        <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
+          <InputSwitch
+            checked={preferencesData.notifications}
+            id={'notifications'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Notification sound" key="notificationSound">
+        <div
+          data-tooltip="Get a little chime sound on new important notifications"
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.notificationSound}
+            id={'notificationSound'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Flat settings layout" key="flatSettingsLayout">
+        <div
+          data-tooltip="Show settings as one flat sheet of cards instead of nested panels"
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.flatSettingsLayout}
+            id={'flatSettingsLayout'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading}
+          />
+        </div>
+      </FormRow>
+    </>
+  )
+
   return (
     <main>
       <Section
@@ -274,79 +361,33 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             <span className={Type.headlineMedium}>{userName ? userName : 'User FullName'}</span>
           </AvatarName>
           <ColumnsStyled>
-            <Panel>
-              {/* saves this card only: addon sections save their own data */}
-              <header className="profile-card-header">
-                <b>Profile</b>
-                <SaveButton
-                  onClick={handleSaveAll}
-                  label="Save profile"
-                  active={changesMade || preferenceChanges}
-                  saving={isUpdatingUser || isUpdatingPreferences}
-                  style={{ marginLeft: 'auto' }}
-                />
-              </header>
-              <FormRow label="Username" key="Username">
-                <ReadOnlyInput value={name} readOnly />
-              </FormRow>
-              <UserAttribForm
-                formData={formData}
-                setFormData={setFormData}
-                attributes={attributes}
-                showAvatarUrl={false}
-              />
-
-              {!user?.data?.disablePasswordLogin && (
-                <FormRow label="Password" key="Password">
-                  <EditableLockedInput
-                    label="Password"
-                    value={password}
-                    type="password"
-                    onEdit={() => setShowSetPassword(true)}
-                  />
-                </FormRow>
-              )}
-
-              <DividerSmallStyled />
-              <FormRow label="Desktop notifications" key="notifications">
-                <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
-                  <InputSwitch
-                    checked={preferencesData.notifications}
-                    id={'notifications'}
-                    onChange={handleChangePreferences}
-                    disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
-                  />
-                </div>
-              </FormRow>
-
-              <FormRow label="Notification sound" key="notificationSound">
-                <div
-                  data-tooltip="Get a little chime sound on new important notifications"
-                  style={{ width: 'fit-content' }}
-                >
-                  <InputSwitch
-                    checked={preferencesData.notificationSound}
-                    id={'notificationSound'}
-                    onChange={handleChangePreferences}
-                    disabled={isUpdatingPreferences || isLoading}
-                  />
-                </div>
-              </FormRow>
-
-              <FormRow label="Flat settings layout" key="flatSettingsLayout">
-                <div
-                  data-tooltip="Show settings as one flat sheet of cards instead of nested panels"
-                  style={{ width: 'fit-content' }}
-                >
-                  <InputSwitch
-                    checked={preferencesData.flatSettingsLayout}
-                    id={'flatSettingsLayout'}
-                    onChange={handleChangePreferences}
-                    disabled={isUpdatingPreferences || isLoading}
-                  />
-                </div>
-              </FormRow>
-            </Panel>
+            {flatLayout ? (
+              <div className="flat-form">
+                <section>
+                  {/* saves this card and the preferences: addon sections save their own data */}
+                  <header className="flat-form-title">
+                    <span>Profile</span>
+                    {saveButton}
+                  </header>
+                  <FormLayout>{profileRows}</FormLayout>
+                </section>
+                <section>
+                  <h3 className="flat-form-title">Preferences</h3>
+                  <FormLayout>{preferenceRows}</FormLayout>
+                </section>
+              </div>
+            ) : (
+              <Panel>
+                {/* saves this card only: addon sections save their own data */}
+                <header className="profile-card-header">
+                  <b>Profile</b>
+                  {saveButton}
+                </header>
+                {profileRows}
+                <DividerSmallStyled />
+                {preferenceRows}
+              </Panel>
+            )}
             <SideStyled>
               {/* what addons contribute to this page (profile.section slot, @ynput/ayon-addon) */}
               <AddonProfileSections />

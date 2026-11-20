@@ -9,7 +9,7 @@ const ServiceDetails = ({ user, editName, flat }) => {
   if (flat)
     return (
       <Panel>
-        <b className="user-detail-title">Profile</b>
+        <b className="flat-form-title">Profile</b>
         <FormLayout>
           <FormRow label="Username">
             <EditableLockedInput value={user.name} onEdit={editName} />

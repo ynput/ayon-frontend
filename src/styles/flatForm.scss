@@ -1,0 +1,166 @@
+// Forms drawn like a flat settings sheet (SettingsEditor.sass), outside the settings editor, when
+// the user turned on the flat settings layout (frontendPreferences.flatSettingsLayout): the user
+// details panel, the profile, secrets, the attribute dialog. Built from ARC FormRows (a .label and
+// a .field). Global, so it reaches dialogs, which are portalled out of the page.
+//
+//   .flat-form             cards stacked on the sheet
+//     > card with a .flat-form-title: the title on the sheet, what follows it is a panel of rows
+//     > card without one: a box of its own content (add-on sections)
+//   .flat-form-panel       a panel of rows without a title (a dialog's form)
+
+// an ARC FormRow: a label and its field
+$row: 'div:has(> .label + .field)';
+// a panel of rows: under a card's title, or on its own
+$panel: ':is(.flat-form .flat-form-title + *, .flat-form-panel)';
+
+.flat-form {
+  display: flex;
+  flex-direction: column;
+  // 32 from a panel to the next title's text, less the panel's and the title's own room
+  gap: 20px;
+
+  // a card has no box: its title sits on the sheet, over its panel
+  > :has(> .flat-form-title) {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0;
+    border-radius: 0;
+    background-color: transparent;
+  }
+
+  // a card without a title is a box of its own content
+  > :not(:has(> .flat-form-title), .flat-form-panel) {
+    padding: 12px;
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container-lowest);
+  }
+
+  .flat-form-title {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-small);
+    min-height: var(--base-input-size);
+    margin: 0;
+    padding: 0 12px;
+    font-size: var(--md-sys-typescale-title-medium-font-size);
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+
+    // the title's text, when an action shares its line
+    > span {
+      font: inherit;
+    }
+
+    // a title with an action is as tall as its button: room so the button clears the panel
+    &:has(> button) {
+      margin-bottom: 6px;
+    }
+
+    // an action of the card (save, add) at the end of its title line
+    > button:last-child:not(:first-child) {
+      margin-left: auto;
+      font-size: var(--md-sys-typescale-label-large-font-size);
+    }
+  }
+}
+
+// panels are one step off the sheet, fields a step lighter again
+#{$panel} {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 6px 0;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-lowest);
+
+  // forms nested in a panel (attributes, a key handler) add no gaps of their own
+  > div:not(#{$row}) {
+    gap: 0;
+  }
+
+  // fields get their own fill, except a value shown as plain text (.flat-form-plain)
+  :is(input[type='text'], input[type='password'], .dropdown > button):not(.flat-form-plain) {
+    background-color: var(--md-sys-color-surface-container);
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-hover);
+    }
+  }
+
+  // rows are parted by lines already
+  .user-attrib-divider {
+    display: none;
+  }
+
+  // a note or an error among the rows
+  > :is(span, p):not(:empty) {
+    margin: 6px 12px;
+  }
+
+  // a hint about the rows below it
+  > .flat-form-note {
+    color: var(--md-sys-color-on-surface-variant);
+  }
+
+  #{$row} {
+    position: relative;
+    align-items: flex-start;
+    padding: 6px 12px;
+  }
+
+  // a soft line between two rows, inset from both sides
+  #{$row}::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 12px;
+    right: 12px;
+    border-top: 1px solid var(--md-sys-color-surface-container-high);
+  }
+
+  // the panel's first row, also inside a form or a wrapper of its own
+  > #{$row}:first-child::before,
+  > :first-child > #{$row}:first-child::before {
+    content: none;
+  }
+
+  // labels take the free room, on the line of the field's first control; text fields and
+  // dropdowns take the row's second half
+  #{$row} > .label {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: var(--base-input-size);
+  }
+
+  #{$row} > .field {
+    flex: 0 1 50%;
+    min-width: 200px;
+    min-height: var(--base-input-size);
+    justify-content: center;
+    gap: var(--base-gap-small);
+  }
+
+  // inputs give up their default width in a narrow field, so the buttons beside them
+  // (a locked input's edit, a role's delete) stay inside the row
+  #{$row} > .field :is(input, form) {
+    min-width: 0;
+  }
+
+  // a dialog's labels are short, and some rows hold two controls (an attribute's type)
+  &.flat-form-panel #{$row} > .field {
+    flex-basis: 60%;
+  }
+
+  // switches, choice buttons and the invitation sit at the end of the row
+  #{$row} > .field:has(.switch-body, .p-selectbutton, .invitation-row) {
+    flex: none;
+    min-width: 0;
+    align-items: flex-end;
+  }
+
+  // a service's new API key, shown once under its field: one long word
+  #{$row} > .field strong {
+    overflow-wrap: anywhere;
+  }
+}

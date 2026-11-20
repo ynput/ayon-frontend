@@ -56,7 +56,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
 
   return (
     <>
-      <b className="user-detail-title">{isUsingPools ? 'License control' : 'Login control'}</b>
+      <b className="flat-form-title">{isUsingPools ? 'License control' : 'Login control'}</b>
       <FormLayout>
         <FormRowStyled label="User active">
           <div

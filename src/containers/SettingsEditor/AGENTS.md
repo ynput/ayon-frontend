@@ -8,9 +8,10 @@ user with `frontendPreferences.flatSettingsLayout` (_Profile > Flat settings lay
 `SettingField/`, `SettingsOutline/`). The classic markup is what the e2e tests rely on, so keep it
 as it is when changing the flat layout.
 
-The user panel of Studio settings > Users isn't an RJSF form, but follows the same preference: it
-copies the flat look in CSS (`FormsStyled` in `UsersSettings/userDetail.styled.js`). Keep its
-spacing and surfaces in step with `SettingsEditor.sass`.
+Forms outside the editor follow the same preference (`useFlatSettingsLayout`): the Users details
+panel, the profile, Secrets, the attribute dialog, and the Teams page's member and team settings. They are ARC `FormRow`s, drawn flat by the
+global `src/styles/flatForm.scss` (`flat-form`, `flat-form-title`, `flat-form-panel`; global, as
+dialogs are portalled). Keep its spacing and surfaces in step with `SettingsEditor.sass`.
 
 ## Flat layout
 
@@ -42,6 +43,9 @@ looks the same and typing never flips it.
 - An item whose only field is a group of single values (a path mapping) is drawn as that group's
   row or card (`wrapped`), not as a fold holding a group.
 - Fields out of the level being edited (studio, project, site) take no room (`isPropertyInScope`).
+- A list of records is always a list group (`isListGroupSchema`), `layout: compact` or not
+  (the access groups' access lists). Classic draws a compact one as a field, beside a dashed
+  line; the flat box rules skip lists inside a field (`.form-inline-field-widget`).
 
 ### Groups that fold like records
 
@@ -108,6 +112,15 @@ reordering a pair changes both lists.
   - `context.onSetValue` (Anatomy).
   - Else as an edit (`onChange`), marking the keys that changed: ServerConfig saves only with
     changed keys, and a whole sheet edited has no path of its own.
+- Read only (`readOnlySettings.ts`, worked out when a menu opens: it walks the group): the
+  dialog shows the JSON to select and copy, the editor refuses typing, and Confirm is greyed
+  out with the reason as its tooltip. Paste is greyed out too.
+  - No edit permissions: hosts set `context.readOnly` (project settings without
+    `canEditSettings`, project anatomy without `canEditAnatomy`, a project's access groups
+    without write access to "Project access", Global for non-admins). The override actions
+    are greyed out as well.
+  - The group or field holds a field the form shows as read-only (`disabled`, `readonly`, or a
+    `fixedValue` it has): only Paste and the dialog, the override actions stay.
 - The dialogs are portalled out of the form: settings tokens like `--space-2` don't reach them.
   Use the app's (`--base-gap-large`).
 - It is not the addon list's "Low-level editor" (`RawSettingsDialog`): that one edits the saved

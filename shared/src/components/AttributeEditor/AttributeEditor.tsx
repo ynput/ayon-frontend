@@ -150,6 +150,8 @@ export interface AttributeEditorProps {
   onHide: () => void
   onEdit: (attribute: AttributeForm) => void
   onDelete?: () => void
+  /** Draws the form as a panel of rows, like a flat settings sheet (the host's flat-form styles) */
+  flat?: boolean
 }
 
 export const AttributeEditor: FC<AttributeEditorProps> = ({
@@ -162,6 +164,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   onHide,
   onEdit,
   onDelete,
+  flat,
 }) => {
   const resolvedDefaultData = defaultData
     ? {
@@ -367,7 +370,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       }}
     >
       {formData && (
-        <FormLayout>
+        <FormLayout className={flat ? 'flat-form-panel' : undefined}>
           {!excludes.includes('title') && (
             <FormRow label={'Title'} key={'title'}>
               <InputText value={formData?.data['title']} onChange={handleTitleChange} autoFocus />
