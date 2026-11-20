@@ -9,6 +9,8 @@ import {
   isSameOutline,
   readSettingsOutline,
   scrollToSettingsGroup,
+  startRollingLink,
+  stopRollingLink,
 } from './SettingsOutlineHelpers'
 import { useSettingsOutlineCurrent } from './useSettingsOutlineCurrent'
 import { useSettingsOutlineCollapsed } from './useSettingsOutlineCollapsed'
@@ -158,10 +160,29 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
               )}
               data-outline-id={item.id}
               aria-current={item.id === currentId ? 'true' : undefined}
-              title={item.title}
+              // the full name (the rail cuts long ones), the group's description on the next line:
+              // a markdown line break, as the tooltip sets separate paragraphs side by side
+              data-tooltip={
+                item.description ? `**${item.title}**\\\n${item.description}` : item.title
+              }
+              data-tooltip-as="markdown"
+              data-tooltip-delay={300}
               onClick={(e) => onNavigate(e, item.id)}
+              // a name cut short rolls to show its end
+              onMouseEnter={(e) => startRollingLink(e.currentTarget)}
+              onMouseLeave={(e) => stopRollingLink(e.currentTarget)}
+              onFocus={(e) => startRollingLink(e.currentTarget)}
+              onBlur={(e) => stopRollingLink(e.currentTarget)}
             >
-              {item.title}
+              <span className="settings-outline-label">
+                <span className="settings-outline-text">
+                  <span className="settings-outline-name">{item.title}</span>
+                  {/* follows the name while it rolls, so its start comes round again */}
+                  <span className="settings-outline-copy" aria-hidden="true">
+                    {item.title}
+                  </span>
+                </span>
+              </span>
             </Styled.Link>
           </li>
         ))}

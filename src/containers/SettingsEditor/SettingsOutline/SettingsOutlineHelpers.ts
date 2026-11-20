@@ -2,6 +2,8 @@ export type SettingsOutlineItem = {
   /** The group's element id, which its link points to */
   id: string
   title: string
+  /** The group's description, shown on its title's tooltip (markdown) */
+  description?: string
   /** 0 for a sheet, 1 for a card, 2 for a sub-group straight inside a card */
   depth: number
 }
@@ -40,7 +42,8 @@ export const readSettingsOutline = (root: HTMLElement): SettingsOutlineItem[] =>
     const titleElement = group.querySelector(GROUP_TITLE)
     const title = titleElement && readTitle(titleElement)
     if (!id || !title || group.closest('[data-hidden="true"]')) return
-    items.push({ id, title, depth: Number(group.dataset.settingsDepth) })
+    const description = titleElement.getAttribute('data-tooltip') || undefined
+    items.push({ id, title, description, depth: Number(group.dataset.settingsDepth) })
   })
   return items
 }
@@ -48,7 +51,11 @@ export const readSettingsOutline = (root: HTMLElement): SettingsOutlineItem[] =>
 export const isSameOutline = (a: SettingsOutlineItem[], b: SettingsOutlineItem[]) =>
   a.length === b.length &&
   a.every(
-    (item, i) => item.id === b[i].id && item.title === b[i].title && item.depth === b[i].depth,
+    (item, i) =>
+      item.id === b[i].id &&
+      item.title === b[i].title &&
+      item.description === b[i].description &&
+      item.depth === b[i].depth,
   )
 
 /** The group an outline item links to, by its element id */
@@ -122,3 +129,26 @@ export const scrollToSettingsGroup = (sheet: HTMLElement, group: HTMLElement) =>
   scrollTarget.addEventListener('scrollend', done)
   timer = window.setTimeout(done, JUMP_TIMEOUT)
 }
+
+// A name the rail cuts short rolls on hover, like a text screen: it scrolls left in a loop,
+// its start coming back in after a gap. At a reading pace, so a longer name takes longer
+const ROLL_SPEED = 40 // px per second
+// the gap between the name's end and its start coming round again
+const ROLL_GAP = 32
+// the share of each pass spent moving; the rest pauses with the name's start in place
+const ROLL_MOVING = 0.88
+
+/** Starts rolling an outline link's name when the rail cuts it short */
+export const startRollingLink = (link: HTMLElement) => {
+  const label = link.querySelector<HTMLElement>('.settings-outline-label')
+  const name = link.querySelector<HTMLElement>('.settings-outline-name')
+  if (!label || !name || label.scrollWidth - label.clientWidth <= 1) return
+  // one pass moves the name's copy to where the name started, so the loop restarts unseen
+  const distance = name.getBoundingClientRect().width + ROLL_GAP
+  link.style.setProperty('--outline-roll-gap', `${ROLL_GAP}px`)
+  link.style.setProperty('--outline-roll-shift', `-${distance}px`)
+  link.style.setProperty('--outline-roll-duration', `${distance / ROLL_SPEED / ROLL_MOVING}s`)
+  link.classList.add('is-rolling')
+}
+
+export const stopRollingLink = (link: HTMLElement) => link.classList.remove('is-rolling')

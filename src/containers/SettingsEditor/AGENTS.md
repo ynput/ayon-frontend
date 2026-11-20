@@ -151,7 +151,11 @@ in a single run on a dev server.
 ### Outline
 
 `SettingsOutline/` reads groups from the rendered sheet, not the schema, and highlights the one
-being read (`useSettingsOutlineCurrent`). A clicked item stays highlighted until the user scrolls
+being read (`useSettingsOutlineCurrent`). A link's tooltip shows the group's full name and its
+description, read from the title's own tooltip (`data-tooltip`). A name the rail cuts short
+scrolls left in a loop on hover or focus (`startRollingLink`): a hidden copy follows it after a
+gap, and a pass moves exactly one name and gap, so the loop restarts unseen. Not with reduced
+motion. A clicked item stays highlighted until the user scrolls
 by hand. Where CSS scroll-spy is supported (`scroll-target-group`, Chrome), the highlight reads the
 browser's `:target-current` link; elsewhere an `IntersectionObserver` tracks the group crossing the
 middle of the view. Only Chrome has been checked. A jump (`scrollToSettingsGroup`) renders every

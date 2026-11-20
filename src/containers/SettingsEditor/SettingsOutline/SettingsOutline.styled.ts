@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 // A rail beside the sheet that stays in view while the sheet scrolls under it
 export const Outline = styled.nav`
@@ -52,12 +52,21 @@ export const Outline = styled.nav`
   }
 `
 
+// a name rolling in a loop (Link, is-rolling): a pause with its start in place, then a pass
+// that brings its copy to where it started
+const roll = keyframes`
+  0%,
+  12% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(var(--outline-roll-shift));
+  }
+`
+
 export const Link = styled.a`
   display: block;
   padding: 4px 8px;
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   border-radius: var(--border-radius-m);
   font-size: var(--md-sys-typescale-body-medium-font-size);
   color: var(--md-sys-color-on-surface-variant);
@@ -93,6 +102,51 @@ export const Link = styled.a`
   /* the rail is navigation, so it may show the hierarchy the sheet keeps flat */
   &.settings-outline-subgroup {
     padding-left: 20px;
+  }
+
+  /* the name's window: a long name ends in an ellipsis, cut at the link's padding */
+  .settings-outline-label {
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* its copy shows only while it rolls */
+  .settings-outline-copy {
+    display: none;
+    padding-left: var(--outline-roll-gap);
+  }
+
+  /* on hover, a name cut short scrolls left in a loop (startRollingLink sets the distance and
+     the time) */
+  &.is-rolling .settings-outline-label {
+    text-overflow: clip;
+  }
+
+  &.is-rolling .settings-outline-text {
+    display: inline-block;
+    animation: ${roll} var(--outline-roll-duration) linear infinite;
+  }
+
+  &.is-rolling .settings-outline-copy {
+    display: inline;
+  }
+
+  /* reduced motion: the name stays cut, its tooltip shows it whole */
+  @media (prefers-reduced-motion: reduce) {
+    &.is-rolling .settings-outline-label {
+      text-overflow: ellipsis;
+    }
+
+    &.is-rolling .settings-outline-text {
+      display: inline;
+      animation: none;
+    }
+
+    &.is-rolling .settings-outline-copy {
+      display: none;
+    }
   }
 
   &:hover,
