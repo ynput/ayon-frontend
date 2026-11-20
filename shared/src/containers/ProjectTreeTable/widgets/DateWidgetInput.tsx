@@ -4,17 +4,31 @@ import { DateField } from '@ynput/ayon-react-components'
 import { WidgetBaseProps } from './CellWidget'
 import { fromDay, toDay } from './DateWidgetHelpers'
 
-// ARC's date field as the cell: no border, background or padding of its own
+// ARC's date field, looking like the text editor (TextWidgetInput): it fills the cell, dark, with
+// the focus outline
 const StyledDateField = styled(DateField)`
   &&& {
-    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    width: auto;
     min-width: 0;
-    height: 100%;
+    height: auto;
     min-height: 0;
     border: none;
     border-radius: 0;
-    background-color: transparent;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
     font: inherit;
+  }
+  &&& > div {
+    background-color: transparent;
+    box-shadow: none;
+    font: inherit;
+    color: inherit;
+  }
+  &&& input {
+    padding: 0 8px 0 9px;
   }
 `
 
