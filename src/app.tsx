@@ -284,6 +284,7 @@ const App = () => {
                                                     <EntityLinksSlot />
                                                     <PowerpackDialog />
                                                     <FileUploadPreviewContainer />
+                                                    <AddonHostNavigation />
                                                     <DetailsPipPage />
                                                   </>
                                                 ) : (
