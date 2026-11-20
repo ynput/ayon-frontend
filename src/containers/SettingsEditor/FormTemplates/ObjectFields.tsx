@@ -8,6 +8,7 @@ import { getFoldingGroupNames, getRowCellWidth, isShortField } from './listItemL
 import SettingsFoldingGroup from './SettingsFoldingGroup'
 import SearchHidden from './SearchHidden'
 import { usePathMapping } from './PathMappingContextInstance'
+import { resolveSchema } from './schemaCache'
 import { DESTINATION_FIELD, SOURCE_FIELD } from './PathMappingHelpers'
 import { PathMappingField } from './PathMappingField'
 import {
@@ -274,9 +275,7 @@ export const ObjectFields = ({
         isListRow
           ? getRowCellWidth(
               element.name,
-              registry.schemaUtils.retrieveSchema(
-                (schema.properties?.[element.name] ?? {}) as $Any,
-              ),
+              resolveSchema(registry.schemaUtils, schema.properties?.[element.name] ?? {}),
             )
           : undefined
       }
@@ -292,7 +291,7 @@ export const ObjectFields = ({
     if (foldingGroups.has(name)) return false
     const propertySchema = schema.properties?.[name]
     if (!propertySchema || typeof propertySchema !== 'object') return false
-    const resolved = registry.schemaUtils.retrieveSchema(propertySchema, formData?.[name])
+    const resolved = resolveSchema(registry.schemaUtils, propertySchema, formData?.[name])
     return isGroupSchema(resolved) && (mode === 'sheet' || resolved.type === 'object')
   }
 

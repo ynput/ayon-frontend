@@ -1,5 +1,6 @@
 import { Registry } from '@rjsf/utils'
 import { $Any } from '@types'
+import { resolveSchema } from './schemaCache'
 
 // Why a group's or field's value can't be changed from its right-click menu (Paste, Edit raw
 // settings...), shown on the raw settings dialog's greyed out Confirm button
@@ -28,7 +29,7 @@ export const hasReadOnlySetting = (rawSchema: $Any, value: $Any, registry: Regis
     if (cached !== undefined) return cached
   }
 
-  const schema: $Any = registry.schemaUtils.retrieveSchema(rawSchema, value)
+  const schema: $Any = resolveSchema(registry.schemaUtils, rawSchema, value)
   let result = isReadOnlyField(schema, value)
 
   if (!result && schema?.type === 'object' && schema.properties) {

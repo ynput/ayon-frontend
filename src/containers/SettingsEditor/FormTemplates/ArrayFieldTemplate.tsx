@@ -249,10 +249,24 @@ const FormArrayFieldWrapper = ({
   delete dynProps.key
   const ref = useRef<HTMLDivElement>(null)
 
+  // the new item takes focus once it's painted: focusing straight after the render makes the
+  // browser restyle the whole sheet there and then, which the flat layout's :has() rules make
+  // slow on a big addon. After the paint the styles are up to date and focusing costs nothing
   useEffect(() => {
     if (!focusOnMount) return
-    ref.current?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, select')?.focus()
-    onFocused?.()
+    let timer = 0
+    const frame = requestAnimationFrame(() => {
+      timer = window.setTimeout(() => {
+        ref.current
+          ?.querySelector<HTMLElement>('input:not([type="hidden"]), textarea, select')
+          ?.focus()
+        onFocused?.()
+      })
+    })
+    return () => {
+      cancelAnimationFrame(frame)
+      window.clearTimeout(timer)
+    }
   }, [focusOnMount, onFocused])
 
   return (

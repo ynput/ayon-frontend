@@ -1,5 +1,6 @@
 import { Registry } from '@rjsf/utils'
 import { $Any } from '@types'
+import { resolveSchema } from './schemaCache'
 import { SettingFieldKind, getSettingFieldKind } from '../SettingField'
 import {
   PLATFORM_KEYS,
@@ -81,10 +82,9 @@ const getListItemPresentation = (schema: $Any, context: LayoutContext): ListItem
   const fields = Object.entries<$Any>(schema.properties || {})
     .filter(([, property]) => isPropertyInScope(property, context.formContext))
     .map(([name, property]) => {
-      const resolved = context.schemaUtils.retrieveSchema(property)
+      const resolved = resolveSchema(context.schemaUtils, property)
       const options =
-        resolved?.type === 'array' &&
-        context.schemaUtils.retrieveSchema((resolved.items || {}) as $Any).enum
+        resolved?.type === 'array' && resolveSchema(context.schemaUtils, resolved.items || {}).enum
       // a multi-select holds several values: a few fit a cell, many outgrow it
       const tooMany =
         resolved?.type === 'array' && !(options && options.length <= MULTI_SELECT_MAX_OPTIONS)
@@ -139,7 +139,7 @@ const getListItemShape = (schema: $Any, context: LayoutContext): ListItemShape =
   )
   if (shown.length !== 1) return { presentation }
   const [name, property] = shown[0]
-  const inner = context.schemaUtils.retrieveSchema(property)
+  const inner = resolveSchema(context.schemaUtils, property)
   if (inner?.type !== 'object') return { presentation }
   const innerFit = getListItemPresentation(inner, context)
   return innerFit.presentation === 'row' || innerFit.presentation === 'card'
@@ -178,7 +178,7 @@ export const getListItemLayout = (
   value: unknown,
   context: LayoutContext,
 ): ListItemLayout => {
-  const resolved: $Any = context.schemaUtils.retrieveSchema(itemsSchema, value as $Any)
+  const resolved: $Any = resolveSchema(context.schemaUtils, itemsSchema, value)
   // a single value has nothing to lay out: it never folds nor becomes a row
   if (PLAIN_TYPES.includes(resolved?.type)) {
     return { presentation: 'plain', itemSchema: null, simple: true }
@@ -227,7 +227,7 @@ export const getFoldingGroupNames = (
   for (const name of names) {
     const property = schema?.properties?.[name]
     if (!property || typeof property !== 'object') continue
-    const resolved: $Any = registry.schemaUtils.retrieveSchema(property, formData?.[name])
+    const resolved: $Any = resolveSchema(registry.schemaUtils, property, formData?.[name])
     if (resolved?.type !== 'object' || !isGroupSchema(resolved)) continue
     groups.set(name, resolved)
     shapes.add(getGroupShape(property, resolved))
