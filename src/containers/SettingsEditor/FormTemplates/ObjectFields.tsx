@@ -134,20 +134,11 @@ const PanelFields = ({ segments, renderField, lead, platformRow }: PanelFieldsPr
 type PlainFieldsProps = {
   fields: ObjectFieldElement[]
   renderField: RenderField
-  /** An open list item: it leads with its first field and keeps the rest in a panel */
-  leadsListItem: boolean
 }
 
-const PlainFields = ({ fields, renderField, leadsListItem }: PlainFieldsProps) => {
-  const items = fields.map(renderField)
-  if (!leadsListItem || items.length < 2) return <>{items}</>
-  return (
-    <>
-      {items[0]}
-      <div className="form-object-field settings-panel">{items.slice(1)}</div>
-    </>
-  )
-}
+// The fields in order. In an open list item (or a group folding like one) they sit on the item's
+// box, all at one level: no panel inside it, and its name, when it has one, first
+const PlainFields = ({ fields, renderField }: PlainFieldsProps) => <>{fields.map(renderField)}</>
 
 type ExpandedFieldsProps = {
   properties: ObjectFieldElement[]
@@ -186,8 +177,6 @@ export type ObjectFieldsProps = Pick<
   className: string
   mode: ObjectFieldsMode
   flatLayout: boolean
-  /** An open list item in the flat layout: it leads with its first field */
-  leadsListItem: boolean
   /** The field a list item is titled by (name, label or title): it leads */
   leadField?: string
   longDescription: ReactNode
@@ -209,7 +198,6 @@ export const ObjectFields = ({
   className,
   mode,
   flatLayout,
-  leadsListItem,
   leadField,
   longDescription,
   matches,
@@ -327,7 +315,6 @@ export const ObjectFields = ({
       <PlainFields
         fields={orderPlainFields(visible, { schema, layout, flatLayout, leadField })}
         renderField={renderField}
-        leadsListItem={leadsListItem}
       />
     )
   }

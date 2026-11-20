@@ -92,7 +92,6 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       className={className}
       mode={wrapsLooseFields ? 'sheet' : panelsFields ? 'panels' : 'plain'}
       flatLayout={flatLayout}
-      leadsListItem={leadsListItem}
       leadField={leadField}
       longDescription={longDescription}
       matches={matches}

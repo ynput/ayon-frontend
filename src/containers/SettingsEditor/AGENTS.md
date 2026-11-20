@@ -19,7 +19,9 @@ An addon is a sheet. Its top-level groups are cards (a title on the sheet over p
 rows), deeper groups are sections (a title above their own panels). Sub-sections get panels beside
 their parent's, never inside them, so nothing is indented. A section's on/off switch is the first
 row of its panel (`leadsPanel` in `getSettingsGroupLayout`). Only records fold: list items, and
-groups that read as records.
+groups that read as records. An open one draws its fields straight on its box, all at one level
+(no panel inside it), its name first when it has one: a plugin's fields (Optional, Active...)
+have no name to lead with.
 
 ### How a list item is drawn
 
