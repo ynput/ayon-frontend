@@ -6,7 +6,8 @@
 //   @ynput/ayon-e2e              e2e/
 //
 // Run from the repo root through yarn (the release:* scripts in package.json):
-//   yarn release:start                      guided changes -> branch -> bump -> PR/merge -> build -> publish
+//   yarn release:start                      choose versions, confirm once, then branch -> bump -> PR/merge
+//                                           -> build -> publish run without further questions
 //   yarn release:status                     local origin/develop version vs npm, per package
 //   yarn release:changes [--json|--verbose] what merged since each package's last npm release, and the
 //                                           signals that decide patch / minor / major
@@ -26,7 +27,10 @@
 // Colour is automatic in terminals (NO_COLOR disables it; FORCE_COLOR=1 enables it in pipes).
 //
 // start requires a terminal, a clean checkout, gh authentication and installed root dependencies.
+// It asks for each package's version, shows the plan, and asks once; only a failed merge asks again.
 // It never bypasses GitHub protections; interrupted releases can be continued with release:start.
+// Bump suggestions: major only for an explicit breaking marker (`type!:` commit, BREAKING CHANGE,
+// a PR label with "breaking"); removed exports and generated API changes suggest minor and are listed.
 import { execFileSync, spawnSync } from 'node:child_process'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import path from 'node:path'
@@ -550,12 +554,17 @@ const subJsonString = (text, key, value, section) => {
   )
 }
 
-const arcRange = (repo) =>
-  JSON.parse(readFileSync(path.join(repo, 'package.json'), 'utf8')).dependencies[ARC]
+// ref: read from that commit instead of the working tree
+const arcRange = (repo, ref) =>
+  JSON.parse(
+    ref
+      ? git(repo, 'show', `${ref}:package.json`)
+      : readFileSync(path.join(repo, 'package.json'), 'utf8'),
+  ).dependencies[ARC]
 
 // Per package: [section, dependency, wanted value] for every pin this workflow keeps in step
-const expected = (repo, versions) => {
-  const arc = arcRange(repo)
+const expected = (repo, versions, ref) => {
+  const arc = arcRange(repo, ref)
   const a = versions.addon
   const s = versions.shared
   return {
@@ -571,8 +580,8 @@ const expected = (repo, versions) => {
   }
 }
 
-const versionsOf = (repo) =>
-  Object.fromEntries(Object.keys(PACKAGES).map((k) => [k, pkgJson(repo, k).version]))
+const versionsOf = (repo, ref) =>
+  Object.fromEntries(Object.keys(PACKAGES).map((k) => [k, pkgJson(repo, k, ref).version]))
 
 const check = (repo) => {
   const versions = versionsOf(repo)
@@ -654,57 +663,95 @@ const suggestedBumps = (repo, releaseData) => {
   return suggestions
 }
 
-const promptBumps = async (repo, releaseData) => {
+const LEVELS = ['none', 'patch', 'minor', 'major']
+const atLeast = (level, floor) => (LEVELS.indexOf(level) >= LEVELS.indexOf(floor) ? level : floor)
+
+const preview = (items, max = 6) =>
+  items.length > max
+    ? `${items.slice(0, max).join(', ')} (+${items.length - max} more)`
+    : items.join(', ')
+
+// Suggest a level per package, then ask for each package that has something to release.
+// Only an explicit marker suggests major: a `type!:` / BREAKING CHANGE commit or a PR label with
+// "breaking". Removed exports and changed generated endpoints suggest minor and are listed for review:
+// most are internal modules or backend churn, not API that apps and addons use.
+// ref: read versions and pins from that commit (release:start asks before it creates the branch).
+// confirmApply: false skips the final "apply?" question (release:start confirms the whole run once).
+const promptBumps = async (repo, releaseData, { ref, confirmApply = true } = {}) => {
   if (!process.stdin.isTTY) {
     die('interactive bump needs a terminal; pass explicit <pkg>=<patch|minor|major|x.y.z> instead')
   }
   const suggestions = suggestedBumps(repo, releaseData)
-  const versions = versionsOf(repo)
+  const versions = versionsOf(repo, ref)
   const levels = {}
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout })
   try {
-    section('Review suggested version bumps')
-    line('fix = patch / feat = minor / breaking change = major / other changes = patch', {
-      tone: 'muted',
-    })
+    section('Choose versions')
+    line(
+      'fix or other changes = patch / feat, new exports or endpoints = minor / explicit breaking change = major',
+      { tone: 'muted' },
+    )
     for (const key of PUBLISH_ORDER) {
       let { level, reason } = suggestions[key]
-      if (releaseData) {
-        const p = releaseData[key]
+      let review = []
+      const p = releaseData?.[key]
+      if (p) {
         const s = p.signals
+        const labels = p.changes.flatMap((c) => c.labels ?? [])
+        review = [
+          ...s.removed_exports,
+          ...s.generated_changed_args,
+          ...s.generated_removed_endpoints.map((e) => `endpoint ${e}`),
+        ]
         if (isPendingRelease(p)) {
           level = 'none'
           reason = `${p.local_version} is already newer than npm ${p.npm_version}; no extra bump needed`
-        } else if (
-          s.removed_exports.length ||
-          s.generated_changed_args.length ||
-          s.generated_removed_endpoints.length
-        ) {
+          review = []
+        } else if (level !== 'major' && labels.some((l) => /breaking/i.test(l))) {
           level = 'major'
-          reason = 'potentially breaking export or generated API changes; review before accepting'
-        } else if (
-          level !== 'major' &&
-          (s.added_exports.length || s.generated_added_endpoints.length)
-        ) {
-          level = 'minor'
-          reason = 'new hand-written exports or generated API endpoints'
+          reason = 'PR labelled as a breaking change'
+        } else if (level !== 'major') {
+          const why = [
+            labels.includes('type: feature') && 'feature PR',
+            s.added_exports.length && 'new exports',
+            s.generated_added_endpoints.length && 'new generated API endpoints',
+            review.length && 'removed or renamed exports/endpoints',
+          ].filter(Boolean)
+          if (why.length && atLeast(level, 'minor') !== level) {
+            level = 'minor'
+            reason = why.join(', ')
+          }
         }
       }
-      const pins = expected(repo, versions)[key] ?? []
-      const pj = pkgJson(repo, key)
+      const pins = expected(repo, versions, ref)[key] ?? []
+      const pj = pkgJson(repo, key, ref)
       const changedPins = pins.filter(([section, dep, value]) => pj[section]?.[dep] !== value)
       if (changedPins.length) {
         if (level === 'none') level = 'patch'
         reason += `; updated pins: ${changedPins.map(([, dep]) => dep).join(', ')}`
       }
       const current = versions[key]
+      // nothing to release: no question
+      if (level === 'none' && (!p || !hasChanges(p) || isPendingRelease(p))) {
+        console.log(paint(`  ${PACKAGES[key].name.padEnd(30)} ${current}  ${reason}`, 'muted'))
+        continue
+      }
       const target = level === 'none' ? current : bumped(current, level)
       section(PACKAGES[key].name)
-      line(`${current} -> ${target} (${level})`, { tone: level === 'none' ? 'muted' : 'yellow' })
-      line(reason, { tone: 'muted' })
+      line(`${current} -> ${target} (${level})  ${reason}`, {
+        tone: level === 'none' ? 'muted' : 'yellow',
+      })
+      if (review.length)
+        line(
+          `Removed or renamed: ${preview(review)}. Choose major only if apps or addons use these.`,
+          {
+            indent: 4,
+            tone: 'muted',
+          },
+        )
       while (true) {
         const answer = (
-          await rl.question(`Bump [${level}] (Enter to accept, patch/minor/major/x.y.z/none): `)
+          await rl.question(`  Bump [${level}] (Enter to accept, patch/minor/major/x.y.z/none): `)
         ).trim()
         const choice = ['', 'y', 'yes'].includes(answer.toLowerCase()) ? level : answer
         if (choice !== 'none' && !/^(?:patch|minor|major|\d+\.\d+\.\d+)$/.test(choice)) {
@@ -713,18 +760,14 @@ const promptBumps = async (repo, releaseData) => {
         }
         if (choice !== 'none') {
           const next = bumped(current, choice)
-          const npmVersion = releaseData?.[key].npm_version
+          const npmVersion = p?.npm_version
           if (cmpSemver(next, current) <= 0 || (npmVersion && cmpSemver(next, npmVersion) <= 0)) {
             console.error(`Choose a version newer than ${current}, or none to skip.`)
             continue
           }
           levels[key] = choice
           versions[key] = next
-        } else if (
-          releaseData &&
-          changedPins.length &&
-          cmpSemver(current, releaseData[key].npm_version) <= 0
-        ) {
+        } else if (p && changedPins.length && cmpSemver(current, p.npm_version) <= 0) {
           line('Dependency pins will change: this package needs a new version. Choose a bump.', {
             tone: 'yellow',
           })
@@ -738,6 +781,7 @@ const promptBumps = async (repo, releaseData) => {
       line('No bumps selected; nothing changed.', { tone: 'muted' })
       return []
     }
+    if (!confirmApply) return items
     section('Selected versions')
     for (const key of Object.keys(levels))
       line(`${PACKAGES[key].name}: ${versions[key]}`, { tone: 'green' })
@@ -874,6 +918,15 @@ const cmdBump = async (repo, items, releaseData) => {
   return versions
 }
 
+// npm login owns the terminal; no readline interface may remain open during this browser flow.
+const ensureNpmLogin = () => {
+  if (npmLoggedIn()) return
+  if (!process.stdin.isTTY) die('not logged in to npm: run `npm login` first, then rerun')
+  line('Not logged in to npm: starting npm login (approve it in the browser).', { tone: 'yellow' })
+  const login = spawnSync('npm', ['login'], { stdio: 'inherit' })
+  if (login.status !== 0 || !npmLoggedIn()) die('npm login did not finish: nothing was published')
+}
+
 // `release:build` requires installed root dependencies and builds every publishable package.
 // A failed build stops the release before publishing.
 const cmdBuild = (repo) => {
@@ -949,6 +1002,7 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force, expectedVer
   cmdBuild(repo)
   if (
     expectedVersions &&
+    !yes &&
     !(await confirm('Builds passed. Publish the listed versions to npm now?'))
   ) {
     line('Stopped after building; nothing was published. Rerun yarn release:start to continue.', {
@@ -956,15 +1010,7 @@ const cmdPublish = async (repo, { packages, dryRun, yes, otp, force, expectedVer
     })
     return
   }
-  // npm login owns the terminal; no readline interface may remain open during this browser flow.
-  if (!npmLoggedIn()) {
-    if (!process.stdin.isTTY) die('not logged in to npm: run `npm login` first, then rerun')
-    line('Not logged in to npm: starting npm login (approve it in the browser).', {
-      tone: 'yellow',
-    })
-    const login = spawnSync('npm', ['login'], { stdio: 'inherit' })
-    if (login.status !== 0 || !npmLoggedIn()) die('npm login did not finish: nothing was published')
-  }
+  ensureNpmLogin()
   git(repo, 'fetch', '-q', 'origin')
   if (!force) {
     if (
@@ -1028,7 +1074,7 @@ const releasePrBody = (repo, versions) => {
     'Technical details':
       'Updates package versions and cross-package dependency pins. Internal version/pin consistency checks: passed. Builds and npm publication: not run yet; the guided release builds the merged origin/develop checkout before publishing.',
     'Additional context':
-      'Created by yarn release:start. Merge remains subject to GitHub checks and branch protections; publishing requires a separate CLI confirmation.',
+      'Created by yarn release:start, which merges it (subject to GitHub checks and branch protections), then builds and publishes the merged develop.',
   }
   let body = readFileSync(file, 'utf8')
   for (const [heading, text] of Object.entries(details)) {
@@ -1047,17 +1093,7 @@ const mergeReleasePr = async (repo, url, head) => {
     if (pr.state !== 'OPEN') die(`release PR was closed without merging: ${url}`)
     if (pr.headRefOid !== head || pr.baseRefName !== 'develop')
       die('release PR head or target changed; stop and review it before continuing')
-    line(url, { tone: 'cyan' })
-    if (
-      !(await confirm(
-        'Merge this release PR into develop (respecting GitHub checks and protections)?',
-      ))
-    ) {
-      line('Stopped before merging. Rerun yarn release:start on this branch to continue.', {
-        tone: 'yellow',
-      })
-      return
-    }
+    line(`Merging ${url}`, { tone: 'cyan' })
     const result = spawnSync('gh', ['pr', 'merge', url, '--merge', '--match-head-commit', head], {
       cwd: repo,
       stdio: 'inherit',
@@ -1066,7 +1102,12 @@ const mergeReleasePr = async (repo, url, head) => {
       line('Merge did not complete. Resolve the checks/reviews or error above, then retry here.', {
         tone: 'yellow',
       })
-      if (!(await confirm('Retry the merge?'))) return
+      if (!(await confirm('Retry the merge?'))) {
+        line('Stopped before merging. Rerun yarn release:start on this branch to continue.', {
+          tone: 'yellow',
+        })
+        return
+      }
     } else {
       line(
         'Waiting for GitHub to confirm the PR is merged (including any merge queue). Ctrl+C stops safely.',
@@ -1124,6 +1165,36 @@ const cleanupReleaseBranch = (repo, branch, head) => {
   line(`Removed ${branch} locally and on origin.`, { tone: 'green' })
 }
 
+const findReleasePr = (repo, branch) =>
+  JSON.parse(
+    gh(
+      repo,
+      'pr',
+      'list',
+      '--head',
+      branch,
+      '--base',
+      'develop',
+      '--state',
+      'open',
+      '--json',
+      'url',
+      '--limit',
+      '1',
+    ),
+  )[0]?.url
+
+const printPlan = (data, versions, steps) => {
+  section('Release plan')
+  for (const [key, version] of Object.entries(versions))
+    console.log(
+      paint(`  ${PACKAGES[key].name.padEnd(30)} ${data[key].npm_version} -> ${version}`, 'yellow'),
+    )
+  console.log()
+  for (const [i, step] of steps.entries()) line(`${i + 1} ${step}`, { tone: 'muted' })
+}
+
+// Choose the versions, then one confirmation runs branch, bump, PR, merge, build and publish.
 // Git and the PR are the resume state: no local state file, reset, forced merge or force-publish.
 const cmdStart = async (repo, opts, reviewedData) => {
   if (!process.stdin.isTTY) die('release:start needs an interactive terminal')
@@ -1132,7 +1203,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
       'release:start is interactive; use --verbose, --repo or --otp only (individual subcommands support automation/dry runs)',
     )
   section('Guided package release')
-  line('1 Review changes  /  2 Branch and bump  /  3 Merge PR  /  4 Build  /  5 Publish', {
+  line('Choose versions, confirm once: branch, bump, PR, merge, build and publish run in one go.', {
     tone: 'muted',
   })
   const data = reviewedData || collect(repo)
@@ -1151,7 +1222,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
     line('Nothing to release.', { tone: 'green' })
     return
   }
-  if (!reviewedData && !(await confirm('Continue with this release?'))) return
+  // everything that can fail without a change, before any question
   requireCleanTree(repo)
   gh(repo, 'auth', 'status')
   if (!existsSync(path.join(repo, 'node_modules')))
@@ -1159,8 +1230,8 @@ const cmdStart = async (repo, opts, reviewedData) => {
 
   let branch = git(repo, 'branch', '--show-current')
   let versions
-  let mergeCommit
-  let releaseHead
+  let bumpItems
+  let steps
   const branchFiles = branch.startsWith(RELEASE_BRANCH_PREFIX)
     ? git(repo, 'diff', '--name-only', `${BASE}...HEAD`).split('\n').filter(Boolean)
     : []
@@ -1174,48 +1245,73 @@ const cmdStart = async (repo, opts, reviewedData) => {
         die(`${key} has release edits but no new version; review its bump before continuing`)
     }
     const problems = check(repo)
-    printProblems(problems)
     if (problems.length) {
+      printProblems(problems)
       process.exitCode = 1
       return
     }
-    line(`Continuing existing release branch: ${branch}`, { tone: 'cyan' })
+    section(`Continuing existing release branch ${branch}`)
+    steps = [
+      `Push ${branch} and open the release PR, unless it is open already`,
+      'Merge the PR into develop (GitHub checks and protections apply)',
+      'Switch to develop, delete the release branch, build addon and e2e',
+      'Publish to npm in dependency order',
+    ]
   } else if (Object.values(data).some((p) => hasChanges(p) && !isPendingRelease(p))) {
+    bumpItems = await promptBumps(repo, data, { ref: BASE, confirmApply: false })
+    if (!bumpItems.length) return
+    const next = versionsOf(repo, BASE)
+    for (const item of bumpItems) {
+      const [key, level] = item.split('=')
+      next[key] = bumped(next[key], level)
+    }
+    versions = Object.fromEntries(
+      PUBLISH_ORDER.filter((key) => cmpSemver(next[key], data[key].npm_version) > 0).map((key) => [
+        key,
+        next[key],
+      ]),
+    )
     branch = `${RELEASE_BRANCH_PREFIX}${new Date().toISOString().replace(/[:.]/g, '-')}`
-    section('Create release branch')
-    line(`${branch} from ${BASE}`, { tone: 'cyan' })
-    if (!(await confirm('Create this branch and review version bumps?'))) return
-    requireCleanTree(repo)
-    git(repo, 'switch', '-c', branch, BASE)
-    const bumpedVersions = await cmdBump(repo, [], data)
-    if (!bumpedVersions) return
-    versions = releaseVersions(repo, data)
+    steps = [
+      `Create ${branch} from ${BASE}, bump versions and pins, commit and push`,
+      'Open the release PR and merge it into develop (GitHub checks and protections apply)',
+      'Switch to develop, delete the release branch, build addon and e2e',
+      'Publish to npm in dependency order',
+    ]
+  } else {
+    versions = Object.fromEntries(
+      ready.map((p) => [
+        PUBLISH_ORDER.find((key) => PACKAGES[key].name === p.name),
+        p.local_version,
+      ]),
+    )
+    section('Versions already merged')
+    steps = ['Switch to develop and build addon and e2e', 'Publish to npm in dependency order']
   }
 
-  if (versions) {
+  printPlan(data, versions, steps)
+  if (!(await confirm('Run the whole release now?'))) {
+    line('Stopped; nothing changed.', { tone: 'yellow' })
+    return
+  }
+  // a login prompt now, not after the merge and build
+  ensureNpmLogin()
+
+  let mergeCommit
+  let releaseHead
+  if (bumpItems) {
+    requireCleanTree(repo)
+    git(repo, 'switch', '-c', branch, BASE)
+    const bumpedVersions = await cmdBump(repo, bumpItems, data)
+    if (!bumpedVersions)
+      die(`bump did not complete; fix the problem above, then rerun on ${branch}`)
+    versions = releaseVersions(repo, data)
+  }
+  if (bumpItems || branchFiles.length) {
     section('Release pull request')
-    const head = git(repo, 'rev-parse', 'HEAD')
-    releaseHead = head
-    const prs = JSON.parse(
-      gh(
-        repo,
-        'pr',
-        'list',
-        '--head',
-        branch,
-        '--base',
-        'develop',
-        '--state',
-        'open',
-        '--json',
-        'url',
-        '--limit',
-        '1',
-      ),
-    )
-    let url = prs[0]?.url
+    releaseHead = git(repo, 'rev-parse', 'HEAD')
+    let url = findReleasePr(repo, branch)
     if (!url) {
-      if (!(await confirm('Push this branch and create the release PR?'))) return
       git(repo, 'push', '--set-upstream', 'origin', `HEAD:refs/heads/${branch}`)
       const title = `chore: release ${Object.entries(versions)
         .map(([key, version]) => `${key}@${version}`)
@@ -1234,19 +1330,8 @@ const cmdStart = async (repo, opts, reviewedData) => {
         releasePrBody(repo, versions),
       )
     }
-    mergeCommit = await mergeReleasePr(repo, url, head)
+    mergeCommit = await mergeReleasePr(repo, url, releaseHead)
     if (!mergeCommit) return
-  } else {
-    versions = Object.fromEntries(
-      ready.map((p) => [
-        PUBLISH_ORDER.find((key) => PACKAGES[key].name === p.name),
-        p.local_version,
-      ]),
-    )
-    section('Versions already merged')
-    line('Continuing at the build/publish stage; no additional version bump or PR is needed.', {
-      tone: 'green',
-    })
   }
 
   section('Build merged release')
@@ -1255,7 +1340,7 @@ const cmdStart = async (repo, opts, reviewedData) => {
   const published = await cmdPublish(repo, {
     packages: Object.keys(versions),
     expectedVersions: versions,
-    yes: false,
+    yes: true,
     force: false,
     dryRun: false,
     otp: opts.otp,
@@ -1266,8 +1351,8 @@ const cmdStart = async (repo, opts, reviewedData) => {
 // ----------------------------------------------------------------------------- cli
 const USAGE = `usage: yarn release:<command> [options]
 
-  start                         guided changes -> branch -> bump -> PR/merge -> build -> publish
-                                confirms each stage; rerun to continue an existing release branch
+  start                         choose versions, confirm once: branch, bump, PR/merge, build, publish
+                                rerun to continue an existing release branch
                                 requires a terminal, clean tree, gh login and root dependencies
                                 uses GitHub merge commits and respects checks/branch protections
   status                        local origin/develop version vs npm, per package
