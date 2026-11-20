@@ -195,14 +195,14 @@ export interface SlotMap {
     pieces: { component: Loader<ComponentType<SlotProps<'userDetails.section'>>> }
   }
   /**
-   * An item in the user details panel's "more" menu (Settings → Users) and in the users table's
+   * An item in the user details panel's "more" menu (Settings → Users) and/or the users table's
    * right-click menu, for the selected users. It shows from the description; `run` loads when the
    * menu opens and is called on click.
    */
   'userDetails.menuItem': {
     version: 1
     meta: UserDetailsMenuItemMeta
-    context: UserDetailsContext
+    context: UserDetailsMenuItemContext
     pieces: { run: Loader<RunPiece<'userDetails.menuItem'>> }
   }
   /**
@@ -568,7 +568,10 @@ export interface TableShortcutPieces {
 /** Which menu a list's menu item is in: the right-click menu or the "more" dropdown. */
 export type MenuKind = 'context' | 'dropdown'
 
-/** Description of a `projectList.menuItem` or `slicer.menuItem` contribution. */
+/**
+ * Description of a `projectList.menuItem`, `slicer.menuItem` or `userDetails.menuItem`
+ * contribution.
+ */
 export interface ListMenuItemMeta extends MenuItemMeta {
   /** which menus show it: both when not set */
   in?: MenuKind[]
@@ -682,7 +685,7 @@ export interface UserDetailsSectionMeta {
 }
 
 /** Description of a `userDetails.menuItem` contribution. */
-export interface UserDetailsMenuItemMeta extends MenuItemMeta {
+export interface UserDetailsMenuItemMeta extends ListMenuItemMeta {
   /** `single`: only when one user is selected; `multi` (default): for one or more */
   selection?: UserSelection
 }
@@ -694,6 +697,15 @@ export interface UserDetailsContext extends UsersScope {
    * don't edit
    */
   readOnly: boolean
+}
+
+/**
+ * Context of a user details menu item: in the panel's "more" dropdown or the table's right-click
+ * menu.
+ */
+export interface UserDetailsMenuItemContext extends UserDetailsContext {
+  /** the menu it was clicked in */
+  menu: MenuKind
 }
 
 /** Description of a `profile.section` contribution. */

@@ -71,8 +71,8 @@ export const userDetailsSection = (section: ContributionFields<'userDetails.sect
   contribute('userDetails.section', section)
 
 /**
- * An item in the user details panel's "more" menu (Settings → Users) and in the users table's
- * right-click menu, for the selected users.
+ * An item in the user details panel's "more" menu (Settings → Users) and/or the users table's
+ * right-click menu (`in`), for the selected users.
  */
 export const userDetailsMenuItem = (item: ContributionFields<'userDetails.menuItem'>) =>
   contribute('userDetails.menuItem', item)

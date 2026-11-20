@@ -60,6 +60,7 @@ export type {
   AppServiceContext,
   AppServiceMeta,
   UserDetailsContext,
+  UserDetailsMenuItemContext,
   UserDetailsMenuItemMeta,
   UserDetailsSectionMeta,
   UserSelection,

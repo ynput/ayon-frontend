@@ -2,7 +2,13 @@
 // @ynput/ayon-addon). The sections themselves are AddonUserDetailsSections.
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import type { Contribution, UserDetailsContext, UserRef, UserSelection } from '@ynput/ayon-addon'
+import type {
+  Contribution,
+  MenuKind,
+  UserDetailsContext,
+  UserRef,
+  UserSelection,
+} from '@ynput/ayon-addon'
 import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 
@@ -48,19 +54,23 @@ export interface AddonUserMenuItems {
   prefetch: () => void
 }
 
+// the items of `menu`: those whose `in` lists it (both menus when not set)
 const toMenuItems = (
   contributions: readonly Contribution<'userDetails.menuItem'>[],
   context: UserDetailsContext,
+  menu: MenuKind,
 ): AddonUserMenuItems => {
-  const applicable = contributions.filter((item) =>
-    showsForSelection(item.selection, context.users.length),
+  const applicable = contributions.filter(
+    (item) =>
+      showsForSelection(item.selection, context.users.length) &&
+      (!item.in?.length || item.in.includes(menu)),
   )
   const toMenuItem = (item: Contribution<'userDetails.menuItem'>): MenuItemType => ({
     id: item.key,
     label: item.label,
     icon: item.icon,
     'data-addon-item': item.key,
-    onClick: () => runContribution(item, context),
+    onClick: () => runContribution(item, { ...context, menu }),
     ...contributionTags(item),
   })
   return {
@@ -76,7 +86,7 @@ const toMenuItems = (
  */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')
-  return useMemo(() => toMenuItems(contributions, context), [contributions, context])
+  return useMemo(() => toMenuItems(contributions, context, 'dropdown'), [contributions, context])
 }
 
 /**
@@ -87,7 +97,7 @@ export const useAddonUserMenuItemsFor = (readOnly: boolean) => {
   const { contributions } = useContributions('userDetails.menuItem')
   return useCallback(
     (users: UserDetailsSource[]) =>
-      toMenuItems(contributions, { users: users.map(toUserRef), readOnly }),
+      toMenuItems(contributions, { users: users.map(toUserRef), readOnly }, 'context'),
     [contributions, readOnly],
   )
 }

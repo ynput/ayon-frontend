@@ -158,11 +158,8 @@ const UserList = ({
     // the addons' items of the details panel's "more" menu (userDetails.menuItem)
     const addonMenu = addonMenuItemsFor(ctxSelection)
     addonMenu.prefetch()
-    const toCtxItem = (item) => ({
-      label: item.label,
-      icon: item.icon,
-      command: withSelection(item.onClick),
-    })
+    // as the panel's items (id and slot inspector tags), with the context menu's `command`
+    const toCtxItem = ({ onClick, ...item }) => ({ ...item, command: withSelection(onClick) })
     const inviteLabel =
       ctxSelection.length === 1 && getInvitationState(ctxSelection[0]) === 'pending'
         ? 'Resend'
