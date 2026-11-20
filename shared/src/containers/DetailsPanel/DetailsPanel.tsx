@@ -625,7 +625,7 @@ DetailsPanelProps) => {
                     entities={entitiesToQuery}
                     entityType={activeEntityType}
                     options={projectUsers || []}
-                    onWatchersUpdate={onWatchersUpdate && onWatchersUpdate}
+                    onWatchersUpdate={onWatchersUpdate}
                     userName={user.name}
                   />
                 ),
