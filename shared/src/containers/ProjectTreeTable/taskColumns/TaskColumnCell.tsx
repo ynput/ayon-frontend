@@ -1,4 +1,4 @@
-import { CSSProperties, memo, useContext, useMemo, useRef } from 'react'
+import { CSSProperties, memo, useMemo, useRef } from 'react'
 import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Row } from '@tanstack/react-table'
 import clsx from 'clsx'
@@ -6,9 +6,7 @@ import { FilmstripEntityCard } from '@shared/components/Filmstrip/FilmstripEntit
 import { useProjectContext } from '@shared/context'
 import { getEntityFilmstripUrl, getEntityThumbnailUrl, getSelectableAssignees } from '@shared/util'
 import { useColumnSettingsContext } from '../context/column-settings'
-import { DetailsPanelEntityContext } from '../context/details-panel-entity/DetailsPanelEntityContextInstance'
 import { useProjectTableContext } from '../context/project-table'
-import { useOptionalSelectedRowsContext } from '../context/selected-rows/SelectedRowsContext'
 import { useSelectionCellsContext } from '../context/selection-cells'
 import type { EditorTaskNode, TableRow } from '../types/table'
 import { getCellId } from '../utils/cellUtils'
@@ -36,6 +34,8 @@ interface TaskCardProps extends Pick<TaskColumnsContextValue, 'statuses' | 'prio
   zoom?: number
   // the page's task filter does not match the task
   isDimmed: boolean
+  // picked out of the cell's cards: the others are not selected
+  isPicked: boolean
   // each field's picker is there when the field can be edited
   onChange?: (task: EditorTaskNode, change: TaskCardChange) => void
   readOnlyFields?: string[]
@@ -55,6 +55,7 @@ const TaskCard = memo(
     priorities,
     users,
     isDimmed,
+    isPicked,
     onChange,
     readOnlyFields,
     selection,
@@ -83,7 +84,7 @@ const TaskCard = memo(
 
     return (
       <Styled.Card
-        className={clsx({ dimmed: isDimmed })}
+        className={clsx({ dimmed: isDimmed, picked: isPicked })}
         data-task-id={task.id}
         data-tooltip={task.label || task.name}
         data-tooltip-delay={250}
@@ -159,13 +160,12 @@ interface TaskColumnCellProps {
 /**
  * A folder row's tasks of one type, one card each, side by side. The cards edit their own task
  * (never the row's folder), so the cell is read-only to the table: no cell editor, paste or clear.
- * With several task cells selected, an edit on one card goes to the tasks of all of them.
+ * The table selects the cell; in a cell with several cards a press picks the pressed one. An edit
+ * on a selected card goes to the tasks of all selected cards.
  */
 export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: TaskColumnCellProps) => {
   const context = useTaskColumnsContext()
   const selection = useTaskColumnsSelection()
-  const detailsPanelEntity = useContext(DetailsPanelEntityContext)
-  const selectedRows = useOptionalSelectedRowsContext()
   const { projectName } = useProjectContext()
   const { isRowReadOnly, readOnly: isTableReadOnly } = useProjectTableContext()
   const { isCellSelected } = useSelectionCellsContext()
@@ -186,9 +186,11 @@ export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: Task
   // as on Task progress, a card is edited once it is selected: the first click only selects
   const isSelected = isCellSelected(cellId)
   const canEdit = isSelected && !isTableReadOnly && !isRowReadOnly(row.id)
-  const isMultiple = isSelected && selection.cells > 1
-  // the press that selects the cell makes its cards editable before the click arrives, which
-  // would open the picker under the pointer on that same click
+  // the cell's picked cards; without picks a selected cell has all its cards
+  const picks = isSelected ? selection.picks[cellId] : undefined
+  const isCardSelected = (taskId: string) => isSelected && (!picks || picks.includes(taskId))
+  // the press that selects a card makes it editable before the click arrives, which would open
+  // the picker under the pointer on that same click
   const wasSelectedOnPress = useRef(false)
   const swallowClick = useRef(false)
 
@@ -207,22 +209,36 @@ export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: Task
 
   const handlePress = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.button !== 0) return
-    const taskId = (e.target as HTMLElement).closest<HTMLElement>('[data-task-id]')?.dataset.taskId
+    const target = e.target as HTMLElement
+    // an open picker's list is the cell's in React only (a portal), or sits inside the card:
+    // a press in it picks an option, not a card
+    if (target.closest('.options') || !e.currentTarget.contains(target)) return
+    const taskId = target.closest<HTMLElement>('[data-task-id]')?.dataset.taskId
     if (taskId) context?.notePressedTask(cellId, taskId)
+    const isOnPicker = !!target.closest(PICKER_SELECTOR)
+    const additive = e.metaKey || e.ctrlKey
     if (e.detail < 2) {
-      wasSelectedOnPress.current = isSelected
-      swallowClick.current = !isSelected
+      const wasSelected = !!taskId && isCardSelected(taskId)
+      wasSelectedOnPress.current = wasSelected
+      swallowClick.current = !wasSelected || additive || e.shiftKey
+      // a press on a selected card's picker edits what is selected: nothing is picked anew
+      if (wasSelected && isOnPicker && !additive && !e.shiftKey) return
+      const keepsSelection = context?.pressCard(
+        cellId,
+        taskId,
+        (tasks || NO_TASKS).map((task) => task.id),
+        { isCellSelected: isSelected, additive, range: e.shiftKey },
+      )
+      // the cell stays selected and only its cards changed: not the table's press
+      if (keepsSelection) e.stopPropagation()
       return
     }
-    // A double click opens the task's details, as on Task progress. Handled on the press: the
-    // first one re-renders the cell, and the dblclick event is not sure to follow. Left to the
-    // picker when both clicks went to one of a card that could already be edited.
-    const isOnPicker = !!(e.target as HTMLElement).closest(PICKER_SELECTOR)
-    if ((wasSelectedOnPress.current && isOnPicker) || !taskId || !detailsPanelEntity) return
+    // A double click opens the details panel on the task, as on Task progress. Handled on the
+    // press: the first one re-renders the cell, and the dblclick event is not sure to follow.
+    // Left to the picker when both clicks went to one of a card that could already be edited.
+    if ((wasSelectedOnPress.current && isOnPicker) || !taskId) return
     swallowClick.current = true
-    // selected rows are what the panel shows first
-    if (selectedRows?.selectedRows.length) selectedRows.clearRowsSelection()
-    detailsPanelEntity.setSelectedEntity({ entityId: taskId, entityType: 'task' })
+    context?.openDetails()
   }
 
   return (
@@ -254,13 +270,13 @@ export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: Task
               priorities={context.priorities}
               users={context.users}
               isDimmed={context.isTaskDimmed(task)}
-              onChange={handleChange}
+              isPicked={!!picks?.includes(task.id)}
+              // as on Task progress, a card is edited once it is selected
+              onChange={isCardSelected(task.id) ? handleChange : undefined}
               readOnlyFields={readOnlyFields}
               selection={
-                // a greyed out card is not part of the edit of several: it is edited by itself
-                isMultiple && selection.tasks.some((target) => target.task.id === task.id)
-                  ? selection
-                  : undefined
+                // several selected cards are edited together; a greyed out one by itself
+                selection.tasks.length > 1 && selection.taskIds.has(task.id) ? selection : undefined
               }
             />
           ))

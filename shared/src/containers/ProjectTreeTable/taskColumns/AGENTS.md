@@ -31,13 +31,17 @@ other `ProjectTreeTable` pages can adopt it.
   through `meta.updateEntities`: with a selection that one resolves the row's folder and the Status column
   of the selected rows. One call is one undo step. `entityData` is what undo and error messages use while
   the folder is collapsed (the task is not in the table's entity map).
-- **Several task cells selected**: an edit on one card goes to every task the selected cells show, in any
-  task column (`TaskColumnsSelectionContext`, apart from the main context because it changes with every
-  click). Status and priority are set; assignees are added to or removed from each task, the picker
-  showing on how many of the tasks each one is (`mixedCounts` / `onMixedChange`, as the details panel
-  does). With one cell selected only the card's own task is edited, so two cards in one cell stay
-  separate. The table leaves the selection alone on a press
-  on a card's picker (`.tag.editable`) in a selected cell; any other press selects as usual.
+- **Selection is per card, on top of the table's cells.** The table selects cells. A cell with several
+  cards is selected with all of them (range, keyboard) unless some were picked: a press picks the pressed
+  card alone, Ctrl/Cmd adds or removes one (`pressCard`, `picks` in `TaskColumnsSelectionContext`, which
+  is apart from the main context because it changes with every click). Picks are dropped for a cell the
+  moment it is not selected. A Ctrl/Cmd press that only changes a selected cell's cards stops the event
+  before the table sees it; presses in an open picker's list are not the cell's at all.
+- **An edit on a selected card goes to every selected card's task**, in any task column. Status and
+  priority are set; assignees are added to or removed from each task, the picker showing on how many of
+  the tasks each one is (`mixedCounts` / `onMixedChange`, as the details panel does). Only selected cards
+  have pickers. The table leaves the selection alone on a press on a selected card's picker
+  (`.tag.editable`).
 - **The page's task filter greys cards out, it never hides them.** The provider asks the same endpoint a
   second time (`scope: 'taskColumnsMatch'`) with the shown types and the page's filter and search; a card
   whose task is not in that answer is `dimmed`, once its folder was asked about. The filter is never
@@ -47,22 +51,26 @@ other `ProjectTreeTable` pages can adopt it.
 - **A greyed out card is edited by itself and left out of an edit of several cells.** So is a folder the
   filter was not asked about yet, or whose tasks have not loaded (rows scrolled past quickly, or after
   Sync): unknown means "shown as it is" for a card but "not a target" for an edit, with a warning.
-- **Double click** on a card opens its task in the details panel (`setSelectedEntity`, as `EntityWidget`
-  does), handled on the second press. **Space** plays the cell's task, not the row's folder
-  (`useKeyboardNavigation` asks `getCellTask`: the card pressed last in the cell, else its first). On a
-  task row the key still plays the row's task.
+- **Double click** on a card opens the details panel on the selected cards' tasks (`openDetails`; the
+  page's panel reads `detailsTaskIds`), handled on the second press. The panel then follows the selected
+  cards until it is closed, the selection leaves the cards, or another entity is opened in it. Selected
+  rows still come first. **Space** plays the cell's task, not the row's folder (`useKeyboardNavigation`
+  asks `getCellTask`: the card pressed last in the cell, else its first). On a task row the key still
+  plays the row's task.
+- **Default width**: one card times the most common number of tasks of the type per folder, worked out
+  once from the first folders loaded and then left, so a column does not change width while scrolling.
 - **The cell is read-only to the table** (`readonly` class, no `editable`): no cell editor on double click
   or Enter, no clear. Paste writes nothing to these cells but keeps their place in the selection, so
   the values after them land in their own columns (`ClipboardContext`). The Overview's Delete button and the
   menu's Delete ignore cells of these columns, since everything selection-based acts on the row's folder.
-- **A card is edited once its cell is selected**, as on Task progress: the first click selects. The cell
-  swallows the click of the press that selected it, or the card (editable by then) opens a picker on it.
+- **A card is edited once it is selected**, as on Task progress: the first click only selects. The cell
+  swallows the click of the press that selected the card, or the card (editable by then) opens a picker
+  on it.
 - **Tall rows**: `useDynamicRowHeight` returns the tall height for folder rows with tasks. Per-row toggles
   live in the provider for the visit; "expand all" is the view's `expandRows`.
 - The card is designed for a 34px row. Below that the collapsed card is scaled (`zoom`) instead of clipped.
 
 ## Not there yet
 
-The context menu, copy, and the details panel for several selected cards still see the folder. Selection is
-per cell: in a cell with two cards, an edit of several cells takes both.
+The context menu and copy on a task cell still see the folder.
 Sorting by a task column and roll-ups on parent folders need tasks for rows that are not on screen.

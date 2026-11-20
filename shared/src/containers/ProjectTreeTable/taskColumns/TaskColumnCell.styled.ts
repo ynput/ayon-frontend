@@ -70,6 +70,13 @@ export const Card = styled.div`
   min-width: 0;
   transition: opacity 150ms, filter 150ms;
 
+  /* picked out of the cell's cards: the cell's selection border goes around all of them */
+  &.picked {
+    border-radius: var(--border-radius-m);
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -1px;
+  }
+
   /* the page's task filter does not match the task: there, but out of the way */
   &.dimmed {
     opacity: 0.3;

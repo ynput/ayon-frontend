@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
 import { getMixedCounts } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
@@ -14,7 +14,9 @@ import {
 import { useProjectContext } from '@shared/context'
 import { useOptionalCellEditing } from '../context/cell-editing'
 import { useColumnSettingsContext } from '../context/column-settings'
+import { DetailsPanelEntityContext } from '../context/details-panel-entity/DetailsPanelEntityContextInstance'
 import { useProjectTableContext } from '../context/project-table'
+import { useOptionalSelectedRowsContext } from '../context/selected-rows/SelectedRowsContext'
 import { useOptionalSelectionCellsContext } from '../context/selection-cells'
 import type { EntityUpdate } from '../hooks/useUpdateTableData'
 import type { EntityData } from '../types/table'
@@ -41,6 +43,7 @@ const MATCH_REFRESH_DELAY = 1000
 // the endpoint refuses more folders than this in one request
 const MAX_REFRESH_FOLDERS = 1000
 const NO_IDS: string[] = []
+const NO_PICKS: Record<string, string[]> = {}
 const NO_TASKS: never[] = []
 
 interface TaskColumnsProviderProps {
@@ -238,8 +241,20 @@ export const TaskColumnsProvider = ({
     [match],
   )
 
-  // the same object until a width changes: a new one rebuilds the table's columns
-  const widthsKey = JSON.stringify(getTaskColumnDefaultWidths(tasksByFolder))
+  // A column's default width is worked out once, from the first folders loaded with tasks of its
+  // type, and then left: it would otherwise change under the user while scrolling.
+  const firstWidths = useRef<{ projectName: string; widths: Record<string, number> }>()
+  const widthsKey = useMemo(() => {
+    if (firstWidths.current?.projectName !== projectName) {
+      firstWidths.current = { projectName, widths: {} }
+    }
+    const { widths } = firstWidths.current
+    Object.entries(getTaskColumnDefaultWidths(tasksByFolder)).forEach(([columnId, width]) => {
+      widths[columnId] ??= width
+    })
+    return JSON.stringify(widths)
+  }, [tasksByFolder, projectName])
+  // the same object until a width is added: a new one rebuilds the table's columns
   const defaultWidths = useMemo<Record<string, number>>(() => JSON.parse(widthsKey), [widthsKey])
 
   const getTasks = useCallback<TaskColumnsContextValue['getTasks']>(
@@ -300,22 +315,94 @@ export const TaskColumnsProvider = ({
     [isActive, typeByColumn, getEntityById, tasksByFolder],
   )
 
-  // the task cells in the table's selection, with the tasks an edit of several goes to
+  // The cards picked inside selected cells. The table knows cells only, so this sits next to its
+  // selection and is dropped for a cell as soon as it is not selected.
+  const [picks, setPicks] = useState(NO_PICKS)
+  const picksRef = useRef(picks)
+  picksRef.current = picks
+  useEffect(() => {
+    setPicks((picks) => {
+      const kept = Object.entries(picks).filter(([cellId]) => selectedCells?.has(cellId))
+      return kept.length === Object.keys(picks).length ? picks : Object.fromEntries(kept)
+    })
+  }, [selectedCells])
+
+  const pressCard = useCallback<TaskColumnsContextValue['pressCard']>(
+    (cellId, taskId, cellTaskIds, { isCellSelected, additive, range }) => {
+      const without = (picks: Record<string, string[]>) =>
+        cellId in picks
+          ? Object.fromEntries(Object.entries(picks).filter(([id]) => id !== cellId))
+          : picks
+      // only a cell with several cards can have some of them picked
+      const canPick = !!taskId && cellTaskIds.length > 1
+      if (range) {
+        setPicks(without)
+      } else if (!additive) {
+        setPicks((picks) =>
+          canPick ? { [cellId]: [taskId] } : Object.keys(picks).length ? NO_PICKS : picks,
+        )
+      } else if (canPick && !isCellSelected) {
+        setPicks((picks) => ({ ...picks, [cellId]: [taskId] }))
+      } else if (canPick) {
+        const current = picksRef.current[cellId] || cellTaskIds
+        const next = current.includes(taskId)
+          ? current.filter((id) => id !== taskId)
+          : [...current, taskId]
+        // its last card: the table deselects the cell
+        if (!next.length) return false
+        setPicks((picks) =>
+          next.length === cellTaskIds.length ? without(picks) : { ...picks, [cellId]: next },
+        )
+        return true
+      }
+      return false
+    },
+    [],
+  )
+
+  // the details panel on the selected cards, opened by a double click on one
+  const detailsPanelEntity = useContext(DetailsPanelEntityContext)
+  const selectedRows = useOptionalSelectedRowsContext()
+  const [isDetailsOpen, setDetailsOpen] = useState(false)
+  const detailsRef = useRef({ detailsPanelEntity, selectedRows })
+  detailsRef.current = { detailsPanelEntity, selectedRows }
+  const openDetails = useCallback(() => {
+    // selected rows and an entity opened from a cell are what the panel shows first
+    const { detailsPanelEntity, selectedRows } = detailsRef.current
+    if (selectedRows?.selectedRows.length) selectedRows.clearRowsSelection()
+    if (detailsPanelEntity?.selectedEntity) detailsPanelEntity.clearSelectedEntity()
+    setDetailsOpen(true)
+  }, [])
+  const closeDetails = useCallback(() => setDetailsOpen(false), [])
+  // an entity opened elsewhere takes the panel over
+  const hasSelectedEntity = !!detailsPanelEntity?.selectedEntity
+  useEffect(() => {
+    if (hasSelectedEntity) setDetailsOpen(false)
+  }, [hasSelectedEntity])
+
+  // the selected cards, with the tasks an edit goes to
   const selection = useMemo<TaskColumnsSelection>(() => {
     if (!isActive || !selectedCells?.size) return NO_TASK_COLUMNS_SELECTION
     const loadedFolders = getQueriedFolders(
       getCacheKey(args.projectName, args.filter, undefined, undefined, undefined, args.scope),
     )
-    const selected: TaskColumnsSelection = { ...NO_TASK_COLUMNS_SELECTION, tasks: [] }
+    const selected: TaskColumnsSelection = {
+      ...NO_TASK_COLUMNS_SELECTION,
+      picks,
+      cardIds: [],
+      tasks: [],
+      taskIds: new Set(),
+    }
     for (const cellId of selectedCells) {
       const { rowId, colId } = parseCellId(cellId) || {}
       const taskType = colId && typeByColumn.get(colId)
       const folder = rowId && taskType ? getEntityById(rowId) : undefined
       if (!rowId || !taskType || folder?.entityType !== 'folder') continue
-      selected.cells++
-      if (isRowReadOnly(rowId)) continue
       const folderTasks = tasksByFolder.get(folder.id)?.get(taskType)
-      if (folder.hasTasks === false) continue
+      const picked = picks[cellId]
+      const cards = (folderTasks || []).filter((task) => !picked || picked.includes(task.id))
+      cards.forEach((task) => selected.cardIds.push(task.id))
+      if (isRowReadOnly(rowId) || folder.hasTasks === false) continue
       // Not loaded, or the filter was not asked about the folder yet (its cards show as they
       // are meanwhile): which of its tasks an edit may reach is not known
       const isKnown =
@@ -325,12 +412,14 @@ export const TaskColumnsProvider = ({
         selected.notLoaded++
         continue
       }
-      for (const task of folderTasks || []) {
+      for (const task of cards) {
         // a card the filter greyed out is left alone by an edit of several
         if (isTaskDimmed(task)) continue
         selected.tasks.push({ task, rowId })
+        selected.taskIds.add(task.id)
       }
     }
+    if (isDetailsOpen) selected.detailsTaskIds = selected.cardIds
     selected.assigneeCounts = getMixedCounts(selected.tasks.map(({ task }) => task.assignees))
     selected.assignees = Object.keys(selected.assigneeCounts)
     return selected
@@ -338,6 +427,8 @@ export const TaskColumnsProvider = ({
   }, [
     isActive,
     selectedCells,
+    picks,
+    isDetailsOpen,
     typeByColumn,
     tasksByFolder,
     isTaskDimmed,
@@ -349,16 +440,21 @@ export const TaskColumnsProvider = ({
     fulfilledTimeStamp,
   ])
 
+  // the selection left the cards: the panel does not come back with the next card selected
+  const hasSelectedCards = !!selection.cardIds.length
+  useEffect(() => {
+    if (!hasSelectedCards) setDetailsOpen(false)
+  }, [hasSelectedCards])
+
   const editRef = useRef({ selection, updateEntities })
   editRef.current = { selection, updateEntities }
   const editTasks = useCallback<TaskColumnsContextValue['editTasks']>(
     async (task, rowId, change) => {
       const { selection, updateEntities } = editRef.current
       if (!updateEntities) return
-      // several cells: every task they show. One cell, or a card the edit of several leaves
-      // out (greyed out by the filter): the card's own task
-      const isOfSeveral =
-        selection.cells > 1 && selection.tasks.some((target) => target.task.id === task.id)
+      // every selected card's task; a card the edit of several leaves out (greyed out by the
+      // filter) is edited by itself
+      const isOfSeveral = selection.tasks.length > 1 && selection.taskIds.has(task.id)
       const targets = isOfSeveral ? selection.tasks : [{ task, rowId }]
 
       const updates = targets.flatMap(({ task, rowId }): EntityUpdate[] => {
@@ -411,6 +507,9 @@ export const TaskColumnsProvider = ({
       users,
       getCellTask,
       notePressedTask,
+      pressCard,
+      openDetails,
+      closeDetails,
       isTaskDimmed,
       editTasks,
     }),
@@ -427,6 +526,9 @@ export const TaskColumnsProvider = ({
       users,
       getCellTask,
       notePressedTask,
+      pressCard,
+      openDetails,
+      closeDetails,
       isTaskDimmed,
       editTasks,
     ],
