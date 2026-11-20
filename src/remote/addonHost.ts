@@ -9,6 +9,7 @@ import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPic
 import { AddonListPicker } from '@shared/components/AddonLayout/AddonListPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
 import { AddonPanelTabHeader } from '@shared/components/AddonLayout/AddonPanelTabHeader'
+import { AddonTabbedPanel } from '@shared/components/AddonLayout/AddonTabbedPanel'
 import { PanelAddonTab } from '@shared/components/PanelTabs'
 import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
 import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
@@ -70,6 +71,7 @@ export const provideAddonHost = () =>
       MoreMenu: AddonMoreMenu,
       PanelTabHeader: AddonPanelTabHeader,
       ContributionTab: PanelAddonTab,
+      TabbedPanel: AddonTabbedPanel,
       EntityTable: LazyEntityTable,
     },
   })
