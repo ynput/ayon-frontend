@@ -23,6 +23,10 @@ const VideoPlayerControls = ({
   setLoop,
   muted,
   setMuted,
+
+  /* save the current frame as an image */
+  onSaveFrame,
+  isSavingFrame,
 }) => {
   const dispatch = useDispatch()
   const fullscreen = useSelector((state) => state.viewer.fullscreen)
@@ -219,6 +223,14 @@ const VideoPlayerControls = ({
         icon="grid_guides"
         data-tooltip="Show/hide grid overlay"
       />
+      {onSaveFrame && (
+        <Button
+          onClick={onSaveFrame}
+          icon={isSavingFrame ? 'hourglass_empty' : 'photo_camera'}
+          disabled={isSavingFrame}
+          data-tooltip="Save frame as image (full resolution)"
+        />
+      )}
       <Button
         onClick={handleFullscreen}
         icon={fullscreen ? 'fullscreen_exit' : 'fullscreen'}

@@ -16,6 +16,8 @@ import useVideoSourceTransition from './hooks/useVideoSourceTransition'
 import useVideoDimensions from './hooks/useVideoDimensions'
 
 import './utils/videoFrameCallbackPolyfill'
+import { downloadFrame, getFrameFileName, getStillUrl } from './utils/saveFrame'
+import { toast } from 'react-toastify'
 
 const VideoPlayerContainer = styled.div`
   position: absolute;
@@ -68,7 +70,7 @@ const AnnotationsContainer = styled.div`
   inset: 0;
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId, fileName }) => {
   const {
     createToolbar,
     AnnotationsEditorProvider,
@@ -231,6 +233,25 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
     setIsPlaying(false)
   }
 
+  // Save the frame under the playhead at the video's full resolution (the server extracts it)
+  const [isSavingFrame, setIsSavingFrame] = useState(false)
+  const handleSaveFrame = async () => {
+    const video = videoRef.current
+    if (!video || !src || isSavingFrame) return
+    // pausing snaps the video to a whole frame, so the saved frame is the one left on screen
+    if (!video.paused) video.pause()
+    const frame = Math.round(video.currentTime * frameRate)
+    setIsSavingFrame(true)
+    try {
+      await downloadFrame(getStillUrl(src, frame, frameRate), getFrameFileName(fileName, frame))
+    } catch (error) {
+      console.error('VideoPlayer: Failed to save frame', error)
+      toast.error('Unable to save frame')
+    } finally {
+      setIsSavingFrame(false)
+    }
+  }
+
   const handlePlayPause = () => {
     if (videoRef.current.paused) {
       videoRef.current.play()
@@ -325,6 +346,8 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           currentFrame={currentFrame}
           getCurrentFrame={() => Math.round((videoRef.current?.currentTime ?? 0) * frameRate)}
           setMuted={handleMuteToggle}
+          onSaveFrame={loadError ? undefined : handleSaveFrame}
+          isSavingFrame={isSavingFrame}
           {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
         />
       </div>
