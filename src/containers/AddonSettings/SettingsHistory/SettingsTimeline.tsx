@@ -10,20 +10,29 @@ import {
 } from 'react'
 import { createPortal } from 'react-dom'
 import clsx from 'clsx'
-import { format, formatDistanceToNowStrict } from 'date-fns'
+import { format } from 'date-fns'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useLocalStorage } from '@shared/hooks'
 import { useContextMenu } from '@shared/containers/ContextMenu'
-import { clampScale, getTicks } from '@pages/EventsPage/utils/timeScale'
 import type { SettingsChange } from '@queries/settingsHistory/getSettingsHistory'
-import { COMPARE_COLOR, lastIndexAtOrBefore } from './settingsHistoryHelpers'
+import { beforeSave, DATE_FORMAT, lastIndexAtOrBefore } from './settingsHistoryHelpers'
 import type { HistoryLane } from './useSettingsHistory'
 import { SettingsChangeSummary } from './SettingsChangeSummary'
 import { SaveAvatar, SettingsChangeList } from './SettingsChangeList'
+import { getTimeAxis } from './timeAxis'
+import { HoveredSaves, useHoveredSaves } from './hoveredSaves'
 import * as Styled from './SettingsTimeline.styled'
 import { AVATAR, AXIS_HEIGHT, GUTTER } from './SettingsTimeline.styled'
 
 const DAY = 86_400_000
+/** from about a minute to a couple of years across the timeline */
+const MIN_MS_PER_PX = 1000
+const MAX_MS_PER_PX = 2 * DAY
+const clampScale = (msPerPx: number) => Math.min(MAX_MS_PER_PX, Math.max(MIN_MS_PER_PX, msPerPx))
+/** whether an axis label fits a width, roughly, the labels are short */
+const fits = (text: string, px: number) => text.length * 7 <= px
+/** width of the compared time on the axis */
+const COMPARE_FLAG = 124
 const PRESETS = [
   { label: '1w', span: 7 * DAY },
   { label: '1m', span: 30 * DAY },
@@ -101,12 +110,6 @@ const buildSegments = (lane: HistoryLane, now: number): Segment[] => {
   return segments
 }
 
-/** The save at `index` is the last one of the version shown: its settings are the current ones */
-const isCurrentState = (lane: HistoryLane, index: number) =>
-  index >= 0 &&
-  index === lane.changes.length - 1 &&
-  lane.changes[index].addonVersion === lane.currentVersion
-
 const fitView = (lanes: HistoryLane[], now: number): View => {
   const first = Math.min(...lanes.map((lane) => lane.changes[0]?.createdAt ?? now))
   const span = Math.max(now - first, 7 * DAY)
@@ -119,6 +122,7 @@ type Props = {
   compareAt: number | null
   onCompareAtChange: (time: number | null) => void
   isLoading?: boolean
+  hoveredSaves: HoveredSaves
 }
 
 export const SettingsTimeline: FC<Props> = ({
@@ -127,6 +131,7 @@ export const SettingsTimeline: FC<Props> = ({
   compareAt,
   onCompareAtChange,
   isLoading,
+  hoveredSaves,
 }) => {
   const [collapsed, setCollapsed] = useLocalStorage('settings-history-collapsed', false)
   const bodyRef = useRef<HTMLDivElement>(null)
@@ -141,14 +146,6 @@ export const SettingsTimeline: FC<Props> = ({
     () => lanes.flatMap((lane) => lane.changes).sort((a, b) => a.createdAt - b.createdAt),
     [lanes],
   )
-  const latest = allChanges[allChanges.length - 1]
-  // comparing with the latest save shows nothing when every addon's last save is of the version
-  // shown, the arrow keys then stop one save earlier
-  const latestIsCurrent = lanes.every(
-    (lane) => !lane.changes.length || isCurrentState(lane, lane.changes.length - 1),
-  )
-  const lastStep = allChanges.length - (latestIsCurrent ? 2 : 1)
-
   // --- measure ---
   useLayoutEffect(() => {
     const el = bodyRef.current
@@ -334,7 +331,7 @@ export const SettingsTimeline: FC<Props> = ({
     bodyRef.current?.focus({ preventScroll: true })
     if (mark.changes.length === 1) {
       setPopover((open) => (open?.pinned ? null : open))
-      onCompareAtChange(mark.changes[0].createdAt)
+      onCompareAtChange(beforeSave(mark.changes[0]))
       return
     }
     if (popover?.pinned && popover.mark.key === mark.key) setPopover(null)
@@ -343,7 +340,7 @@ export const SettingsTimeline: FC<Props> = ({
 
   const pickChange = (change: SettingsChange) => {
     setPopover(null)
-    onCompareAtChange(change.createdAt)
+    onCompareAtChange(beforeSave(change))
     bodyRef.current?.focus({ preventScroll: true })
   }
 
@@ -357,6 +354,13 @@ export const SettingsTimeline: FC<Props> = ({
     })
   }
 
+  // a save picked in the side panel can be out of view
+  const keepVisibleRef = useRef(keepVisible)
+  keepVisibleRef.current = keepVisible
+  useEffect(() => {
+    if (compareAt !== null) keepVisibleRef.current(compareAt)
+  }, [compareAt])
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     switch (e.key) {
       case 'ArrowLeft':
@@ -367,21 +371,25 @@ export const SettingsTimeline: FC<Props> = ({
           panBy((e.key === 'ArrowLeft' ? -1 : 1) * plotWidth * 0.25)
           return
         }
-        let index = lastStep
-        if (compareAt !== null) {
-          const at = lastIndexAtOrBefore(allChanges, compareAt)
-          const onChange = allChanges[at]?.createdAt === compareAt
-          index = e.key === 'ArrowLeft' ? (onChange ? at - 1 : at) : at + 1
-        } else if (e.key === 'ArrowRight') {
-          return
+        // step to the save before or after the compared time, the latest one when not comparing
+        let index: number
+        if (compareAt === null) {
+          if (e.key === 'ArrowRight') return
+          index = allChanges.length - 1
+        } else {
+          const next = lastIndexAtOrBefore(allChanges, compareAt) + 1
+          const atSave = next < allChanges.length && beforeSave(allChanges[next]) === compareAt
+          index = e.key === 'ArrowLeft' ? next - 1 : atSave ? next + 1 : next
+          // saves of the same moment compare the same
+          while (index < allChanges.length && beforeSave(allChanges[index]) === compareAt) index++
         }
-        // stepping past the last save that differs from now: stop comparing
-        if (index > lastStep) {
+        if (index < 0) return
+        // past the latest save: stop comparing
+        if (index >= allChanges.length) {
           onCompareAtChange(null)
           return
         }
-        // before the first save: the settings it started from
-        const time = index < 0 ? allChanges[0].createdAt - 1000 : allChanges[index].createdAt
+        const time = beforeSave(allChanges[index])
         onCompareAtChange(time)
         keepVisible(time)
         return
@@ -415,10 +423,12 @@ export const SettingsTimeline: FC<Props> = ({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [compareAt, onCompareAtChange, isContextOpen])
 
-  const ticks = useMemo(
-    () => getTicks(current.start, current.end, msPerPx),
+  const axis = useMemo(
+    () => getTimeAxis(current.start, current.end, msPerPx),
     [current.start, current.end, msPerPx],
   )
+  const hoveredIds = useHoveredSaves(hoveredSaves)
+  const hovered = useMemo(() => new Set(hoveredIds ?? []), [hoveredIds])
   const marks = useMemo(
     () => lanes.map((lane) => buildMarks(lane.changes, current.start, current.end, msPerPx)),
     [lanes, current.start, current.end, msPerPx],
@@ -427,9 +437,10 @@ export const SettingsTimeline: FC<Props> = ({
 
   const compareX = compareAt !== null ? timeToX(compareAt) : null
   const nowX = timeToX(now)
-  const changesSince =
-    compareAt === null ? 0 : allChanges.length - 1 - lastIndexAtOrBefore(allChanges, compareAt)
-  const style = { '--compare-color': COMPARE_COLOR } as React.CSSProperties
+  const cellStyle = (cell: { start: number; end: number }) => ({
+    left: timeToX(cell.start),
+    width: (cell.end - cell.start) / msPerPx,
+  })
 
   const header = (
     <Styled.Header>
@@ -444,12 +455,9 @@ export const SettingsTimeline: FC<Props> = ({
         <Icon icon="history" />
         History
       </span>
-      {compareAt !== null ? (
-        <Styled.CompareChip>
-          <span className="label">
-            Comparing with <strong>{format(compareAt, 'EEE d MMM yyyy, HH:mm')}</strong>
-            {` · ${changesSince} save${changesSince === 1 ? '' : 's'} since`}
-          </span>
+      {compareAt !== null && (
+        <Styled.CompareChip aria-label={`Comparing with ${format(compareAt, DATE_FORMAT)}`}>
+          <span className="label">{format(compareAt, DATE_FORMAT)}</span>
           <Button
             variant="text"
             icon="close"
@@ -458,16 +466,6 @@ export const SettingsTimeline: FC<Props> = ({
             aria-label="Stop comparing"
           />
         </Styled.CompareChip>
-      ) : (
-        <span className="summary">
-          {isLoading
-            ? 'Loading…'
-            : latest
-            ? `Last saved ${formatDistanceToNowStrict(latest.createdAt, { addSuffix: true })}${
-                latest.user ? ` by ${latest.user}` : ''
-              }`
-            : 'No saved changes'}
-        </span>
       )}
       <span className="spacer" />
       {!collapsed && (
@@ -492,7 +490,7 @@ export const SettingsTimeline: FC<Props> = ({
   )
 
   return (
-    <Styled.Wrapper style={{ ...style, containerType: 'inline-size' }}>
+    <Styled.Wrapper style={{ containerType: 'inline-size' }}>
       {header}
       {!collapsed && (
         <Styled.Body
@@ -512,13 +510,81 @@ export const SettingsTimeline: FC<Props> = ({
           }}
           onPointerLeave={scheduleClose}
         >
-          {/* grid and compared range, behind the marks */}
-          <Styled.Overlay style={{ left: GUTTER, right: 0 }} aria-hidden>
-            {ticks.map((tick) => (
+          <Styled.AxisRows aria-hidden>
+            <Styled.GutterCell />
+            <Styled.Plot>
+              {axis.primary.map((cell) => {
+                const { left, width } = cellStyle(cell)
+                // the label stays at the start of what shows of its cell, shorter when it does not fit
+                const room = Math.min(left + width, plotWidth) - Math.max(left, 0) - 16
+                const label = [cell.label, cell.short].find((text) => text && fits(text, room))
+                return (
+                  <Styled.AxisCell
+                    key={cell.start}
+                    className="top-row"
+                    style={{ left, width, paddingLeft: Math.max(8, 8 - left) }}
+                  >
+                    {label}
+                  </Styled.AxisCell>
+                )
+              })}
+              {axis.secondary.map((cell) => {
+                const { left, width } = cellStyle(cell)
+                const visibleLeft = Math.max(left, 0)
+                const room = Math.min(left + width, plotWidth) - visibleLeft - 8
+                // times label their line, other cells are centred in what shows of them
+                const fitting = axis.clock
+                  ? left >= 0 && fits(cell.label, width - 8)
+                  : fits(cell.label, room)
+                // the compared time covers the labels around it
+                const labelWidth = cell.label.length * 7
+                const labelCenter = axis.clock
+                  ? left + 4 + labelWidth / 2
+                  : visibleLeft + 4 + room / 2
+                const covered =
+                  compareX !== null &&
+                  Math.abs(labelCenter - compareX) < (labelWidth + COMPARE_FLAG) / 2
+                const show = fitting && !covered
+                return (
+                  <Styled.AxisCell
+                    key={cell.start}
+                    className={clsx({ weekend: cell.weekend, clock: axis.clock })}
+                    style={{
+                      left,
+                      width,
+                      ...(!axis.clock && {
+                        paddingLeft: Math.max(0, -left),
+                        paddingRight: Math.max(0, left + width - plotWidth),
+                      }),
+                    }}
+                  >
+                    {show && cell.label}
+                  </Styled.AxisCell>
+                )
+              })}
+              {compareX !== null && compareX >= 0 && compareX <= plotWidth && (
+                <Styled.AxisFlag className="compare" style={{ left: compareX }}>
+                  {format(compareAt!, DATE_FORMAT)}
+                </Styled.AxisFlag>
+              )}
+            </Styled.Plot>
+          </Styled.AxisRows>
+
+          {/* calendar grid, compared range and lines, behind the marks */}
+          <Styled.Overlay style={{ left: GUTTER, right: 0, top: AXIS_HEIGHT }} aria-hidden>
+            {axis.secondary
+              .filter((cell) => cell.weekend)
+              .map((cell) => (
+                <Styled.Weekend key={cell.start} style={cellStyle(cell)} />
+              ))}
+            {axis.secondary.map((cell) => (
+              <Styled.GridLine key={cell.start} style={{ left: timeToX(cell.start) }} />
+            ))}
+            {axis.primary.map((cell) => (
               <Styled.GridLine
-                key={tick.time}
-                className={clsx({ major: tick.major })}
-                style={{ left: timeToX(tick.time) }}
+                key={`primary-${cell.start}`}
+                className="major"
+                style={{ left: timeToX(cell.start) }}
               />
             ))}
             {compareX !== null && (
@@ -526,6 +592,8 @@ export const SettingsTimeline: FC<Props> = ({
                 style={{ left: Math.max(compareX, 0), width: Math.max(0, nowX - compareX) }}
               />
             )}
+            {nowX >= 0 && nowX <= plotWidth && <Styled.NowLine style={{ left: nowX }} />}
+            {compareX !== null && <Styled.CompareLine style={{ left: compareX - 1 }} />}
           </Styled.Overlay>
 
           {lanes.map((lane, laneIndex) => (
@@ -580,13 +648,20 @@ export const SettingsTimeline: FC<Props> = ({
                       className={clsx({
                         cluster: isCluster,
                         before: compareAt !== null && last.createdAt < compareAt,
-                        selected: mark.changes.some((c) => c.createdAt === compareAt),
+                        selected: mark.changes.some((c) => beforeSave(c) === compareAt),
                         open: popover?.mark.key === mark.key,
+                        linked: mark.changes.some((change) => hovered.has(change.id)),
                       })}
                       style={{ left: mark.left, width: mark.width }}
                       onClick={(e) => handleMarkClick(lane, mark, e)}
-                      onMouseEnter={(e) => openPopover(lane, mark, e)}
-                      onMouseLeave={scheduleClose}
+                      onMouseEnter={(e) => {
+                        openPopover(lane, mark, e)
+                        hoveredSaves.set(mark.changes.map((change) => change.id))
+                      }}
+                      onMouseLeave={() => {
+                        scheduleClose()
+                        hoveredSaves.set(null)
+                      }}
                     >
                       {mark.users.slice(0, MAX_STACK).map((user) => (
                         <SaveAvatar
@@ -603,39 +678,6 @@ export const SettingsTimeline: FC<Props> = ({
               </Styled.Plot>
             </Styled.Lane>
           ))}
-
-          <Styled.Axis aria-hidden>
-            <Styled.GutterCell />
-            <Styled.Plot>
-              {ticks
-                .filter((tick) => {
-                  const x = timeToX(tick.time)
-                  return x > 28 && x < plotWidth - 28
-                })
-                .map((tick) => (
-                  <Styled.TickLabel
-                    key={tick.time}
-                    className={clsx({ major: tick.major })}
-                    style={{ left: timeToX(tick.time) }}
-                  >
-                    {tick.label}
-                  </Styled.TickLabel>
-                ))}
-              {compareX !== null && compareX >= 0 && compareX <= plotWidth && (
-                <Styled.AxisFlag className="compare" style={{ left: compareX }}>
-                  {format(compareAt!, 'd MMM, HH:mm')}
-                </Styled.AxisFlag>
-              )}
-            </Styled.Plot>
-          </Styled.Axis>
-
-          {/* lines above the marks */}
-          <Styled.Overlay style={{ left: GUTTER, right: 0, overflow: 'hidden' }} aria-hidden>
-            {nowX >= 0 && nowX <= plotWidth && (
-              <Styled.NowLine style={{ left: nowX }} title="Now" />
-            )}
-            {compareX !== null && <Styled.CompareLine style={{ left: compareX - 1 }} />}
-          </Styled.Overlay>
 
           {!isDragging && <HoverGuide bodyRef={bodyRef} start={current.start} msPerPx={msPerPx} />}
 
@@ -700,10 +742,8 @@ const HoverGuide: FC<{ bodyRef: RefObject<HTMLDivElement>; start: number; msPerP
   if (x === null || time === null || time > Date.now()) return null
   return (
     <Styled.Overlay style={{ left: GUTTER, right: 0 }} aria-hidden>
-      <Styled.HoverLine style={{ left: x, bottom: AXIS_HEIGHT }} />
-      <Styled.AxisFlag style={{ left: x, top: 'auto', bottom: 3 }}>
-        {format(time, 'd MMM yyyy, HH:mm')}
-      </Styled.AxisFlag>
+      <Styled.HoverLine style={{ left: x, top: AXIS_HEIGHT }} />
+      <Styled.AxisFlag style={{ left: x }}>{format(time, DATE_FORMAT)}</Styled.AxisFlag>
     </Styled.Overlay>
   )
 }
@@ -718,7 +758,6 @@ const ChangeSummary: FC<{ lane: HistoryLane; change: SettingsChange; schema?: an
     <SettingsChangeSummary
       change={change}
       previous={lane.changes[index - 1]}
-      isLatest={isCurrentState(lane, index)}
       lane={lane}
       schema={schema}
     />

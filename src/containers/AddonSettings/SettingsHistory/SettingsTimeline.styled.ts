@@ -1,10 +1,11 @@
 import styled from 'styled-components'
 import { theme } from '@ynput/ayon-react-components'
-import { COMPARE_COLOR } from './settingsHistoryHelpers'
 
 export const GUTTER = 148
 export const LANE_HEIGHT = 38
-export const AXIS_HEIGHT = 22
+/** the calendar above the lanes: a row of larger units over a row of cells */
+export const AXIS_ROW = 20
+export const AXIS_HEIGHT = 2 * AXIS_ROW
 /** vertical centre of the markers inside a lane, version labels sit above it */
 export const LANE_MID = 24
 /** size of the avatar of who saved, the marker of a save */
@@ -42,13 +43,6 @@ export const Header = styled.div`
     .icon {
       font-size: 18px;
     }
-  }
-
-  .summary {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    min-width: 0;
   }
 
   .spacer {
@@ -99,18 +93,16 @@ export const CompareChip = styled.div`
   height: 26px;
   padding: 0 2px 0 10px;
   border-radius: 13px;
-  background-color: color-mix(in srgb, var(--compare-color) 18%, transparent);
-  color: var(--md-sys-color-on-surface);
+  background-color: var(--color-hl-compare-container);
+  color: var(--color-hl-compare-text);
   white-space: nowrap;
   ${theme.labelMedium}
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 
   .label {
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  strong {
-    color: var(--compare-color);
   }
 
   button {
@@ -216,10 +208,13 @@ export const VersionLabel = styled.span`
   top: 1px;
   padding-left: 4px;
   border-left: 1px solid var(--lane-color);
+  padding-right: 4px;
   white-space: nowrap;
   font-size: 10px;
   line-height: 13px;
   color: var(--md-sys-color-on-surface-variant);
+  /* the grid and the compared time run behind it */
+  background-color: var(--md-sys-color-surface-container-low);
   pointer-events: none;
 
   &.current {
@@ -252,7 +247,8 @@ export const Marker = styled.div`
   }
 
   &:hover,
-  &.open {
+  &.open,
+  &.linked {
     transform: translateY(-50%) scale(1.15);
     z-index: 2;
   }
@@ -270,7 +266,8 @@ export const Marker = styled.div`
     box-shadow: inset 0 0 0 1.5px var(--lane-color);
 
     &:hover,
-    &.open {
+    &.open,
+    &.linked {
       transform: translateY(-50%) scale(1.06);
     }
 
@@ -311,9 +308,58 @@ export const Marker = styled.div`
   }
 `
 
-export const Axis = styled(Row)`
+export const AxisRows = styled(Row)`
   height: ${AXIS_HEIGHT}px;
-  border-top: 1px solid var(--md-sys-color-outline-variant);
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+
+  > div:last-child {
+    background: linear-gradient(
+      var(--md-sys-color-surface-container) 0 ${AXIS_ROW}px,
+      transparent ${AXIS_ROW}px
+    );
+  }
+`
+
+/** A span of the calendar, the larger units on the top row */
+export const AxisCell = styled.div`
+  position: absolute;
+  top: ${AXIS_ROW}px;
+  height: ${AXIS_ROW}px;
+  box-sizing: border-box;
+  overflow: hidden;
+  border-left: 1px solid color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
+  text-align: center;
+  white-space: nowrap;
+  ${theme.labelSmall}
+  line-height: ${AXIS_ROW}px;
+  font-variant-numeric: tabular-nums;
+  color: var(--md-sys-color-on-surface-variant);
+
+  &.weekend {
+    background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent);
+  }
+
+  &.clock {
+    padding-left: 4px;
+    text-align: left;
+  }
+
+  &.top-row {
+    top: 0;
+    border-left-color: var(--md-sys-color-outline-variant);
+    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+    text-align: left;
+    font-weight: 600;
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
+export const Weekend = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background-color: color-mix(in srgb, var(--md-sys-color-on-surface) 4%, transparent);
+  pointer-events: none;
 `
 
 /** Time before the oldest loaded change, when older changes exist but were not loaded */
@@ -329,20 +375,6 @@ export const Unloaded = styled.div`
   );
 `
 
-export const TickLabel = styled.span`
-  position: absolute;
-  top: 4px;
-  transform: translateX(-50%);
-  white-space: nowrap;
-  ${theme.labelSmall}
-  color: var(--md-sys-color-on-surface-variant);
-  font-variant-numeric: tabular-nums;
-
-  &.major {
-    color: var(--md-sys-color-on-surface);
-  }
-`
-
 export const Overlay = styled.div`
   position: absolute;
   top: 0;
@@ -352,7 +384,7 @@ export const Overlay = styled.div`
 
 export const GridLine = styled(Overlay)`
   width: 1px;
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: color-mix(in srgb, var(--md-sys-color-outline-variant) 50%, transparent);
 
   &.major {
     background-color: var(--md-sys-color-outline-variant);
@@ -366,13 +398,12 @@ export const NowLine = styled(Overlay)`
 
 /** Everything saved since the compared time */
 export const SinceRange = styled(Overlay)`
-  background-color: color-mix(in srgb, var(--compare-color) 9%, transparent);
+  background-color: color-mix(in srgb, var(--color-hl-compare) 8%, transparent);
 `
 
 export const CompareLine = styled(Overlay)`
   width: 0;
-  border-left: 2px solid var(--compare-color);
-  z-index: 2;
+  border-left: 2px solid var(--color-hl-compare);
 `
 
 export const HoverLine = styled(Overlay)`
@@ -381,10 +412,10 @@ export const HoverLine = styled(Overlay)`
   opacity: 0.35;
 `
 
-/** Time label in the axis row, covers the tick labels below it */
+/** A time on the row of cells, covers the labels below it */
 export const AxisFlag = styled.span`
   position: absolute;
-  top: 2px;
+  top: ${AXIS_ROW + 2}px;
   transform: translateX(-50%);
   padding: 1px 6px;
   border-radius: 4px;
@@ -394,11 +425,13 @@ export const AxisFlag = styled.span`
   font-variant-numeric: tabular-nums;
   background-color: var(--md-sys-color-surface-container-highest);
   color: var(--md-sys-color-on-surface);
+  /* hides the labels around it */
+  box-shadow: 0 0 0 3px var(--md-sys-color-surface-container-low);
   pointer-events: none;
 
   &.compare {
-    background-color: var(--compare-color);
-    color: #2a2100;
+    background-color: var(--color-hl-compare);
+    color: var(--color-on-hl-compare);
     font-weight: 600;
   }
 `
@@ -411,7 +444,7 @@ export const Tooltip = styled.div`
   padding: 10px 12px;
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-highest);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--md-sys-elevation-overlay);
   pointer-events: none;
   display: flex;
   flex-direction: column;
@@ -474,7 +507,7 @@ export const Tooltip = styled.div`
       outline-offset: -2px;
     }
     &.selected {
-      box-shadow: inset 3px 0 0 ${COMPARE_COLOR};
+      box-shadow: inset 3px 0 0 var(--color-hl-compare);
       background-color: var(--md-sys-color-surface-container-high);
     }
 

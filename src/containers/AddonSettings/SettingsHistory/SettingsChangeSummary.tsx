@@ -1,7 +1,7 @@
 import { FC } from 'react'
 import { format, formatDistanceToNowStrict } from 'date-fns'
 import type { SettingsChange } from '@queries/settingsHistory/getSettingsHistory'
-import { getPathTitles } from './settingsHistoryHelpers'
+import { DATE_FORMAT, getPathTitles } from './settingsHistoryHelpers'
 import { useChangeDiffs } from './useChangeDiffs'
 import type { HistoryLane } from './useSettingsHistory'
 import { DiffPath, DiffValues } from './SettingsDiff'
@@ -13,14 +13,12 @@ type Props = {
   change: SettingsChange
   /** change saved just before this one, for this addon */
   previous?: SettingsChange
-  /** nothing was saved after it, comparing would show no difference */
-  isLatest?: boolean
   lane: HistoryLane
   schema?: any
 }
 
 /** Tooltip content of one change: who, when, which version and what changed */
-export const SettingsChangeSummary: FC<Props> = ({ change, previous, isLatest, lane, schema }) => {
+export const SettingsChangeSummary: FC<Props> = ({ change, previous, lane, schema }) => {
   const { diffs, startsVersion, isError } = useChangeDiffs(change, previous)
   const isOtherVersion = change.addonVersion !== lane.currentVersion
 
@@ -31,7 +29,7 @@ export const SettingsChangeSummary: FC<Props> = ({ change, previous, isLatest, l
         {change.user || 'Unknown user'}
       </span>
       <span className="meta">
-        {format(change.createdAt, 'EEE d MMM yyyy, HH:mm')} ·{' '}
+        {format(change.createdAt, DATE_FORMAT)} ·{' '}
         {formatDistanceToNowStrict(change.createdAt, { addSuffix: true })}
       </span>
       <span className="meta version">
@@ -65,9 +63,7 @@ export const SettingsChangeSummary: FC<Props> = ({ change, previous, isLatest, l
           </>
         )}
       </div>
-      <span className="hint">
-        {isLatest ? 'Latest save: these are the current settings' : 'Click to compare with now'}
-      </span>
+      <span className="hint">Click to compare with now</span>
     </>
   )
 }

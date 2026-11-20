@@ -1,6 +1,5 @@
 import styled from 'styled-components'
 import { theme } from '@ynput/ayon-react-components'
-import { COMPARE_COLOR } from './settingsHistoryHelpers'
 
 export const Panel = styled.div`
   display: flex;
@@ -10,7 +9,6 @@ export const Panel = styled.div`
   overflow: hidden;
   border-radius: var(--border-radius-m);
   background-color: var(--md-sys-color-surface-container-low);
-  box-shadow: inset 3px 0 0 ${COMPARE_COLOR};
 `
 
 export const Header = styled.div`
@@ -23,7 +21,7 @@ export const Header = styled.div`
 
   > .icon {
     margin-right: 4px;
-    color: ${COMPARE_COLOR};
+    color: var(--color-hl-compare-text);
   }
 
   .label {
@@ -133,7 +131,7 @@ export const Row = styled.button`
     }
 
     .before {
-      color: ${COMPARE_COLOR};
+      color: var(--color-hl-compare-text);
     }
 
     .icon {

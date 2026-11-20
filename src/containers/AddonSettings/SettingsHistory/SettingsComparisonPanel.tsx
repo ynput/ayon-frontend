@@ -2,7 +2,7 @@ import { FC, MouseEvent } from 'react'
 import { format } from 'date-fns'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { getFieldId, getPathTitles, groupByParent } from './settingsHistoryHelpers'
+import { DATE_FORMAT, getFieldId, getPathTitles, groupByParent } from './settingsHistoryHelpers'
 import type { AddonComparison, SettingsComparison } from './useSettingsHistory'
 import type { useComparisonActions } from './useComparisonActions'
 import { DiffValues } from './SettingsDiff'
@@ -38,7 +38,7 @@ export const SettingsComparisonPanel: FC<Props> = ({
   const openMoreMenu = (e: MouseEvent) =>
     openMenu(e, [
       {
-        label: `Revert all to ${format(comparison.at, 'd MMM, HH:mm')}`,
+        label: `Revert all to ${format(comparison.at, DATE_FORMAT)}`,
         icon: 'history',
         command: actions.revertAll,
         disabled: isLoading || !total,
@@ -50,7 +50,7 @@ export const SettingsComparisonPanel: FC<Props> = ({
       <Styled.Header>
         <Icon icon="history" />
         <span className="label">
-          Changed since {format(comparison.at, 'EEE d MMM, HH:mm')}
+          Since {format(comparison.at, DATE_FORMAT)}
           <small>
             {isLoading
               ? 'Loading…'

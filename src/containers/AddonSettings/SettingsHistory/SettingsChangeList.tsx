@@ -5,6 +5,7 @@ import { UserImage as InitialsImage } from '@ynput/ayon-react-components'
 import { UserImage } from '@shared/components'
 import type { SettingsChange } from '@queries/settingsHistory/getSettingsHistory'
 import type { HistoryLane } from './useSettingsHistory'
+import { beforeSave } from './settingsHistoryHelpers'
 import { useChangeDiffs } from './useChangeDiffs'
 
 /** Avatar of who saved, the events of some services have no user */
@@ -53,7 +54,7 @@ export const SettingsChangeList: FC<Props> = ({ lane, changes, compareAt, onPick
       {[...changes].reverse().map((change) => (
         <li key={change.id}>
           <button
-            className={clsx('change', { selected: change.createdAt === compareAt })}
+            className={clsx('change', { selected: beforeSave(change) === compareAt })}
             onClick={() => onPick(change)}
           >
             <SaveAvatar user={change.user} size={20} />

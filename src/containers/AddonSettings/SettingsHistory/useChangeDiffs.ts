@@ -7,14 +7,14 @@ import { diffOverrides } from './settingsHistoryHelpers'
 
 /**
  * Settings one save changed. The first save of a version starts from nothing, so it is
- * compared to the save before it (`previous`, the version before).
+ * compared to the save before it (`previous`, the version before). `skip` waits with loading.
  */
-export const useChangeDiffs = (change: SettingsChange, previous?: SettingsChange) => {
+export const useChangeDiffs = (change: SettingsChange, previous?: SettingsChange, skip = false) => {
   const startsVersion = !!previous && previous.addonVersion !== change.addonVersion
-  const { data: payload, isError } = useGetSettingsChangePayloadQuery({ id: change.id })
+  const { data: payload, isError } = useGetSettingsChangePayloadQuery({ id: change.id }, { skip })
   const { data: previousPayload } = useGetSettingsChangePayloadQuery(
     { id: previous?.id ?? '' },
-    { skip: !startsVersion },
+    { skip: skip || !startsVersion },
   )
 
   const diffs = useMemo(() => {

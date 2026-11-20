@@ -1,4 +1,5 @@
 import { cloneDeep, isEqual } from 'lodash'
+import { format, isThisYear, isToday, isYesterday } from 'date-fns'
 import type {
   SettingsChange,
   SettingsChangePayload,
@@ -47,6 +48,9 @@ export const diffOverrides = (
   }
   return result
 }
+
+/** Comparing with a save compares from just before it, so the save is part of what changed */
+export const beforeSave = (change: SettingsChange) => change.createdAt - 1
 
 /** Index of the last change at or before `time` in an ascending list, -1 when all are newer */
 export const lastIndexAtOrBefore = (changes: SettingsChange[], time: number) => {
@@ -235,6 +239,12 @@ export const formatValue = (value: unknown, maxLength = 48): string => {
   return String(value)
 }
 
+/** How a setting changed, in one short line: `9 → 8` */
+export const describeChange = (diff: OverrideDiff, maxLength = 14) =>
+  diff.sameValue
+    ? 'override removed'
+    : `${formatValue(diff.before, maxLength)} → ${formatValue(diff.after, maxLength)}`
+
 /** What happened to a list, when showing both values does not tell */
 export const describeListChange = (before: unknown, after: unknown): string | null => {
   if (!Array.isArray(before) || !Array.isArray(after)) return null
@@ -262,8 +272,12 @@ export const LANE_COLORS = [
   '#a3a9b8',
 ]
 
-/**
- * Marks settings that differ from the compared point in time. Not used by the variants
- * (production, staging, dev) or the override levels (studio, project, site, unsaved).
- */
-export const COMPARE_COLOR = '#ffd166'
+/** Moments in the settings history, the same everywhere */
+export const DATE_FORMAT = 'd MMM yyyy, HH:mm'
+
+/** Label of a day in a list of saves, like the inbox */
+export const getDayLabel = (time: number) => {
+  if (isToday(time)) return 'Today'
+  if (isYesterday(time)) return 'Yesterday'
+  return format(time, isThisYear(time) ? 'd MMMM' : 'd MMMM yyyy')
+}

@@ -5,6 +5,7 @@ import { format } from 'date-fns'
 import { isEqual } from 'lodash'
 import { addonSettingsApi } from '@queries/addonSettings'
 import {
+  DATE_FORMAT,
   getRevertEntries,
   OverrideDiff,
   stageEntries,
@@ -133,7 +134,7 @@ export const useComparisonActions = (props: Props) => {
         isStaged(addonName, diff.path)
           ? { label: 'Undo revert', icon: 'redo', command: () => undo(addonName, diff.path) }
           : {
-              label: `Revert to ${format(comparison.at, 'd MMM, HH:mm')}`,
+              label: `Revert to ${format(comparison.at, DATE_FORMAT)}`,
               icon: 'history',
               command: () => revert(addonName, [diff]).then(warnSkipped),
             },

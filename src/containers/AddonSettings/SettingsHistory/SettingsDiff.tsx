@@ -12,9 +12,33 @@ export const DiffPath: FC<{ titles: string[]; className?: string }> = ({ titles,
   </span>
 )
 
+type DiffValuesProps = {
+  diff: OverrideDiff
+  className?: string
+  /** lists only say what happened to them, where both values do not fit */
+  compact?: boolean
+}
+
 /** Old and new value of a setting, `default` when it was not overridden */
-export const DiffValues: FC<{ diff: OverrideDiff; className?: string }> = ({ diff, className }) => {
-  const note = diff.sameValue ? 'same value' : describeListChange(diff.before, diff.after)
+export const DiffValues: FC<DiffValuesProps> = ({ diff, className, compact }) => {
+  if (diff.sameValue) {
+    return (
+      <span
+        className={className ?? 'values'}
+        title={`Overridden with ${formatValue(diff.before)}, the same value as it inherits now`}
+      >
+        <span className="note">override removed</span>
+      </span>
+    )
+  }
+  const note = describeListChange(diff.before, diff.after)
+  if (compact && note) {
+    return (
+      <span className={className ?? 'values'}>
+        <span className="note">{note}</span>
+      </span>
+    )
+  }
   return (
     <span className={className ?? 'values'}>
       <span className="before">{formatValue(diff.before)}</span>

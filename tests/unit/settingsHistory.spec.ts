@@ -10,6 +10,7 @@ import {
   stageEntries,
   withSameValues,
 } from '../../src/containers/AddonSettings/SettingsHistory/settingsHistoryHelpers'
+import { getTimeAxis } from '../../src/containers/AddonSettings/SettingsHistory/timeAxis'
 
 const change = (id: string, createdAt: number, addonVersion: string): SettingsChange => ({
   id,
@@ -183,4 +184,34 @@ test('diffs are grouped by parent in the order they first appear', () => {
     [['p', 'sub'], 1],
     [[], 1],
   ])
+})
+
+test('axis cells stay on the calendar while the view pans', () => {
+  const day = 86_400_000
+  const msPerPx = day / 100
+  const start = new Date(2026, 10, 3, 15, 20).getTime()
+  const axis = getTimeAxis(start, start + 14 * day, msPerPx)
+  const panned = getTimeAxis(start + 1.3 * day, start + 15.3 * day, msPerPx)
+  const starts = new Set(axis.secondary.map((cell) => cell.start))
+  // every cell both views show starts at the same moment, a local midnight
+  const shared = panned.secondary.filter((cell) => starts.has(cell.start))
+  expect(shared.length).toBe(panned.secondary.length - 1)
+  for (const cell of axis.secondary) expect(new Date(cell.start).getHours()).toBe(0)
+  expect(axis.secondary[0].label).toBe('Tue 3')
+  expect(axis.secondary.find((cell) => cell.label === 'Sat 7')?.weekend).toBe(true)
+  expect(axis.primary.map((cell) => cell.label)).toEqual(['November 2026'])
+})
+
+test('weeks start on Monday, months and years take over when zoomed out', () => {
+  const day = 86_400_000
+  const start = new Date(2026, 10, 4).getTime()
+  const weeks = getTimeAxis(start, start + 60 * day, day / 6)
+  expect(weeks.secondary.every((cell) => new Date(cell.start).getDay() === 1)).toBe(true)
+  expect(weeks.primary[0].label).toBe('November 2026')
+  const months = getTimeAxis(start, start + 400 * day, day / 2)
+  expect(months.secondary[0].label).toBe('Nov')
+  expect(months.primary.map((cell) => cell.label)).toEqual(['2026', '2027'])
+  const years = getTimeAxis(start, start + 3000 * day, 2 * day)
+  expect(years.secondary[0].label).toBe('2026')
+  expect(years.primary).toEqual([])
 })

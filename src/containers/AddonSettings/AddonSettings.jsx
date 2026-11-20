@@ -57,6 +57,8 @@ import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
 import { SettingsTimeline } from './SettingsHistory/SettingsTimeline'
 import { SettingsComparisonPanel } from './SettingsHistory/SettingsComparisonPanel'
+import { SettingsHistoryFeed } from './SettingsHistory/SettingsHistoryFeed'
+import { createHoveredSaves } from './SettingsHistory/hoveredSaves'
 import { ComparisonHighlight } from './SettingsHistory/ComparisonHighlight.styled'
 import { useSettingsHistory } from './SettingsHistory/useSettingsHistory'
 import { useComparisonActions } from './SettingsHistory/useComparisonActions'
@@ -127,6 +129,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [selectedSites, setSelectedSites] = useState([])
   // epoch ms the settings are compared with, null when not comparing
   const [compareAt, setCompareAt] = useState(null)
+  const [hoveredSaves] = useState(createHoveredSaves)
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
@@ -711,6 +714,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //
 
   const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
+  const showFeed = showHistory && shownAddons.length > 0
 
   const addonListHeader = useMemo(() => {
     // site settings do not have variants
@@ -918,6 +922,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               compareAt={compareAt}
               onCompareAtChange={setCompareAt}
               isLoading={historyLoading}
+              hoveredSaves={hoveredSaves}
             />
           )}
           <Section style={{ position: 'relative' }}>
@@ -1032,6 +1037,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <SplitterPanel size={20} style={{ minWidth: 240 }}>
         <Section wrap>
           <Toolbar>{commitToolbar}</Toolbar>
+          {showFeed && (
+            <SettingsHistoryFeed
+              lanes={historyLanes}
+              schemas={addonSchemas}
+              isLoading={historyLoading}
+              hidden={!!comparison || canCommit}
+              compareAt={compareAt}
+              hoveredSaves={hoveredSaves}
+              onCompare={setCompareAt}
+            />
+          )}
           {comparison && (
             <SettingsComparisonPanel
               comparison={comparison}
@@ -1041,8 +1057,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               onClose={() => setCompareAt(null)}
             />
           )}
-          {/* while comparing, the unsaved changes only show when there are any */}
-          {(!comparison || canCommit) && (
+          {/* the history takes the place of the unsaved changes while there are none */}
+          {(canCommit || (!showFeed && !comparison)) && (
             <SettingsChangesTable
               changes={changedKeys}
               unpins={unpinnedKeys}
