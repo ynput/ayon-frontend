@@ -8,6 +8,7 @@ import { menuItemsAt } from '../../addon/src/menus'
 import { matchesShortcut, parseShortcut } from '../../addon/src/shortcuts'
 import { useSlot } from '../../addon/src/useSlot'
 import { SlotReactContext } from '../../addon/src/SlotContextInstance'
+import { listDetailsTab } from '../../addon/src/slotHelpers'
 
 const addon = { name: 'my-addon', version: '1.0.0', remote: 'my_addon' }
 const loader = () => Promise.resolve({ default: () => null })
@@ -243,6 +244,28 @@ test('list details tabs need a label, an icon and a component', () => {
   })
   expect(contributions.map((c) => c.key)).toEqual(['my-addon.time'])
   expect(skipped.map((s) => s.id)).toEqual(['noLabel', 'noIcon', 'noComponent'])
+})
+
+test('list details tabs for some list types need version 2, which the helper stamps', () => {
+  const fields = { label: 'Time', icon: 'schedule', component: loader }
+  const reviews = listDetailsTab({ ...fields, id: 'reviews', entityListTypes: ['review-session'] })
+  const all = listDetailsTab({ ...fields, id: 'all' })
+  expect(reviews).toMatchObject({ slot: 'listDetails.tab', slotVersion: 2 })
+  expect(all).not.toHaveProperty('slotVersion')
+
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      reviews,
+      all,
+      { ...reviews, id: 'newer', slotVersion: 3 },
+      { ...reviews, id: 'badTypes', entityListTypes: 'review-session' },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.reviews', 'my-addon.all'])
+  expect(skipped.map((s) => s.id)).toEqual(['newer', 'badTypes'])
+  expect(skipped.find((s) => s.id === 'badTypes')?.reason).toBe(
+    'entityListTypes must be a list of list types',
+  )
 })
 
 test("table shortcuts have one action and keys that parse and aren't the table's own", () => {

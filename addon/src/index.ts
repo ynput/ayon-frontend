@@ -161,6 +161,18 @@ export type { MoreMenuProps } from './MoreMenu'
 export { DetailsPanelTabHeader, PanelTabHeader } from './PanelTabHeader'
 export { ContributionTab } from './ContributionTab'
 export type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
+// AYON's panel with tabs: tools, its own tabs and a slot's (Review's session sidebar)
+export { TabbedPanel } from './TabbedPanel'
+export type {
+  PanelTab,
+  PanelTool,
+  PanelToolButtonProps,
+  PanelToolDivider,
+  PanelToolElement,
+  PanelToolItem,
+  TabbedPanelProps,
+  TabbedPanelSlot,
+} from './TabbedPanel'
 export type {
   DetailsPanelTabHeaderProps,
   PanelTabHeaderProps,
