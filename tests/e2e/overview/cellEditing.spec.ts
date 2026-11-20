@@ -325,12 +325,20 @@ test.describe('overview tag and date cells', () => {
     await input.fill('')
     await page.keyboard.press('Enter')
     await expect(input).toHaveAttribute('aria-invalid', 'true')
+    // ArrowDown goes into the calendar on the day typed, Enter picks it
     await input.fill('16/11/2026')
+    await page.keyboard.press('ArrowDown')
     await page.keyboard.press('Enter')
     await expect(overview.dateCalendar).toBeHidden()
     await expect(cell).toHaveText('16 Nov 2026')
+
+    await cell.dblclick()
+    await input.fill('18/11/2026')
+    await page.keyboard.press('Enter')
+    await expect(overview.dateCalendar).toBeHidden()
+    await expect(cell).toHaveText('18 Nov 2026')
     await expect
       .poll(async () => Date.parse((await api.getTask(projectName, tasks[0].id)).attrib.startDate))
-      .toBe(Date.parse('2026-11-16T00:00:00Z'))
+      .toBe(Date.parse('2026-11-18T00:00:00Z'))
   })
 })

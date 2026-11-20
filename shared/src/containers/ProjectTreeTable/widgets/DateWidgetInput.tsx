@@ -191,6 +191,8 @@ export const DateWidgetInput = ({
           onBlur={onBlur}
         >
           <DateRangeCalendar
+            // remade for each day typed: react-datepicker moves its keyboard day only on a new month
+            key={typedDay ?? day}
             monthsShown={1}
             selectsRange={false}
             // the day typed, as it is typed
