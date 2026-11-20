@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import styled from 'styled-components'
 import { uniq } from 'lodash'
 import {
+  closePipFromPip,
   DetailsPanel,
   DetailsPanelSlideOut,
   openViewerFromPip,
@@ -16,14 +17,19 @@ import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { useAppDispatch } from '@state/store'
 import mergeProjectInfo from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
 
-const Page = styled.main`
+// the panel is the whole window. A div, not a main: `#root > main` pads the app's pages
+const Page = styled.div`
   position: relative;
-  height: 100vh;
+  flex: 1;
+  min-height: 0;
+  display: flex;
   overflow: hidden;
 
   .details-panel {
+    flex: 1;
     height: 100%;
     border-radius: 0;
+    box-shadow: none;
   }
 `
 
@@ -49,7 +55,10 @@ const DetailsPipPage = () => {
     { projects: projectNames },
     { skip: !projectNames.length },
   )
-  const projectsInfo = (projectsInfoData || {}) as Record<string, ProjectModelWithProducts>
+  const projectsInfo = useMemo(
+    () => (projectsInfoData || {}) as Record<string, ProjectModelWithProducts>,
+    [projectsInfoData],
+  )
   const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
     { projects: projectNames },
     { skip: !projectNames.length },
@@ -70,9 +79,7 @@ const DetailsPipPage = () => {
 
   return (
     <Page>
-      <EntityListsContextBoundary
-        projectName={projectNames.length === 1 ? projectName : undefined}
-      >
+      <EntityListsContextBoundary projectName={projectNames.length === 1 ? projectName : undefined}>
         {(entityListsContext) => (
           <ProjectContextProvider projectName={projectName}>
             <VersionUploadProvider
@@ -93,6 +100,7 @@ const DetailsPipPage = () => {
                 scope="pip"
                 entityListsContext={entityListsContext}
                 onOpenViewer={openViewerFromPip}
+                onClose={closePipFromPip}
               />
               <SlideOutLayer>
                 <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="pip" />

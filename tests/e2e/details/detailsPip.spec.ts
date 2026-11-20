@@ -45,5 +45,12 @@ test.describe('details panel picture in picture', () => {
     await pipPanel.root.getByRole('button', { name: 'More actions' }).click()
     await expect(frame.getByText('View data', { exact: true })).toBeVisible()
     await expect(frame.getByText('Picture in picture', { exact: true })).toHaveCount(0)
+    await pipPanel.root.getByRole('button', { name: 'More actions' }).click()
+
+    // the panel's own close button closes the PiP window, the main window keeps its panel
+    const pipClosed = pip.waitForEvent('close')
+    await pipPanel.root.getByRole('button', { name: 'close', exact: true }).first().click()
+    await pipClosed
+    await expect(panel.header).toContainText('layout')
   })
 })

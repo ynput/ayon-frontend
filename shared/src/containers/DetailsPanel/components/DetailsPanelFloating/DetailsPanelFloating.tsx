@@ -12,7 +12,7 @@ const frameStyle = { display: 'block', width: '100%', height: '100%', border: 'n
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
   const { pip, onOpenViewer, onGoToFrame, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
-  const { pipWindow } = usePiPWindow()
+  const { pipWindow, closePipWindow } = usePiPWindow()
   const frameRef = useRef<HTMLIFrameElement>(null)
 
   const entityType = pip?.entityType
@@ -30,6 +30,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
       if (event.origin !== window.location.origin) return
       if (!frameRef.current || event.source !== frameRef.current.contentWindow) return
       if (event.data?.type !== DETAILS_PIP_MESSAGE) return
+      if (event.data.action === 'close') return closePipWindow()
       if (event.data.action === 'open-viewer') onOpenViewer?.(event.data.args)
       if (event.data.action === 'navigate') navigate(event.data.to)
       if (event.data.action === 'go-to-frame') onGoToFrame?.(event.data.frame)
@@ -37,7 +38,7 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
     }
     host.addEventListener('message', handleMessage)
     return () => host.removeEventListener('message', handleMessage)
-  }, [pipWindow, onOpenViewer, onGoToFrame, navigate])
+  }, [pipWindow, closePipWindow, onOpenViewer, onGoToFrame, navigate])
 
   if (!src) return null
 
