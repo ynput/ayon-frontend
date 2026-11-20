@@ -3,14 +3,26 @@
 // tabs and the tabs addons contribute to its slot, then the open tab. The details panel, a list's
 // details panel and Review's session sidebar (through the addon SDK) all use it, so they look and
 // behave alike. The panel keeps its own state: which tab is open, its keyboard shortcuts.
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, type ReactNode, type Ref } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
-import type { IconType } from '@ynput/ayon-react-components'
+import type { ButtonProps, IconType } from '@ynput/ayon-react-components'
 import { PanelSlotTab, PanelTabs, usePanelSlotTabs } from '@shared/components/PanelTabs'
 import type { PanelTab, PanelTabSlot, PanelTabSlotName } from '@shared/components/PanelTabs'
-import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
+import type { MenuItemType } from '@shared/components/Menu/Menu'
+import { MENU_DIVIDER } from '@shared/components/Menu/menuSections'
+import { MoreMenuButton } from '@shared/components/Menu/MoreMenuButton'
 import * as Styled from './TabbedPanel.styled'
+
+/**
+ * More props for a tool's button (`variant`, `className`, `style`, `ref`, `data-*`): a tool that
+ * changes its look (a running timer) sets them. An item of the "more" menu takes its `className`,
+ * `style` and `data-*`.
+ */
+export type PanelToolButtonProps = Omit<ButtonProps, 'icon' | 'label' | 'onClick' | 'ref'> & {
+  ref?: Ref<HTMLButtonElement>
+  [key: `data-${string}`]: string | undefined
+}
 
 /** A button in the panel's tools, or an item of its "more" menu. */
 export interface PanelToolItem {
@@ -28,6 +40,20 @@ export interface PanelToolItem {
   hidden?: boolean
   /** the shortcut shown in its tooltip; the panel handles the key itself */
   shortcut?: string
+  /** its tooltip when that is not `label` (why it is disabled) */
+  tooltip?: string
+  /** deletes or breaks something: red, in the menu's bottom section */
+  danger?: boolean
+  /** loads what `onClick` needs: on the pointer over its button, or when its menu opens */
+  onPrefetch?: () => void
+  buttonProps?: PanelToolButtonProps
+}
+
+/** A line between the "more" menu's items, starting a section; lines left at an end go. */
+export interface PanelToolDivider {
+  divider: true
+  id?: string
+  hidden?: boolean
 }
 
 /** A tool the panel draws itself (the details panel's watchers): always a button, never in the menu. */
@@ -37,15 +63,17 @@ export interface PanelToolElement {
   hidden?: boolean
 }
 
-export type PanelTool = PanelToolItem | PanelToolElement
+export type PanelTool = PanelToolItem | PanelToolElement | PanelToolDivider
 
 export interface TabbedPanelProps<S extends PanelTabSlotName> {
   /** left of the tools, at the top; without it, the tools go at the end of the tab bar */
   title?: ReactNode
   /** between the title row and the tab bar (the details panel's summary) */
   beforeTabs?: ReactNode
-  /** the panel's tools, in order; items not `pinned` go in a "more" menu before the others */
+  /** the panel's tools, in order; items not `pinned` go in a "more" menu, where its first one is */
   tools?: PanelTool[]
+  /** more props for the "more" button (its tooltip, test hooks), "More" by default */
+  moreButtonProps?: PanelToolButtonProps
   /** a close button after the tools */
   onClose?: () => void
   /** a tool or "more" menu item that fails; logged when not set */
@@ -81,55 +109,86 @@ export interface TabbedPanelProps<S extends PanelTabSlotName> {
 }
 
 const isElement = (tool: PanelTool): tool is PanelToolElement => 'element' in tool
+const isDivider = (tool: PanelTool): tool is PanelToolDivider => 'divider' in tool
+const isMenuItem = (tool: PanelTool): tool is PanelToolItem =>
+  !isElement(tool) && !isDivider(tool) && !tool.pinned
+
+// a menu item is a list item: it takes the button props a list item has
+const menuItemProps = ({ className, style, ...props }: PanelToolButtonProps = {}) => ({
+  className,
+  style,
+  ...Object.fromEntries(Object.entries(props).filter(([key]) => key.startsWith('data-'))),
+})
 
 const logError = (error: unknown) => console.error(error)
 
 const PanelTools = ({
   tools = [],
+  moreButtonProps,
   onClose,
   closeShortcut,
   onToolError = logError,
 }: Pick<
   TabbedPanelProps<PanelTabSlotName>,
-  'tools' | 'onClose' | 'closeShortcut' | 'onToolError'
+  'tools' | 'moreButtonProps' | 'onClose' | 'closeShortcut' | 'onToolError'
 >) => {
   const shown = tools.filter((tool) => !tool.hidden)
-  const menuItems = shown.filter((tool): tool is PanelToolItem => !isElement(tool) && !tool.pinned)
   if (!shown.length && !onClose) return null
+
+  // a failing tool is reported, not lost
+  const run = (tool: PanelToolItem) => {
+    Promise.resolve().then(tool.onClick).catch(onToolError)
+  }
+  const menuTools = shown.filter((tool) => isDivider(tool) || isMenuItem(tool))
+  const menuItems = menuTools.map(
+    (tool): MenuItemType =>
+      isDivider(tool)
+        ? MENU_DIVIDER
+        : {
+            id: tool.id,
+            icon: tool.icon,
+            label: tool.label,
+            disabled: tool.disabled,
+            danger: tool.danger,
+            'data-tooltip': tool.tooltip,
+            ...menuItemProps(tool.buttonProps),
+            onClick: () => run(tool),
+          },
+  )
+  const menuAt = shown.findIndex(isMenuItem)
+  const menu = menuAt >= 0 && (
+    <MoreMenuButton
+      key="more"
+      items={menuItems}
+      onOpen={() => menuTools.forEach((tool) => !isDivider(tool) && tool.onPrefetch?.())}
+      aria-label="More"
+      data-tooltip="More"
+      {...moreButtonProps}
+    />
+  )
 
   return (
     <Styled.Tools className="tabbed-panel-tools">
-      {!!menuItems.length && (
-        <AddonMoreMenu
-          items={menuItems.map(({ id, icon, label, onClick, disabled }) => ({
-            id,
-            icon,
-            label,
-            onClick,
-            disabled,
-          }))}
-          onError={onToolError}
-        />
-      )}
-      {shown.map((tool) =>
-        isElement(tool) ? (
+      {shown.map((tool, index) =>
+        index === menuAt ? (
+          menu
+        ) : isElement(tool) ? (
           <span key={tool.id} style={{ display: 'contents' }}>
             {tool.element}
           </span>
-        ) : tool.pinned ? (
+        ) : !isDivider(tool) && tool.pinned ? (
           <Button
             key={tool.id}
             icon={tool.icon as IconType}
             variant="text"
             selected={tool.active}
             disabled={tool.disabled}
-            onClick={() => {
-              // as the menu's items: a failing tool is reported, not lost
-              Promise.resolve().then(tool.onClick).catch(onToolError)
-            }}
             aria-label={tool.label}
-            data-tooltip={tool.label}
+            data-tooltip={tool.tooltip ?? tool.label}
             data-shortcut={tool.shortcut}
+            onMouseEnter={tool.onPrefetch}
+            {...tool.buttonProps}
+            onClick={() => run(tool)}
           />
         ) : null,
       )}
@@ -144,6 +203,7 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
   title,
   beforeTabs,
   tools,
+  moreButtonProps,
   onClose,
   closeShortcut,
   onToolError,
@@ -175,6 +235,7 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
   const toolsNode = (
     <PanelTools
       tools={tools}
+      moreButtonProps={moreButtonProps}
       onClose={onClose}
       closeShortcut={closeShortcut}
       onToolError={onToolError}

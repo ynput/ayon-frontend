@@ -393,8 +393,12 @@ const slot = useMemo(
 
 - `title`: the row at the top, with the tools at its right; without it, the tools go at the end
   of the tab bar. `beforeTabs`: anything between the title and the tab bar.
-- `tools`: `{ id, icon, label, onClick, pinned? }` buttons, or `{ id, element }` drawn by the
-  addon. Items not `pinned` go in a "more" (…) menu before the others. `onClose` adds a close button
+- `tools`: `{ id, icon, label, onClick, pinned? }` buttons, `{ id, element }` drawn by the
+  addon, or `{ divider: true }` lines between menu items. Items not `pinned` go in a "more" (…)
+  menu, placed where the first of them is; `moreButtonProps` sets its tooltip and test hooks. An
+  item takes `tooltip` (when not its label), `danger`, `onPrefetch` (on hover, or when the menu
+  opens) and `buttonProps` for a look that changes (a running timer's `variant`, `className`,
+  `style`); a menu item uses their `className`, `style` and `data-*`. `onClose` adds a close button
   after them. Shortcuts are only shown in the tooltips: the addon handles its keys.
 - `children`: the open tab when it is one of `tabs`. An addon tab draws itself, with its header.
 - `fallbackTab`: opened instead of a `selected` addon tab whose addon is gone.

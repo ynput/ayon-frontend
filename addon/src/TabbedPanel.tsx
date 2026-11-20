@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react'
 import type { PanelTabSlotName } from './ContributionTab'
 import { getHost } from './hostBridge'
 import { Missing } from './layout'
@@ -15,6 +15,20 @@ export interface PanelTab {
   end?: boolean
   /** its label next to the icon even when the bar shows icons only */
   showLabel?: boolean
+}
+
+/**
+ * More props for a tool's button: a tool that changes its look (a running timer) sets its
+ * `variant`, `className` or `style`. An item of the "more" menu takes its `className`, `style` and
+ * `data-*`.
+ */
+export type PanelToolButtonProps = Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick'> & {
+  ref?: Ref<HTMLButtonElement>
+  /** AYON's button styles; `text` by default */
+  variant?: 'surface' | 'tonal' | 'filled' | 'nav' | 'text' | 'tertiary' | 'danger'
+  /** shown as selected */
+  selected?: boolean
+  [key: `data-${string}`]: string | undefined
 }
 
 /** A button in the panel's tools, or an item of its "more" (…) menu. */
@@ -34,6 +48,20 @@ export interface PanelToolItem {
   hidden?: boolean
   /** the shortcut shown in its tooltip; the addon handles the key itself */
   shortcut?: string
+  /** its tooltip when that is not `label` (why it is disabled) */
+  tooltip?: string
+  /** deletes or breaks something: red, in the menu's bottom section */
+  danger?: boolean
+  /** loads what `onClick` needs: on the pointer over its button, or when its menu opens */
+  onPrefetch?: () => void
+  buttonProps?: PanelToolButtonProps
+}
+
+/** A line between the "more" menu's items, starting a section; lines left at an end go. */
+export interface PanelToolDivider {
+  divider: true
+  id?: string
+  hidden?: boolean
 }
 
 /** A tool the addon draws itself: always shown, never in the menu. */
@@ -43,7 +71,7 @@ export interface PanelToolElement {
   hidden?: boolean
 }
 
-export type PanelTool = PanelToolItem | PanelToolElement
+export type PanelTool = PanelToolItem | PanelToolElement | PanelToolDivider
 
 /** The slot whose tabs the panel shows after its own, and what they get. */
 export interface TabbedPanelSlot<S extends PanelTabSlotName = PanelTabSlotName> {
@@ -61,8 +89,10 @@ export interface TabbedPanelProps<S extends PanelTabSlotName = PanelTabSlotName>
   title?: ReactNode
   /** between the title and the tab bar (a summary of what the panel shows) */
   beforeTabs?: ReactNode
-  /** the panel's tools, in order; items not `pinned` go in a "more" menu before the others */
+  /** the panel's tools, in order; items not `pinned` go in a "more" menu, where its first one is */
   tools?: PanelTool[]
+  /** more props for the "more" button (its tooltip, test hooks), "More" by default */
+  moreButtonProps?: PanelToolButtonProps
   /** a close button after the tools */
   onClose?: () => void
   /** the close button's shortcut, shown in its tooltip; the addon handles the key itself */

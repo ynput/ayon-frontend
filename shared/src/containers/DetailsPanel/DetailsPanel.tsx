@@ -32,7 +32,7 @@ import DetailsPanelFiles from './components/DetailsPanelFiles'
 import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
 import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
-  DetailsPanelMoreMenu,
+  useDetailsPanelMoreMenu,
   type DetailsPanelEntityListsContext,
 } from './components/DetailsPanelMoreMenu'
 import useGetEntityPath from './hooks/useGetEntityPath'
@@ -381,7 +381,8 @@ DetailsPanelProps) => {
 
   // Hoisted so ThumbnailUploadProvider (wrapping the toolbar) and EntityPanelUploader
   // (inside DetailsPanelHeader) share the same ref identity — otherwise the toolbar's
-  // more-menu, which sits as a sibling above the header, can't reach the inputs.
+  // more-menu, which sits as a sibling above the header, can't reach the inputs. The more menu
+  // (useDetailsPanelMoreMenu, called here, above the provider) clicks the thumbnail input itself.
   const thumbnailInputRef = useRef<HTMLInputElement>(null)
   const versionsInputRef = useRef<HTMLInputElement>(null)
   const canUploadVersion = entityDetailsData.length === 1 && activeEntityType !== 'representation'
@@ -416,6 +417,36 @@ DetailsPanelProps) => {
     })
     requestPipWindow(500, 500)
   }
+
+  const moreMenu = useDetailsPanelMoreMenu({
+    entityType: activeEntityType,
+    entityId: firstEntityData?.id,
+    entityIds: entitiesToQuery.map((e) => e.id).filter(Boolean),
+    entityLabel: shareEntityLabel,
+    projectName: firstProject,
+    selectedEntities: entityDetailsData
+      .filter((e) => !!e?.id)
+      .map((e) => {
+        const type = e.entityType || activeEntityType
+        return {
+          entityId: e.id,
+          entityType: type,
+          hasReviewables: !!e.hasReviewables,
+          name: e.name,
+          label: e.label,
+          projectName: e.projectName || firstProject,
+          folderId: type === 'task' ? e.folder?.id : undefined,
+        }
+      }),
+    entityListsContext,
+    onOpenPip: handleOpenPip,
+    onOpenViewer,
+    productId: firstEntityData?.product?.id,
+    taskId: firstEntityData?.task?.id,
+    folderId: firstEntityData?.folder?.id,
+    onUploadThumbnail: () => thumbnailInputRef.current?.click(),
+    canUploadVersion,
+  })
 
   const addonTabContext = useMemo(
     () => ({
@@ -482,38 +513,7 @@ DetailsPanelProps) => {
               />
             }
             tools={[
-              {
-                id: 'more',
-                element: (
-                  <DetailsPanelMoreMenu
-                    entityType={activeEntityType}
-                    entityId={firstEntityData?.id}
-                    entityIds={entitiesToQuery.map((e) => e.id).filter(Boolean)}
-                    entityLabel={shareEntityLabel}
-                    projectName={firstProject}
-                    selectedEntities={entityDetailsData
-                      .filter((e) => !!e?.id)
-                      .map((e) => {
-                        const type = e.entityType || activeEntityType
-                        return {
-                          entityId: e.id,
-                          entityType: type,
-                          hasReviewables: !!e.hasReviewables,
-                          name: e.name,
-                          label: e.label,
-                          projectName: e.projectName || firstProject,
-                          folderId: type === 'task' ? e.folder?.id : undefined,
-                        }
-                      })}
-                    entityListsContext={entityListsContext}
-                    onOpenPip={handleOpenPip}
-                    onOpenViewer={onOpenViewer}
-                    productId={firstEntityData?.product?.id}
-                    taskId={firstEntityData?.task?.id}
-                    folderId={firstEntityData?.folder?.id}
-                  />
-                ),
-              },
+              ...moreMenu.tools,
               {
                 id: 'watchers',
                 element: (
@@ -527,6 +527,7 @@ DetailsPanelProps) => {
                 ),
               },
             ]}
+            moreButtonProps={moreMenu.moreButtonProps}
             // Escape closes it too (above)
             onClose={onClose && handleClose}
             closeShortcut="Escape"
@@ -640,6 +641,7 @@ DetailsPanelProps) => {
               </FeedContextWrapper>
             )}
           </TabbedPanel>
+          {moreMenu.dialogs}
         </ProjectContextProvider>
       </Styled.Panel>
     </ThumbnailUploadProvider>

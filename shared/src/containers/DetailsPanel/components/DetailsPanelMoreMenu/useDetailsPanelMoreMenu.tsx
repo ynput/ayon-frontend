@@ -1,16 +1,11 @@
-import { useCallback, useContext, useEffect, useId, useMemo, useRef, useState } from 'react'
-import { menuSection } from '@shared/components/Menu/menuSections'
-import clsx from 'clsx'
+// The details panel's "more" (…) menu and the buttons addons pin next to it, as the panel's
+// tools (TabbedPanel), with the dialogs its items open.
+import { useCallback, useMemo, useState, type ReactNode } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
 import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
-import type { MenuItemType } from '@shared/components/Menu/Menu'
-import { Button } from '@ynput/ayon-react-components'
-import { Menu } from '@shared/components/Menu/Menu'
-import { MenuContainer } from '@shared/components/Menu/MenuContainer'
+import type { PanelTool, PanelToolButtonProps } from '@shared/components/TabbedPanel'
 import { DetailsDialog } from '@shared/components/DetailsDialog/DetailsDialog'
 import {
-  useMenuContext,
-  ThumbnailUploadContext,
   useDeleteEntitiesContextOptional,
   isDeletableEntityType,
   type DeletableEntity,
@@ -23,7 +18,7 @@ import type { DetailsPanelEntityListsContext, SelectedEntityRef } from './types'
 
 const SLOT = 'detailsPanel.menuItem'
 
-export interface DetailsPanelMoreMenuProps {
+export interface DetailsPanelMoreMenuOptions {
   entityType: string
   entityId?: string
   entityIds?: string[]
@@ -36,6 +31,28 @@ export interface DetailsPanelMoreMenuProps {
   productId?: string
   taskId?: string
   folderId?: string
+  /** opens the thumbnail file picker (the panel's ThumbnailUploadProvider is below this hook) */
+  onUploadThumbnail?: () => void
+  /** a single entity that takes versions (not a representation) */
+  canUploadVersion?: boolean
+}
+
+// addon items are a section of their own
+const section = (items: PanelTool[]): PanelTool[] =>
+  items.length ? [{ divider: true }, ...items, { divider: true }] : []
+
+const moreButtonProps: PanelToolButtonProps = {
+  'data-tooltip': 'More actions',
+  'aria-label': 'More actions',
+  'data-ayon-trigger': SLOT,
+}
+
+export interface DetailsPanelMoreMenu {
+  /** the pinned addon buttons and the menu's items */
+  tools: PanelTool[]
+  moreButtonProps: PanelToolButtonProps
+  /** the dialogs its items open (View data, Share) */
+  dialogs: ReactNode
 }
 
 const buildViewerArgs = (
@@ -62,7 +79,7 @@ const buildViewerArgs = (
   }
 }
 
-export const DetailsPanelMoreMenu = ({
+export const useDetailsPanelMoreMenu = ({
   entityType,
   entityId,
   entityIds,
@@ -75,28 +92,17 @@ export const DetailsPanelMoreMenu = ({
   productId,
   taskId,
   folderId,
-}: DetailsPanelMoreMenuProps) => {
-  const buttonRef = useRef<HTMLButtonElement>(null)
+  onUploadThumbnail,
+  canUploadVersion,
+}: DetailsPanelMoreMenuOptions): DetailsPanelMoreMenu => {
   const [showDataDialog, setShowDataDialog] = useState(false)
   const [shareDialogLink, setShareDialogLink] = useState<string | null>(null)
-  const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
 
-  const { triggerThumbnailUpload, canUploadVersion } = useContext(ThumbnailUploadContext)
   const { onOpenVersionUpload } = useContextAccess()
 
-  // useId keeps the id unique per panel instance so the main panel and the slideout
-  // never share it — a global menuOpen would otherwise open both menus at once.
-  const instanceId = useId()
-  const menuId = useMemo(() => {
-    const seed = entityId || entityIds?.[0] || 'noentity'
-    return `details-more-menu-${instanceId}-${seed}-${projectName || 'noproject'}`
-  }, [instanceId, entityId, entityIds, projectName])
-
-  const isOpen = menuOpen === menuId
-
-  const canUploadThumbnail = !!entityId && !!projectName && !!triggerThumbnailUpload
+  const canUploadThumbnail = !!entityId && !!projectName && !!onUploadThumbnail
   // Show "Upload version" only when both gates pass:
-  //  - ThumbnailUploadContext flags this entity as version-uploadable (single, non-representation).
+  //  - the panel flags this entity as version-uploadable (single, non-representation).
   //  - VersionUploadContext is mounted upstream so the proper form flow is available.
   // (No raw file-picker fallback — matches PR #1406's "only on project pages" semantics.)
   const canUploadVersionItem = !!canUploadVersion && !!onOpenVersionUpload
@@ -140,7 +146,6 @@ export const DetailsPanelMoreMenu = ({
   const canDelete = !!deleteContext && deletableEntities.length > 0
 
   const handleDelete = () => {
-    setMenuOpen(false)
     deleteContext?.deleteEntities(deletableEntities)
   }
 
@@ -168,43 +173,40 @@ export const DetailsPanelMoreMenu = ({
     }))
     return { projectName: projectName || '', entityType, entities }
   }, [selectedEntities, entityId, entityType, projectName])
-  const toMenuItem = useCallback(
-    (item: (typeof applicableAddonItems)[number]): MenuItemType => ({
+  // the items draw from their descriptions; their code loads on hover, or when the menu opens
+  const toTool = useCallback(
+    (item: (typeof applicableAddonItems)[number]): PanelTool => ({
       id: item.key,
       label: item.label,
       icon: item.icon,
-      'data-addon-item': item.key,
+      pinned: item.pinned,
       onClick: () => runContribution(item, addonContext),
-      ...contributionTags(item),
+      onPrefetch: () => prefetchPiece(item.run),
+      buttonProps: { 'data-addon-item': item.key, ...contributionTags(item) },
     }),
     [addonContext],
   )
-  // pinned items are buttons next to this one, the rest are in the menu: `top` ones first, the
-  // others (default) above View data and Delete
+  // pinned items are buttons before the menu, the rest are in it: `top` ones first, the others
+  // (default) above View data and Delete
   const pinnedAddonItems = useMemo(
-    () => [
-      ...menuItemsAt(applicableAddonItems, 'top'),
-      ...menuItemsAt(applicableAddonItems, 'bottom'),
-    ].filter((item) => item.pinned),
-    [applicableAddonItems],
+    () =>
+      [...menuItemsAt(applicableAddonItems, 'top'), ...menuItemsAt(applicableAddonItems, 'bottom')]
+        .filter((item) => item.pinned)
+        .map(toTool),
+    [applicableAddonItems, toTool],
   )
   const menuAddonItems = useMemo(
     () => applicableAddonItems.filter((item) => !item.pinned),
     [applicableAddonItems],
   )
   const addonTopItems = useMemo(
-    // addon items are a section of their own
-    () => menuSection(menuItemsAt(menuAddonItems, 'top').map(toMenuItem)),
-    [menuAddonItems, toMenuItem],
+    () => section(menuItemsAt(menuAddonItems, 'top').map(toTool)),
+    [menuAddonItems, toTool],
   )
   const addonItems = useMemo(
-    () => menuSection(menuItemsAt(menuAddonItems, 'bottom').map(toMenuItem)),
-    [menuAddonItems, toMenuItem],
+    () => section(menuItemsAt(menuAddonItems, 'bottom').map(toTool)),
+    [menuAddonItems, toTool],
   )
-  // the items draw from their descriptions; their code loads when the menu opens
-  useEffect(() => {
-    if (isOpen) menuAddonItems.forEach((item) => prefetchPiece(item.run))
-  }, [isOpen, menuAddonItems])
 
   const { items } = useMenuOptions({
     entityType,
@@ -222,7 +224,7 @@ export const DetailsPanelMoreMenu = ({
     extraItems: addonItems,
     onPip: () => onOpenPip?.(),
     onOpenViewer: () => viewerArgs && onOpenViewer?.(viewerArgs),
-    onUploadThumbnail: () => triggerThumbnailUpload?.(),
+    onUploadThumbnail: () => onUploadThumbnail?.(),
     onUploadVersion: handleUploadVersion,
     onShare: (link) => setShareDialogLink(link),
     onViewData: () => setShowDataDialog(true),
@@ -232,35 +234,10 @@ export const DetailsPanelMoreMenu = ({
   const dialogIds = entityIds?.length ? entityIds : entityId ? [entityId] : []
   const shareLabel = entityLabel || entityId || ''
 
-  return (
+  const tools = useMemo(() => [...pinnedAddonItems, ...items], [pinnedAddonItems, items])
+
+  const dialogs = (
     <>
-      {pinnedAddonItems.map((item) => (
-        <Button
-          key={item.key}
-          // addons name any Material Symbols icon
-          icon={item.icon as never}
-          variant="text"
-          data-tooltip={item.label}
-          aria-label={item.label}
-          data-addon-item={item.key}
-          {...contributionTags(item)}
-          onMouseEnter={() => prefetchPiece(item.run)}
-          onClick={() => runContribution(item, addonContext)}
-        />
-      ))}
-      <Button
-        ref={buttonRef}
-        icon="more_horiz"
-        variant="text"
-        data-tooltip="More actions"
-        aria-label="More actions"
-        data-ayon-trigger={SLOT}
-        className={clsx({ active: isOpen })}
-        onClick={() => toggleMenuOpen(menuId)}
-      />
-      <MenuContainer id={menuId} target={buttonRef.current} align="right">
-        <Menu menu={items} onClose={() => setMenuOpen(false)} />
-      </MenuContainer>
       {showDataDialog && projectName && dialogIds.length > 0 && (
         <DetailsDialog
           projectName={projectName}
@@ -280,6 +257,6 @@ export const DetailsPanelMoreMenu = ({
       )}
     </>
   )
-}
 
-export default DetailsPanelMoreMenu
+  return { tools, moreButtonProps, dialogs }
+}

@@ -166,6 +166,8 @@ export { TabbedPanel } from './TabbedPanel'
 export type {
   PanelTab,
   PanelTool,
+  PanelToolButtonProps,
+  PanelToolDivider,
   PanelToolElement,
   PanelToolItem,
   TabbedPanelProps,

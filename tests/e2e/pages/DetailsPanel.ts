@@ -23,6 +23,18 @@ export class DetailsPanel {
     await expect(this.root).toBeHidden()
   }
 
+  get moreButton() {
+    return this.root.getByRole('button', { name: 'More actions', exact: true })
+  }
+
+  /** Open the "more" (…) menu of the panel's tools; returns its items' labels, in order */
+  async openMoreMenu() {
+    await this.moreButton.click()
+    const items = this.page.locator('#ayon-menu-content li.menu-item')
+    await expect(items.first()).toBeVisible()
+    return items.evaluateAll((els) => els.map((el) => el.getAttribute('aria-label')))
+  }
+
   // ---------------------------------------------------------------------------
   // header
   // ---------------------------------------------------------------------------
