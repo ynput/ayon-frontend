@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 1.1.0
+# @ynput/ayon-addon 2.0.0
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
@@ -319,20 +319,22 @@ import { EntityPicker, type EntityRef } from '@ynput/ayon-addon'
   left to load it.
 - One fixed project: put your own project field next to it if the user picks the project.
 
-## A details panel tab's header: `DetailsPanelTabHeader`
+## A panel tab's header: `PanelTabHeader`
 
-AYON puts a header above every details panel tab: the tab's `label` as the title, then what the
-tab adds. Built-in tabs (Activity, Subtasks) use the same header, so a tab that fills its header this
-way looks like them. Render it once in the tab's component; it takes no room where it is rendered.
+AYON's panels with tabs (the details panel, `detailsPanel.tab`; a list's details panel,
+`listDetails.tab`) show icon-only tab buttons and a header above the open tab: the tab's
+`label` as the title, then what the tab adds. Built-in tabs (Activity, Subtasks, a list's Details)
+use the same header, so a tab that fills its header this way looks like them. Render it once in the
+tab's component; it takes no room where it is rendered.
 
 ```tsx
-import { DetailsPanelTabHeader } from '@ynput/ayon-addon'
+import { PanelTabHeader } from '@ynput/ayon-addon'
 import type { TabHeaderFilter } from '@ynput/ayon-addon'
 
 const [search, setSearch] = useState('')
 const [filters, setFilters] = useState<TabHeaderFilter[]>([])
 
-<DetailsPanelTabHeader
+<PanelTabHeader
   menu={[{ id: 'add', label: 'Add time manually', icon: 'more_time', onClick: () => setAdding(true) }]}
   search={{
     onSearch: setSearch,
@@ -342,7 +344,7 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
   }}
 >
   <Total logs={logs} />
-</DetailsPanelTabHeader>
+</PanelTabHeader>
 ```
 
 - `menu`: the "…" button right of the title, items as in `MoreMenu`.
@@ -350,18 +352,67 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
   right. The user shows or hides it (one choice for every tab, hidden by default); while hidden with
   filters set, the button is marked. `onSearch` gets the text when the user
   confirms it (Enter) or removes it. `options` are the filters the user can add, `filters` (`{ id, values, inverted? }`,
-  value ids) the ones set now; the bar is search-only without `options`.
+  value ids) the ones set now; the bar is search-only without `options`. `variant: 'text'` shows a plain
+  text input instead, like the search of AYON's own Details tabs: `onSearch` gets the text as it is
+  typed, `placeholder` is its placeholder, and there are no filters. An AYON older than `text` shows
+  the search and filter bar.
 - `children`: anything else for the header, under the search bar.
 - No title prop: the title is always the tab's `label`.
 - An AYON older than this component has no such export (`undefined`): an addon that supports one
-  checks `DetailsPanelTabHeader &&` before rendering it.
+  checks `PanelTabHeader &&` before rendering it. `DetailsPanelTabHeader` is its old name.
+
+### An addon's own panel with other addons' tabs: `ContributionTab`
+
+An addon that draws a panel showing a tab slot (Review's session sidebar shows `listDetails.tab`)
+renders the open tab with `ContributionTab`, so the tab gets the same header as in AYON's panels.
+On an AYON without it, the tab renders alone.
+
+```tsx
+import { ContributionTab, useContributions } from '@ynput/ayon-addon'
+
+const { contributions: tabs } = useContributions('listDetails.tab')
+const tab = tabs.find((t) => t.key === openTab)
+
+{tab && <ContributionTab contribution={tab} context={{ projectName, list, scope: 'review' }} />}
+```
+
+## Picking lists: `ListPicker`
+
+AYON's list picker (the dialog of Add to list and Compare with list): the project's lists and review
+sessions in their folders, with search, sorting and item counts. Like `EntityPicker`, it loads the
+project itself: render it anywhere with no providers around it.
+
+```tsx
+import { ListPicker, type EntityListRef } from '@ynput/ayon-addon'
+
+{picking && (
+  <ListPicker
+    projectName={projectName}
+    initialSelection={list ? [list] : undefined}
+    onClose={() => setPicking(false)}
+    onSubmit={([picked]: EntityListRef[]) => {
+      setPicking(false)
+      setList(picked) // { id, projectName, label, entityListType, entityType, count }
+    }}
+  />
+)}
+```
+
+- `entityListTypes`: `['generic']` for lists, `['review-session']` for review sessions; both by
+  default, in one table.
+- `onSubmit` gets `EntityListRef[]`: the list's `label`, `entityListType`, the type of its items
+  (`entityType`) and how many it has (`count`). One list unless `multiSelect`. The picker stays
+  open until you stop rendering it: close it in `onSubmit` and `onClose`.
+- `initialSelection`: lists (`{ id }` is enough) selected when it opens.
+- An older AYON frontend has no list picker: there `ListPicker` renders "ListPicker is not
+  available in this AYON frontend." instead of the dialog.
 
 ## A "more" menu: `MoreMenu`
 
 An addon's own menu (a panel's "…" actions, a row's options) is AYON's menu under a button, from
 one component. Don't build one: `MoreMenu` looks and works like AYON's menus everywhere (pages,
-details panel tabs, popovers, dialogs, the dev shell). A details panel tab's own "…" goes in its
-header: `DetailsPanelTabHeader`'s `menu`.
+panel tabs, popovers, dialogs, the dev shell). A panel tab's own "…" goes in its header:
+`PanelTabHeader`'s `menu`.
 
 ```tsx
 import { MoreMenu } from '@ynput/ayon-addon'
@@ -777,6 +828,9 @@ The same thing has the same name and type in every slot that has it:
   one type), `entityMenuItem`, `table.shortcut` (the project tables' rows; empty in the panels'
   tables) and `slicer.menuItem` (hierarchy rows; empty for other slice types). A table cell is one
   entity: `tableColumn` has `entity`.
+- **`list`** (`EntityListRef`: `id`, `projectName`, `label?`, `entityType?` of its items,
+  `entityListType?`, `review-session` for a review session), in `listDetails.tab`: the list the
+  panel shows.
 - **`users`** (`UserRef[]`: `name`, `fullName?`, `email?`, `active` and the flags of
   `user` without `isDeveloper`), in slots about other users: `userDetails.section` and
   `userDetails.menuItem` (the users selected in Settings → Users). Not the signed-in user: that is
@@ -891,15 +945,15 @@ headerItem({
 
 ### `detailsPanel.tab`: `detailsPanelTab`
 
-A tab in the details panel. The tab button shows from the description, for `entityTypes`; `component` loads when the tab is first opened. AYON puts a header above it with `label` as its title; `DetailsPanelTabHeader` adds a "more" menu, a search and filter bar and other content to that header. Loads: first shown.
+A tab in the details panel. The tab button shows from the description, for `entityTypes`; `component` loads when the tab is first opened. AYON puts a header above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to that header. Loads: first shown.
 
 | Description field | Type | |
 |---|---|---|
+| `entityTypes` | `string[] \| undefined` | entity types the tab shows for; all when not set |
 | `id` (required) | `string` | the tab id is `<addon>.<id>` |
 | `label` (required) | `string` | the title of the tab's header, and the tab button's tooltip unless `tooltip` is set |
 | `tooltip` | `string \| undefined` | the tab button's tooltip; the label when not set |
 | `icon` (required) | `string` | a Material Symbols icon name, the tab button |
-| `entityTypes` | `string[] \| undefined` | entity types the tab shows for; all when not set |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -955,6 +1009,38 @@ detailsPanelMenuItem({
   label: 'Example menu item',
   icon: 'extension',
   run: () => import('./Run'),
+})
+```
+
+### `listDetails.tab`: `listDetailsTab`
+
+A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's sidebar in Review. The tab button shows from the description, after the panel's own tabs; `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to that header. Loads: first shown.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | the tab id is `<addon>.<id>` |
+| `label` (required) | `string` | the title of the tab's header, and the tab button's tooltip unless `tooltip` is set |
+| `tooltip` | `string \| undefined` | the tab button's tooltip; the label when not set |
+| `icon` (required) | `string` | a Material Symbols icon name, the tab button |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'listDetails.tab'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `list` (required) | `EntityListRef` | the list the panel shows |
+| `scope` (required) | `string` | where the panel is: `lists` (the Lists page), `reviews` (the Reviews page) or `review` (a review session in Review) |
+| `projectName` (required) | `string` |  |
+
+Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+listDetailsTab({
+  id: 'example',
+  label: 'Example tab',
+  icon: 'extension',
+  component: () => import('./Component'),
 })
 ```
 

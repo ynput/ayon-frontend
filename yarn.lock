@@ -2910,10 +2910,10 @@
     react-toastify "^9.0.3"
     sass "1.99.0"
 
-"@ynput/ayon-react-components@^1.31.0":
-  version "1.31.0"
-  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.31.0.tgz#b198a8052a001c4623465084f29bd4bb4124079c"
-  integrity sha512-oJTa+KvYqetg+wEnNYnpD0av4WNbCCTSjlAvXvtz/StRTqMcXj6gx9UhrqPXT8qmSVhO1lKVCAT/tqhzKhbstw==
+"@ynput/ayon-react-components@^1.32.0":
+  version "1.32.0"
+  resolved "https://registry.yarnpkg.com/@ynput/ayon-react-components/-/ayon-react-components-1.32.0.tgz#ab511eca0641ba84d2f0fef6c1f020dc3e38e5f6"
+  integrity sha512-Uk/V/66kGX9ZRpo8hBQ0NEAl75hLiFoed3oDR1MCmNFQIighopUm9KT0/j43nS3PioP0n/tbk9hfJ8uttjxHbQ==
   dependencies:
     clsx "^2.1.1"
     match-sorter "^8.2.0"

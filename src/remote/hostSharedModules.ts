@@ -38,6 +38,7 @@ const ENTRY_NAMES = [
   'SimpleTable',
   'ProjectsTable',
   'EntityPickerDialog',
+  'ListPicker',
   'ListTable',
   'NewEntity',
 ]

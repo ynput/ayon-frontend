@@ -22,10 +22,21 @@ export interface TabHeaderFilter {
   inverted?: boolean
 }
 
-/** AYON's search and filter bar under the tab's title. */
+/** AYON's search bar under the tab's title. */
 export interface TabHeaderSearch {
-  /** the search text when the user confirms it (Enter) or removes it; `''` when cleared */
+  /**
+   * `filter` (default): AYON's search and filter bar. `text`: a plain text input, like the search of
+   * AYON's own Details tabs, without `options` and `filters`. An AYON older than `text` shows the
+   * search and filter bar.
+   */
+  variant?: 'filter' | 'text'
+  /**
+   * the search text when the user confirms it (Enter) or removes it, as it is typed for `text`; `''`
+   * when cleared
+   */
   onSearch: (text: string) => void
+  /** the text input's placeholder (`text`) */
+  placeholder?: string
   /** filters the user can add; search only when not set */
   options?: TabHeaderFilterOption[]
   /** the filters set now (controlled) */
@@ -33,39 +44,47 @@ export interface TabHeaderSearch {
   onFiltersChange?: (filters: TabHeaderFilter[]) => void
 }
 
-export interface DetailsPanelTabHeaderProps {
+export interface PanelTabHeaderProps {
   /** the "more" (…) menu right of the title: the items a `menu` piece returns */
   menu?: AddonMenuItem[]
-  /** AYON's search and filter bar under the title, shown and hidden with the header's search button */
+  /**
+   * AYON's search and filter bar, or a plain text search (`variant: 'text'`), under the title, shown
+   * and hidden with the header's search button
+   */
   search?: TabHeaderSearch
   /** anything else for the header, under the search bar (counts, a toggle, a summary) */
   children?: ReactNode
 }
 
-/** What the host's `DetailsPanelTabHeader` gets: the addon's props and where to report a failing menu item. */
-export interface HostDetailsPanelTabHeaderProps extends DetailsPanelTabHeaderProps {
+/** What the host's `PanelTabHeader` gets: the addon's props and where to report a failing menu item. */
+export interface HostPanelTabHeaderProps extends PanelTabHeaderProps {
   onError: (error: unknown) => void
 }
 
 /**
- * Fills the header of a `detailsPanel.tab`: AYON shows the tab's `label` as its title and puts
- * these in the header, so every tab looks alike. Render it once, anywhere in the tab's component;
+ * Fills the header of a panel tab (`detailsPanel.tab`, `listDetails.tab`): AYON shows the tab's
+ * `label` as its title and puts these in the header, so every tab looks alike. Render it once, anywhere in the tab's component;
  * it takes no room where it is rendered. Without it, the header has the title only. An AYON older
  * than this component has no such export (`undefined`): an addon that supports one checks
- * `DetailsPanelTabHeader &&` before rendering it.
+ * `PanelTabHeader &&` before rendering it.
  *
  * ```tsx
  * const [search, setSearch] = useState('')
- * <DetailsPanelTabHeader
+ * <PanelTabHeader
  *   menu={[{ id: 'add', label: 'Add time', icon: 'more_time', onClick: add }]}
  *   search={{ onSearch: setSearch }}
  * >
  *   <Total logs={logs} />
- * </DetailsPanelTabHeader>
+ * </PanelTabHeader>
  * ```
  */
-export const DetailsPanelTabHeader = (props: DetailsPanelTabHeaderProps) => {
+export const PanelTabHeader = (props: PanelTabHeaderProps) => {
   const onError = useMenuErrorHandler()
-  const Host = getHost().components?.DetailsPanelTabHeader
+  const Host = getHost().components?.PanelTabHeader
   return Host ? <Host {...props} onError={onError} /> : <>{props.children}</>
 }
+
+/** @deprecated renamed `PanelTabHeader`: it fills the header of any panel tab */
+export const DetailsPanelTabHeader = PanelTabHeader
+/** @deprecated renamed `PanelTabHeaderProps` */
+export type DetailsPanelTabHeaderProps = PanelTabHeaderProps

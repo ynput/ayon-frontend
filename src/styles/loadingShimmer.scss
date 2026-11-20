@@ -52,6 +52,11 @@
     opacity: 0 !important;
   }
 
+  // a nested theme scope sets its own text colour (e.g. the card title tag's "loading card..."): hide it too
+  [data-theme] {
+    color: inherit;
+  }
+
   /* Darken the Shimmer Effect */
   &.shimmer-dark,
   // even table rows are darkened

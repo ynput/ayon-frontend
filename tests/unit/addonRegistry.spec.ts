@@ -231,6 +231,20 @@ test('profile sections need a title and check powerFeature', () => {
   )
 })
 
+test('list details tabs need a label, an icon and a component', () => {
+  const tab = { slot: 'listDetails.tab', label: 'Time', icon: 'schedule', component: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...tab, id: 'time' },
+      { ...tab, id: 'noLabel', label: undefined },
+      { ...tab, id: 'noIcon', icon: undefined },
+      { ...tab, id: 'noComponent', component: undefined },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.time'])
+  expect(skipped.map((s) => s.id)).toEqual(['noLabel', 'noIcon', 'noComponent'])
+})
+
 test("table shortcuts have one action and keys that parse and aren't the table's own", () => {
   const shortcut = { slot: 'table.shortcut', label: 'Copy row', run: loader }
   const { contributions, skipped } = checkManifest(addon, {

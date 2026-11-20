@@ -6,9 +6,11 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { ListPickerProps } from './ListPicker'
 import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
-import type { HostDetailsPanelTabHeaderProps } from './DetailsPanelTabHeader'
+import type { HostPanelTabHeaderProps } from './PanelTabHeader'
+import type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
@@ -31,7 +33,7 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components, the entity picker and the menu button. */
+/** The host's implementations of the layout components, the pickers and the menu button. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
@@ -39,12 +41,16 @@ export interface HostComponents {
   ProjectList: ComponentType<ProjectListProps>
   /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
   EntityPicker: ComponentType<EntityPickerProps>
+  /** AYON's list picker, with the project's context it needs (`ListPicker`) */
+  ListPicker: ComponentType<ListPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
   /** AYON's project table with the providers it needs (`EntityTable`); not in the dev shell */
   EntityTable?: ComponentType<EntityTableProps>
-  /** fills the header of the details panel tab it is rendered in (`DetailsPanelTabHeader`) */
-  DetailsPanelTabHeader?: ComponentType<HostDetailsPanelTabHeaderProps>
+  /** fills the header of the panel tab it is rendered in (`PanelTabHeader`) */
+  PanelTabHeader?: ComponentType<HostPanelTabHeaderProps>
+  /** a panel tab contribution with its header, as AYON's panels draw it (`ContributionTab`) */
+  ContributionTab?: ComponentType<ContributionTabProps<PanelTabSlotName>>
 }
 
 /**

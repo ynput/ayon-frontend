@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import { RepresentationsList } from '@shared/containers/RepresentationsList/RepresentationsList'
 import ReviewablesList from '@shared/components/ReviewablesList/ReviewablesList'
 import type { DetailsPanelEntityData } from '@shared/api'
-import { DetailsPanelTabHeader } from '@shared/components/DetailsPanelTabHeader'
+import { PanelTabHeader } from '@shared/components/PanelTabs'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -51,7 +51,7 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
   return (
     <StyledContainer>
       {/* the tab button's tooltip stays "Files" (DetailsPanelTabs) */}
-      <DetailsPanelTabHeader title={reviewablesTitle} />
+      <PanelTabHeader title={reviewablesTitle} />
       <StyledSection>
         <ReviewablesList
           projectName={firstVersion.projectName}

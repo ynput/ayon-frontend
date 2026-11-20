@@ -110,7 +110,7 @@ export const Header = styled.header`
   align-items: center;
   justify-content: space-between;
   height: var(--size-header);
-  padding: 0 8px;
+  padding: 4px 8px;
   z-index: 10;
   position: relative;
 

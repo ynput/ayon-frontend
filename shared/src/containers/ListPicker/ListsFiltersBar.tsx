@@ -1,8 +1,8 @@
 import { forwardRef, useEffect, useState } from 'react'
 import { Filter, SearchFilter, SearchFilterRef } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
-import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
-import useListsFilterOptions from '@pages/ProjectListsPage/hooks/useListsFilterOptions'
+import { useListsDataContext } from './context'
+import useListsFilterOptions from './hooks/useListsFilterOptions'
 import { HeaderButton } from '@shared/containers/SimpleTable'
 
 const Container = styled.div`
@@ -76,5 +76,6 @@ const ListsFiltersBar = forwardRef<SearchFilterRef, ListsFiltersBarProps>(({ onC
     </Container>
   )
 })
+ListsFiltersBar.displayName = 'ListsFiltersBar'
 
 export default ListsFiltersBar

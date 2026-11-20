@@ -20,6 +20,10 @@ export const detailsPanelTab = (tab: ContributionFields<'detailsPanel.tab'>) =>
 export const detailsPanelMenuItem = (item: ContributionFields<'detailsPanel.menuItem'>) =>
   contribute('detailsPanel.menuItem', item)
 
+/** A tab in a list's details panel (Lists and Reviews pages, a review session in Review). */
+export const listDetailsTab = (tab: ContributionFields<'listDetails.tab'>) =>
+  contribute('listDetails.tab', tab)
+
 /** An item in the project tables' right-click menu, acting on the selected entities. */
 export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
   contribute('entityMenuItem', item)
