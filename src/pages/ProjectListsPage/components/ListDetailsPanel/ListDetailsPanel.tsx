@@ -147,10 +147,12 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         onChange={setSelectedTab}
         // a tab in the URL whose addon is gone
         fallbackTab="details"
+        // few tabs: each is named, the addons' too
+        showLabels
       >
         {ownTab && (
           <>
-            {/* the tab buttons are icons: the open tab is named here */}
+            {/* as an addon tab's header: the open tab's name and its search */}
             <PanelTabHeader
               title={ownTab.label}
               searchActive={ownTab.id === 'details' && !!detailsSearch}
