@@ -21,6 +21,7 @@ import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
 const AcceptInvitePage = lazy(() => import('@pages/AcceptInvitePage'))
+const DetailsPipPage = lazy(() => import('@pages/DetailsPipPage/DetailsPipPage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -80,7 +81,7 @@ import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import { DetailsPanelFloating } from '@shared/containers'
+import { DetailsPanelFloating, isDetailsPipPage } from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import AppAddonServices from './remote/AppAddonServices'
@@ -221,6 +222,7 @@ const App = () => {
   }, [])
 
   const isUser = user?.data?.isUser
+  const isDetailsPip = isDetailsPipPage()
 
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
@@ -264,23 +266,36 @@ const App = () => {
                                           <ImportDialogProvider>
                                             <DeleteEntitiesProvider>
                                               <TableExportProvider>
-                                                <Header />
-                                                <ShareDialog />
-                                                <ViewerDialog />
-                                                <ConfirmDialog />
-                                                <ImportDialog />
-                                                <FileUploadPreviewContainer />
-                                                <ReleaseInstallerDialog />
-                                                <CompleteProfilePrompt />
-                                                <AppRoutes />
-                                                <DetailsPanelFloating />
-                                                <EntityLinksSlot />
-                                                <PowerpackDialog />
-                                                <AppRemoteLoader />
-                                                <AppAddonServices />
-                                                <AddonHostNavigation />
-                                                <AddonHostImport />
-                                                <TrialBanner />
+                                                {isDetailsPip ? (
+                                                  // the picture-in-picture details panel: only the panel
+                                                  <>
+                                                    <ShareDialog />
+                                                    <ConfirmDialog />
+                                                    <EntityLinksSlot />
+                                                    <PowerpackDialog />
+                                                    <DetailsPipPage />
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Header />
+                                                    <ShareDialog />
+                                                    <ViewerDialog />
+                                                    <ConfirmDialog />
+                                                    <ImportDialog />
+                                                    <FileUploadPreviewContainer />
+                                                    <ReleaseInstallerDialog />
+                                                    <CompleteProfilePrompt />
+                                                    <AppRoutes />
+                                                    <DetailsPanelFloating />
+                                                    <EntityLinksSlot />
+                                                    <PowerpackDialog />
+                                                    <AppRemoteLoader />
+                                                    <AppAddonServices />
+                                                    <AddonHostNavigation />
+                                                    <AddonHostImport />
+                                                    <TrialBanner />
+                                                  </>
+                                                )}
                                               </TableExportProvider>
                                             </DeleteEntitiesProvider>
                                           </ImportDialogProvider>
@@ -303,7 +318,7 @@ const App = () => {
         </Suspense>
       </>
     ),
-    [user, isUser, isTrialing, user.name],
+    [user, isUser, isTrialing, user.name, isDetailsPip],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])

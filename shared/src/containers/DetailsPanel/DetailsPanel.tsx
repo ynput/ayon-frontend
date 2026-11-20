@@ -29,6 +29,7 @@ import {
 
 import DetailsPanelHeader from './components/DetailsPanelHeader/DetailsPanelHeader'
 import DetailsPanelFiles from './components/DetailsPanelFiles'
+import { isDetailsPipPage } from './components/DetailsPanelFloating/detailsPip'
 import NewerVersionBanner, { type ResolveVersionJump } from './components/NewerVersionBanner'
 import { getNewerLatestVersion } from './components/NewerVersionBanner/NewerVersionBannerHelpers'
 import {
@@ -412,7 +413,7 @@ DetailsPanelProps) => {
       entities: entitiesToQuery,
       scope: scope,
     })
-    requestPipWindow(500, 500)
+    requestPipWindow(480, 720)
   }
 
   const addonTabContext = useMemo(
@@ -491,7 +492,8 @@ DetailsPanelProps) => {
                   }
                 })}
               entityListsContext={entityListsContext}
-              onOpenPip={handleOpenPip}
+              // the PiP window can't open another one
+              onOpenPip={isDetailsPipPage() ? undefined : handleOpenPip}
               onOpenViewer={onOpenViewer}
               productId={firstEntityData?.product?.id}
               taskId={firstEntityData?.task?.id}
