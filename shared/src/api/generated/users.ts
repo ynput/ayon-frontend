@@ -560,6 +560,8 @@ export type UserSessionModel = {
   isService: boolean
   lastUsed: number
   clientInfo?: ClientInfo | null
+  /** The session making this request */
+  isCurrent?: boolean
 }
 export type UserSessionsResponseModel = {
   sessions: UserSessionModel[]
