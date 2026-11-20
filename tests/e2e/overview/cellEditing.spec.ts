@@ -312,8 +312,21 @@ test.describe('overview tag and date cells', () => {
     await expect(cell).toHaveText('15 Nov 2026')
     // the keyboard goes on from the cell
     await expect(cell).toBeFocused()
+
+    // a date typed in the cell; one not understood stays to be fixed
+    await cell.dblclick()
+    const input = cell.locator('input')
+    await expect(input).toBeFocused()
+    await expect(input).toHaveValue('15 Nov 2026')
+    await page.keyboard.type('nope')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    await input.fill('16/11/2026')
+    await page.keyboard.press('Enter')
+    await expect(overview.dateCalendar).toBeHidden()
+    await expect(cell).toHaveText('16 Nov 2026')
     await expect
       .poll(async () => Date.parse((await api.getTask(projectName, tasks[0].id)).attrib.startDate))
-      .toBe(Date.parse('2026-11-15T00:00:00Z'))
+      .toBe(Date.parse('2026-11-16T00:00:00Z'))
   })
 })
