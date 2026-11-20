@@ -52,6 +52,7 @@ const buildProductsGrid = (
             entityType: 'version',
             entityId: product.featuredVersion.id,
             thumbnailHash: product.featuredVersion.thumbnailHash,
+            placeholder: 'none',
           }) ?? undefined
         : undefined,
       filmstripUrl: product.featuredVersion?.hasReviewables
@@ -90,6 +91,7 @@ const buildVersionsGrid = (
           entityType: 'version',
           entityId: version.id,
           thumbnailHash: version.thumbnailHash,
+          placeholder: 'none',
         }) ?? undefined,
       filmstripUrl: version.hasReviewables
         ? getEntityFilmstripUrl({
