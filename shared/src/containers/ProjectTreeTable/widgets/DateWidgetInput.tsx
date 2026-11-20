@@ -84,11 +84,9 @@ export const DateWidgetInput = ({
   const isOutside = (node: Node | null) =>
     !!node && !input.current?.contains(node) && !popover.current?.contains(node)
 
-  // the date selected to type over, and the calendar under the cell, or above it when there is no
-  // room below
-  useLayoutEffect(() => {
-    input.current?.focus()
-    input.current?.select()
+  // the calendar under the cell, or above it when there is no room below; again when the table or
+  // the window scrolls or resizes
+  const place = () => {
     const box = popover.current
     const field = input.current?.closest('td') ?? input.current
     if (!box || !field) return
@@ -107,6 +105,18 @@ export const DateWidgetInput = ({
       Math.min(rect.left, window.innerWidth - box.offsetWidth - 8),
     )}px`
     box.style.visibility = 'visible'
+  }
+  useLayoutEffect(() => {
+    // the date selected to type over
+    input.current?.focus()
+    input.current?.select()
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
   }, [])
 
   // a click anywhere else saves the date typed, if any
@@ -145,8 +155,9 @@ export const DateWidgetInput = ({
         onKeyDown={(event) => {
           if (event.key === 'Enter') {
             event.preventDefault()
-            // an empty cell keeps its date; a date not understood stays to be fixed
-            if (typedDay || !text.trim()) finish(typedDay, 'Enter')
+            // a date not understood, or none for a cell with one (it can't be cleared), stays to be
+            // fixed; an empty cell left empty closes
+            if (typedDay || (!text.trim() && !day)) finish(typedDay, 'Enter')
             else setIsInvalid(true)
           } else if (event.key === 'Escape') {
             event.preventDefault()
@@ -154,9 +165,11 @@ export const DateWidgetInput = ({
           } else if (event.key === 'ArrowDown') {
             // into the calendar: the arrows move between its days, Enter picks one
             event.preventDefault()
-            popover.current
-              ?.querySelector<HTMLElement>('.react-datepicker__day[tabindex="0"]')
-              ?.focus()
+            const days = popover.current
+            ;(
+              days?.querySelector<HTMLElement>('.react-datepicker__day[tabindex="0"]') ??
+              days?.querySelector<HTMLElement>('.react-datepicker__day--selected')
+            )?.focus()
           }
         }}
         // The table focuses its cell on mousedown, which would blur and unmount this editor.

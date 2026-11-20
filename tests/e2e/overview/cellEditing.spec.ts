@@ -313,12 +313,16 @@ test.describe('overview tag and date cells', () => {
     // the keyboard goes on from the cell
     await expect(cell).toBeFocused()
 
-    // a date typed in the cell; one not understood stays to be fixed
+    // a date typed in the cell; one not understood, or none, stays to be fixed
     await cell.dblclick()
     const input = cell.locator('input')
     await expect(input).toBeFocused()
     await expect(input).toHaveValue('15 Nov 2026')
     await page.keyboard.type('nope')
+    await page.keyboard.press('Enter')
+    await expect(input).toHaveAttribute('aria-invalid', 'true')
+    // a date can't be cleared here
+    await input.fill('')
     await page.keyboard.press('Enter')
     await expect(input).toHaveAttribute('aria-invalid', 'true')
     await input.fill('16/11/2026')

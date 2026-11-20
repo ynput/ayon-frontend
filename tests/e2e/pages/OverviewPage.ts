@@ -223,8 +223,15 @@ export class OverviewPage {
       const shown = new Date(`1 ${await header.textContent()}`)
       const diff = (year - shown.getFullYear()) * 12 + (month - 1 - shown.getMonth())
       if (diff === 0) break
-      await calendar.getByRole('button', { name: diff > 0 ? 'Next Month' : 'Previous Month' }).click()
+      await calendar
+        .getByRole('button', { name: diff > 0 ? 'Next Month' : 'Previous Month' })
+        .click()
     }
+    const target = new Date(year, month - 1).toLocaleString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
+    await expect(header).toHaveText(target)
     await calendar
       .locator('.react-datepicker__day:not(.react-datepicker__day--outside-month)')
       .getByText(String(day), { exact: true })
