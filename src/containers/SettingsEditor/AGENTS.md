@@ -177,6 +177,15 @@ rail is rendered, hidden or not, so hiding or showing it never moves the sheet. 
 narrow for both margins to hold the rail, the right one gives way first. Nested layouts (one per
 editor under a shared rail) are a single column.
 
+Two more preferences on the user's record change that grid (_Profile_, shown only as usable while
+the flat layout is on). The grid's classes come from `useFlatSettingsLayoutClassName`, used by both
+places that draw the grid (`SettingsEditor.jsx`, `AddonSettingsSheets`):
+
+| Preference | Class | Effect |
+| --- | --- | --- |
+| `fullWidthSettings` (_Full width settings_) | `is-full-width` | No margins: the rail, then the sheet filling the rest. Narrow panels (720px or less) still drop the rail |
+| `outlineFitsTitles` (_Outline fits titles_) | `outline-fits-titles` | `--settings-outline-width` becomes `max-content`, so the rail is as wide as its longest title, up to 400px. Longer names still roll |
+
 Addon settings and Site settings stack one editor per selected addon (and site). They share one
 outline (`AddonSettingsSheets`, editors get `outline={false}`), so every sheet starts at the same edge
 whether or not it has groups of its own. Each sheet heads its cards in that rail. A rail lists a

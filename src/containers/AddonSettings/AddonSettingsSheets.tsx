@@ -1,5 +1,6 @@
 import { ReactNode, useRef } from 'react'
 import { SettingsOutline } from '@containers/SettingsEditor/SettingsOutline'
+import { useFlatSettingsLayoutClassName } from '@hooks/useFlatSettingsLayout'
 
 type AddonSettingsSheetsProps = {
   /** The flat layout: one outline beside every sheet, in place of one per addon */
@@ -14,12 +15,13 @@ type AddonSettingsSheetsProps = {
  */
 export const AddonSettingsSheets = ({ flat, children }: AddonSettingsSheetsProps) => {
   const sheetsRef = useRef<HTMLDivElement>(null)
+  const layoutClassName = useFlatSettingsLayoutClassName()
 
   if (!flat) return <>{children}</>
 
   return (
     <div className="settings-flat">
-      <div className="settings-flat-layout">
+      <div className={layoutClassName}>
         <SettingsOutline sheetRef={sheetsRef} />
         <div className="settings-flat-sheet" ref={sheetsRef}>
           {children}

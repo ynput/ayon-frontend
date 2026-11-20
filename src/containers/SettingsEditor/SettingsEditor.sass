@@ -318,23 +318,40 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   container-type: inline-size
 
 .settings-flat-layout
+  // the rail's width: fixed, or as wide as its longest title, up to a cap (Profile)
+  --settings-outline-width: 200px
   display: grid
   grid-template-columns: minmax(0, 1fr) minmax(0, 1040px) minmax(0, 1fr)
   column-gap: 24px
   align-items: start
 
+  &.outline-fits-titles
+    --settings-outline-width: max-content
+
   // shown or hidden, the rail keeps its room: only a sheet too short for one goes without
   &:has(> .settings-outline)
-    grid-template-columns: minmax(200px, 1fr) minmax(0, 1040px) minmax(0, 1fr)
+    grid-template-columns: minmax(var(--settings-outline-width), 1fr) minmax(0, 1040px) minmax(0, 1fr)
 
   // beside the sheet however wide its margin grows
   > .settings-outline
     grid-column: 1
     justify-self: end
-    width: 200px
+    width: var(--settings-outline-width)
+    max-width: 400px
 
   > :not(.settings-outline)
     grid-column: 2
+
+// full width (Profile): the sheet fills the panel beside the rail, with no margins. Not in
+// nested layouts, and not in narrow panels, which drop the rail (below)
+@container (min-width: 721px)
+  .settings-flat-layout.is-full-width:not(.settings-flat-layout *)
+    grid-template-columns: 0 minmax(0, 1fr)
+    column-gap: 0
+
+    &:has(> .settings-outline)
+      grid-template-columns: var(--settings-outline-width) minmax(0, 1fr)
+      column-gap: 24px
 
 // editors stacked beside one shared rail (AddonSettings, SiteSettings) take that layout's
 // margins and column: their own layout holds just their sheet

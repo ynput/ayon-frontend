@@ -83,6 +83,8 @@ const initialPreferences = {
   notifications: false,
   notificationSound: false,
   flatSettingsLayout: false,
+  fullWidthSettings: false,
+  outlineFitsTitles: false,
 }
 
 const ProfilePage = ({ user = {}, isLoading }) => {
@@ -195,6 +197,8 @@ const ProfilePage = ({ user = {}, isLoading }) => {
         notifications: data.frontendPreferences?.notifications,
         notificationSound: data.frontendPreferences?.notificationSound,
         flatSettingsLayout: !!data.frontendPreferences?.flatSettingsLayout,
+        fullWidthSettings: !!data.frontendPreferences?.fullWidthSettings,
+        outlineFitsTitles: !!data.frontendPreferences?.outlineFitsTitles,
       }
 
       setPreferencesData(newPreferencesData)
@@ -268,6 +272,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     ? 'Browser notifications only work over HTTPS'
     : 'Get notifications on your device'
 
+  // the width options only apply to the flat layout
+  const flatLayoutOptionsDisabled =
+    isUpdatingPreferences || isLoading || !preferencesData.flatSettingsLayout
+  const flatLayoutTooltip = (tooltip) =>
+    preferencesData.flatSettingsLayout ? tooltip : 'Turn on the flat settings layout to use this'
+
   const saveButton = (
     <SaveButton
       onClick={handleSaveAll}
@@ -340,6 +350,36 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             id={'flatSettingsLayout'}
             onChange={handleChangePreferences}
             disabled={isUpdatingPreferences || isLoading}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Full width settings" key="fullWidthSettings">
+        <div
+          data-tooltip={flatLayoutTooltip('Let the settings fill the page instead of a column')}
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.fullWidthSettings}
+            id={'fullWidthSettings'}
+            onChange={handleChangePreferences}
+            disabled={flatLayoutOptionsDisabled}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Outline fits titles" key="outlineFitsTitles">
+        <div
+          data-tooltip={flatLayoutTooltip(
+            'Make the settings outline as wide as its longest title, instead of a fixed width',
+          )}
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.outlineFitsTitles}
+            id={'outlineFitsTitles'}
+            onChange={handleChangePreferences}
+            disabled={flatLayoutOptionsDisabled}
           />
         </div>
       </FormRow>

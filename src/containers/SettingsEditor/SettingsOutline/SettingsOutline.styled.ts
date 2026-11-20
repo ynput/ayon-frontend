@@ -41,8 +41,8 @@ export const Outline = styled.nav`
   ul {
     /* the browser tracks which link's group is in view (see useSettingsOutlineCurrent) */
     scroll-target-group: auto;
-    /* the width of the grid column when the rail is shown */
-    width: 200px;
+    /* the rail's width (SettingsEditor.sass), so a long name ends in an ellipsis */
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 2px;

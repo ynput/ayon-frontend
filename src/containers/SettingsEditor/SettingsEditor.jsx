@@ -21,6 +21,7 @@ import { SettingsJsonDialog } from './SettingsJsonDialog/SettingsJsonDialog'
 import { compareObjects, getValueByPath, setValueByPath } from '@containers/AddonSettings/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { useStableFormContext } from './formContextStore'
+import { useFlatSettingsLayoutClassName } from '@hooks/useFlatSettingsLayout'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -124,6 +125,7 @@ const SettingsEditor = ({
   const flatLayout = useAppSelector(
     (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
   )
+  const layoutClassName = useFlatSettingsLayoutClassName()
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -264,7 +266,7 @@ const SettingsEditor = ({
       className={clsx(flatLayout && 'settings-flat')}
     >
       {flatLayout ? (
-        <div className="settings-flat-layout">
+        <div className={layoutClassName}>
           {outline && <SettingsOutline sheetRef={sheetRef} />}
           <div className="settings-flat-sheet" ref={sheetRef}>
             {form}
