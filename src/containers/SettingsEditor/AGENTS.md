@@ -8,6 +8,10 @@ user with `frontendPreferences.flatSettingsLayout` (_Profile > Flat settings lay
 `SettingField/`, `SettingsOutline/`). The classic markup is what the e2e tests rely on, so keep it
 as it is when changing the flat layout.
 
+The user panel of Studio settings > Users isn't an RJSF form, but follows the same preference: it
+copies the flat look in CSS (`FormsStyled` in `UsersSettings/userDetail.styled.js`). Keep its
+spacing and surfaces in step with `SettingsEditor.sass`.
+
 ## Flat layout
 
 An addon is a sheet. Its top-level groups are cards (a title on the sheet over panels of one-line

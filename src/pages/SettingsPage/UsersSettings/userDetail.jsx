@@ -1,10 +1,18 @@
 import { useState, useEffect, useRef, memo } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
-import { Button, Section, Panel, FormRow, SaveButton } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Section,
+  Panel,
+  FormLayout,
+  FormRow,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
-import styled from 'styled-components'
+import { useAppSelector } from '@state/store'
+import clsx from 'clsx'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
@@ -19,20 +27,7 @@ import {
   UserDetailsHeader,
   usersAccessLabel,
 } from '@shared/components'
-import { EditableLockedInput, PanelButtonsStyled } from './userDetail.styled'
-
-const FormsStyled = styled.section`
-  flex: 1;
-  overflow-x: clip;
-  overflow-y: auto;
-  gap: var(--base-gap-small);
-  display: flex;
-  flex-direction: column;
-
-  & > *:last-child {
-    /* flex: 1; */
-  }
-`
+import { EditableLockedInput, FormsStyled, PanelButtonsStyled } from './userDetail.styled'
 
 const attribTypeDefaults = {
   string: '',
@@ -217,6 +212,10 @@ const UserDetail = ({
 
   const attributes = ayonClient.getAttribsByScope('user')
   const dispatch = useDispatch()
+  // the user's flat settings layout preference draws these forms like a flat settings sheet
+  const flatLayout = useAppSelector(
+    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
+  )
 
   useEffect(() => {
     // have the selected users changed?
@@ -407,38 +406,45 @@ const UserDetail = ({
         onMenuOpen={addonMenu.prefetch}
       />
       {hasServiceUser && singleUserEdit ? (
-        <FormsStyled>
-          <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
+        <FormsStyled className={clsx({ flat: flatLayout })}>
+          <ServiceDetails
+            editName={() => setShowRenameUser(true)}
+            user={singleUserEdit}
+            flat={flatLayout}
+          />
           <AddonUserDetailsSections context={addonContext} />
         </FormsStyled>
       ) : (
-        <FormsStyled>
+        <FormsStyled className={clsx({ flat: flatLayout })}>
           {singleUserEdit && (
             <Panel>
-              <FormRow label="Username" key="Username">
-                <EditableLockedInput
-                  value={singleUserEdit.name}
-                  onEdit={() => setShowRenameUser(true)}
-                  disabled={managerDisabled}
-                />
-              </FormRow>
-              <FormRow label="Password" key="Password">
-                <EditableLockedInput
-                  label="Password"
-                  value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                  type="password"
-                  onEdit={() => setShowSetPassword(true)}
-                  disabled={managerDisabled}
-                />
-              </FormRow>
-              {formData && (
-                <UserAttribForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  attributes={attributes}
-                  disabled={managerDisabled}
-                />
-              )}
+              {flatLayout && <b className="user-detail-title">Profile</b>}
+              <FormLayout>
+                <FormRow label="Username" key="Username">
+                  <EditableLockedInput
+                    value={singleUserEdit.name}
+                    onEdit={() => setShowRenameUser(true)}
+                    disabled={managerDisabled}
+                  />
+                </FormRow>
+                <FormRow label="Password" key="Password">
+                  <EditableLockedInput
+                    label="Password"
+                    value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                    type="password"
+                    onEdit={() => setShowSetPassword(true)}
+                    disabled={managerDisabled}
+                  />
+                </FormRow>
+                {formData && (
+                  <UserAttribForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    attributes={attributes}
+                    disabled={managerDisabled}
+                  />
+                )}
+              </FormLayout>
             </Panel>
           )}
           {formData && (
