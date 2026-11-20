@@ -25,6 +25,7 @@ import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/e
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
+import { extractFeaturedVersionFilter } from '../util/featuredVersionFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import {
   useEntityLinks,
@@ -110,10 +111,12 @@ const useGetListItemsData = ({
   ) as StatsEntity | undefined
   const statsProjectName = contextProjectName || projectName
   const { search, filters: filtersWithoutSearch } = extractSearchFromFilters(filters)
-  const queryFilterString = filtersWithoutSearch.conditions?.length
+  const { featuredOnly, filters: filtersWithoutFeatured } =
+    extractFeaturedVersionFilter(filtersWithoutSearch)
+  const queryFilterString = filtersWithoutFeatured.conditions?.length
     ? JSON.stringify(
         toEntityValueKeys(
-          sanitizeQueryFilter(expandRelativeDates(filtersWithoutSearch)),
+          sanitizeQueryFilter(expandRelativeDates(filtersWithoutFeatured)),
           readsEntityValue,
         ),
       )
@@ -181,6 +184,7 @@ const useGetListItemsData = ({
     desc,
     filter: queryFilterString || undefined,
     search,
+    featuredOnly,
     showComments,
   }
 
@@ -209,6 +213,7 @@ const useGetListItemsData = ({
       desc,
       filter: queryFilterString || '',
       search: search || '',
+      featuredOnly: featuredOnly?.join(',') || '',
     },
     isFetchingListItems,
   )
@@ -246,6 +251,7 @@ const useGetListItemsData = ({
     listId: listId || '',
     filter: statsFilter,
     search,
+    featuredOnly,
     targets: statsTargets,
   }
   const skipStats =

@@ -2619,6 +2619,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "featuredOnly",
+                "description": "Version lists only. Keep the items that are the featured version of their product, based on the order of flags, that can be 'hero', 'latestDone' and 'latest'. Same as featuredOnly of versions.",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "filter",
                 "description": null,
                 "type": {
@@ -11813,7 +11833,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one or more of name, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
+                "description": "Sort by one or more of name, path, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -12711,6 +12731,26 @@
                 "deprecationReason": null
               },
               {
+                "name": "calculateSpecificStatistics",
+                "description": "\nStatistics of the filtered users (e.g. COUNT of name) returned\nin fieldStats instead of the edges. Pagination is ignored.\nFields: name, attrib.fullName, attrib.email (managers only).\n",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "MetricTargetInput",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "emails",
                 "description": "\nThe emails of the users to retrieve.\n",
                 "type": {
@@ -12813,6 +12853,38 @@
               {
                 "name": "projects",
                 "description": "List only users assigned to projects",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "SCALAR",
+                      "name": "String",
+                      "ofType": null
+                    }
+                  }
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "search",
+                "description": "Fuzzy text search filter (name, full name and email)",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "String",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
+                "name": "sortBy",
+                "description": "Sort by one or more of name, fullName, email. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
                   "kind": "LIST",
                   "name": null,
@@ -15495,7 +15567,7 @@
               },
               {
                 "name": "sortBy",
-                "description": "Sort by one or more of name, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
+                "description": "Sort by one or more of name, path, status, createdAt, updatedAt. Multiple keys are applied in order of precedence. Prefix a key with '-' to sort it in descending order. A single string is accepted as well.",
                 "type": {
                   "kind": "LIST",
                   "name": null,

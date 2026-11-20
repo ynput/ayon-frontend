@@ -1,5 +1,5 @@
 import { QueryFilter, QueryCondition } from '@shared/api'
-import { FEATURED_VERSION_TYPES } from '@shared/components'
+import { FEATURED_VERSION_TYPES } from '@shared/components/FeaturedVersionOrder/FeaturedVersionOrderHelpers'
 
 // Get featured version values for quick lookup
 const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
