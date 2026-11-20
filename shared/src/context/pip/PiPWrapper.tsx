@@ -2,44 +2,22 @@ import React, { FC } from 'react'
 import { usePiPWindow } from './PiPContextInstance'
 import PiPWindow from './PiPWindow'
 import { Dialog } from 'primereact/dialog'
-import { Button } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 
 export interface PiPWrapperProps {
   children: React.ReactNode
 }
 
+// the panel is the whole dialog: no title bar or padding, the panel has its own close button
 const StyledDialog = styled(Dialog)`
-  width: 25vw;
-  height: 70vh;
+  position: relative;
+  width: 480px;
+  height: min(720px, 90vh);
   border: solid 1px var(--md-sys-color-outline-variant);
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 0 1px 1px light-dark(var(--md-sys-color-outline-variant), #000),
     0 11px 15px -7px #0003, 0 24px 38px 3px #00000024, 0 9px 46px 8px #0000001f;
-  &:hover {
-    .close {
-      opacity: 1;
-    }
-  }
-`
-
-const StyledClose = styled(Button)`
-  width: 26px;
-  height: 26px;
-  margin-left: auto;
-
-  .icon {
-    font-size: 15px;
-    font-variation-settings: 'FILL' 0;
-  }
-  background-color: unset !important;
-  opacity: 0;
-  border-radius: 100%;
-  transition: opacity 400ms, background-color 400ms;
-  &:hover {
-    background-color: light-dark(var(--md-sys-color-surface-container-high-hover), #3d3e40);
-  }
 `
 
 export const PiPWrapper: FC<PiPWrapperProps> = ({ children }) => {
@@ -55,14 +33,18 @@ export const PiPWrapper: FC<PiPWrapperProps> = ({ children }) => {
   if (!isSupported && pipId) {
     return (
       <StyledDialog
-        header={<StyledClose icon="close" className="close" onClick={closePipWindow} />}
+        // an invisible strip along the top edge to drag the dialog by
         headerStyle={{
-          padding: 4,
-          backgroundColor: 'light-dark(var(--md-sys-color-surface-container-low), #202124)',
+          position: 'absolute',
+          inset: '0 0 auto 0',
+          height: 8,
+          padding: 0,
+          background: 'transparent',
           border: 'none',
-          height: 33,
+          cursor: 'move',
+          zIndex: 1,
         }}
-        contentStyle={{ overflow: 'hidden', height: 'revert-layer', padding: 8, border: 'none' }}
+        contentStyle={{ overflow: 'hidden', height: '100%', padding: 0, border: 'none' }}
         maskStyle={{ pointerEvents: 'none', userSelect: 'none', backgroundColor: 'unset' }}
         visible={true}
         closeOnEscape={false}

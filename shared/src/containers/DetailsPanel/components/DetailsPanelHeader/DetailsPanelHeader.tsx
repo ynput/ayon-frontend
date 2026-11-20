@@ -344,7 +344,7 @@ const DetailsPanelHeader = ({
               <Styled.AssigneeSelect
                 value={entityUsers}
                 options={usersOptions}
-                disabledValues={disabledAssignees.map((u) => u.name)}
+                disabledValues={disabledAssignees.map((u) => (typeof u === 'string' ? u : u.name))}
                 isMultiple={isMultiple && entityUsers.length > 1 && entityType === 'task'}
                 readOnly={!canEditAssignees}
                 emptyMessage={canEditAssignees ? 'Assign user' : '-'}

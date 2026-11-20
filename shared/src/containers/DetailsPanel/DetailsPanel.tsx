@@ -35,6 +35,7 @@ import {
   useDetailsPanelMoreMenu,
   type DetailsPanelEntityListsContext,
 } from './components/DetailsPanelMoreMenu'
+import { isDetailsPipPage } from './components/DetailsPanelFloating/detailsPip'
 import useGetEntityPath from './hooks/useGetEntityPath'
 import getAllProjectStatuses from './helpers/getAllProjectsStatuses'
 import FeedWrapper from './containers/FeedWrapper'
@@ -414,7 +415,7 @@ DetailsPanelProps) => {
       entities: entitiesToQuery,
       scope: scope,
     })
-    requestPipWindow(500, 500)
+    requestPipWindow(480, 720)
   }
 
   const moreMenu = useDetailsPanelMoreMenu({
@@ -438,7 +439,8 @@ DetailsPanelProps) => {
         }
       }),
     entityListsContext,
-    onOpenPip: handleOpenPip,
+    // the PiP window can't open another one
+    onOpenPip: isDetailsPipPage() ? undefined : handleOpenPip,
     onOpenViewer,
     productId: firstEntityData?.product?.id,
     taskId: firstEntityData?.task?.id,
