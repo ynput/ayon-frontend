@@ -328,6 +328,9 @@ test.describe('overview tag and date cells', () => {
     // ArrowDown goes into the calendar on the day typed, Enter picks it
     await input.fill('16/11/2026')
     await page.keyboard.press('ArrowDown')
+    const keyboardDay = overview.dateCalendar.locator('.react-datepicker__day[tabindex="0"]')
+    await expect(keyboardDay).toBeFocused()
+    await expect(keyboardDay).toHaveText('16')
     await page.keyboard.press('Enter')
     await expect(overview.dateCalendar).toBeHidden()
     await expect(cell).toHaveText('16 Nov 2026')
