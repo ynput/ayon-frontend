@@ -8,6 +8,7 @@ import {
   useProjectTableContext,
   ProjectTreeTable,
   useAddonTableColumns,
+  useTaskColumns,
 } from '@shared/containers/ProjectTreeTable'
 import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { useOptionalNewEntityContext } from '@shared/containers/NewEntity'
@@ -51,6 +52,16 @@ const ProjectOverviewTable = ({ excludedColumns }: Props) => {
   // columns addons contribute (tableColumn slot)
   const { columns: addonColumns, settingsColumns: addonSettingsColumns } =
     useAddonTableColumns('overview')
+  // a column per task type, on folder rows (not where the rows are tasks)
+  const { columns: taskColumns, settingsColumns: taskSettingsColumns } = useTaskColumns(
+    showHierarchy || !!isFlatFolderView,
+  )
+  // a new array rebuilds the table's columns
+  const extraColumns = useMemo(() => [...taskColumns, ...addonColumns], [taskColumns, addonColumns])
+  const addColumnItems = useMemo(
+    () => [...taskSettingsColumns, ...addonSettingsColumns],
+    [taskSettingsColumns, addonSettingsColumns],
+  )
 
   const scope = `overview-${projectName}`
 
@@ -100,10 +111,10 @@ const ProjectOverviewTable = ({ excludedColumns }: Props) => {
           fieldStatsError={folderStatsError || taskStatsError}
           mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
           onVisibleRowsChange={setVisibleEntityIds}
-          extraColumns={addonColumns}
+          extraColumns={extraColumns}
           excludedColumns={excludedColumns}
         />
-        <AddColumnButton extraColumns={addonSettingsColumns} hiddenColumns={excludedColumns} />
+        <AddColumnButton extraColumns={addColumnItems} hiddenColumns={excludedColumns} />
       </TableWrapper>
     </Section>
   )

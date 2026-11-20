@@ -162,6 +162,8 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     // a column an addon contributes (tableColumn slot)
     addonColumn?: AddonColumnMeta
+    // a task column: its task type, shown in the header
+    taskColumn?: { name: string; icon?: string; color?: string }
   }
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
@@ -1324,7 +1326,14 @@ const TableHeadLabel = ({ header }: { header: Header<TableRow, unknown> }) => {
     return <Icon icon={getColumnIcon(column.id)} data-tooltip={label} />
   }
 
-  return <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
+  const taskColumn = column.columnDef.meta?.taskColumn
+
+  return (
+    <>
+      {taskColumn?.icon && <Icon icon={taskColumn.icon} style={{ color: taskColumn.color }} />}
+      <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
+    </>
+  )
 }
 
 interface TableHeadCellProps {
@@ -1413,6 +1422,9 @@ const TableHeadCell = ({
     return {}
   }
 
+  // a task column's header carries its task type's colour
+  const taskColumnColor = column.columnDef.meta?.taskColumn?.color
+
   // Prevent drag when clicking action buttons
   const preventDragFromActions = {
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
@@ -1431,12 +1443,14 @@ const TableHeadCell = ({
         resizing: column.getIsResizing(),
         dragging: isDragging,
         draggable: isDraggable,
+        'task-column': !!taskColumnColor,
       })}
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth(column.id),
         ...getDragStyle(),
+        ...(taskColumnColor && ({ '--task-type-color': taskColumnColor } as CSSProperties)),
       }}
     >
       {header.isPlaceholder ? null : (
@@ -2049,8 +2063,9 @@ const TD = ({
 
         const target = e.target as HTMLElement
 
-        // check we are not clicking on expander
-        if (target.closest('.expander')) return
+        // check we are not clicking on expander (the row's button: a task card's status label
+        // carries the same class)
+        if (target.closest('button.expander')) return
 
         // check we are not clicking in a dropdown, or in anything the cell opened in a portal
         // (e.g. a dropdown's search box), which would lose its focus to the cell
@@ -2077,7 +2092,7 @@ const TD = ({
 
           // name column: select row to open details panel
           // comments column: same — comments are read and written in the details panel feed
-          if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
+          if (['name', 'comments'].includes(cell.column.id) && !target.closest('button.expander')) {
             // all ProjectTreeTable pages render their details panel under the 'overview' scope
             if (cell.column.id === 'comments') setDetailsPanelTabForScope('overview', 'feed')
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)

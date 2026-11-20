@@ -1,6 +1,7 @@
 import { getPlatformShortcutKey, KeyMode } from '@shared/util'
 import {
   CellEditingContextType,
+  isTaskColumnId,
   parseCellId,
   ROW_SELECTION_COLUMN_ID,
   SelectionCellsContextType,
@@ -73,6 +74,8 @@ const OverviewActions: FC<OverviewActionsProps> = ({ items }) => {
       if (!rowEntities.includes(rowId)) rowEntities.push(rowId)
       return
     }
+    // a task column's cell is the folder's tasks, not the folder: Delete must not take the row
+    if (colId && isTaskColumnId(colId)) return
     if (!cellEntities.includes(rowId)) cellEntities.push(rowId)
   })
   const selectedEntities = cellEntities.length ? cellEntities : rowEntities

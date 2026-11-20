@@ -218,15 +218,18 @@ const injectedApi = enhancedApi.injectEndpoints({
         folderFilter?: string
         search?: string
         showComments?: boolean
+        // A cache of its own for another consumer of the same folders (task columns), so it
+        // neither shares tasks nor the queried-folders registry with the expanded folders
+        scope?: string
       }
     >({
       async queryFn(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments, scope },
         { dispatch, getState, forced },
       ) {
         try {
           const state = getState()
-          const cacheArgs = { projectName, filter, folderFilter, search, showComments }
+          const cacheArgs = { projectName, filter, folderFilter, search, showComments, scope }
 
           // Select current flat cache state
           const currentCache = (injectedApi.endpoints as any).getOverviewTasksByFolders.select(
@@ -235,7 +238,14 @@ const injectedApi = enhancedApi.injectEndpoints({
           const cacheData: EditorTaskNode[] = currentCache?.data || []
 
           // 1. Generate a stable cache key matching RTK Query's serialization
-          const cacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
+          const cacheKey = getCacheKey(
+            projectName,
+            filter,
+            folderFilter,
+            search,
+            showComments,
+            scope,
+          )
 
           // 2. Fetch our registry specific to THIS combination of search/filters
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)
@@ -335,13 +345,13 @@ const injectedApi = enhancedApi.injectEndpoints({
       providesTags: (result, _e, { parentIds, projectName }) =>
         getOverviewTaskTags(result, projectName, parentIds),
       async onCacheEntryAdded(
-        { projectName, parentIds, filter, folderFilter, search, showComments },
+        { projectName, parentIds, filter, folderFilter, search, showComments, scope },
         { cacheDataLoaded, cacheEntryRemoved, updateCachedData, dispatch, getCacheEntry },
       ) {
         let token: any
         const batchProcessMessages: RealtimeBatchProcessor<any> = async (messages, isActive) => {
           const queriedFolders = getQueriedFolders(
-            getCacheKey(projectName, filter, folderFilter, search, showComments),
+            getCacheKey(projectName, filter, folderFilter, search, showComments, scope),
           )
           const cachedTaskIds = new Set(
             (getCacheEntry().data as EditorTaskNode[] | undefined)?.map((task) => task.id) || [],
@@ -467,7 +477,14 @@ const injectedApi = enhancedApi.injectEndpoints({
         batcher.clear()
 
         // Evict tracking map memory entry completely when this RTK Query cache entry expires
-        const deadCacheKey = getCacheKey(projectName, filter, folderFilter, search, showComments)
+        const deadCacheKey = getCacheKey(
+          projectName,
+          filter,
+          folderFilter,
+          search,
+          showComments,
+          scope,
+        )
         delete queriedFoldersRegistry[deadCacheKey]
 
         if (token) PubSub.unsubscribe(token)

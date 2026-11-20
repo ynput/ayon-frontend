@@ -46,6 +46,8 @@ import { getColumnDisplayConfig } from './types/columnConfig'
 import { ENTITY_COLUMN_IDS, normalizeColumnId } from './utils/columnIds'
 import { getFolderColumnEntity, getFolderColumnValue } from './utils/folderColumn'
 import { upperFirst } from 'lodash'
+import { TaskRowExpandToggle } from './taskColumns/TaskRowExpandToggle'
+import { isTaskRowExpandable } from './taskColumns/taskColumnsHelpers'
 
 export const isEntityExpandable = (entityType: string) => ['folder', 'product'].includes(entityType)
 
@@ -769,6 +771,7 @@ const buildTreeTableColumns = ({
                 columnDisplayConfig={getColumnDisplayConfig(meta?.columnsConfig, 'name')}
               />
             )}
+            {isTaskRowExpandable(row.original) && <TaskRowExpandToggle rowId={row.id} />}
             {!row.original.group && isEditing(cellId) && (
               <CellWidget
                 rowId={id}

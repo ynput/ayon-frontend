@@ -17,6 +17,7 @@ import {
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
 import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { isTaskColumnId } from '../../taskColumns/taskColumnsHelpers'
 import { getAddonColumnText } from '../../addonColumns/addonColumnValues'
 
 // Types
@@ -498,6 +499,8 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         if (colId === ROW_SELECTION_COLUMN_ID || !visibleColumnIds.includes(colId)) return
         // addon columns are read-only, and their ids are no field names (`split('_').pop()`)
         if (isAddonColumnId(colId)) return
+        // a task column's cell holds the folder's tasks: a paste would go to the folder
+        if (isTaskColumnId(colId)) return
         // nothing is pasted into read-only rows (subtasks and links don't go through updateEntities)
         if (isRowReadOnly(rowId)) return
 

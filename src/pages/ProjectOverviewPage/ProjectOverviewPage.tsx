@@ -32,6 +32,7 @@ import { useProjectOverviewContext } from './context/project-overview'
 import ProjectOverviewSettings from './containers/ProjectOverviewSettings'
 import { useGlobalContext, useProjectFoldersContext, useSettingsPanel } from '@shared/context'
 import OverviewActions from './components/OverviewActions'
+import ExpandRowsButton from './components/ExpandRowsButton'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { DetailsPanelEntityData } from '@shared/api'
 import { QueryFilter } from '@shared/containers/ProjectTreeTable/types/operations'
@@ -271,6 +272,7 @@ const ProjectOverviewPage: FC = () => {
                 onChange={handleViewGroupByChange}
                 multiSelect={false}
               />
+              <ExpandRowsButton />
               <TableExportButton onImport={() => openImportDialog('hierarchy', projectName)} />
               <Actions
                 entities={[]}
