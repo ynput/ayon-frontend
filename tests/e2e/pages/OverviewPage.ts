@@ -209,15 +209,39 @@ export class OverviewPage {
     await expect(this.table.locator('td.editing')).toHaveCount(0)
   }
 
-  // FLAG: the native date picker takes Enter while open, so the date is committed by clicking another cell
+  /** the calendar a date cell opens to edit its date */
+  get dateCalendar() {
+    return this.page.getByRole('dialog', { name: 'Choose a date' })
+  }
+
+  /** picks a day (`YYYY-MM-DD`) in the open date calendar, going month by month to it */
+  async pickCalendarDay(date: string) {
+    const calendar = this.dateCalendar
+    const [year, month, day] = date.split('-').map(Number)
+    const header = calendar.locator('.react-datepicker__current-month')
+    for (let step = 0; step < 36; step++) {
+      const shown = new Date(`1 ${await header.textContent()}`)
+      const diff = (year - shown.getFullYear()) * 12 + (month - 1 - shown.getMonth())
+      if (diff === 0) break
+      await calendar
+        .getByRole('button', { name: diff > 0 ? 'Next Month' : 'Previous Month' })
+        .click()
+    }
+    const target = new Date(year, month - 1).toLocaleString('en-US', {
+      month: 'long',
+      year: 'numeric',
+    })
+    await expect(header).toHaveText(target)
+    await calendar
+      .locator('.react-datepicker__day:not(.react-datepicker__day--outside-month)')
+      .getByText(String(day), { exact: true })
+      .click()
+    await expect(calendar).toBeHidden()
+  }
+
   async setDateCell(label: string, columnId: string, date: string) {
-    const cell = this.cell(label, columnId)
-    await cell.dblclick()
-    const input = cell.locator('input[type="date"]')
-    await expect(input).toBeFocused()
-    await input.fill(date)
-    await this.nameCell(label).click()
-    await expect(input).toBeHidden()
+    await this.cell(label, columnId).dblclick()
+    await this.pickCalendarDay(date)
   }
 
   async undo() {
