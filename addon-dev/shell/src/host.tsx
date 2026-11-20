@@ -9,6 +9,7 @@ import {
   AddonListPicker,
   AddonMoreMenu,
   AddonPanelTabHeader,
+  AddonTabbedPanel,
   PanelAddonTab,
   ProjectListHost,
   ProjectPageLayoutHost,
@@ -91,5 +92,6 @@ export const provideShellHost = () =>
       MoreMenu: AddonMoreMenu,
       PanelTabHeader: AddonPanelTabHeader,
       ContributionTab: PanelAddonTab,
+      TabbedPanel: AddonTabbedPanel,
     },
   })

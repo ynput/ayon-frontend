@@ -495,20 +495,47 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
 - An AYON older than this component has no such export (\`undefined\`): an addon that supports one
   checks \`PanelTabHeader &&\` before rendering it. \`DetailsPanelTabHeader\` is its old name.
 
-### An addon's own panel with other addons' tabs: \`ContributionTab\`
+### An addon's own panel with tabs: \`TabbedPanel\`
 
-An addon that draws a panel showing a tab slot (Review's session sidebar shows \`listDetails.tab\`)
-renders the open tab with \`ContributionTab\`, so the tab gets the same header as in AYON's panels.
-On an AYON without it, the tab renders alone.
+An addon that draws a panel with tabs (Review's session sidebar) uses \`TabbedPanel\`, AYON's own
+panel frame: the same title row, tools, tab bar and tab headers as the details panels, and the tabs
+other addons contribute to a tab slot (\`listDetails.tab\`) after the panel's own. The addon keeps
+which tab is open.
 
 \`\`\`tsx
-import { ContributionTab, useContributions } from '@ynput/ayon-addon'
+import { TabbedPanel } from '@ynput/ayon-addon'
 
-const { contributions: tabs } = useContributions('listDetails.tab')
-const tab = tabs.find((t) => t.key === openTab)
+const [tab, setTab] = useState('feedback')
+// undefined while the list loads: the addons' tabs wait for it
+const slot = useMemo(
+  () => ({ name: 'listDetails.tab' as const, context: list && { projectName, list, scope: 'review' } }),
+  [projectName, list],
+)
 
-{tab && <ContributionTab contribution={tab} context={{ projectName, list, scope: 'review' }} />}
+<TabbedPanel
+  tabs={[{ id: 'feedback', label: 'Feedback', icon: 'forum' }]}
+  selected={tab}
+  onChange={setTab}
+  slot={slot}
+  fallbackTab="feedback"
+  showLabels
+  tools={[{ id: 'hide', icon: 'right_panel_close', label: 'Hide', shortcut: '.', pinned: true, onClick: hide }]}
+>
+  {tab === 'feedback' && <Feedback />}
+</TabbedPanel>
 \`\`\`
+
+- \`title\`: the row at the top, with the tools at its right; without it, the tools go at the end
+  of the tab bar. \`beforeTabs\`: anything between the title and the tab bar.
+- \`tools\`: \`{ id, icon, label, onClick, pinned? }\` buttons, or \`{ id, element }\` drawn by the
+  addon. Items not \`pinned\` go in a "more" (…) menu before the others. \`onClose\` adds a close button
+  after them. Shortcuts are only shown in the tooltips: the addon handles its keys.
+- \`children\`: the open tab when it is one of \`tabs\`. An addon tab draws itself, with its header.
+- \`fallbackTab\`: opened instead of a \`selected\` addon tab whose addon is gone.
+- An AYON older than this component has no such export (\`undefined\`): an addon that supports one
+  checks \`TabbedPanel &&\` and draws its own panel otherwise. Such a panel renders the open addon
+  tab with \`ContributionTab\`, which gives it the same header (on an AYON without it, the tab alone):
+  \`<ContributionTab contribution={tab} context={context} />\`.
 
 ## Picking lists: \`ListPicker\`
 

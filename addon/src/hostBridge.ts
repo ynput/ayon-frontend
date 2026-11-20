@@ -11,6 +11,7 @@ import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
 import type { HostPanelTabHeaderProps } from './PanelTabHeader'
 import type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
+import type { HostTabbedPanelProps } from './TabbedPanel'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
@@ -51,6 +52,8 @@ export interface HostComponents {
   PanelTabHeader?: ComponentType<HostPanelTabHeaderProps>
   /** a panel tab contribution with its header, as AYON's panels draw it (`ContributionTab`) */
   ContributionTab?: ComponentType<ContributionTabProps<PanelTabSlotName>>
+  /** AYON's panel with tabs, its tools and the tabs of a slot (`TabbedPanel`) */
+  TabbedPanel?: ComponentType<HostTabbedPanelProps>
 }
 
 /**
