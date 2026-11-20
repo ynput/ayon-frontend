@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import { $Any } from '@types'
 import { updateOpenItems, useOpenItem } from './openItemsStore'
+import { useFormContextSelector } from '../formContextStore'
 
 type FoldStateArgs = {
   formContext: $Any
@@ -20,8 +21,16 @@ type FoldStateArgs = {
  */
 export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldStateArgs) => {
   const isOpen = useOpenItem(itemKey, foldable)
-  // while searching every item stays open, so no match is hidden inside a folded one
-  const forcedOpen = !!formContext?.searchText
+  const { forcedOpen, pointedInside } = useFormContextSelector(formContext, (context) => {
+    // currentId is 0, not a string, while nothing is selected (SettingsEditor)
+    const currentId = context.currentId
+    return {
+      // while searching every item stays open, so no match is hidden inside a folded one
+      forcedOpen: !!context.searchText,
+      pointedInside:
+        !!itemId && typeof currentId === 'string' && currentId.startsWith(`${itemId}_`),
+    }
+  })
 
   const toggle = useCallback(
     () =>
@@ -35,10 +44,6 @@ export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldSta
     if (!forcedOpen) toggle()
   }, [forcedOpen, toggle])
 
-  // currentId is 0, not a string, while nothing is selected (SettingsEditor)
-  const currentId = formContext?.currentId
-  const pointedInside =
-    !!itemId && typeof currentId === 'string' && currentId.startsWith(`${itemId}_`)
   const wasPointedInside = useRef(false)
   useEffect(() => {
     const justPointed = pointedInside && !wasPointedInside.current

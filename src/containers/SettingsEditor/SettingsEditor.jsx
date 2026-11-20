@@ -20,6 +20,7 @@ import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContext
 import { SettingsJsonDialog } from './SettingsJsonDialog/SettingsJsonDialog'
 import { compareObjects, getValueByPath, setValueByPath } from '@containers/AddonSettings/utils'
 import cloneDeep from 'lodash/cloneDeep'
+import { useStableFormContext } from './formContextStore'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -184,6 +185,28 @@ const SettingsEditor = ({
     })
   }, [currentId])
 
+  const fullContext = {
+    ...context,
+    ...formContext,
+    onEditJson: (path, title, readOnlyReason) =>
+      setJsonEdit({
+        path,
+        title,
+        value: cloneDeep(getValueByPath(formData, path)),
+        readOnlyReason,
+      }),
+    onSetChangedKeys: onSetChangedKeys || noop,
+    onSetBreadcrumbs: setBc,
+    breadcrumbs: totallyRealBreadcrumbs,
+    currentId: currentId,
+    flatLayout,
+    // also keys the open folds, for editors that share a page without an addon context
+    anchorScope,
+  }
+
+  // one object, updated in place, so an edit doesn't draw every field again
+  const rjsfContext = useStableFormContext(fullContext)
+
   if (!schema) {
     // TODO: maybe a spinner or something?
     return <div></div>
@@ -211,35 +234,13 @@ const SettingsEditor = ({
     return true
   }
 
-  const fullContext = {
-    ...context,
-    ...formContext,
-    onEditJson: (path, title, readOnlyReason) =>
-      setJsonEdit({
-        path,
-        title,
-        value: cloneDeep(getValueByPath(formData, path)),
-        readOnlyReason,
-      }),
-    onSetChangedKeys: onSetChangedKeys || noop,
-    onSetBreadcrumbs: setBc,
-    breadcrumbs: totallyRealBreadcrumbs,
-    currentId: currentId,
-    flatLayout,
-    // also keys the open folds, for editors that share a page without an addon context
-    anchorScope,
-  }
-
-  // console.log('context? ', fullContext)
-  // console.log('schema? ', schema)
-
   const form = (
     <SettingsAnchorScopeContext.Provider value={anchorScope}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
         formData={formData}
-        formContext={fullContext}
+        formContext={rjsfContext}
         widgets={widgets}
         fields={settingsFields}
         onChange={(evt) => onChange(evt.formData)}

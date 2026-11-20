@@ -10,7 +10,6 @@ import { isListGroupSchema } from '../SettingsGroup/SettingsGroupHelpers'
 import { SettingField, getSettingFieldKind } from '../SettingField'
 import AccessWidget from '../Widgets/AccessWidget/AccessWidget'
 import { ListColorScheme, hasColorField } from '../ListColorScheme'
-import { arrayStartsWith, matchesFilterKeys } from './searchMatcher'
 
 type RenderFieldArgs = {
   props: FieldTemplateProps
@@ -20,6 +19,12 @@ type RenderFieldArgs = {
   override?: $Any
   overrideLevel: string
   labelStyle?: CSSProperties
+  /** Whether the field matches the search */
+  matches: boolean
+  /** Whether a list drawn as a group changed anywhere inside */
+  listChanged: boolean
+  /** The selected field id, while it is inside a list drawn as a group */
+  currentId: string | null
   onContextMenu: (event: $Any) => void
 }
 
@@ -31,6 +36,9 @@ export const renderFieldTemplate = ({
   override,
   overrideLevel,
   labelStyle,
+  matches,
+  listChanged,
+  currentId,
   onContextMenu,
 }: RenderFieldArgs) => {
   if (props.schema.type === 'object' && props.schema?.widget !== 'access') {
@@ -43,31 +51,16 @@ export const renderFieldTemplate = ({
   }
 
   if (isListGroupSchema(props.schema, flatLayout)) {
-    const classes = []
-
-    for (const changedPath of props.formContext.changedKeys) {
-      if (arrayStartsWith(changedPath, path)) {
-        classes.push('obj-override-edit')
-        classes.push('group-changed')
-        break
-      }
-    }
-
-    if (!classes.includes('obj-override-edit')) classes.push(`obj-override-${overrideLevel}`)
-
-    const matches = matchesFilterKeys(
-      props.formContext.searchText,
-      props.formContext.filterKeys,
-      props.formContext.addonName,
-      props.id,
-    )
+    const classes = listChanged
+      ? ['obj-override-edit', 'group-changed']
+      : [`obj-override-${overrideLevel}`]
     const onGroupClick = () => {
       if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
     }
 
     // an editor that can set a list as a whole (anatomy) offers a colour scheme to draw
     // the colours of a list of types, statuses or tags from
-    const listPath: string[] | undefined = props.formContext.overrides?.[props.id]?.path
+    const listPath: string[] | undefined = override?.path
     const colorScheme =
       flatLayout &&
       props.formContext.onSetValue &&
@@ -105,7 +98,7 @@ export const renderFieldTemplate = ({
             className={classes.join(' ')}
             onClick={onGroupClick}
             onContextMenu={onContextMenu}
-            currentId={props.formContext.currentId}
+            currentId={currentId}
             layout={undefined}
             enabledToggler={undefined}
           >
@@ -120,12 +113,6 @@ export const renderFieldTemplate = ({
     props.schema.type === 'array' && props.schema.layout === 'compact' && props.formData?.length
       ? 'left-border'
       : ''
-  const matches = matchesFilterKeys(
-    props.formContext.searchText,
-    props.formContext.filterKeys,
-    props.formContext.addonName,
-    props.id,
-  )
   const mainWidget = props.schema.widget === 'access' ? <AccessWidget {...props} /> : props.children
   const kebabLabel = kebabCase(props.label || '')
   const onLabelClick = () => {

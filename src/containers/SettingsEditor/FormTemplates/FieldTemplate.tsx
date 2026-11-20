@@ -6,11 +6,12 @@ import isEqual from 'lodash/isEqual'
 import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
-import { matchesFilterKeys } from './searchMatcher'
+import { arrayStartsWith, matchesFilterKeys } from './searchMatcher'
 import { renderFieldTemplate } from './FieldTemplateHelpers'
 import { buildOverrideContextMenu } from './ObjectFieldTemplateHelpers'
 import { getReadOnlyReason } from './readOnlySettings'
 import { isListGroupSchema, isPropertyInScope } from '../SettingsGroup/SettingsGroupHelpers'
+import { pointsInside, useFormContextSelector } from '../formContextStore'
 
 const arrayContainsArray = (arr1: $Any, arr2: $Any) => {
   return arr1.some((el: $Any) => isEqual(el, arr2))
@@ -26,33 +27,41 @@ function FieldTemplate(props: FieldTemplateProps) {
   const outOfScope =
     props.schema.scope !== undefined && !isPropertyInScope(props.schema, props.formContext)
 
-  const filterKeys = props.formContext.filterKeys
-  const section = props.schema.section
-
-  const dividerMatches = matchesFilterKeys(
-    props.formContext.searchText,
-    filterKeys,
-    props.formContext.addonName,
-    props.id,
+  const isListGroup = isListGroupSchema(props.schema, flatLayout)
+  const { override, fieldChanged, listChanged, matches, currentId } = useFormContextSelector(
+    props.formContext,
+    (context) => {
+      const fieldOverride = context.overrides?.[props.id] ?? null
+      const fieldPath = fieldOverride?.path || []
+      const changedKeys = context.changedKeys || []
+      return {
+        override: fieldOverride,
+        fieldChanged: arrayContainsArray(changedKeys, fieldPath),
+        // a list drawn as a group shows a change anywhere inside it
+        listChanged:
+          isListGroup && changedKeys.some((key: $Any) => arrayStartsWith(key, fieldPath)),
+        matches: matchesFilterKeys(
+          context.searchText,
+          context.filterKeys,
+          context.addonName,
+          props.id,
+        ),
+        currentId: isListGroup ? pointsInside(context.currentId, props.id) : null,
+      }
+    },
   )
+
+  const section = props.schema.section
   const divider =
-    !flatLayout && section && dividerMatches ? (
+    !flatLayout && section && matches ? (
       <Divider>{section !== '---' ? section : undefined}</Divider>
     ) : null
 
-  // Solve overrides for lists and leaves
-
-  const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
-  // a list drawn as a group (renderFieldTemplate) can be edited as JSON from its title
-  const isListGroup = isListGroupSchema(props.schema, flatLayout)
+  // a list drawn as a group (renderFieldTemplate) can be edited as JSON from its title,
   // and only where its place in the data is known: any other would open the whole form
   const onEditJson = isListGroup && override?.path ? props.formContext.onEditJson : undefined
   const jsonTitle = props.schema.title || props.label
   const path = useMemo(() => override?.path || [], [override?.path])
-
-  const fieldChanged = useMemo(() => {
-    return arrayContainsArray(props.formContext.changedKeys, path)
-  }, [props.formContext.changedKeys, path])
 
   const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
   // classic marks a value overridden with its whole group in italics; flat leaves it out
@@ -97,6 +106,9 @@ function FieldTemplate(props: FieldTemplateProps) {
     override,
     overrideLevel,
     labelStyle,
+    matches,
+    listChanged,
+    currentId,
     onContextMenu,
   })
 }

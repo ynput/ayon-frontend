@@ -18,6 +18,7 @@ import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { matchesFilterKeys } from './searchMatcher'
 import { getReadOnlyReason } from './readOnlySettings'
+import { pointsInside, useFormContextSelector } from '../formContextStore'
 
 function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
@@ -47,13 +48,28 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   // Highlight overrides and changed fields
 
   const objId = props.idSchema.$id
-  const override = props.formContext.overrides[objId]
-  const path = override?.path
-
-  const overrideLevel = useMemo(
-    () => getObjectOverrideLevel(props.formContext.changedKeys, props.formContext.overrides, path),
-    [path, props.formContext.changedKeys, props.formContext.overrides],
+  const { override, overrideLevel, matches, currentId } = useFormContextSelector(
+    props.formContext,
+    (context) => {
+      const objOverride = context.overrides?.[objId]
+      return {
+        override: objOverride,
+        overrideLevel: getObjectOverrideLevel(
+          context.changedKeys || [],
+          context.overrides,
+          objOverride?.path,
+        ),
+        matches: matchesFilterKeys(
+          context.searchText,
+          context.filterKeys,
+          context.addonName,
+          objId,
+        ),
+        currentId: pointsInside(context.currentId, objId),
+      }
+    },
   )
+  const path = override?.path
 
   if (props.schema.isgroup && overrideLevel === 'edit') {
     className += ' group-changed'
@@ -70,13 +86,6 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
 
   // formContext and registry are new objects on every render, so this is worked out each time
   const enabledToggler = getEnabledToggler(props.properties)
-
-  const matches = matchesFilterKeys(
-    props.formContext.searchText,
-    props.formContext.filterKeys,
-    props.formContext.addonName,
-    props.idSchema.$id,
-  )
 
   const { properties } = props
   // a group's title row may lead its first panel (SettingsGroup hands it over)
@@ -188,7 +197,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       enabledToggler={enabledToggler}
       onContextMenu={onContextMenu}
       onGroupClick={onGroupClick}
-      currentId={props.formContext.currentId}
+      currentId={currentId}
       fields={fields}
     />
   )

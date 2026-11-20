@@ -9,7 +9,7 @@ import {
 } from '@ynput/ayon-react-components'
 import { CSSProperties } from 'react'
 
-import { updateChangedKeys, equiv, parseContext } from '../helpers'
+import { updateChangedKeys, equiv, useParsedContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
 import OrderedListWidget from './OrderedListWidget'
@@ -226,7 +226,7 @@ const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
 }
 
 const SelectWidget = (props: $Any) => {
-  const { originalValue, path } = parseContext(props)
+  const { originalValue, path } = useParsedContext(props)
   const valueChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const dropdownRef = useRef<DropdownRef>(null)
   const [dropdownPlacement, setDropdownPlacement] = useState<CSSProperties>({})

@@ -232,6 +232,32 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
   panel, and `getSettingFieldKind` mirrors `TextWidget` and the widget map in `SettingsEditor.jsx`.
   Change them together.
 
+## Form context and redrawing
+
+These apply to both layouts.
+
+- RJSF deep-compares a field's props, form context included, before drawing it again. So
+  `SettingsEditor` hands it one context object (`useStableFormContext`, `formContextStore.ts`),
+  updated in place on every render. It makes a new object only when a value that rarely changes
+  does (level, flat layout, the page's context). Without this, an edit draws every mounted field
+  again: about 470 in Maya's flat sheet.
+- Overrides, changed keys, the search text and keys, the current id and the breadcrumbs change on
+  every edit, search or click, and RJSF won't redraw a field for them. Code that **draws** from
+  one of them reads it with `useFormContextSelector(formContext, select)`, selecting only what it
+  uses, and draws from the returned value. Widgets use `useParsedContext`. Event handlers can
+  read the context directly, since it's always current.
+- `select` runs for every mounted field after each editor render, so keep it cheap.
+- A component that reads a changing value straight from the context still looks right after an
+  edit inside it. It goes stale only when the value changes elsewhere: the changed marks after a
+  save or Clear, or a fold that a search should open. Check those cases after adding a reader.
+- The object is updated during render, which React doesn't expect (React Doctor flags it). If
+  React drops a render, as it can with the search's transition, the object holds that render's
+  values until the editor renders again. Only a component that redraws in between on its own
+  (a fold toggle, a subscription) can see them.
+- `resolveSchema` (`FormTemplates/schemaCache.ts`) remembers RJSF's `retrieveSchema` for schemas
+  whose resolution doesn't depend on the value. Use it in render-time schema lookups, and treat its
+  result as read-only.
+
 ## Loading and search (`src/containers/AddonSettings/`)
 
 These apply to both layouts.

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react'
 import { $Any } from '@types'
-import { equiv, parseContext, updateChangedKeys } from '../helpers'
+import { equiv, useParsedContext, updateChangedKeys } from '../helpers'
 import { SettingsTemplateText } from './SettingsTemplateText'
 import { SettingsTextFold } from './SettingsTextFold'
 import { checkNumber, getTextWidgetInputConfig } from './TextWidgetHelpers'
 
 export const TextWidget = (props: $Any) => {
-  const { originalValue, path } = parseContext(props)
+  const { originalValue, path } = useParsedContext(props)
   // starts at the saved value, so a field doesn't read as changed before its first sync
   const [value, setValue] = useState<$Any>(props.value ?? null)
 

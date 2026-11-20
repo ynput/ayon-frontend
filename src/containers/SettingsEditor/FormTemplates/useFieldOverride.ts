@@ -3,6 +3,7 @@ import isEqual from 'lodash/isEqual'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { $Any } from '@types'
 import { buildOverrideContextMenu } from './ObjectFieldTemplateHelpers'
+import { useFormContextSelector } from '../formContextStore'
 
 /**
  * A field's override level (default, studio, project, site, or edit once changed), its
@@ -11,15 +12,16 @@ import { buildOverrideContextMenu } from './ObjectFieldTemplateHelpers'
  */
 export const useFieldOverride = (fieldId: string, formContext: $Any, formData: unknown) => {
   const [contextMenu] = useCreateContextMenu([])
-  const { level, onPinOverride, onRemoveOverride, onPasteValue, onSetBreadcrumbs, changedKeys } =
-    formContext
-  const override = formContext.overrides?.[fieldId] ?? null
+  const { override, changed } = useFormContextSelector(formContext, (context) => {
+    const fieldOverride = context.overrides?.[fieldId] ?? null
+    const fieldPath = fieldOverride?.path || []
+    return {
+      override: fieldOverride,
+      changed: (context.changedKeys || []).some((key: unknown) => isEqual(key, fieldPath)),
+    }
+  })
+  const { level, onPinOverride, onRemoveOverride, onPasteValue, onSetBreadcrumbs } = formContext
   const path: string[] = useMemo(() => override?.path || [], [override?.path])
-
-  const changed = useMemo(
-    () => (changedKeys || []).some((key: unknown) => isEqual(key, path)),
-    [changedKeys, path],
-  )
   const overrideLevel: string = changed ? 'edit' : override?.level || 'default'
 
   const menuModel = useMemo(
