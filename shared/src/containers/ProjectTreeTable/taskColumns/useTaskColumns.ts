@@ -39,7 +39,6 @@ export const useTaskColumns = (enabled: boolean) => {
           columnId: id,
           taskType,
           readOnlyFields: table.options.meta?.readOnly,
-          updateEntities: table.options.meta?.updateEntities,
         })
       return { id, taskType, cell }
     })

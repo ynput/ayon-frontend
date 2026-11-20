@@ -8,7 +8,7 @@ const OverviewTaskColumnsProvider: FC<{ children: ReactNode; disabled?: boolean 
   children,
   disabled,
 }) => {
-  const { visibleEntityIds } = useProjectOverviewContext()
+  const { visibleEntityIds, taskFilters } = useProjectOverviewContext()
   const { showHierarchy, isFlatFolderView } = useProjectTableContext()
   const { viewSettings } = useViewsContext()
   const { updateViewSettings } = useViewUpdateHelper()
@@ -22,6 +22,9 @@ const OverviewTaskColumnsProvider: FC<{ children: ReactNode; disabled?: boolean 
       visibleEntityIds={visibleEntityIds}
       // the flat task list and group-by modes show tasks as rows
       enabled={!disabled && (showHierarchy || !!isFlatFolderView)}
+      // search bar and slicer: the cards they don't match are greyed out
+      taskFilter={taskFilters.filterString}
+      taskSearch={taskFilters.search}
       isAllExpanded={expandRows}
       onAllExpandedChange={onUpdateExpandRows}
     >

@@ -26,10 +26,26 @@ other `ProjectTreeTable` pages can adopt it.
   updates and optimistic patches come with the endpoint (`overviewTask` tags).
 - **Only rows on screen** are asked for, debounced. All folders share one cache entry and RTK Query ignores
   new args while it fetches, so the provider asks again after a fetch for rows that scrolled in meanwhile.
-- **Edits** go through the table's `meta.updateEntities` with the task's `id`, `type: 'task'` and
-  `entityData`, and without a selection. Without the id the edit goes to the row's folder; with the
-  selection a status edit goes to the Status column of the other selected rows. `entityData` is what undo
-  and error messages use while the folder is collapsed (the task is not in the table's entity map).
+- **Edits** go through the provider's `editTasks`, which calls the table's `updateEntities`
+  (`useCellEditing`) once with one update per task: the task's `id`, `type: 'task'` and `entityData`. Not
+  through `meta.updateEntities`: with a selection that one resolves the row's folder and the Status column
+  of the selected rows. One call is one undo step. `entityData` is what undo and error messages use while
+  the folder is collapsed (the task is not in the table's entity map).
+- **Several task cells selected**: an edit on one card goes to every task the selected cells show, in any
+  task column (`TaskColumnsSelectionContext`, apart from the main context because it changes with every
+  click). Status and priority are set; an assignee is added to or removed from each task, the picker
+  showing every assignee they have (the Task progress setup). With one cell selected only the card's own
+  task is edited, so two cards in one cell stay separate. The table leaves the selection alone on a press
+  on a card's picker (`.tag.editable`) in a selected cell; any other press selects as usual.
+- **The page's task filter greys cards out, it never hides them.** The provider asks the same endpoint a
+  second time (`scope: 'taskColumnsMatch'`) with the shown types and the page's filter and search; a card
+  whose task is not in that answer is `dimmed`, once its folder was asked about. The filter is never
+  evaluated in the client. The answer is asked for again when a shown task changes (a cache learns a
+  task's new values, not whether it still matches), and held while a request is in flight so cards don't
+  flash. A greyed out card can be edited by itself, and is left out of an edit of several cells.
+- **Double click** on a card opens its task in the details panel (`setSelectedEntity`, as `EntityWidget`
+  does), handled on the second press. **Space** plays the cell's task, not the row's folder
+  (`useKeyboardNavigation` asks `getCellTask`: the card pressed last in the cell, else its first).
 - **The cell is read-only to the table** (`readonly` class, no `editable`): no cell editor on double click
   or Enter, no clear. Paste writes nothing to these cells but keeps their place in the selection, so
   the values after them land in their own columns (`ClipboardContext`). The Overview's Delete button and the
@@ -42,5 +58,6 @@ other `ProjectTreeTable` pages can adopt it.
 
 ## Not there yet
 
-Selection-based actions on a task cell (bulk edit, details panel, context menu, copy) still see the folder.
+The context menu, copy, and the details panel for several selected cards still see the folder. Selection is
+per cell: in a cell with two cards, an edit of several cells takes both.
 Sorting by a task column and roll-ups on parent folders need tasks for rows that are not on screen.

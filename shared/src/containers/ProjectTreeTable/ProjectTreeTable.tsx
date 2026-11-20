@@ -138,6 +138,7 @@ import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
+import { isTaskColumnId } from './taskColumns/taskColumnsHelpers'
 import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
 import {
   useAddonColumnMenuItems,
@@ -2159,6 +2160,19 @@ const TD = ({
             focusCell(cellId)
           }
           setEditingCellId(cellId)
+          return
+        }
+
+        // a press on a picker of a selected task card keeps the selection: the edit goes to the
+        // tasks of every selected task cell
+        if (
+          isTaskColumnId(cell.column.id) &&
+          target.closest('.tag.editable') &&
+          isCellSelected(cellId) &&
+          !e.shiftKey &&
+          !e.metaKey &&
+          !e.ctrlKey
+        ) {
           return
         }
 

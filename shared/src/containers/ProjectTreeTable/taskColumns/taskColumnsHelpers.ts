@@ -16,6 +16,8 @@ export const getTaskColumnId = (taskType: string) =>
 
 /** The cache of its own the task columns keep in getOverviewTasksByFolders. */
 export const TASK_COLUMNS_CACHE_SCOPE = 'taskColumns'
+/** A second one: the same tasks under the page's task filter, to tell which cards it matches. */
+export const TASK_COLUMNS_MATCH_CACHE_SCOPE = 'taskColumnsMatch'
 
 // one card in a default-width column, and a row made tall to show thumbnails
 export const TASK_COLUMN_CARD_WIDTH = 180

@@ -1,4 +1,4 @@
-import { CSSProperties, memo, useMemo, useRef } from 'react'
+import { CSSProperties, memo, useContext, useMemo, useRef } from 'react'
 import type { EntityCardProps } from '@ynput/ayon-react-components'
 import type { Row } from '@tanstack/react-table'
 import clsx from 'clsx'
@@ -6,17 +6,23 @@ import { FilmstripEntityCard } from '@shared/components/Filmstrip/FilmstripEntit
 import { useProjectContext } from '@shared/context'
 import { getEntityFilmstripUrl, getEntityThumbnailUrl, getSelectableAssignees } from '@shared/util'
 import { useColumnSettingsContext } from '../context/column-settings'
+import { DetailsPanelEntityContext } from '../context/details-panel-entity/DetailsPanelEntityContextInstance'
 import { useProjectTableContext } from '../context/project-table'
+import { useOptionalSelectedRowsContext } from '../context/selected-rows/SelectedRowsContext'
 import { useSelectionCellsContext } from '../context/selection-cells'
-import type { EditorTaskNode, EntityData, TableRow } from '../types/table'
-import type { EntityUpdate } from '../hooks/useUpdateTableData'
+import type { EditorTaskNode, TableRow } from '../types/table'
 import { getCellId } from '../utils/cellUtils'
-import { useTaskColumnsContext, TaskColumnsContextValue } from './TaskColumnsContextInstance'
+import {
+  TaskCardChange,
+  TaskColumnsContextValue,
+  useTaskColumnsContext,
+  useTaskColumnsSelection,
+} from './TaskColumnsContextInstance'
 import * as Styled from './TaskColumnCell.styled'
 
-type TaskUpdate = Pick<EntityUpdate, 'field' | 'value' | 'isAttrib'>
-
 const NO_TASKS: EditorTaskNode[] = []
+// a card's picker, once the card can be edited
+const PICKER_SELECTOR = '.tag.editable'
 // the collapsed card's design height, less the 2px it can lose without clipping
 const TASK_CARD_HEIGHT = 32
 
@@ -27,9 +33,13 @@ interface TaskCardProps extends Pick<TaskColumnsContextValue, 'statuses' | 'prio
   isExpanded: boolean
   // below the card's own height the collapsed card is scaled down to the row
   zoom?: number
+  // the page's task filter does not match the task
+  isDimmed: boolean
   // each field's picker is there when the field can be edited
-  onChange?: (task: EditorTaskNode, update: TaskUpdate) => void
+  onChange?: (task: EditorTaskNode, change: TaskCardChange) => void
   readOnlyFields?: string[]
+  // several task cells are selected, and the edit goes to all their tasks: every assignee they have
+  selectedAssignees?: string[]
 }
 
 // one task of the cell: the Task progress page's card
@@ -43,8 +53,10 @@ const TaskCard = memo(
     statuses,
     priorities,
     users,
+    isDimmed,
     onChange,
     readOnlyFields,
+    selectedAssignees,
   }: TaskCardProps) => {
     const entity = { projectName, entityType: 'task', entityId: task.id } as const
     const thumbnailUrl = isExpanded
@@ -57,12 +69,10 @@ const TaskCard = memo(
 
     const assigneeOptions = useMemo(
       () =>
-        getSelectableAssignees(users, task.assignees).map(({ name, fullName }) => ({
-          name,
-          fullName,
-          avatarUrl: `/api/users/${name}/avatar`,
-        })),
-      [users, task.assignees],
+        getSelectableAssignees(users, selectedAssignees || task.assignees).map(
+          ({ name, fullName }) => ({ name, fullName, avatarUrl: `/api/users/${name}/avatar` }),
+        ),
+      [users, task.assignees, selectedAssignees],
     )
     const canEdit = (field: string) => !!onChange && !readOnlyFields?.includes(field)
     // the project's icons, statuses and priorities are typed more loosely than the card's props
@@ -72,6 +82,8 @@ const TaskCard = memo(
 
     return (
       <Styled.Card
+        className={clsx({ dimmed: isDimmed })}
+        data-task-id={task.id}
         data-tooltip={task.label || task.name}
         data-tooltip-delay={250}
         style={zoom && zoom < 1 ? { zoom } : undefined}
@@ -92,12 +104,27 @@ const TaskCard = memo(
           priority={priorityOptions?.find((priority) => priority.value === task.attrib?.priority)}
           priorityOptions={priorityOptions}
           isPlayable={task.hasReviewables}
-          // the picker gives the whole new list (one task is edited, never a mixed selection)
-          pt={{ assigneeSelect: { multiSelectClose: false, multipleOverride: true } }}
+          pt={{
+            assigneeSelect: selectedAssignees
+              ? {
+                  // several tasks: the picker shows every assignee they have, and each pick is
+                  // added to or removed from every task
+                  value: selectedAssignees,
+                  multiSelectClose: false,
+                  isMultiple: true,
+                  multipleOverride: false,
+                  onAddItem: (added) =>
+                    onChange?.(task, { field: 'assignees', added: [added], removed: [] }),
+                  onRemoveItem: (removed) =>
+                    onChange?.(task, { field: 'assignees', added: [], removed: [removed] }),
+                }
+              : // one task: the picker gives the whole new list
+                { multiSelectClose: false, multipleOverride: true },
+          }}
           onAssigneeChange={
             canEdit('assignees')
               ? (assignees) =>
-                  onChange?.(task, { field: 'assignees', value: [...new Set(assignees)] })
+                  !selectedAssignees && onChange?.(task, { field: 'assignees', value: assignees })
               : undefined
           }
           onStatusChange={
@@ -107,8 +134,7 @@ const TaskCard = memo(
           }
           onPriorityChange={
             canEdit('attrib_priority')
-              ? ([priority]) =>
-                  onChange?.(task, { field: 'priority', value: priority, isAttrib: true })
+              ? ([priority]) => onChange?.(task, { field: 'priority', value: priority })
               : undefined
           }
           style={{ width: 'unset', aspectRatio: 'unset' }}
@@ -127,21 +153,18 @@ interface TaskColumnCellProps {
   columnId: string
   taskType: { name: string; icon?: string; color?: string }
   readOnlyFields?: string[]
-  updateEntities?: (entity: EntityUpdate) => void
 }
 
 /**
  * A folder row's tasks of one type, one card each, side by side. The cards edit their own task
  * (never the row's folder), so the cell is read-only to the table: no cell editor, paste or clear.
+ * With several task cells selected, an edit on one card goes to the tasks of all of them.
  */
-export const TaskColumnCell = ({
-  row,
-  columnId,
-  taskType,
-  readOnlyFields,
-  updateEntities,
-}: TaskColumnCellProps) => {
+export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: TaskColumnCellProps) => {
   const context = useTaskColumnsContext()
+  const selection = useTaskColumnsSelection()
+  const detailsPanelEntity = useContext(DetailsPanelEntityContext)
+  const selectedRows = useOptionalSelectedRowsContext()
   const { projectName } = useProjectContext()
   const { isRowReadOnly, readOnly: isTableReadOnly } = useProjectTableContext()
   const { isCellSelected } = useSelectionCellsContext()
@@ -162,30 +185,44 @@ export const TaskColumnCell = ({
   // as on Task progress, a card is edited once it is selected: the first click only selects
   const isSelected = isCellSelected(cellId)
   const canEdit = isSelected && !isTableReadOnly && !isRowReadOnly(row.id)
+  const isMultiple = isSelected && selection.cells > 1
   // the press that selects the cell makes its cards editable before the click arrives, which
   // would open the picker under the pointer on that same click
   const wasSelectedOnPress = useRef(false)
+  const swallowClick = useRef(false)
 
   const isExpanded = !!folder && !!context?.isRowExpanded(row.id)
   // the cell is the row less its borders
   const cardSpace = rowHeight - 2
 
+  const editTasks = context?.editTasks
   const handleChange = useMemo(
     () =>
-      canEdit && updateEntities
-        ? (task: EditorTaskNode, update: TaskUpdate) =>
-            // the task is the target, whatever is selected: without it the edit would go to
-            // the row's folder, and with the selection to the Status column of other rows
-            updateEntities({
-              ...update,
-              id: task.id,
-              rowId: row.id,
-              type: 'task',
-              entityData: task as unknown as EntityData,
-            })
+      canEdit && editTasks
+        ? (task: EditorTaskNode, change: TaskCardChange) => editTasks(task, row.id, change)
         : undefined,
-    [canEdit, updateEntities, row.id],
+    [canEdit, editTasks, row.id],
   )
+
+  const handlePress = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.button !== 0) return
+    const taskId = (e.target as HTMLElement).closest<HTMLElement>('[data-task-id]')?.dataset.taskId
+    if (taskId) context?.notePressedTask(cellId, taskId)
+    if (e.detail < 2) {
+      wasSelectedOnPress.current = isSelected
+      swallowClick.current = !isSelected
+      return
+    }
+    // A double click opens the task's details, as on Task progress. Handled on the press: the
+    // first one re-renders the cell, and the dblclick event is not sure to follow. Left to the
+    // picker when both clicks went to one of a card that could already be edited.
+    const isOnPicker = !!(e.target as HTMLElement).closest(PICKER_SELECTOR)
+    if ((wasSelectedOnPress.current && isOnPicker) || !taskId || !detailsPanelEntity) return
+    swallowClick.current = true
+    // selected rows are what the panel shows first
+    if (selectedRows?.selectedRows.length) selectedRows.clearRowsSelection()
+    detailsPanelEntity.setSelectedEntity({ entityId: taskId, entityType: 'task' })
+  }
 
   return (
     <Styled.Cell
@@ -193,8 +230,8 @@ export const TaskColumnCell = ({
       className={clsx('readonly', 'task-column-cell', { loading: isLoading, expanded: isExpanded })}
       style={{ '--task-type-color': taskType.color } as CSSProperties}
       tabIndex={0}
-      onMouseDownCapture={() => (wasSelectedOnPress.current = isSelected)}
-      onClickCapture={(e) => !wasSelectedOnPress.current && e.stopPropagation()}
+      onMouseDownCapture={handlePress}
+      onClickCapture={(e) => swallowClick.current && e.stopPropagation()}
     >
       {folder &&
         context &&
@@ -215,8 +252,10 @@ export const TaskColumnCell = ({
               statuses={context.statuses}
               priorities={context.priorities}
               users={context.users}
+              isDimmed={context.isTaskDimmed(task)}
               onChange={handleChange}
               readOnlyFields={readOnlyFields}
+              selectedAssignees={isMultiple ? selection.assignees : undefined}
             />
           ))
         ))}

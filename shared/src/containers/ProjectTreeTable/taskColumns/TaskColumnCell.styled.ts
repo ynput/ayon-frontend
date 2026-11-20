@@ -68,6 +68,18 @@ export const Cell = styled.div`
 export const Card = styled.div`
   flex: 1 1 0;
   min-width: 0;
+  transition: opacity 150ms, filter 150ms;
+
+  /* the page's task filter does not match the task: there, but out of the way */
+  &.dimmed {
+    opacity: 0.3;
+    filter: grayscale(0.85);
+
+    &:hover,
+    .selected & {
+      opacity: 0.6;
+    }
+  }
 `
 
 export const Loading = styled.div`
