@@ -81,7 +81,12 @@ import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import { DetailsPanelFloating, isDetailsPipPage } from '@shared/containers'
+import {
+  DetailsPanelFloating,
+  isDetailsPipPage,
+  openViewerFromPip,
+  usePipNavigate,
+} from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import AppAddonServices from './remote/AppAddonServices'
@@ -106,6 +111,10 @@ const DetailsPanelProviderWithSubtasks = (
   )
 }
 
+// the picture-in-picture details panel (an iframe): only the panel, and the viewer and other
+// pages open in the main window. Read once, so a navigation inside the frame keeps the panel.
+const isDetailsPip = isDetailsPipPage()
+
 const App = () => {
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
@@ -127,7 +136,8 @@ const App = () => {
   }
 
   const onOpenViewer = (args: any) => {
-    dispatch(openViewer(args))
+    if (isDetailsPip) openViewerFromPip(args)
+    else dispatch(openViewer(args))
   }
 
   const handlerProps = {
@@ -222,7 +232,6 @@ const App = () => {
   }, [])
 
   const isUser = user?.data?.isUser
-  const isDetailsPip = isDetailsPipPage()
 
   // DEFINE ALL HIGH LEVEL COMPONENT PAGES HERE
   const mainComponent = useMemo(
@@ -256,7 +265,7 @@ const App = () => {
                                     viewer={viewer}
                                     dispatch={dispatch}
                                     useLocation={useLocation}
-                                    useNavigate={useNavigate}
+                                    useNavigate={isDetailsPip ? usePipNavigate : useNavigate}
                                     useParams={useParams}
                                     useSearchParams={useSearchParams}
                                   >
@@ -267,12 +276,12 @@ const App = () => {
                                             <DeleteEntitiesProvider>
                                               <TableExportProvider>
                                                 {isDetailsPip ? (
-                                                  // the picture-in-picture details panel: only the panel
                                                   <>
                                                     <ShareDialog />
                                                     <ConfirmDialog />
                                                     <EntityLinksSlot />
                                                     <PowerpackDialog />
+                                                    <FileUploadPreviewContainer />
                                                     <DetailsPipPage />
                                                   </>
                                                 ) : (
@@ -318,7 +327,7 @@ const App = () => {
         </Suspense>
       </>
     ),
-    [user, isUser, isTrialing, user.name, isDetailsPip],
+    [user, isUser, isTrialing, user.name],
   )
 
   const loadingComponent = useMemo(() => <LoadingPage />, [])

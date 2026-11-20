@@ -1,6 +1,6 @@
 import { FC, useEffect, useMemo, useRef } from 'react'
 import { PiPWrapper, useDetailsPanelContext, usePiPWindow } from '@shared/context'
-import { buildDetailsPipUrl, DETAILS_PIP_OPEN_VIEWER } from './detailsPip'
+import { buildDetailsPipUrl, DETAILS_PIP_MESSAGE, type DetailsPipMessage } from './detailsPip'
 
 export interface DetailsPanelFloatingProps {}
 
@@ -10,7 +10,8 @@ const frameStyle = { display: 'block', width: '100%', height: '100%', border: 'n
 // The details panel in a picture-in-picture window (or a floating dialog where the browser has no
 // document picture-in-picture): the full panel, loaded as its own page in an iframe.
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  const { pip, onOpenViewer } = useDetailsPanelContext()
+  const { pip, onOpenViewer, useNavigate } = useDetailsPanelContext()
+  const navigate = useNavigate()
   const { pipWindow } = usePiPWindow()
   const frameRef = useRef<HTMLIFrameElement>(null)
 
@@ -21,20 +22,21 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
     [entityType, entities],
   )
 
-  // the viewer opens in the main window, where there is room for it
+  // the viewer and other pages open in the main window, where there is room for them
   useEffect(() => {
     // the frame's parent: the PiP window, or this window for the fallback dialog
     const host = pipWindow || window
-    const handleMessage = (event: MessageEvent) => {
+    const handleMessage = (event: MessageEvent<DetailsPipMessage>) => {
       if (event.origin !== window.location.origin) return
       if (!frameRef.current || event.source !== frameRef.current.contentWindow) return
-      if (event.data?.type !== DETAILS_PIP_OPEN_VIEWER) return
-      onOpenViewer?.(event.data.args)
+      if (event.data?.type !== DETAILS_PIP_MESSAGE) return
+      if (event.data.action === 'open-viewer') onOpenViewer?.(event.data.args)
+      if (event.data.action === 'navigate') navigate(event.data.to)
       window.focus()
     }
     host.addEventListener('message', handleMessage)
     return () => host.removeEventListener('message', handleMessage)
-  }, [pipWindow, onOpenViewer])
+  }, [pipWindow, onOpenViewer, navigate])
 
   if (!src) return null
 

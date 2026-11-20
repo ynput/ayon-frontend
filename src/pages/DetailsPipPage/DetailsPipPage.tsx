@@ -6,12 +6,12 @@ import { uniq } from 'lodash'
 import {
   DetailsPanel,
   DetailsPanelSlideOut,
-  DETAILS_PIP_OPEN_VIEWER,
+  openViewerFromPip,
   parseDetailsPipUrl,
 } from '@shared/containers'
 import { useGetKanbanProjectUsersQuery, useGetProjectsInfoQuery } from '@shared/api'
 import { UploadVersionDialog, VersionUploadProvider } from '@shared/components'
-import { ProjectContextProvider } from '@shared/context'
+import { ProjectContextProvider, type ProjectModelWithProducts } from '@shared/context'
 import { EntityListsContextBoundary } from '@pages/ProjectListsPage/context'
 import { useAppDispatch } from '@state/store'
 import mergeProjectInfo from '@shared/containers/DetailsPanel/helpers/mergeProjectInfo'
@@ -27,6 +27,17 @@ const Page = styled.main`
   }
 `
 
+// the slide-out (an entity opened from a breadcrumb or mention) slides out to the left of a
+// docked panel, which is off screen here: show it over the panel instead
+const SlideOutLayer = styled.div`
+  & > * {
+    max-width: none;
+    animation: none;
+    /* above the panel (z-index 300) */
+    z-index: 310;
+  }
+`
+
 const DetailsPipPage = () => {
   const dispatch = useAppDispatch()
   const pip = useMemo(() => parseDetailsPipUrl(window.location.search), [])
@@ -34,10 +45,11 @@ const DetailsPipPage = () => {
   const projectNames = useMemo(() => uniq(entities.map((e) => e.projectName)), [entities])
   const projectName = projectNames[0] || ''
 
-  const { data: projectsInfo = {} } = useGetProjectsInfoQuery(
+  const { data: projectsInfoData } = useGetProjectsInfoQuery(
     { projects: projectNames },
     { skip: !projectNames.length },
   )
+  const projectsInfo = (projectsInfoData || {}) as Record<string, ProjectModelWithProducts>
   const { data: projectUsers = [] } = useGetKanbanProjectUsersQuery(
     { projects: projectNames },
     { skip: !projectNames.length },
@@ -53,9 +65,6 @@ const DetailsPipPage = () => {
     () => mergeProjectInfo(projectsInfo, projectNames).tags,
     [projectsInfo, projectNames],
   )
-
-  const handleOpenViewer = (args: any) =>
-    window.parent.postMessage({ type: DETAILS_PIP_OPEN_VIEWER, args }, window.location.origin)
 
   if (!pip) return null
 
@@ -83,10 +92,11 @@ const DetailsPipPage = () => {
                 disabledProjectUsers={disabledProjectUsers}
                 scope="pip"
                 entityListsContext={entityListsContext}
-                onOpenViewer={handleOpenViewer}
-                style={{ boxShadow: 'none' }}
+                onOpenViewer={openViewerFromPip}
               />
-              <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="pip" />
+              <SlideOutLayer>
+                <DetailsPanelSlideOut projectsInfo={projectsInfo} scope="pip" />
+              </SlideOutLayer>
               <UploadVersionDialog />
             </VersionUploadProvider>
           </ProjectContextProvider>
