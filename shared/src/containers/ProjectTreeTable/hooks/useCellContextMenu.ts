@@ -1,3 +1,4 @@
+import { isTaskColumnId } from '../taskColumns/taskColumnsHelpers'
 import { ContextMenuItemType, useCreateContextMenu } from '../../ContextMenu/useCreateContextMenu'
 import useDeleteEntities from './useDeleteEntities'
 import { getPlatformShortcutKey, KeyMode } from '../../../util/platform'
@@ -281,7 +282,10 @@ const useCellContextMenu = ({
       const cellRows = [
         ...new Set(
           meta.selectedCells
-            .map((cellId) => parseCellId(cellId)?.rowId)
+            .map((cellId) => parseCellId(cellId))
+            // a task column's cell is the folder's tasks, not the folder
+            .filter((cell) => !!cell && !isTaskColumnId(cell.colId))
+            .map((cell) => cell?.rowId)
             .filter((rowId): rowId is string => !!rowId),
         ),
       ]

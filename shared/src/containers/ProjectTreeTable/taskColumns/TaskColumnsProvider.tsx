@@ -101,7 +101,12 @@ export const TaskColumnsProvider = ({
     [projectName, folderIds, shownTypesKey],
   )
   const skip = !isActive || !folderIds.length
-  const { data: tasks, isFetching, error } = useGetOverviewTasksByFoldersQuery(args, { skip })
+  const {
+    data: tasks,
+    isFetching,
+    error,
+    fulfilledTimeStamp,
+  } = useGetOverviewTasksByFoldersQuery(args, { skip })
 
   // All folders share one cache entry, and RTK Query ignores new args for an entry while it is
   // fetching. Rows scrolled in during a request would never load, so they are asked for after it.
@@ -126,7 +131,9 @@ export const TaskColumnsProvider = ({
       )
       return loaded.has(folderId) ? NO_TASKS : undefined
     },
-    [tasksByFolder, args],
+    // a fetch that brings no task keeps the same data, yet its folders are now loaded (empty)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [tasksByFolder, args, fulfilledTimeStamp],
   )
 
   // per-row toggles are for this visit only; "expand all" is the view's
