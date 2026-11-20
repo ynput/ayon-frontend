@@ -6,6 +6,7 @@ import { $Any } from '@types'
 import SettingsPanel from '../SettingsPanel'
 import SearchHidden from './SearchHidden'
 import { SettingsGroup } from '../SettingsGroup/SettingsGroup'
+import { isListGroupSchema } from '../SettingsGroup/SettingsGroupHelpers'
 import { SettingField, getSettingFieldKind } from '../SettingField'
 import AccessWidget from '../Widgets/AccessWidget/AccessWidget'
 import { ListColorScheme, hasColorField } from '../ListColorScheme'
@@ -41,12 +42,7 @@ export const renderFieldTemplate = ({
     )
   }
 
-  if (
-    props.schema.type === 'array' &&
-    // @ts-ignore
-    props.schema.items.type !== 'string' &&
-    props.schema.layout !== 'compact'
-  ) {
+  if (isListGroupSchema(props.schema, flatLayout)) {
     const classes = []
 
     for (const changedPath of props.formContext.changedKeys) {

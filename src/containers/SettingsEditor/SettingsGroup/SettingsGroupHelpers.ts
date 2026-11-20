@@ -74,7 +74,7 @@ export const isPanelSectionObject = ({
 }) => !isRoot && !isListItem && !isInlineObjectLayout(layout)
 
 /**
- * Whether a (resolved) property schema renders as a group rather than a row.
+ * Whether a (resolved) property schema renders as a group rather than a row, in the flat layout.
  * Mirrors the branches in FieldTemplate and ObjectFieldTemplate that draw a panel.
  */
 export const isGroupSchema = (schema: $Any): boolean => {
@@ -82,11 +82,19 @@ export const isGroupSchema = (schema: $Any): boolean => {
   if (schema.type === 'object') {
     return schema.widget !== 'access' && !isInlineObjectLayout(schema.layout)
   }
-  if (schema.type === 'array') {
-    return schema.items?.type !== 'string' && schema.layout !== 'compact'
-  }
+  if (schema.type === 'array') return isListGroupSchema(schema, true)
   return false
 }
+
+/**
+ * Whether a list renders as a group (a titled list of items) rather than as a field. Every list
+ * of records does in the flat layout, whatever its layout hint; classic draws a compact one as a
+ * field, its items beside a dashed line.
+ */
+export const isListGroupSchema = (schema: $Any, flatLayout: boolean): boolean =>
+  schema?.type === 'array' &&
+  schema.items?.type !== 'string' &&
+  (flatLayout || schema.layout !== 'compact')
 
 // Folding list items (flat layout). Open items are stored for the browser session
 
