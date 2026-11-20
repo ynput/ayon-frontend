@@ -13,8 +13,8 @@ export const HeaderContainer = styled.div`
 
 export const Grid = styled.div`
   position: relative;
-  padding: 8px;
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  /* the tab bar comes after it, with the line under both (DetailsPanel) */
+  padding: 8px 8px 0;
   flex: none;
   overflow: hidden;
 

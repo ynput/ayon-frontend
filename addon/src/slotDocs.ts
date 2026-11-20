@@ -40,7 +40,7 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'listDetails.tab': {
     helper: 'listDetailsTab',
-    where: "a tab in a list's details panel (Lists, Reviews) and in a review session's sidebar",
+    where: "a tab in a list's details panel (Lists, Reviews) and in a review session's sidebar, for the list types listed",
     loads: 'first shown',
   },
   'detailsPanel.menuItem': {
