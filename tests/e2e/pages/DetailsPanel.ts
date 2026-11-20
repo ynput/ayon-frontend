@@ -68,9 +68,9 @@ export class DetailsPanel {
     await expect(this.page.locator('.options')).toBeHidden()
   }
 
-  // FLAG: the feed and subtasks tabs are icon-only buttons (accessible names "forum" and "checklist")
+  // the tab buttons are named by their labels, also the icon-only ones
   async openTab(tab: 'feed' | 'subtasks' | 'details') {
-    const name = { feed: 'forum', subtasks: 'checklist', details: 'Details' }[tab]
+    const name = { feed: 'Activity', subtasks: 'Subtasks', details: 'Details' }[tab]
     await this.root.getByRole('navigation').getByRole('button', { name, exact: true }).click()
   }
 
@@ -83,6 +83,9 @@ export class DetailsPanel {
   }
 
   private async search(scope: Locator, text: string) {
+    // the search bar is behind the tab header's search button, which stays open once opened
+    const toggle = scope.getByRole('button', { name: /^(hide )?search and filter$/i })
+    if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
     await scope.getByRole('textbox', { name: 'Search and filter' }).click()
     await this.page.keyboard.type(text)
     // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
