@@ -7,12 +7,36 @@ import { useEffect, type ReactNode, type Ref } from 'react'
 import clsx from 'clsx'
 import { Button } from '@ynput/ayon-react-components'
 import type { ButtonProps, IconType } from '@ynput/ayon-react-components'
-import { PanelSlotTab, PanelTabs, usePanelSlotTabs } from '@shared/components/PanelTabs'
-import type { PanelTab, PanelTabSlot, PanelTabSlotName } from '@shared/components/PanelTabs'
+import {
+  PanelSlotTab,
+  PanelTabHeader,
+  PanelTabs,
+  usePanelSlotTabs,
+} from '@shared/components/PanelTabs'
+import type {
+  PanelTab,
+  PanelTabHeaderProps,
+  PanelTabSlot,
+  PanelTabSlotName,
+} from '@shared/components/PanelTabs'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 import { MENU_DIVIDER } from '@shared/components/Menu/menuSections'
 import { MoreMenuButton } from '@shared/components/Menu/MoreMenuButton'
 import * as Styled from './TabbedPanel.styled'
+
+/** One of the panel's own tabs: its button, its header and what it shows. */
+export interface TabbedPanelTab extends PanelTab {
+  /** what the tab shows below its header, called only while it is open (elements, no hooks) */
+  render: () => ReactNode
+  /** not there (it does not apply): no button, and a `selected` one falls back to `fallbackTab` */
+  hidden?: boolean
+  /**
+   * the header the panel draws above it, as an addon tab's: the tab's label as title, with its
+   * search (`search`, `searchActive`), a `menu` and anything below (`children`). `false`: the tab
+   * draws its own (one whose header keeps state, like the activity feed's filters)
+   */
+  header?: false | Pick<PanelTabHeaderProps, 'menu' | 'search' | 'searchActive' | 'children'>
+}
 
 /**
  * More props for a tool's button (`variant`, `className`, `style`, `ref`, `data-*`): a tool that
@@ -80,8 +104,8 @@ export interface TabbedPanelProps<S extends PanelTabSlotName> {
   onToolError?: (error: unknown) => void
   /** the close button's shortcut, shown in its tooltip; the panel handles the key itself */
   closeShortcut?: string
-  /** the panel's own tabs */
-  tabs: PanelTab[]
+  /** the panel's own tabs, with what each shows */
+  tabs: TabbedPanelTab[]
   /** the open tab: a panel tab's id, or an addon tab's contribution key */
   selected: string
   onChange: (tab: string) => void
@@ -102,8 +126,6 @@ export interface TabbedPanelProps<S extends PanelTabSlotName> {
   isLoading?: boolean
   /** a test id for each tab button, by tab id */
   tabTestId?: (id: string) => string
-  /** the open tab when it is one of the panel's own, with its PanelTabHeader */
-  children?: ReactNode
   className?: string
   'data-testid'?: string
 }
@@ -216,12 +238,13 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
   showLabels,
   isLoading,
   tabTestId,
-  children,
   className,
   'data-testid': testId,
 }: TabbedPanelProps<S>) => {
   const { tabs: slotTabs, isLoading: isLoadingSlot } = usePanelSlotTabs(slot)
-  const isOwnTab = tabs.some((tab) => tab.id === selected)
+  const shownTabs = tabs.filter((tab) => !tab.hidden)
+  const openTab = shownTabs.find((tab) => tab.id === selected)
+  const isOwnTab = !!openTab
   // a tab that is neither the panel's nor an addon's, once the addons and the subject have loaded
   const isGone =
     !isOwnTab &&
@@ -255,7 +278,7 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
         {beforeTabs}
         <Styled.TabRow className="tabbed-panel-tabs">
           <PanelTabs
-            tabs={tabs}
+            tabs={shownTabs}
             // the slot's tabs wait for the subject (its context): until then, which fit and what they
             // would show is not known
             slot={slot?.context === undefined ? undefined : slot}
@@ -270,7 +293,12 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
       </Styled.Head>
       {/* an addon's tab, with its own header; nothing while the slot's context loads */}
       {slot && <PanelSlotTab slot={slot} selected={selected} />}
-      {isOwnTab && children}
+      {openTab && (
+        <>
+          {openTab.header !== false && <PanelTabHeader title={openTab.label} {...openTab.header} />}
+          {openTab.render()}
+        </>
+      )}
     </Styled.Panel>
   )
 }

@@ -379,16 +379,18 @@ const slot = useMemo(
 )
 
 <TabbedPanel
-  tabs={[{ id: 'feedback', label: 'Feedback', icon: 'forum' }]}
+  tabs={[
+    { id: 'feedback', label: 'Feedback', icon: 'forum', render: () => <Feedback /> },
+    // its search bar in the header, as the details panel's Details tab
+    { id: 'notes', label: 'Notes', icon: 'notes', header: { search: <NotesSearch /> }, render: () => <Notes /> },
+  ]}
   selected={tab}
   onChange={setTab}
   slot={slot}
   fallbackTab="feedback"
   showLabels
   tools={[{ id: 'hide', icon: 'right_panel_close', label: 'Hide', shortcut: '.', pinned: true, onClick: hide }]}
->
-  {tab === 'feedback' && <Feedback />}
-</TabbedPanel>
+/>
 ```
 
 - `title`: the row at the top, with the tools at its right; without it, the tools go at the end
@@ -400,8 +402,13 @@ const slot = useMemo(
   opens) and `buttonProps` for a look that changes (a running timer's `variant`, `className`,
   `style`); a menu item uses their `className`, `style` and `data-*`. `onClose` adds a close button
   after them. Shortcuts are only shown in the tooltips: the addon handles its keys.
-- `children`: the open tab when it is one of `tabs`. An addon tab draws itself, with its header.
-- `fallbackTab`: opened instead of a `selected` addon tab whose addon is gone.
+- `tabs`: the panel's own. `render` returns what the open one shows (it runs only for that tab:
+  elements, no hooks). The panel draws its header above it, as for an addon tab: the label as title,
+  with `header`'s `search` (and `searchActive`), `menu` and `children`. `header: false` when the
+  tab draws its own (or none). `hidden` leaves a tab out that does not apply: no button, and when it
+  is `selected` the panel falls back to `fallbackTab`. An addon tab draws itself, with its header.
+- `fallbackTab`: opened instead of a `selected` tab that is not there: a `hidden` one, or an addon
+  tab whose addon is gone.
 - An AYON older than this component has no such export (`undefined`): an addon that supports one
   checks `TabbedPanel &&` and draws its own panel otherwise. Such a panel renders the open addon
   tab with `ContributionTab`, which gives it the same header (on an AYON without it, the tab alone):

@@ -2,9 +2,9 @@
 // a toast naming the addon.
 import type { HostTabbedPanelProps } from '@ynput/ayon-addon/host'
 import { TabbedPanel } from '@shared/components/TabbedPanel'
-import type { PanelTab } from '@shared/components/PanelTabs'
+import type { TabbedPanelTab } from '@shared/components/TabbedPanel'
 
 export const AddonTabbedPanel = ({ onError, tabs, ...props }: HostTabbedPanelProps) => (
   // an addon names its icons as strings
-  <TabbedPanel {...props} tabs={tabs as PanelTab[]} onToolError={onError} />
+  <TabbedPanel {...props} tabs={tabs as TabbedPanelTab[]} onToolError={onError} />
 )

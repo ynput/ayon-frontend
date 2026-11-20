@@ -44,9 +44,8 @@ import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
 import { useDetailsPanelTabSlot } from './hooks/useDetailsPanelTabSlot'
-import { PanelTabHeader, PanelTabSearch } from '@shared/components/PanelTabs'
-import { TabbedPanel } from '@shared/components/TabbedPanel'
-import { getDetailsPanelTabs } from './components/DetailsPanelTabs/DetailsPanelTabs'
+import { PanelTabSearch } from '@shared/components/PanelTabs'
+import { TabbedPanel, type TabbedPanelTab } from '@shared/components/TabbedPanel'
 
 type User = { avatarUrl: string; name: string; fullName?: string }
 
@@ -135,7 +134,7 @@ DetailsPanelProps) => {
     SubtasksManager,
     useNavigate,
   } = useDetailsPanelContext()
-  const { currentTab, setTab, isFeed } = useScopedDetailsPanel(scope)
+  const { currentTab, setTab } = useScopedDetailsPanel(scope)
   // the Details tab's search: it stays while the selection changes, as the feed's filters do
   const [detailsSearch, setDetailsSearch] = useState('')
   const [_searchParams, setSearchParams] = useSearchParams()
@@ -466,8 +465,7 @@ DetailsPanelProps) => {
     [firstProject, activeEntityType, entityDetailsData, scope],
   )
 
-  // the panel's own tabs, and the addons' with what they get
-  const ownTabs = useMemo(() => getDetailsPanelTabs(activeEntityType), [activeEntityType])
+  // the addons' tabs with what they get
   const addonTabSlotWithContext = useMemo(
     () => ({ ...addonTabSlot, context: addonTabContext }),
     [addonTabSlot, addonTabContext],
@@ -488,6 +486,112 @@ DetailsPanelProps) => {
     }
     return true
   }
+
+  // the panel's own tabs, by entity type; the feed, subtasks and files tabs draw their own header
+  const ownTabs: TabbedPanelTab[] = [
+    {
+      id: 'feed',
+      label: 'Activity',
+      icon: 'forum',
+      hidden: entitiesWithoutFeed.includes(activeEntityType),
+      header: false,
+      render: () =>
+        !isError && (
+          <FeedWrapper
+            title="Activity"
+            entityType={activeEntityType}
+            entities={entityDetailsData}
+            activeUsers={activeProjectUsers || []}
+            projectInfo={firstProjectInfo}
+            projectName={firstProject}
+            disabled={!isCommentingEnabled()}
+            scope={scope}
+            statuses={allStatuses}
+            readOnly={false}
+            entityListId={entityListId}
+            annotations={annotations}
+            removeAnnotation={removeAnnotation}
+            exportAnnotationComposite={exportAnnotationComposite}
+            isSlideOut={isSlideOut}
+          />
+        ),
+    },
+    {
+      id: 'subtasks',
+      label: 'Subtasks',
+      icon: 'checklist',
+      hidden: activeEntityType !== 'task',
+      header: false,
+      render: () =>
+        firstEntityData?.id &&
+        SubtasksManager && (
+          <DetailsPanelSubtasks
+            projectName={firstProject}
+            taskId={firstEntityData.id}
+            taskName={firstEntityData.name}
+            folderId={firstEntityData.folder?.id}
+            subtasks={firstEntityData.task?.subtasks || []}
+            SubtasksManager={SubtasksManager}
+            useNavigate={useNavigate!}
+            onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
+          />
+        ),
+    },
+    {
+      id: 'files',
+      label: 'Files',
+      icon: 'order_play',
+      end: true,
+      hidden: activeEntityType !== 'version',
+      header: false,
+      render: () => (
+        <DetailsPanelFiles
+          entities={entityDetailsData}
+          scope={scope}
+          isLoadingVersion={isFetchingEntitiesDetails}
+        />
+      ),
+    },
+    {
+      id: 'details',
+      label: 'Details',
+      icon: 'lists',
+      end: true,
+      showLabel: true,
+      header: {
+        searchActive: !!detailsSearch,
+        search: (
+          <PanelTabSearch
+            value={detailsSearch}
+            onChange={setDetailsSearch}
+            placeholder="Search attributes and details..."
+          />
+        ),
+      },
+      render: () => (
+        <FeedContextWrapper
+          entityType={activeEntityType}
+          entities={entityDetailsData}
+          activeUsers={activeProjectUsers || []}
+          projectInfo={firstProjectInfo}
+          projectName={firstProject}
+          disabled={!isCommentingEnabled()}
+          scope={scope}
+          statuses={allStatuses}
+          readOnly={false}
+          annotations={annotations}
+          removeAnnotation={removeAnnotation}
+          exportAnnotationComposite={exportAnnotationComposite}
+        >
+          <DetailsPanelDetails
+            entities={entityDetailsData}
+            isLoading={isFetchingEntitiesDetails}
+            search={detailsSearch}
+          />
+        </FeedContextWrapper>
+      ),
+    },
+  ]
 
   return (
     <ThumbnailUploadProvider
@@ -563,84 +667,7 @@ DetailsPanelProps) => {
             selected={currentTab}
             onChange={(tab) => setTab(tab as DetailsPanelTab)}
             isLoading={!entityDetailsData.length || isFetchingEntitiesDetails}
-          >
-            {isFeed && !isError && (
-              <FeedWrapper
-                title="Activity"
-                entityType={activeEntityType}
-                entities={entityDetailsData}
-                activeUsers={activeProjectUsers || []}
-                projectInfo={firstProjectInfo}
-                projectName={firstProject}
-                disabled={!isCommentingEnabled()}
-                scope={scope}
-                statuses={allStatuses}
-                readOnly={false}
-                entityListId={entityListId}
-                annotations={annotations}
-                removeAnnotation={removeAnnotation}
-                exportAnnotationComposite={exportAnnotationComposite}
-                isSlideOut={isSlideOut}
-              />
-            )}
-            {currentTab === 'subtasks' &&
-              activeEntityType === 'task' &&
-              firstEntityData?.id &&
-              SubtasksManager && (
-                <DetailsPanelSubtasks
-                  projectName={firstProject}
-                  taskId={firstEntityData.id}
-                  taskName={firstEntityData.name}
-                  folderId={firstEntityData.folder?.id}
-                  subtasks={firstEntityData.task?.subtasks || []}
-                  SubtasksManager={SubtasksManager}
-                  useNavigate={useNavigate!}
-                  onNotFound={() => setTab('feed')} // if subtasks module is not found, switch to feed tab
-                />
-              )}
-            {currentTab === 'files' && (
-              <DetailsPanelFiles
-                entities={entityDetailsData}
-                scope={scope}
-                isLoadingVersion={isFetchingEntitiesDetails}
-              />
-            )}
-            {currentTab === 'details' && (
-              <PanelTabHeader
-                title="Details"
-                searchActive={!!detailsSearch}
-                search={
-                  <PanelTabSearch
-                    value={detailsSearch}
-                    onChange={setDetailsSearch}
-                    placeholder="Search attributes and details..."
-                  />
-                }
-              />
-            )}
-            {currentTab === 'details' && (
-              <FeedContextWrapper
-                entityType={activeEntityType}
-                entities={entityDetailsData}
-                activeUsers={activeProjectUsers || []}
-                projectInfo={firstProjectInfo}
-                projectName={firstProject}
-                disabled={!isCommentingEnabled()}
-                scope={scope}
-                statuses={allStatuses}
-                readOnly={false}
-                annotations={annotations}
-                removeAnnotation={removeAnnotation}
-                exportAnnotationComposite={exportAnnotationComposite}
-              >
-                <DetailsPanelDetails
-                  entities={entityDetailsData}
-                  isLoading={isFetchingEntitiesDetails}
-                  search={detailsSearch}
-                />
-              </FeedContextWrapper>
-            )}
-          </TabbedPanel>
+          />
           {moreMenu.dialogs}
         </ProjectContextProvider>
       </Styled.Panel>

@@ -5,7 +5,7 @@ import { Missing } from './layout'
 import type { SlotMap } from './slots'
 import { useMenuErrorHandler } from './useContextMenu'
 
-/** One of the panel's own tabs: a button in its tab bar. */
+/** One of the panel's own tabs: its button in the tab bar, its header and what it shows. */
 export interface PanelTab {
   id: string
   label: string
@@ -15,6 +15,18 @@ export interface PanelTab {
   end?: boolean
   /** its label next to the icon even when the bar shows icons only */
   showLabel?: boolean
+  /** what the tab shows below its header, called only while it is open (elements, no hooks) */
+  render: () => ReactNode
+  /** not there (it does not apply): no button, and a `selected` one falls back to `fallbackTab` */
+  hidden?: boolean
+  /**
+   * the header the panel draws above it, as an addon tab's: the tab's label as title, with its
+   * search bar (`search`, shown with the search button; `searchActive` when it filters), a `menu`
+   * and anything below (`children`). `false`: the tab draws its own, or none
+   */
+  header?:
+    | false
+    | { menu?: ReactNode; search?: ReactNode; searchActive?: boolean; children?: ReactNode }
 }
 
 /**
@@ -121,8 +133,6 @@ export interface TabbedPanelProps<S extends PanelTabSlotName = PanelTabSlotName>
   isLoading?: boolean
   /** a test id for each tab button, by tab id */
   tabTestId?: (id: string) => string
-  /** the open tab when it is one of the panel's own */
-  children?: ReactNode
   className?: string
   'data-testid'?: string
 }
@@ -135,23 +145,21 @@ export interface HostTabbedPanelProps extends TabbedPanelProps<PanelTabSlotName>
 /**
  * AYON's panel with tabs, as its details panels draw it: a title with the panel's tools, the tab
  * bar with the panel's own tabs and the tabs other addons contribute to `slot`, then the open tab.
- * An addon tab draws itself with its header; the panel's own tab is `children`. The addon keeps
- * which tab is open. An AYON older than this component has no such export (`undefined`): an addon
+ * Every tab gets the same header: the panel draws it for its own tabs (`header`) above what their
+ * `render` returns, and an addon tab draws itself with it. The addon keeps which tab is open. An AYON older than this component has no such export (`undefined`): an addon
  * that supports one checks `TabbedPanel &&` and draws its own panel otherwise.
  *
  * ```tsx
  * const [tab, setTab] = useState('notes')
  * const slot = useMemo(() => ({ name: 'listDetails.tab' as const, context }), [context])
  * <TabbedPanel
- *   tabs={[{ id: 'notes', label: 'Notes', icon: 'notes' }]}
+ *   tabs={[{ id: 'notes', label: 'Notes', icon: 'notes', render: () => <Notes /> }]}
  *   selected={tab}
  *   onChange={setTab}
  *   slot={slot}
  *   fallbackTab="notes"
  *   tools={[{ id: 'hide', icon: 'right_panel_close', label: 'Hide', onClick: hide, pinned: true }]}
- * >
- *   <Notes />
- * </TabbedPanel>
+ * />
  * ```
  */
 export const TabbedPanel = <S extends PanelTabSlotName>(props: TabbedPanelProps<S>) => {

@@ -3,17 +3,11 @@ import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@shared/util'
-import {
-  ListAttributeForm,
-  ListMetaData,
-  PanelTabHeader,
-  PanelTabSearch,
-  TabbedPanel,
-} from '@shared/components'
+import { ListAttributeForm, ListMetaData, PanelTabSearch, TabbedPanel } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
-import type { PanelTab, PanelTabSlot } from '@shared/components'
+import type { PanelTabSlot, TabbedPanelTab } from '@shared/components'
 import type { ListDetailsTabContext } from '@ynput/ayon-addon'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
@@ -28,13 +22,6 @@ const showFullValueIfCut = (event: MouseEvent<HTMLElement>) => {
   if (value.scrollWidth > value.clientWidth) value.dataset.tooltip = value.textContent || ''
   else delete value.dataset.tooltip
 }
-
-// the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
-// the contribution key, `<addon>.<id>`
-const LIST_DETAILS_TABS: PanelTab[] = [
-  { id: 'details', label: 'Details', icon: 'lists' },
-  { id: 'access', label: 'Share', icon: 'share' },
-]
 
 interface ListDetailsPanelProps {
   listId: string
@@ -68,8 +55,6 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   // the Details tab's search: it stays while another list is selected
   const [detailsSearch, setDetailsSearch] = useState('')
-
-  const ownTab = LIST_DETAILS_TABS.find((tab) => tab.id === selectedTab)
 
   // the selected list only (currentData): while another list loads, a tab must not act on the last one
   const addonTabContext = useMemo<ListDetailsTabContext | undefined>(
@@ -114,6 +99,58 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     }
   }
 
+  // the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
+  // the contribution key, `<addon>.<id>`
+  const tabs: TabbedPanelTab[] = [
+    {
+      id: 'details',
+      label: 'Details',
+      icon: 'lists',
+      header: {
+        searchActive: !!detailsSearch,
+        search: (
+          <PanelTabSearch
+            value={detailsSearch}
+            onChange={setDetailsSearch}
+            placeholder="Search attributes and details..."
+          />
+        ),
+      },
+      render: () => (
+        <Styled.Scrollable>
+          <Styled.Section>
+            <ListAttributeForm
+              list={list}
+              isLoading={isLoadingList}
+              projectName={projectName}
+              search={detailsSearch}
+            />
+          </Styled.Section>
+          <Styled.Section onMouseOver={showFullValueIfCut}>
+            <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
+          </Styled.Section>
+        </Styled.Scrollable>
+      ),
+    },
+    {
+      id: 'access',
+      label: 'Share',
+      icon: 'share',
+      render: () => (
+        <Styled.Scrollable>
+          {list && (
+            <ListAccessForm
+              list={list}
+              projectName={projectName}
+              isLoading={isLoadingList}
+              isReview={isReview}
+            />
+          )}
+        </Styled.Scrollable>
+      ),
+    },
+  ]
+
   if (errorMessage)
     return (
       <Styled.Panel>
@@ -139,7 +176,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
           </Styled.Titles>
         }
         onClose={() => setListDetailsOpen(false)}
-        tabs={LIST_DETAILS_TABS}
+        tabs={tabs}
         // the addon tabs get the selected list only: while another list loads, they must not act
         // on the last one
         slot={addonTabSlot}
@@ -149,51 +186,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         fallbackTab="details"
         // few tabs: each is named, the addons' too
         showLabels
-      >
-        {ownTab && (
-          <>
-            {/* as an addon tab's header: the open tab's name and its search */}
-            <PanelTabHeader
-              title={ownTab.label}
-              searchActive={ownTab.id === 'details' && !!detailsSearch}
-              search={
-                ownTab.id === 'details' && (
-                  <PanelTabSearch
-                    value={detailsSearch}
-                    onChange={setDetailsSearch}
-                    placeholder="Search attributes and details..."
-                  />
-                )
-              }
-            />
-            <Styled.Scrollable>
-              {ownTab.id === 'details' && (
-                <>
-                  <Styled.Section>
-                    <ListAttributeForm
-                      list={list}
-                      isLoading={isLoadingList}
-                      projectName={projectName}
-                      search={detailsSearch}
-                    />
-                  </Styled.Section>
-                  <Styled.Section onMouseOver={showFullValueIfCut}>
-                    <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
-                  </Styled.Section>
-                </>
-              )}
-              {ownTab.id === 'access' && list && (
-                <ListAccessForm
-                  list={list}
-                  projectName={projectName}
-                  isLoading={isLoadingList}
-                  isReview={isReview}
-                />
-              )}
-            </Styled.Scrollable>
-          </>
-        )}
-      </TabbedPanel>
+      />
     </Styled.Panel>
   )
 }
