@@ -235,8 +235,6 @@ const injectedApi = enhancedApi.injectEndpoints({
           const currentCache = (injectedApi.endpoints as any).getOverviewTasksByFolders.select(
             cacheArgs,
           )(state)
-          const cacheData: EditorTaskNode[] = currentCache?.data || []
-
           // 1. Generate a stable cache key matching RTK Query's serialization
           const cacheKey = getCacheKey(
             projectName,
@@ -246,6 +244,12 @@ const injectedApi = enhancedApi.injectEndpoints({
             showComments,
             scope,
           )
+
+          // A refresh of a scoped cache starts over. Its folders are the ones on screen, so the
+          // others would stay marked as queried with the tasks they had before the refresh
+          const isScopedRefresh = !!scope && forced
+          if (isScopedRefresh) delete queriedFoldersRegistry[cacheKey]
+          const cacheData: EditorTaskNode[] = isScopedRefresh ? [] : currentCache?.data || []
 
           // 2. Fetch our registry specific to THIS combination of search/filters
           const alreadyQueriedFolders = getQueriedFolders(cacheKey)

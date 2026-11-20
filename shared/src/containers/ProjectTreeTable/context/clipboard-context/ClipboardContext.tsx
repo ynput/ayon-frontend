@@ -507,8 +507,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
         cellsByRow.get(rowId)?.add(colId)
       })
+      // a row with only task-column cells selected has nothing to paste into; left in, it would
+      // get the values of the first row's columns
+      let hasTaskCellRows = false
+      cellsByRow.forEach((colIds, rowId) => {
+        if (![...colIds].every(isTaskColumnId)) return
+        cellsByRow.delete(rowId)
+        hasTaskCellRows = true
+      })
       if (!cellsByRow.size) {
-        clipboardError('These rows are read-only. Paste operation cancelled.')
+        if (!hasTaskCellRows) clipboardError('These rows are read-only. Paste operation cancelled.')
         return
       }
 

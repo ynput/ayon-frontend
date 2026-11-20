@@ -833,7 +833,7 @@ export const ProjectTreeTable = ({
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
-  const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
+  const { getRowHeight, defaultRowHeight, rowHeightsKey } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return resolvedAttribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
@@ -1001,6 +1001,7 @@ export const ProjectTreeTable = ({
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
+              rowHeightsKey={rowHeightsKey}
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
               onVisibleRowsChange={onVisibleRowsChange}
@@ -1550,6 +1551,7 @@ interface TableBodyProps {
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
+  rowHeightsKey: string
   onResetView?: () => void
   contextMenuItems?: ContextMenuItemConstructors
   onVisibleRowsChange?: (entityIds: string[]) => void
@@ -1575,6 +1577,7 @@ const TableBody = ({
   isGrouping,
   getRowHeight,
   defaultRowHeight,
+  rowHeightsKey,
   onResetView,
   contextMenuItems,
   onVisibleRowsChange,
@@ -1623,6 +1626,12 @@ const TableBody = ({
         : undefined,
     overscan: 5,
   })
+
+  // rows measured before all heights changed (e.g. every row made tall) keep their old height
+  // until they are on screen again, which leaves the offsets and the total wrong meanwhile
+  useEffect(() => {
+    rowVirtualizer.measure()
+  }, [rowHeightsKey, rowVirtualizer])
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 

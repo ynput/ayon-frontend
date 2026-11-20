@@ -26,7 +26,15 @@ const useDynamicRowHeight = () => {
     return rowHeight
   }
 
-  return { getRowHeight, thumbnailRowHeight: rowHeight, defaultRowHeight: rowHeight }
+  // changes when rows that are not on screen change height too: their measured heights are stale
+  const rowHeightsKey = `${rowHeight}:${!!taskColumns?.isActive && taskColumns.isAllExpanded}`
+
+  return {
+    getRowHeight,
+    thumbnailRowHeight: rowHeight,
+    defaultRowHeight: rowHeight,
+    rowHeightsKey,
+  }
 }
 
 export default useDynamicRowHeight
