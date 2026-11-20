@@ -20,7 +20,16 @@ import SettingsEditor from '@containers/SettingsEditor'
 import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 import useSettingsSetValue from '@containers/SettingsEditor/useSettingsSetValue'
 
-const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
+// readOnly: the viewer can't edit this project's anatomy (raw settings and Paste are greyed out)
+const AnatomyEditor = ({
+  preset,
+  projectName,
+  formData,
+  setFormData,
+  setIsChanged,
+  savedAt,
+  readOnly = false,
+}) => {
   const [originalData, setOriginalData] = useState(null)
   const handledSaveRef = useRef(null)
   const { data: schema } = useGetAnatomySchemaQuery()
@@ -95,6 +104,7 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
         context={{
           onPasteValue: onPasteValue,
           onSetValue,
+          readOnly,
         }}
       />
     )
@@ -108,6 +118,7 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
     setFormData,
     onPasteValue,
     onSetValue,
+    readOnly,
   ])
 
   return editor

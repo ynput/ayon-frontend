@@ -9,7 +9,8 @@ import { CSS } from 'styled-components/dist/types'
 import { matchesFilterKeys } from './searchMatcher'
 import { renderFieldTemplate } from './FieldTemplateHelpers'
 import { buildOverrideContextMenu } from './ObjectFieldTemplateHelpers'
-import { isPropertyInScope } from '../SettingsGroup/SettingsGroupHelpers'
+import { getReadOnlyReason } from './readOnlySettings'
+import { isListGroupSchema, isPropertyInScope } from '../SettingsGroup/SettingsGroupHelpers'
 
 const arrayContainsArray = (arr1: $Any, arr2: $Any) => {
   return arr1.some((el: $Any) => isEqual(el, arr2))
@@ -43,11 +44,7 @@ function FieldTemplate(props: FieldTemplateProps) {
 
   const override = props.formContext.overrides ? props.formContext.overrides[props.id] : null
   // a list drawn as a group (renderFieldTemplate) can be edited as JSON from its title
-  const isListGroup =
-    props.schema.type === 'array' &&
-    // @ts-ignore
-    props.schema.items?.type !== 'string' &&
-    props.schema.layout !== 'compact'
+  const isListGroup = isListGroupSchema(props.schema, flatLayout)
   // and only where its place in the data is known: any other would open the whole form
   const onEditJson = isListGroup && override?.path ? props.formContext.onEditJson : undefined
   const jsonTitle = props.schema.title || props.label
@@ -63,37 +60,30 @@ function FieldTemplate(props: FieldTemplateProps) {
 
   // Context menu
 
-  const contextMenuModel = useMemo(
-    () =>
-      buildOverrideContextMenu({
-        level,
-        onPinOverride,
-        onRemoveOverride,
-        onPasteValue,
-        onEditJson,
-        jsonTitle,
-        formData: props.formData,
-        override,
-        overrideLevel,
-        path,
-      }),
-    [
+  // built when it opens: whether a list holds a read-only field walks its items
+  const buildContextMenu = () =>
+    buildOverrideContextMenu({
       level,
+      onPinOverride,
+      onRemoveOverride,
       onPasteValue,
       onEditJson,
       jsonTitle,
-      onPinOverride,
-      onRemoveOverride,
+      formData: props.formData,
       override,
       overrideLevel,
       path,
-      props.formData,
-    ],
-  )
+      readOnlyReason: getReadOnlyReason(
+        props.formContext,
+        props.schema,
+        props.formData,
+        props.registry,
+      ),
+    })
 
   const onContextMenu = (e: $Any) => {
     e.preventDefault()
-    contextMenu(e, contextMenuModel)
+    contextMenu(e, buildContextMenu())
     if (onSetBreadcrumbs && path) onSetBreadcrumbs(path)
   }
 

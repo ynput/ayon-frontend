@@ -102,6 +102,7 @@ const ProjectAnatomy = ({ projectName, projectList }) => {
             setFormData={setFormData}
             setIsChanged={setIsChanged}
             savedAt={savedAt}
+            readOnly={!userPermissions.canEditAnatomy(projectName)}
           />
         ) : (
           <EmptyPlaceholder

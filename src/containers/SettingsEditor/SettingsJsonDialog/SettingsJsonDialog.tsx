@@ -20,6 +20,9 @@ export type SettingsJsonDialogProps = {
   path: string[]
   /** The group's value when the dialog opened */
   value: unknown
+  /** Why the value can't be changed (no edit permissions, or it holds read-only settings): the
+   * JSON can be read and copied, and Confirm is greyed out with this as its tooltip */
+  readOnlyReason?: string
   /** Sets the value in the form, unsaved. Returns false when the editor refuses it (it says why) */
   onApply: (value: unknown) => boolean | void
   onClose: () => void
@@ -33,14 +36,16 @@ export const SettingsJsonDialog = ({
   title,
   path,
   value,
+  readOnlyReason,
   onApply,
   onClose,
 }: SettingsJsonDialogProps) => {
+  const readOnly = !!readOnlyReason
   const [code, setCode] = useState(() => toJson(value))
   const parsed = useMemo(() => parseJson(code), [code])
   // a value that doesn't parse, or isn't of the group's kind, is never confirmed
   const problem = getJsonProblem(parsed, value)
-  const changed = !problem && !isEqual(parsed.value, value)
+  const changed = !readOnly && !problem && !isEqual(parsed.value, value)
 
   const confirm = () => {
     if (!changed) return
@@ -56,16 +61,27 @@ export const SettingsJsonDialog = ({
         variant="text"
         onClick={() => copyToClipboard(code)}
       />
-      <Button
-        label="Format"
-        icon="format_align_left"
-        variant="text"
-        disabled={parsed.error !== undefined}
-        onClick={() => parsed.error === undefined && setCode(toJson(parsed.value))}
-      />
+      {!readOnly && (
+        <Button
+          label="Format"
+          icon="format_align_left"
+          variant="text"
+          disabled={parsed.error !== undefined}
+          onClick={() => parsed.error === undefined && setCode(toJson(parsed.value))}
+        />
+      )}
       <span className="spacer" />
-      <Button label="Cancel" variant="text" onClick={onClose} />
-      <Button label="Confirm" icon="check" variant="filled" disabled={!changed} onClick={confirm} />
+      <Button label={readOnly ? 'Close' : 'Cancel'} variant="text" onClick={onClose} />
+      {/* a span: a disabled button shows no tooltip */}
+      <span data-tooltip={readOnlyReason}>
+        <Button
+          label="Confirm"
+          icon="check"
+          variant="filled"
+          disabled={!changed}
+          onClick={confirm}
+        />
+      </span>
     </DialogFooter>
   )
 
@@ -81,7 +97,12 @@ export const SettingsJsonDialog = ({
     >
       <DialogBody>
         <DialogSubtitle>{path.length ? path.join(' / ') : 'All settings'}</DialogSubtitle>
-        <JsonCodeEditor value={code} onChange={setCode} error={problem} />
+        <JsonCodeEditor
+          value={code}
+          onChange={setCode}
+          error={readOnly ? undefined : problem}
+          readOnly={readOnly}
+        />
       </DialogBody>
     </Dialog>
   )

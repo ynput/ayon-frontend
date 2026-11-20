@@ -115,7 +115,7 @@ const SettingsEditor = ({
   anchorScope,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
-  // a group opened as JSON from its right-click menu: { path, title, value }
+  // a group opened as JSON from its right-click menu: { path, title, value, readOnlyReason }
   const [jsonEdit, setJsonEdit] = useState(null)
   const formWrapperRef = useRef()
   const sheetRef = useRef(null)
@@ -214,8 +214,13 @@ const SettingsEditor = ({
   const fullContext = {
     ...context,
     ...formContext,
-    onEditJson: (path, title) =>
-      setJsonEdit({ path, title, value: cloneDeep(getValueByPath(formData, path)) }),
+    onEditJson: (path, title, readOnlyReason) =>
+      setJsonEdit({
+        path,
+        title,
+        value: cloneDeep(getValueByPath(formData, path)),
+        readOnlyReason,
+      }),
     onSetChangedKeys: onSetChangedKeys || noop,
     onSetBreadcrumbs: setBc,
     breadcrumbs: totallyRealBreadcrumbs,
@@ -272,6 +277,7 @@ const SettingsEditor = ({
           title={jsonEdit.title}
           path={jsonEdit.path}
           value={jsonEdit.value}
+          readOnlyReason={jsonEdit.readOnlyReason}
           onApply={applyJson}
           onClose={() => setJsonEdit(null)}
         />

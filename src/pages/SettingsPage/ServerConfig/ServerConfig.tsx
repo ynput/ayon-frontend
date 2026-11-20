@@ -13,6 +13,7 @@ import { ServerConfigModel } from '@shared/api'
 import styled from 'styled-components'
 import { toast } from 'react-toastify'
 import usePortalElements from '@hooks/usePortalElements'
+import { useAppSelector } from '@state/store'
 import {
   SettingsFormSection,
   SettingsFormTitle,
@@ -30,6 +31,8 @@ const StyledContent = styled(SettingsFormContent)`
 `
 
 const ServerConfig = () => {
+  // only admins can change the server's configuration; a manager who opens the page reads it
+  const isAdmin = useAppSelector((state) => !!state.user?.data?.isAdmin)
   const { bgElement, logoElement, containerRef } = usePortalElements()
 
   const { data: originalData = {}, isLoading: isLoadingData } = useGetServerConfigQuery()
@@ -125,6 +128,7 @@ const ServerConfig = () => {
         onChange={setFormData}
         onSetChangedKeys={setChangedKeys}
         outline={false}
+        context={{ readOnly: !isAdmin }}
       />
     )
   }, [
@@ -138,6 +142,7 @@ const ServerConfig = () => {
     configOverrides,
     setFormData,
     setChangedKeys,
+    isAdmin,
   ])
 
   return (

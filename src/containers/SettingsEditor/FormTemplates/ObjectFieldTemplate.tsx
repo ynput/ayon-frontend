@@ -17,6 +17,7 @@ import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { $Any } from '@types'
 import { ObjectFieldTemplateProps } from '@rjsf/utils'
 import { matchesFilterKeys } from './searchMatcher'
+import { getReadOnlyReason } from './readOnlySettings'
 
 function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const [contextMenu] = useCreateContextMenu([])
@@ -112,23 +113,9 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     props.title ||
     'Settings'
 
-  const contextMenuModel = useMemo(
-    () =>
-      buildOverrideContextMenu({
-        isRoot,
-        level,
-        onRemoveAllOverrides,
-        onPinOverride,
-        onRemoveOverride,
-        onPasteValue,
-        onEditJson,
-        jsonTitle,
-        formData: props.formData,
-        override,
-        overrideLevel,
-        path,
-      }),
-    [
+  // built when it opens: whether the group holds a read-only field walks its settings
+  const buildContextMenu = () =>
+    buildOverrideContextMenu({
       isRoot,
       level,
       onRemoveAllOverrides,
@@ -137,12 +124,17 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       onPasteValue,
       onEditJson,
       jsonTitle,
-      props.formData,
+      formData: props.formData,
       override,
       overrideLevel,
       path,
-    ],
-  )
+      readOnlyReason: getReadOnlyReason(
+        props.formContext,
+        props.schema,
+        props.formData,
+        props.registry,
+      ),
+    })
 
   // aaand... render
 
@@ -178,7 +170,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       e,
       props.formContext.onSetBreadcrumbs,
       path,
-      contextMenuModel,
+      buildContextMenu(),
       contextMenu,
     )
 

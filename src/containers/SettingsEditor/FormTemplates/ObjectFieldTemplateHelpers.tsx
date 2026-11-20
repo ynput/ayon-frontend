@@ -3,6 +3,7 @@ import { ReactNode } from 'react'
 import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { $Any } from '@types'
+import { NO_EDIT_PERMISSION } from './readOnlySettings'
 import { Badge, BadgeWrapper } from '@shared/components'
 import { copyToClipboard } from '@shared/util'
 import { arrayStartsWith } from './searchMatcher'
@@ -117,8 +118,12 @@ type OverrideContextMenuArgs = {
   onPinOverride?: (path: $Any[]) => void
   onRemoveOverride?: (path: $Any[]) => void
   onPasteValue?: (path: $Any[]) => void
-  /** Groups only: opens the group's raw settings (SettingsJsonDialog), under this title */
-  onEditJson?: (path: $Any[], title: string) => void
+  /** Groups only: opens the group's raw settings (SettingsJsonDialog), under this title, read
+   * only (greyed out Confirm) for the reason given */
+  onEditJson?: (path: $Any[], title: string, readOnlyReason?: string) => void
+  /** Why the value can't be changed here (readOnlySettings): Paste is greyed out, and without
+   * edit permissions the override actions too */
+  readOnlyReason?: string
   jsonTitle?: string
   formData: ObjectFieldTemplateProps['formData']
   override?: $Any
@@ -141,13 +146,15 @@ export const buildOverrideContextMenu = ({
   override,
   overrideLevel,
   path,
+  readOnlyReason,
 }: OverrideContextMenuArgs) => {
   const model = []
+  const noPermission = readOnlyReason === NO_EDIT_PERMISSION
 
   if (isRoot) {
     model.push({
       label: `Remove all ${level} overrides`,
-      disabled: !onRemoveAllOverrides,
+      disabled: !onRemoveAllOverrides || noPermission,
       command: () => onRemoveAllOverrides?.(),
     })
   } else {
@@ -156,14 +163,14 @@ export const buildOverrideContextMenu = ({
       model.push({
         label: `Add current ${rmPath[rmPath.length - 1]} value as ${level} override`,
         command: () => onPinOverride(rmPath),
-        disabled: overrideLevel === level,
+        disabled: overrideLevel === level || noPermission,
       })
     }
     if (onRemoveOverride) {
       model.push({
         label: `Remove ${level} override from ${rmPath[rmPath.length - 1]}`,
         command: () => onRemoveOverride(rmPath),
-        disabled: overrideLevel !== level,
+        disabled: overrideLevel !== level || noPermission,
       })
     }
   }
@@ -181,14 +188,14 @@ export const buildOverrideContextMenu = ({
     },
     {
       label: 'Paste',
-      disabled: !onPasteValue,
+      disabled: !onPasteValue || !!readOnlyReason,
       command: () => onPasteValue?.(path || []),
     },
   )
   if (onEditJson) {
     model.push({
       label: 'Edit raw settings...',
-      command: () => onEditJson(path || [], jsonTitle || 'Settings'),
+      command: () => onEditJson(path || [], jsonTitle || 'Settings', readOnlyReason),
     })
   }
   return model

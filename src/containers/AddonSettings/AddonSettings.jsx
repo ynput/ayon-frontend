@@ -619,6 +619,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //
 
   const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
+  // the project's settings are read-only for users without edit permissions (site settings are
+  // each user's own)
+  const canEditSettings = bypassPermissions || userPermissions.canEditSettings(projectName)
 
   const addonListHeader = useMemo(() => {
     // site settings do not have variants
@@ -937,6 +940,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                               onSetRawValue: (path, value) =>
                                 pushValueToPath(addon, siteId, path, value, 'update'),
                               includeStudioScope: !!addon.isProjectBundle,
+                              // read-only users can look, not change (raw settings, Paste)
+                              readOnly: !canEditSettings,
                             }}
                           />
                         </Panel>

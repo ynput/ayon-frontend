@@ -13,11 +13,14 @@ export type JsonCodeEditorProps = {
   overlay?: ReactNode
   /** The editor can't be reached (mouse, keyboard, screen readers) while the overlay asks first */
   locked?: boolean
+  /** The value can be read, selected and copied, not changed */
+  readOnly?: boolean
 }
 
 /**
  * The editor of the raw settings dialogs (a group's, SettingsJsonDialog, and an addon's
- * overrides, RawSettingsDialog): coloured JSON, indented with 2 spaces
+ * overrides, RawSettingsDialog) and of a user's data (UserDataDialog): coloured JSON,
+ * indented with 2 spaces
  */
 export const JsonCodeEditor = ({
   value,
@@ -25,6 +28,7 @@ export const JsonCodeEditor = ({
   error,
   overlay,
   locked,
+  readOnly,
 }: JsonCodeEditorProps) => (
   <>
     <Styled.Wrapper>
@@ -37,6 +41,7 @@ export const JsonCodeEditor = ({
           value={value}
           language="json"
           padding={12}
+          readOnly={readOnly}
           onChange={(event) => onChange(event.target.value)}
         />
       </Styled.Frame>
