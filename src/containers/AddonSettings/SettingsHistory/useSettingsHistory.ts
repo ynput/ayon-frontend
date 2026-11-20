@@ -12,6 +12,7 @@ import {
   getOverridesRefAt,
   LANE_COLORS,
   OverrideDiff,
+  withMissing,
   withSameValues,
 } from './settingsHistoryHelpers'
 import { useQueryEach } from './useQueryEach'
@@ -158,7 +159,7 @@ export const useSettingsHistory = ({ addons, projectName, compareAt, skip }: Pro
         return {
           ...base,
           status: 'ready',
-          diffs: withSameValues(diffOverrides(then, now), nowSettings),
+          diffs: withMissing(withSameValues(diffOverrides(then, now), nowSettings), nowSettings),
         }
       }),
     }

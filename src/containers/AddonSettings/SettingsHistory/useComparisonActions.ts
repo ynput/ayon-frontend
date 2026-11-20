@@ -4,8 +4,10 @@ import { toast } from 'react-toastify'
 import { format } from 'date-fns'
 import { isEqual } from 'lodash'
 import { addonSettingsApi } from '@queries/addonSettings'
+import { copyToClipboard } from '@shared/util'
 import {
   DATE_FORMAT,
+  getIn,
   getRevertEntries,
   OverrideDiff,
   stageEntries,
@@ -21,6 +23,7 @@ export type ComparisonMenuItem = {
   label?: string
   icon?: string
   command?: () => void
+  disabled?: boolean
   separator?: boolean
 }
 
@@ -57,6 +60,31 @@ export const useComparisonActions = (props: Props) => {
     return getStaged(getKey(addon)).changed.some((changed) => isEqual(changed, path))
   }, [])
 
+  /** What settings that are not overridden inherit: the defaults, or the studio settings */
+  const loadInherited = useCallback(
+    async (addon: HistoryAddon): Promise<{ inherited?: unknown; failed?: boolean }> => {
+      const { projectName } = latest.current
+      const request = dispatch(
+        addonSettingsApi.endpoints.getAddonSettings.initiate({
+          addonName: addon.name,
+          addonVersion: addon.version,
+          variant: projectName ? addon.variant : DEFAULTS_VARIANT,
+          projectName: null,
+          siteId: null,
+        }) as any,
+      ) as any
+      try {
+        return { inherited: await request.unwrap() }
+      } catch {
+        toast.error(`Could not load the ${projectName ? 'studio' : 'default'} settings`)
+        return { failed: true }
+      } finally {
+        request.unsubscribe()
+      }
+    },
+    [dispatch],
+  )
+
   /** Stages the values of then, returns how many settings could not be reverted */
   const revert = useCallback(
     async (addonName: string, diffs: OverrideDiff[]): Promise<number> => {
@@ -64,24 +92,9 @@ export const useComparisonActions = (props: Props) => {
       if (!addon || !diffs.length) return 0
       let inherited: unknown
       if (diffs.some((diff) => diff.before === undefined)) {
-        const { projectName } = latest.current
-        const request = dispatch(
-          addonSettingsApi.endpoints.getAddonSettings.initiate({
-            addonName,
-            addonVersion: addon.version,
-            variant: projectName ? addon.variant : DEFAULTS_VARIANT,
-            projectName: null,
-            siteId: null,
-          }) as any,
-        ) as any
-        try {
-          inherited = await request.unwrap()
-        } catch {
-          toast.error(`Could not load the ${projectName ? 'studio' : 'default'} settings`)
-          return diffs.length
-        } finally {
-          request.unsubscribe()
-        }
+        const loaded = await loadInherited(addon)
+        if (loaded.failed) return diffs.length
+        inherited = loaded.inherited
       }
       const { getKey, getStaged, setStaged } = latest.current
       const key = getKey(addon)
@@ -92,7 +105,22 @@ export const useComparisonActions = (props: Props) => {
       if (next.changed.length) setStaged(key, next)
       return diffs.length - entries.length + skipped.length
     },
-    [dispatch],
+    [loadInherited],
+  )
+
+  /** Copies the value of then like the editor copies a setting, so it can be pasted elsewhere */
+  const copyOld = useCallback(
+    async (addonName: string, diff: OverrideDiff) => {
+      const addon = getAddon(addonName)
+      let value = diff.before
+      if (value === undefined && addon) {
+        const loaded = await loadInherited(addon)
+        if (loaded.failed) return
+        value = getIn(loaded.inherited, diff.path)
+      }
+      copyToClipboard(value === undefined ? '' : JSON.stringify(value, null, 2))
+    },
+    [loadInherited],
   )
 
   const warnSkipped = (skipped: number) =>
@@ -128,6 +156,7 @@ export const useComparisonActions = (props: Props) => {
           label: 'Show in editor',
           icon: 'arrow_outward',
           command: () => onFocus(addonName, diff.path),
+          disabled: diff.missing,
         })
       }
       items.push(
@@ -137,11 +166,18 @@ export const useComparisonActions = (props: Props) => {
               label: `Revert to ${format(comparison.at, DATE_FORMAT)}`,
               icon: 'history',
               command: () => revert(addonName, [diff]).then(warnSkipped),
+              // nothing to put it back in
+              disabled: diff.missing,
             },
+        {
+          label: 'Copy old value',
+          icon: 'content_copy',
+          command: () => copyOld(addonName, diff),
+        },
       )
       return items
     },
-    [isStaged, revert, undo],
+    [isStaged, revert, undo, copyOld],
   )
 
   /** Items for the context menu of a field in the editor: the setting or the list it is in */

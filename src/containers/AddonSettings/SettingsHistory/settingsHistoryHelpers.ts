@@ -12,6 +12,8 @@ export type OverrideDiff = {
   after?: unknown
   /** only the override changed: the value it inherits now is the one it was overridden with */
   sameValue?: boolean
+  /** the current version has no such setting, it was removed or renamed */
+  missing?: boolean
 }
 
 /** Where the overrides of an addon at some moment can be read from */
@@ -47,6 +49,53 @@ export const diffOverrides = (
     else if (!isEqual(x, y)) result.push({ path: childPath, before: x, after: y })
   }
   return result
+}
+
+/**
+ * Settings one save changed. The first save of a version starts from nothing, so it is
+ * compared to the save before it (`previousPayload`, of the version before).
+ */
+export const getChangeDiffs = (
+  payload: SettingsChangePayload,
+  previousPayload: SettingsChangePayload | null | undefined,
+  startsVersion: boolean,
+): OverrideDiff[] | null => {
+  const before =
+    startsVersion && !Object.keys(payload.originalValue).length
+      ? previousPayload?.newValue
+      : payload.originalValue
+  return before ? diffOverrides(before, payload.newValue) : null
+}
+
+/** Whether a save of `change` starts a new version of the addon */
+export const startsVersion = (change: SettingsChange, previous?: SettingsChange) =>
+  !!previous && previous.addonVersion !== change.addonVersion
+
+/**
+ * Diffs of a setting and what is inside it. A list is stored whole, so a setting inside a list
+ * item changed when the list did.
+ */
+export const filterDiffs = (diffs: OverrideDiff[], path: (string | number)[]) =>
+  diffs.filter((diff) => diff.path.slice(0, path.length).every((key, i) => key === String(path[i])))
+
+/** Saves by day, and within a day the runs of saves by one user in one addon version */
+export const groupSaves = <T extends { change: SettingsChange }>(entries: T[]) => {
+  const days: { label: string; runs: T[][] }[] = []
+  for (const entry of entries) {
+    const { change } = entry
+    const label = getDayLabel(change.createdAt)
+    let day = days[days.length - 1]
+    if (day?.label !== label) days.push((day = { label, runs: [] }))
+    const run = day.runs[day.runs.length - 1]
+    const last = run?.[run.length - 1].change
+    const sameRun =
+      last?.user === change.user &&
+      last.addonName === change.addonName &&
+      last.addonVersion === change.addonVersion
+    if (sameRun) run.push(entry)
+    else day.runs.push([entry])
+  }
+  return days
 }
 
 /** Comparing with a save compares from just before it, so the save is part of what changed */
@@ -128,6 +177,12 @@ export const withSameValues = (diffs: OverrideDiff[], settings: unknown): Overri
       : diff,
   )
 
+/** Marks the settings the current settings do not have, those of an older version */
+export const withMissing = (diffs: OverrideDiff[], settings: unknown): OverrideDiff[] =>
+  diffs.map((diff) =>
+    getIn(settings, diff.path) === undefined ? { ...diff, missing: true } : diff,
+  )
+
 /** A value to put back in the form, `unpin` removes the override when saving */
 export type RevertEntry = { path: string[]; value: unknown; unpin: boolean }
 
@@ -173,19 +228,6 @@ export const stageEntries = (state: StagedSettings, entries: RevertEntry[]) => {
     if (entry.unpin) unpinned.push(path)
   }
   return { data, changed, unpinned, skipped }
-}
-
-/** Diffs by parent, in the order they first appear, so the parent titles show once */
-export const groupByParent = (diffs: OverrideDiff[]) => {
-  const groups = new Map<string, { parent: string[]; diffs: OverrideDiff[] }>()
-  for (const diff of diffs) {
-    const parent = diff.path.slice(0, -1)
-    const key = JSON.stringify(parent)
-    const group = groups.get(key)
-    if (group) group.diffs.push(diff)
-    else groups.set(key, { parent, diffs: [diff] })
-  }
-  return [...groups.values()]
 }
 
 /** Field id the settings form uses for a path (`data-fieldid`) */

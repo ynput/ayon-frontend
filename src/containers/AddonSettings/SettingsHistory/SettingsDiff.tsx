@@ -1,5 +1,5 @@
 import { FC } from 'react'
-import { Icon } from '@ynput/ayon-react-components'
+import clsx from 'clsx'
 import { describeListChange, formatValue, OverrideDiff } from './settingsHistoryHelpers'
 
 /** `Parent › Parent › Setting` with the setting itself emphasised */
@@ -12,15 +12,21 @@ export const DiffPath: FC<{ titles: string[]; className?: string }> = ({ titles,
   </span>
 )
 
-type DiffValuesProps = {
-  diff: OverrideDiff
-  className?: string
-  /** lists only say what happened to them, where both values do not fit */
-  compact?: boolean
-}
+/** `Parent › Setting` on one line, the parent gives way first, styled by `settingName` */
+export const SettingName: FC<{ titles: string[] }> = ({ titles }) =>
+  titles.length ? (
+    <span className="name">
+      {titles.length > 1 && <span className="parent">{titles.slice(0, -1).join(' › ')}</span>}
+      <span className="leaf">{titles[titles.length - 1]}</span>
+    </span>
+  ) : null
+
+/** What a list change or a removed override means, where the values alone do not tell */
+export const describeNote = (diff: OverrideDiff) =>
+  diff.sameValue ? 'override removed' : describeListChange(diff.before, diff.after)
 
 /** Old and new value of a setting, `default` when it was not overridden */
-export const DiffValues: FC<DiffValuesProps> = ({ diff, className, compact }) => {
+export const DiffValues: FC<{ diff: OverrideDiff; className?: string }> = ({ diff, className }) => {
   if (diff.sameValue) {
     return (
       <span
@@ -32,19 +38,32 @@ export const DiffValues: FC<DiffValuesProps> = ({ diff, className, compact }) =>
     )
   }
   const note = describeListChange(diff.before, diff.after)
-  if (compact && note) {
-    return (
-      <span className={className ?? 'values'}>
-        <span className="note">{note}</span>
-      </span>
-    )
-  }
   return (
     <span className={className ?? 'values'}>
       <span className="before">{formatValue(diff.before)}</span>
-      <Icon icon="arrow_forward" />
+      <span className="arrow">→</span>
       <span className="after">{formatValue(diff.after)}</span>
       {note && <span className="note">({note})</span>}
     </span>
   )
 }
+
+/**
+ * The value then and now side by side, like a split diff, `default` when not overridden.
+ * A setting the current version does not have no longer exists now.
+ */
+export const SplitDiff: FC<{ diff: OverrideDiff }> = ({ diff }) => (
+  <span className="diff">
+    <span className={clsx('then', { inherited: diff.before === undefined })}>
+      {formatValue(diff.before, 160)}
+    </span>
+    <span className="arrow">→</span>
+    {diff.missing ? (
+      <span className="now missing">no longer exists</span>
+    ) : (
+      <span className={clsx('now', { inherited: diff.after === undefined })}>
+        {formatValue(diff.after, 160)}
+      </span>
+    )}
+  </span>
+)

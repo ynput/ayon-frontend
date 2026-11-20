@@ -1,11 +1,11 @@
 import { FC, MouseEvent } from 'react'
-import { format } from 'date-fns'
+import { format, isThisYear } from 'date-fns'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { DATE_FORMAT, getFieldId, getPathTitles, groupByParent } from './settingsHistoryHelpers'
+import { beforeSave, DATE_FORMAT, getFieldId, getPathTitles } from './settingsHistoryHelpers'
 import type { AddonComparison, SettingsComparison } from './useSettingsHistory'
 import type { useComparisonActions } from './useComparisonActions'
-import { DiffValues } from './SettingsDiff'
+import { describeNote, SettingName, SplitDiff } from './SettingsDiff'
 import * as Styled from './SettingsComparisonPanel.styled'
 
 const describeStatus = (addon: AddonComparison) => {
@@ -33,7 +33,12 @@ export const SettingsComparisonPanel: FC<Props> = ({
 }) => {
   const [openMenu] = useCreateContextMenu([])
   const total = comparison.addons.reduce((acc, addon) => acc + addon.diffs.length, 0)
+  const saves = comparison.addons.reduce((acc, addon) => acc + addon.changesSince.length, 0)
   const isLoading = comparison.addons.some((addon) => addon.status === 'loading')
+  // picked from a save: the settings are those from just before it
+  const fromSave = comparison.addons.some(({ lane }) =>
+    lane.changes.some((change) => beforeSave(change) === comparison.at),
+  )
 
   const openMoreMenu = (e: MouseEvent) =>
     openMenu(e, [
@@ -50,13 +55,16 @@ export const SettingsComparisonPanel: FC<Props> = ({
       <Styled.Header>
         <Icon icon="history" />
         <span className="label">
-          Since {format(comparison.at, DATE_FORMAT)}
+          {fromSave && 'Before '}
+          {format(comparison.at, isThisYear(comparison.at) ? 'd MMM, HH:mm' : DATE_FORMAT)} → now
           <small>
             {isLoading
               ? 'Loading…'
-              : total === 1
-              ? '1 setting differs'
-              : `${total || 'No'} settings differ`}
+              : !total
+              ? 'No settings differ from now'
+              : `${total} setting${total === 1 ? '' : 's'} changed since, in ${saves} save${
+                  saves === 1 ? '' : 's'
+                }`}
           </small>
         </span>
         <Button
@@ -84,37 +92,36 @@ export const SettingsComparisonPanel: FC<Props> = ({
                 </span>
               </Styled.AddonHeader>
               {status && <Styled.Status>{status}</Styled.Status>}
-              {groupByParent(addon.diffs).map(({ parent, diffs }) => (
-                <div key={parent.join('/')}>
-                  {!!parent.length && (
-                    <Styled.Parent>{getPathTitles(schema, parent).join(' › ')}</Styled.Parent>
-                  )}
-                  {diffs.map((diff) => {
-                    const title = getPathTitles(schema, diff.path).pop()
-                    const staged = actions.isStaged(lane.addonName, diff.path)
-                    return (
-                      <Styled.Row
-                        key={diff.path.join('/')}
-                        onClick={() => onFocus(lane.addonName, diff.path, getFieldId(diff.path))}
-                        onContextMenu={(e) =>
-                          openMenu(e, actions.getMenuItems(lane.addonName, diff, true))
-                        }
-                        title="Show in the editor, right-click to revert"
-                      >
-                        <span className="name">{title}</span>
-                        <DiffValues diff={diff} />
-                        {staged && (
-                          <Icon
-                            icon="history"
-                            className="staged"
-                            data-tooltip="Reverted, not saved yet"
-                          />
-                        )}
-                      </Styled.Row>
-                    )
-                  })}
-                </div>
-              ))}
+              {addon.diffs.map((diff) => {
+                const titles = getPathTitles(schema, diff.path)
+                const note = describeNote(diff)
+                return (
+                  <Styled.Row
+                    key={diff.path.join('/')}
+                    onClick={() => onFocus(lane.addonName, diff.path, getFieldId(diff.path))}
+                    onContextMenu={(e) =>
+                      openMenu(e, actions.getMenuItems(lane.addonName, diff, true))
+                    }
+                    data-tooltip={`${titles.join(
+                      ' › ',
+                    )}\nClick to show it in the editor, right-click for more`}
+                    data-tooltip-delay={500}
+                  >
+                    <span className="head">
+                      <SettingName titles={titles.slice(-2)} />
+                      {note && <span className="note">{note}</span>}
+                    </span>
+                    <SplitDiff diff={diff} />
+                    {actions.isStaged(lane.addonName, diff.path) && (
+                      <Icon
+                        icon="history"
+                        className="staged"
+                        data-tooltip="Reverted, not saved yet"
+                      />
+                    )}
+                  </Styled.Row>
+                )
+              })}
             </div>
           )
         })}

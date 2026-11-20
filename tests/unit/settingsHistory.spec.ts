@@ -2,12 +2,14 @@ import { expect, test } from '@playwright/test'
 import type { SettingsChange } from '../../src/services/settingsHistory/getSettingsHistory'
 import {
   diffOverrides,
+  filterDiffs,
   getLevelOverrides,
   getOverridesRefAt,
   getPathTitles,
   getRevertEntries,
-  groupByParent,
+  groupSaves,
   stageEntries,
+  withMissing,
   withSameValues,
 } from '../../src/containers/AddonSettings/SettingsHistory/settingsHistoryHelpers'
 import { getTimeAxis } from '../../src/containers/AddonSettings/SettingsHistory/timeAxis'
@@ -172,17 +174,14 @@ test('staged values become unsaved changes, unpins share the changed path', () =
   expect(state.data.a).toBe(2)
 })
 
-test('diffs are grouped by parent in the order they first appear', () => {
+test('settings the current version does not have are marked, the others are left as they are', () => {
   const diffs = [
-    { path: ['p', 'a'] },
-    { path: ['p', 'sub', 'x'] },
-    { path: ['p', 'b'] },
-    { path: ['top'] },
+    { path: ['publish', 'enabled'], before: true },
+    { path: ['media', 'enabled'], before: true },
   ]
-  expect(groupByParent(diffs).map((g) => [g.parent, g.diffs.length])).toEqual([
-    [['p'], 2],
-    [['p', 'sub'], 1],
-    [[], 1],
+  expect(withMissing(diffs, { publish: { enabled: false } })).toEqual([
+    { path: ['publish', 'enabled'], before: true },
+    { path: ['media', 'enabled'], before: true, missing: true },
   ])
 })
 
@@ -214,4 +213,39 @@ test('weeks start on Monday, months and years take over when zoomed out', () => 
   const years = getTimeAxis(start, start + 3000 * day, 2 * day)
   expect(years.secondary[0].label).toBe('2026')
   expect(years.primary).toEqual([])
+})
+
+test('saves in a row by one user in one version share a run, a day or version starts a new one', () => {
+  const at = (day: number, hour: number) => new Date(2025, 2, day, hour).getTime()
+  const save = (id: string, createdAt: number, user: string, version = '1.0.0') => ({
+    change: { ...change(id, createdAt, version), user },
+  })
+  const days = groupSaves([
+    save('a', at(12, 15), 'roy'),
+    save('b', at(12, 14), 'roy'),
+    save('c', at(12, 13), 'luke'),
+    save('d', at(12, 12), 'roy'),
+    save('e', at(12, 11), 'roy', '0.9.0'),
+    save('f', at(11, 18), 'roy', '0.9.0'),
+  ])
+  const ids = days.map((day) => day.runs.map((run) => run.map((s) => s.change.id).join('')))
+  expect(ids).toEqual([['ab', 'c', 'd', 'e'], ['f']])
+})
+
+test('the history of a setting holds what is inside it, and the list a setting is in', () => {
+  const diffs = [
+    { path: ['publish', 'ExtractReview', 'enabled'] },
+    { path: ['publish', 'ExtractReview', 'profiles'] },
+    { path: ['publish', 'ExtractBurnin', 'enabled'] },
+  ]
+  const paths = (path: (string | number)[]) =>
+    filterDiffs(diffs, path).map((diff) => diff.path.join('/'))
+  expect(paths(['publish', 'ExtractReview'])).toEqual([
+    'publish/ExtractReview/enabled',
+    'publish/ExtractReview/profiles',
+  ])
+  expect(paths(['publish', 'ExtractReview', 'profiles', 0, 'name'])).toEqual([
+    'publish/ExtractReview/profiles',
+  ])
+  expect(paths(['publish', 'ExtractRev'])).toEqual([])
 })

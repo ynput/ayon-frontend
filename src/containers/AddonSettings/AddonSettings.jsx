@@ -715,6 +715,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
   const showFeed = showHistory && shownAddons.length > 0
+  const selectedSetting = currentSelection?.path?.length
+    ? { addonName: currentSelection.addonString.split('@')[0], path: currentSelection.path }
+    : null
 
   const addonListHeader = useMemo(() => {
     // site settings do not have variants
@@ -1043,7 +1046,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               schemas={addonSchemas}
               isLoading={historyLoading}
               hidden={!!comparison || canCommit}
-              compareAt={compareAt}
+              selectedSetting={selectedSetting}
               hoveredSaves={hoveredSaves}
               onCompare={setCompareAt}
             />

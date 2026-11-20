@@ -14,6 +14,54 @@ export const Header = styled(Comparison.Header)`
 
 export const List = Comparison.List
 
+/** Shows the history of the setting selected in the editor only */
+export const FilterBar = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 8px 0;
+  padding: 4px 8px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-m);
+  background: transparent;
+  text-align: left;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  ${theme.labelMedium}
+  ${Comparison.settingName}
+
+  .icon {
+    flex-shrink: 0;
+    font-size: 16px;
+  }
+
+  .hint {
+    flex-shrink: 0;
+  }
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
+  }
+
+  &.active {
+    background-color: var(--md-sys-color-surface-container-high);
+    color: var(--md-sys-color-on-surface);
+
+    .icon {
+      color: var(--md-sys-color-primary);
+    }
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-high-hover);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
+  }
+`
+
 /** Day of the saves below it, like the inbox, stays at the top while its saves scroll by */
 export const Day = styled.div`
   position: sticky;
@@ -22,7 +70,7 @@ export const Day = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 10px 12px 4px;
+  padding: 10px 12px 2px;
   background-color: var(--md-sys-color-surface-container-low);
   ${theme.labelMedium}
   color: var(--md-sys-color-outline);
@@ -34,58 +82,28 @@ export const Day = styled.div`
   }
 `
 
-export const Entry = styled.button`
-  display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
-  column-gap: 8px;
-  width: 100%;
-  padding: 6px 12px;
-  border: none;
-  background: transparent;
-  text-align: left;
-  color: var(--md-sys-color-on-surface);
-  cursor: pointer;
-  ${theme.bodySmall}
+/** Saves one user made in a row, under their avatar, with a line down to the last one */
+export const Run = styled.div`
+  position: relative;
+  padding: 4px 4px 4px 12px;
 
-  &:hover,
-  &.linked {
-    background-color: var(--md-sys-color-surface-container-hover);
+  &::before {
+    content: '';
+    position: absolute;
+    left: 21.5px;
+    top: 30px;
+    bottom: 10px;
+    width: 1px;
+    background-color: var(--md-sys-color-outline-variant);
   }
 
-  /* nothing to compare: the settings were saved as they were */
-  &.empty {
-    cursor: default;
-
-    .head {
-      color: var(--md-sys-color-on-surface-variant);
-    }
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--md-sys-color-primary);
-    outline-offset: -2px;
-  }
-
-  /* compared last, when coming back from comparing */
-  &.selected {
-    box-shadow: inset 3px 0 0 var(--color-hl-compare);
-  }
-
-  .avatar {
-    grid-row: span 2;
-    margin-top: 1px;
-  }
-
-  &.empty .avatar {
-    grid-row: auto;
-  }
-
-  .head {
+  .who {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     gap: 8px;
+    height: 24px;
     min-width: 0;
-    height: 20px;
+    ${theme.labelMedium}
   }
 
   .user {
@@ -94,7 +112,7 @@ export const Entry = styled.button`
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    ${theme.labelLarge}
+    color: var(--md-sys-color-on-surface);
   }
 
   .addon {
@@ -106,7 +124,7 @@ export const Entry = styled.button`
     white-space: nowrap;
     text-overflow: ellipsis;
     ${theme.labelSmall}
-    color: var(--md-sys-color-on-surface-variant);
+    color: var(--md-sys-color-outline);
   }
 
   .swatch {
@@ -116,20 +134,51 @@ export const Entry = styled.button`
     border-radius: 50%;
   }
 
-  .none {
-    flex-shrink: 0;
-    ${theme.labelSmall}
-    color: var(--md-sys-color-on-surface-variant);
+  .saves {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin: 2px 0 0 20px;
+  }
+`
+
+export const Save = styled.button`
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 2px 8px;
+  border: none;
+  border-radius: var(--border-radius-m);
+  background: transparent;
+  text-align: left;
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  ${theme.bodySmall}
+  ${Comparison.settingName}
+
+  &:not(.copied):hover,
+  &.linked {
+    background-color: var(--md-sys-color-surface-container-hover);
+    color: var(--md-sys-color-on-surface);
+
+    .name .parent,
+    .name .parent + .leaf::before {
+      color: var(--md-sys-color-on-surface-variant);
+    }
   }
 
-  .time {
-    margin-left: auto;
-    ${theme.labelSmall}
-    font-variant-numeric: tabular-nums;
-    color: var(--md-sys-color-on-surface-variant);
+  &:focus-visible {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
   }
 
-  .changes {
+  /* the first save of a version, with the settings of the version before: nothing to compare */
+  &.copied {
+    cursor: default;
+    font-style: italic;
+  }
+
+  .lines {
     display: flex;
     flex-direction: column;
     min-width: 0;
@@ -140,72 +189,63 @@ export const Entry = styled.button`
     display: flex;
     align-items: baseline;
     gap: 8px;
+    min-width: 0;
     height: 20px;
     line-height: 20px;
   }
 
   .status {
-    color: var(--md-sys-color-on-surface-variant);
+    align-self: flex-start;
+    color: var(--md-sys-color-outline);
   }
 
-  /* Parent › Setting, the parent gives way first */
-  .name {
-    display: flex;
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    white-space: nowrap;
-
-    .parent,
-    .leaf {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .parent {
-      flex: 0 100 auto;
-      min-width: 4ch;
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
-    .leaf {
-      flex: 0 0 auto;
-      max-width: calc(100% - 5ch);
-    }
-
-    .parent + .leaf::before {
-      content: '\\00a0›\\00a0';
-      color: var(--md-sys-color-on-surface-variant);
-    }
-  }
-
+  /* the history of one setting: its values matter more than the names in it */
   .values {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    flex-shrink: 0;
-    max-width: 60%;
-    font-size: 11px;
+    flex: 0 0 auto;
+    max-width: 65%;
+    overflow: hidden;
+    text-overflow: ellipsis;
     white-space: nowrap;
+  }
 
-    .before,
-    .after {
-      max-width: 10ch;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      font-family: monospace;
+  /* the time is on the first line only, the lines below use the full width */
+  .lines > :first-child {
+    padding-right: 44px;
+  }
+
+  .time,
+  .action {
+    position: absolute;
+    top: 2px;
+    right: 8px;
+    line-height: 20px;
+    white-space: nowrap;
+    ${theme.labelSmall}
+  }
+
+  .time {
+    font-variant-numeric: tabular-nums;
+    color: var(--md-sys-color-outline);
+  }
+
+  /* says what clicking does, in place of the time */
+  .action {
+    display: none;
+    color: var(--color-hl-compare-text);
+  }
+
+  &:not(.copied):hover,
+  &:not(.copied):focus-visible {
+    .lines > :first-child {
+      padding-right: 116px;
     }
 
-    .before,
-    .note {
-      color: var(--md-sys-color-on-surface-variant);
+    .time {
+      display: none;
     }
 
-    .icon {
-      align-self: center;
-      font-size: 12px;
-      color: var(--md-sys-color-on-surface-variant);
+    .action {
+      display: block;
     }
   }
 `

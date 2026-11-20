@@ -1,5 +1,39 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { theme } from '@ynput/ayon-react-components'
+
+/** `Parent › Setting` on one line, the parent gives way first */
+export const settingName = css`
+  .name {
+    display: flex;
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+
+    .parent,
+    .leaf {
+      flex: 0 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .parent {
+      color: var(--md-sys-color-outline);
+    }
+
+    /* leaves the parent enough to recognise it */
+    .parent + .leaf {
+      flex-shrink: 0;
+      max-width: calc(100% - 9ch);
+    }
+
+    .parent + .leaf::before {
+      content: '\\00a0›\\00a0';
+      color: var(--md-sys-color-outline);
+    }
+  }
+`
 
 export const Panel = styled.div`
   display: flex;
@@ -70,33 +104,28 @@ export const Status = styled.div`
   color: var(--md-sys-color-on-surface-variant);
 `
 
-/** Titles of the section the settings below it are in */
-export const Parent = styled.div`
-  padding: 8px 12px 0 30px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  ${theme.labelSmall}
-  color: var(--md-sys-color-on-surface-variant);
-`
-
+/** A setting that differs: its name, and below it its value then and now, like a split diff */
 export const Row = styled.button`
   position: relative;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: 8px;
+  display: block;
   width: 100%;
-  padding: 3px 12px 3px 30px;
+  padding: 4px 12px 6px 30px;
   border: none;
   background: transparent;
   text-align: left;
-  color: var(--md-sys-color-on-surface);
+  color: var(--md-sys-color-on-surface-variant);
   cursor: pointer;
   ${theme.bodySmall}
+  ${settingName}
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
+    color: var(--md-sys-color-on-surface);
+
+    .name .parent,
+    .name .parent + .leaf::before {
+      color: var(--md-sys-color-on-surface-variant);
+    }
   }
 
   &:focus-visible {
@@ -104,44 +133,61 @@ export const Row = styled.button`
     outline-offset: -2px;
   }
 
-  .name {
-    flex: 1 1 auto;
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-weight: 600;
-  }
-
-  .values {
+  .head {
     display: flex;
     align-items: baseline;
-    gap: 6px;
+    gap: 8px;
     min-width: 0;
-    max-width: 100%;
-    margin-left: auto;
+    line-height: 20px;
+  }
+
+  .note {
+    flex-shrink: 0;
+    ${theme.labelSmall}
+    color: var(--md-sys-color-outline);
+  }
+
+  .diff {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: start;
+    gap: 4px;
+    margin-top: 2px;
+    font-family: monospace;
     font-size: 11px;
-    white-space: nowrap;
+    line-height: 16px;
 
-    .before,
-    .after {
-      font-family: monospace;
+    .then,
+    .now {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+      min-width: 0;
       overflow: hidden;
-      text-overflow: ellipsis;
+      overflow-wrap: anywhere;
+      color: var(--md-sys-color-on-surface);
     }
 
-    .before {
-      color: var(--color-hl-compare-text);
+    /* what it was: crossed out, like a diff */
+    .then {
+      color: var(--md-sys-color-on-surface-variant);
+      text-decoration: line-through;
+      text-decoration-color: var(--md-sys-color-outline);
     }
 
-    .icon {
-      align-self: center;
-      font-size: 13px;
+    .arrow {
+      color: var(--md-sys-color-outline);
+    }
+
+    /* not overridden, or no such setting */
+    .inherited,
+    .missing {
+      font-style: italic;
       color: var(--md-sys-color-on-surface-variant);
     }
 
-    .note {
-      color: var(--md-sys-color-on-surface-variant);
+    .missing {
+      text-decoration: none;
     }
   }
 
@@ -149,7 +195,7 @@ export const Row = styled.button`
   .staged {
     position: absolute;
     left: 10px;
-    top: 50%;
+    top: 14px;
     transform: translateY(-50%);
     font-size: 14px;
     color: var(--md-sys-color-primary);

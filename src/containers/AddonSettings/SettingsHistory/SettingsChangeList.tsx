@@ -25,9 +25,11 @@ const ChangeCount: FC<{ change: SettingsChange; previous?: SettingsChange }> = (
   change,
   previous,
 }) => {
-  const { diffs } = useChangeDiffs(change, previous)
+  const { diffs, startsVersion } = useChangeDiffs(change, previous)
   if (!diffs) return <span className="count" />
-  if (!diffs.length) return <span className="count">no changes</span>
+  if (!diffs.length) {
+    return <span className="count none">{startsVersion ? 'copied over' : 'no changes'}</span>
+  }
   return (
     <span className="count">
       {diffs.length} change{diffs.length === 1 ? '' : 's'}

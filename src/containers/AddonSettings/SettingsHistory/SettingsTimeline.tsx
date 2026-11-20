@@ -455,18 +455,6 @@ export const SettingsTimeline: FC<Props> = ({
         <Icon icon="history" />
         History
       </span>
-      {compareAt !== null && (
-        <Styled.CompareChip aria-label={`Comparing with ${format(compareAt, DATE_FORMAT)}`}>
-          <span className="label">{format(compareAt, DATE_FORMAT)}</span>
-          <Button
-            variant="text"
-            icon="close"
-            onClick={() => onCompareAtChange(null)}
-            data-tooltip="Stop comparing (Esc)"
-            aria-label="Stop comparing"
-          />
-        </Styled.CompareChip>
-      )}
       <span className="spacer" />
       {!collapsed && (
         <span className="presets">

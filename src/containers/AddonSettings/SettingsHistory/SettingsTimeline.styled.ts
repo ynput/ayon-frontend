@@ -85,35 +85,6 @@ export const Header = styled.div`
   }
 `
 
-export const CompareChip = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  height: 26px;
-  padding: 0 2px 0 10px;
-  border-radius: 13px;
-  background-color: var(--color-hl-compare-container);
-  color: var(--color-hl-compare-text);
-  white-space: nowrap;
-  ${theme.labelMedium}
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-
-  .label {
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
-  button {
-    width: 22px;
-    height: 22px;
-    min-height: 0;
-    padding: 0;
-    border-radius: 50%;
-  }
-`
-
 export const Body = styled.div`
   position: relative;
   display: flex;
@@ -526,6 +497,11 @@ export const Tooltip = styled.div`
       color: var(--md-sys-color-on-surface-variant);
     }
 
+    .count.none {
+      font-style: italic;
+      color: var(--md-sys-color-outline);
+    }
+
     .version.older {
       opacity: 0.7;
     }
@@ -594,12 +570,8 @@ export const Tooltip = styled.div`
       text-decoration: line-through;
     }
 
+    .arrow,
     .note {
-      color: var(--md-sys-color-on-surface-variant);
-    }
-
-    .icon {
-      font-size: 12px;
       color: var(--md-sys-color-on-surface-variant);
     }
   }
