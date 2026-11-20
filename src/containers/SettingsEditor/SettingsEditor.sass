@@ -1400,6 +1400,12 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       .settings-panel
         --settings-surface: var(--md-sys-color-surface-container-lowest)
 
+  // a search hides the settings it doesn't match (SearchHidden, data-hidden), not the panel
+  // around them: a panel whose settings are all hidden would show as an empty dark strip.
+  // A panel led by its section's switch, or holding a list, keeps its own content
+  .settings-panel:has(> .form-object-field-item):not(:has(> .form-object-field-item > div[data-hidden="false"]), :has(> .settings-group-header), :has(> .array-dnd))
+    display: none
+
   // a box (a list item, a folding group) already sets its content apart from the panel around
   // it, so the panels inside it all take the same shade, however deep the item sits
   :is(.settings-array-item, .settings-folding-group) .settings-panel
