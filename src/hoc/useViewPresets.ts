@@ -31,13 +31,20 @@ export const useViewPresets = (viewType?: string): ViewPreset[] | undefined => {
     const getTaskProgressSettings = async () => {
       const used = new Set<string>()
       try {
-        const stats = await dispatch(
-          overviewApi.endpoints.GetTaskColumnStats.initiate(
-            { projectName, targets: TASK_TYPE_TARGET ? [TASK_TYPE_TARGET] : [] },
-            { subscribe: false, forceRefetch: true },
-          ),
-        ).unwrap()
-        selectGroupCounts(stats, TASK_TYPE_TARGET).counts.forEach((_count, type) => used.add(type))
+        // The cache entry is shared with the page's own task stats (the targets are not part of
+        // its key): a request made while one is in flight gets that one's answer, without the
+        // task types. So it is asked again.
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const stats = await dispatch(
+            overviewApi.endpoints.GetTaskColumnStats.initiate(
+              { projectName, targets: TASK_TYPE_TARGET ? [TASK_TYPE_TARGET] : [] },
+              { subscribe: false, forceRefetch: true },
+            ),
+          ).unwrap()
+          const { counts, complete } = selectGroupCounts(stats, TASK_TYPE_TARGET)
+          counts.forEach((_count, type) => used.add(type))
+          if (complete) break
+        }
       } catch {
         // without the counts every task type gets a column
       }

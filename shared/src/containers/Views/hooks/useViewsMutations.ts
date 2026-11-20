@@ -147,21 +147,24 @@ export const useViewsMutations = ({
         // Priority order: project base view → studio base view → default (empty settings)
 
         // Invalidate base view cache to ensure fresh data
-        dispatch(
-          viewsQueries.util.invalidateTags([
-            { type: 'Views', id: `base-${viewType}-${projectName}` },
-            { type: 'Views', id: `base-${viewType}` },
-          ]),
-        )
+        if (!preset) {
+          dispatch(
+            viewsQueries.util.invalidateTags([
+              { type: 'Views', id: `base-${viewType}-${projectName}` },
+              { type: 'Views', id: `base-${viewType}` },
+            ]),
+          )
+        }
 
         // 1. Try to fetch project base view first (force fresh fetch, no subscription)
-        const projectBaseViewPromise = dispatch(
-          viewsQueries.endpoints.getBaseView.initiate(
-            { viewType, projectName },
-            { subscribe: false, forceRefetch: true },
-          ),
-        )
-        const projectBaseViewResult = preset ? undefined : await projectBaseViewPromise
+        const projectBaseViewResult = preset
+          ? undefined
+          : await dispatch(
+              viewsQueries.endpoints.getBaseView.initiate(
+                { viewType, projectName },
+                { subscribe: false, forceRefetch: true },
+              ),
+            )
         const projectBaseView = projectBaseViewResult?.data
 
         let templateSettings = {}
@@ -263,7 +266,9 @@ export const useViewsMutations = ({
         return viewId
       } catch (error) {
         if (notify) {
-          toast.error(preset ? `Failed to load "${preset.label}"` : 'Failed to reset view to default')
+          toast.error(
+            preset ? `Failed to load "${preset.label}"` : 'Failed to reset view to default',
+          )
         }
         throw error
       }
