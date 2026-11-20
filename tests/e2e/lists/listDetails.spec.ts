@@ -21,6 +21,27 @@ test.describe('list details', () => {
     await expect(lists.listRow('Old picks')).toContainText('(archived)')
   })
 
+  test('a tab whose addon is gone opens Details, and close hides the panel', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await api.createEntityList(projectName, { label: 'Tab picks' })
+    const lists = new ListsPage(page)
+    // a tab id from an addon that isn't installed, as an old link would have it
+    await page.goto(`/projects/${projectName}/lists?listTab=gone.tab`)
+    await expect(lists.addListButton).toBeVisible({ timeout: 30_000 })
+    await lists.openDetails('Tab picks')
+
+    const panel = page.getByTestId('list-details-panel')
+    await expect(lists.listField('Active')).toBeVisible()
+    await expect(panel.getByRole('button', { name: 'Details' })).toHaveClass(/selected/)
+    await expect(page).not.toHaveURL(/listTab=gone/)
+
+    await panel.getByRole('button', { name: 'close', exact: true }).click()
+    await expect(panel).toBeHidden()
+  })
+
   test('search lists by label', async ({ page, api, projectName }) => {
     await api.createEntityList(projectName, { label: 'Monday picks' })
     await api.createEntityList(projectName, { label: 'Tuesday picks' })

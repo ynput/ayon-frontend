@@ -33,6 +33,8 @@ export interface PanelTabsProps<S extends PanelTabSlotName> {
   /** labels next to the icons on every tab; off by default (icons, the label is the tooltip) */
   showLabels?: boolean
   isLoading?: boolean
+  /** a test id for each tab button, by tab id (a panel tab's id or an addon tab's key) */
+  tabTestId?: (id: string) => string
   className?: string
 }
 
@@ -43,18 +45,25 @@ export const PanelTabs = <S extends PanelTabSlotName>({
   slot,
   showLabels,
   isLoading,
+  tabTestId,
   className,
 }: PanelTabsProps<S>) => {
   // the buttons show from the descriptions; a tab's code loads when it is opened
   const { tabs: slotTabs } = usePanelSlotTabs(slot)
 
-  // icon-only tabs keep their width whichever is open; the open tab is named in its header
+  // icon-only tabs keep their width whichever is open; the open tab is named in its header. With
+  // `showLabels`, a panel may hide the labels when it is narrow (`.panel-tab-label`): the tooltip
+  // and the accessible name stay
   const tabProps = (id: string, label: string, withLabel?: boolean, tooltip?: string) => {
-    const hint = tooltip || (withLabel || showLabels ? undefined : label)
+    const hint = tooltip || (withLabel ? undefined : label)
     return {
       selected: selected === id,
+      ...(tabTestId && { 'data-testid': tabTestId(id) }),
       variant: 'text' as const,
-      ...(withLabel || showLabels ? { label } : { 'aria-label': label }),
+      'aria-label': label,
+      ...((withLabel || showLabels) && {
+        children: <span className="panel-tab-label">{label}</span>,
+      }),
       ...(hint && { 'data-tooltip': hint, 'data-tooltip-delay': 0 }),
     }
   }

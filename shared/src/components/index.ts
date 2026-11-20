@@ -52,6 +52,7 @@ export * from './AddonLayout/addonUserDetailsHelpers'
 export * from './AddonLayout/AddonMoreMenu'
 export * from './AddonLayout/AddonPanelTabHeader'
 export * from './PanelTabs'
+export * from './TabbedPanel'
 export * from './AddonLayout/useAddonContextMenu'
 export * from './AddonLayout/useAddonTableShortcuts'
 // internal: AYON's developer mode and the addon dev shell, not for addons

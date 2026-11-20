@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useContributions } from '@ynput/ayon-addon'
-import type { Contribution } from '@ynput/ayon-addon'
+import type { Contribution, SlotMap } from '@ynput/ayon-addon'
 
 /** The slots whose contributions are panel tabs: a button in a panel's tab bar and the tab itself. */
 export type PanelTabSlotName = 'detailsPanel.tab' | 'listDetails.tab'
@@ -13,6 +13,8 @@ export interface PanelTabSlot<S extends PanelTabSlotName = PanelTabSlotName> {
    * stable. A method, so a panel typed for any slot (a styled PanelTabs) takes a slot of its own.
    */
   filter?(tab: Contribution<S>): boolean
+  /** what the slot's tabs get (TabbedPanel); `undefined` while the panel's subject loads */
+  context?: SlotMap[S]['context']
 }
 
 const NONE: never[] = []
@@ -22,12 +24,12 @@ const NONE: never[] = []
 // to a slot, since hooks can't be skipped.
 export const usePanelSlotTabs = <S extends PanelTabSlotName>(slot?: PanelTabSlot<S>) => {
   const { contributions, isLoading } = useContributions(slot?.name ?? 'detailsPanel.tab')
+  const name = slot?.name
   const filter = slot?.filter
-  const hasSlot = !!slot
   const tabs = useMemo(() => {
-    if (!hasSlot) return NONE as Contribution<S>[]
+    if (!name) return NONE as Contribution<S>[]
     const all = contributions as Contribution<S>[]
     return filter ? all.filter(filter) : all
-  }, [contributions, filter, hasSlot])
-  return { tabs, isLoading: hasSlot && isLoading }
+  }, [contributions, filter, name])
+  return { tabs, isLoading: !!name && isLoading }
 }
