@@ -90,6 +90,17 @@ export const InputColumn = styled.div`
     width: 53px;
   }
 
+  /* the name columns take the room left, and give it up when the dialog is narrow. Firefox keeps
+     an input's default width (about 20 characters) as its minimum, which pushed Count out of the
+     card */
+  &.seq {
+    min-width: 0;
+
+    input {
+      min-width: 0;
+    }
+  }
+
   label {
     width: 100%;
     text-overflow: ellipsis;

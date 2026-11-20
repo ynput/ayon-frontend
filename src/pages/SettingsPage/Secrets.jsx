@@ -4,6 +4,7 @@ import styled from 'styled-components'
 import {
   InputText,
   InputPassword,
+  FormRow,
   Button,
   Toolbar,
   theme,
@@ -17,6 +18,7 @@ import {
   isDialogContinueKey,
 } from '@shared/util'
 import { copyToClipboard } from '@shared/util'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import {
   SettingsFormSection,
   SettingsFormTitle,
@@ -70,7 +72,34 @@ const StyledSecretItem = styled.div`
   }
 `
 
-const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
+// a secret's rows in the flat layout: its value and actions share the row's field
+const FlatSecretRows = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  .secret-value {
+    display: flex;
+    align-items: center;
+    gap: var(--base-gap-large);
+
+    > :first-child {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* the dots stop before the show button */
+    input {
+      padding-right: 36px;
+    }
+  }
+
+  .secret-actions {
+    display: flex;
+    gap: var(--base-gap-large);
+  }
+`
+
+const SecretItem = ({ name: initialName, value: initialValue, stored, flat }) => {
   const [name, setName] = useState(initialName)
   const [value, setValue] = useState(initialValue)
   const [setSecret, { isLoading: isSaving }] = useSetSecretMutation()
@@ -122,52 +151,76 @@ const SecretItem = ({ name: initialName, value: initialValue, stored }) => {
     handleSave()
   }
 
+  const nameInput = (
+    <InputText
+      ref={nameRef}
+      value={name}
+      onChange={(e) => setName(e.target.value)}
+      readOnly={stored}
+      placeholder="Secret name"
+      pattern="^\S+$"
+    />
+  )
+
+  const valueInput = (
+    <InputPassword
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      placeholder="Secret value"
+    />
+  )
+
+  const actions = (
+    <div className="secret-actions">
+      {stored && (
+        <Button
+          icon="content_copy"
+          aria-label="Copy secret value"
+          data-tooltip="Copy secret value"
+          onClick={() => copyToClipboard(value)}
+        />
+      )}
+      <SaveButton
+        active={canSave}
+        data-shortcut="Enter"
+        saving={isSaving}
+        icon={stored ? 'check' : 'add'}
+        onClick={handleSave}
+        variant={stored ? 'surface' : 'filled'}
+        label={stored ? '' : 'Add'}
+        aria-label={stored ? 'Save secret' : 'Add secret'}
+        data-tooltip={stored ? 'Save secret' : undefined}
+      />
+      {stored && (
+        <Button
+          icon="delete"
+          aria-label="Delete secret"
+          data-tooltip="Delete secret"
+          onClick={handleDelete}
+        />
+      )}
+    </div>
+  )
+
+  // flat settings layout: rows of a panel. A stored secret is named by its row's label
+  if (flat)
+    return (
+      <FlatSecretRows onKeyDown={handleKeyDown}>
+        {!stored && <FormRow label="Name">{nameInput}</FormRow>}
+        <FormRow label={stored ? name : 'Value'}>
+          <div className="secret-value">
+            {valueInput}
+            {actions}
+          </div>
+        </FormRow>
+      </FlatSecretRows>
+    )
+
   return (
     <StyledSecretItem onKeyDown={handleKeyDown}>
-      <InputText
-        ref={nameRef}
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        readOnly={stored}
-        placeholder="Secret name"
-        pattern="^\S+$"
-      />
-
-      <InputPassword
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        placeholder="Secret value"
-      />
-
-      <div className="secret-actions">
-        {stored && (
-          <Button
-            icon="content_copy"
-            aria-label="Copy secret value"
-            data-tooltip="Copy secret value"
-            onClick={() => copyToClipboard(value)}
-          />
-        )}
-        <SaveButton
-          active={canSave}
-          data-shortcut="Enter"
-          saving={isSaving}
-          icon={stored ? 'check' : 'add'}
-          onClick={handleSave}
-          variant={stored ? 'surface' : 'filled'}
-          label={stored ? '' : 'Add'}
-          aria-label={stored ? 'Save secret' : 'Add secret'}
-          data-tooltip={stored ? 'Save secret' : undefined}
-        />
-        {stored && (
-          <Button
-            icon="delete"
-            aria-label="Delete secret"
-            data-tooltip="Delete secret"
-            onClick={handleDelete}
-          />
-        )}
-      </div>
+      {nameInput}
+      {valueInput}
+      {actions}
     </StyledSecretItem>
   )
 }
@@ -176,6 +229,7 @@ const Secrets = () => {
   const { data } = useGetSecretsQuery()
 
   const secrets = data?.filter((secret) => secret.name !== 'ynput_cloud_key')
+  const flatLayout = useFlatSettingsLayout()
 
   return (
     <main>
@@ -185,22 +239,50 @@ const Secrets = () => {
         </Toolbar>
         <SettingsFormScrollPanel className="transparent">
           <SettingsFormContent>
-            <SecretGroup>
-              <h3>New secret</h3>
-              <SecretItem name="" value="" stored={false} />
-            </SecretGroup>
-            <SecretGroup>
-              <h3>Stored secrets</h3>
-              {secrets?.map((secret) => (
-                <SecretItem
-                  key={secret.name}
-                  name={secret.name}
-                  value={secret.value}
-                  stored={true}
-                />
-              ))}
-              {secrets?.length === 0 && <span>No stored secrets</span>}
-            </SecretGroup>
+            {flatLayout ? (
+              <div className="flat-form">
+                <section>
+                  <h3 className="flat-form-title">New secret</h3>
+                  <div>
+                    <SecretItem name="" value="" stored={false} flat />
+                  </div>
+                </section>
+                <section>
+                  <h3 className="flat-form-title">Stored secrets</h3>
+                  <div>
+                    {secrets?.map((secret) => (
+                      <SecretItem
+                        key={secret.name}
+                        name={secret.name}
+                        value={secret.value}
+                        stored
+                        flat
+                      />
+                    ))}
+                    {secrets?.length === 0 && <span>No stored secrets</span>}
+                  </div>
+                </section>
+              </div>
+            ) : (
+              <>
+                <SecretGroup>
+                  <h3>New secret</h3>
+                  <SecretItem name="" value="" stored={false} />
+                </SecretGroup>
+                <SecretGroup>
+                  <h3>Stored secrets</h3>
+                  {secrets?.map((secret) => (
+                    <SecretItem
+                      key={secret.name}
+                      name={secret.name}
+                      value={secret.value}
+                      stored={true}
+                    />
+                  ))}
+                  {secrets?.length === 0 && <span>No stored secrets</span>}
+                </SecretGroup>
+              </>
+            )}
           </SettingsFormContent>
         </SettingsFormScrollPanel>
       </SettingsFormSection>

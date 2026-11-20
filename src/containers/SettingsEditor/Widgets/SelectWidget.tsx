@@ -1,10 +1,19 @@
-import { useState, useEffect, useMemo } from 'react'
-import { DefaultItemTemplate, Dropdown, InputSwitch } from '@ynput/ayon-react-components'
+import { useMemo, useCallback, useRef, useState } from 'react'
+import {
+  Button,
+  DefaultItemTemplate,
+  DefaultValueTemplate,
+  Dropdown,
+  DropdownRef,
+  InputSwitch,
+} from '@ynput/ayon-react-components'
+import { CSSProperties } from 'react'
 
-import { updateChangedKeys, equiv, parseContext } from '../helpers'
+import { updateChangedKeys, equiv, useParsedContext } from '../helpers'
 import { $Any } from '@types'
 import styled from 'styled-components'
 import OrderedListWidget from './OrderedListWidget'
+import { MultiSelectValue } from './MultiSelectValue'
 import { isEqual } from 'lodash'
 import { useAttributeEnumOptions } from '@shared/hooks/useAttributeEnumOptions'
 import {
@@ -54,6 +63,65 @@ const enumItemTemplate = (
   )
 }
 
+const buildSelectOptions = ({
+  enumResolverName,
+  resolvedEnumOptions,
+  value,
+  schema,
+  enumOptions,
+}: $Any): $Any[] => {
+  if (enumResolverName) {
+    const selectedValues = Array.isArray(value) ? value : value !== null ? [value] : []
+    return getSelectableEnumItems(resolvedEnumOptions, selectedValues).map((option: $Any) => ({
+      label: option.label,
+      value: option.value,
+      icon: getEnumItemIcon(option.icon),
+      color: option.color,
+    }))
+  }
+
+  // A schema with fixed options names its labels, and may name icons and colours the same
+  // way, as maps from value (enumIcons: material symbol name or image URL)
+  const enumLabels = schema?.enumLabels || {}
+  const enumIcons = schema?.enumIcons || {}
+  const enumColors = schema?.enumColors || {}
+  return enumOptions.map((option: $Any) => ({
+    label: enumLabels[option.value] || option.value,
+    value: option.value,
+    icon: getEnumItemIcon(enumIcons[option.value]),
+    color: enumColors[option.value],
+  }))
+}
+
+const getRenderableValue = (value: $Any, multiple: boolean) => {
+  if (value === null) return []
+  return multiple ? value : [value]
+}
+
+// the selected options first, each group in the schema's order
+const sortSelectedFirst = (options: $Any[], selected: $Any) => {
+  const picked = new Set(Array.isArray(selected) ? selected : [])
+  if (!picked.size) return options
+  return [...options].sort((a, b) => Number(picked.has(b.value)) - Number(picked.has(a.value)))
+}
+
+const getHighlightStyle = (
+  value: $Any,
+  multiple: boolean,
+  formValue: $Any,
+  originalValue: $Any,
+) => {
+  const style: $Any = {}
+  if (
+    equiv(value, multiple ? formValue || [] : formValue) &&
+    originalValue &&
+    !equiv(formValue, originalValue)
+  ) {
+    style.outline = '1px solid var(--color-changed)'
+  }
+  return style
+}
+
 const SwitchboxContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -68,30 +136,11 @@ const SwitchboxGrid = styled.div`
   gap: 12px 16px;
 `
 
+// Select all and Deselect all, at the end of the line above the options
 const SwitchboxButtonGroup = styled.div`
   display: flex;
-  gap: 8px;
-`
-
-const SwitchboxButton = styled.button`
-  padding: 6px 12px;
-  font-size: 12px;
-  border: 1px solid var(--md-sys-color-outline-variant);
-  border-radius: var(--border-radius-s);
-  background: var(--md-sys-color-surface-container-high);
-  color: var(--md-sys-color-on-surface);
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover:not(:disabled) {
-    background: var(--md-sys-color-surface-container-highest);
-    border-color: var(--md-sys-color-outline);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
+  justify-content: flex-end;
+  gap: var(--base-gap-small);
 `
 
 const SwitchboxMessage = styled.div`
@@ -135,26 +184,29 @@ const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
   const noneSelected = Array.isArray(value) && value.length === 0
 
   return (
-    <SwitchboxContainer>
+    <SwitchboxContainer className="settings-switchbox">
       {message && <SwitchboxMessage>{message}</SwitchboxMessage>}
       {options.length > 0 && (
         <SwitchboxButtonGroup>
-          <SwitchboxButton onClick={selectAll} disabled={allSelected} title="Select all options">
-            Select All
-          </SwitchboxButton>
-          <SwitchboxButton
+          <Button
+            label="Select all"
+            onClick={selectAll}
+            disabled={allSelected}
+            data-tooltip="Select all options"
+          />
+          <Button
+            label="Deselect all"
             onClick={deselectAll}
             disabled={noneSelected}
-            title="Deselect all options"
-          >
-            Deselect All
-          </SwitchboxButton>
+            data-tooltip="Deselect all options"
+          />
         </SwitchboxButtonGroup>
       )}
-      <SwitchboxGrid>
+      <SwitchboxGrid className="settings-switchbox-options">
         {options.map((opt: any) => (
           <div
             key={opt.value}
+            className="settings-switchbox-option"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -174,8 +226,14 @@ const Switchbox = ({ options, value, onSelectionChange, message }: $Any) => {
 }
 
 const SelectWidget = (props: $Any) => {
-  const { originalValue, path } = parseContext(props)
-  const [value, setValue] = useState<string[] | string | null>(null)
+  const { originalValue, path } = useParsedContext(props)
+  const valueChangeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const dropdownRef = useRef<DropdownRef>(null)
+  const [dropdownPlacement, setDropdownPlacement] = useState<CSSProperties>({})
+  const [dropdownMaxHeight, setDropdownMaxHeight] = useState(300)
+  const [dropdownHorizontalPlacement, setDropdownHorizontalPlacement] = useState<CSSProperties>({})
+  // a multi-select's value when its menu opened: the menu lists it first (flat layout)
+  const [openedSelection, setOpenedSelection] = useState<$Any[] | null>(null)
 
   const widget = props.schema?.widget
   // TODO: remove ID check once backend addon adds widget="sortable_multiselect" to schema
@@ -211,57 +269,44 @@ const SelectWidget = (props: $Any) => {
     ? getEnumErrorText(enumOptionsErrorMessage)
     : undefined
 
-  const getDefaultValue = () => props.schema['default'] || (props.multiple ? [] : '')
+  const getDefaultValue = useCallback(
+    () => props.schema['default'] || (props.multiple ? [] : ''),
+    [props.multiple, props.schema],
+  )
   const isMissing = props.value === null || props.value === undefined
+  const formValue = props.value
+  const value = isMissing ? getDefaultValue() : formValue
 
-  useEffect(() => {
-    // Sync the local state with the formData
-    // For sortable multiselect, order matters - use isEqual instead of equiv
-    const eq = isSortableMultiselect ? isEqual(value, props.value) : equiv(value, props.value)
-    if (eq) {
-      return
-    }
+  const handleValueChange = useCallback(
+    (nextValue: $Any) => {
+      if (nextValue === null) return
 
-    setValue(isMissing ? getDefaultValue() : props.value)
-  }, [props.value])
+      const same = isSortableMultiselect ? isEqual : equiv
+      if (isMissing && same(nextValue, getDefaultValue())) return
+      if (same(nextValue, formValue)) return
 
-  useEffect(() => {
-    if (value === null) return
-    const same = isSortableMultiselect ? isEqual : equiv
-    if (isMissing && same(value, getDefaultValue())) return
-    const isChanged = !same(value, props.value)
-    if (!isChanged) {
-      return
-    }
-    props.onChange(value)
-    setTimeout(() => {
-      const origChanged = isSortableMultiselect
-        ? !isEqual(value, originalValue)
-        : !equiv(value, props.originalValue)
-      updateChangedKeys(props, origChanged, path)
-    }, 100)
-  }, [value])
+      props.onChange(nextValue)
+      // the pending update still runs if the field unmounts (a pick that swaps its section):
+      // Save skips an addon without changed keys
+      if (valueChangeTimer.current) clearTimeout(valueChangeTimer.current)
+      valueChangeTimer.current = setTimeout(() => {
+        const origChanged = isSortableMultiselect
+          ? !isEqual(nextValue, originalValue)
+          : !equiv(nextValue, originalValue)
+        updateChangedKeys(props, origChanged, path)
+        valueChangeTimer.current = null
+      }, 100)
+    },
+    [formValue, getDefaultValue, isMissing, isSortableMultiselect, originalValue, path, props],
+  )
 
-  let options: { label: string; value: $Any; icon?: string; color?: string }[]
-  if (enumResolverName) {
-    // Backend-resolved options carry their own labels; enumLabels only applies to static enums.
-    // icon/color are rendered natively by Dropdown's default item/value templates.
-    const selectedValues = Array.isArray(value) ? value : value !== null ? [value] : []
-    options = getSelectableEnumItems(resolvedEnumOptions, selectedValues).map((opt) => ({
-      label: opt.label,
-      value: opt.value,
-      icon: getEnumItemIcon(opt.icon),
-      color: opt.color,
-    }))
-  } else {
-    const enumLabels = props.schema?.enumLabels || {}
-    options = []
-    for (const opt of props.options.enumOptions) {
-      const _value = opt.value
-      const label = enumLabels[_value] || _value
-      options.push({ label, value: _value })
-    }
-  }
+  const options = buildSelectOptions({
+    enumResolverName,
+    resolvedEnumOptions,
+    value,
+    schema: props.schema,
+    enumOptions: props.options.enumOptions,
+  })
 
   // Only pay for the custom item template when an option actually has an image icon;
   // otherwise the library's own material-symbols item rendering is used as-is.
@@ -281,27 +326,66 @@ const SelectWidget = (props: $Any) => {
     props.onFocus(e)
   }
 
-  const tooltip = []
-  if (props.rawErrors) {
-    for (const err of props.rawErrors) tooltip.push(err)
+  const onDropdownOpen = () => {
+    const dropdown = dropdownRef.current?.getElement()
+    const trigger = dropdown?.querySelector('button')
+    if (!trigger) return
+
+    const triggerRect = trigger.getBoundingClientRect()
+    const spaceAbove = triggerRect.top - 10
+    const spaceBelow = window.innerHeight - triggerRect.bottom - 10
+    const opensUp = spaceAbove > spaceBelow
+    const availableSpace = opensUp ? spaceAbove : spaceBelow
+
+    setDropdownPlacement({
+      top: opensUp ? triggerRect.top : triggerRect.bottom,
+      translate: opensUp ? '0 -100%' : 'none',
+      transformOrigin: opensUp ? 'center bottom' : 'center top',
+    })
+    setDropdownMaxHeight(Math.min(300, Math.max(80, availableSpace - 48)))
+
+    requestAnimationFrame(() => {
+      // this dropdown's own list, not the first open menu on the page
+      const optionsList = dropdownRef.current?.getOptions()
+      if (!optionsList) return
+
+      const maxMenuWidth = window.innerWidth - 20
+      const menuWidth = Math.min(maxMenuWidth, Math.max(triggerRect.width, optionsList.scrollWidth))
+      const spaceLeft = triggerRect.left - 10
+      const spaceRight = window.innerWidth - triggerRect.right - 10
+      const opensRight = spaceRight >= spaceLeft
+      const desiredLeft = opensRight ? triggerRect.left : triggerRect.right - menuWidth
+      const left = Math.max(10, Math.min(desiredLeft, window.innerWidth - menuWidth - 10))
+
+      setDropdownHorizontalPlacement({ left, right: 'auto', width: menuWidth })
+    })
   }
 
-  let hlstyle: $Any = {}
-  if (!equiv(value, props.multiple ? props.value || [] : props.value)) {
-    // no one likes this :`-(
-    // hlstyle.outline = '1px solid yellow'
-  } else if (originalValue && !equiv(props.value, originalValue)) {
-    hlstyle.outline = '1px solid var(--color-changed)'
-  }
+  // the flat layout sizes the menu to its options and keeps it on screen; the classic
+  // layout keeps the library's own menu
+  const flatMenuProps = props.formContext?.flatLayout
+    ? {
+        onOpen: onDropdownOpen,
+        maxHeight: dropdownMaxHeight,
+        itemStyle: { whiteSpace: 'nowrap' as const },
+        listStyle: { width: 'max-content', maxWidth: 'calc(100vw - 20px)' },
+        pt: {
+          container: {
+            className: 'settings-select-dropdown-menu',
+            style: {
+              width: 'max-content',
+              maxWidth: 'calc(100vw - 20px)',
+              ...dropdownPlacement,
+              ...dropdownHorizontalPlacement,
+            },
+          },
+          list: { style: { width: 'max-content', maxWidth: 'calc(100vw - 20px)' } },
+        },
+      }
+    : {}
 
-  let renderableValue: $Any
-  if (value === null) {
-    renderableValue = []
-  } else if (props.multiple) {
-    renderableValue = value
-  } else {
-    renderableValue = [value]
-  }
+  const hlstyle = getHighlightStyle(value, props.multiple, formValue, originalValue)
+  const renderableValue = getRenderableValue(value, props.multiple)
 
   // every value of a multiselect, for when they don't fit (in the order the dropdown shows them)
   const valueTooltip =
@@ -319,15 +403,65 @@ const SelectWidget = (props: $Any) => {
     : props.schema?.placeholder
   const disabled = props.schema?.disabled || isEnumOptionsLoading
 
+  // the flat layout shows a multi-select's values that fit and counts the others (+N), and
+  // lists the selected ones first in its menu, all of them in view when it opens
+  const isFlatMulti = !!props.formContext?.flatLayout && !!props.multiple
+  const menuOptions = isFlatMulti ? sortSelectedFirst(options, openedSelection ?? value) : options
+  const dropdownError = toDropdownErrorText(enumOptionsError)
+  const flatMultiProps = isFlatMulti
+    ? {
+        valueTemplate: (committed: string[], picked: string[], isOpen: boolean) => {
+          // while the menu is open it shows the values being picked
+          const shown = isOpen ? picked : committed
+          return (
+            <DefaultValueTemplate
+              value={shown}
+              placeholder={placeholder}
+              isOpen={isOpen}
+              hasError={!!dropdownError}
+              // the dropdown's own button runs the clear (onClear below); this shows its icon
+              onClear={shown.length ? () => undefined : undefined}
+              clearTooltip="Clear selection"
+            >
+              <MultiSelectValue
+                items={shown.map(
+                  (selected) =>
+                    options.find((option) => option.value === selected) ?? {
+                      value: selected,
+                      label: selected,
+                    },
+                )}
+              />
+            </DefaultValueTemplate>
+          )
+        },
+        // the menu closes on a clear without telling onClose
+        onClear: value?.length
+          ? () => {
+              setOpenedSelection(null)
+              handleValueChange([])
+            }
+          : undefined,
+        clearTooltip: 'Clear selection',
+        // the order the menu lists its options in is set when it opens: a value picked
+        // with the menu open (each pick saves) stays where it was clicked
+        onOpen: () => {
+          onDropdownOpen()
+          setOpenedSelection(value || [])
+        },
+        onClose: () => setOpenedSelection(null),
+      }
+    : {}
+
   if (isSortableMultiselect && props.multiple) {
     return (
       <OrderedListWidget
         value={(value as string[]) || []}
         options={options}
-        onChange={setValue as (value: string[]) => void}
+        onChange={handleValueChange}
         placeholder={placeholder}
         disabled={disabled}
-        dropdownProps={{ error: toDropdownErrorText(enumOptionsError), itemTemplate }}
+        dropdownProps={{ error: dropdownError, itemTemplate }}
       />
     )
   }
@@ -337,7 +471,7 @@ const SelectWidget = (props: $Any) => {
       <Switchbox
         options={options}
         value={value}
-        onSelectionChange={setValue}
+        onSelectionChange={handleValueChange}
         message={enumOptionsError || (isEnumOptionsLoading ? 'Loading options...' : undefined)}
       />
     )
@@ -346,27 +480,31 @@ const SelectWidget = (props: $Any) => {
   return (
     <StyledDropdown
       widthExpand
-      options={options}
+      options={menuOptions}
       value={renderableValue}
       // @ts-ignore
-      onSelectionChange={props.multiple ? setValue : (e) => setValue(e[0])}
+      onSelectionChange={props.multiple ? handleValueChange : (e) => handleValueChange(e[0])}
       onBlur={props.onBlur}
       onFocus={onFocus}
       placeholder={placeholder}
-      error={toDropdownErrorText(enumOptionsError)}
+      error={dropdownError}
       itemTemplate={itemTemplate}
       className={`form-field`}
+      ref={dropdownRef}
+      {...flatMenuProps}
+      {...flatMultiProps}
       multiSelect={props.multiple}
       style={hlstyle}
       disabled={disabled}
       onSelectAll={
         props.multiple && options.length > 10
-          ? () => setValue(options.map((opt) => opt.value))
+          ? () => handleValueChange(options.map((opt) => opt.value))
           : undefined
       }
       // without icons the values are one comma separated text, cut with an ellipsis
       valueIconMode={options.some((opt) => opt.icon) ? 'all' : undefined}
-      data-tooltip={valueTooltip}
+      // the flat layout's value lists the values in its own tooltip, only when they don't fit
+      data-tooltip={isFlatMulti ? undefined : valueTooltip}
     />
   )
 }

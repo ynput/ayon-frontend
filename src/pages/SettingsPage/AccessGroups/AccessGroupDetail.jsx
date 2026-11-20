@@ -9,6 +9,7 @@ import {
   SaveButton,
 } from '@ynput/ayon-react-components'
 import SettingsEditor from '@containers/SettingsEditor'
+import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
 import { isEqual } from 'lodash'
 import {
@@ -19,11 +20,19 @@ import {
   useGetAccessGroupSchemaQuery,
 } from '@shared/api'
 import { confirmDelete } from '@shared/util'
+import { useSelector } from 'react-redux'
+import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
 
 const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
+  // a project's access groups are read-only without write access to its "Project access" (the
+  // studio's are for managers, who can always edit them)
+  const isUser = useSelector((state) => state.user.data.isUser)
+  const { permissions: userPermissions } = useUserProjectPermissions(isUser)
+  const readOnly =
+    !!projectName && !userPermissions.canEdit(UserPermissionsEntity.access, projectName)
   const [formData, setFormData] = useState(null)
 
   const { data } = useGetAccessGroupQuery(
@@ -101,15 +110,17 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         context={{
           headerProjectName: projectName,
           onPasteValue,
+          readOnly,
         }}
       />
     )
-  }, [schema, originalData, formData, projectName, setFormData, onPasteValue])
+  }, [schema, originalData, formData, projectName, setFormData, onPasteValue, readOnly])
 
   return (
     <Section style={{ flex: 2 }}>
       <Toolbar>
         <Spacer />
+        <SettingsOutlineToggle />
         {isLocalProject && (
           <Button
             onClick={onDeleteLocalGroupSettings}
@@ -120,11 +131,8 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
         )}
         <SaveButton onClick={onSave} label="Save changes" active={isChanged} saving={saving} />
       </Toolbar>
-      <ScrollPanel
-        className="nopad transparent"
-        scrollStyle={{ padding: 0 }}
-        style={{ flexGrow: 1 }}
-      >
+      {/* a panel, like the list beside it: the flat settings sheet takes the panel's colour */}
+      <ScrollPanel className="nopad" scrollStyle={{ padding: 0 }} style={{ flexGrow: 1 }}>
         {permissionsEditor}
       </ScrollPanel>
     </Section>

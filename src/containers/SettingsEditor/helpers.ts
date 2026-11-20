@@ -1,14 +1,13 @@
 import { $Any } from '@types'
 import { isEqual } from 'lodash'
+import { useFormContextSelector } from './formContextStore'
 
-const parseContext = (props: $Any) => {
-  const result = { originalValue: undefined, path: [] }
-  if (props.formContext?.overrides && props.formContext.overrides[props.id]) {
-    result.originalValue = props.formContext.overrides[props.id].originalValue
-    result.path = props.formContext.overrides[props.id].path
-  }
-  return result
-}
+/** A widget's saved value and its path in the settings; the widget draws again when they change */
+const useParsedContext = (props: $Any): { originalValue: $Any; path: $Any } =>
+  useFormContextSelector(props.formContext, (context) => {
+    const override = context.overrides?.[props.id]
+    return { originalValue: override?.originalValue, path: override?.path ?? [] }
+  })
 
 const equiv = (a: $Any, b: $Any) => {
   if (typeof a !== typeof b) return false
@@ -60,4 +59,4 @@ const getDefaultValue = (props: $Any) => {
     return props.schema['default'] || 0
   }
 }
-export { getDefaultValue, equiv, parseContext, updateChangedKeys }
+export { getDefaultValue, equiv, useParsedContext, updateChangedKeys }

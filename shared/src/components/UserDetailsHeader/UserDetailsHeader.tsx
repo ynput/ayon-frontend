@@ -22,6 +22,9 @@ export interface UserDetailsHeaderProps {
   menuItems?: MenuItemType[]
   /** called when the more menu opens */
   onMenuOpen?: () => void
+  /** opens the host's own dialog for the users' data ("View data", or the more button when there
+   * is no menu), instead of the read-only one here */
+  onViewData?: () => void
 }
 
 export const UserDetailsHeader = ({
@@ -31,6 +34,7 @@ export const UserDetailsHeader = ({
   style = {},
   menuItems,
   onMenuOpen,
+  onViewData,
 }: UserDetailsHeaderProps) => {
   // a single user
   const singleUserEdit = users.length === 1 ? users[0] : null
@@ -67,7 +71,7 @@ export const UserDetailsHeader = ({
           id: 'view-data',
           label: 'View data',
           icon: 'data_object',
-          onClick: () => setShowContext(true),
+          onClick: () => (onViewData ? onViewData() : setShowContext(true)),
         },
         ...menuItems.slice(splitAt),
       ]
@@ -105,6 +109,7 @@ export const UserDetailsHeader = ({
       <DetailHeader
         onClose={onClose}
         context={hasMenu ? undefined : users}
+        onViewContext={hasMenu ? undefined : onViewData}
         dialogTitle="User Context"
         style={style}
         rightActions={rightActions}

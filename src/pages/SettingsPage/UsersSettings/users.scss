@@ -24,6 +24,17 @@
   .p-datatable-wrapper {
     overflow-x: visible;
   }
+  // a column made narrower than its content cuts it (useColumnWidths)
+  th {
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  td {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .p-selectable-row.inactive td {
     color: var(--md-sys-color-outline);
     span {

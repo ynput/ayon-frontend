@@ -67,7 +67,7 @@ const UserAccessForm = ({ accessGroupsData, formData, onChange, disabled }) => {
 
   return (
     <>
-      <b>Access</b>
+      <b className="flat-form-title">Access</b>
 
       <FormLayout>
         <FormRowStyled label="Disable password">

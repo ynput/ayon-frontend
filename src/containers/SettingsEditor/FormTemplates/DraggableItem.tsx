@@ -4,6 +4,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { ReactNode } from 'react'
 import styled from 'styled-components'
 import clsx from 'clsx'
+import type { ListItemLayout } from './listItemLayout'
 
 const StyledIconWrapper = styled.div`
   height: var(--base-input-size);
@@ -50,10 +51,70 @@ type Props = {
   isVisible?: boolean
   children: ReactNode
   isOverlay?: boolean
+  /** Flat layout: the handle hides until the item is hovered, see SettingsEditor.sass */
+  flatLayout?: boolean
+  /** How the item is drawn in the flat layout: the box's class (is-row, is-card, is-fold,
+   * is-plain, is-simple) that SettingsEditor.sass styles it by */
+  layout?: ListItemLayout
   className?: string
 }
 
-const DraggableItem = ({ id, isVisible = true, isOverlay, className, children }: Props) => {
+// the class of an item's box in the flat layout
+const getItemBoxClass = (flatLayout?: boolean, layout?: ListItemLayout) =>
+  flatLayout &&
+  clsx('settings-array-item', layout && `is-${layout.simple ? 'simple' : layout.presentation}`)
+
+const DraggableItem = ({
+  id,
+  isVisible = true,
+  isOverlay,
+  flatLayout,
+  layout,
+  className,
+  children,
+}: Props) => {
+  const boxClass = getItemBoxClass(flatLayout, layout)
+  if (isOverlay) {
+    return <DragPreview boxClass={boxClass}>{children}</DragPreview>
+  }
+
+  return (
+    <SortableDraggableItem id={id} isVisible={isVisible} boxClass={boxClass} className={className}>
+      {children}
+    </SortableDraggableItem>
+  )
+}
+
+const DragPreview = ({
+  boxClass,
+  children,
+}: {
+  boxClass?: string | false
+  children: ReactNode
+}) => (
+  <div>
+    <DraggableContainer style={{ display: 'flex' }} className={clsx('isOverlay', boxClass)}>
+      <StyledIconWrapper className="drag-handle">
+        <StyledIcon className="icon draggable" icon="drag_indicator" id="icon" />
+      </StyledIconWrapper>
+      {children}
+    </DraggableContainer>
+  </div>
+)
+
+const SortableDraggableItem = ({
+  id,
+  isVisible,
+  boxClass,
+  className,
+  children,
+}: {
+  id: string
+  isVisible: boolean
+  boxClass?: string | false
+  className?: string
+  children: ReactNode
+}) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -73,8 +134,8 @@ const DraggableItem = ({ id, isVisible = true, isOverlay, className, children }:
         opacity: isVisible ? 1 : 0,
       }}
     >
-      <DraggableContainer style={{ display: 'flex' }} className={clsx({ isOverlay })}>
-        <StyledIconWrapper>
+      <DraggableContainer style={{ display: 'flex' }} className={clsx(boxClass)}>
+        <StyledIconWrapper className="drag-handle">
           <StyledIcon
             {...listeners}
             {...attributes}

@@ -20,6 +20,7 @@ import { isEqual } from 'lodash'
 import clsx from 'clsx'
 import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 
 // the drag handles stay in the background until their row is hovered
 const StyledDataTable = styled(DataTable)`
@@ -43,6 +44,7 @@ const Attributes = () => {
   const [attributes, setAttributes] = useState([])
   const [selectedAttribute, setSelectedAttribute] = useState(null)
   const [showEditor, setShowEditor] = useState(false)
+  const flatLayout = useFlatSettingsLayout()
   const { data, isLoading, isError, error, isFetching } = useGetAttributeListQuery()
 
   const [updateAttributes, { isLoading: updateLoading }] = useSetAttributeListMutation()
@@ -170,6 +172,7 @@ const Attributes = () => {
             existingNames={existingAttrNames}
             onEdit={onEdit}
             onHide={() => setShowEditor(false)}
+            flat={flatLayout}
           />
         )}
         <Section>

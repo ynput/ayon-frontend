@@ -1,6 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
-import { FormRow, Section, Panel, SaveButton, InputSwitch } from '@ynput/ayon-react-components'
+import {
+  FormLayout,
+  FormRow,
+  Section,
+  Panel,
+  SaveButton,
+  InputSwitch,
+} from '@ynput/ayon-react-components'
 import { useUpdateUserMutation, useSetFrontendPreferencesMutation } from '@shared/api'
 import Avatar from '@components/Avatar/Avatar'
 import styled from 'styled-components'
@@ -17,6 +24,7 @@ import { useContributions } from '@ynput/ayon-addon'
 import { AddonProfileSections } from '@shared/components'
 import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import { AvatarName, ReadOnlyInput } from './ProfilePage.styled'
 import { EditableLockedInput } from '../SettingsPage/UsersSettings/userDetail.styled'
 import { DividerSmallStyled } from '../SettingsPage/UsersSettings/UserAttribForm.styled'
@@ -71,19 +79,28 @@ const SideStyled = styled.div`
   }
 `
 
+const initialPreferences = {
+  notifications: false,
+  notificationSound: false,
+  flatSettingsLayout: false,
+  fullWidthSettings: false,
+  outlineFitsTitles: false,
+}
+
 const ProfilePage = ({ user = {}, isLoading }) => {
   const dispatch = useDispatch()
-  const attributes = ayonClient.getAttribsByScope('user')
+  const attributes = useMemo(() => ayonClient.getAttribsByScope('user'), [])
   const [showSetPassword, setShowSetPassword] = useState(false)
+  const flatLayout = useFlatSettingsLayout()
 
   // UPDATE USER DATA
   const [updateUser, { isLoading: isUpdatingUser }] = useUpdateUserMutation()
 
   // build initial form data
-  const initialFormData = {}
-  attributes.forEach((attrib) => {
-    initialFormData[attrib.name] = ''
-  })
+  const initialFormData = useMemo(
+    () => Object.fromEntries(attributes.map((attrib) => [attrib.name, ''])),
+    [attributes],
+  )
 
   const [name, setName] = useState('')
   const [password] = useState('randompasswor')
@@ -115,7 +132,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       setFormData(initialFormData)
       setName('')
     }
-  }, [isLoading, user])
+  }, [attributes, initialFormData, isLoading, user])
 
   // look for changes when formData changes
   useEffect(() => {
@@ -126,7 +143,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     } else {
       setChangesMade(false)
     }
-  }, [formData, initData])
+  }, [changesMade, formData, initData])
 
   const onSave = async () => {
     const trimmedFormData = Object.fromEntries(
@@ -166,10 +183,10 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [updatePreferences, { isLoading: isUpdatingPreferences }] =
     useSetFrontendPreferencesMutation()
 
-  const initPreferences = { notifications: false, notificationSound: false }
-  const [initPreferencesData, setInitPreferencesData] = useState(initPreferences)
-  const [preferencesData, setPreferencesData] = useState(initPreferences)
-  const [preferenceChanges, setPreferenceChanges] = useState(false)
+  const initPreferencesData = useRef(initialPreferences)
+  const [preferencesData, setPreferencesData] = useState(initialPreferences)
+  const preferenceChanges =
+    JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData.current)
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -179,30 +196,22 @@ const ProfilePage = ({ user = {}, isLoading }) => {
       const newPreferencesData = {
         notifications: data.frontendPreferences?.notifications,
         notificationSound: data.frontendPreferences?.notificationSound,
+        flatSettingsLayout: !!data.frontendPreferences?.flatSettingsLayout,
+        fullWidthSettings: !!data.frontendPreferences?.fullWidthSettings,
+        outlineFitsTitles: !!data.frontendPreferences?.outlineFitsTitles,
       }
 
       setPreferencesData(newPreferencesData)
       // used to reset form and detect changes
-      setInitPreferencesData(newPreferencesData)
+      initPreferencesData.current = newPreferencesData
     }
 
     return () => {
       // reset forms
-      setInitPreferencesData(initPreferences)
-      setPreferencesData(initPreferences)
+      initPreferencesData.current = initialPreferences
+      setPreferencesData(initialPreferences)
     }
   }, [isLoading, user])
-
-  // look for changes when preferencesData changes
-  useEffect(() => {
-    const isDiff = JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData)
-
-    if (isDiff) {
-      if (!preferenceChanges) setPreferenceChanges(true)
-    } else {
-      setPreferenceChanges(false)
-    }
-  }, [preferencesData, initPreferencesData])
 
   const { sendNotification } = useNotifications()
   const { powerLicense, isLoading: isLoadingLicense } = usePowerpack()
@@ -213,7 +222,6 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   )
 
   const onSavePreferences = async () => {
-    setPreferenceChanges(false)
     try {
       await updatePreferences({
         userName: user.name,
@@ -222,7 +230,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       dispatch(updateUserPreferences(preferencesData))
       // reset form
-      setInitPreferencesData(preferencesData)
+      initPreferencesData.current = preferencesData
 
       // if the user has enabled notifications for the first time, ask for permission
       if (preferencesData.notifications && Notification.permission !== 'granted') {
@@ -239,7 +247,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
           }).unwrap()
         }
       }
-    } catch (error) {
+    } catch {
       toast.error('Unable to update preferences')
     }
   }
@@ -264,6 +272,120 @@ const ProfilePage = ({ user = {}, isLoading }) => {
     ? 'Browser notifications only work over HTTPS'
     : 'Get notifications on your device'
 
+  // the width options only apply to the flat layout
+  const flatLayoutOptionsDisabled =
+    isUpdatingPreferences || isLoading || !preferencesData.flatSettingsLayout
+  const flatLayoutTooltip = (tooltip) =>
+    preferencesData.flatSettingsLayout ? tooltip : 'Turn on the flat settings layout to use this'
+
+  const saveButton = (
+    <SaveButton
+      onClick={handleSaveAll}
+      label="Save profile"
+      active={changesMade || preferenceChanges}
+      saving={isUpdatingUser || isUpdatingPreferences}
+      style={{ marginLeft: 'auto' }}
+    />
+  )
+
+  const profileRows = (
+    <>
+      <FormRow label="Username" key="Username">
+        <ReadOnlyInput className="flat-form-plain" value={name} readOnly />
+      </FormRow>
+      <UserAttribForm
+        formData={formData}
+        setFormData={setFormData}
+        attributes={attributes}
+        showAvatarUrl={false}
+      />
+
+      {!user?.data?.disablePasswordLogin && (
+        <FormRow label="Password" key="Password">
+          <EditableLockedInput
+            label="Password"
+            value={password}
+            type="password"
+            onEdit={() => setShowSetPassword(true)}
+          />
+        </FormRow>
+      )}
+    </>
+  )
+
+  const preferenceRows = (
+    <>
+      <FormRow label="Desktop notifications" key="notifications">
+        <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
+          <InputSwitch
+            checked={preferencesData.notifications}
+            id={'notifications'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Notification sound" key="notificationSound">
+        <div
+          data-tooltip="Get a little chime sound on new important notifications"
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.notificationSound}
+            id={'notificationSound'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Flat settings layout" key="flatSettingsLayout">
+        <div
+          data-tooltip="Show settings as one flat sheet of cards instead of nested panels"
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.flatSettingsLayout}
+            id={'flatSettingsLayout'}
+            onChange={handleChangePreferences}
+            disabled={isUpdatingPreferences || isLoading}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Full width settings" key="fullWidthSettings">
+        <div
+          data-tooltip={flatLayoutTooltip('Let the settings fill the page instead of a column')}
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.fullWidthSettings}
+            id={'fullWidthSettings'}
+            onChange={handleChangePreferences}
+            disabled={flatLayoutOptionsDisabled}
+          />
+        </div>
+      </FormRow>
+
+      <FormRow label="Outline fits titles" key="outlineFitsTitles">
+        <div
+          data-tooltip={flatLayoutTooltip(
+            'Make the settings outline as wide as its longest title, instead of a fixed width',
+          )}
+          style={{ width: 'fit-content' }}
+        >
+          <InputSwitch
+            checked={preferencesData.outlineFitsTitles}
+            id={'outlineFitsTitles'}
+            onChange={handleChangePreferences}
+            disabled={flatLayoutOptionsDisabled}
+          />
+        </div>
+      </FormRow>
+    </>
+  )
+
   return (
     <main>
       <Section
@@ -279,65 +401,33 @@ const ProfilePage = ({ user = {}, isLoading }) => {
             <span className={Type.headlineMedium}>{userName ? userName : 'User FullName'}</span>
           </AvatarName>
           <ColumnsStyled>
-            <Panel>
-              {/* saves this card only: addon sections save their own data */}
-              <header className="profile-card-header">
-                <b>Profile</b>
-                <SaveButton
-                  onClick={handleSaveAll}
-                  label="Save profile"
-                  active={changesMade || preferenceChanges}
-                  saving={isUpdatingUser || isUpdatingPreferences}
-                  style={{ marginLeft: 'auto' }}
-                />
-              </header>
-              <FormRow label="Username" key="Username">
-                <ReadOnlyInput value={name} readOnly />
-              </FormRow>
-              <UserAttribForm
-                formData={formData}
-                setFormData={setFormData}
-                attributes={attributes}
-                showAvatarUrl={false}
-              />
-
-              {!user?.data?.disablePasswordLogin && (
-                <FormRow label="Password" key="Password">
-                  <EditableLockedInput
-                    label="Password"
-                    value={password}
-                    type="password"
-                    onEdit={() => setShowSetPassword(true)}
-                  />
-                </FormRow>
-              )}
-
-              <DividerSmallStyled />
-              <FormRow label="Desktop notifications" key="notifications">
-                <div data-tooltip={notificationsTooltip} style={{ width: 'fit-content' }}>
-                  <InputSwitch
-                    checked={preferencesData.notifications}
-                    id={'notifications'}
-                    onChange={handleChangePreferences}
-                    disabled={isUpdatingPreferences || isLoading || notificationsDisabled}
-                  />
-                </div>
-              </FormRow>
-
-              <FormRow label="Notification sound" key="notificationSound">
-                <div
-                  data-tooltip="Get a little chime sound on new important notifications"
-                  style={{ width: 'fit-content' }}
-                >
-                  <InputSwitch
-                    checked={preferencesData.notificationSound}
-                    id={'notificationSound'}
-                    onChange={handleChangePreferences}
-                    disabled={isUpdatingPreferences || isLoading}
-                  />
-                </div>
-              </FormRow>
-            </Panel>
+            {flatLayout ? (
+              <div className="flat-form">
+                <section>
+                  {/* saves this card and the preferences: addon sections save their own data */}
+                  <header className="flat-form-title">
+                    <span>Profile</span>
+                    {saveButton}
+                  </header>
+                  <FormLayout>{profileRows}</FormLayout>
+                </section>
+                <section>
+                  <h3 className="flat-form-title">Preferences</h3>
+                  <FormLayout>{preferenceRows}</FormLayout>
+                </section>
+              </div>
+            ) : (
+              <Panel>
+                {/* saves this card only: addon sections save their own data */}
+                <header className="profile-card-header">
+                  <b>Profile</b>
+                  {saveButton}
+                </header>
+                {profileRows}
+                <DividerSmallStyled />
+                {preferenceRows}
+              </Panel>
+            )}
             <SideStyled>
               {/* what addons contribute to this page (profile.section slot, @ynput/ayon-addon) */}
               <AddonProfileSections />

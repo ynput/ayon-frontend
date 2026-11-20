@@ -11,7 +11,17 @@ import './SettingsEditor.sass'
 import { TextWidget } from './Widgets/TextWidget'
 import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
+import SettingsObjectField from './FormTemplates/SettingsObjectField'
 import { FormWrapper } from './SettingsEditor.styled'
+import { useAppSelector } from '@state/store'
+import clsx from 'clsx'
+import { SettingsOutline } from './SettingsOutline'
+import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContextInstance'
+import { SettingsJsonDialog } from './SettingsJsonDialog/SettingsJsonDialog'
+import { compareObjects, getValueByPath, setValueByPath } from '@containers/AddonSettings/utils'
+import cloneDeep from 'lodash/cloneDeep'
+import { useStableFormContext } from './formContextStore'
+import { useFlatSettingsLayoutClassName } from '@hooks/useFlatSettingsLayout'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -44,6 +54,9 @@ const widgets = {
   CheckboxWidget,
   DateTimeWidget,
 }
+
+// RJSF's own object field, plus directory mappings drawn as pairs in the flat layout
+const settingsFields = { ObjectField: SettingsObjectField }
 
 // Just close the top-level object to a simple div
 const uiSchema = {
@@ -97,9 +110,22 @@ const SettingsEditor = ({
   level,
   changedKeys,
   context,
+  // pages that don't want the flat layout's table of contents (Global settings) turn it off,
+  // and pages stacking several editors draw one for all of them (AddonSettings)
+  outline = true,
+  // tells apart the group ids of editors sharing a page (getSettingsGroupAnchor)
+  anchorScope,
 }) => {
   const [localBreadcrumbs, setLocalBreadcrumbs] = useState([])
+  // a group opened as JSON from its right-click menu: { path, title, value, readOnlyReason }
+  const [jsonEdit, setJsonEdit] = useState(null)
   const formWrapperRef = useRef()
+  const sheetRef = useRef(null)
+  // per-user choice between the classic nested panels and the flat card layout
+  const flatLayout = useAppSelector(
+    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
+  )
+  const layoutClassName = useFlatSettingsLayoutClassName()
 
   const originalOverrides = useMemo(() => {
     const result = buildOverrides(originalData, true)
@@ -131,7 +157,7 @@ const SettingsEditor = ({
       changedKeys: changedKeys || [],
       level: level || 'studio',
     }
-  }, [schema, formData, overrides, level, changedKeys])
+  }, [schema, formData, overrides, level, changedKeys, originalOverrides])
 
   // we need to add the props.context to form context independently
   // otherwise it breaks memoized overrides
@@ -161,31 +187,64 @@ const SettingsEditor = ({
     })
   }, [currentId])
 
+  const fullContext = {
+    ...context,
+    ...formContext,
+    onEditJson: (path, title, readOnlyReason) =>
+      setJsonEdit({
+        path,
+        title,
+        value: cloneDeep(getValueByPath(formData, path)),
+        readOnlyReason,
+      }),
+    onSetChangedKeys: onSetChangedKeys || noop,
+    onSetBreadcrumbs: setBc,
+    breadcrumbs: totallyRealBreadcrumbs,
+    currentId: currentId,
+    flatLayout,
+    // also keys the open folds, for editors that share a page without an addon context
+    anchorScope,
+  }
+
+  // one object, updated in place, so an edit doesn't draw every field again
+  const rjsfContext = useStableFormContext(fullContext)
+
   if (!schema) {
     // TODO: maybe a spinner or something?
     return <div></div>
   }
 
-  const fullContext = {
-    ...context,
-    ...formContext,
-    onSetChangedKeys: onSetChangedKeys || noop,
-    onSetBreadcrumbs: setBc,
-    breadcrumbs: totallyRealBreadcrumbs,
-    currentId: currentId,
+  // Sets a group's value from the JSON dialog, through the editor's own setter when it has one
+  // (AddonSettings checks the value's shape and works out the changed keys), else as an edit
+  const applyJson = (value) => {
+    const path = jsonEdit?.path || []
+    if (context?.onSetRawValue) return context.onSetRawValue(path, value)
+    if (context?.onSetValue) {
+      context.onSetValue(path, value)
+      return true
+    }
+    const newData = setValueByPath(cloneDeep(formData), path, value)
+    onChange(newData)
+    // the keys the value changes, so an editor that saves only with changed keys can (a whole
+    // sheet edited has no path of its own); a group of anything but settings counts as one
+    const isGroup = (data) => !!data && typeof data === 'object' && !Array.isArray(data)
+    const oldValue = getValueByPath(formData, path)
+    const changed =
+      isGroup(oldValue) && isGroup(value) ? compareObjects(oldValue, value, path) : [path]
+    if (changed.length)
+      onSetChangedKeys?.(changed.map((keyPath) => ({ path: keyPath, isChanged: true })))
+    return true
   }
 
-  // console.log('context? ', fullContext)
-  // console.log('schema? ', schema)
-
-  return (
-    <FormWrapper $currentSelection={currentId} ref={formWrapperRef}>
+  const form = (
+    <SettingsAnchorScopeContext.Provider value={anchorScope}>
       <Form
         schema={schema}
         uiSchema={uiSchema}
         formData={formData}
-        formContext={fullContext}
+        formContext={rjsfContext}
         widgets={widgets}
+        fields={settingsFields}
         onChange={(evt) => onChange(evt.formData)}
         templates={{
           FieldTemplate,
@@ -197,6 +256,35 @@ const SettingsEditor = ({
       >
         <div />
       </Form>
+    </SettingsAnchorScopeContext.Provider>
+  )
+
+  return (
+    <FormWrapper
+      $currentSelection={currentId}
+      ref={formWrapperRef}
+      className={clsx(flatLayout && 'settings-flat')}
+    >
+      {flatLayout ? (
+        <div className={layoutClassName}>
+          {outline && <SettingsOutline sheetRef={sheetRef} />}
+          <div className="settings-flat-sheet" ref={sheetRef}>
+            {form}
+          </div>
+        </div>
+      ) : (
+        form
+      )}
+      {jsonEdit && (
+        <SettingsJsonDialog
+          title={jsonEdit.title}
+          path={jsonEdit.path}
+          value={jsonEdit.value}
+          readOnlyReason={jsonEdit.readOnlyReason}
+          onApply={applyJson}
+          onClose={() => setJsonEdit(null)}
+        />
+      )}
     </FormWrapper>
   )
 }

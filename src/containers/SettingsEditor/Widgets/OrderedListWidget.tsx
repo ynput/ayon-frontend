@@ -83,7 +83,7 @@ const OrderedListWidget = ({
   }
 
   return (
-    <Container data-tooltip="">
+    <Container className="settings-ordered-list" data-tooltip="">
       <Row>
         <StyledDropdown
           widthExpand

@@ -56,7 +56,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
 
   return (
     <>
-      <b>{isUsingPools ? 'License control' : 'Login control'}</b>
+      <b className="flat-form-title">{isUsingPools ? 'License control' : 'Login control'}</b>
       <FormLayout>
         <FormRowStyled label="User active">
           <div
@@ -87,7 +87,7 @@ const UserLicenseForm: FC<UserLicenseFormProps> = ({
         )}
         {user && onInvite && (
           <FormRowStyled label="Invitation">
-            <InvitationRow>
+            <InvitationRow className="invitation-row">
               <Button
                 label={getInvitationState(user) === 'pending' ? 'Resend' : 'Invite'}
                 icon="mail"

@@ -33,6 +33,7 @@ const StateShade = styled.div`
 
 const CopySettingsDialog = ({
   selectedAddons,
+  addonsLoading = false,
   variant,
   originalData,
   setOriginalData,
@@ -206,8 +207,9 @@ const CopySettingsDialog = ({
       if (nodeState[key] === 'loaded') somethingLoaded = true
     }
 
+    if (addonsLoading) return 'loading'
     return somethingLoaded ? 'loaded' : 'empty'
-  }, [nodeState])
+  }, [addonsLoading, nodeState])
 
   //
   // RENDER
