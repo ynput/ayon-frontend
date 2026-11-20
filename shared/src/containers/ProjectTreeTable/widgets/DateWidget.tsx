@@ -1,7 +1,7 @@
 import { format, subMilliseconds } from 'date-fns'
-import { forwardRef, Fragment } from 'react'
+import { forwardRef, Fragment, useImperativeHandle, useRef } from 'react'
 import styled from 'styled-components'
-import { DateWidgetInput } from './DateWidgetInput'
+import { DateWidgetCalendar } from './DateWidgetCalendar'
 import { WidgetBaseProps } from './CellWidget'
 import { formatUTCDate } from '../../../util/formatUTCDate'
 import { DATE_FORMAT, TIME_FORMAT } from '../../../util/formatDate'
@@ -45,6 +45,10 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
     },
     ref,
   ) => {
+    // the calendar's anchor while editing
+    const valueRef = useRef<HTMLSpanElement>(null)
+    useImperativeHandle(ref, () => valueRef.current as HTMLSpanElement)
+
     let dateString = ''
     let isInvalid = false
     if (value) {
@@ -59,24 +63,10 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       }
     }
 
-    if (isEditing) {
-      return (
-        <DateWidgetInput
-          value={value}
-          onChange={onChange}
-          onCancel={onCancelEdit}
-          readOnly={isReadOnly}
-          disabled={isReadOnly}
-          isMidnightExclusive={isMidnightExclusive}
-          {...(props as any)}
-        />
-      )
-    }
-
     const parts = dateString && !isInvalid ? dateString.split(', ') : []
 
     return (
-      <StyledDateValue {...props} ref={ref}>
+      <StyledDateValue {...props} ref={valueRef}>
         {isInvalid
           ? dateString
           : parts.map((part, index) => (
@@ -85,6 +75,15 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
                 <StyledDatePart>{part}</StyledDatePart>
               </Fragment>
             ))}
+        {isEditing && !isReadOnly && (
+          <DateWidgetCalendar
+            value={value}
+            anchor={valueRef}
+            onChange={onChange}
+            onCancel={onCancelEdit}
+            isMidnightExclusive={isMidnightExclusive}
+          />
+        )}
       </StyledDateValue>
     )
   },

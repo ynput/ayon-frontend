@@ -297,17 +297,21 @@ test.describe('overview tag and date cells', () => {
     await overview.expand('sh010')
 
     const cell = overview.cell('anim', 'attrib_startDate')
+    // Escape and a click elsewhere close the calendar and keep the date
     await cell.dblclick()
-    const input = cell.locator('input[type="date"]')
-    await expect(input).toBeFocused()
-    await input.click()
-    await expect(input).toBeVisible()
-    await expect(input).toBeFocused()
-    await input.fill('2026-11-15')
+    await expect(overview.dateCalendar).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(overview.dateCalendar).toBeHidden()
+    await cell.dblclick()
+    await expect(overview.dateCalendar).toBeVisible()
     await overview.nameCell('anim').click()
-    await expect(input).toBeHidden()
+    await expect(overview.dateCalendar).toBeHidden()
+    await expect(cell).toHaveText('')
 
+    await overview.setDateCell('anim', 'attrib_startDate', '2026-11-15')
     await expect(cell).toHaveText('15 Nov 2026')
+    // the keyboard goes on from the cell
+    await expect(cell).toBeFocused()
     await expect
       .poll(async () => Date.parse((await api.getTask(projectName, tasks[0].id)).attrib.startDate))
       .toBe(Date.parse('2026-11-15T00:00:00Z'))
