@@ -1,5 +1,6 @@
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'react-toastify'
+import { getMixedCounts } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import overviewApi, {
@@ -37,6 +38,8 @@ import {
 const VISIBLE_ROWS_DEBOUNCE = 150
 // from a task changing in the cache (optimistically, before it is saved) to asking the filter again
 const MATCH_REFRESH_DELAY = 1000
+// the endpoint refuses more folders than this in one request
+const MAX_REFRESH_FOLDERS = 1000
 const NO_IDS: string[] = []
 const NO_TASKS: never[] = []
 
@@ -191,20 +194,24 @@ export const TaskColumnsProvider = ({
   // The filter is the server's to evaluate, and a cache only learns of a task's new values, not
   // whether it still matches. So when a shown task changes (an edit here or in its own row, an
   // undo, another user) the match is asked for again, once the change had time to be saved.
-  const refreshRef = useRef({ hasTaskFilter, matchArgs })
-  refreshRef.current = { hasTaskFilter, matchArgs }
+  const refreshRef = useRef({ hasTaskFilter, matchArgs, match })
+  refreshRef.current = { hasTaskFilter, matchArgs, match }
   const refreshTimer = useRef<ReturnType<typeof setTimeout>>()
   const refreshMatch = useCallback(
     (delay: number) => {
       clearTimeout(refreshTimer.current)
       refreshTimer.current = setTimeout(() => {
-        const { hasTaskFilter, matchArgs } = refreshRef.current
+        const { hasTaskFilter, matchArgs, match } = refreshRef.current
         if (!hasTaskFilter) return
+        // A refresh starts the cache over with the folders it is given. Every folder asked about
+        // so far is asked again, not only those on screen: a selection can reach past them, and
+        // an edit must keep knowing which of its cards the filter leaves out.
+        const parentIds = [...new Set([...matchArgs.parentIds, ...(match?.folderIds || [])])]
         dispatch(
-          overviewApi.endpoints.getOverviewTasksByFolders.initiate(matchArgs, {
-            subscribe: false,
-            forceRefetch: true,
-          }),
+          overviewApi.endpoints.getOverviewTasksByFolders.initiate(
+            { ...matchArgs, parentIds: parentIds.slice(0, MAX_REFRESH_FOLDERS) },
+            { subscribe: false, forceRefetch: true },
+          ),
         )
       }, delay)
     },
@@ -299,8 +306,7 @@ export const TaskColumnsProvider = ({
     const loadedFolders = getQueriedFolders(
       getCacheKey(args.projectName, args.filter, undefined, undefined, undefined, args.scope),
     )
-    const selected: TaskColumnsSelection = { cells: 0, tasks: [], assignees: [], notLoaded: 0 }
-    const assignees = new Set<string>()
+    const selected: TaskColumnsSelection = { ...NO_TASK_COLUMNS_SELECTION, tasks: [] }
     for (const cellId of selectedCells) {
       const { rowId, colId } = parseCellId(cellId) || {}
       const taskType = colId && typeByColumn.get(colId)
@@ -309,17 +315,24 @@ export const TaskColumnsProvider = ({
       selected.cells++
       if (isRowReadOnly(rowId)) continue
       const folderTasks = tasksByFolder.get(folder.id)?.get(taskType)
-      if (!folderTasks && folder.hasTasks !== false && !loadedFolders.has(folder.id)) {
+      if (folder.hasTasks === false) continue
+      // Not loaded, or the filter was not asked about the folder yet (its cards show as they
+      // are meanwhile): which of its tasks an edit may reach is not known
+      const isKnown =
+        (!!folderTasks || loadedFolders.has(folder.id)) &&
+        (!hasTaskFilter || !!match?.folderIds.has(folder.id))
+      if (!isKnown) {
         selected.notLoaded++
+        continue
       }
       for (const task of folderTasks || []) {
         // a card the filter greyed out is left alone by an edit of several
         if (isTaskDimmed(task)) continue
         selected.tasks.push({ task, rowId })
-        task.assignees.forEach((assignee) => assignees.add(assignee))
       }
     }
-    selected.assignees = [...assignees]
+    selected.assigneeCounts = getMixedCounts(selected.tasks.map(({ task }) => task.assignees))
+    selected.assignees = Object.keys(selected.assigneeCounts)
     return selected
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -328,6 +341,8 @@ export const TaskColumnsProvider = ({
     typeByColumn,
     tasksByFolder,
     isTaskDimmed,
+    hasTaskFilter,
+    match,
     getEntityById,
     isRowReadOnly,
     args,
@@ -340,11 +355,11 @@ export const TaskColumnsProvider = ({
     async (task, rowId, change) => {
       const { selection, updateEntities } = editRef.current
       if (!updateEntities) return
-      // the edited card is one of the selected cells' own; alone, only its task is edited
-      const targets =
-        selection.cells > 1
-          ? [{ task, rowId }, ...selection.tasks.filter((target) => target.task.id !== task.id)]
-          : [{ task, rowId }]
+      // several cells: every task they show. One cell, or a card the edit of several leaves
+      // out (greyed out by the filter): the card's own task
+      const isOfSeveral =
+        selection.cells > 1 && selection.tasks.some((target) => target.task.id === task.id)
+      const targets = isOfSeveral ? selection.tasks : [{ task, rowId }]
 
       const updates = targets.flatMap(({ task, rowId }): EntityUpdate[] => {
         // the task is the target, whatever the row: without it the edit would go to the folder.
@@ -365,11 +380,11 @@ export const TaskColumnsProvider = ({
       })
       if (!updates.length) return
 
-      if (selection.cells > 1 && selection.notLoaded) {
+      if (isOfSeveral && selection.notLoaded) {
         toast.warn(
           `${selection.notLoaded} selected folder${
             selection.notLoaded > 1 ? 's have' : ' has'
-          } not loaded tasks yet and ${selection.notLoaded > 1 ? 'were' : 'was'} left out.`,
+          } not loaded yet and ${selection.notLoaded > 1 ? 'were' : 'was'} left out.`,
         )
       }
 

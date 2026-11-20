@@ -30,7 +30,8 @@ export interface TaskColumnsContextValue {
   isTaskDimmed: (task: EditorTaskNode) => boolean
   /**
    * An edit made on a card. With one task cell selected it goes to the card's task; with several,
-   * to every task the selected cells show, less the greyed out ones.
+   * to every task the selected cells show, less the greyed out ones (a greyed out card is edited
+   * by itself).
    */
   editTasks: (task: EditorTaskNode, rowId: string, change: TaskCardChange) => Promise<void>
 }
@@ -47,8 +48,9 @@ export interface TaskColumnsSelection {
   cells: number
   /** the tasks an edit of several cells goes to */
   tasks: { task: EditorTaskNode; rowId: string }[]
-  /** every assignee of those tasks */
+  /** every assignee of those tasks, and on how many of them each is */
   assignees: string[]
+  assigneeCounts: Record<string, number>
   /** selected folders whose tasks have not loaded: an edit leaves them out */
   notLoaded: number
 }
@@ -62,6 +64,7 @@ export const NO_TASK_COLUMNS_SELECTION: TaskColumnsSelection = {
   cells: 0,
   tasks: [],
   assignees: [],
+  assigneeCounts: {},
   notLoaded: 0,
 }
 export const TaskColumnsSelectionContext = createContext(NO_TASK_COLUMNS_SELECTION)

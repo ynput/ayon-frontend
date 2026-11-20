@@ -33,19 +33,24 @@ other `ProjectTreeTable` pages can adopt it.
   the folder is collapsed (the task is not in the table's entity map).
 - **Several task cells selected**: an edit on one card goes to every task the selected cells show, in any
   task column (`TaskColumnsSelectionContext`, apart from the main context because it changes with every
-  click). Status and priority are set; an assignee is added to or removed from each task, the picker
-  showing every assignee they have (the Task progress setup). With one cell selected only the card's own
-  task is edited, so two cards in one cell stay separate. The table leaves the selection alone on a press
+  click). Status and priority are set; assignees are added to or removed from each task, the picker
+  showing on how many of the tasks each one is (`mixedCounts` / `onMixedChange`, as the details panel
+  does). With one cell selected only the card's own task is edited, so two cards in one cell stay
+  separate. The table leaves the selection alone on a press
   on a card's picker (`.tag.editable`) in a selected cell; any other press selects as usual.
 - **The page's task filter greys cards out, it never hides them.** The provider asks the same endpoint a
   second time (`scope: 'taskColumnsMatch'`) with the shown types and the page's filter and search; a card
   whose task is not in that answer is `dimmed`, once its folder was asked about. The filter is never
   evaluated in the client. The answer is asked for again when a shown task changes (a cache learns a
   task's new values, not whether it still matches), and held while a request is in flight so cards don't
-  flash. A greyed out card can be edited by itself, and is left out of an edit of several cells.
+  flash. That refresh asks about every folder asked about so far, not only those on screen.
+- **A greyed out card is edited by itself and left out of an edit of several cells.** So is a folder the
+  filter was not asked about yet, or whose tasks have not loaded (rows scrolled past quickly, or after
+  Sync): unknown means "shown as it is" for a card but "not a target" for an edit, with a warning.
 - **Double click** on a card opens its task in the details panel (`setSelectedEntity`, as `EntityWidget`
   does), handled on the second press. **Space** plays the cell's task, not the row's folder
-  (`useKeyboardNavigation` asks `getCellTask`: the card pressed last in the cell, else its first).
+  (`useKeyboardNavigation` asks `getCellTask`: the card pressed last in the cell, else its first). On a
+  task row the key still plays the row's task.
 - **The cell is read-only to the table** (`readonly` class, no `editable`): no cell editor on double click
   or Enter, no clear. Paste writes nothing to these cells but keeps their place in the selection, so
   the values after them land in their own columns (`ClipboardContext`). The Overview's Delete button and the

@@ -15,6 +15,7 @@ import { getCellId } from '../utils/cellUtils'
 import {
   TaskCardChange,
   TaskColumnsContextValue,
+  TaskColumnsSelection,
   useTaskColumnsContext,
   useTaskColumnsSelection,
 } from './TaskColumnsContextInstance'
@@ -38,8 +39,8 @@ interface TaskCardProps extends Pick<TaskColumnsContextValue, 'statuses' | 'prio
   // each field's picker is there when the field can be edited
   onChange?: (task: EditorTaskNode, change: TaskCardChange) => void
   readOnlyFields?: string[]
-  // several task cells are selected, and the edit goes to all their tasks: every assignee they have
-  selectedAssignees?: string[]
+  // several task cells are selected, and the edit goes to all their tasks: their assignees
+  selection?: TaskColumnsSelection
 }
 
 // one task of the cell: the Task progress page's card
@@ -56,7 +57,7 @@ const TaskCard = memo(
     isDimmed,
     onChange,
     readOnlyFields,
-    selectedAssignees,
+    selection,
   }: TaskCardProps) => {
     const entity = { projectName, entityType: 'task', entityId: task.id } as const
     const thumbnailUrl = isExpanded
@@ -69,10 +70,10 @@ const TaskCard = memo(
 
     const assigneeOptions = useMemo(
       () =>
-        getSelectableAssignees(users, selectedAssignees || task.assignees).map(
+        getSelectableAssignees(users, selection?.assignees || task.assignees).map(
           ({ name, fullName }) => ({ name, fullName, avatarUrl: `/api/users/${name}/avatar` }),
         ),
-      [users, task.assignees, selectedAssignees],
+      [users, task.assignees, selection],
     )
     const canEdit = (field: string) => !!onChange && !readOnlyFields?.includes(field)
     // the project's icons, statuses and priorities are typed more loosely than the card's props
@@ -105,18 +106,18 @@ const TaskCard = memo(
           priorityOptions={priorityOptions}
           isPlayable={task.hasReviewables}
           pt={{
-            assigneeSelect: selectedAssignees
+            assigneeSelect: selection
               ? {
-                  // several tasks: the picker shows every assignee they have, and each pick is
-                  // added to or removed from every task
-                  value: selectedAssignees,
+                  // several tasks: the picker shows every assignee they have and on how many
+                  // of them, and what it adds or removes goes to each task
+                  value: selection.assignees,
                   multiSelectClose: false,
-                  isMultiple: true,
-                  multipleOverride: false,
-                  onAddItem: (added) =>
-                    onChange?.(task, { field: 'assignees', added: [added], removed: [] }),
-                  onRemoveItem: (removed) =>
-                    onChange?.(task, { field: 'assignees', added: [], removed: [removed] }),
+                  isMultiple: selection.assignees.length > 1,
+                  mixedCounts: selection.assigneeCounts,
+                  mixedTotal: selection.tasks.length,
+                  mixedLabel: 'tasks',
+                  onMixedChange: ({ add, remove }) =>
+                    onChange?.(task, { field: 'assignees', added: add, removed: remove }),
                 }
               : // one task: the picker gives the whole new list
                 { multiSelectClose: false, multipleOverride: true },
@@ -124,7 +125,7 @@ const TaskCard = memo(
           onAssigneeChange={
             canEdit('assignees')
               ? (assignees) =>
-                  !selectedAssignees && onChange?.(task, { field: 'assignees', value: assignees })
+                  !selection && onChange?.(task, { field: 'assignees', value: assignees })
               : undefined
           }
           onStatusChange={
@@ -255,7 +256,12 @@ export const TaskColumnCell = ({ row, columnId, taskType, readOnlyFields }: Task
               isDimmed={context.isTaskDimmed(task)}
               onChange={handleChange}
               readOnlyFields={readOnlyFields}
-              selectedAssignees={isMultiple ? selection.assignees : undefined}
+              selection={
+                // a greyed out card is not part of the edit of several: it is edited by itself
+                isMultiple && selection.tasks.some((target) => target.task.id === task.id)
+                  ? selection
+                  : undefined
+              }
             />
           ))
         ))}

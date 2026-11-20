@@ -85,13 +85,13 @@ export default function useKeyboardNavigation() {
       const openPlayer = (entityId: string) => {
         // try to open the player if onOpenPlayer is defined
         if (onOpenPlayer) {
-          // a task column plays its cell's task, not the row's folder
-          if (isTaskColumnId(colId)) {
+          const entity = getEntityById(entityId)
+          // on a folder row a task column plays its cell's task, not the folder
+          if (entity?.entityType === 'folder' && isTaskColumnId(colId)) {
             const task = taskColumns?.getCellTask(entityId, colId)
             if (task) onOpenPlayer({ taskId: task.id }, { quickView: true })
             return
           }
-          const entity = getEntityById(entityId)
           if (entity) {
             const targetIds = getEntityViewierIds(entity)
             onOpenPlayer(targetIds, { quickView: true })
