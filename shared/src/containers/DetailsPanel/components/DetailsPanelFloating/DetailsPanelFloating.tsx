@@ -10,7 +10,7 @@ const frameStyle = { display: 'block', width: '100%', height: '100%', border: 'n
 // The details panel in a picture-in-picture window (or a floating dialog where the browser has no
 // document picture-in-picture): the full panel, loaded as its own page in an iframe.
 export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
-  const { pip, onOpenViewer, useNavigate } = useDetailsPanelContext()
+  const { pip, onOpenViewer, onGoToFrame, useNavigate } = useDetailsPanelContext()
   const navigate = useNavigate()
   const { pipWindow } = usePiPWindow()
   const frameRef = useRef<HTMLIFrameElement>(null)
@@ -32,11 +32,12 @@ export const DetailsPanelFloating: FC<DetailsPanelFloatingProps> = () => {
       if (event.data?.type !== DETAILS_PIP_MESSAGE) return
       if (event.data.action === 'open-viewer') onOpenViewer?.(event.data.args)
       if (event.data.action === 'navigate') navigate(event.data.to)
+      if (event.data.action === 'go-to-frame') onGoToFrame?.(event.data.frame)
       window.focus()
     }
     host.addEventListener('message', handleMessage)
     return () => host.removeEventListener('message', handleMessage)
-  }, [pipWindow, onOpenViewer, navigate])
+  }, [pipWindow, onOpenViewer, onGoToFrame, navigate])
 
   if (!src) return null
 

@@ -9,9 +9,12 @@ import type { DetailsPanelPip } from '@shared/context'
 export const DETAILS_PIP_PATH = '/details-pip'
 
 // posted by the PiP page to the window that hosts its frame (DetailsPanelFloating), for what
-// belongs in the main window: the viewer, and pages a link or button navigates to
+// belongs in the main window: the viewer (and its frame), and pages a link or button navigates to
 export const DETAILS_PIP_MESSAGE = 'ayon:details-pip'
-type DetailsPipAction = { action: 'open-viewer'; args: any } | { action: 'navigate'; to: To }
+type DetailsPipAction =
+  | { action: 'open-viewer'; args: any }
+  | { action: 'go-to-frame'; frame: number }
+  | { action: 'navigate'; to: To }
 export type DetailsPipMessage = DetailsPipAction & { type: typeof DETAILS_PIP_MESSAGE }
 
 export type DetailsPipEntities = Pick<DetailsPanelPip, 'entityType' | 'entities'>
@@ -22,6 +25,7 @@ const postToHost = (message: DetailsPipAction) =>
   window.parent.postMessage({ type: DETAILS_PIP_MESSAGE, ...message }, window.location.origin)
 
 export const openViewerFromPip = (args: any) => postToHost({ action: 'open-viewer', args })
+export const goToFrameFromPip = (frame: number) => postToHost({ action: 'go-to-frame', frame })
 
 // useNavigate for the PiP page: the main window navigates, the PiP keeps the panel
 export const usePipNavigate = (): NavigateFunction =>

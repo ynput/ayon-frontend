@@ -83,6 +83,7 @@ import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
 import {
   DetailsPanelFloating,
+  goToFrameFromPip,
   isDetailsPipPage,
   openViewerFromPip,
   usePipNavigate,
@@ -132,7 +133,8 @@ const App = () => {
   }
 
   const onGoToFrame = (frame: number) => {
-    dispatch(goToFrame(frame))
+    if (isDetailsPip) goToFrameFromPip(frame)
+    else dispatch(goToFrame(frame))
   }
 
   const onOpenViewer = (args: any) => {
