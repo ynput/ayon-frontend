@@ -11,6 +11,7 @@ import { useCallback } from 'react'
 import { useDispatch } from 'react-redux'
 import type { AnyAction, ThunkDispatch } from '@reduxjs/toolkit'
 import type { ViewData } from '../context'
+import type { ViewPreset } from '../types'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 
@@ -37,6 +38,8 @@ export type UseViewMutations = {
     setSelectedView?: (id: string) => void
     setSettingsChanged?: (changed: boolean) => void
     notify?: boolean
+    // load this preset's settings instead of the base view's
+    preset?: ViewPreset
   }) => Promise<string>
 }
 type R = UseViewMutations
@@ -128,8 +131,14 @@ export const useViewsMutations = ({
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
     async (args) => {
-      const { existingWorkingViewId, selectedViewId, setSelectedView, setSettingsChanged, notify } =
-        args || {}
+      const {
+        existingWorkingViewId,
+        selectedViewId,
+        setSelectedView,
+        setSettingsChanged,
+        notify,
+        preset,
+      } = args || {}
       if (!viewType) {
         throw new Error('viewType are required for resetting a view')
       }
@@ -152,14 +161,20 @@ export const useViewsMutations = ({
             { subscribe: false, forceRefetch: true },
           ),
         )
-        const projectBaseViewResult = await projectBaseViewPromise
-        const projectBaseView = projectBaseViewResult.data
+        const projectBaseViewResult = preset ? undefined : await projectBaseViewPromise
+        const projectBaseView = projectBaseViewResult?.data
 
         let templateSettings = {}
         let baseViewSource = 'default'
 
+        // a preset is the template itself: no base view is looked up
+        if (preset) {
+          templateSettings =
+            typeof preset.settings === 'function' ? await preset.settings() : preset.settings
+          baseViewSource = 'preset'
+        }
         // Check if project base view exists and has settings
-        if (
+        else if (
           projectBaseView &&
           projectBaseView.settings &&
           Object.keys(projectBaseView.settings).length > 0
@@ -235,7 +250,9 @@ export const useViewsMutations = ({
 
         if (notify) {
           const message =
-            baseViewSource === 'project'
+            baseViewSource === 'preset'
+              ? `Loaded "${preset?.label}"`
+              : baseViewSource === 'project'
               ? 'View reset to project default view'
               : baseViewSource === 'studio'
               ? 'View reset to studio default view'
@@ -245,7 +262,9 @@ export const useViewsMutations = ({
 
         return viewId
       } catch (error) {
-        if (notify) toast.error('Failed to reset view to default')
+        if (notify) {
+          toast.error(preset ? `Failed to load "${preset.label}"` : 'Failed to reset view to default')
+        }
         throw error
       }
     },

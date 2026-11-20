@@ -7,14 +7,14 @@ import {
 import { useCallback, useMemo } from 'react'
 import { VIEW_DIVIDER, ViewMenuItem } from '../ViewsMenu/ViewsMenu'
 import { ViewItem } from '../ViewItem/ViewItem'
-import { Icon } from '@ynput/ayon-react-components'
+import { Icon, IconType } from '@ynput/ayon-react-components'
 import { generateWorkingView } from '../utils/generateWorkingView'
 import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
 import type { CollapsedViewState } from '../context'
-import { WORKING_VIEW_ID } from '../types'
+import { ViewPreset, WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
   highlighted?: 'save' | 'edit'
@@ -36,6 +36,9 @@ type Props = {
   onSelect: (viewId: string) => void
   onSave: (viewId: string) => Promise<void>
   onResetWorkingView?: () => void
+  // the page's ready-made views: picking one loads it into the working view
+  presets?: ViewPreset[]
+  onLoadPreset?: (preset: ViewPreset) => void
 }
 
 const useBuildViewMenuItems = ({
@@ -54,6 +57,8 @@ const useBuildViewMenuItems = ({
   onSave,
   onResetWorkingView,
   selectedId,
+  presets,
+  onLoadPreset,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
 
@@ -228,6 +233,17 @@ const useBuildViewMenuItems = ({
   const viewItems: ViewMenuItem[] = useMemo(() => {
     const result: ViewMenuItem[] = [workingViewItem]
 
+    // ready-made views: for everyone, with or without saved views
+    presets?.forEach((preset) =>
+      result.push({
+        id: `preset-${preset.id}`,
+        label: preset.label,
+        startContent: <Icon icon={(preset.icon || 'dashboard') as IconType} />,
+        isEditable: false,
+        onClick: () => onLoadPreset?.(preset),
+      }),
+    )
+
     // Add divider only if any section exists and powerpack is available
     const visibleSections = sections.filter((s) => powerLicense && (s.items?.length || 0) > 0)
     if (visibleSections.length > 0) result.push(VIEW_DIVIDER)
@@ -250,7 +266,16 @@ const useBuildViewMenuItems = ({
     })
 
     return result
-  }, [workingViewItem, sections, isSectionCollapsed, toggleSection, selectedId, powerLicense])
+  }, [
+    workingViewItem,
+    sections,
+    isSectionCollapsed,
+    toggleSection,
+    selectedId,
+    powerLicense,
+    presets,
+    onLoadPreset,
+  ])
 
   return viewItems
 }

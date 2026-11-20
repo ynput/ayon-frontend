@@ -70,6 +70,12 @@ other `ProjectTreeTable` pages can adopt it.
   live in the provider for the visit; "expand all" is the view's `expandRows`.
 - The card is designed for a 34px row. Below that the collapsed card is scaled (`zoom`) instead of clipped.
 
+- **The "Task progress" entry in the Overview's views menu** is a view preset, not a saved view
+  (`ViewPreset` in `Views/types.ts`, built in `src/hoc/useViewPresets.ts`). Views are database rows and
+  none ships with the server, so picking the entry loads its settings into the user's working view: flat
+  folder view, the folder name and a task column per task type that has tasks (asked for at that moment),
+  the page's default columns hidden. It shows with or without saved views.
+
 ## Not there yet
 
 The context menu and copy on a task cell still see the folder.

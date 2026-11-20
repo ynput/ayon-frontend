@@ -31,6 +31,22 @@ export const isTaskRowExpandable = (row: TableRow) =>
   row.primary.entityType === 'folder' &&
   !!row.primary.hasTasks
 
+/**
+ * View settings of the Task progress layout: every folder with tasks as a row, its name and a
+ * task column per given task type.
+ *
+ * @param hiddenColumns the columns the page shows unless a view says otherwise
+ */
+export const getTaskProgressViewSettings = (taskTypes: string[], hiddenColumns: string[]) => ({
+  showHierarchy: false,
+  groupBy: 'folder',
+  columns: [
+    { name: 'name', visible: true, pinned: true },
+    ...taskTypes.map((name) => ({ name: getTaskColumnId(name), visible: true })),
+    ...hiddenColumns.filter((name) => name !== 'name').map((name) => ({ name, visible: false })),
+  ],
+})
+
 const nameCollator = new Intl.Collator(undefined, { numeric: true, sensitivity: 'base' })
 
 /** A folder's tasks by type, each type's tasks ordered by name. */
