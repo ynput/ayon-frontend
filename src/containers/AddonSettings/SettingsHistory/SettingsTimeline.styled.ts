@@ -264,6 +264,25 @@ export const Marker = styled.div`
       font-weight: 600;
       font-variant-numeric: tabular-nums;
     }
+
+    /* changes of several kinds: the ring and tint in bands of their colours */
+    &.mixed {
+      background: var(--mark-colors);
+      box-shadow: none;
+
+      &::before {
+        content: '';
+        position: absolute;
+        inset: 1.5px;
+        z-index: -1;
+        border-radius: inherit;
+        background-color: color-mix(
+          in srgb,
+          var(--md-sys-color-surface-container-low) 72%,
+          transparent
+        );
+      }
+    }
   }
 
   /* before the compared time: context only */

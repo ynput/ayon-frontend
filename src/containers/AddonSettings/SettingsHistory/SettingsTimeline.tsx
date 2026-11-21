@@ -63,6 +63,23 @@ export type TimelineLane<C extends TimelineChange = TimelineChange> = {
   truncated?: boolean
 }
 
+/** The colours of a lane's kinds of changes, in the order they first came */
+const colorsOf = (lane: TimelineLane) => {
+  const colors = [...new Set(lane.changes.map((change) => change.color ?? lane.color))]
+  return colors.length ? colors : [lane.color]
+}
+
+/** A colour, or equal bands of colours from top to bottom */
+const bands = (colors: string[]) =>
+  colors.length === 1
+    ? colors[0]
+    : `linear-gradient(${colors
+        .map(
+          (color, i) =>
+            `${color} ${(100 * i) / colors.length}% ${(100 * (i + 1)) / colors.length}%`,
+        )
+        .join(', ')})`
+
 type View = { start: number; end: number }
 
 /** Saves drawn as one mark, `left` is the first avatar's left edge, `users` newest first */
@@ -494,6 +511,7 @@ export const SettingsTimeline = <L extends TimelineLane>({
     () => lanes.map((lane) => buildSegments(lane, valueOf, now)),
     [lanes, valueOf, now],
   )
+  const laneColors = useMemo(() => lanes.map(colorsOf), [lanes])
 
   const compareX = compareAt !== null ? timeToX(compareAt) : null
   const nowX = timeToX(now)
@@ -650,7 +668,7 @@ export const SettingsTimeline = <L extends TimelineLane>({
               style={{ '--lane-color': lane.color } as React.CSSProperties}
             >
               <Styled.GutterCell title={[lane.title, lane.current].filter(Boolean).join(' ')}>
-                <span className="swatch" style={{ backgroundColor: lane.color }} />
+                <span className="swatch" style={{ background: bands(laneColors[laneIndex]) }} />
                 <span className="label">{lane.title}</span>
                 <span className="count">{lane.changes.length}</span>
               </Styled.GutterCell>
@@ -689,14 +707,17 @@ export const SettingsTimeline = <L extends TimelineLane>({
                 {marks[laneIndex].map((mark) => {
                   const isCluster = mark.changes.length > 1
                   const last = mark.changes[mark.changes.length - 1]
-                  // changes of one kind in its colour, of several kinds in the lane's
-                  const colors = new Set(mark.changes.map((change) => change.color ?? lane.color))
+                  // changes of one kind in its colour, of several kinds in bands of theirs
+                  const colors = laneColors[laneIndex].filter((color) =>
+                    mark.changes.some((change) => (change.color ?? lane.color) === color),
+                  )
                   return (
                     <Styled.Marker
                       key={mark.key}
                       data-mark
                       className={clsx({
                         cluster: isCluster,
+                        mixed: colors.length > 1,
                         before: compareAt !== null && last.createdAt < compareAt,
                         selected: mark.changes.some((c) => beforeSave(c) === compareAt),
                         open: popover?.mark.key === mark.key,
@@ -706,7 +727,9 @@ export const SettingsTimeline = <L extends TimelineLane>({
                         {
                           left: mark.left,
                           width: mark.width,
-                          ...(colors.size === 1 && { '--lane-color': [...colors][0] }),
+                          ...(colors.length === 1
+                            ? { '--lane-color': colors[0] }
+                            : { '--mark-colors': bands(colors) }),
                         } as React.CSSProperties
                       }
                       onClick={(e) => handleMarkClick(lane, mark, e)}
