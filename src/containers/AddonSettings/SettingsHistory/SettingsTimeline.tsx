@@ -161,8 +161,6 @@ type Props<L extends TimelineLane> = {
   /** local storage key of the collapsed state */
   storageKey: string
   collapsedByDefault?: boolean
-  /** in the header next to the zoom presets, while expanded */
-  controls?: ReactNode
   /** what the timeline shows and how to use it, for screen readers */
   label: string
 }
@@ -185,7 +183,6 @@ export const SettingsTimeline = <L extends TimelineLane>({
   hoveredSaves = noHoveredSaves,
   storageKey,
   collapsedByDefault = false,
-  controls,
   label,
 }: Props<L>) => {
   const compareAt = compareAtProp ?? null
@@ -519,7 +516,6 @@ export const SettingsTimeline = <L extends TimelineLane>({
         History
       </span>
       <span className="spacer" />
-      {!collapsed && controls}
       {!collapsed && (
         <span className="presets">
           {PRESETS.map((preset) => (

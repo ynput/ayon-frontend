@@ -48,18 +48,37 @@ const STAGING = 'var(--color-hl-staging)'
 const DEV = ['var(--color-hl-developer)', ...LANE_COLORS.slice(0, 3)]
 const OTHER = LANE_COLORS[LANE_COLORS.length - 1]
 
-/** Production, staging and each dev bundle, in the colours of their badges */
-export const getSources = (bundles: ListedBundle[]): BundleSource[] => [
-  { key: 'production', title: 'Production', color: PRODUCTION, variant: 'production' },
-  { key: 'staging', title: 'Staging', color: STAGING, variant: 'staging' },
-  ...bundles
-    .filter((bundle) => bundle.isDev)
-    .map((bundle, i) => ({
-      key: `dev:${bundle.name}`,
-      title: bundle.name,
-      color: DEV[i % DEV.length],
-    })),
-]
+const PRODUCTION_SOURCE: BundleSource = {
+  key: 'production',
+  title: 'Production',
+  color: PRODUCTION,
+  variant: 'production',
+}
+const STAGING_SOURCE: BundleSource = {
+  key: 'staging',
+  title: 'Staging',
+  color: STAGING,
+  variant: 'staging',
+}
+
+/**
+ * What the selected bundles are, in the colours of their badges: production, staging, dev
+ * bundles. Production and staging when they are none of these.
+ */
+export const getSources = (selected: ListedBundle[]): BundleSource[] => {
+  const sources = [
+    ...(selected.some((bundle) => bundle.isProduction) ? [PRODUCTION_SOURCE] : []),
+    ...(selected.some((bundle) => bundle.isStaging) ? [STAGING_SOURCE] : []),
+    ...selected
+      .filter((bundle) => bundle.isDev)
+      .map((bundle, i) => ({
+        key: `dev:${bundle.name}`,
+        title: bundle.name,
+        color: DEV[i % DEV.length],
+      })),
+  ]
+  return sources.length ? sources : [PRODUCTION_SOURCE, STAGING_SOURCE]
+}
 
 const toChange = (event: BundleEvent, source: BundleSource): BundleChange => ({
   id: event.id,
@@ -158,7 +177,7 @@ export const getAddonChanges = (
 
 /**
  * One lane with the changes of the shown sources, each in its colour. Its key stays the same, so
- * showing other sources keeps the zoom. `addons`: see `getAddonChanges`.
+ * selecting another bundle keeps the zoom. `addons`: see `getAddonChanges`.
  */
 export const getBundleLane = (
   history: BundleHistory | undefined,
@@ -175,8 +194,8 @@ export const getBundleLane = (
     .sort((a, b) => a.createdAt - b.createdAt)
   return {
     key: 'bundles',
-    title: 'Bundles',
-    color: OTHER,
+    title: shown.length === 1 ? shown[0].title : 'Bundles',
+    color: shown.length === 1 ? shown[0].color : OTHER,
     current: '',
     changes,
     truncated: shown.some((source) => source.variant && history?.truncated[source.variant]),

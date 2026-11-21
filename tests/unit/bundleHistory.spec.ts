@@ -35,28 +35,37 @@ const setProduction = (name: string) =>
   event(name, 'bundle.updated', ['isProduction'], { isProduction: true })
 const unsetProduction = (name: string) => event(name, 'bundle.updated', ['isProduction'])
 
-const [PRODUCTION, STAGING, DEV] = getSources([{ name: 'D', isDev: true }, { name: 'A' }])
+const [PRODUCTION, STAGING, DEV] = getSources([
+  { name: 'A', isProduction: true, isStaging: true },
+  { name: 'D', isDev: true },
+])
 const historyOf = (events: BundleEvent[]) => ({
   events,
   truncated: { production: false, staging: false, addons: false, created: false },
 })
+const keysOf = (selected: Parameters<typeof getSources>[0]) =>
+  getSources(selected).map((source) => source.key)
 
-test('sources are production, staging and each dev bundle', () => {
+test('the history shows what the selected bundles are, production and staging otherwise', () => {
   expect([PRODUCTION.key, STAGING.key, DEV.key]).toEqual(['production', 'staging', 'dev:D'])
-  expect(getSources([]).length).toBe(2)
+  expect(keysOf([{ name: 'A', isProduction: true }])).toEqual(['production'])
+  expect(keysOf([{ name: 'D', isDev: true }])).toEqual(['dev:D'])
+  expect(keysOf([{ name: 'B' }])).toEqual(['production', 'staging'])
+  expect(keysOf([])).toEqual(['production', 'staging'])
 })
 
 test('sources take the colours of the bundle badges, more dev bundles are told apart', () => {
-  const colors = getSources([
-    { name: 'D', isDev: true },
-    { name: 'E', isDev: true },
-  ]).map((source) => source.color)
-  expect(colors.slice(0, 3)).toEqual([
+  expect([PRODUCTION.color, STAGING.color, DEV.color]).toEqual([
     'var(--color-hl-production)',
     'var(--color-hl-staging)',
     'var(--color-hl-developer)',
   ])
-  expect(new Set(colors).size).toBe(4)
+  const colors = getSources([
+    { name: 'D', isDev: true },
+    { name: 'E', isDev: true },
+  ]).map((source) => source.color)
+  expect(colors[0]).toBe('var(--color-hl-developer)')
+  expect(new Set(colors).size).toBe(2)
 })
 
 test('production is the sequence of bundles set as production, from one to the next', () => {
@@ -179,7 +188,8 @@ test('one lane holds the changes of the shown sources in time, each in its colou
     [events[1].id, DEV.color],
     [events[2].id, STAGING.color],
   ])
-  expect(getBundleLane(historyOf(events), [STAGING], {}).changes.map((c) => c.id)).toEqual([
-    events[2].id,
-  ])
+  expect(lane.title).toBe('Bundles')
+  const staging = getBundleLane(historyOf(events), [STAGING], {})
+  expect(staging.changes.map((c) => c.id)).toEqual([events[2].id])
+  expect([staging.title, staging.color]).toEqual(['Staging', STAGING.color])
 })
