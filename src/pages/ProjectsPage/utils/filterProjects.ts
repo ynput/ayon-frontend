@@ -8,6 +8,7 @@ import {
   isRelativeDateValue,
   resolveRelativeValue,
 } from '@shared/containers/ProjectTreeTable/utils/expandRelativeDates'
+import { compareOrdered } from './compareOrdered'
 
 /**
  * Applies a QueryFilter to a list of project rows, returning only matching rows.
@@ -53,6 +54,29 @@ const getRowValue = (row: ProjectTableRow, key: string): unknown => {
 
 const stripLikeWildcards = (pattern: string): string => pattern.replace(/%/g, '')
 
+const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+
+// An ILIKE pattern as a regex: % is any text, _ one character, a backslash makes the next
+// character literal
+const likeToRegExp = (pattern: string): RegExp => {
+  let source = ''
+  for (let i = 0; i < pattern.length; i++) {
+    const char = pattern[i]
+    if (char === '\\' && i + 1 < pattern.length) source += escapeRegExp(pattern[++i])
+    else if (char === '%') source += '[\\s\\S]*'
+    else if (char === '_') source += '[\\s\\S]'
+    else source += escapeRegExp(char)
+  }
+  return new RegExp(`^${source}$`, 'i')
+}
+const likeMatches = (rowValue: unknown, pattern: unknown) =>
+  likeToRegExp(String(pattern ?? '')).test(String(rowValue ?? ''))
+
+const asArray = (value: unknown): unknown[] =>
+  Array.isArray(value) ? value : value === null || value === undefined ? [] : [value]
+const includesValue = (list: unknown[], value: unknown) =>
+  list.some((item) => String(item) === String(value))
+
 const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boolean => {
   const { key, operator = 'eq', value } = condition
 
@@ -72,23 +96,32 @@ const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boo
   const resolvedValue =
     typeof value === 'string' && isRelativeDateValue(value) ? resolveRelativeValue(value) : value
 
-  switch (operator) {
+  // `startswith` and `endswith` are not in the generated operator type yet
+  switch (operator as string) {
     case 'eq':
       return rowValue === resolvedValue || String(rowValue) === String(resolvedValue)
     case 'ne':
       return rowValue !== resolvedValue && String(rowValue) !== String(resolvedValue)
-    case 'like': {
-      const term = stripLikeWildcards(String(resolvedValue ?? '')).toLowerCase()
+    case 'like':
+      return likeMatches(rowValue, resolvedValue)
+    case 'notlike':
+      return !likeMatches(rowValue, resolvedValue)
+    case 'startswith':
       return String(rowValue ?? '')
         .toLowerCase()
-        .includes(term)
-    }
-    case 'notlike': {
-      const term = stripLikeWildcards(String(resolvedValue ?? '')).toLowerCase()
-      return !String(rowValue ?? '')
+        .startsWith(String(resolvedValue ?? '').toLowerCase())
+    case 'endswith':
+      return String(rowValue ?? '')
         .toLowerCase()
-        .includes(term)
-    }
+        .endsWith(String(resolvedValue ?? '').toLowerCase())
+    case 'includesany':
+      return asArray(resolvedValue).some((v) => includesValue(asArray(rowValue), v))
+    case 'includesall':
+      return asArray(resolvedValue).every((v) => includesValue(asArray(rowValue), v))
+    case 'excludesany':
+      return !asArray(resolvedValue).some((v) => includesValue(asArray(rowValue), v))
+    case 'excludesall':
+      return !asArray(resolvedValue).every((v) => includesValue(asArray(rowValue), v))
     case 'in': {
       const haystack = Array.isArray(resolvedValue) ? resolvedValue : [resolvedValue]
       return haystack.some((v) => String(rowValue) === String(v))
@@ -102,22 +135,14 @@ const evaluateCondition = (row: ProjectTableRow, condition: QueryCondition): boo
     case 'notnull':
       return rowValue !== null && rowValue !== undefined
     case 'gt':
-      return compareValues(rowValue, resolvedValue) > 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order > 0)
     case 'gte':
-      return compareValues(rowValue, resolvedValue) >= 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order >= 0)
     case 'lt':
-      return compareValues(rowValue, resolvedValue) < 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order < 0)
     case 'lte':
-      return compareValues(rowValue, resolvedValue) <= 0
+      return compareOrdered(rowValue, resolvedValue, (order) => order <= 0)
     default:
       return true
   }
-}
-
-/** Numeric comparison with ISO-string fallback (works for dates). */
-const compareValues = (a: unknown, b: unknown): number => {
-  const numA = Number(a)
-  const numB = Number(b)
-  if (!isNaN(numA) && !isNaN(numB)) return numA - numB
-  return String(a) < String(b) ? -1 : String(a) > String(b) ? 1 : 0
 }

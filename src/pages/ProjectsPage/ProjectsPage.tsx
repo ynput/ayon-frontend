@@ -33,6 +33,7 @@ import { DEFAULT_COLUMNS_PROJECT, GROUP_BY_FOLDER_KEY } from './constants'
 import { ProjectFolderFormDialog, useProjectMenuController } from '@shared/containers/ProjectsTable'
 import { useProjectsListAppProps } from '@containers/ProjectsList/useProjectsListAppProps'
 import { getMaxDepth } from './utils'
+import { mergeQueryFilters } from '@shared/containers/ProjectTreeTable'
 
 interface ProjectsPageProps {
   onNewProject: () => void
@@ -92,7 +93,12 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
   // SETTINGS: sorting
   const { sorting, handleSortingChange } = useProjectSorting()
   // SETTINGS: Filters
-  const { filters, handleFiltersChange } = useProjectFilters()
+  const { filters, handleFiltersChange, advancedFilter, onUpdateAdvancedFilter } =
+    useProjectFilters()
+  const appliedFilters = useMemo(
+    () => mergeQueryFilters(filters, advancedFilter),
+    [filters, advancedFilter],
+  )
 
   // STATE: expanded rows (persisted in session storage)
   const [expanded, setExpanded] = useSessionStorage<ExpandedState>('projects-page-expanded', {})
@@ -119,7 +125,7 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
     groupSortByDesc,
     foldersMap,
     columnAttributeData,
-    filters,
+    filters: appliedFilters,
   })
 
   // SELECTION
@@ -221,7 +227,12 @@ const ProjectsPageContent: FC<ProjectsPageProps> = ({ onNewProject }) => {
             Create folder
           </PowerpackButton>
         )}
-        <ProjectsSearchFilterWrapper queryFilters={filters} onChange={handleFiltersChange} />
+        <ProjectsSearchFilterWrapper
+          queryFilters={filters}
+          onChange={handleFiltersChange}
+          advancedFilter={advancedFilter}
+          onAdvancedFilterChange={onUpdateAdvancedFilter}
+        />
         <SortingDropdown
           title="Group by"
           value={groupValue}

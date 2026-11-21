@@ -49,6 +49,7 @@ const useListItemDeepLink = () => {
     hasNextPage,
     fetchNextPage,
     listItemsFilters,
+    listItemsAdvancedFilter,
     listItemsQuery,
     resetFilters,
   } = useListItemsDataContext()
@@ -61,7 +62,10 @@ const useListItemDeepLink = () => {
   const listParam = isReview ? 'review' : 'list'
   const urlListId = searchParams.get(listParam)
   const urlItemIds = searchParams.getAll(LIST_ITEM_ID_PARAM).join(',')
-  const filtersKey = useMemo(() => JSON.stringify(listItemsFilters), [listItemsFilters])
+  const filtersKey = useMemo(
+    () => JSON.stringify([listItemsFilters, listItemsAdvancedFilter]),
+    [listItemsFilters, listItemsAdvancedFilter],
+  )
   const { filter: queryFilter, search: querySearch } = listItemsQuery
 
   // read the params once and remove them from the url

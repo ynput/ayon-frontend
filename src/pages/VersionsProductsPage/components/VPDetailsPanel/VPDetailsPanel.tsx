@@ -34,7 +34,8 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     useVersionsSelectionContext()
   const { selectedEntity, clearSelectedEntity } = useDetailsPanelEntityContext()
   const { setSelectedCells, selectedRows } = useSelectionCellsContext()
-  const { onUpdateViewGroupBy, onUpdateFilters } = useVPViewsContext()
+  const { onUpdateViewGroupBy, onUpdateFilters, advancedFilter, onUpdateAdvancedFilter } =
+    useVPViewsContext()
   const { setExpanded: setProductsExpanded } = useVersionsDataContext()
   const slicer = useSlicerContext()
 
@@ -111,6 +112,7 @@ const VPDetailsPanel = ({}: VPDetailsPanelProps) => {
     // Only reset view state
     if (source === 'uri') {
       onUpdateFilters({})
+      if (advancedFilter) onUpdateAdvancedFilter(undefined)
       onUpdateViewGroupBy(undefined)
     }
 

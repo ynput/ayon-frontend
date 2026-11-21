@@ -11,17 +11,28 @@ const SCOPES = buildScopes(['version', 'product', 'task', 'folder', 'representat
   task: ['folderType'],
 })
 
+// these options are not filter conditions: the page turns them into query arguments
+// (featured versions, reviewables) or into a path match (extension)
+const ADVANCED_FILTER_EXCLUDE = [
+  'version_version',
+  'version_hasReviewables',
+  'representation_extension',
+]
+
 interface VPSearchFilterProps {}
 
 const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
   const { projectName, productBaseTypes, ...projectInfo } = useProjectContext()
-  const { filters, onUpdateFilters } = useVPViewsContext()
+  const { filters, onUpdateFilters, advancedFilter, onUpdateAdvancedFilter } = useVPViewsContext()
 
   return (
     <SearchFilterWrapper
       // @ts-ignore
       queryFilters={filters}
       onChange={onUpdateFilters}
+      advancedFilter={advancedFilter}
+      onAdvancedFilterChange={onUpdateAdvancedFilter}
+      advancedFilterExclude={ADVANCED_FILTER_EXCLUDE}
       keepAppliedOptionsVisible
       scopes={SCOPES}
       projectNames={[projectName]}

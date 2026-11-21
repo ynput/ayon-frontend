@@ -44,6 +44,7 @@ import { useSelectedEntityIds, useSlicerPanelSelections } from '@shared/containe
 import { useProjectOverviewStats } from '../../hooks/useProjectOverviewStats'
 import { useProjectContext, useProjectFoldersContext } from '@shared/context'
 import { splitClientFiltersByScope, splitFiltersByScope } from '@shared/components'
+import { splitAdvancedFilterByScope } from '@shared/containers/ProjectTreeTable/utils/advancedFilter'
 import { ProjectOverviewContext } from './ProjectOverviewContextInstance'
 import { useAppDispatch } from '@state/store'
 import useOverviewContextMenu from '../../hooks/useOverviewContextMenu'
@@ -130,6 +131,8 @@ export const ProjectOverviewProvider = ({
     onUpdateGroupBy: _updateGroupByAtomic,
     filters: queryFilters,
     onUpdateFilters: setQueryFilters,
+    advancedFilter,
+    onUpdateAdvancedFilter: setAdvancedFilter,
   } = useOverviewViewSettings({ viewSettings, updateViewSettings })
 
   const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(
@@ -223,6 +226,12 @@ export const ProjectOverviewProvider = ({
     )
   }, [queryFilters])
 
+  // The advanced filter per scope, merged into every filter built below
+  const { task: advancedTaskFilter, folder: advancedFolderFilter } = useMemo(
+    () => splitAdvancedFilterByScope(advancedFilter, ['task', 'folder'], 'task'),
+    [advancedFilter],
+  )
+
   // Separate slicer filters into different types
   const validScopes: ('task' | 'folder')[] = ['task', 'folder']
   const attribScopeMap = useMemo(
@@ -248,6 +257,7 @@ export const ProjectOverviewProvider = ({
   // Combine slicer filters with task/folder filters
   const combinedTaskFilter = useQueryFilters({
     queryFilters: taskFilter,
+    advancedFilter: advancedTaskFilter,
     sliceFilters: slicerTaskFilters,
     config: { searchKey: 'name' },
   })
@@ -255,6 +265,7 @@ export const ProjectOverviewProvider = ({
   // the task queries (folderFilter) have no folder text search, so a search would be dropped there
   const combinedFolderFilter = useQueryFilters({
     queryFilters: folderFilter,
+    advancedFilter: advancedFolderFilter,
     sliceFilters: slicerFolderFilters,
   })
 
@@ -344,11 +355,13 @@ export const ProjectOverviewProvider = ({
       )
       const countsTaskFilter = buildQueryFilters({
         queryFilters: taskFilter,
+        advancedFilter: advancedTaskFilter,
         sliceFilters: otherTaskFilters,
         config: { searchKey: 'name' },
       })
       const countsFolderFilter = buildQueryFilters({
         queryFilters: folderFilter,
+        advancedFilter: advancedFolderFilter,
         sliceFilters: otherFolderFilters,
       })
       // a panel's own search leaving nothing must not zero its own counts
@@ -376,6 +389,8 @@ export const ProjectOverviewProvider = ({
       attribScopeMap,
       taskFilter,
       folderFilter,
+      advancedTaskFilter,
+      advancedFolderFilter,
       projectName,
       selectedFolders,
       selectedTaskIds,
@@ -516,6 +531,8 @@ export const ProjectOverviewProvider = ({
           search: combinedTaskFilter.search,
         },
         setQueryFilters,
+        advancedFilter,
+        setAdvancedFilter,
         // Additional filter contexts for dual filtering system
         combinedFilters: queryFiltersResult.combinedFilters,
         displayFilters: queryFiltersResult.displayFilters,
