@@ -8,6 +8,7 @@ query GetListItems(
   $sortBy: [String!]
   $filter: String
   $search: String
+  $featuredOnly: [String!]
   $showComments: Boolean! = false
 ) {
   project(name: $projectName) {
@@ -28,6 +29,7 @@ query GetListItems(
             sortBy: $sortBy
             filter: $filter
             search: $search
+            featuredOnly: $featuredOnly
           ) {
             pageInfo {
               hasNextPage
