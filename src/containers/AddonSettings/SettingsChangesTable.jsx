@@ -179,7 +179,7 @@ const SettingsChangesTable = ({ changes, unpins, onRevert }) => {
             scrollHeight="100%"
           >
             <Column header="Name" body={changeNameRenderer} field="key" expander />
-            <Column header="" body={actionRenderer} style={{ width: 28 }} />
+            <Column header="" body={actionRenderer} style={{ width: 48 }} />
           </TreeTable>
         ) : (
           <EmptyPlaceholder className="compact" icon="edit_off" message="No changes" />
