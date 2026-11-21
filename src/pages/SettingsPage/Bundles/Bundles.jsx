@@ -22,6 +22,7 @@ import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
 import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-search'
+import { BundleHistory } from './BundleHistory/BundleHistory'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -427,8 +428,17 @@ const Bundles = () => {
         onFinish={closeCopySettings}
         onSetTag={copySettingsBundle.pendingChange ? handleConfirmTagChange : undefined}
       />
-      <main>
-        <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
+      <main style={{ flexDirection: 'column' }}>
+        <BundleHistory
+          bundles={bundleList}
+          selected={selectedBundles}
+          onSelect={handleBundleSelect}
+        />
+        <Splitter
+          style={{ width: '100%', flex: 1, minHeight: 0 }}
+          stateStorage="local"
+          stateKey="bundles-splitter"
+        >
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Styled.MainToolbar>
