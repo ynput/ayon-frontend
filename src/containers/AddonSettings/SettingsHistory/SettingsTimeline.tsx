@@ -45,8 +45,8 @@ const STACK_STEP = 10
 /** time to move the pointer from a mark to its popover */
 const CLOSE_DELAY = 200
 
-/** A change on the timeline: when and by whom */
-export type TimelineChange = { id: string; createdAt: number; user: string | null }
+/** A change on the timeline: when and by whom. `color`: of a change of another kind than its lane */
+export type TimelineChange = { id: string; createdAt: number; user: string | null; color?: string }
 
 /**
  * A row of changes. The line under them shows which value each change set (`valueOf`), the
@@ -160,6 +160,9 @@ type Props<L extends TimelineLane> = {
   hoveredSaves?: HoveredSaves
   /** local storage key of the collapsed state */
   storageKey: string
+  collapsedByDefault?: boolean
+  /** in the header next to the zoom presets, while expanded */
+  controls?: ReactNode
   /** what the timeline shows and how to use it, for screen readers */
   label: string
 }
@@ -181,10 +184,12 @@ export const SettingsTimeline = <L extends TimelineLane>({
   isLoading,
   hoveredSaves = noHoveredSaves,
   storageKey,
+  collapsedByDefault = false,
+  controls,
   label,
 }: Props<L>) => {
   const compareAt = compareAtProp ?? null
-  const [collapsed, setCollapsed] = useLocalStorage(storageKey, false)
+  const [collapsed, setCollapsed] = useLocalStorage(storageKey, collapsedByDefault)
   const bodyRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [now, setNow] = useState(Date.now())
@@ -514,6 +519,7 @@ export const SettingsTimeline = <L extends TimelineLane>({
         History
       </span>
       <span className="spacer" />
+      {!collapsed && controls}
       {!collapsed && (
         <span className="presets">
           {PRESETS.map((preset) => (
@@ -687,6 +693,8 @@ export const SettingsTimeline = <L extends TimelineLane>({
                 {marks[laneIndex].map((mark) => {
                   const isCluster = mark.changes.length > 1
                   const last = mark.changes[mark.changes.length - 1]
+                  // changes of one kind in its colour, of several kinds in the lane's
+                  const colors = new Set(mark.changes.map((change) => change.color ?? lane.color))
                   return (
                     <Styled.Marker
                       key={mark.key}
@@ -698,7 +706,13 @@ export const SettingsTimeline = <L extends TimelineLane>({
                         open: popover?.mark.key === mark.key,
                         linked: mark.changes.some((change) => hovered.has(change.id)),
                       })}
-                      style={{ left: mark.left, width: mark.width }}
+                      style={
+                        {
+                          left: mark.left,
+                          width: mark.width,
+                          ...(colors.size === 1 && { '--lane-color': [...colors][0] }),
+                        } as React.CSSProperties
+                      }
                       onClick={(e) => handleMarkClick(lane, mark, e)}
                       onMouseEnter={(e) => {
                         openPopover(lane, mark, e)
