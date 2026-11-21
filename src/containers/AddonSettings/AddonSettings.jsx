@@ -57,12 +57,14 @@ import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
 import { SettingsTimeline } from './SettingsHistory/SettingsTimeline'
 import { SettingsComparisonPanel } from './SettingsHistory/SettingsComparisonPanel'
+import { SettingsChangeSummary } from './SettingsHistory/SettingsChangeSummary'
+import { SettingsChangeList } from './SettingsHistory/SettingsChangeList'
 import { SettingsHistoryFeed } from './SettingsHistory/SettingsHistoryFeed'
 import { createHoveredSaves } from './SettingsHistory/hoveredSaves'
 import { ComparisonHighlight } from './SettingsHistory/ComparisonHighlight.styled'
 import { useSettingsHistory } from './SettingsHistory/useSettingsHistory'
 import { useComparisonActions } from './SettingsHistory/useComparisonActions'
-import { getFieldId } from './SettingsHistory/settingsHistoryHelpers'
+import { beforeSave, getFieldId } from './SettingsHistory/settingsHistoryHelpers'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -102,6 +104,8 @@ const StyledBundleLabel = styled.div`
     color: var(--md-sys-color-outline);
   }
 `
+
+const addonVersionOf = (change) => change.addonVersion
 
 const isChildPath = (childPath, parentPath) => {
   if (childPath.length < parentPath.length) return false
@@ -921,11 +925,30 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
             <SettingsTimeline
               key={`${selectedBundle.variant}|${projectName}`}
               lanes={historyLanes}
-              schemas={addonSchemas}
+              valueOf={addonVersionOf}
+              renderChange={(lane, change) => (
+                <SettingsChangeSummary
+                  change={change}
+                  previous={lane.changes[lane.changes.indexOf(change) - 1]}
+                  lane={lane}
+                  schema={addonSchemas[lane.addonName]}
+                />
+              )}
+              renderChanges={(lane, changes, pick) => (
+                <SettingsChangeList
+                  lane={lane}
+                  changes={changes}
+                  compareAt={compareAt}
+                  onPick={pick}
+                />
+              )}
+              onPick={(_lane, change) => setCompareAt(beforeSave(change))}
               compareAt={compareAt}
               onCompareAtChange={setCompareAt}
               isLoading={historyLoading}
               hoveredSaves={hoveredSaves}
+              storageKey="settings-history-collapsed"
+              label="Settings history. Left and right arrows compare with the previous or next save, plus and minus zoom, Escape stops comparing."
             />
           )}
           <Section style={{ position: 'relative' }}>

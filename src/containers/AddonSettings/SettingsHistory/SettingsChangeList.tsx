@@ -66,9 +66,7 @@ export const SettingsChangeList: FC<Props> = ({ lane, changes, compareAt, onPick
               previous={lane.changes[lane.changes.indexOf(change) - 1]}
             />
             <span className="date">{format(change.createdAt, 'd MMM yyyy, HH:mm')}</span>
-            <span
-              className={clsx('version', { older: change.addonVersion !== lane.currentVersion })}
-            >
+            <span className={clsx('version', { older: change.addonVersion !== lane.current })}>
               {change.addonVersion}
             </span>
           </button>

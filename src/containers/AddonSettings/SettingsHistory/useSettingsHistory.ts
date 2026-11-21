@@ -16,19 +16,12 @@ import {
   withSameValues,
 } from './settingsHistoryHelpers'
 import { useQueryEach } from './useQueryEach'
+import type { TimelineLane } from './SettingsTimeline'
 
 export type HistoryAddon = { name: string; version: string; variant: string; title?: string }
 
-export type HistoryLane = {
-  addonName: string
-  title: string
-  color: string
-  currentVersion: string
-  /** ascending */
-  changes: SettingsChange[]
-  /** older changes were not loaded */
-  truncated: boolean
-}
+/** `current`: the version shown */
+export type HistoryLane = TimelineLane<SettingsChange> & { addonName: string; current: string }
 
 export type AddonComparison = {
   lane: HistoryLane
@@ -77,10 +70,11 @@ export const useSettingsHistory = ({ addons, projectName, compareAt, skip }: Pro
   const lanes = useMemo<HistoryLane[]>(
     () =>
       addons.map((addon, i) => ({
+        key: addon.name,
         addonName: addon.name,
         title: addon.title || addon.name,
         color: LANE_COLORS[i % LANE_COLORS.length],
-        currentVersion: addon.version,
+        current: addon.version,
         changes: histories[i]?.data?.changes ?? [],
         truncated: !!histories[i]?.data?.truncated,
       })),

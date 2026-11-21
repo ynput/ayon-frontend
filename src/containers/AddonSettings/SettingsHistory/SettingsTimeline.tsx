@@ -1,5 +1,6 @@
 import {
   FC,
+  ReactNode,
   RefObject,
   useCallback,
   useEffect,
@@ -14,11 +15,8 @@ import { format } from 'date-fns'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import { useLocalStorage } from '@shared/hooks'
 import { useContextMenu } from '@shared/containers/ContextMenu'
-import type { SettingsChange } from '@queries/settingsHistory/getSettingsHistory'
 import { beforeSave, DATE_FORMAT, lastIndexAtOrBefore } from './settingsHistoryHelpers'
-import type { HistoryLane } from './useSettingsHistory'
-import { SettingsChangeSummary } from './SettingsChangeSummary'
-import { SaveAvatar, SettingsChangeList } from './SettingsChangeList'
+import { SaveAvatar } from './SettingsChangeList'
 import { getTimeAxis } from './timeAxis'
 import { HoveredSaves, useHoveredSaves } from './hoveredSaves'
 import * as Styled from './SettingsTimeline.styled'
@@ -47,17 +45,35 @@ const STACK_STEP = 10
 /** time to move the pointer from a mark to its popover */
 const CLOSE_DELAY = 200
 
+/** A change on the timeline: when and by whom */
+export type TimelineChange = { id: string; createdAt: number; user: string | null }
+
+/**
+ * A row of changes. The line under them shows which value each change set (`valueOf`), the
+ * `current` value runs until now. A null value draws no line, an empty one draws it without a label.
+ */
+export type TimelineLane<C extends TimelineChange = TimelineChange> = {
+  key: string
+  title: string
+  color: string
+  current: string | null
+  /** ascending */
+  changes: C[]
+  /** older changes were not loaded */
+  truncated?: boolean
+}
+
 type View = { start: number; end: number }
 
 /** Saves drawn as one mark, `left` is the first avatar's left edge, `users` newest first */
-type Mark = { key: string; left: number; width: number; changes: SettingsChange[]; users: string[] }
+type Mark = { key: string; left: number; width: number; changes: TimelineChange[]; users: string[] }
 
-type Segment = { version: string; from: number; to: number }
+type Segment = { version: string | null; from: number; to: number }
 
 /** `pinned`: opened with a click, stays open until a click elsewhere */
-type Popover = { lane: HistoryLane; mark: Mark; left: number; top: number; pinned: boolean } | null
+type Popover<L> = { lane: L; mark: Mark; left: number; top: number; pinned: boolean } | null
 
-const getUsers = (changes: SettingsChange[]) => [
+const getUsers = (changes: TimelineChange[]) => [
   ...new Set([...changes].reverse().map((change) => change.user ?? '')),
 ]
 
@@ -69,7 +85,7 @@ const getMarkWidth = (users: number, count: number) =>
 
 /** Saves whose avatars would overlap are drawn as one mark */
 const buildMarks = (
-  changes: SettingsChange[],
+  changes: TimelineChange[],
   start: number,
   end: number,
   msPerPx: number,
@@ -96,54 +112,92 @@ const buildMarks = (
   return marks
 }
 
-/** Spans of time each version was the one being saved, the shown version runs until now */
-const buildSegments = (lane: HistoryLane, now: number): Segment[] => {
+/** Spans of time each value was the one set, the current value runs until now */
+const buildSegments = <C extends TimelineChange>(
+  lane: TimelineLane<C>,
+  valueOf: (change: C) => string | null,
+  now: number,
+): Segment[] => {
   const segments: Segment[] = []
   for (const change of lane.changes) {
     const last = segments[segments.length - 1]
     if (last) last.to = change.createdAt
-    if (last?.version === change.addonVersion) continue
-    segments.push({ version: change.addonVersion, from: change.createdAt, to: change.createdAt })
+    const version = valueOf(change)
+    if (last?.version === version) continue
+    segments.push({ version, from: change.createdAt, to: change.createdAt })
   }
   const last = segments[segments.length - 1]
-  if (last?.version === lane.currentVersion) last.to = now
+  if (last?.version === lane.current) last.to = now
   return segments
 }
 
-const fitView = (lanes: HistoryLane[], now: number): View => {
+const fitView = (lanes: TimelineLane[], now: number): View => {
   const first = Math.min(...lanes.map((lane) => lane.changes[0]?.createdAt ?? now))
   const span = Math.max(now - first, 7 * DAY)
   return { start: now - span * 1.04, end: now + span * 0.04 }
 }
 
-type Props = {
-  lanes: HistoryLane[]
-  schemas: Record<string, any>
-  compareAt: number | null
-  onCompareAtChange: (time: number | null) => void
+type LaneChange<L extends TimelineLane> = L['changes'][number]
+
+type Props<L extends TimelineLane> = {
+  lanes: L[]
+  /** the value a change set its lane to, see `TimelineLane` */
+  valueOf: (change: LaneChange<L>) => string | null
+  /** popover of one change */
+  renderChange: (lane: L, change: LaneChange<L>) => ReactNode
+  /** popover of the changes of a mark, to pick one from */
+  renderChanges: (
+    lane: L,
+    changes: LaneChange<L>[],
+    pick: (change: LaneChange<L>) => void,
+  ) => ReactNode
+  /** a change was clicked, or picked from a mark */
+  onPick?: (lane: L, change: LaneChange<L>) => void
+  /** epoch ms compared with, without `onCompareAtChange` the timeline does not compare */
+  compareAt?: number | null
+  onCompareAtChange?: (time: number | null) => void
   isLoading?: boolean
-  hoveredSaves: HoveredSaves
+  hoveredSaves?: HoveredSaves
+  /** local storage key of the collapsed state */
+  storageKey: string
+  /** what the timeline shows and how to use it, for screen readers */
+  label: string
 }
 
-export const SettingsTimeline: FC<Props> = ({
+const noHoveredSaves: HoveredSaves = {
+  get: () => null,
+  set: () => {},
+  subscribe: () => () => {},
+}
+
+export const SettingsTimeline = <L extends TimelineLane>({
   lanes,
-  schemas,
-  compareAt,
+  valueOf,
+  renderChange,
+  renderChanges,
+  onPick,
+  compareAt: compareAtProp,
   onCompareAtChange,
   isLoading,
-  hoveredSaves,
-}) => {
-  const [collapsed, setCollapsed] = useLocalStorage('settings-history-collapsed', false)
+  hoveredSaves = noHoveredSaves,
+  storageKey,
+  label,
+}: Props<L>) => {
+  const compareAt = compareAtProp ?? null
+  const [collapsed, setCollapsed] = useLocalStorage(storageKey, false)
   const bodyRef = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
   const [now, setNow] = useState(Date.now())
   const [view, setView] = useState<View | null>(null)
-  const [popover, setPopover] = useState<Popover>(null)
+  const [popover, setPopover] = useState<Popover<L>>(null)
   const [isDragging, setIsDragging] = useState(false)
 
   const plotWidth = Math.max(1, width - GUTTER)
   const allChanges = useMemo(
-    () => lanes.flatMap((lane) => lane.changes).sort((a, b) => a.createdAt - b.createdAt),
+    () =>
+      lanes
+        .flatMap((lane) => lane.changes as TimelineChange[])
+        .sort((a, b) => a.createdAt - b.createdAt),
     [lanes],
   )
   // --- measure ---
@@ -162,7 +216,7 @@ export const SettingsTimeline: FC<Props> = ({
   }, [])
 
   // --- fit the history of the shown addons once it is loaded ---
-  const fitKey = lanes.map((lane) => `${lane.addonName}@${lane.currentVersion}`).join('|')
+  const fitKey = lanes.map((lane) => `${lane.key}@${lane.current}`).join('|')
   const fittedFor = useRef<string | null>(null)
   useEffect(() => {
     if (isLoading || fittedFor.current === fitKey) return
@@ -271,7 +325,7 @@ export const SettingsTimeline: FC<Props> = ({
     const time = current.start + x * msPerPx
     // nothing to compare with after now
     if (d && x >= 0 && time <= Date.now() && !(e.target as HTMLElement).closest('[data-mark]')) {
-      onCompareAtChange(time)
+      onCompareAtChange?.(time)
     }
   }
 
@@ -287,7 +341,7 @@ export const SettingsTimeline: FC<Props> = ({
   }
   useEffect(() => cancelClose, [])
 
-  const openPopover = (lane: HistoryLane, mark: Mark, e: React.MouseEvent, pinned = false) => {
+  const openPopover = (lane: L, mark: Mark, e: React.MouseEvent, pinned = false) => {
     if (drag.current?.moved) return
     cancelClose()
     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
@@ -326,21 +380,21 @@ export const SettingsTimeline: FC<Props> = ({
   // the marks move when zooming or panning
   useEffect(() => setPopover(null), [view])
 
-  const handleMarkClick = (lane: HistoryLane, mark: Mark, e: React.MouseEvent) => {
+  const handleMarkClick = (lane: L, mark: Mark, e: React.MouseEvent) => {
     if (suppressClick.current) return
     bodyRef.current?.focus({ preventScroll: true })
     if (mark.changes.length === 1) {
       setPopover((open) => (open?.pinned ? null : open))
-      onCompareAtChange(beforeSave(mark.changes[0]))
+      onPick?.(lane, mark.changes[0] as LaneChange<L>)
       return
     }
     if (popover?.pinned && popover.mark.key === mark.key) setPopover(null)
     else openPopover(lane, mark, e, true)
   }
 
-  const pickChange = (change: SettingsChange) => {
+  const pickChange = (lane: L, change: LaneChange<L>) => {
     setPopover(null)
-    onCompareAtChange(beforeSave(change))
+    onPick?.(lane, change)
     bodyRef.current?.focus({ preventScroll: true })
   }
 
@@ -371,6 +425,7 @@ export const SettingsTimeline: FC<Props> = ({
           panBy((e.key === 'ArrowLeft' ? -1 : 1) * plotWidth * 0.25)
           return
         }
+        if (!onCompareAtChange) return
         // step to the save before or after the compared time, the latest one when not comparing
         let index: number
         if (compareAt === null) {
@@ -410,7 +465,7 @@ export const SettingsTimeline: FC<Props> = ({
   // Escape stops comparing from anywhere on the page, unless something else uses it
   const { isContextOpen } = useContextMenu()
   useEffect(() => {
-    if (compareAt === null || isContextOpen) return
+    if (compareAt === null || !onCompareAtChange || isContextOpen) return
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key !== 'Escape' || e.defaultPrevented) return
       const target = e.target as HTMLElement | null
@@ -433,7 +488,10 @@ export const SettingsTimeline: FC<Props> = ({
     () => lanes.map((lane) => buildMarks(lane.changes, current.start, current.end, msPerPx)),
     [lanes, current.start, current.end, msPerPx],
   )
-  const segments = useMemo(() => lanes.map((lane) => buildSegments(lane, now)), [lanes, now])
+  const segments = useMemo(
+    () => lanes.map((lane) => buildSegments(lane, valueOf, now)),
+    [lanes, valueOf, now],
+  )
 
   const compareX = compareAt !== null ? timeToX(compareAt) : null
   const nowX = timeToX(now)
@@ -448,7 +506,7 @@ export const SettingsTimeline: FC<Props> = ({
         variant="text"
         icon={collapsed ? 'chevron_right' : 'expand_more'}
         onClick={() => setCollapsed(!collapsed)}
-        aria-label={collapsed ? 'Show settings history' : 'Hide settings history'}
+        aria-label={collapsed ? 'Show history' : 'Hide history'}
         style={{ padding: 2 }}
       />
       <span className="title">
@@ -487,7 +545,7 @@ export const SettingsTimeline: FC<Props> = ({
           tabIndex={0}
           role="application"
           aria-roledescription="timeline"
-          aria-label="Settings history. Left and right arrows compare with the previous or next save, plus and minus zoom, Escape stops comparing."
+          aria-label={label}
           onKeyDown={handleKeyDown}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -586,10 +644,10 @@ export const SettingsTimeline: FC<Props> = ({
 
           {lanes.map((lane, laneIndex) => (
             <Styled.Lane
-              key={lane.addonName}
+              key={lane.key}
               style={{ '--lane-color': lane.color } as React.CSSProperties}
             >
-              <Styled.GutterCell title={`${lane.title} ${lane.currentVersion}`}>
+              <Styled.GutterCell title={[lane.title, lane.current].filter(Boolean).join(' ')}>
                 <span className="swatch" style={{ backgroundColor: lane.color }} />
                 <span className="label">{lane.title}</span>
                 <span className="count">{lane.changes.length}</span>
@@ -600,14 +658,14 @@ export const SettingsTimeline: FC<Props> = ({
                   timeToX(lane.changes[0].createdAt) > 0 && (
                     <Styled.Unloaded
                       style={{ width: Math.min(timeToX(lane.changes[0].createdAt), plotWidth) }}
-                      title="Older saves were not loaded"
+                      title="Older changes were not loaded"
                     />
                   )}
                 {segments[laneIndex].map((segment) => {
                   const left = timeToX(segment.from)
                   const right = timeToX(segment.to)
-                  if (right < 0 || left > plotWidth) return null
-                  const isCurrent = segment.version === lane.currentVersion
+                  if (segment.version === null || right < 0 || left > plotWidth) return null
+                  const isCurrent = segment.version === lane.current
                   const labelLeft = Math.max(left, 0)
                   return (
                     <span key={`${segment.version}-${segment.from}`}>
@@ -615,7 +673,7 @@ export const SettingsTimeline: FC<Props> = ({
                         className={clsx({ current: isCurrent })}
                         style={{ left, width: Math.max(1, right - left) }}
                       />
-                      {right - labelLeft > 56 && (
+                      {!!segment.version && right - labelLeft > 56 && (
                         <Styled.VersionLabel
                           className={clsx({ current: isCurrent })}
                           style={{ left: labelLeft }}
@@ -679,20 +737,11 @@ export const SettingsTimeline: FC<Props> = ({
                 onMouseEnter={cancelClose}
                 onMouseLeave={scheduleClose}
               >
-                {popover.mark.changes.length > 1 ? (
-                  <SettingsChangeList
-                    lane={popover.lane}
-                    changes={popover.mark.changes}
-                    compareAt={compareAt}
-                    onPick={pickChange}
-                  />
-                ) : (
-                  <ChangeSummary
-                    lane={popover.lane}
-                    change={popover.mark.changes[0]}
-                    schema={schemas[popover.lane.addonName]}
-                  />
-                )}
+                {popover.mark.changes.length > 1
+                  ? renderChanges(popover.lane, popover.mark.changes as LaneChange<L>[], (change) =>
+                      pickChange(popover.lane, change),
+                    )
+                  : renderChange(popover.lane, popover.mark.changes[0] as LaneChange<L>)}
               </Styled.Tooltip>,
               document.body,
             )}
@@ -733,21 +782,5 @@ const HoverGuide: FC<{ bodyRef: RefObject<HTMLDivElement>; start: number; msPerP
       <Styled.HoverLine style={{ left: x, top: AXIS_HEIGHT }} />
       <Styled.AxisFlag style={{ left: x }}>{format(time, DATE_FORMAT)}</Styled.AxisFlag>
     </Styled.Overlay>
-  )
-}
-
-const ChangeSummary: FC<{ lane: HistoryLane; change: SettingsChange; schema?: any }> = ({
-  lane,
-  change,
-  schema,
-}) => {
-  const index = lane.changes.indexOf(change)
-  return (
-    <SettingsChangeSummary
-      change={change}
-      previous={lane.changes[index - 1]}
-      lane={lane}
-      schema={schema}
-    />
   )
 }
