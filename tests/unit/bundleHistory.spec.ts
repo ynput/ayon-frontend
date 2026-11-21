@@ -46,6 +46,19 @@ test('sources are production, staging and each dev bundle', () => {
   expect(getSources([]).length).toBe(2)
 })
 
+test('sources take the colours of the bundle badges, more dev bundles are told apart', () => {
+  const colors = getSources([
+    { name: 'D', isDev: true },
+    { name: 'E', isDev: true },
+  ]).map((source) => source.color)
+  expect(colors.slice(0, 3)).toEqual([
+    'var(--color-hl-production)',
+    'var(--color-hl-staging)',
+    'var(--color-hl-developer)',
+  ])
+  expect(new Set(colors).size).toBe(4)
+})
+
 test('production is the sequence of bundles set as production, from one to the next', () => {
   const events = [
     event('A', 'bundle.created', [], { isProduction: true }),

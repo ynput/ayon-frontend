@@ -42,16 +42,23 @@ export type ListedBundle = {
 
 const FLAGS = { production: 'isProduction', staging: 'isStaging' } as const
 
-// muted hues of the production, staging and dev badges
-const [, , , STAGING, PRODUCTION, DEV, , OTHER] = LANE_COLORS
+const PRODUCTION = 'var(--color-hl-production)'
+const STAGING = 'var(--color-hl-staging)'
+// the first dev bundle in the badge colour, the others told apart
+const DEV = ['var(--color-hl-developer)', ...LANE_COLORS.slice(0, 3)]
+const OTHER = LANE_COLORS[LANE_COLORS.length - 1]
 
-/** Production, staging and each dev bundle */
+/** Production, staging and each dev bundle, in the colours of their badges */
 export const getSources = (bundles: ListedBundle[]): BundleSource[] => [
   { key: 'production', title: 'Production', color: PRODUCTION, variant: 'production' },
   { key: 'staging', title: 'Staging', color: STAGING, variant: 'staging' },
   ...bundles
     .filter((bundle) => bundle.isDev)
-    .map((bundle) => ({ key: `dev:${bundle.name}`, title: bundle.name, color: DEV })),
+    .map((bundle, i) => ({
+      key: `dev:${bundle.name}`,
+      title: bundle.name,
+      color: DEV[i % DEV.length],
+    })),
 ]
 
 const toChange = (event: BundleEvent, source: BundleSource): BundleChange => ({
