@@ -55,6 +55,7 @@ const ViewerPlayer = ({
           autoplay={autoplay}
           onPlay={onPlay}
           reviewableId={reviewable.activityId}
+          fileName={reviewable.filename}
           // label={reviewable.label}
         />
       )}
