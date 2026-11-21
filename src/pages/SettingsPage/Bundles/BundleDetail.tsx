@@ -37,6 +37,8 @@ type BundleDetailProps = {
   onDuplicate: (name: string) => void
   installers: Installer[]
   toggleBundleStatus: (state: 'staging' | 'production', name: string) => void
+  /** below the toolbar */
+  history?: React.ReactNode
 }
 
 const BundleDetail: React.FC<BundleDetailProps> = ({
@@ -44,6 +46,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
   onDuplicate,
   installers,
   toggleBundleStatus,
+  history,
 }) => {
   const [selectedBundle, setSelectedBundle] = useState<string | null>(null)
 
@@ -174,6 +177,7 @@ const BundleDetail: React.FC<BundleDetailProps> = ({
           data-shortcut={getPlatformShortcutKey('D', [KeyMode.Shift])}
         />
       </Toolbar>
+      {history}
       {selectedBundles.length > 1 && selectedBundles.length < 5 ? (
         <BundleCompare bundles={selectedBundles as any} addons={filteredAddons as any} />
       ) : (

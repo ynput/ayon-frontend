@@ -2,11 +2,13 @@ import { expect, test } from '@playwright/test'
 import type { BundleEvent } from '../../src/services/bundleHistory/getBundleHistory'
 import {
   describeAddonChange,
+  describeChange,
   diffAddons,
   getAddonChanges,
   getAddonEventIds,
   getBundleEvents,
-  getBundleLanes,
+  getBundleLane,
+  getSources,
   getVariantChanges,
 } from '../../src/pages/SettingsPage/Bundles/BundleHistory/bundleHistoryHelpers'
 
@@ -33,7 +35,18 @@ const setProduction = (name: string) =>
   event(name, 'bundle.updated', ['isProduction'], { isProduction: true })
 const unsetProduction = (name: string) => event(name, 'bundle.updated', ['isProduction'])
 
-test('the production lane is the sequence of bundles set as production', () => {
+const [PRODUCTION, STAGING, DEV] = getSources([{ name: 'D', isDev: true }, { name: 'A' }])
+const historyOf = (events: BundleEvent[]) => ({
+  events,
+  truncated: { production: false, staging: false, addons: false, created: false },
+})
+
+test('sources are production, staging and each dev bundle', () => {
+  expect([PRODUCTION.key, STAGING.key, DEV.key]).toEqual(['production', 'staging', 'dev:D'])
+  expect(getSources([]).length).toBe(2)
+})
+
+test('production is the sequence of bundles set as production, from one to the next', () => {
   const events = [
     event('A', 'bundle.created', [], { isProduction: true }),
     setProduction('B'),
@@ -46,70 +59,80 @@ test('the production lane is the sequence of bundles set as production', () => {
     unsetProduction('B'),
     event('C', 'bundle.updated', ['isStaging'], { isStaging: true }),
   ]
+  const changes = getVariantChanges(events, PRODUCTION)
   expect(
-    getVariantChanges(events, 'production').map(({ bundleName, value, created }) => ({
-      bundleName,
-      value,
-      created,
-    })),
+    changes.map(({ bundleName, from, to, created }) => ({ bundleName, from, to, created })),
   ).toEqual([
-    { bundleName: 'A', value: 'A', created: true },
-    { bundleName: 'B', value: 'B', created: false },
-    { bundleName: 'B', value: null, created: false },
+    { bundleName: 'A', from: undefined, to: 'A', created: true },
+    { bundleName: 'B', from: 'A', to: 'B', created: false },
+    { bundleName: 'B', from: 'B', to: null, created: false },
   ])
-  expect(getVariantChanges(events, 'staging').map((change) => change.value)).toEqual(['C'])
+  expect(changes.map(describeChange)).toEqual(['A', 'A → B', 'B → none'])
+  expect(getVariantChanges(events, STAGING).map((change) => change.to)).toEqual(['C'])
 })
 
 test('an unset before anything was set still counts, the holder is unknown', () => {
-  expect(getVariantChanges([unsetProduction('A')], 'production')[0].value).toBe(null)
+  expect(getVariantChanges([unsetProduction('A')], PRODUCTION)[0].to).toBe(null)
 })
 
-test('a bundle lane compares the events since the bundle was last created', () => {
+test('a dev bundle compares the events since it was last created', () => {
   const events = [
-    event('A', 'bundle.created', [], { isDev: true }),
-    event('A', 'bundle.updated', ['addons', 'addonDevelopment']),
-    event('A', 'bundle.created', [], { isDev: true }),
-    event('A', 'bundle.updated', ['addonDevelopment']),
+    event('D', 'bundle.created', [], { isDev: true }),
+    event('D', 'bundle.updated', ['addons', 'addonDevelopment']),
+    event('D', 'bundle.created', [], { isDev: true }),
+    event('D', 'bundle.updated', ['addonDevelopment']),
     event('B', 'bundle.updated', ['addons']),
-    event('A', 'bundle.updated', ['addons']),
+    event('D', 'bundle.updated', ['addons']),
   ]
-  const { events: bundleEvents, truncated } = getBundleEvents(events, 'A')
+  const { events: bundleEvents, truncated } = getBundleEvents(events, 'D')
   expect(bundleEvents).toEqual([events[2], events[5]])
   expect(truncated).toBe(false)
-  expect(getBundleEvents(events.slice(4), 'A').truncated).toBe(true)
-  const history = {
-    events,
-    truncated: { production: false, staging: false, addons: false, created: false },
-  }
-  expect(getAddonEventIds(history, ['A', 'B'])).toEqual([events[2].id, events[5].id, events[4].id])
+  expect(getBundleEvents(events.slice(4), 'D').truncated).toBe(true)
+  // only dev bundles load the addons of their events
+  expect(getAddonEventIds(historyOf(events), [PRODUCTION, DEV])).toEqual([
+    events[2].id,
+    events[5].id,
+  ])
 })
 
 test('saves that set the same addon versions again are left out', () => {
   const events = [
-    event('A', 'bundle.created', [], { isDev: true }),
+    event('D', 'bundle.created', [], { isDev: true }),
     // e.g. a dev path change, the form sends all addons along
-    event('A', 'bundle.updated', ['addons', 'addonDevelopment'], { isDev: true }),
-    event('A', 'bundle.updated', ['addons'], { isDev: true }),
-    event('A', 'bundle.updated', ['addons'], { isDev: true }),
-    event('A', 'bundle.updated', ['addons'], { isDev: true }),
+    event('D', 'bundle.updated', ['addons', 'addonDevelopment'], { isDev: true }),
+    event('D', 'bundle.updated', ['addons'], { isDev: true }),
+    event('D', 'bundle.updated', ['addons'], { isDev: true }),
+    event('D', 'bundle.updated', ['addons'], { isDev: true }),
   ]
   const [created, devPaths, core, gone, after] = events.map((e) => e.id)
-  const changes = getAddonChanges(events, {
-    [created]: { core: '1.0.0' },
-    [devPaths]: { core: '1.0.0' },
-    [core]: { core: '1.1.0' },
-    // the event is gone, what it and the next one changed is not known
-    [gone]: null,
-    [after]: { core: '1.2.0' },
-  })
+  const changes = getAddonChanges(
+    events,
+    {
+      [created]: { core: '1.0.0' },
+      [devPaths]: { core: '1.0.0' },
+      [core]: { core: '1.1.0' },
+      // the event is gone, what it and the next one changed is not known
+      [gone]: null,
+      [after]: { core: '1.2.0' },
+    },
+    DEV,
+  )
   expect(changes.map((change) => [change.id, change.addons])).toEqual([
     [created, null],
     [core, [{ name: 'core', before: '1.0.0', after: '1.1.0' }]],
     [gone, null],
     [after, null],
   ])
+  expect(changes.map(describeChange)).toEqual([
+    'created',
+    'core 1.0.0 → 1.1.0',
+    'addons changed',
+    'addons changed',
+  ])
   // events whose addons are not loaded yet wait, with those after them
-  expect(getAddonChanges(events, { [created]: {}, [core]: {} }).map((c) => c.id)).toEqual([created])
+  expect(getAddonChanges(events, { [created]: {}, [core]: {} }, DEV).map((c) => c.id)).toEqual([
+    created,
+  ])
 })
 
 test('addon changes list the versions that differ, added and removed addons too', () => {
@@ -129,19 +152,21 @@ test('addon changes list the versions that differ, added and removed addons too'
   ])
 })
 
-test('lanes: production and staging when they have history, then the selected bundles', () => {
-  const events = [setProduction('A'), event('D', 'bundle.created', [], { isDev: true })]
-  const history = {
-    events,
-    truncated: { production: false, staging: false, addons: false, created: false },
-  }
-  const bundles = [{ name: 'A', isProduction: true }, { name: 'D', isDev: true }, { name: 'S' }]
-  const lanes = getBundleLanes(history, bundles, ['D', 'gone'], {})
-  expect(lanes.map((lane) => [lane.key, lane.title, lane.current])).toEqual([
-    ['production', 'Production', 'A'],
-    ['bundle-0', 'D', ''],
+test('one lane holds the changes of the shown sources in time, each in its colour', () => {
+  const events = [
+    setProduction('A'),
+    event('D', 'bundle.created', [], { isDev: true }),
+    event('C', 'bundle.updated', ['isStaging'], { isStaging: true }),
+  ]
+  const lane = getBundleLane(historyOf(events), [PRODUCTION, STAGING, DEV], {
+    [events[1].id]: {},
+  })
+  expect(lane.changes.map((change) => [change.id, change.color])).toEqual([
+    [events[0].id, PRODUCTION.color],
+    [events[1].id, DEV.color],
+    [events[2].id, STAGING.color],
   ])
-  // staging shows once a bundle is staging, even without history
-  const staging = getBundleLanes(history, [...bundles, { name: 'T', isStaging: true }], [], {})
-  expect(staging.map((lane) => lane.key)).toEqual(['production', 'staging'])
+  expect(getBundleLane(historyOf(events), [STAGING], {}).changes.map((c) => c.id)).toEqual([
+    events[2].id,
+  ])
 })

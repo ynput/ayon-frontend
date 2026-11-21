@@ -404,6 +404,8 @@ const Bundles = () => {
     },
   ]
 
+  const history = <BundleHistory bundles={bundleList} onSelect={handleBundleSelect} />
+
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
 
@@ -428,17 +430,8 @@ const Bundles = () => {
         onFinish={closeCopySettings}
         onSetTag={copySettingsBundle.pendingChange ? handleConfirmTagChange : undefined}
       />
-      <main style={{ flexDirection: 'column' }}>
-        <BundleHistory
-          bundles={bundleList}
-          selected={selectedBundles}
-          onSelect={handleBundleSelect}
-        />
-        <Splitter
-          style={{ width: '100%', flex: 1, minHeight: 0 }}
-          stateStorage="local"
-          stateKey="bundles-splitter"
-        >
+      <main>
+        <Splitter style={{ width: '100%' }} stateStorage="local" stateKey="bundles-splitter">
           <SplitterPanel style={{ minWidth: 200, width: 400, maxWidth: 800, zIndex: 10 }} size={30}>
             <Section style={{ height: '100%' }}>
               <Styled.MainToolbar>
@@ -521,6 +514,7 @@ const Bundles = () => {
                     installers={installerVersions}
                     developerMode={developerMode}
                     isDeveloper={isDeveloper}
+                    history={history}
                   />
                 ) : (
                   !!bundlesData.length &&
@@ -530,6 +524,7 @@ const Bundles = () => {
                       isLoading={isLoadingInstallers || isFetching}
                       installers={installerVersions}
                       isDev
+                      history={history}
                     />
                   ) : (
                     <BundleDetail
@@ -539,6 +534,7 @@ const Bundles = () => {
                       installers={installerVersions}
                       toggleBundleStatus={toggleBundleStatus}
                       developerMode={isDeveloper}
+                      history={history}
                     />
                   ))
                 )}

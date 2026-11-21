@@ -11,20 +11,26 @@ import { LANE_COLORS } from '@containers/AddonSettings/SettingsHistory/settingsH
 
 export type BundleVariant = 'production' | 'staging'
 
+/** What the history can show: which bundle was production or staging, or a dev bundle's addons */
+export type BundleSource = { key: string; title: string; color: string; variant?: BundleVariant }
+
+export type AddonChange = { name: string; before: string | null; after: string | null }
+
 /**
- * A change on the bundles timeline. `value`: the bundle holding the variant after the change, null
- * when it was unset. In the lane of a bundle it is empty, the line only shows the bundle exists.
+ * A change on the bundles timeline. Production, staging: the bundle that held it before (`from`,
+ * undefined when not known) and after (`to`), null when none. A dev bundle: the addon versions it
+ * changed, null when not known.
  */
 export type BundleChange = TimelineChange & {
   bundleName: string
-  value: string | null
+  source: BundleSource
   created: boolean
-  /** the addon versions it changed, null when not known: the event before it was not loaded */
+  from?: string | null
+  to?: string | null
   addons?: AddonChange[] | null
 }
 
-/** `variant`: the lane of which bundle was production or staging, otherwise the lane of a bundle */
-export type BundleLane = TimelineLane<BundleChange> & { variant?: BundleVariant }
+export type BundleLane = TimelineLane<BundleChange>
 
 /** The bundles in the list, as far as the history needs them */
 export type ListedBundle = {
@@ -34,16 +40,27 @@ export type ListedBundle = {
   isDev?: boolean
 }
 
-export type AddonChange = { name: string; before: string | null; after: string | null }
-
 const FLAGS = { production: 'isProduction', staging: 'isStaging' } as const
 
-const toChange = (event: BundleEvent, value: string | null): BundleChange => ({
+// muted hues of the production, staging and dev badges
+const [, , , STAGING, PRODUCTION, DEV, , OTHER] = LANE_COLORS
+
+/** Production, staging and each dev bundle */
+export const getSources = (bundles: ListedBundle[]): BundleSource[] => [
+  { key: 'production', title: 'Production', color: PRODUCTION, variant: 'production' },
+  { key: 'staging', title: 'Staging', color: STAGING, variant: 'staging' },
+  ...bundles
+    .filter((bundle) => bundle.isDev)
+    .map((bundle) => ({ key: `dev:${bundle.name}`, title: bundle.name, color: DEV })),
+]
+
+const toChange = (event: BundleEvent, source: BundleSource): BundleChange => ({
   id: event.id,
   createdAt: event.createdAt,
   user: event.user,
+  color: source.color,
   bundleName: event.name,
-  value,
+  source,
   created: event.topic === 'bundle.created',
 })
 
@@ -52,18 +69,18 @@ const toChange = (event: BundleEvent, value: string | null): BundleChange => ({
  * one in the events, so the lane is the sequence of bundles set. Setting the bundle that holds it
  * again changes nothing, an unset only counts for the bundle that held it.
  */
-export const getVariantChanges = (events: BundleEvent[], variant: BundleVariant) => {
-  const flag = FLAGS[variant]
+export const getVariantChanges = (events: BundleEvent[], source: BundleSource) => {
+  const flag = FLAGS[source.variant ?? 'production']
   const changes: BundleChange[] = []
   let holder: string | null | undefined
   for (const event of events) {
     const touched =
       event.topic === 'bundle.created' ? event[flag] : event.changedFields.includes(flag)
     if (!touched) continue
-    const value = event[flag] ? event.name : null
-    if (holder !== undefined && (value === holder || (!value && holder !== event.name))) continue
-    holder = value
-    changes.push(toChange(event, holder))
+    const to = event[flag] ? event.name : null
+    if (holder !== undefined && (to === holder || (!to && holder !== event.name))) continue
+    changes.push({ ...toChange(event, source), from: holder, to })
+    holder = to
   }
   return changes
 }
@@ -87,34 +104,13 @@ export const getBundleEvents = (events: BundleEvent[], name: string) => {
   return { events: bundleEvents, truncated }
 }
 
-/** Events whose addons the lanes of the selected bundles compare */
-export const getAddonEventIds = (history: BundleHistory | undefined, selected: string[]) =>
-  selected.flatMap((name) =>
-    getBundleEvents(history?.events ?? [], name).events.map((event) => event.id),
-  )
-
-/**
- * The creation and the addon version changes of a bundle, from its events and the addons after each
- * (by event id, null when the event is gone). Saves that set the same versions again, like those
- * of dev paths, are left out. Events whose addons are not loaded yet wait, with those after them.
- */
-export const getAddonChanges = (
-  events: BundleEvent[],
-  addons: Record<string, BundleAddons | null>,
-): BundleChange[] => {
-  const changes: BundleChange[] = []
-  let before: BundleAddons | null = null
-  for (const event of events) {
-    if (!(event.id in addons)) break
-    const after = addons[event.id]
-    const diff = before && after ? diffAddons(before, after) : null
-    before = after
-    if (event.topic === 'bundle.created' || !diff || diff.length) {
-      changes.push({ ...toChange(event, ''), addons: diff })
-    }
-  }
-  return changes
-}
+/** Events whose addons the shown dev bundles compare */
+export const getAddonEventIds = (history: BundleHistory | undefined, sources: BundleSource[]) =>
+  sources
+    .filter((source) => !source.variant)
+    .flatMap((source) =>
+      getBundleEvents(history?.events ?? [], source.title).events.map((event) => event.id),
+    )
 
 /** Addons whose version differs, by name */
 export const diffAddons = (before: BundleAddons, after: BundleAddons): AddonChange[] =>
@@ -129,49 +125,65 @@ export const describeAddonChange = ({ name, before, after }: AddonChange) => {
   return after ? `${name} added ${after}` : `${name} removed ${before}`
 }
 
-// muted hues of the production, staging and dev badges, other bundles grey
-const [, , , STAGING, PRODUCTION, DEV, , OTHER] = LANE_COLORS
-
-const VARIANTS: { variant: BundleVariant; title: string; color: string }[] = [
-  { variant: 'production', title: 'Production', color: PRODUCTION },
-  { variant: 'staging', title: 'Staging', color: STAGING },
-]
+/**
+ * The creation and the addon version changes of a bundle, from its events and the addons after each
+ * (by event id, null when the event is gone). Saves that set the same versions again, like those
+ * of dev paths, are left out. Events whose addons are not loaded yet wait, with those after them.
+ */
+export const getAddonChanges = (
+  events: BundleEvent[],
+  addons: Record<string, BundleAddons | null>,
+  source: BundleSource,
+): BundleChange[] => {
+  const changes: BundleChange[] = []
+  let before: BundleAddons | null = null
+  for (const event of events) {
+    if (!(event.id in addons)) break
+    const after = addons[event.id]
+    const diff = before && after ? diffAddons(before, after) : null
+    before = after
+    if (event.topic === 'bundle.created' || !diff || diff.length) {
+      changes.push({ ...toChange(event, source), addons: diff })
+    }
+  }
+  return changes
+}
 
 /**
- * Lanes of which bundle was production and staging, when they have any history, and a lane of the
- * addon changes of each selected bundle. Those lanes are keyed by position, selecting another bundle
- * keeps the zoom. `addons`: see `getAddonChanges`.
+ * One lane with the changes of the shown sources, each in its colour. Its key stays the same, so
+ * showing other sources keeps the zoom. `addons`: see `getAddonChanges`.
  */
-export const getBundleLanes = (
+export const getBundleLane = (
   history: BundleHistory | undefined,
-  bundles: ListedBundle[],
-  selected: string[],
+  shown: BundleSource[],
   addons: Record<string, BundleAddons | null>,
-): BundleLane[] => {
+): BundleLane => {
   const events = history?.events ?? []
-  const variantLanes = VARIANTS.map(({ variant, title, color }) => ({
-    key: variant,
-    variant,
-    title,
-    color,
-    current: bundles.find((bundle) => bundle[FLAGS[variant]])?.name ?? null,
-    changes: getVariantChanges(events, variant),
-    truncated: !!history?.truncated[variant],
-  })).filter((lane) => lane.changes.length || lane.current)
-  const bundleLanes = selected.flatMap((name, i) => {
-    const bundle = bundles.find((b) => b.name === name)
-    if (!bundle) return []
-    const { events: bundleEvents, truncated } = getBundleEvents(events, name)
-    return [
-      {
-        key: `bundle-${i}`,
-        title: name,
-        color: bundle.isDev ? DEV : OTHER,
-        current: '',
-        changes: getAddonChanges(bundleEvents, addons),
-        truncated: !!history && truncated,
-      },
-    ]
-  })
-  return [...variantLanes, ...bundleLanes]
+  const changes = shown
+    .flatMap((source) =>
+      source.variant
+        ? getVariantChanges(events, source)
+        : getAddonChanges(getBundleEvents(events, source.title).events, addons, source),
+    )
+    .sort((a, b) => a.createdAt - b.createdAt)
+  return {
+    key: 'bundles',
+    title: 'Bundles',
+    color: OTHER,
+    current: '',
+    changes,
+    truncated: shown.some((source) => source.variant && history?.truncated[source.variant]),
+  }
+}
+
+/** What a change did, in a line: `A → B`, `core 1.2.0 → 1.3.0`, `3 addons` */
+export const describeChange = (change: BundleChange) => {
+  if (change.source.variant) {
+    const to = change.to ?? 'none'
+    return change.from ? `${change.from} → ${to}` : to
+  }
+  if (change.created) return 'created'
+  if (!change.addons) return 'addons changed'
+  if (change.addons.length === 1) return describeAddonChange(change.addons[0])
+  return `${change.addons.length} addons`
 }

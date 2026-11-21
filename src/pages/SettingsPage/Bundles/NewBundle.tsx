@@ -73,6 +73,8 @@ type NewBundleProps = {
   isDev: boolean
   developerMode?: boolean
   isDeveloper?: boolean
+  /** below the toolbar */
+  history?: React.ReactNode
 }
 
 const NewBundle: React.FC<NewBundleProps> = ({
@@ -82,6 +84,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
   isDev,
   developerMode,
   isDeveloper,
+  history,
 }) => {
   // when updating a dev bundle, we need to track changes
   const [formData, setFormData] = useState<LocalBundleFormData | null>(null)
@@ -378,6 +381,7 @@ const NewBundle: React.FC<NewBundleProps> = ({
           saving={isCreating || isUpdating}
         />
       </Toolbar>
+      {history}
       <BundleForm
         isNew
         isDev={isDev}

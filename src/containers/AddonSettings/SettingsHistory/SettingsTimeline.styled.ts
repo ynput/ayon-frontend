@@ -505,6 +505,48 @@ export const Tooltip = styled.div`
     .version.older {
       opacity: 0.7;
     }
+
+    /* described in a line of text, under who made it */
+    &.text-row {
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      padding-left: 36px;
+    }
+  }
+
+  /* a run of changes by one user, who made them shown once */
+  .run-user {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px 2px;
+    ${theme.labelLarge}
+  }
+
+  /* a change in a line: from what, muted, to what. What it changed from gives way first */
+  .change-text {
+    display: flex;
+    gap: 4px;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+
+    > * {
+      flex-shrink: 0;
+    }
+
+    .from {
+      flex-shrink: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    &.from,
+    .from,
+    .arrow,
+    .note {
+      color: var(--md-sys-color-on-surface-variant);
+    }
   }
 
   .meta {
