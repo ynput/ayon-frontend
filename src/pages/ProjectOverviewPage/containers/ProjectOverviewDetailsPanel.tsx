@@ -10,6 +10,8 @@ import {
   useProjectTableContext,
   useSelectedRowsContext,
   useDetailsPanelEntityContext,
+  useTaskColumnsContext,
+  useTaskColumnsSelection,
 } from '@shared/containers/ProjectTreeTable'
 import { useRegisterActiveEntities } from '@shared/util'
 import type { ActiveEntity } from '@shared/util'
@@ -58,6 +60,9 @@ const ProjectOverviewDetailsPanel = ({
   const entityContext = useDetailsPanelEntityContext()
   const selectedEntity = entityContext?.selectedEntity || null
   const clearSelectedEntity = entityContext?.clearSelectedEntity
+  // the cards selected in the task columns, once the panel was opened on one
+  const closeTaskCards = useTaskColumnsContext()?.closeDetails
+  const taskCardIds = useTaskColumnsSelection().detailsTaskIds
 
   // Early return if no project info is available
   if (!projectInfo || !projectName) {
@@ -68,9 +73,11 @@ const ProjectOverviewDetailsPanel = ({
   // Get entity selection data
   const entitySelection = getEntitySelection({
     selectedRows,
+    taskCardIds,
     selectedEntity,
     getEntityById,
     clearRowsSelection,
+    closeTaskCards,
     clearSelectedEntity,
     projectName,
   })
@@ -146,16 +153,20 @@ const RegisterOverviewSelection = ({ projectName }: { projectName: string }) => 
  */
 function getEntitySelection({
   selectedRows,
+  taskCardIds,
   selectedEntity,
   getEntityById,
   clearRowsSelection,
+  closeTaskCards,
   clearSelectedEntity,
   projectName,
 }: {
   selectedRows: string[]
+  taskCardIds: string[]
   selectedEntity: { entityId: string; entityType: 'folder' | 'task' | 'version' } | null
   getEntityById: (id: string, field?: string) => EntityMap | undefined
   clearRowsSelection: () => void
+  closeTaskCards?: () => void
   clearSelectedEntity?: () => void
   projectName: string
 }): EntitySelection | null {
@@ -170,6 +181,15 @@ function getEntitySelection({
       clearRowsSelection,
       projectName,
     })
+  }
+
+  // task cards (task columns) are tasks of folder rows: not rows themselves
+  if (taskCardIds.length && closeTaskCards) {
+    return {
+      entities: taskCardIds.map((id) => ({ id, projectName })),
+      entityType: 'task',
+      handleClose: closeTaskCards,
+    }
   }
 
   if (hasEntitySelection && clearSelectedEntity && selectedEntity) {

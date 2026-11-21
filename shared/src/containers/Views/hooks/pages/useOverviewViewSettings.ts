@@ -38,6 +38,9 @@ type Return = {
   // Slicer type management
   sliceType: string | undefined
   onUpdateSliceType: (sliceType: string) => void
+  // Tall rows for the task columns
+  expandRows: boolean
+  onUpdateExpandRows: (expandRows: boolean) => void
 }
 
 type Props = {
@@ -50,6 +53,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
   const [localFilters, setLocalFilters] = useState<QueryFilter | null>(null)
   const [localHierarchy, setLocalHierarchy] = useState<boolean | null>(null)
   const [localColumns, setLocalColumns] = useState<ColumnsConfig | null>(null)
+  const [localExpandRows, setLocalExpandRows] = useState<boolean | null>(null)
 
   // Get server settings
   const overviewSettings = viewSettings as OverviewSettings
@@ -84,10 +88,16 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify((viewSettings as OverviewSettings)?.columns)])
 
+  useEffect(() => {
+    setLocalExpandRows(null)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [(viewSettings as OverviewSettings)?.expandRows])
+
   // Use local state if available, otherwise use server state
   const filters = localFilters !== null ? localFilters : serverFilters
   const showHierarchy = localHierarchy !== null ? localHierarchy : serverHierarchy
   const columns = localColumns || serverColumns
+  const expandRows = localExpandRows ?? overviewSettings?.expandRows ?? false
 
   // Slice type update handler
   const noop = useCallback(() => {}, [])
@@ -95,6 +105,15 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     async (newSliceType: string) => {
       await updateViewSettings({ sliceType: newSliceType }, noop, newSliceType, {
         errorMessage: 'Failed to update slicer type',
+      })
+    },
+    [updateViewSettings],
+  )
+
+  const onUpdateExpandRows = useCallback(
+    async (newExpandRows: boolean) => {
+      await updateViewSettings({ expandRows: newExpandRows }, setLocalExpandRows, newExpandRows, {
+        errorMessage: 'Failed to update row expansion',
       })
     },
     [updateViewSettings],
@@ -222,5 +241,7 @@ export const useOverviewViewSettings = ({ viewSettings, updateViewSettings }: Pr
     onUpdateGroupBy,
     sliceType: serverSliceType,
     onUpdateSliceType,
+    expandRows,
+    onUpdateExpandRows,
   }
 }

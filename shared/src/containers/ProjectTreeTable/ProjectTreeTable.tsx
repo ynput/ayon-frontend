@@ -138,6 +138,7 @@ import { getFilmstripTarget } from '@shared/components/Filmstrip'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import type { AddonColumnMeta } from './addonColumns/addonColumnsHelpers'
 import { AddonColumnDataScope } from './addonColumns/AddonColumns'
+import { isTaskColumnId } from './taskColumns/taskColumnsHelpers'
 import { AddonCellShortcuts } from './addonShortcuts/AddonCellShortcuts'
 import {
   useAddonColumnMenuItems,
@@ -162,6 +163,8 @@ declare module '@tanstack/react-table' {
   interface ColumnMeta<TData extends RowData, TValue> {
     // a column an addon contributes (tableColumn slot)
     addonColumn?: AddonColumnMeta
+    // a task column: its task type, shown in the header
+    taskColumn?: { name: string; icon?: string; color?: string }
   }
   interface TableMeta<TData extends RowData> {
     options?: BuiltInFieldOptions
@@ -831,7 +834,7 @@ export const ProjectTreeTable = ({
   // const showSummaryPowerFeature = !isLicenseLoading && !powerLicense
 
   // Calculate dynamic row height based on user setting from Customize panel
-  const { getRowHeight, defaultRowHeight } = useDynamicRowHeight()
+  const { getRowHeight, defaultRowHeight, rowHeightsKey } = useDynamicRowHeight()
 
   const attribByField = useMemo(() => {
     return resolvedAttribFields.reduce((acc: Record<string, EnumItem[]>, attrib) => {
@@ -999,6 +1002,7 @@ export const ProjectTreeTable = ({
               isGrouping={isGrouping}
               getRowHeight={getRowHeight}
               defaultRowHeight={defaultRowHeight}
+              rowHeightsKey={rowHeightsKey}
               onResetView={onResetView}
               contextMenuItems={propsContextMenuItems}
               onVisibleRowsChange={onVisibleRowsChange}
@@ -1324,7 +1328,14 @@ const TableHeadLabel = ({ header }: { header: Header<TableRow, unknown> }) => {
     return <Icon icon={getColumnIcon(column.id)} data-tooltip={label} />
   }
 
-  return <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
+  const taskColumn = column.columnDef.meta?.taskColumn
+
+  return (
+    <>
+      {taskColumn?.icon && <Icon icon={taskColumn.icon} style={{ color: taskColumn.color }} />}
+      <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
+    </>
+  )
 }
 
 interface TableHeadCellProps {
@@ -1413,6 +1424,9 @@ const TableHeadCell = ({
     return {}
   }
 
+  // a task column's header carries its task type's colour
+  const taskColumnColor = column.columnDef.meta?.taskColumn?.color
+
   // Prevent drag when clicking action buttons
   const preventDragFromActions = {
     onPointerDown: (e: React.PointerEvent) => e.stopPropagation(),
@@ -1431,12 +1445,14 @@ const TableHeadCell = ({
         resizing: column.getIsResizing(),
         dragging: isDragging,
         draggable: isDraggable,
+        'task-column': !!taskColumnColor,
       })}
       key={header.id}
       style={{
         ...getCommonPinningStyles(column),
         width: getColumnWidth(column.id),
         ...getDragStyle(),
+        ...(taskColumnColor && ({ '--task-type-color': taskColumnColor } as CSSProperties)),
       }}
     >
       {header.isPlaceholder ? null : (
@@ -1536,6 +1552,7 @@ interface TableBodyProps {
   isGrouping: boolean
   getRowHeight: (row: TableRow) => number
   defaultRowHeight: number
+  rowHeightsKey: string
   onResetView?: () => void
   contextMenuItems?: ContextMenuItemConstructors
   onVisibleRowsChange?: (entityIds: string[]) => void
@@ -1561,6 +1578,7 @@ const TableBody = ({
   isGrouping,
   getRowHeight,
   defaultRowHeight,
+  rowHeightsKey,
   onResetView,
   contextMenuItems,
   onVisibleRowsChange,
@@ -1609,6 +1627,12 @@ const TableBody = ({
         : undefined,
     overscan: 5,
   })
+
+  // rows measured before all heights changed (e.g. every row made tall) keep their old height
+  // until they are on screen again, which leaves the offsets and the total wrong meanwhile
+  useEffect(() => {
+    rowVirtualizer.measure()
+  }, [rowHeightsKey, rowVirtualizer])
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
@@ -2049,8 +2073,9 @@ const TD = ({
 
         const target = e.target as HTMLElement
 
-        // check we are not clicking on expander
-        if (target.closest('.expander')) return
+        // check we are not clicking on expander (the row's button: a task card's status label
+        // carries the same class)
+        if (target.closest('button.expander')) return
 
         // check we are not clicking in a dropdown, or in anything the cell opened in a portal
         // (e.g. a dropdown's search box), which would lose its focus to the cell
@@ -2077,7 +2102,7 @@ const TD = ({
 
           // name column: select row to open details panel
           // comments column: same — comments are read and written in the details panel feed
-          if (['name', 'comments'].includes(cell.column.id) && !target.closest('.expander')) {
+          if (['name', 'comments'].includes(cell.column.id) && !target.closest('button.expander')) {
             // all ProjectTreeTable pages render their details panel under the 'overview' scope
             if (cell.column.id === 'comments') setDetailsPanelTabForScope('overview', 'feed')
             const rowSelectionCellId = getCellId(cell.row.id, ROW_SELECTION_COLUMN_ID)
@@ -2135,6 +2160,19 @@ const TD = ({
             focusCell(cellId)
           }
           setEditingCellId(cellId)
+          return
+        }
+
+        // a press on a picker of a selected task card keeps the selection: the edit goes to the
+        // tasks of every selected task cell
+        if (
+          isTaskColumnId(cell.column.id) &&
+          target.closest('.tag.editable') &&
+          isCellSelected(cellId) &&
+          !e.shiftKey &&
+          !e.metaKey &&
+          !e.ctrlKey
+        ) {
           return
         }
 
