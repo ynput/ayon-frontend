@@ -81,6 +81,16 @@ strong {
   // text on a badge filled with --color-hl-production, -staging or -developer
   --color-on-hl: light-dark(white, black);
 
+  // settings history: what differs from the compared moment. Yellow, apart from the variants, the override levels and
+  // the unsaved changes. A deeper yellow and darker text in the light theme, to stay visible on white
+  --color-hl-compare: light-dark(#c98a00, #ffd166);
+  --color-hl-compare-text: light-dark(#7a5500, #ffd166);
+  --color-hl-compare-container: light-dark(
+    color-mix(in srgb, #c98a00 22%, transparent),
+    color-mix(in srgb, #ffd166 14%, transparent)
+  );
+  --color-on-hl-compare: #2a2100;
+
   // shared sizes, so lines line up across panels: headers (tables, kanban columns, list groups) and the rows of
   // fixed-height lists such as the slicer. Table rows follow the user's row height instead
   --size-header: 34px;

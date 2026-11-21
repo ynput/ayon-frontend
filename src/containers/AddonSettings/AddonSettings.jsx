@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -55,6 +55,14 @@ import { projectBundleFromName } from '../../components/PerProjectBundleConfig/P
 import { useSessionStorage, readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
+import { SettingsTimeline } from './SettingsHistory/SettingsTimeline'
+import { SettingsComparisonPanel } from './SettingsHistory/SettingsComparisonPanel'
+import { SettingsHistoryFeed } from './SettingsHistory/SettingsHistoryFeed'
+import { createHoveredSaves } from './SettingsHistory/hoveredSaves'
+import { ComparisonHighlight } from './SettingsHistory/ComparisonHighlight.styled'
+import { useSettingsHistory } from './SettingsHistory/useSettingsHistory'
+import { useComparisonActions } from './SettingsHistory/useComparisonActions'
+import { getFieldId } from './SettingsHistory/settingsHistoryHelpers'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -119,6 +127,9 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const [unpinnedKeys, setUnpinnedKeys] = useState({})
   const [currentSelection, setCurrentSelection] = useState(null)
   const [selectedSites, setSelectedSites] = useState([])
+  // epoch ms the settings are compared with, null when not comparing
+  const [compareAt, setCompareAt] = useState(null)
+  const [hoveredSaves] = useState(createHoveredSaves)
 
   const siteId = showSites ? selectedSites[0] || '_' : undefined
 
@@ -188,6 +199,46 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     }
     return storedBundle
   }, [storedBundle, devBundles, isDeveloper])
+
+  // site settings have no variants and no history
+  const showHistory = !showSites
+  const shownAddons = useMemo(
+    () => selectedAddons.filter((addon) => !addon.isBroken).reverse(),
+    [selectedAddons],
+  )
+  const {
+    lanes: historyLanes,
+    comparison,
+    isLoading: historyLoading,
+  } = useSettingsHistory({
+    addons: shownAddons,
+    projectName,
+    compareAt,
+    skip: !showHistory,
+  })
+  const comparedDiffs = useMemo(
+    () =>
+      Object.fromEntries(
+        (comparison?.addons || []).map(({ lane, diffs }) => [lane.addonName, diffs]),
+      ),
+    [comparison],
+  )
+
+  useEffect(() => {
+    setCompareAt(null)
+  }, [selectedBundle.variant, projectName])
+
+  const focusSetting = (addonName, path, fieldId) => {
+    const addon = selectedAddons.find((a) => a.name === addonName)
+    if (!addon) return
+    setCurrentSelection({
+      addonName,
+      addonVersion: addon.version,
+      addonString: `${addonName}@${addon.version}`,
+      path,
+      fieldId,
+    })
+  }
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -377,6 +428,25 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       }
     }
   }
+
+  const comparisonActions = useComparisonActions({
+    comparison,
+    addons: shownAddons,
+    projectName,
+    getKey: (addon) => `${addon.name}|${addon.version}|${addon.variant}|_|${projectKey}`,
+    getStaged: (key) => ({
+      data: localData[key],
+      changed: changedKeys[key] || [],
+      unpinned: unpinnedKeys[key] || [],
+    }),
+    setStaged: (key, { data, changed, unpinned }) => {
+      setLocalData((localData) => ({ ...localData, [key]: data }))
+      setChangedKeys((changedKeys) => ({ ...changedKeys, [key]: changed }))
+      setUnpinnedKeys((unpinnedKeys) => ({ ...unpinnedKeys, [key]: unpinned }))
+    },
+    onUndo: (key, path) => onRevertChange({ [key]: [path] }),
+    onFocus: (addonName, path) => focusSetting(addonName, path, getFieldId(path)),
+  })
 
   //
   // Context menu actions
@@ -644,6 +714,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //
 
   const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
+  const showFeed = showHistory && shownAddons.length > 0
+  const selectedSetting = currentSelection?.path?.length
+    ? { addonName: currentSelection.addonString.split('@')[0], path: currentSelection.path }
+    : null
 
   const addonListHeader = useMemo(() => {
     // site settings do not have variants
@@ -843,6 +917,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               setFilterKeys(filterKeys)
             }}
           />
+          {showHistory && shownAddons.length > 0 && (
+            <SettingsTimeline
+              key={`${selectedBundle.variant}|${projectName}`}
+              lanes={historyLanes}
+              schemas={addonSchemas}
+              compareAt={compareAt}
+              onCompareAtChange={setCompareAt}
+              isLoading={historyLoading}
+              hoveredSaves={hoveredSaves}
+            />
+          )}
           <Section style={{ position: 'relative' }}>
             {showSites && !ayonClient.settings.sites.length ? (
               <EmptyPlaceholder
@@ -872,38 +957,31 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               )
             )}
             <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
-              {selectedAddons
-                .filter((addon) => !addon.isBroken)
-                .reverse()
-                .map((addon) => {
-                  const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
+              {shownAddons.map((addon) => {
+                const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
-                  if (filterKeys.length === 0 && searchText !== '') {
-                    return (
-                      <StyledEmptyPlaceholder
-                        key={addon.name}
-                        icon="filter_list"
-                        message="No settings found for the current search"
-                      />
-                    )
-                  }
-                  return sites.map((siteId) => {
-                    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+                if (filterKeys.length === 0 && searchText !== '') {
+                  return (
+                    <StyledEmptyPlaceholder
+                      key={addon.name}
+                      icon="filter_list"
+                      message="No settings found for the current search"
+                    />
+                  )
+                }
+                return sites.map((siteId) => {
+                  const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
 
-                    return (
-                      <Panel
-                        key={key}
-                        style={{ flexGrow: 0 }}
-                        className="transparent nopad"
-                        size={1}
-                      >
-                        {addon.isProjectBundle && (
-                          <InfoMessage
-                            message="The addon settings for this project are frozen to the project bundle.
+                  return (
+                    <Panel key={key} style={{ flexGrow: 0 }} className="transparent nopad" size={1}>
+                      {addon.isProjectBundle && (
+                        <InfoMessage
+                          message="The addon settings for this project are frozen to the project bundle.
                             Studio settings are also displayed alongside project-scoped settings."
-                            icon={FROZEN_BUNDLE_ICON}
-                          />
-                        )}
+                          icon={FROZEN_BUNDLE_ICON}
+                        />
+                      )}
+                      <ComparisonHighlight $diffs={comparedDiffs[addon.name]}>
                         <AddonSettingsPanel
                           addon={addon}
                           updateAddonSchema={onUpdateAddonSchema}
@@ -943,13 +1021,16 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                             onPinOverride: (path) => onPinOverride(addon, siteId, path),
                             onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
                             onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                            getHistoryMenuItems: (path) =>
+                              comparisonActions.getFieldMenuItems(addon.name, path),
                             includeStudioScope: !!addon.isProjectBundle,
                           }}
                         />
-                      </Panel>
-                    )
-                  })
-                })}
+                      </ComparisonHighlight>
+                    </Panel>
+                  )
+                })
+              })}
 
               <Spacer />
             </StyledScrollPanel>
@@ -959,11 +1040,34 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <SplitterPanel size={20} style={{ minWidth: 240 }}>
         <Section wrap>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable
-            changes={changedKeys}
-            unpins={unpinnedKeys}
-            onRevert={onRevertChange}
-          />
+          {showFeed && (
+            <SettingsHistoryFeed
+              lanes={historyLanes}
+              schemas={addonSchemas}
+              isLoading={historyLoading}
+              hidden={!!comparison || canCommit}
+              selectedSetting={selectedSetting}
+              hoveredSaves={hoveredSaves}
+              onCompare={setCompareAt}
+            />
+          )}
+          {comparison && (
+            <SettingsComparisonPanel
+              comparison={comparison}
+              schemas={addonSchemas}
+              actions={comparisonActions}
+              onFocus={focusSetting}
+              onClose={() => setCompareAt(null)}
+            />
+          )}
+          {/* the history takes the place of the unsaved changes while there are none */}
+          {(canCommit || (!showFeed && !comparison)) && (
+            <SettingsChangesTable
+              changes={changedKeys}
+              unpins={unpinnedKeys}
+              onRevert={onRevertChange}
+            />
+          )}
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>
