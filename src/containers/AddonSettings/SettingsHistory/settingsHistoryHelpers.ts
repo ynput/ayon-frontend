@@ -99,10 +99,10 @@ export const groupSaves = <T extends { change: SettingsChange }>(entries: T[]) =
 }
 
 /** Comparing with a save compares from just before it, so the save is part of what changed */
-export const beforeSave = (change: SettingsChange) => change.createdAt - 1
+export const beforeSave = (change: { createdAt: number }) => change.createdAt - 1
 
 /** Index of the last change at or before `time` in an ascending list, -1 when all are newer */
-export const lastIndexAtOrBefore = (changes: SettingsChange[], time: number) => {
+export const lastIndexAtOrBefore = (changes: { createdAt: number }[], time: number) => {
   let lo = 0
   let hi = changes.length
   while (lo < hi) {

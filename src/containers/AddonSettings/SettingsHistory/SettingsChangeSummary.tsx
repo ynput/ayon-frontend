@@ -20,7 +20,7 @@ type Props = {
 /** Tooltip content of one change: who, when, which version and what changed */
 export const SettingsChangeSummary: FC<Props> = ({ change, previous, lane, schema }) => {
   const { diffs, startsVersion, isError } = useChangeDiffs(change, previous)
-  const isOtherVersion = change.addonVersion !== lane.currentVersion
+  const isOtherVersion = change.addonVersion !== lane.current
 
   return (
     <>

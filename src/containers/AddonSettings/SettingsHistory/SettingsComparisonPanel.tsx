@@ -86,9 +86,9 @@ export const SettingsComparisonPanel: FC<Props> = ({
                 <span className="swatch" style={{ backgroundColor: lane.color }} />
                 {lane.title}
                 <span className="versions">
-                  {addon.thenVersion && addon.thenVersion !== lane.currentVersion
-                    ? `${addon.thenVersion} → ${lane.currentVersion}`
-                    : lane.currentVersion}
+                  {addon.thenVersion && addon.thenVersion !== lane.current
+                    ? `${addon.thenVersion} → ${lane.current}`
+                    : lane.current}
                 </span>
               </Styled.AddonHeader>
               {status && <Styled.Status>{status}</Styled.Status>}
