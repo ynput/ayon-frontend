@@ -404,12 +404,14 @@ const Bundles = () => {
     },
   ]
 
-  const { histories, context: historyContext } = useBundlesHistory(
-    bundleList,
-    selectedBundles,
-    handleBundleSelect,
+  const {
+    histories,
+    context: historyContext,
+    pending: historyPending,
+  } = useBundlesHistory(bundleList, selectedBundles, handleBundleSelect)
+  const history = (
+    <BundlesHistory histories={histories} context={historyContext} pending={historyPending} />
   )
-  const history = <BundlesHistory histories={histories} context={historyContext} />
 
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])

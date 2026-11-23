@@ -9,17 +9,23 @@ type History = Contribution<'bundles.history'>
 
 type ListedBundle = { name: string; isProduction?: boolean; isStaging?: boolean; isDev?: boolean }
 
+// the place of a collapsed history row, kept while it loads so the bundle below doesn't move
+const ROW_HEIGHT = 36
+const placeholder = <div style={{ height: ROW_HEIGHT, flexShrink: 0 }} />
+
 /**
  * The contributions to show, a power feature's only with a Power Pack licence, and their context:
  * `bundles` the list shows, the `selected` bundle names, and `onSelect` to select bundles.
+ * `pending`: there were licensed ones last time, and AYON is still loading the addons' manifests
+ * or checking the licence.
  */
 export const useBundlesHistory = (
   bundles: ListedBundle[],
   selected: string[],
   onSelect: (names: string[]) => void,
 ) => {
-  const { contributions } = useContributions('bundles.history')
-  const { powerLicense, isLoading } = usePowerpack()
+  const { contributions, isLoading: isLoadingManifests } = useContributions('bundles.history')
+  const { powerLicense, isLoading, storedLicense } = usePowerpack()
   const histories = useMemo(
     () => contributions.filter((history) => !history.powerFeature || (powerLicense && !isLoading)),
     [contributions, powerLicense, isLoading],
@@ -48,29 +54,36 @@ export const useBundlesHistory = (
     () => ({ bundles: listed, selected, selectBundle }),
     [listed, selected, selectBundle],
   )
-  return { histories, context }
+  const pending = !histories.length && !!storedLicense && (isLoadingManifests || isLoading)
+  return { histories, context, pending }
 }
 
 type Props = {
   histories: History[]
+  /** keep the place of a row that is still on its way, see `useBundlesHistory` */
+  pending: boolean
   /** memoized: the pieces re-render when it changes */
   context: BundlesHistoryContext
 }
 
 // untagged: the history is a child of the page's section, which sizes its children (`> *`); the
 // slot inspector's wrapper would come between them. Memoized: the page re-renders often
-const HistoryPieces = ({ histories, context }: Props) => (
-  <>
-    {histories.map((history) => (
-      <ContributionView
-        key={history.key}
-        contribution={history}
-        context={context}
-        piece="component"
-        untagged
-      />
-    ))}
-  </>
-)
+const HistoryPieces = ({ histories, context, pending }: Props) =>
+  pending ? (
+    placeholder
+  ) : (
+    <>
+      {histories.map((history) => (
+        <ContributionView
+          key={history.key}
+          contribution={history}
+          context={context}
+          piece="component"
+          loading={placeholder}
+          untagged
+        />
+      ))}
+    </>
+  )
 
 export const BundlesHistory = memo(HistoryPieces)
