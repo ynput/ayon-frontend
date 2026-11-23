@@ -34,7 +34,7 @@ export interface PanelTabsProps<S extends PanelTabSlotName> {
   showLabels?: boolean
   /**
    * with `showLabels`, the most tabs (the panel's and the addons') that keep their labels: with
-   * more, the bar shows icons only. 4 by default
+   * more, the bar shows icons only. 3 by default
    */
   maxLabeledTabs?: number
   isLoading?: boolean
@@ -49,7 +49,7 @@ export const PanelTabs = <S extends PanelTabSlotName>({
   onChange,
   slot,
   showLabels,
-  maxLabeledTabs = 4,
+  maxLabeledTabs = 3,
   isLoading,
   tabTestId,
   className,

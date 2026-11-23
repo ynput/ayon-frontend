@@ -125,7 +125,7 @@ export interface TabbedPanelProps<S extends PanelTabSlotName> {
   showLabels?: boolean
   /**
    * with `showLabels`, the most tabs (the panel's and the addons') that keep their labels: with
-   * more, the bar shows icons only. 4 by default
+   * more, the bar shows icons only. 3 by default
    */
   maxLabeledTabs?: number
   isLoading?: boolean
