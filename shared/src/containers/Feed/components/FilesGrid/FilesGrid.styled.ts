@@ -12,8 +12,6 @@ export const Grid = styled.div`
     gap: var(--base-gap-small);
   }
 
-  max-height: calc(
-    301px + var(--padding-s) + var(--padding-s) + var(--base-gap-large) + var(--base-gap-large)
-  );
+  max-height: 180px;
   overflow: auto;
 `
