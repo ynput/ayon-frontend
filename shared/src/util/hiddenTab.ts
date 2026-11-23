@@ -50,6 +50,9 @@ const DROPPED_TOPIC_TAGS: Record<string, string[]> = {
   activity: ['activity', 'entityActivities'],
   link: ['link'],
   reviewable: ['review', 'viewer'],
+  // The thumbnail socket delivers thumbnails (thumbnailWebsocket.ts). On this socket only catch-all
+  // subscribers get them, so they are dropped first and nothing refetches for them.
+  thumbnail: [],
 }
 
 /** `entity.version.created` -> `entity.version`, `activity.created` -> `activity` */
@@ -62,7 +65,7 @@ export const getTopicRoot = (topic: string) =>
 // Topic roots dropped while hidden, by either socket. WebsocketContext refetches them on visible.
 const droppedTopics = new Set<string>()
 
-/** Marks a topic root's caches for a refetch on visible. False if it has none: keep its messages. */
+/** Marks a topic root's caches for a refetch on visible. False if it isn't listed: keep its messages. */
 export const dropHiddenTopic = (root: string) => {
   if (!Object.prototype.hasOwnProperty.call(DROPPED_TOPIC_TAGS, root)) return false
   droppedTopics.add(root)

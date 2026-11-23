@@ -66,6 +66,20 @@ test('a queue that grows too long drops what a refetch can replace and keeps the
   expect(lostUntagged).toBe(false)
 })
 
+test('thumbnail updates are dropped first, without losing other messages', () => {
+  const queue = createHiddenTabQueue()
+  queue.add('addon.install_from_url', { id: 'install', topic: 'addon.install_from_url' })
+  for (let i = 0; i <= HIDDEN_TAB_MAX_QUEUED; i++) {
+    queue.add('thumbnail.updated', { topic: 'thumbnail.updated', summary: { entityId: `v${i}` } })
+  }
+  queue.add('thumbnail.updated', { topic: 'thumbnail.updated', summary: { entityId: 'late' } })
+
+  const { messages, tags, lostUntagged } = queue.take()
+  expect(messages.map((m) => m.topic)).toEqual(['addon.install_from_url'])
+  expect(tags).toEqual([])
+  expect(lostUntagged).toBe(false)
+})
+
 test('a flood of topics nothing can refetch for is dropped as a whole', () => {
   const queue = createHiddenTabQueue()
   for (let i = 0; i <= HIDDEN_TAB_MAX_QUEUED; i++) {
