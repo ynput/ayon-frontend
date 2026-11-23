@@ -1,5 +1,6 @@
 // Shown on an addon's splash screen when the addon is installed on the server but its page
-// isn't available: it is missing from the bundle in use, or its page did not load.
+// isn't available: it is missing from the bundle in use, or its page did not load. Also when
+// the installed addons couldn't be listed, so AYON can't tell whether the addon is there.
 // Unlike the PowerpackDialog this says nothing about subscriptions: the studio may well have one.
 
 import { FC } from 'react'
@@ -7,12 +8,13 @@ import { Link } from 'react-router-dom'
 import { Button, Icon } from '@ynput/ayon-react-components'
 import * as Styled from '@shared/components/Powerpack/PowerpackDialog.styled'
 import { useGetCurrentUserQuery } from '@shared/api'
+import { getAddonUnavailableText } from './SplashWrapperPageHelpers'
 import type { AddonSplashState } from './SplashWrapperPageHelpers'
 
 interface AddonUnavailableDialogProps {
   label?: string
   addon: { name: string; icon: string }
-  state: Extract<AddonSplashState, { status: 'notInBundle' | 'pageUnavailable' }>
+  state: Extract<AddonSplashState, { status: 'notInBundle' | 'pageUnavailable' | 'lookupFailed' }>
 }
 
 export const AddonUnavailableDialog: FC<AddonUnavailableDialogProps> = ({
@@ -23,26 +25,13 @@ export const AddonUnavailableDialog: FC<AddonUnavailableDialogProps> = ({
   const { data: currentUser } = useGetCurrentUserQuery()
   const isAdmin = !!currentUser?.data?.isAdmin
   const title = label || addon.name
-  const bundle = `${state.bundleVariant} bundle`
 
-  const heading =
-    state.status === 'notInBundle'
-      ? `The ${addon.name} addon is not active in the ${bundle}`
-      : `The ${addon.name} addon did not load`
-
-  const explanation =
-    state.status === 'notInBundle'
-      ? `The ${addon.name} addon is installed on this server, but the ${bundle} does not include it, so ${title} is not available.`
-      : `The ${bundle} includes ${addon.name} ${state.version}, but ${title} could not be loaded. The addon version may be too old for this AYON version, or its frontend failed to load.`
-
-  const nextStep =
-    state.status === 'notInBundle'
-      ? isAdmin
-        ? `Add ${addon.name} to the ${bundle} in Bundles settings, then reload the page.`
-        : `Ask your AYON administrator to add ${addon.name} to the ${bundle}.`
-      : isAdmin
-      ? `Reload the page. If ${title} still does not load, check the ${addon.name} version in the bundle or contact support.`
-      : `Reload the page. If ${title} still does not load, contact your AYON administrator.`
+  const { heading, explanation, nextStep } = getAddonUnavailableText(
+    state,
+    addon.name,
+    title,
+    isAdmin,
+  )
 
   return (
     <Styled.PowerpackDialog isOpen size="lg" hideCancelButton hideBackdrop onClose={() => {}}>
@@ -72,6 +61,11 @@ export const AddonUnavailableDialog: FC<AddonUnavailableDialogProps> = ({
             Open Bundles
           </Button>
         </Link>
+      )}
+      {state.status === 'lookupFailed' && (
+        <Button variant="filled" icon="refresh" onClick={state.retry}>
+          Try again
+        </Button>
       )}
       {state.status === 'pageUnavailable' && (
         <Button variant="filled" icon="refresh" onClick={() => window.location.reload()}>
