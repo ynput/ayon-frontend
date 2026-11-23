@@ -543,6 +543,8 @@ const slot = useMemo(
   is \`selected\` the panel falls back to \`fallbackTab\`. An addon tab draws itself, with its header.
 - \`fallbackTab\`: opened instead of a \`selected\` tab that is not there: a \`hidden\` one, or an addon
   tab whose addon is gone.
+- \`showLabels\`: the labels next to the icons. With more tabs than \`maxLabeledTabs\` (the panel's and
+  the addons', 4 by default) the bar shows icons only; the label stays the tooltip.
 - An AYON older than this component has no such export (\`undefined\`): an addon that supports one
   checks \`TabbedPanel &&\` and draws its own panel otherwise. Such a panel renders the open addon
   tab with \`ContributionTab\`, which gives it the same header (on an AYON without it, the tab alone):

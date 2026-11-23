@@ -123,6 +123,11 @@ export interface TabbedPanelProps<S extends PanelTabSlotName> {
   onFallback?: (tab: string) => void
   /** labels next to the icons on every tab; off by default (icons, the label is the tooltip) */
   showLabels?: boolean
+  /**
+   * with `showLabels`, the most tabs (the panel's and the addons') that keep their labels: with
+   * more, the bar shows icons only. 4 by default
+   */
+  maxLabeledTabs?: number
   isLoading?: boolean
   /** a test id for each tab button, by tab id */
   tabTestId?: (id: string) => string
@@ -236,6 +241,7 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
   fallbackTab,
   onFallback,
   showLabels,
+  maxLabeledTabs,
   isLoading,
   tabTestId,
   className,
@@ -285,6 +291,7 @@ export const TabbedPanel = <S extends PanelTabSlotName>({
             selected={selected}
             onChange={onChange}
             showLabels={showLabels}
+            maxLabeledTabs={maxLabeledTabs}
             isLoading={isLoading}
             tabTestId={tabTestId}
           />

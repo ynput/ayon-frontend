@@ -129,6 +129,11 @@ export interface TabbedPanelProps<S extends PanelTabSlotName = PanelTabSlotName>
   onFallback?: (tab: string) => void
   /** labels next to the icons on every tab; icons only when not set (the label is the tooltip) */
   showLabels?: boolean
+  /**
+   * with `showLabels`, the most tabs (the panel's and the addons') that keep their labels: with
+   * more, the bar shows icons only. 4 by default
+   */
+  maxLabeledTabs?: number
   /** the tab bar shows as loading */
   isLoading?: boolean
   /** a test id for each tab button, by tab id */
