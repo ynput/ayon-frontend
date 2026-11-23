@@ -16,6 +16,9 @@ const VideoPlayerControls = ({
   seekToFrame,
   frameCount,
 
+  onSaveFrame,
+  isSavingFrame,
+
   /* toggles */
   showOverlay,
   setShowOverlay,
@@ -218,6 +221,12 @@ const VideoPlayerControls = ({
         onClick={() => setShowOverlay(!showOverlay)}
         icon="grid_guides"
         data-tooltip="Show/hide grid overlay"
+      />
+      <Button
+        onClick={onSaveFrame}
+        disabled={isSavingFrame}
+        icon={isSavingFrame ? 'hourglass_empty' : 'photo_camera'}
+        data-tooltip="Save current frame as image"
       />
       <Button
         onClick={handleFullscreen}

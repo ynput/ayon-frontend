@@ -14,6 +14,7 @@ import useVideoPlayback from './hooks/useVideoPlayback'
 import useVideoSeeking from './hooks/useVideoSeeking'
 import useVideoSourceTransition from './hooks/useVideoSourceTransition'
 import useVideoDimensions from './hooks/useVideoDimensions'
+import useSaveFrame from './hooks/useSaveFrame'
 
 import './utils/videoFrameCallbackPolyfill'
 
@@ -68,7 +69,7 @@ const AnnotationsContainer = styled.div`
   inset: 0;
 `
 
-const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId }) => {
+const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewableId, fileName }) => {
   const {
     createToolbar,
     AnnotationsEditorProvider,
@@ -138,6 +139,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
   )
 
   useGoToFrame({ setCurrentTime, frameRate, duration, videoElement: videoRef.current })
+
+  const { saveFrame, isSaving: isSavingFrame } = useSaveFrame({ src, frameRate, fileName })
+  const getVideoFrame = () => Math.round((videoRef.current?.currentTime ?? 0) * frameRate)
 
   const { annotations } = useAnnotations()
 
@@ -323,7 +327,9 @@ const VideoPlayer = ({ src, frameRate, aspectRatio, autoplay, onPlay, reviewable
           seekToFrame={seekToFrame}
           frameCount={frameCount}
           currentFrame={currentFrame}
-          getCurrentFrame={() => Math.round((videoRef.current?.currentTime ?? 0) * frameRate)}
+          getCurrentFrame={getVideoFrame}
+          onSaveFrame={() => saveFrame(getVideoFrame())}
+          isSavingFrame={isSavingFrame}
           setMuted={handleMuteToggle}
           {...{ showOverlay, setShowOverlay, loop, setLoop, muted }}
         />
