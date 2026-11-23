@@ -72,6 +72,7 @@ type AttributeDataValue = AttributeType | null | undefined
 
 type FilterConfig = {
   enableExcludes?: boolean
+  disableExcludes?: FilterFieldType[] // filters that can't be inverted, even with enableExcludes
   enableOperatorChange?: boolean
   enableRelativeValues?: boolean
   prefixes?: Partial<Record<FilterFieldType, string>> // strings that will be prepended to the id of the option
@@ -1126,6 +1127,10 @@ const getOptionRoot = (
   if (rootOption && fieldName === 'version' && entityType === 'version') {
     rootOption.value = { label: 'Product Version' }
     rootOption.tooltip = 'Product Version'
+  }
+
+  if (rootOption && config?.disableExcludes?.includes(fieldName)) {
+    rootOption.allowExcludes = false
   }
 
   return rootOption

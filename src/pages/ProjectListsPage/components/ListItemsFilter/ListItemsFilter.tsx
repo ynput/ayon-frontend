@@ -30,6 +30,8 @@ const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) 
       enableGlobalSearch={true}
       data={entityType === 'version' ? { productTypes: projectInfo.productTypes } : {}}
       config={{
+        // the list items query can keep only Latest, Latest Done or Hero, not leave them out
+        disableExcludes: ['version'],
         prefixes: {
           assignees: 'entity_',
           tags: 'entity_',

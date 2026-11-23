@@ -25,7 +25,7 @@ import { expandRelativeDates } from '@shared/containers/ProjectTreeTable/utils/e
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import { buildSortArgs } from '@shared/util'
 import { extractSearchFromFilters } from '../util/searchToQueryFilter'
-import { extractFeaturedVersionFilter } from '../util/featuredVersionFilter'
+import { splitFeaturedVersionFilter } from '../util/featuredVersionFilter'
 import { OnSyncDataCallback, usePowerpack, useProjectContext } from '@shared/context'
 import {
   useEntityLinks,
@@ -79,7 +79,13 @@ export interface UseGetListItemsDataReturn {
   fieldStatsLoading: boolean
   fieldStatsError: boolean
   mainCountLabels: { primary: string }
-  queryArgs: { filter?: string; search?: string; sortBy?: string | string[]; desc?: boolean }
+  queryArgs: {
+    filter?: string
+    search?: string
+    featuredOnly?: string[]
+    sortBy?: string | string[]
+    desc?: boolean
+  }
 }
 
 const useGetListItemsData = ({
@@ -111,16 +117,19 @@ const useGetListItemsData = ({
   ) as StatsEntity | undefined
   const statsProjectName = contextProjectName || projectName
   const { search, filters: filtersWithoutSearch } = extractSearchFromFilters(filters)
-  const { featuredOnly, filters: filtersWithoutFeatured } =
-    extractFeaturedVersionFilter(filtersWithoutSearch)
-  const queryFilterString = filtersWithoutFeatured.conditions?.length
+  // the Lists filter, Latest, Latest Done and Hero included; requests split them out
+  const queryFilterString = filtersWithoutSearch.conditions?.length
     ? JSON.stringify(
         toEntityValueKeys(
-          sanitizeQueryFilter(expandRelativeDates(filtersWithoutFeatured)),
+          sanitizeQueryFilter(expandRelativeDates(filtersWithoutSearch)),
           readsEntityValue,
         ),
       )
     : ''
+  const { filter: itemsFilter, featuredOnly } = useMemo(
+    () => splitFeaturedVersionFilter(queryFilterString),
+    [queryFilterString],
+  )
 
   // Create sort params for infinite query
   const parseSorting = (sorting?: string): string | undefined => {
@@ -182,7 +191,7 @@ const useGetListItemsData = ({
     listId: listId || '',
     sortBy,
     desc,
-    filter: queryFilterString || undefined,
+    filter: itemsFilter,
     search,
     featuredOnly,
     showComments,
@@ -213,7 +222,6 @@ const useGetListItemsData = ({
       desc,
       filter: queryFilterString || '',
       search: search || '',
-      featuredOnly: featuredOnly?.join(',') || '',
     },
     isFetchingListItems,
   )
@@ -245,11 +253,10 @@ const useGetListItemsData = ({
     ],
   )
 
-  const statsFilter = queryFilterString || undefined
   const statsArgs = {
     projectName: statsProjectName,
     listId: listId || '',
-    filter: statsFilter,
+    filter: itemsFilter,
     search,
     featuredOnly,
     targets: statsTargets,
@@ -398,8 +405,8 @@ const useGetListItemsData = ({
     hasNextPage,
     isUninitialized,
     isFetching: isFetchingListItems,
-    // the filter and search the items are queried with
-    queryFilter: listItemsArgs.filter,
+    // the Lists filter and search, featured versions in the filter (splitFeaturedVersionFilter)
+    queryFilter: queryFilterString || undefined,
     search: listItemsArgs.search,
     onSyncData,
     isError,
@@ -414,6 +421,7 @@ const useGetListItemsData = ({
     queryArgs: {
       filter: listItemsArgs.filter,
       search: listItemsArgs.search,
+      featuredOnly: listItemsArgs.featuredOnly,
       sortBy: listItemsArgs.sortBy,
       desc: listItemsArgs.desc,
     },

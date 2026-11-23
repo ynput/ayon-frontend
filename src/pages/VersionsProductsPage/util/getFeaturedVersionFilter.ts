@@ -104,10 +104,11 @@ export const extractFilters = (
                 return undefined
               }
 
-              // Return condition with remaining values only
+              // Return condition with remaining values only, still a list:
+              // the server rejects `in` with a single value
               return {
                 ...queryCondition,
-                value: remainingValues.length === 1 ? remainingValues[0] : remainingValues,
+                value: Array.isArray(queryCondition.value) ? remainingValues : remainingValues[0],
               }
             }
           }
