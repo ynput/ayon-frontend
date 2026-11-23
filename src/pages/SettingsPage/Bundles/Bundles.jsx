@@ -22,6 +22,7 @@ import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
 import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-search'
+import { BundlesHistory, useBundlesHistory } from './BundlesHistory'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -403,6 +404,15 @@ const Bundles = () => {
     },
   ]
 
+  const {
+    histories,
+    context: historyContext,
+    pending: historyPending,
+  } = useBundlesHistory(bundleList, selectedBundles, handleBundleSelect)
+  const history = (
+    <BundlesHistory histories={histories} context={historyContext} pending={historyPending} />
+  )
+
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
 
@@ -520,6 +530,7 @@ const Bundles = () => {
                       isLoading={isLoadingInstallers || isFetching}
                       installers={installerVersions}
                       isDev
+                      history={history}
                     />
                   ) : (
                     <BundleDetail
@@ -529,6 +540,7 @@ const Bundles = () => {
                       installers={installerVersions}
                       toggleBundleStatus={toggleBundleStatus}
                       developerMode={isDeveloper}
+                      history={history}
                     />
                   ))
                 )}

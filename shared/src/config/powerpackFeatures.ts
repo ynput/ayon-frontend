@@ -18,6 +18,7 @@ export type PowerpackFeature =
   | 'tableExport'
   | 'personalApiKeys'
   | 'settingsHistory'
+  | 'bundlesHistory'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -37,6 +38,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'tableExport',
   'personalApiKeys',
   'settingsHistory',
+  'bundlesHistory',
 ]
 
 export const powerpackFeatures: {
@@ -132,5 +134,11 @@ export const powerpackFeatures: {
     description:
       'See who changed which addon settings and when, compare the settings with any earlier moment and revert what changed.',
     bullet: 'History of the addon settings',
+  },
+  bundlesHistory: {
+    label: 'Bundle History',
+    description:
+      'See when production and staging moved to another bundle and who moved them, and when the addon versions of a dev bundle changed.',
+    bullet: 'History of the bundles',
   },
 }

@@ -74,6 +74,9 @@ export type {
   AddonSettingsHistoryMeta,
   AddonSettingsMenu,
   AddonSettingsMenuItem,
+  BundlesHistoryBundle,
+  BundlesHistoryContext,
+  BundlesHistoryMeta,
 } from './slots'
 export type {
   Access,

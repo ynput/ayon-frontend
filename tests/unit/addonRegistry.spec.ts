@@ -247,6 +247,20 @@ test('settings histories need a timeline and a sidebar and check powerFeature', 
   expect(skipped.map((s) => s.id)).toEqual(['noTimeline', 'noSidebar', 'badPower'])
 })
 
+test('bundles histories need a component and check powerFeature', () => {
+  const history = { slot: 'bundles.history', component: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...history, id: 'history' },
+      { ...history, id: 'power', powerFeature: true },
+      { ...history, id: 'noComponent', component: undefined },
+      { ...history, id: 'badPower', powerFeature: 'yes' },
+    ],
+  })
+  expect(contributions.map((c) => c.key)).toEqual(['my-addon.history', 'my-addon.power'])
+  expect(skipped.map((s) => s.id)).toEqual(['noComponent', 'badPower'])
+})
+
 test('list details tabs need a label, an icon and a component', () => {
   const tab = { slot: 'listDetails.tab', label: 'Time', icon: 'schedule', component: loader }
   const { contributions, skipped } = checkManifest(addon, {

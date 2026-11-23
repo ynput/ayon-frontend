@@ -36,6 +36,7 @@ export const SLOT_EXAMPLES: { readonly [S in SlotName]: SlotExample } = {
   'userDetails.menuItem': { label: 'Example menu item', icon, run: exampleRun },
   'profile.section': { title: 'Example section', component: exampleView },
   'addonSettings.history': { timeline: exampleInline, sidebar: exampleView },
+  'bundles.history': { component: exampleInline },
   'app.service': { component: exampleService },
 }
 

@@ -10,6 +10,7 @@ export type { SlotDeclaration } from './slots'
 export {
   addonSettingsHistory,
   appService,
+  bundlesHistory,
   detailsPanelMenuItem,
   detailsPanelTab,
   entityMenuItem,

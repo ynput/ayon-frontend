@@ -88,3 +88,7 @@ export const profileSection = (section: ContributionFields<'profile.section'>) =
 /** The history of the addon settings in the settings editor: a timeline above, a sidebar beside. */
 export const addonSettingsHistory = (history: ContributionFields<'addonSettings.history'>) =>
   contribute('addonSettings.history', history)
+
+/** The history of the bundles on the Bundles page: a row below the selected bundle's toolbar. */
+export const bundlesHistory = (history: ContributionFields<'bundles.history'>) =>
+  contribute('bundles.history', history)
