@@ -824,6 +824,8 @@ export interface AddonSettingsHistoryContext {
   selected: { addonName: string; path: string[] } | null
   /** the editor has unsaved changes; they show below the sidebar */
   hasChanges: boolean
+  /** the paths of the unsaved changes of the addons shown, by addon name */
+  changedPaths: Record<string, string[][]>
   /** selects a setting in the editor and scrolls to it */
   focusSetting: (addonName: string, path: string[]) => void
   /** the unsaved changes of an addon, read when called */
@@ -837,8 +839,8 @@ export interface AddonSettingsHistoryContext {
    * with `data-fieldid` `root_<path joined by _>`
    */
   formSelector: (addonName: string) => string
-  /** sets the items added to the right-click menu of a setting, `null` removes them */
-  setSettingMenu: (menu: AddonSettingsMenu | null) => void
+  /** adds items to the top of the right-click menu of a setting; returns the function removing them */
+  addSettingMenu: (menu: AddonSettingsMenu) => () => void
 }
 
 /** Description of an `app.service` contribution. */

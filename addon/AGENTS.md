@@ -1490,12 +1490,13 @@ The history of the addon settings in the settings editor (Studio settings, Proje
 | `schemas` (required) | `Record<string, Record<string, unknown>>` | the settings schemas of the addons, by addon name, once the editor has loaded them |
 | `selected` (required) | `{ addonName: string; path: string[]; } \| null` | the setting selected in the editor |
 | `hasChanges` (required) | `boolean` | the editor has unsaved changes; they show below the sidebar |
+| `changedPaths` (required) | `Record<string, string[][]>` | the paths of the unsaved changes of the addons shown, by addon name |
 | `focusSetting` (required) | `(addonName: string, path: string[]) => void` | selects a setting in the editor and scrolls to it |
 | `getChanges` (required) | `(addonName: string) => AddonSettingsChanges` | the unsaved changes of an addon, read when called |
 | `setChanges` (required) | `(addonName: string, changes: AddonSettingsChanges) => void` | replaces the unsaved changes of an addon; the editor's Save button saves them |
 | `revertChange` (required) | `(addonName: string, path: string[]) => void` | drops the unsaved change of a setting, and of the settings below it |
 | `formSelector` (required) | `(addonName: string) => string` | a CSS selector of an addon's settings form, to style its settings: each setting is an element with `data-fieldid` `root_<path joined by _>` |
-| `setSettingMenu` (required) | `(menu: AddonSettingsMenu \| null) => void` | sets the items added to the right-click menu of a setting, `null` removes them |
+| `addSettingMenu` (required) | `(menu: AddonSettingsMenu) => () => void` | adds items to the top of the right-click menu of a setting; returns the function removing them |
 
 Pieces: `timeline`, `sidebar`.
 

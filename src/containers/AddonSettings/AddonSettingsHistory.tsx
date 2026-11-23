@@ -1,6 +1,6 @@
 // The history of the settings in the editor, from addons (addonSettings.history slot,
 // @ynput/ayon-addon): a timeline above the settings and a sidebar beside them.
-import { useEffect, useMemo } from 'react'
+import { memo, useEffect, useMemo } from 'react'
 import { ContributionView, prefetchPiece, useContributions } from '@ynput/ayon-addon'
 import type { AddonSettingsHistoryContext, Contribution } from '@ynput/ayon-addon'
 import { usePowerpack } from '@shared/context'
@@ -41,8 +41,8 @@ type Props = {
 }
 
 // untagged: the pieces are children of the editor's sections, which size their children (`> *`);
-// the slot inspector's wrapper would come between them
-export const AddonSettingsHistory = ({ histories, piece, context }: Props) => (
+// the slot inspector's wrapper would come between them. Memoized: the editor re-renders on every edit
+const HistoryPieces = ({ histories, piece, context }: Props) => (
   <>
     {histories.map((history) => (
       <ContributionView
@@ -55,3 +55,5 @@ export const AddonSettingsHistory = ({ histories, piece, context }: Props) => (
     ))}
   </>
 )
+
+export const AddonSettingsHistory = memo(HistoryPieces)
