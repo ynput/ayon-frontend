@@ -339,6 +339,8 @@ export const useBuildFilterOptions = ({
                   label: status.name,
                   icon: status.icon,
                   color: status.color,
+                  // filled with its colour, as in the tables
+                  filled: true,
                 })
               }
             })

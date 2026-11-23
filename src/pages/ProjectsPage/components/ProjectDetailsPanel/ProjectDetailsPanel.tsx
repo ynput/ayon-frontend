@@ -11,6 +11,7 @@ import ProjectInfoTab from './components/ProjectInfoTab'
 import ProjectTeamsTab from './components/ProjectTeamsTab'
 import { ProjectThumbnailUploader } from '../ProjectThumbnailUploader/ProjectThumbnailUploader'
 import { Button } from '@ynput/ayon-react-components'
+import { PROJECT_ICON } from '../../constants'
 
 interface ProjectDetailsPanelProps {
   projectName: string
@@ -87,6 +88,7 @@ export const ProjectDetailsPanel: FC<ProjectDetailsPanelProps> = ({
           <Thumbnail
             projectName={pn}
             entityType="project"
+            icon={PROJECT_ICON}
             thumbnailHash={updatedAt}
             isLoading={fetching || (isFetching && !project)}
             showBorder={false}

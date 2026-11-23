@@ -26,6 +26,7 @@ import { isGroupId, GROUP_BY_ID } from '../hooks/useBuildGroupByTableData'
 import { getGroupQueries } from '../utils/getGroupQueries'
 import { ProjectTableAttribute } from '../hooks/useAttributesList'
 import type { ProjectTableModulesType } from '@shared/hooks/useGroupByRemoteModules'
+import { getOverviewTaskSource } from '../utils/getOverviewTaskSource'
 import { useEntityLinks } from './useEntityLinks'
 import { useProjectFoldersContext, type OnSyncDataCallback } from '@shared/context'
 import { debounce } from 'lodash'
@@ -36,6 +37,8 @@ import {
 } from '@shared/api'
 import type { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import { getColumnSortKey } from '../buildTreeTableColumns'
+import overviewApi from '@shared/api/queries/overview/getOverview'
+import { hasUnqueriedFolders } from '@shared/api/queries/overview/queriedFolders'
 
 // how long a folder must stay rendered in the viewport before its tasks are fetched.
 // prevents firing a request per folder while the user is quickly scrolling past them.
@@ -56,6 +59,7 @@ type useFetchOverviewDataData = {
   softErrorAction?: SoftErrorAction
   isLoadingAll: boolean // the whole table is a loading state
   isLoadingMore: boolean // loading more tasks
+  isLoadingMoreGroups: boolean
   loadingTasks: LoadingTasks // show number of loading tasks per folder or root
   loadingLinksEntityIds: Set<string> // entity IDs whose links are currently being fetched (not yet cached)
   fetchNextPage: (value?: string) => void
@@ -77,7 +81,8 @@ type Params = {
   showHierarchy: boolean
   isFlatFolderView?: boolean
   attribFields: ProjectTableAttribute[]
-  modules: ProjectTableModulesType
+  /** @deprecated unused, the table no longer waits for the GroupSettings remote */
+  modules?: ProjectTableModulesType
   skipFolderLinks?: boolean
   skipTaskLinks?: boolean
   /** @deprecated use skipFolderLinks and skipTaskLinks */
@@ -119,7 +124,6 @@ export const useFetchOverviewData = ({
   showHierarchy,
   isFlatFolderView = false,
   attribFields,
-  modules,
   skipFolderLinks: skipFolderLinksProp,
   skipTaskLinks: skipTaskLinksProp,
   skipLinks,
@@ -133,7 +137,6 @@ export const useFetchOverviewData = ({
   taskStatsUninitialized,
   dispatch,
 }: Params): useFetchOverviewDataData => {
-  const { isLoading: isLoadingModules } = modules
   const {
     folders,
     isLoading: isLoadingFolders,
@@ -196,25 +199,59 @@ export const useFetchOverviewData = ({
     return expandedFolderIdsToQuery.filter((id) => visibleIdsSet.has(id))
   }, [expandedFolderIdsToQuery, showHierarchy, isFlatFolderView, debouncedVisibleEntityIds])
 
-  const expandedFoldersTasksArgs = {
-    projectName,
-    parentIds: visibleFolderIdsToQuery,
-    filter: taskFilters.filterString,
-    folderFilter: folderFilters.filterString,
-    search: taskFilters.search,
-    showComments,
-  }
+  const expandedFoldersTasksArgs = useMemo(
+    () => ({
+      projectName,
+      parentIds: visibleFolderIdsToQuery,
+      filter: taskFilters.filterString,
+      folderFilter: folderFilters.filterString,
+      search: taskFilters.search,
+      showComments,
+    }),
+    [
+      projectName,
+      visibleFolderIdsToQuery,
+      taskFilters.filterString,
+      folderFilters.filterString,
+      taskFilters.search,
+      showComments,
+    ],
+  )
 
   // QUERY
+  const skipExpandedFoldersTasks =
+    isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView)
   const {
     data: expandedFoldersTasks = [],
     isFetching: isFetchingExpandedFoldersTasks,
     error: expandedFoldersTasksError,
     isUninitialized: isUninitializedExpandedFoldersTasks,
   } = useGetOverviewTasksByFoldersQuery(expandedFoldersTasksArgs, {
-    skip:
-      isLoadingViews || !visibleFolderIdsToQuery.length || (!showHierarchy && !isFlatFolderView),
+    skip: skipExpandedFoldersTasks,
   })
+
+  // All expanded folders share one cache entry, and RTK Query ignores new args for an entry while
+  // it is fetching. Folders expanded during a request would never load, so request them after it.
+  useEffect(() => {
+    if (
+      skipExpandedFoldersTasks ||
+      isFetchingExpandedFoldersTasks ||
+      expandedFoldersTasksError ||
+      !hasUnqueriedFolders(expandedFoldersTasksArgs)
+    )
+      return
+    dispatch(
+      overviewApi.endpoints.getOverviewTasksByFolders.initiate(expandedFoldersTasksArgs, {
+        subscribe: false,
+      }),
+    )
+  }, [
+    skipExpandedFoldersTasks,
+    isFetchingExpandedFoldersTasks,
+    expandedFoldersTasksError,
+    expandedFoldersTasksArgs,
+    dispatch,
+  ])
 
   const skipFoldersByTaskFilter =
     (!taskFilters.filterString &&
@@ -428,10 +465,15 @@ export const useFetchOverviewData = ({
     [selectedFolders, getFolderIdsWithoutChildren],
   )
 
-  // In hierarchy mode with slicer-selected folders, use GetTasksList with folderIds to fetch
-  // tasks directly under those folders in a single paginated request, rather than firing one
-  // request per folder via getOverviewTasksByFolders.
-  const getTasksDirectlyUnderFolder = showHierarchy && excludeSelectedFolders
+  const { source: taskSource, skipTasksList } = getOverviewTaskSource({
+    showHierarchy,
+    isFlatFolderView,
+    isGrouped: !!groupBy,
+    excludeSelectedFolders,
+    hasSelectedFolders: selectedFolders.length > 0,
+    hasTaskIds: !!taskIds?.length,
+    isLoadingViews,
+  })
 
   const getTasksListFolderIds = () => {
     if (taskIds?.length) {
@@ -455,7 +497,7 @@ export const useFetchOverviewData = ({
     sortBy: tasksSortBy,
     desc: tasksSortDesc,
     showComments,
-    includeFolderChildren: !getTasksDirectlyUnderFolder,
+    includeFolderChildren: taskSource !== 'expandedFoldersAndTasksList',
   }
 
   // Use the new infinite query hook for tasks list with correct name
@@ -468,12 +510,7 @@ export const useFetchOverviewData = ({
     isFetchingNextPage: isFetchingNextPageTasksList,
     isUninitialized: isUninitializedTasksList,
   } = useGetTasksListInfiniteInfiniteQuery(tasksListArgs, {
-    // Skip flat task list for flat folder view (tasks loaded on folder expand).
-    // In hierarchy+slicer mode, run it to fetch tasks under selected-but-hidden folders.
-    // Always run it when entity list provides specific task IDs.
-    skip:
-      isLoadingViews ||
-      (((showHierarchy && !getTasksDirectlyUnderFolder) || isFlatFolderView) && !taskIds?.length),
+    skip: skipTasksList,
     initialPageParam: {
       cursor: '',
       desc: tasksSortDesc,
@@ -540,35 +577,25 @@ export const useFetchOverviewData = ({
 
   const {
     data: { tasks: groupTasks = [] } = {},
+    isFetching: isFetchingGroupedTasks,
     isUninitialized: isUninitializedGroupedTasks,
     error: groupedTasksError,
   } = useGetGroupedTasksListQuery(groupTasksArgs, {
-    skip: isLoadingViews || !groupBy || !groupQueries.length || isLoadingModules,
+    skip: isLoadingViews || !groupBy || !groupQueries.length,
   })
 
-  // Resolve which task source to use based on current mode
-  // When entity list provides specific task IDs, use flat task list even in hierarchy mode
   const resolvedTasks = useMemo(() => {
-    if (taskIds?.length) return tasksList
-    if (isFlatFolderView) return expandedFoldersTasks
-    if (showHierarchy) {
-      // In hierarchy+slicer mode, merge per-folder expanded tasks with tasks fetched via
-      // GetTasksList for the slicer-selected (but not displayed) folders.
-      if (getTasksDirectlyUnderFolder) return [...expandedFoldersTasks, ...tasksList]
-      return expandedFoldersTasks
+    switch (taskSource) {
+      case 'tasksList':
+        return tasksList
+      case 'expandedFolders':
+        return expandedFoldersTasks
+      case 'expandedFoldersAndTasksList':
+        return [...expandedFoldersTasks, ...tasksList]
+      case 'groups':
+        return groupTasks
     }
-    if (groupBy) return groupTasks
-    return tasksList
-  }, [
-    taskIds,
-    showHierarchy,
-    getTasksDirectlyUnderFolder,
-    isFlatFolderView,
-    groupBy,
-    tasksList,
-    expandedFoldersTasks,
-    groupTasks,
-  ])
+  }, [taskSource, tasksList, expandedFoldersTasks, groupTasks])
 
   // Get visible tasks for link fetching
   const visibleTasks = useMemo(() => {
@@ -591,7 +618,8 @@ export const useFetchOverviewData = ({
   const handleFetchNextPage = (group?: string) => {
     if (groupBy) {
       // Ungrouped is never seeded into pageCounts, so don't gate on key presence
-      if (group) {
+      // one page at a time: the grouped query refetches every expanded group
+      if (group && !isFetchingGroupedTasks) {
         incrementPageCount(group)
       }
     } else if (hasNextPage) {
@@ -759,13 +787,9 @@ export const useFetchOverviewData = ({
     // @ts-expect-error: softError is a string
     softError: expandedFoldersTasksError?.error, // this is separate as we should still show the folders table so the user can make changes
     softErrorAction,
-    isLoadingAll:
-      isLoadingViews ||
-      isLoadingFolders ||
-      isLoadingTasksList ||
-      isLoadingTasksFolders ||
-      isLoadingModules, // these all show a full loading state
+    isLoadingAll: isLoadingViews || isLoadingFolders || isLoadingTasksList || isLoadingTasksFolders, // these all show a full loading state
     isLoadingMore: isFetchingNextPageTasksList,
+    isLoadingMoreGroups: !!groupBy && isFetchingGroupedTasks,
     loadingTasks: loadingTasksForParents,
     loadingLinksEntityIds,
     fetchNextPage: handleFetchNextPage,

@@ -55,7 +55,11 @@ export const CategoryDropdownItem = forwardRef<HTMLSpanElement, CategoryDropdown
       <StyledItem
         {...props}
         className={clsx(className, { selected: isSelected })}
-        style={{ backgroundColor: isSelected && color ? color : '', color: getTextColor(isSelected && color ? color : ''), ...style }}
+        style={{
+          backgroundColor: isSelected && color ? color : '',
+          color: isSelected && color ? getTextColor(color) : undefined,
+          ...style,
+        }}
         ref={ref}
       >
         {startContent}

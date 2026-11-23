@@ -2,7 +2,7 @@
 // here and is reported to `ayon-addon open`, instead of blanking the page.
 import { Component } from 'react'
 import type { ErrorInfo, ReactNode } from 'react'
-import { setStage } from './status'
+import { setStageReady } from './status'
 
 export class StageBoundary extends Component<
   { children: ReactNode; what?: string },
@@ -17,7 +17,7 @@ export class StageBoundary extends Component<
   componentDidCatch(error: Error, info: ErrorInfo) {
     const what = this.props.what || 'stage'
     console.error(`[ayon-addon shell] the ${what} crashed`, error, info.componentStack)
-    if (what === 'stage') setStage({ ready: false })
+    if (what === 'stage') setStageReady(false)
   }
 
   render() {

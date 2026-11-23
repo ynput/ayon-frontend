@@ -3,7 +3,11 @@ import { useListsContext } from '@pages/ProjectListsPage/context'
 import { getColumnConfigFromType } from '@pages/ProjectListsPage/util'
 import { useListValuesContext } from '@pages/ProjectListsPage/context/list-values'
 import ListItemsShortcuts from '@pages/ProjectListsPage/util/ListItemsShortcuts'
-import { EmptyPlaceholder, FilterErrorActions } from '@shared/components'
+import {
+  EmptyPlaceholder,
+  EmptyPlaceholderFlexWrapper,
+  FilterErrorActions,
+} from '@shared/components'
 import {
   BuildTreeTableColumnsProps,
   EntityType,
@@ -72,14 +76,14 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   } = useListItemsDataContext()
   const scope = `lists-${projectName}`
 
-  // with list values, attribute edits go to the list item, so the entities' read-only
-  // attributes (product and version lists) don't apply
-  const { isPowerFeature } = useListValuesContext()
+  // with list values, attribute edits go to the list item, so the entities' locked attributes
+  // don't apply
+  const { editsEntities } = useListValuesContext()
   const { canCompareLists, compareLists } = useCompareLists()
-  const [hiddenColumns, readOnly] = useMemo(() => {
-    const [hidden, readOnly] = getColumnConfigFromType(selectedList?.entityType)
-    return [hidden, isPowerFeature ? readOnly.filter((id) => id !== 'attrib') : readOnly]
-  }, [selectedList, isPowerFeature])
+  const [hiddenColumns, readOnly] = useMemo(
+    () => getColumnConfigFromType(selectedList?.entityType),
+    [selectedList],
+  )
 
   const listAttributesMenuItems = useMemo(
     () => [
@@ -96,16 +100,18 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
 
   if (!selectedList)
     return (
-      <EmptyPlaceholder message="Start by selecting or importing a list.">
-        <ImportDialogButton importContext="entity_list_item" projectName={projectName} />
-      </EmptyPlaceholder>
+      <EmptyPlaceholderFlexWrapper>
+        <EmptyPlaceholder message="Select a list to see its items">
+          <ImportDialogButton importContext="entity_list_item" projectName={projectName} />
+        </EmptyPlaceholder>
+      </EmptyPlaceholderFlexWrapper>
     )
 
   if (selectedLists.length > 1) {
     const [shown, compared] = selectedLists
     const tooBig = isTooBigToCompare(compared)
     return (
-      <EmptyPlaceholder message="Please select one list to view its items.">
+      <EmptyPlaceholder message="Select a single list to see its items">
         {selectedLists.length === 2 && canCompareLists(shown, compared) && (
           <Button
             icon="compare_arrows"
@@ -148,6 +154,7 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
         // pagination
         onScrollBottom={fetchNextPage}
         readOnly={readOnly}
+        ignoreEntityAttribLocks={!editsEntities}
         excludedColumns={hiddenColumns}
         extraColumns={extraColumns}
         includeParents={includeParents}

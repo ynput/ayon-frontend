@@ -50,9 +50,10 @@ type Props = {
   isVisible?: boolean
   children: ReactNode
   isOverlay?: boolean
+  className?: string
 }
 
-const DraggableItem = ({ id, isVisible = true, isOverlay, children }: Props) => {
+const DraggableItem = ({ id, isVisible = true, isOverlay, className, children }: Props) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({
     id,
     animateLayoutChanges: () => false,
@@ -66,6 +67,7 @@ const DraggableItem = ({ id, isVisible = true, isOverlay, children }: Props) => 
   return (
     <div
       ref={setNodeRef}
+      className={className}
       style={{
         ...dndStyle,
         opacity: isVisible ? 1 : 0,

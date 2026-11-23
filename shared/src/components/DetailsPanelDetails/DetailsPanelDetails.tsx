@@ -8,6 +8,7 @@ import type { DetailsPanelEntityData } from '@shared/api'
 import { useGetActivitiesInfiniteInfiniteQuery, useGetUsersAssigneeQuery } from '@shared/api'
 import { DescriptionSection } from './DescriptionSection'
 import { DetailsSection } from './DetailsSection'
+import { matchesFieldSearch } from '../DetailsPanelAttributes/fieldSearch'
 import styled from 'styled-components'
 import { useEntityFormData, useEntityFields, useEntityEditing } from './hooks'
 import { useDetailsPanelContext, useGlobalContext, useProjectContext } from '@shared/context'
@@ -23,15 +24,22 @@ const StyledContainer = styled.div`
   overflow-y: auto;
   padding-right: 8px;
   padding-left: 8px;
-  margin-top: 16px;
 `
+
+const DESCRIPTION_FIELD = { name: 'description', data: { title: 'Description' } }
 
 export type DetailsPanelDetailsProps = {
   entities: DetailsPanelEntityData[]
   isLoading: boolean
+  /** the tab's search: only the attributes and details whose label, name or value match */
+  search?: string
 }
 
-export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDetailsProps) => {
+export const DetailsPanelDetails = ({
+  entities = [],
+  isLoading,
+  search,
+}: DetailsPanelDetailsProps) => {
   const { formData, mixedFields, updateFormData, clearMixedField } = useEntityFormData(
     entities,
     isLoading,
@@ -164,18 +172,24 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
     updateEntity('attrib', { description })
   }
 
+  // the description is an attribute too: found by its name or its text
+  const showDescription = matchesFieldSearch(DESCRIPTION_FIELD, formData?.description, search)
+
   return (
     <StyledContainer>
-      <DescriptionSection
-        description={formData?.description || ''}
-        isMixed={mixedFields.includes('description')}
-        enableEditing={enableDescriptionEditing}
-        onChange={handleDescriptionChange}
-        isLoading={isLoading}
-        mentionsContext={mentionsContext}
-        onMentionClick={handleMentionClick}
-        onMentionHover={handleMentionHover}
-      />
+      {/* hidden, not removed: a description being edited keeps its draft */}
+      <div hidden={!showDescription}>
+        <DescriptionSection
+          description={formData?.description || ''}
+          isMixed={mixedFields.includes('description')}
+          enableEditing={enableDescriptionEditing}
+          onChange={handleDescriptionChange}
+          isLoading={isLoading}
+          mentionsContext={mentionsContext}
+          onMentionClick={handleMentionClick}
+          onMentionHover={handleMentionHover}
+        />
+      </div>
       <ActivityReferenceTooltip />
 
       <DetailsPanelAttributesEditor
@@ -188,6 +202,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         onMixedChange={handleMixedChange}
         entities={entities}
         entityType={entityType}
+        search={search}
       />
 
       <DetailsSection
@@ -196,6 +211,7 @@ export const DetailsPanelDetails = ({ entities = [], isLoading }: DetailsPanelDe
         mixedFields={mixedFields}
         isLoading={isLoading}
         users={authors}
+        search={search}
       />
     </StyledContainer>
   )

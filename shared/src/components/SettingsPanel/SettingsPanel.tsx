@@ -55,6 +55,8 @@ export interface SettingConfig {
   icon?: string
   preview?: string | number
   headerActions?: ReactNode
+  /** extra attributes on the menu entry, e.g. the slot inspector's tags of an addon's section */
+  attributes?: object
 }
 
 export interface SettingsPanelProps {
@@ -97,6 +99,7 @@ export const SettingsPanel: FC<SettingsPanelProps> = ({ settings, order }) => {
                 onClick={() => selectSetting(setting.id)}
                 variant="text"
                 className="setting-option"
+                {...setting.attributes}
               >
                 {setting.icon && <Icon icon={setting.icon} />}
                 <span className="title">{setting.title}</span>

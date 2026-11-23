@@ -12,6 +12,11 @@ export const Header = styled.header`
     margin-left: 4px;
     font-weight: 800;
   }
+
+  .guest {
+    font-size: 16px;
+    color: var(--md-sys-color-outline);
+  }
 `
 
 export const Body = styled.div`

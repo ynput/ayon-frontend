@@ -281,7 +281,7 @@ const NewProjectDialog = ({ onHide, redirect = true }) => {
       )}
       <Spacer />
       <SaveButton
-        label="Create Project"
+        label="Create project"
         onClick={() => handleSubmit()}
         active={canSubmit}
         saving={isLoading}

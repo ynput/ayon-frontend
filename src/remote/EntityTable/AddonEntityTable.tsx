@@ -74,7 +74,7 @@ const useReadOnlyMenu = (projectName: string): ContextMenuItemConstructors => {
         hidden: !url || cell.isGroup,
       }
     }
-    return [openInOverview, 'copy-paste', 'open-viewer', 'expand-collapse', 'export']
+    return [openInOverview, 'open-viewer', 'expand-collapse', 'separator', 'copy-paste', 'export']
   }, [projectName, navigate])
 }
 

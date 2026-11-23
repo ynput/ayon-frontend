@@ -44,6 +44,7 @@ import styled from 'styled-components'
 
 import SettingsListHeader from './SettingsListHeader'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
+import ayonClient from '@/ayon'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
 import LoadingPage from '@pages/LoadingPage'
@@ -51,7 +52,7 @@ import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
 } from '../../components/PerProjectBundleConfig/PerProjectBundleConfig'
 import { projectBundleFromName } from '../../components/PerProjectBundleConfig/PerProjectBundleConfigHelpers'
-import { useSessionStorage } from '@shared/hooks'
+import { useSessionStorage, readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
 
@@ -107,6 +108,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   //const navigate = useNavigate()
   const user = useSelector((state) => state.user)
   const developerMode = useMemo(() => user?.attrib?.developerMode, [JSON.stringify(user?.attrib)])
+  const isDeveloper = user?.data?.isDeveloper
   const userName = useSelector((state) => state.user.name)
 
   const [showHelp, setShowHelp] = useState(false)
@@ -172,10 +174,10 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     return bundles.filter((bundle) => bundle.isDev && bundle.activeUser === userName)
   }, [bundles, userName])
 
-  // 'dev' is the user's dev bundle; a dev bundle falls back to production without developer mode
+  // 'dev' is the user's dev bundle; a dev bundle falls back to production for non-developers
   const selectedBundle = useMemo(() => {
     const production = { variant: 'production', bundleName: null, projectBundleName: undefined }
-    if (!developerMode && !['production', 'staging'].includes(storedBundle.variant)) {
+    if (!isDeveloper && !['production', 'staging'].includes(storedBundle.variant)) {
       return production
     }
     if (storedBundle.variant === 'dev') {
@@ -185,7 +187,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         : production
     }
     return storedBundle
-  }, [storedBundle, devBundles, developerMode])
+  }, [storedBundle, devBundles, isDeveloper])
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -693,13 +695,16 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <>
         <Spacer />
         <Button
-          label="Clear Changes"
+          label="Clear"
           icon="clear"
           onClick={onRevertAllChanges}
           disabled={!canCommit}
+          data-tooltip="Clear all changes"
+          style={{ flexShrink: 0 }}
         />
         <SaveButton
-          label="Save Changes"
+          label="Save changes"
+          style={{ flexShrink: 0 }}
           disabled={
             (!bypassPermissions && !userPermissions.canEditSettings(projectName)) || !canCommit
           }
@@ -718,6 +723,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   )
 
   const onSelectAddon = (newSelection) => {
+    // Open the root section of a newly picked addon, so its settings show without another click.
+    // The root panel id is the same for every addon.
+    if (newSelection.some((a) => !selectedAddons.find((s) => s.name === a.name))) {
+      const expanded = readSessionStorage('expanded-settings-keys', [])
+      if (!expanded.includes('root'))
+        writeSessionStorage('expanded-settings-keys', [...expanded, 'root'])
+    }
     setSelectedAddons(newSelection)
     setCurrentSelection(null)
   }
@@ -757,7 +769,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   return (
     <Splitter layout="horizontal" style={{ width: '100%', height: '100%' }}>
       <SplitterPanel size={80} style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
-        <Section style={{ maxWidth: 400, minWidth: 400 }}>
+        <Section className="standard-rows" style={{ maxWidth: 400, minWidth: 400 }}>
           {addonListHeader}
           {showCopySettings && (
             <CopySettingsDialog
@@ -831,12 +843,35 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               setFilterKeys(filterKeys)
             }}
           />
-          <Section>
-            <StyledScrollPanel
-              className="transparent nopad"
-              style={{ flexGrow: 1 }}
-              id="settings-scroll-panel"
-            >
+          <Section style={{ position: 'relative' }}>
+            {showSites && !ayonClient.settings.sites.length ? (
+              <EmptyPlaceholder
+                className="muted"
+                style={{ zIndex: 1 }}
+                icon="computer"
+                message="Site settings become available once a launcher registers a site"
+              />
+            ) : !selectedAddons.some((addon) => !addon.isBroken) ? (
+              <EmptyPlaceholder
+                style={{ zIndex: 1 }}
+                icon={selectedAddons.length ? 'error' : 'settings'}
+                message={
+                  selectedAddons.length
+                    ? 'Settings could not be loaded'
+                    : 'Select an addon to edit its settings'
+                }
+              />
+            ) : (
+              showSites &&
+              !selectedSites.length && (
+                <EmptyPlaceholder
+                  style={{ zIndex: 1 }}
+                  icon="computer"
+                  message="Select a site to edit its settings"
+                />
+              )
+            )}
+            <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
               {selectedAddons
                 .filter((addon) => !addon.isBroken)
                 .reverse()
@@ -921,8 +956,8 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
           </Section>
         </Section>
       </SplitterPanel>
-      <SplitterPanel size={20}>
-        <Section wrap style={{ minWidth: 300 }}>
+      <SplitterPanel size={20} style={{ minWidth: 240 }}>
+        <Section wrap>
           <Toolbar>{commitToolbar}</Toolbar>
           <SettingsChangesTable
             changes={changedKeys}

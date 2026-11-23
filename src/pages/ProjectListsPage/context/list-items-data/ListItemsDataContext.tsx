@@ -56,8 +56,6 @@ import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 export type TableEntity = EntityListItemWithLinks & { attrib: Record<string, unknown> }
 
-const NO_LIST_VALUES_SETTINGS: CompareSettings = {}
-
 // the module marks attributes; the table marks cells by column id
 const toCellMarks = (marks: Record<string, CellMark> = {}): Record<string, CellMark> =>
   Object.fromEntries(Object.entries(marks).map(([name, mark]) => [`attrib_${name}`, mark]))
@@ -170,7 +168,14 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const { onLinkColumnsVisibleChange, isLinkColumnShown } = useLinkColumnsVisibility(linkTypes)
 
   const { isLoadingViews } = useViewsContext()
-  const { module: listValues, rules: listValuesRules, readsEntityValue } = useListValuesContext()
+  const {
+    module: listValues,
+    rules: listValuesRules,
+    readsEntityValue,
+    // stored with the view, shaped by the ListValues module
+    settings: listValuesSettings,
+    setSettings: setListValuesSettings,
+  } = useListValuesContext()
   const { listsMap } = useListsDataContext()
   const {
     filters: listItemsFilters,
@@ -179,12 +184,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     onUpdateAdvancedFilter: setListItemsAdvancedFilter,
     columns,
     onUpdateColumns,
-    listValues: storedListValuesSettings,
-    onUpdateListValues: setListValuesSettings,
   } = useListsViewSettings()
-  // stored with the view, shaped by the ListValues module
-  const listValuesSettings =
-    (storedListValuesSettings as CompareSettings | undefined) || NO_LIST_VALUES_SETTINGS
 
   // non-review lists are always shown as a table, only review lists use the display style
   const isTableView = !isReview || displayStyle === 'table'
@@ -447,6 +447,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
       projectName,
       listId: selectedListId,
       entityType: listEntityType,
+      attribFields,
       listItemsMap,
       canEditList: (selectedList?.accessLevel || 0) >= 20,
     })
@@ -491,12 +492,15 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const contextMenuItems: ContextMenuItemConstructors = [
     addonEntityTopItems,
     'copy-paste',
+    'separator',
     'show-details',
     'open-viewer',
-    'export',
+    'separator',
     // add context menu to add to lists but filter out own list
     menuItemsAddToList((item) => item.id !== selectedListId),
     addToShownListMenuItem,
+    'export',
+    'separator',
     forListItems(replaceItemContextMenu),
     forListItems(viewDataContextMenu),
     forListItems(listValueMenuItem),

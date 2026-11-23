@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
-import { Button, Dialog } from '@ynput/ayon-react-components'
+import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import VersionsProductsPage from '../VersionsProductsPage'
@@ -16,7 +16,6 @@ import ProjectListsPage from '../ProjectListsPage'
 import { selectProject, setOpenProject } from '@state/project'
 import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
-import { TabPanel, TabView } from 'primereact/tabview'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
@@ -34,7 +33,7 @@ import {
   useGlobalContext,
   useProjectContext,
 } from '@shared/context'
-import { VersionUploadProvider, UploadVersionDialog } from '@shared/components'
+import { VersionUploadProvider, UploadVersionDialog, JsonViewer } from '@shared/components'
 import { productSelected } from '@state/context'
 import { useGetBundleAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
@@ -43,7 +42,9 @@ import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
 import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
 import { useContributions } from '@ynput/ayon-addon'
-import { pageAccessLevels, useAddonPages } from '@/remote/AddonPagesHelpers'
+import type { Contribution } from '@ynput/ayon-addon'
+import { contributionTags, useHiddenContributions } from '@ynput/ayon-addon/host'
+import { useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
@@ -102,6 +103,14 @@ const ADDON_PAGES: AddonPageConfig[] = [
   },
 ]
 
+// A tab AYON shows for an addon whose page the user's exposure level hides: no tab, no Fallback
+const isHiddenOwnedPage = (hiddenPages: Contribution<'project.page'>[], module: string) =>
+  hiddenPages.some((page) =>
+    ADDON_PAGES.some(
+      (owned) => owned.module === module && page.id === module && owned.addon === page.addon.name,
+    ),
+  )
+
 const OWNED_PAGES = ADDON_PAGES.map(({ module, viewType, addon }) => ({
   id: module,
   viewType,
@@ -115,15 +124,25 @@ const ProjectContextInfo = () => {
    */
   const context = useAppSelector((state) => state.context)
   const project = useAppSelector((state) => state.project)
+  const [tab, setTab] = useState<'context' | 'project'>('context')
   return (
-    <TabView panelContainerStyle={{ justifyContent: 'flex-start' }}>
-      <TabPanel header="context" style={{ overflow: 'hidden' }}>
-        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ context }, null, 2)}</pre>
-      </TabPanel>
-      <TabPanel header="project" style={{ overflow: 'hidden' }}>
-        <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify({ project }, null, 2)}</pre>
-      </TabPanel>
-    </TabView>
+    <>
+      <Toolbar style={{ marginBottom: 8 }}>
+        {(['context', 'project'] as const).map((id) => (
+          <Button
+            key={id}
+            variant={tab === id ? 'surface' : 'text'}
+            selected={tab === id}
+            aria-pressed={tab === id}
+            onClick={() => setTab(id)}
+            style={{ textTransform: 'capitalize' }}
+          >
+            {id}
+          </Button>
+        ))}
+      </Toolbar>
+      <JsonViewer value={tab === 'context' ? { context } : { project }} wrap />
+    </>
   )
 }
 
@@ -295,6 +314,12 @@ const ProjectPageInner = () => {
     [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
     OWNED_PAGES,
   )
+  // the addon pages the user's exposure level hides (minExposureLevel, access)
+  const hiddenPages = useHiddenContributions('project.page')
+  const ownedTabs = useMemo(
+    () => ADDON_PAGES.filter((owned) => !isHiddenOwnedPage(hiddenPages, owned.module)),
+    [hiddenPages],
+  )
 
   // get remote project module pages
   const links: NavLinkItem[] = useMemo(
@@ -341,22 +366,25 @@ const ProjectPageInner = () => {
         viewType: 'reviews',
         startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
       },
-      ...ADDON_PAGES.map(({ name, module: addonModule, viewType, addon }) => ({
-        name,
-        path: `/projects/${projectName}/${addonModule}`,
-        module: addonModule,
-        viewType,
-        // a restricted addon page hides the tab, else the user lands on an empty page
-        accessLevels: pageAccessLevels(addonPages.find((page) => page.id === addonModule)?.access),
-        startContent: (
-          <RemotePageBundleDot
-            bundle={
-              remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
-              getAddonBundle(addon)
-            }
-          />
-        ),
-      })),
+      ...ownedTabs.map(({ name, module: addonModule, viewType, addon }) => {
+        const page = addonPages.find((p) => p.id === addonModule)
+        return {
+          name,
+          path: `/projects/${projectName}/${addonModule}`,
+          module: addonModule,
+          viewType,
+          startContent: (
+            <RemotePageBundleDot
+              bundle={
+                remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
+                getAddonBundle(addon)
+              }
+            />
+          ),
+          // the slot inspector's tags on the tab, as for other addon pages: the page itself has none
+          ...(page && contributionTags(page)),
+        }
+      }),
       {
         name: 'Workfiles',
         path: `/projects/${projectName}/workfiles`,
@@ -379,8 +407,9 @@ const ProjectPageInner = () => {
           module: page.id,
           path: `/projects/${projectName}/${page.id}`,
           viewType: page.viewType,
-          accessLevels: pageAccessLevels(page.access),
           startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
+          // the slot inspector's tags on the tab, while it is on
+          ...contributionTags(page),
         })),
       ...addonsData
         .filter((addon) => {
@@ -409,7 +438,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, module, getAddonBundle],
+    [addonsData, projectName, remotePages, addonPages, ownedTabs, module, getAddonBundle],
   )
 
   const activeLink = useMemo(() => {
@@ -503,7 +532,7 @@ const ProjectPageInner = () => {
       )
     } else {
       const addonPage = ADDON_PAGES.find((p) => p.module === module)
-      if (addonPage) {
+      if (addonPage && !isHiddenOwnedPage(hiddenPages, module)) {
         component = <addonPage.Fallback projectName={projectName} />
       } else {
         console.log('addon not found, redirecting to overview')

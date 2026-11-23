@@ -1,4 +1,4 @@
-import { getTextColor, theme } from '@ynput/ayon-react-components'
+import { getTagColors, theme } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import { forwardRef } from 'react'
 import styled from 'styled-components'
@@ -56,6 +56,11 @@ const StyledTag = styled.div`
   }
 `
 
+const getCategoryColors = (color: string) => {
+  const colors = getTagColors(color)
+  return { backgroundColor: colors.background, borderColor: colors.border, color: colors.text }
+}
+
 interface CategoryTagProps extends React.HTMLAttributes<HTMLDivElement> {
   value?: string | null
   color?: string
@@ -84,11 +89,7 @@ export const CategoryTag = forwardRef<HTMLDivElement, CategoryTagProps>(
         })}
         style={{
           ...style,
-          ...(color && {
-            backgroundColor: color,
-            borderColor: color,
-            color: getTextColor(color)
-          })
+          ...(color && getCategoryColors(color)),
         }}
       >
         {value || NO_CATEGORY_LABEL}

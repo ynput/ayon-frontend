@@ -1,0 +1,6 @@
+export { DetailHeader } from './DetailHeader'
+export type { DetailHeaderProps } from './DetailHeader'
+export { UserDetailsHeader } from './UserDetailsHeader'
+export type { UserDetailsHeaderProps } from './UserDetailsHeader'
+export { usersAccessLabel } from './UserDetailsHeaderHelpers'
+export type { UserDetailsHeaderUser } from './UserDetailsHeaderHelpers'

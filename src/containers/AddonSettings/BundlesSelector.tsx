@@ -1,11 +1,10 @@
-import { Dropdown } from '@ynput/ayon-react-components'
 import { useAppSelector } from '@state/store'
 import { useMemo } from 'react'
 import { useListBundlesQuery } from '@shared/api'
 import styled from 'styled-components'
 import type { BundleModel } from '@shared/api/generated/bundles'
 import clsx from 'clsx'
-import { DropdownBadge } from './BundlesSelector.styled'
+import { BundleDropdown, DropdownBadge } from './BundlesSelector.styled'
 
 type BundleType = 'production' | 'staging' | 'dev' | 'project' | 'default'
 
@@ -129,14 +128,14 @@ interface BundlesSelectorProps {
 const BundlesSelector = ({ selected, onChange, disabled }: BundlesSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
   const userName = useAppSelector((state) => state.user.name)
-  const devMode = useAppSelector((state) => state.user.attrib.developerMode)
+  const isDeveloper = useAppSelector((state) => state.user.data.isDeveloper)
 
   console.debug('selected bundle: ', selected)
 
   const bundleOptions = useMemo<BundleOption[]>(() => {
     return bundles
       .filter(
-        (b) => devMode /* IDK: is this a good idea? && b.activeUser === userName*/ || !b?.isDev,
+        (b) => isDeveloper /* IDK: is this a good idea? && b.activeUser === userName*/ || !b?.isDev,
       )
       .map((bundle) => ({
         label: bundle.name,
@@ -148,7 +147,7 @@ const BundlesSelector = ({ selected, onChange, disabled }: BundlesSelectorProps)
         createdAt: bundle.createdAt,
       }))
       .sort(compareBundles)
-  }, [bundles, devMode, userName])
+  }, [bundles, isDeveloper, userName])
 
   const selectedBundle = useMemo(() => {
     const { bundleName, projectBundleName, variant } = selected
@@ -204,7 +203,7 @@ const BundlesSelector = ({ selected, onChange, disabled }: BundlesSelectorProps)
   }
 
   return (
-    <Dropdown
+    <BundleDropdown
       options={bundleOptions}
       value={selectedBundle ? [selectedBundle?.value] : []}
       style={{ width: '100%' }}

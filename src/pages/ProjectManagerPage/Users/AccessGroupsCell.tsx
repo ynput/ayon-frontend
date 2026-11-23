@@ -1,4 +1,5 @@
 import clsx from 'clsx'
+import { Fragment } from 'react'
 import { $Any } from '@types'
 
 import * as Styled from './ProjectUserAccess.styled'
@@ -21,14 +22,17 @@ export const AccessGroupsCell = ({
 }: Props) => {
   return (
     <Styled.DataColumn className={clsx({ actionable: true, selected })}>
-      {data.assignedAccessGroups.map(
-        (ag: { accessGroup: string; complete: boolean }, idx: number) => (
-          <span key={ag.accessGroup} className={clsx({ 'partial-match': !ag.complete })}>
-            {ag.accessGroup}
-            {idx !== data.assignedAccessGroups.length - 1 ? ',' : ''}
-          </span>
-        ),
-      )}
+      {/* one run of text, so the names are apart by ", " and not by the gap of the row */}
+      <span className="access-groups">
+        {data.assignedAccessGroups.map(
+          (ag: { accessGroup: string; complete: boolean }, idx: number) => (
+            <Fragment key={ag.accessGroup}>
+              {idx > 0 && ', '}
+              <span className={clsx({ 'partial-match': !ag.complete })}>{ag.accessGroup}</span>
+            </Fragment>
+          ),
+        )}
+      </span>
       <Spacer />
       {!readOnly && (
         <Styled.ActionButton

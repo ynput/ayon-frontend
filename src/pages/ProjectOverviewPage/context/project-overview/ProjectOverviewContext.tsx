@@ -54,7 +54,6 @@ import type { ProjectTableState } from '@ynput/ayon-addon'
 
 export const ProjectOverviewProvider = ({
   children,
-  modules,
   page = 'overview',
 }: ProjectOverviewProviderProps) => {
   const dispatch = useAppDispatch()
@@ -199,7 +198,11 @@ export const ProjectOverviewProvider = ({
   // folderType can only be used with entity type 'folder'
   // viewGroupByObj is already undefined for flat folder view, so no extra guard needed
   const groupingEntityType = viewGroupBy === 'folderType' ? 'folder' : 'task'
-  const { groups: taskGroups, error: groupingError } = useGetEntityGroups({
+  const {
+    groups: taskGroups,
+    error: groupingError,
+    isLoading: isLoadingGroups,
+  } = useGetEntityGroups({
     groupBy: viewGroupByObj,
     projectName,
     entityType: groupingEntityType,
@@ -431,6 +434,7 @@ export const ProjectOverviewProvider = ({
     onSyncData,
     isLoadingAll,
     isLoadingMore,
+    isLoadingMoreGroups,
     loadingTasks,
     loadingLinksEntityIds,
     error: dataError,
@@ -459,7 +463,6 @@ export const ProjectOverviewProvider = ({
     showHierarchy,
     isFlatFolderView,
     attribFields,
-    modules,
     skipFolderLinks: !isLinkColumnShown('primary', 'folder'),
     skipTaskLinks: !isLinkColumnShown('primary', 'task'),
     showComments,
@@ -482,8 +485,9 @@ export const ProjectOverviewProvider = ({
     <ProjectOverviewContext.Provider
       value={{
         isInitialized: isInitialized,
-        isLoading: isLoadingAll || isLoadingData,
+        isLoading: isLoadingAll || isLoadingData || isLoadingGroups,
         isLoadingMore,
+        isLoadingMoreGroups,
         loadingTasks,
         error,
         softError, // shows a warning banner but doesn't block the table from rendering

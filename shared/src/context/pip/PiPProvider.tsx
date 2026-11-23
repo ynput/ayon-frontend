@@ -105,6 +105,20 @@ export function PiPProvider({ children }: PiPProviderProps) {
     })
   }, [pipWindow])
 
+  // the window has its own document: keep its theme in step with the app's
+  useEffect(() => {
+    if (!pipWindow) return
+    const source = document.documentElement
+    const copyTheme = () => {
+      pipWindow.document.documentElement.dataset.theme = source.dataset.theme || 'dark'
+      pipWindow.document.documentElement.dataset.colorMode = source.dataset.colorMode || 'dark'
+    }
+    copyTheme()
+    const observer = new MutationObserver(copyTheme)
+    observer.observe(source, { attributeFilter: ['data-theme', 'data-color-mode'] })
+    return () => observer.disconnect()
+  }, [pipWindow])
+
   const value = useMemo(() => {
     {
       return {

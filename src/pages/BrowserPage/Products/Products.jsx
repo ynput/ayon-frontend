@@ -1,15 +1,17 @@
 import { useState, useMemo, useCallback } from 'react'
+import clsx from 'clsx'
 import { useSelector, useDispatch } from 'react-redux'
-import { InputText, TablePanel, Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
+import { Section, Toolbar, Spacer } from '@ynput/ayon-react-components'
+import SearchInput from '@components/SearchInput'
 import { CellWithIcon } from '@components/icons'
 import { TimestampField } from '@containers/fieldFormat'
 import usePubSub from '@hooks/usePubSub'
 // shared
-import { DetailsDialog } from '@shared/components'
+import { DetailsDialog, EmptyPlaceholder, ValuePill } from '@shared/components'
 import { useLocalStorage, useScopedStatuses } from '@shared/hooks'
 import api, { useUpdateEntitiesMutation } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
-import { groupResult, confirmDelete } from '@shared/util'
+import { groupResult, confirmDelete, getEntityTypeIcon } from '@shared/util'
 import { extractIdFromClassList } from '@shared/containers/Feed'
 
 import {
@@ -32,7 +34,6 @@ import useColumnResize from '@hooks/useColumnResize'
 import ViewModeToggle from './ViewModeToggle'
 import ProductsList from './ProductsList'
 import ProductsGrid from './ProductsGrid'
-import NoProducts from './NoProducts'
 import { toast } from 'react-toastify'
 import * as Styled from './Products.styled'
 import { openViewer } from '@state/viewer'
@@ -265,12 +266,14 @@ const Products = () => {
     }
   }
 
+  // default widths fit product, status, type, task and version next to an open details panel
+  // at 1600px; widths people set by resizing are kept in local storage and win
   let columns = useMemo(
     () => [
       {
         field: 'name',
         header: 'Product',
-        width: 200,
+        width: 170,
         body: (node) => {
           let className = ''
           let i = 0
@@ -298,8 +301,8 @@ const Products = () => {
       },
       {
         field: 'versionStatus',
-        header: 'Version Status',
-        width: 180,
+        header: 'Version status',
+        width: 130,
         style: { height: 'max-content' },
         body: (node) => {
           if (node.data.isGroup) return ''
@@ -320,6 +323,7 @@ const Products = () => {
               multipleSelected={focusedProducts.length}
               onOpen={() => handleStatusOpen(node.data.id, node.data.versionId)}
               style={{ maxWidth: '100%' }}
+              invert
             />
           )
         },
@@ -330,15 +334,16 @@ const Products = () => {
         width: 120,
         body: (node) => {
           if (!node.data.productType) return ''
-          const color = project.getProductType(node.data.productType).color || '#cccccc'
+          const { color } = project.getProductType(node.data.productType)
 
-          return <CellWithIcon text={node.data.productType} textStyle={{ color }} />
+          // tinted with its colour like the other coloured values, never coloured text
+          return <ValuePill variant="tinted" label={node.data.productType} color={color} />
         },
       },
       {
         field: 'taskName',
         header: 'Task',
-        width: 120,
+        width: 96,
       },
       {
         field: 'folder',
@@ -348,7 +353,7 @@ const Products = () => {
       {
         field: 'versionList',
         header: 'Version',
-        width: 70,
+        width: 84,
         body: (node) => (
           <VersionList
             row={node.data}
@@ -359,9 +364,10 @@ const Products = () => {
       },
       {
         field: 'createdAt',
-        header: 'Created At',
-        width: 150,
-        body: (node) => node.data.createdAt && <TimestampField value={node.data.createdAt} />,
+        header: 'Created at',
+        width: 160,
+        body: (node) =>
+          node.data.createdAt && <TimestampField value={node.data.createdAt} seconds={false} />,
       },
       {
         field: 'versionAuthor',
@@ -392,9 +398,10 @@ const Products = () => {
   const allColumnsNames = filterOptions.map(({ value }) => value)
   const isMultiSelected = focusedFolders.length > 1
 
+  // one folder selected: every row is in it, so its column starts hidden
   const [shownColumnsSingleFocused, setShownColumnsSingleFocused] = useLocalStorage(
     'products-columns-filter-single',
-    allColumnsNames,
+    allColumnsNames.filter((name) => name !== 'folder'),
   )
   const [shownColumnsMultiFocused, setShownColumnsMultiFocused] = useLocalStorage(
     'products-columns-filter-multi',
@@ -691,16 +698,16 @@ const Products = () => {
   //
 
   const isNone = tableData.length === 0
+  const showPlaceholder = isNone && !isLoading && !isFetching
 
   return (
     <Section wrap>
       <Toolbar>
-        <InputText
-          style={{ width: '200px' }}
-          placeholder="Filter products..."
+        <SearchInput
+          style={{ flex: '0 1 200px', minWidth: 128 }}
+          placeholder="Filter products"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          autoComplete="off"
           data-tooltip="Use '!' to exclude and ',' to separate multiple filters. Example: '!image, render, compositing'"
         />
         <Styled.TaskFilterDropdown
@@ -709,7 +716,7 @@ const Products = () => {
           onChange={handleTaskTypeChange}
           onClear={!!selectedTaskTypes.length && handleTaskTypeChange}
           clearTooltip="Clear task types"
-          placeholder="Task types..."
+          placeholder="Task types"
           multiSelect
         />
         <Styled.ColumnsFilterSelect
@@ -728,7 +735,8 @@ const Products = () => {
           disabled={focusedFolders.length > 1 ? ['grid'] : []}
         />
       </Toolbar>
-      <TablePanel
+      <Styled.ProductsTablePanel
+        className={clsx({ empty: showPlaceholder })}
         style={{ overflow: 'hidden' }}
         onContextMenu={handleTablePanelContext}
         onKeyDown={handleKeyDown}
@@ -768,8 +776,16 @@ const Products = () => {
             loadingProducts={loadingProducts}
           />
         )}
-        {isNone && !isLoading && !isFetching && <NoProducts error={error} />}
-      </TablePanel>
+        {showPlaceholder && (
+          <EmptyPlaceholder
+            icon={getEntityTypeIcon('product')}
+            message={
+              focusedFolders.length ? 'No products found' : 'Select a folder to see its products'
+            }
+            error={error}
+          />
+        )}
+      </Styled.ProductsTablePanel>
     </Section>
   )
 }

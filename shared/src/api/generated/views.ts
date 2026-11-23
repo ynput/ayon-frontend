@@ -150,6 +150,8 @@ export type ViewListItemModel = {
   working: boolean
   position: number
   accessLevel: number
+  /** False when the view is not shared with the user, who sees it only because they are a manager or admin */
+  sharedWithMe?: boolean
 }
 export type ViewListModel = {
   views: ViewListItemModel[]

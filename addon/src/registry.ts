@@ -3,6 +3,7 @@
 // useSyncExternalStore.
 import { useSyncExternalStore } from 'react'
 import type { AddonInfo, AnyContribution, Contribution } from './contributions'
+import { isExposed } from './exposure'
 import { SLOTS } from './slots'
 import type { SlotName } from './slots'
 import {
@@ -21,7 +22,12 @@ export interface ManifestEntry {
 }
 
 interface RegistryState {
+  /** what the user sees: contributions their exposure level hides are in `hidden` instead */
   contributions: AnyContribution[]
+  /** contributions the user's exposure level hides (`minExposureLevel`, a page's `access`) */
+  hidden: AnyContribution[]
+  /** the user's UI exposure level; `undefined` until the host knows the user */
+  exposureLevel: number | undefined
   skipped: SkippedContribution[]
   addons: AddonInfo[]
   /** the slots addons declared, each with its owner */
@@ -29,15 +35,26 @@ interface RegistryState {
   skippedSlots: SkippedDeclaration[]
   /** true until the host has loaded every manifest it knows of */
   isLoading: boolean
+  /** Show slots is on: `contributions` ends with each slot's example (`example: true`) */
+  examples: boolean
+  /** a switch of the slot inspector is on: rendered contributions carry `contributionTags` */
+  tagged: boolean
+  /** the slot inspector is available: `ContributionView` keeps a wrapper for the tags */
+  wrapped: boolean
 }
 
 let state: RegistryState = {
   contributions: [],
+  hidden: [],
+  exposureLevel: undefined,
   skipped: [],
   addons: [],
   slots: [],
   skippedSlots: [],
   isLoading: true,
+  examples: false,
+  tagged: false,
+  wrapped: false,
 }
 // every manifest registered so far: the registry is computed from all of them, because a change to
 // one addon's declarations changes which contributions of the others apply
@@ -48,12 +65,16 @@ const built = new WeakMap<object, AnyContribution>()
 // the skipped contributions already in the console
 let warnedSkipped: SkippedContribution[] = []
 const listeners = new Set<() => void>()
+// the example builder, loaded when Show slots first turns on
+let examples: typeof import('./examples') | undefined
 // per-slot snapshots, rebuilt lazily after each change (useSyncExternalStore needs stable values)
 let slotSnapshots = new Map<string, { contributions: AnyContribution[]; isLoading: boolean }>()
+let hiddenSnapshots = new Map<string, AnyContribution[]>()
 
 const setState = (next: Partial<RegistryState>) => {
   state = { ...state, ...next }
   slotSnapshots = new Map()
+  hiddenSnapshots = new Map()
   listeners.forEach((listener) => listener())
 }
 
@@ -63,6 +84,9 @@ const subscribe = (listener: () => void) => {
     listeners.delete(listener)
   }
 }
+
+/** Calls the listener after every change of the registry (`getRegistry`). */
+export const subscribeRegistry = subscribe
 
 const warnNew = <T>(previous: readonly T[], next: readonly T[], format: (item: T) => string) => {
   const known = new Set(previous.map(format))
@@ -100,16 +124,22 @@ const applyManifests = (next: ManifestEntry[]) => {
 
   const available = { ...SLOTS, ...Object.fromEntries(slots.map((slot) => [slot.name, slot])) }
   const contributions: AnyContribution[] = []
+  const hidden: AnyContribution[] = []
   const skipped: SkippedContribution[] = []
   for (const { addon, manifest } of next) {
     const result = checkManifest(addon, manifest, available, built)
-    contributions.push(...result.contributions)
+    // hidden here, so no surface sees them and none of their code loads
+    for (const contribution of result.contributions) {
+      ;(isExposed(contribution, state.exposureLevel) ? contributions : hidden).push(contribution)
+    }
     skipped.push(...result.skipped)
   }
+  // each slot's example after its real contributions: surfaces list a slot's in registry order
+  if (state.examples && examples) contributions.push(...examples.buildExamples(slots))
 
   warnNew(state.skippedSlots, skippedSlots, formatSkippedDeclaration)
   const addons = new Map(next.map(({ addon }) => [addon.name, addon]))
-  setState({ contributions, skipped, slots, skippedSlots, addons: [...addons.values()] })
+  setState({ contributions, hidden, skipped, slots, skippedSlots, addons: [...addons.values()] })
   warnSkipped()
 }
 
@@ -129,7 +159,7 @@ export const registerManifests = (entries: readonly ManifestEntry[]) => {
 export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
   registerManifests([{ addon, manifest }])
   return {
-    contributions: state.contributions.filter((c) => c.addon.name === addon.name),
+    contributions: state.contributions.filter((c) => c.addon.name === addon.name && !isExample(c)),
     skipped: state.skipped.filter((s) => s.addon === addon.name),
   }
 }
@@ -138,12 +168,103 @@ export const registerManifest = (addon: AddonInfo, manifest: unknown) => {
 export const unregisterAddon = (addonName: string) =>
   applyManifests(manifests.filter(({ addon }) => addon.name !== addonName))
 
+/**
+ * The signed-in user's UI exposure level (`uiExposureLevel`, 900 for service users). Until the host
+ * sets it, contributions with a `minExposureLevel` (or a page with `access`) are hidden. A hidden
+ * contribution is left out of `useContributions` and `getRegistry().contributions`, so none of its
+ * code loads.
+ */
+export const setExposureLevel = (level: number | undefined) => {
+  if (state.exposureLevel === level) return
+  state = { ...state, exposureLevel: level }
+  applyManifests(manifests)
+}
+
 /** The host calls this once every manifest it knows of has loaded (or failed). */
 export const setManifestsLoading = (isLoading: boolean) => {
   if (state.isLoading === isLoading) return
   setState({ isLoading })
   warnSkipped()
 }
+
+/**
+ * Show slots: adds the example contribution of every slot, AYON's and the declared ones, each
+ * owned by its slot's owner (`ayon` for AYON's). Their code loads when this first turns them on.
+ */
+export const setSlotExamples = (on: boolean) => {
+  if (state.examples === on) return
+  state = { ...state, examples: on }
+  if (!on || examples) {
+    applyManifests(manifests)
+    return
+  }
+  import('./examples').then(
+    (module) => {
+      examples = module
+      if (state.examples) applyManifests(manifests)
+    },
+    (error) => console.error('could not load the slot examples', error),
+  )
+}
+
+/** Internal, for tests (Node can't load the sources' dynamic imports): the example builder, loaded. */
+export const provideExamples = (module: typeof import('./examples')) => {
+  examples = module
+}
+
+/** Whether a contribution is a slot's example (Show slots), not an addon's. */
+export const isExample = (contribution: object) => (contribution as { example?: unknown }).example === true
+
+/** The attributes that tag a rendered contribution for the slot inspector. */
+export interface ContributionTags {
+  'data-ayon-addon': string
+  'data-ayon-slot': string
+  'data-ayon-contribution': string
+}
+
+/**
+ * Tags rendered contributions (`contributionTags`) while the slot inspector needs them; without
+ * it, AYON's DOM has none.
+ */
+export const setContributionTags = (on: boolean) => {
+  if (state.tagged !== on) setState({ tagged: on })
+}
+
+/** The attributes of an element that shows a contribution, or nothing when tags are off. */
+export const contributionTags = (contribution: {
+  addon: { name: string }
+  slot: string
+  key: string
+}): ContributionTags | undefined =>
+  state.tagged
+    ? {
+        'data-ayon-addon': contribution.addon.name,
+        'data-ayon-slot': contribution.slot,
+        'data-ayon-contribution': contribution.key,
+      }
+    : undefined
+
+const getTagged = () => state.tagged
+
+/**
+ * Whether rendered contributions are tagged; re-renders when it changes. For `ContributionView`:
+ * a switch is a registry change, so `useContributions` re-renders the host's surfaces anyway.
+ */
+export const useContributionTagging = () => useSyncExternalStore(subscribe, getTagged, getTagged)
+
+/**
+ * Keeps the `display: contents` element `ContributionView` puts the tags on, with or without
+ * them, while the slot inspector is available: turning the tags on and off then changes
+ * attributes only, and contributions keep their state. Without it, AYON's DOM has no wrappers.
+ */
+export const setContributionWrappers = (on: boolean) => {
+  if (state.wrapped !== on) setState({ wrapped: on })
+}
+
+const getWrapped = () => state.wrapped
+
+/** Whether `ContributionView` wraps contributions; re-renders when it changes. */
+export const useContributionWrappers = () => useSyncExternalStore(subscribe, getWrapped, getWrapped)
 
 /** Everything registered, for tooling (developer panel, `ayon-addon check`). */
 export const getRegistry = (): Readonly<RegistryState> => state
@@ -167,6 +288,27 @@ export const getContributions = <S extends SlotName>(slot: S): ContributionsResu
   }
   return snapshot as unknown as ContributionsResult<S>
 }
+
+const getHidden = (slot: string) => {
+  let snapshot = hiddenSnapshots.get(slot)
+  if (!snapshot) {
+    snapshot = state.hidden.filter((c) => c.slot === slot)
+    hiddenSnapshots.set(slot, snapshot)
+  }
+  return snapshot
+}
+
+/**
+ * For the host: the contributions to one slot the user's exposure level hides. Never render them
+ * or load their code; a tab AYON always shows for an addon's page (`ownedPages`) hides when its
+ * page is here.
+ */
+export const useHiddenContributions = <S extends SlotName>(slot: S): Contribution<S>[] =>
+  useSyncExternalStore(
+    subscribe,
+    () => getHidden(slot),
+    () => getHidden(slot),
+  ) as unknown as Contribution<S>[]
 
 /**
  * The contributions to one slot, updated as manifests load.

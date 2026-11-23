@@ -19,7 +19,12 @@ import {
   useUpdateEntitiesMutation,
 } from '@shared/api'
 import type { FolderType, Status, TaskType, EnumItem } from '@shared/api'
-import { EmptyPlaceholder, FilterFieldType, SyncButton } from '@shared/components'
+import {
+  EmptyPlaceholder,
+  EmptyPlaceholderFlexWrapper,
+  FilterFieldType,
+  SyncButton,
+} from '@shared/components'
 import { createFilterFromSlicer, useTaskProgressViewSettings } from '@shared/containers'
 import { TaskFieldChange, TasksProgressTable } from './components'
 // state
@@ -123,10 +128,7 @@ const TasksProgress: FC<TasksProgressProps> = ({
   const selectedTasks = useSelector((state: $Any) => state.context.focused.tasks) as string[]
   const [activeTask, setActiveTask] = useState<string | null>(null)
   //   GET PROJECT ASSIGNEES
-  const { data: users = [] } = useGetUsersAssigneeQuery(
-    { projectName },
-    { skip: !projectName },
-  )
+  const { data: users = [] } = useGetUsersAssigneeQuery({ projectName }, { skip: !projectName })
 
   // when the slice type is not hierarchy we need to get the root folders
   const rootFolderIds = useRootFolders()
@@ -449,14 +451,18 @@ const TasksProgress: FC<TasksProgressProps> = ({
               onCollapseRow={handleCollapseToggle}
             />
           ) : (
-            <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
+            <EmptyPlaceholderFlexWrapper>
+              <EmptyPlaceholder message={getPlaceholderMessage(sliceType)} icon="folder_open" />
+            </EmptyPlaceholderFlexWrapper>
           )
         ) : (
-          <EmptyPlaceholder
-            message={'Select a folder to begin.'}
-            icon="folder_open"
-            error={error}
-          />
+          <EmptyPlaceholderFlexWrapper>
+            <EmptyPlaceholder
+              message="Select a folder to see its tasks"
+              icon="folder_open"
+              error={error}
+            />
+          </EmptyPlaceholderFlexWrapper>
         )}
       </Section>
     </>

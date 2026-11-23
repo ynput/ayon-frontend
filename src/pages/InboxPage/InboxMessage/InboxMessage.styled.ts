@@ -30,11 +30,12 @@ export const Message = styled.li`
   cursor: pointer;
   user-select: none;
 
-  --inbox-row-bg: var(--md-sys-color-surface-container-low);
+  /* messages are rows on the content surface, like table rows, in a list on a panel */
+  --inbox-row-bg: var(--color-table-row);
   background-color: var(--inbox-row-bg);
 
   &:hover:not(.disableHover):not(.placeholder) {
-    --inbox-row-bg: var(--md-sys-color-surface-container-low-hover);
+    --inbox-row-bg: var(--color-table-row-hover);
 
     ${showClearButton}
   }
@@ -97,6 +98,11 @@ export const Message = styled.li`
     display: none;
   }
 
+  /* the subject of an unread message stands out, like in a mail inbox */
+  &:not(.isRead) .title {
+    font-weight: 600;
+  }
+
   /* make all text grey when read */
   &.isRead {
     span:not(.icon):not(.shortcut) {
@@ -139,8 +145,10 @@ export const Left = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-medium);
-  min-width: clamp(350px, 30vw, 500px);
-  max-width: clamp(350px, 30vw, 500px);
+  /* a fixed width, unless the row is too narrow for the status change and the date: then the title gives way */
+  flex: 0 1 clamp(260px, 20vw, 380px);
+  min-width: 200px;
+  max-width: clamp(260px, 20vw, 380px);
 
   .title {
     white-space: nowrap;
@@ -149,15 +157,16 @@ export const Left = styled.div`
   }
 `
 
+// rows have no thumbnails, only the entity type's icon, without the empty image box around it
 export const MessageThumbnail = styled(Thumbnail)`
-  width: 50px;
-  min-width: 50px;
-  max-width: 50px;
+  width: 20px;
+  min-width: 20px;
+  max-width: 20px;
   height: 30px;
   max-height: 30px;
   margin: 0;
   border-radius: var(--border-radius-m);
-  margin-right: 4px;
+  background-color: transparent;
 
   .icon {
     font-size: 18px;
@@ -168,13 +177,19 @@ export const Middle = styled.div`
   display: flex;
   gap: var(--base-gap-large);
   overflow: hidden;
-  flex-grow: 1;
+  flex: 1 1 0;
   align-items: center;
 
   .icon.type {
     font-size: 18px;
 
     font-variation-settings: 'FILL' 1;
+  }
+
+  /* a status change keeps room for its icon-only form (two status squares and the arrow between them),
+     after the unread count's place */
+  &.status-change {
+    min-width: calc(24px + var(--base-gap-large) + 2 * 20px + 18px + 2 * 4px);
   }
 `
 
@@ -194,9 +209,9 @@ export const Right = styled.div`
 `
 
 export const DateContainer = styled.div`
-  /* wide enough for a locale date plus time, right aligned so rows line up */
-  min-width: 128px;
-  max-width: 128px;
+  /* wide enough for a date and time ("22 Oct 2026, 22:43"), right aligned so rows line up */
+  min-width: 140px;
+  max-width: 140px;
   display: flex;
   justify-content: flex-end;
   margin-right: var(--padding-m);
@@ -209,13 +224,31 @@ export const Date = styled.span`
   text-overflow: ellipsis;
 `
 
+// a row action, not the page's main one: compact and quiet
 export const ClearButton = styled(Button)`
-  height: 30px;
+  height: 24px;
+  min-height: 24px;
+  padding: 0 6px;
+  gap: 4px;
 `
 
+/* number of unread messages in the thread, as a small badge */
 export const Unread = styled.span`
-  min-width: 18px;
-  max-width: 18px;
+  flex-shrink: 0;
+  /* same width for one and two digits, so the icons after it line up */
+  min-width: 24px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  background-color: var(--md-sys-color-surface-container-highest);
+  color: var(--md-sys-color-on-surface);
+
   &.hide {
     opacity: 0;
   }

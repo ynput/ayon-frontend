@@ -204,7 +204,7 @@ test.describe('users settings', () => {
       const users = new UsersSettingsPage(page)
       await users.goto({ filter: '' })
       await expect(users.row(bulkName(0))).toBeVisible()
-      const input = page.getByPlaceholder('Filter users...')
+      const input = page.getByPlaceholder('Filter users')
 
       // every typed character is kept, and the list follows
       await input.click()

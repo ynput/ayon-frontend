@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { entityUrl } from '@ynput/ayon-addon'
-import type { MenuItemType } from '@shared/components/Menu/Menu'
+import type { PanelTool, PanelToolDivider } from '@shared/components/TabbedPanel'
 import type { DeletableEntity } from '@shared/context'
 import { pluralize } from '@shared/util'
 import type { DetailsPanelEntityListsContext, SelectedEntityRef, ListEntityRef } from '../types'
@@ -21,9 +21,9 @@ interface UseMenuOptionsParams {
   entityListsContext: DetailsPanelEntityListsContext | undefined
   // items addons contribute (detailsPanel.menuItem slot), shown before "View data"
   /** first in the menu (addon items with position `top`) */
-  extraTopItems?: MenuItemType[]
+  extraTopItems?: PanelTool[]
   /** after the menu's own actions, above View data and Delete */
-  extraItems?: MenuItemType[]
+  extraItems?: PanelTool[]
   onPip: () => void
   onOpenViewer: () => void
   onUploadThumbnail: () => void
@@ -33,8 +33,11 @@ interface UseMenuOptionsParams {
   onDelete: () => void
 }
 
+const MENU_DIVIDER: PanelToolDivider = { divider: true }
+
 export interface MenuOptionsResult {
-  items: MenuItemType[]
+  /** the details panel's "more" menu, as its tools */
+  items: PanelTool[]
   shareLink: string | null
 }
 
@@ -86,7 +89,7 @@ export const useMenuOptions = ({
   }, [selectedEntities, entityId, entityType])
 
   return useMemo<MenuOptionsResult>(() => {
-    const items: MenuItemType[] = [...extraTopItems]
+    const items: PanelTool[] = [...extraTopItems]
 
     if (canOpenViewer) {
       items.push({
@@ -106,6 +109,9 @@ export const useMenuOptions = ({
       })
     }
 
+    // sections: view, upload, lists and sharing, addon items, data; the menu drops empty ones
+    items.push(MENU_DIVIDER)
+
     if (canUploadThumbnail) {
       items.push({
         id: 'upload-thumbnail',
@@ -123,6 +129,8 @@ export const useMenuOptions = ({
         onClick: onUploadVersion,
       })
     }
+
+    items.push(MENU_DIVIDER)
 
     if (entityListsContext?.openAddToListDialog && projectName && normalizedSelected.length) {
       const targetEntityType = normalizedSelected[0]?.entityType || entityType
@@ -144,9 +152,7 @@ export const useMenuOptions = ({
           label: 'Add to session',
           icon: 'list_alt_add',
           disabled: !anyHasReviewables,
-          ...(anyHasReviewables
-            ? {}
-            : { ['data-tooltip' as any]: 'No reviewables on selected version' }),
+          tooltip: anyHasReviewables ? undefined : 'No reviewables on selected version',
           onClick: () => openDialog(targetEntityType, normalizedSelected, { isReview: true }),
         })
       }
@@ -170,7 +176,7 @@ export const useMenuOptions = ({
       })
     }
 
-    items.push(...extraItems)
+    items.push(...extraItems, MENU_DIVIDER)
 
     items.push({
       id: 'view-data',

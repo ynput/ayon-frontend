@@ -38,6 +38,8 @@ export * from './parseFilename'
 export * from './mentionTypeOptions'
 export * from './searchTerms'
 export * from './activeEntities'
+export * from './formatDate'
+export * from './entityAttribReadOnly'
 
 import isHTMLElement from './isHTMLElement'
 export { isHTMLElement }
@@ -48,3 +50,4 @@ export * from './afterStartup'
 export { getEntityIcon, getEntityColor } from './iconUtils'
 export type { IconAnatomy } from './iconUtils'
 export * from './accessToken'
+export * from './pillColors'

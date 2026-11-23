@@ -22,6 +22,7 @@ const userSlice = createSlice({
       isManager: false,
       isUser: true,
       isGuest: false,
+      isDeveloper: false,
     },
     attrib: {
       fullName: '',

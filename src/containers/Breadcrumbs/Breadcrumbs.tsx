@@ -23,7 +23,7 @@ const parseQueryParams = (query: string): Record<string, string> => {
 }
 
 const getSettingsScopeLabel = (query: string): string => {
-  return query?.includes('project') ? 'Projects Manager' : 'Studio Settings'
+  return query?.includes('project') ? 'Project manager' : 'Studio settings'
 }
 
 const getSettingsPathname = ({ project, site }: { project?: string; site?: string }): string => {
@@ -62,17 +62,45 @@ const getUriTargetUrl = (uri: string, location: Location): string | null => {
   return `${pathname}?${params}`
 }
 
-const getPathnameLabel = (pathname: string): string => {
-  const pageTitle = pathname.split('/')[1]
+// route segments named like the nav and tabs that lead to them
+const SECTION_LABELS: Record<string, string> = {
+  dashboard: 'Home',
+  settings: 'Studio settings',
+  manageProjects: 'Project manager',
+}
+const MODULE_LABELS: Record<string, Record<string, string>> = {
+  projects: { tasks: 'Task progress', reviews: 'Review', scheduler: 'Schedule' },
+  account: { downloads: 'Launchers' },
+  settings: {
+    server: 'Global',
+    studio: 'Studio settings',
+    site: 'Site settings',
+    anatomyPresets: 'Anatomy presets',
+    accessGroups: 'Permissions',
+  },
+  manageProjects: {
+    projectSettings: 'Project settings',
+    permissions: 'Project permissions',
+    projectAccess: 'Project access',
+    siteSettings: 'Site settings',
+  },
+}
 
-  if (pageTitle?.includes('settings')) return 'Studio Settings'
-  if (pageTitle?.includes('manageProjects')) return 'Projects Manager'
-
-  return ''
+const pathname2crumbs = (pathname: string): string[] => {
+  const [section, ...rest] = pathname.split('/').filter(Boolean)
+  if (!section) return []
+  const sectionLabel = SECTION_LABELS[section] || upperFirst(section)
+  if (section === 'projects') return [section, ...rest].map(upperFirst)
+  const modules = rest
+    .filter((segment) => segment !== 'addon')
+    .map((segment) => MODULE_LABELS[section]?.[segment] || upperFirst(segment))
+    // the "Studio settings" tab of Studio settings is not repeated
+    .filter((label) => label !== sectionLabel)
+  return [sectionLabel, ...modules]
 }
 
 // TODO(YN-0581 / issue #1940): swap project-name crumb to project label (label || name).
-const uri2crumbs = (uri: string = '', pathname: string): string[] => {
+const uri2crumbs = (uri: string = '', pathname: string, collapse = false): string[] => {
   const [scope, pathAndQuery = ''] = (uri || '').split('://')
   const [path, query] = pathAndQuery.split('?')
   const crumbs: string[] = path.split('/').filter(Boolean)
@@ -81,14 +109,16 @@ const uri2crumbs = (uri: string = '', pathname: string): string[] => {
   if (scope?.includes('ayon+settings')) {
     crumbs.unshift(getSettingsScopeLabel(query))
   } else if (scope?.includes('ayon+entity')) {
-    crumbs.unshift('Project')
-  } else {
-    const pathnameLabel = getPathnameLabel(pathname)
-    if (pathnameLabel) {
-      crumbs.unshift(pathnameLabel)
+    if (pathname.startsWith('/projects/')) {
+      crumbs.unshift('Project')
     } else {
-      crumbs.unshift(...pathname.slice(1).split('/').filter(Boolean).map(upperFirst))
+      const [projectName = '', ...folders] = crumbs
+      const shownFolders =
+        collapse && folders.length > 2 ? ['…', folders[folders.length - 1]] : folders
+      crumbs.splice(0, crumbs.length, ...pathname2crumbs(pathname), projectName, ...shownFolders)
     }
+  } else {
+    crumbs.unshift(...pathname2crumbs(pathname))
   }
 
   // Add query parameter breadcrumbs
@@ -172,7 +202,8 @@ const Breadcrumbs = () => {
     }
   }
 
-  const uriDisplay = uri2crumbs(uri, location.pathname).join(' / ')
+  const uriDisplay = uri2crumbs(uri, location.pathname, true).join(' / ')
+  const uriFullDisplay = uri2crumbs(uri, location.pathname).join(' / ')
   const inputValue = editMode ? localUri : uriDisplay || 'Go to URI...'
 
   return (
@@ -203,6 +234,8 @@ const Breadcrumbs = () => {
               onKeyDown={handleKeyDown}
               ref={inputRef}
               style={{ borderRadius: '4px 0 0 4px' }}
+              data-tooltip={!editMode && uriFullDisplay !== uriDisplay ? uriFullDisplay : undefined}
+              data-tooltip-position="bottom"
             />
           </label>
           <Button

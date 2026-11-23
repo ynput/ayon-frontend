@@ -113,7 +113,8 @@ export const VersionUploadProvider: React.FC<VersionUploadProviderProps> = ({
   const lastSubmittedRef = useRef<{ folderId: string; productName: string } | null>(null)
 
   // Fetch products for the folder (only when no productId — Overview/Browser flow)
-  const { data: folderProducts = [], isLoading: isFolderProductsLoading } =
+  // isFetching, not isLoading: after a skip (dialog closed) the hook keeps the previous folder's data
+  const { data: folderProducts = [], isFetching: isFolderProductsLoading } =
     useGetFolderProductsQuery(
       { projectName, folderId },
       { skip: !folderId || !isOpen || !!productId },

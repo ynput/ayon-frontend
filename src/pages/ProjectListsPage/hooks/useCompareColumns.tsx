@@ -11,6 +11,7 @@ import { isEntityRestricted } from '@shared/containers/ProjectTreeTable/utils/re
 import { useProjectContext } from '@shared/context'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 import { toDropdownErrorText } from '@shared/util/attributeEnum'
+import { isEntityAttribLocked } from '@shared/util'
 import { COMPARE_ENTITY_COLUMN_PREFIX, COMPARE_LIST_COLUMN_PREFIX } from '../listValues/columns'
 import type { ListValueComparison } from '../listValues/types'
 
@@ -19,7 +20,7 @@ type Props = {
   compareValues?: Map<string, Record<string, ListValueComparison>>
   compareLabel?: string // 'Entity' or the compared list's name
   withEntities: boolean // comparing with the entities, not another list
-  entityReadOnly?: boolean // the entities' attributes can't be changed from this list
+  entityType?: string // the list's, for the attributes locked on its entities
   columnVisibility: VisibilityState
   defaultColumnVisibility?: VisibilityState
 }
@@ -30,7 +31,7 @@ const useCompareColumns = ({
   compareValues,
   compareLabel,
   withEntities,
-  entityReadOnly,
+  entityType,
   columnVisibility,
   defaultColumnVisibility,
 }: Props) => {
@@ -86,7 +87,8 @@ const useCompareColumns = ({
             )
           }
 
-          const isReadOnly = !withEntities || !!entityReadOnly || !!attrib.readOnly
+          const isReadOnly =
+            !withEntities || isEntityAttribLocked(entityType, attrib) || !!attrib.readOnly
           return (
             <CellWidget
               rowId={row.id}
@@ -129,7 +131,7 @@ const useCompareColumns = ({
         },
       },
     }))
-  }, [resolvedAttribs, compareValues, compareLabel, withEntities, entityReadOnly])
+  }, [resolvedAttribs, compareValues, compareLabel, withEntities, entityType])
 
   const compareColumnIds = useMemo(
     () => compareColumns.map(({ column }) => column.id as string),

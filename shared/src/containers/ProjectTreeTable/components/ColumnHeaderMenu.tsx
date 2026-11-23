@@ -7,6 +7,8 @@ import { useColumnGroupBy } from '../hooks'
 import { MAX_SORT_KEYS } from '@shared/util/sortingHelpers'
 import { ColumnHeaderMenuUI, type ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
 
+const SLOT = 'projectTable.columnMenuItem'
+
 interface ColumnHeaderMenuProps {
   header: Header<TableRow, unknown>
   canHide?: boolean
@@ -160,7 +162,9 @@ export const ColumnHeaderMenu = ({
     })
   }
 
+  // addon items are a section of their own
   const addonItems = getAddonItems?.(addonColumn) ?? []
+  if (addonItems.length) menuItems.push({ id: 'divider', type: 'divider' })
   for (const item of addonItems) {
     menuItems.push({
       ...item,
@@ -172,6 +176,7 @@ export const ColumnHeaderMenu = ({
   }
 
   if (canHide) {
+    if (addonItems.length) menuItems.push({ id: 'divider', type: 'divider' })
     menuItems.push({
       id: 'hide',
       label: isVisible ? 'Hide column' : 'Show column',
@@ -207,6 +212,7 @@ export const ColumnHeaderMenu = ({
       className={className}
       menuItems={menuItems}
       menuId={menuId || `column-menu-${header.id}`}
+      slot={SLOT}
     />
   )
 }

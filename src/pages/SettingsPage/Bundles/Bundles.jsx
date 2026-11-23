@@ -26,6 +26,7 @@ import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-s
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
   const developerMode = useSelector((state) => state.user.attrib.developerMode)
+  const isDeveloper = useSelector((state) => state.user.data.isDeveloper)
   const dispatch = useDispatch()
   // addon upload dialog
   const [uploadOpen, setUploadOpen] = useState(false)
@@ -73,13 +74,13 @@ const Bundles = () => {
     return bundles
   }, [bundles, showArchived])
 
-  // filter out isDev bundles if developerMode off
+  // filter out isDev bundles for non-developers
   bundleList = useMemo(() => {
-    if (!developerMode) {
+    if (!isDeveloper) {
       return [...bundleList].filter((bundle) => !bundle.isDev)
     }
     return bundleList
-  }, [bundleList, developerMode])
+  }, [bundleList, isDeveloper])
 
   // filter out isProject bundles if showProject is false
   bundleList = useMemo(() => {
@@ -98,7 +99,7 @@ const Bundles = () => {
       return bundleList.find((b) => b.isProduction)
     } else if (param) {
       return bundleList.find((b) => b.name === param)
-    } else if (developerMode) {
+    } else if (isDeveloper) {
       return bundleList.find((b) => b.isDev && b.activeUser === userName)
     }
   }
@@ -283,7 +284,7 @@ const Bundles = () => {
         oldBundle ||
         bundleList.find((b) => b.name !== name && b.isProduction) ||
         bundleList.find((b) => b.name !== name && b.isStaging) ||
-        (developerMode && bundleList.find((b) => b.name !== name && b.isDev))
+        (isDeveloper && bundleList.find((b) => b.name !== name && b.isDev))
 
       if (hasSource) {
         // Open dialog — let user confirm, cancel, or copy
@@ -365,13 +366,13 @@ const Bundles = () => {
   let uploadHeader = ''
   switch (uploadOpen) {
     case 'addon':
-      uploadHeader = 'Upload Addons'
+      uploadHeader = 'Upload addons'
       break
     case 'installer':
-      uploadHeader = 'Upload Launcher'
+      uploadHeader = 'Upload launcher'
       break
     case 'package':
-      uploadHeader = 'Upload Dependency Package'
+      uploadHeader = 'Upload dependency package'
       break
     default:
       break
@@ -421,7 +422,7 @@ const Bundles = () => {
         bundle={copySettingsBundle.bundle}
         previousBundle={copySettingsBundle.previous}
         envTarget={copySettingsBundle.env}
-        devMode={developerMode}
+        devMode={isDeveloper}
         onCancel={closeCopySettings}
         onFinish={closeCopySettings}
         onSetTag={copySettingsBundle.pendingChange ? handleConfirmTagChange : undefined}
@@ -437,7 +438,7 @@ const Bundles = () => {
                   data-tooltip="Add new bundle"
                   data-shortcut="N"
                 >
-                  <span>Add Bundle</span>
+                  <span>Add bundle</span>
                 </Button>
                 <Button
                   icon="upload"
@@ -445,7 +446,7 @@ const Bundles = () => {
                   data-tooltip="Upload addon zip files"
                   data-shortcut="A"
                 >
-                  <span className="large">Upload Addons</span>
+                  <span className="large">Upload addons</span>
                   <span className="small">Addons</span>
                 </Button>
                 <Button
@@ -454,7 +455,7 @@ const Bundles = () => {
                   data-tooltip="Upload launchers for download"
                   data-shortcut="L"
                 >
-                  <span className="large">Upload Launcher</span>
+                  <span className="large">Upload launcher</span>
                   <span className="small">Launcher</span>
                 </Button>
                 <Button
@@ -463,7 +464,7 @@ const Bundles = () => {
                   data-tooltip="Upload dependency packages"
                   data-shortcut="P"
                 >
-                  <span className="large">Upload Dependency Package</span>
+                  <span className="large">Upload dependency package</span>
                   <span className="small">Package</span>
                 </Button>
                 <span style={{ whiteSpace: 'nowrap' }} className="large">
@@ -478,7 +479,7 @@ const Bundles = () => {
                   className="large"
                   data-tooltip={'Show per-project bundles'}
                 >
-                  Project
+                  Project bundles
                 </span>
                 <InputSwitch
                   checked={showProject}
@@ -493,7 +494,7 @@ const Bundles = () => {
                 onDuplicate={handleDuplicateBundle}
                 toggleBundleStatus={toggleBundleStatus}
                 errorMessage={!isFetching && isError && error?.data?.traceback}
-                developerMode={developerMode}
+                developerMode={isDeveloper}
                 onCopySettings={handleCopySettingsFrom}
               />
             </Section>
@@ -509,6 +510,7 @@ const Bundles = () => {
                     onSave={handleNewBundleEnd}
                     installers={installerVersions}
                     developerMode={developerMode}
+                    isDeveloper={isDeveloper}
                   />
                 ) : (
                   !!bundlesData.length &&
@@ -526,7 +528,7 @@ const Bundles = () => {
                       isLoading={isLoadingInstallers || isLoadingAddons || isFetching}
                       installers={installerVersions}
                       toggleBundleStatus={toggleBundleStatus}
-                      developerMode={developerMode}
+                      developerMode={isDeveloper}
                     />
                   ))
                 )}

@@ -48,7 +48,7 @@ const ProjectOverviewDataProvider: FC<Props> = ({
       defaultColumnVisibility={DEFAULT_COLUMN_VISIBILITY}
     >
       <ColumnDndProvider>
-        <ProjectOverviewProvider modules={modules} page={page}>
+        <ProjectOverviewProvider page={page}>
           <SettingsPanelProvider>
             <ProjectOverviewTableProvider
               modules={modules}

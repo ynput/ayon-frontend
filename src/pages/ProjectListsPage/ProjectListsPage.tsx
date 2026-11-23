@@ -34,6 +34,7 @@ import {
   SelectedRowsProvider,
   SelectionCellsProvider,
   TreeTableExtraColumn,
+  useCellEditing,
   type ProjectTreeTableProps,
 } from '@shared/containers/ProjectTreeTable'
 import OverviewActions from '@pages/ProjectOverviewPage/components/OverviewActions'
@@ -52,6 +53,7 @@ import useTableOpenViewer from '@pages/ProjectOverviewPage/hooks/useTableOpenVie
 import ListsShortcuts from './components/ListsShortcuts.tsx'
 import { MoveToFolderDialogContainer } from './components/MoveToFolderDialog'
 import { useSlicerContext, useViewsContext, useViewsState } from '@shared/containers/index.ts'
+import { getSidebarDefaultSize } from '@shared/containers/Slicer'
 import DetailsPanelSplitter from '@components/DetailsPanelSplitter.ts'
 import DndContextWrapper from './components/DndContextWrapper'
 import { toast } from 'react-toastify'
@@ -65,7 +67,6 @@ import { getCellIdForColumn } from './util/cellIds.ts'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import { TableExportButton } from '@shared/containers/TableExport'
 import ListExportSource from './components/ListExportSource'
-import { isEntityAttribReadOnly } from './util/getColumnConfigFromType'
 import { TableGridPlaylistSwitch } from './components/TableGridPlaylistSwitch/TableGridPlaylistSwitch.tsx'
 import { getBundleModeFromUser } from '@shared/util/getBundleMode.ts'
 import usePatchListsCaches from './hooks/usePatchListsCaches'
@@ -103,12 +104,19 @@ const ProviderFill = styled.div`
   gap: var(--base-gap-large);
   width: 100%;
 
-  & > *:only-child {
+  /* not the table splitter, the only child too while no list is selected (no toolbar) */
+  & > *:only-child:not(.p-splitter) {
     display: flex;
     flex-direction: column;
     flex: 1;
     min-height: 0;
     width: 100%;
+  }
+
+  /* the review addon shows its own empty state here while no session is selected: on a panel, not the page background */
+  &:has(> .empty-placeholder:only-child) {
+    background-color: var(--md-sys-color-surface-container-low);
+    border-radius: var(--border-radius-m);
   }
 `
 
@@ -214,7 +222,7 @@ const ProjectListsWithInnerProviders: FC<ProjectListsWithInnerProvidersProps> = 
         ? 'Entity'
         : compareView.comparedList?.label,
     withEntities: compareView.compareWith === COMPARE_WITH_ENTITIES,
-    entityReadOnly: isEntityAttribReadOnly(selectedList?.entityType),
+    entityType: selectedList?.entityType,
     columnVisibility: columns.columnVisibility || {},
     defaultColumnVisibility,
   })
@@ -379,8 +387,23 @@ const ProjectLists: FC<ProjectListsProps> = ({
     useSelectionCellsContext()
 
   // list values (powerpack): the compare controls and the lists sidebar's menu items
-  const { module: listValues, isPowerFeature, outdated } = useListValuesContext()
+  const {
+    module: listValues,
+    isPowerFeature,
+    outdated,
+    settings: listValuesSettings,
+    setSettings: setListValuesSettings,
+    editsEntities,
+  } = useListValuesContext()
   const { compareView } = useListItemsDataContext()
+  // undo replays an edit where edits go now: switching between list values and entities would
+  // undo a list value onto the entity
+  const { history } = useCellEditing()
+  const clearHistory = history?.clearHistory
+  useEffect(() => {
+    clearHistory?.()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editsEntities])
   const { listsMap } = useListsDataContext()
   const shownList = useMemo<ListRef | undefined>(
     () =>
@@ -482,6 +505,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
     onUpdateDisplayStyleWithPersistence('table')
   }, [reviewSessionCardsOutdated])
 
+  // only the first visit: the splitter keeps the sizes the user drags to
+  const sidebarSize = getSidebarDefaultSize()
+
   return (
     <main style={{ gap: 4 }}>
       <Splitter
@@ -490,7 +516,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
         stateKey="overview-splitter-table"
         stateStorage="local"
       >
-        <SplitterPanel size={12} minSize={2} style={{ maxWidth: 600 }}>
+        <SplitterPanel size={sidebarSize} minSize={2} style={{ maxWidth: 600 }}>
           <Section wrap>
             <ListsTable
               isReview={isReview}
@@ -499,7 +525,7 @@ const ProjectLists: FC<ProjectListsProps> = ({
             />
           </Section>
         </SplitterPanel>
-        <SplitterPanel size={88}>
+        <SplitterPanel size={100 - sidebarSize}>
           <Section wrap direction="column" style={{ height: '100%' }}>
             <ProviderFill>
               <ReviewSessionCardsProvider
@@ -601,6 +627,8 @@ const ProjectLists: FC<ProjectListsProps> = ({
                             view={compareView}
                             shownList={shownList}
                             ListPicker={CompareListPicker}
+                            settings={listValuesSettings}
+                            onSettingsChange={setListValuesSettings}
                           />
                         )}
                       </>

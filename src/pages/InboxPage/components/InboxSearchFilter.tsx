@@ -1,5 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { SearchFilter, Filter, Option, SearchFilterRef } from '@ynput/ayon-react-components'
+import {
+  SearchFilter,
+  Filter,
+  Option,
+  SearchFilterRef,
+  getFilterFromId,
+} from '@ynput/ayon-react-components'
 import styled from 'styled-components'
 import { useGetActivityCategoriesQuery, useGetActivityUsersQuery } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
@@ -49,6 +55,9 @@ const REVIEW_VALUES = [
   { id: 'request_changes', label: 'Requested changes', icon: 'refresh' },
 ]
 
+// skipped queries have no data: a fresh [] default would rebuild the options on every render
+const EMPTY: never[] = []
+
 interface InboxSearchFilterProps {
   filter: QueryFilter
   onChange: (filter: QueryFilter) => void
@@ -66,11 +75,11 @@ const InboxSearchFilter = ({
 }: InboxSearchFilterProps) => {
   const isDisabled = !projectName
 
-  const { data: users = [] } = useGetActivityUsersQuery(
+  const { data: users = EMPTY } = useGetActivityUsersQuery(
     { projects: [projectName as string] },
     { skip: isDisabled },
   )
-  const { data: categories = [], isLoading: isLoadingCategories } = useGetActivityCategoriesQuery(
+  const { data: categories = EMPTY, isLoading: isLoadingCategories } = useGetActivityCategoriesQuery(
     { projectName: projectName as string },
     { skip: isDisabled },
   )
@@ -172,9 +181,12 @@ const InboxSearchFilter = ({
   const dateRange = useDateRangeFilter()
   const searchFilterRef = useRef<SearchFilterRef>(null)
 
+  // buildFilterId stamps a new suffix on every rebuild, so compare by the filter key only
+  const filtersKey = JSON.stringify(filters.map((f) => ({ ...f, id: getFilterFromId(f.id) })))
+
   useEffect(() => {
     setLocalFilters(filters)
-  }, [JSON.stringify(filters)])
+  }, [filtersKey])
 
   const handleFinish = (newFilters: Filter[]) => onChange(clientFiltersToFeedFilter(newFilters))
 

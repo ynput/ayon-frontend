@@ -10,7 +10,7 @@ export const Header = styled.header`
   width: 100%;
   z-index: 20;
   user-select: none;
-  min-height: 40px;
+  min-height: var(--size-header);
 
   border-bottom: 1px solid var(--md-sys-color-surface-container-low);
   background-color: var(--md-sys-color-background);
