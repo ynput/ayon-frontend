@@ -17,6 +17,7 @@ export type PowerpackFeature =
   | 'entityLinks'
   | 'tableExport'
   | 'personalApiKeys'
+  | 'settingsHistory'
 
 export const powerpackFeatureOrder: PowerpackFeature[] = [
   'annotations',
@@ -35,6 +36,7 @@ export const powerpackFeatureOrder: PowerpackFeature[] = [
   'entityLinks',
   'tableExport',
   'personalApiKeys',
+  'settingsHistory',
 ]
 
 export const powerpackFeatures: {
@@ -124,5 +126,11 @@ export const powerpackFeatures: {
     description:
       'Create your own API keys on your profile, each with a name and an expiry, for scripts and tools that work as you.',
     bullet: 'Personal API keys for scripts and tools',
+  },
+  settingsHistory: {
+    label: 'Settings History',
+    description:
+      'See who changed which addon settings and when, compare the settings with any earlier moment and revert what changed.',
+    bullet: 'History of the addon settings',
   },
 }

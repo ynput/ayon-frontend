@@ -8,6 +8,7 @@ export type { AddonManifest, CommonMeta, ContributionFields, ContributionInput }
 export { EXPOSURE } from './exposure'
 export type { SlotDeclaration } from './slots'
 export {
+  addonSettingsHistory,
   appService,
   detailsPanelMenuItem,
   detailsPanelTab,

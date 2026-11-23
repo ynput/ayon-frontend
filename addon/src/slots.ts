@@ -234,6 +234,22 @@ export interface SlotMap {
     pieces: { component: Loader<ComponentType<SlotProps<'profile.section'>>> }
   }
   /**
+   * The history of the addon settings in the settings editor (Studio settings, Project settings),
+   * for the addons the editor shows: `timeline` above the settings, `sidebar` in the right column,
+   * where the unsaved changes are. While there are no unsaved changes, the sidebar takes their place;
+   * with unsaved changes, it shows above them. Both load when the editor shows an addon. Site
+   * settings have no history, so it doesn't show there.
+   */
+  'addonSettings.history': {
+    version: 1
+    meta: AddonSettingsHistoryMeta
+    context: AddonSettingsHistoryContext
+    pieces: {
+      timeline: Loader<ComponentType<SlotProps<'addonSettings.history'>>>
+      sidebar: Loader<ComponentType<SlotProps<'addonSettings.history'>>>
+    }
+  }
+  /**
    * Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to
    * websocket events, registering a store listener. `component` loads at startup and is mounted
    * once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks;
@@ -757,6 +773,74 @@ export interface ProfileSectionMeta {
 /** Context of a profile section: nothing besides `user`, the signed-in user it is about. */
 export type ProfileSectionContext = Record<never, never>
 
+/** Description of an `addonSettings.history` contribution. */
+export interface AddonSettingsHistoryMeta {
+  /** unique among the addon's contributions to the slot */
+  id: string
+  /** a Power Pack feature: shown only with a Power Pack licence. `false` by default */
+  powerFeature?: boolean
+}
+
+/** An addon in the settings editor. */
+export interface AddonSettingsAddon {
+  name: string
+  version: string
+  /** `production`, `staging` or the name of a dev bundle */
+  variant: string
+  title: string
+}
+
+/** The unsaved changes of an addon in the settings editor, as the editor keeps them. */
+export interface AddonSettingsChanges {
+  /** the settings with the unsaved changes, undefined until the editor loaded them */
+  data: Record<string, unknown> | undefined
+  /** paths of the changed settings */
+  changed: string[][]
+  /** paths of the overrides to remove */
+  unpinned: string[][]
+}
+
+/** An item of the right-click menu of a setting. */
+export interface AddonSettingsMenuItem {
+  label?: string
+  icon?: string
+  command?: () => void
+  disabled?: boolean
+  separator?: boolean
+}
+
+/** Items to add at the top of the right-click menu of a setting, for its addon and path. */
+export type AddonSettingsMenu = (addonName: string, path: string[]) => AddonSettingsMenuItem[]
+
+/** Context of the settings history: the editor it is shown in. */
+export interface AddonSettingsHistoryContext {
+  /** the addons the editor shows, top to bottom */
+  addons: AddonSettingsAddon[]
+  /** the project whose settings the editor shows; `null` for the studio settings */
+  projectName: string | null
+  /** the settings schemas of the addons, by addon name, once the editor has loaded them */
+  schemas: Record<string, Record<string, unknown>>
+  /** the setting selected in the editor */
+  selected: { addonName: string; path: string[] } | null
+  /** the editor has unsaved changes; they show below the sidebar */
+  hasChanges: boolean
+  /** selects a setting in the editor and scrolls to it */
+  focusSetting: (addonName: string, path: string[]) => void
+  /** the unsaved changes of an addon, read when called */
+  getChanges: (addonName: string) => AddonSettingsChanges
+  /** replaces the unsaved changes of an addon; the editor's Save button saves them */
+  setChanges: (addonName: string, changes: AddonSettingsChanges) => void
+  /** drops the unsaved change of a setting, and of the settings below it */
+  revertChange: (addonName: string, path: string[]) => void
+  /**
+   * a CSS selector of an addon's settings form, to style its settings: each setting is an element
+   * with `data-fieldid` `root_<path joined by _>`
+   */
+  formSelector: (addonName: string) => string
+  /** sets the items added to the right-click menu of a setting, `null` removes them */
+  setSettingMenu: (menu: AddonSettingsMenu | null) => void
+}
+
 /** Description of an `app.service` contribution. */
 export interface AppServiceMeta {
   /** unique among the addon's services */
@@ -1017,6 +1101,15 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     version: 1,
     required: ['title'],
     pieces: ['component'],
+    check: (item) =>
+      item.powerFeature !== undefined && typeof item.powerFeature !== 'boolean'
+        ? 'powerFeature must be true or false'
+        : undefined,
+  },
+  'addonSettings.history': {
+    version: 1,
+    required: [],
+    pieces: ['timeline', 'sidebar'],
     check: (item) =>
       item.powerFeature !== undefined && typeof item.powerFeature !== 'boolean'
         ? 'powerFeature must be true or false'

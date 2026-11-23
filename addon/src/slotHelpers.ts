@@ -84,3 +84,7 @@ export const userDetailsMenuItem = (item: ContributionFields<'userDetails.menuIt
 /** A section on the signed-in user's profile page (Account → Profile). */
 export const profileSection = (section: ContributionFields<'profile.section'>) =>
   contribute('profile.section', section)
+
+/** The history of the addon settings in the settings editor: a timeline above, a sidebar beside. */
+export const addonSettingsHistory = (history: ContributionFields<'addonSettings.history'>) =>
+  contribute('addonSettings.history', history)

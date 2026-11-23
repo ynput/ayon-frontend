@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef } from 'react'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 
@@ -55,6 +55,7 @@ import { projectBundleFromName } from '../../components/PerProjectBundleConfig/P
 import { useSessionStorage, readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import { SETTINGS_VARIANT_KEY } from './settingsVariant'
 import { InfoMessage } from '@shared/components'
+import { AddonSettingsHistory, useAddonSettingsHistory } from './AddonSettingsHistory'
 
 /*
  * key is {addonName}|{addonVersion}|{variant}|{siteId}|{projectKey}
@@ -188,6 +189,68 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     }
     return storedBundle
   }, [storedBundle, devBundles, isDeveloper])
+
+  const shownAddons = useMemo(
+    () => selectedAddons.filter((addon) => !addon.isBroken).reverse(),
+    [selectedAddons],
+  )
+  // site settings have no history
+  const histories = useAddonSettingsHistory(showSites, shownAddons.length > 0)
+
+  // what the history reads and changes of the editor, through functions that never change
+  const editor = useRef(null)
+  const settingMenu = useRef(null)
+  const [historyActions] = useState(() => {
+    const keyOf = (addonName) => {
+      const addon = editor.current.addons.find((a) => a.name === addonName)
+      return (
+        addon && `${addon.name}|${addon.version}|${addon.variant}|_|${editor.current.projectKey}`
+      )
+    }
+    // the editor keeps no entry for an addon without changes
+    const setFor = (key, value) => (state) => {
+      const next = { ...state, [key]: value }
+      if (!value.length) delete next[key]
+      return next
+    }
+    return {
+      focusSetting: (addonName, path) => {
+        const addon = editor.current.addons.find((a) => a.name === addonName)
+        if (!addon) return
+        setCurrentSelection({
+          addonName,
+          addonVersion: addon.version,
+          addonString: `${addonName}@${addon.version}`,
+          path,
+          fieldId: ['root', ...path].join('_'),
+        })
+      },
+      getChanges: (addonName) => {
+        const key = keyOf(addonName)
+        const { localData, changedKeys, unpinnedKeys } = editor.current
+        return {
+          data: key ? localData[key] : undefined,
+          changed: (key && changedKeys[key]) || [],
+          unpinned: (key && unpinnedKeys[key]) || [],
+        }
+      },
+      setChanges: (addonName, { data, changed, unpinned }) => {
+        const key = keyOf(addonName)
+        if (!key) return
+        setLocalData((localData) => ({ ...localData, [key]: data }))
+        setChangedKeys(setFor(key, changed))
+        setUnpinnedKeys(setFor(key, unpinned))
+      },
+      revertChange: (addonName, path) => {
+        const key = keyOf(addonName)
+        if (key) editor.current.onRevertChange({ [key]: [path] })
+      },
+      formSelector: (addonName) => `[data-addon-settings="${CSS.escape(addonName)}"]`,
+      setSettingMenu: (menu) => {
+        settingMenu.current = menu
+      },
+    }
+  })
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -645,6 +708,43 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   const canCommit = useMemo(() => Object.keys(changedKeys).length > 0, [changedKeys])
 
+  editor.current = {
+    addons: shownAddons,
+    projectKey,
+    localData,
+    changedKeys,
+    unpinnedKeys,
+    onRevertChange,
+  }
+  const historyAddons = useMemo(
+    () =>
+      shownAddons.map(({ name, version, variant, title }) => ({
+        name,
+        version,
+        variant,
+        title: title || name,
+      })),
+    [shownAddons],
+  )
+  const selectedAddonName = currentSelection?.path?.length
+    ? currentSelection.addonString.split('@')[0]
+    : null
+  const selectedSetting = useMemo(
+    () => selectedAddonName && { addonName: selectedAddonName, path: currentSelection.path },
+    [selectedAddonName, currentSelection?.path],
+  )
+  const historyContext = useMemo(
+    () => ({
+      ...historyActions,
+      addons: historyAddons,
+      projectName: projectName || null,
+      schemas: addonSchemas,
+      selected: selectedSetting,
+      hasChanges: canCommit,
+    }),
+    [historyActions, historyAddons, projectName, addonSchemas, selectedSetting, canCommit],
+  )
+
   const addonListHeader = useMemo(() => {
     // site settings do not have variants
     if (showSites) return
@@ -843,6 +943,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               setFilterKeys(filterKeys)
             }}
           />
+          <AddonSettingsHistory histories={histories} piece="timeline" context={historyContext} />
           <Section style={{ position: 'relative' }}>
             {showSites && !ayonClient.settings.sites.length ? (
               <EmptyPlaceholder
@@ -872,84 +973,78 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
               )
             )}
             <StyledScrollPanel className="nopad" style={{ flexGrow: 1 }} id="settings-scroll-panel">
-              {selectedAddons
-                .filter((addon) => !addon.isBroken)
-                .reverse()
-                .map((addon) => {
-                  const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
+              {shownAddons.map((addon) => {
+                const sites = showSites ? (selectedSites.length ? selectedSites : []) : ['_']
 
-                  if (filterKeys.length === 0 && searchText !== '') {
-                    return (
-                      <StyledEmptyPlaceholder
-                        key={addon.name}
-                        icon="filter_list"
-                        message="No settings found for the current search"
-                      />
-                    )
-                  }
-                  return sites.map((siteId) => {
-                    const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
+                if (filterKeys.length === 0 && searchText !== '') {
+                  return (
+                    <StyledEmptyPlaceholder
+                      key={addon.name}
+                      icon="filter_list"
+                      message="No settings found for the current search"
+                    />
+                  )
+                }
+                return sites.map((siteId) => {
+                  const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
 
-                    return (
-                      <Panel
-                        key={key}
-                        style={{ flexGrow: 0 }}
-                        className="transparent nopad"
-                        size={1}
-                      >
-                        {addon.isProjectBundle && (
-                          <InfoMessage
-                            message="The addon settings for this project are frozen to the project bundle.
+                  return (
+                    <Panel
+                      key={key}
+                      style={{ flexGrow: 0 }}
+                      className="transparent nopad"
+                      size={1}
+                      data-addon-settings={addon.name}
+                    >
+                      {addon.isProjectBundle && (
+                        <InfoMessage
+                          message="The addon settings for this project are frozen to the project bundle.
                             Studio settings are also displayed alongside project-scoped settings."
-                            icon={FROZEN_BUNDLE_ICON}
-                          />
-                        )}
-                        <AddonSettingsPanel
-                          addon={addon}
-                          updateAddonSchema={onUpdateAddonSchema}
-                          onChange={(data) =>
-                            onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
-                          }
-                          onLoad={(data) =>
-                            onSettingsLoad(addon.name, addon.version, addon.variant, siteId, data)
-                          }
-                          onSetChangedKeys={(data) =>
-                            updateChangedKeys(
-                              addon.name,
-                              addon.version,
-                              addon.variant,
-                              siteId,
-                              data,
-                            )
-                          }
-                          localData={localData[key]}
-                          changedKeys={changedKeys[key]}
-                          currentSelection={currentSelection}
-                          onSelect={setCurrentSelection}
-                          projectName={projectName}
-                          includeStudioScope={addon.isProjectBundle}
-                          siteId={siteId === '_' ? null : siteId}
-                          // Needed for rerender, component memoized
-                          searchText={searchText}
-                          filterKeys={filterKeys}
-                          context={{
-                            headerProjectName: projectName,
-                            headerSiteId: siteId === '_' ? null : siteId,
-                            headerVariant: addon.variant,
-                            addonName: addon.name,
-                            searchText,
-                            filterKeys,
-                            onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
-                            onPinOverride: (path) => onPinOverride(addon, siteId, path),
-                            onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
-                            onPasteValue: (path) => onPasteValue(addon, siteId, path),
-                            includeStudioScope: !!addon.isProjectBundle,
-                          }}
+                          icon={FROZEN_BUNDLE_ICON}
                         />
-                      </Panel>
-                    )
-                  })
-                })}
+                      )}
+                      <AddonSettingsPanel
+                        addon={addon}
+                        updateAddonSchema={onUpdateAddonSchema}
+                        onChange={(data) =>
+                          onSettingsChange(addon.name, addon.version, addon.variant, siteId, data)
+                        }
+                        onLoad={(data) =>
+                          onSettingsLoad(addon.name, addon.version, addon.variant, siteId, data)
+                        }
+                        onSetChangedKeys={(data) =>
+                          updateChangedKeys(addon.name, addon.version, addon.variant, siteId, data)
+                        }
+                        localData={localData[key]}
+                        changedKeys={changedKeys[key]}
+                        currentSelection={currentSelection}
+                        onSelect={setCurrentSelection}
+                        projectName={projectName}
+                        includeStudioScope={addon.isProjectBundle}
+                        siteId={siteId === '_' ? null : siteId}
+                        // Needed for rerender, component memoized
+                        searchText={searchText}
+                        filterKeys={filterKeys}
+                        context={{
+                          headerProjectName: projectName,
+                          headerSiteId: siteId === '_' ? null : siteId,
+                          headerVariant: addon.variant,
+                          addonName: addon.name,
+                          searchText,
+                          filterKeys,
+                          onRemoveOverride: (path) => onRemoveOverride(addon, siteId, path),
+                          onPinOverride: (path) => onPinOverride(addon, siteId, path),
+                          onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
+                          onPasteValue: (path) => onPasteValue(addon, siteId, path),
+                          getSettingMenuItems: (path) =>
+                            settingMenu.current?.(addon.name, path) ?? [],
+                          includeStudioScope: !!addon.isProjectBundle,
+                        }}
+                      />
+                    </Panel>
+                  )
+                })
+              })}
 
               <Spacer />
             </StyledScrollPanel>
@@ -959,11 +1054,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       <SplitterPanel size={20} style={{ minWidth: 240 }}>
         <Section wrap>
           <Toolbar>{commitToolbar}</Toolbar>
-          <SettingsChangesTable
-            changes={changedKeys}
-            unpins={unpinnedKeys}
-            onRevert={onRevertChange}
-          />
+          <AddonSettingsHistory histories={histories} piece="sidebar" context={historyContext} />
+          {/* the history takes the place of the unsaved changes while there are none */}
+          {(canCommit || !histories.length) && (
+            <SettingsChangesTable
+              changes={changedKeys}
+              unpins={unpinnedKeys}
+              onRevert={onRevertChange}
+            />
+          )}
           {/*}
           <ScrollPanel className="transparent nopad" style={{ flexGrow: 1 }}>
             <pre style={{ whiteSpace: 'pre-wrap' }}>{JSON.stringify(localData, null, 2)}</pre>

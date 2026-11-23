@@ -68,6 +68,12 @@ export type {
   UserSelection,
   ProfileSectionContext,
   ProfileSectionMeta,
+  AddonSettingsAddon,
+  AddonSettingsChanges,
+  AddonSettingsHistoryContext,
+  AddonSettingsHistoryMeta,
+  AddonSettingsMenu,
+  AddonSettingsMenuItem,
 } from './slots'
 export type {
   Access,
