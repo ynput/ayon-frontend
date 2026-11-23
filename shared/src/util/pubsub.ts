@@ -389,6 +389,11 @@
   PubSub.setOnSubscriptionsChange = function (fn) {
     onSubscriptionsChange = fn
   }
+
+  /** Whether publishing this message would reach anyone: its topic, a parent topic or `*`. */
+  PubSub.hasSubscribers = function (message) {
+    return messageHasSubscribers(message)
+  }
 })
 
 const typed = PubSub as any

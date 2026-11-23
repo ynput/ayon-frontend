@@ -219,7 +219,8 @@ export const SocketProvider = ({
 
       // a hidden tab holds messages back until it is visible again (hiddenTab.ts)
       if (isTabHidden() && !isLiveWhenHidden(topic, data)) {
-        hiddenQueue.add(topic, data)
+        // one nobody subscribes to goes nowhere in a visible tab either, so it isn't held
+        if (PubSub.hasSubscribers?.(topic) ?? true) hiddenQueue.add(topic, data)
         return
       }
 
