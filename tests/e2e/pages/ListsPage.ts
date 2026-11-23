@@ -71,9 +71,12 @@ export class ListsPage {
   }
 
   get itemsTable() {
-    return this.page
-      .getByRole('table')
-      .filter({ has: this.page.getByRole('columnheader', { name: 'Thumbnail' }) })
+    return (
+      this.page
+        .getByRole('table')
+        // FLAG: the thumbnail header shows only its icon, so its accessible name is "image"
+        .filter({ has: this.page.getByRole('columnheader', { name: /^(Thumbnail|image)$/ }) })
+    )
   }
 
   itemNameCell(label: string) {

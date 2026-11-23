@@ -20,9 +20,10 @@ export class SearchFilterBar {
     await this.root.getByRole('textbox').click()
   }
 
-  async add(scope: string, field: string, value: string) {
+  /** clicks through the dropdown: scope (pages with several), field, value */
+  async add(...labels: string[]) {
     await this.open()
-    for (const label of [scope, field, value]) {
+    for (const label of labels) {
       await this.option(label).click()
     }
   }
