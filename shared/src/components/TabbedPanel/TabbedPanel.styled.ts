@@ -34,18 +34,20 @@ export const Tools = styled.div`
   margin-left: auto;
 `
 
-// what comes before the tabs and the tab bar
+// what comes before the tabs and the tab bar, closed off from the open tab by a line
 export const Head = styled.div`
   display: flex;
   flex-direction: column;
   flex: none;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
 `
 
-// the tab bar, and the tools when the panel has no title
+// the tab bar, inset from the panel's edges, and the tools when the panel has no title
 export const TabRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
+  padding: var(--padding-m);
 
   & > :first-child {
     flex: 1;

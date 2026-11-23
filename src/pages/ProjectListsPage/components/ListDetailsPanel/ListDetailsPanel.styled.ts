@@ -8,13 +8,6 @@ export const Panel = styled(ARCPanel)`
   box-shadow: -2px 0 6px #00000047;
   z-index: 300;
   overflow: scroll;
-
-  /* the tab bar, under the titles, closed off by a line (the panel's own, not one in a tab) */
-  & > .tabbed-panel > .tabbed-panel-head {
-    padding: var(--base-gap-large) var(--padding-m) var(--padding-m);
-    margin-bottom: var(--padding-s);
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
 `
 
 export const Scrollable = styled.div`
