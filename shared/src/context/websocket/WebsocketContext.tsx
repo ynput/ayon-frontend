@@ -9,6 +9,7 @@ import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
 import { SocketContext } from './WebsocketContextInstance'
+import { createHiddenTabQueue, isLiveWhenHidden, isTabHidden } from '@shared/util/hiddenTab'
 
 // @ts-ignore
 const DISABLE_WS = import.meta.env.VITE_DISABLE_WS === 'true'
@@ -134,6 +135,29 @@ export const SocketProvider = ({
   // Using useRef to persist the state across renders
   const messageStatsRef = useRef({ callCount: 0, windowStart: Date.now() })
 
+  const [hiddenQueue] = useState(createHiddenTabQueue)
+
+  // back in view: refetch what was dropped, then replay what was held, once
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (isTabHidden()) return
+      const { messages, received, lostUntagged, tags } = hiddenQueue.take()
+      if (!received && !tags.length) return
+
+      console.log(
+        `WS: tab visible, replaying ${messages.length} of ${received} held messages` +
+          (tags.length ? `, refetching ${tags.join(', ')}` : ''),
+      )
+      if (tags.length) dispatch(api.util.invalidateTags(tags))
+      messages.forEach(({ topic, data }) => PubSub.publish(topic, data))
+      // like after a reconnect: tells subscribers that rely on the stream that they missed messages
+      if (lostUntagged) PubSub.publish('client.connected', { topic: 'client.connected' })
+    }
+
+    document.addEventListener('visibilitychange', onVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
+  }, [hiddenQueue, dispatch])
+
   const debouncedResetCall = debounce(() => {
     // all replicas should start about the same time,
     // so we can reset the API state after a short delay
@@ -193,13 +217,19 @@ export const SocketProvider = ({
 
       messageStatsRef.current.callCount += 1
 
+      // a hidden tab holds messages back until it is visible again (hiddenTab.ts)
+      if (isTabHidden() && !isLiveWhenHidden(topic, data)) {
+        hiddenQueue.add(topic, data)
+        return
+      }
+
       console.log('Event RX', data)
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
       PubSub.publish(topic, data)
     },
-    [setServerRestartingVisible],
+    [setServerRestartingVisible, hiddenQueue],
   )
 
   useEffect(() => {

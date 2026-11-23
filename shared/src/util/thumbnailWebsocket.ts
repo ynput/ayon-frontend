@@ -1,3 +1,5 @@
+import { dropHiddenTopic, HIDDEN_TAB_MAX_QUEUED, isHiddenTopicDropped, isTabHidden } from './hiddenTab'
+
 /**
  * The expected structure of a websocket message when a thumbnail is updated.
  */
@@ -19,16 +21,16 @@ let ws: WebSocket | null = null
 const updaters = new Set<{ updater: ThumbnailUpdater; entityTypes?: string[] }>()
 let reconnectTimeout: ReturnType<typeof setTimeout> | undefined
 
-// Queue for lazy batched updates
-let messageQueue: ThumbnailUpdateMessage[] = []
+// Queue for lazy batched updates, one message per entity: a newer thumbnail replaces an older one
+let messageQueue = new Map<string, ThumbnailUpdateMessage>()
 let processTimeout: number | undefined
 
 const processQueue = () => {
-  if (messageQueue.length === 0) return
+  if (messageQueue.size === 0) return
 
   // Create a copy of the queue to process
-  const queueToProcess = [...messageQueue]
-  messageQueue = []
+  const queueToProcess = [...messageQueue.values()]
+  messageQueue = new Map()
 
   updaters.forEach(({ updater, entityTypes }) => {
     const filtered = entityTypes
@@ -42,7 +44,22 @@ const processQueue = () => {
 }
 
 const queueMessage = (message: ThumbnailUpdateMessage) => {
-  messageQueue.push(message)
+  const { entityType, entityId } = message.summary
+  if (isTabHidden() && isHiddenTopicDropped(`entity.${entityType}`)) return
+  messageQueue.set(`${message.project}|${entityType}|${entityId}`, message)
+
+  // A hidden tab processes the queue once it is visible (hiddenTab.ts). If the queue grows too long,
+  // it is dropped and the caches of those entity types refetch instead.
+  if (isTabHidden()) {
+    if (messageQueue.size > HIDDEN_TAB_MAX_QUEUED) {
+      messageQueue.forEach((m, key) => {
+        if (dropHiddenTopic(`entity.${m.summary.entityType}`)) messageQueue.delete(key)
+      })
+      // still too long, with entity types nothing refetches for: those thumbnails stay stale
+      if (messageQueue.size > HIDDEN_TAB_MAX_QUEUED) messageQueue = new Map()
+    }
+    return
+  }
 
   // A batch is already scheduled, it will pick up this message too.
   // Do not reschedule it, otherwise a steady stream of updates would postpone it forever.
@@ -53,8 +70,16 @@ const queueMessage = (message: ThumbnailUpdateMessage) => {
 
   processTimeout = window.setTimeout(() => {
     processTimeout = undefined
-    processQueue()
+    // hidden in the meantime: wait for the tab to be visible
+    if (!isTabHidden()) processQueue()
   }, throttleDelay)
+}
+
+const onVisibilityChange = () => {
+  if (isTabHidden()) return
+  window.clearTimeout(processTimeout)
+  processTimeout = undefined
+  processQueue()
 }
 
 /**
@@ -93,7 +118,7 @@ const connectWS = () => {
         const message = data as ThumbnailUpdateMessage
 
         // Bypass debounce if current client initiated the change
-        if (message.sender && message.sender === (window as any).senderId) {
+        if (message.sender && message.sender === (window as any).senderId && !isTabHidden()) {
           updaters.forEach(({ updater, entityTypes }) => {
             if (!entityTypes || entityTypes.includes(message.summary.entityType)) {
               updater([message])
@@ -130,6 +155,7 @@ export const subscribeToThumbnailUpdates = (updater: ThumbnailUpdater, entityTyp
 
   if (updaters.size === 1) {
     connectWS()
+    document.addEventListener('visibilitychange', onVisibilityChange)
   }
 
   return () => {
@@ -140,11 +166,12 @@ export const subscribeToThumbnailUpdates = (updater: ThumbnailUpdater, entityTyp
         window.clearTimeout(reconnectTimeout)
         reconnectTimeout = undefined
       }
+      document.removeEventListener('visibilitychange', onVisibilityChange)
       if (processTimeout) {
         window.clearTimeout(processTimeout)
         processTimeout = undefined
-        messageQueue = []
       }
+      messageQueue = new Map()
       if (ws) {
         ws.onclose = null // Prevent reconnect loop on intentional disconnect
         ws.close()
