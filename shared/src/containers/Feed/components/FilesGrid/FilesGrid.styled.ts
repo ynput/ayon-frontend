@@ -13,7 +13,7 @@ export const Grid = styled.div`
   }
 
   max-height: calc(
-    301px + var(--padding-s) + var(--padding-s) + var(--base-gap-large)+ var(--base-gap-large)
+    301px + var(--padding-s) + var(--padding-s) + var(--base-gap-large) + var(--base-gap-large)
   );
   overflow: auto;
 `
