@@ -199,7 +199,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
 
   // what the history reads and changes of the editor, through functions that never change
   const editor = useRef(null)
-  const settingMenu = useRef(null)
+  const settingMenus = useRef(new Set())
   const [historyActions] = useState(() => {
     const keyOf = (addonName) => {
       const addon = editor.current.addons.find((a) => a.name === addonName)
@@ -246,11 +246,22 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         if (key) editor.current.onRevertChange({ [key]: [path] })
       },
       formSelector: (addonName) => `[data-addon-settings="${CSS.escape(addonName)}"]`,
-      setSettingMenu: (menu) => {
-        settingMenu.current = menu
+      addSettingMenu: (menu) => {
+        settingMenus.current.add(menu)
+        return () => settingMenus.current.delete(menu)
       },
     }
   })
+  // an addon's broken menu leaves the editor's own items
+  const getSettingMenuItems = (addonName, path) =>
+    [...settingMenus.current].flatMap((menu) => {
+      try {
+        return menu(addonName, path)
+      } catch (error) {
+        console.error(error)
+        return []
+      }
+    })
 
   const onSettingsLoad = (addonName, addonVersion, variant, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${variant}|${siteId}|${projectKey}`
@@ -733,6 +744,18 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     () => selectedAddonName && { addonName: selectedAddonName, path: currentSelection.path },
     [selectedAddonName, currentSelection?.path],
   )
+  // a new object only when the paths change: the editor replaces changedKeys on every edit
+  const changedPathsJson = JSON.stringify(
+    Object.fromEntries(
+      shownAddons
+        .map((addon) => [
+          addon.name,
+          changedKeys[`${addon.name}|${addon.version}|${addon.variant}|_|${projectKey}`],
+        ])
+        .filter(([, paths]) => paths?.length),
+    ),
+  )
+  const changedPaths = useMemo(() => JSON.parse(changedPathsJson), [changedPathsJson])
   const historyContext = useMemo(
     () => ({
       ...historyActions,
@@ -741,8 +764,17 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
       schemas: addonSchemas,
       selected: selectedSetting,
       hasChanges: canCommit,
+      changedPaths,
     }),
-    [historyActions, historyAddons, projectName, addonSchemas, selectedSetting, canCommit],
+    [
+      historyActions,
+      historyAddons,
+      projectName,
+      addonSchemas,
+      selectedSetting,
+      canCommit,
+      changedPaths,
+    ],
   )
 
   const addonListHeader = useMemo(() => {
@@ -1036,8 +1068,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
                           onPinOverride: (path) => onPinOverride(addon, siteId, path),
                           onRemoveAllOverrides: () => onRemoveAllOverrides(addon, siteId),
                           onPasteValue: (path) => onPasteValue(addon, siteId, path),
-                          getSettingMenuItems: (path) =>
-                            settingMenu.current?.(addon.name, path) ?? [],
+                          getSettingMenuItems: (path) => getSettingMenuItems(addon.name, path),
                           includeStudioScope: !!addon.isProjectBundle,
                         }}
                       />
