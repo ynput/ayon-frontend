@@ -12,11 +12,14 @@ import {
   getValueKind,
   isScalar,
 } from './utils/schemaFields'
+import type { SchemaField } from './utils/schemaFields'
 
 // nested traits (Bundle items in bundles) deeper than this are shown raw
 const MAX_DEPTH = 6
 
 type RenderTraits = (traits: Record<string, unknown>) => ReactNode
+// name of a top level field in the typed search syntax, when it can be filtered on
+type GetFieldSearchName = (field: string) => string | undefined
 
 interface SchemaProps {
   schema: TraitJsonSchema
@@ -93,7 +96,20 @@ const SchemaValue: FC<SchemaProps> = ({ schema, value, root, renderTraits, depth
   }
 }
 
-const SchemaFields: FC<SchemaProps> = ({ schema, value, root, renderTraits, depth }) => {
+const getLabelTooltip = (field: SchemaField, searchName?: string) => {
+  if (!field.inSchema) return 'Not in the trait definition'
+  const search = searchName ? `Search as ${searchName}` : undefined
+  return [field.description, search].filter(Boolean).join('\n') || undefined
+}
+
+const SchemaFields: FC<SchemaProps & { getFieldSearchName?: GetFieldSearchName }> = ({
+  schema,
+  value,
+  root,
+  renderTraits,
+  depth,
+  getFieldSearchName,
+}) => {
   if (!isPlainObject(value)) return <GenericValue value={value} />
 
   const fields = getSchemaFields(schema, value, root)
@@ -102,34 +118,38 @@ const SchemaFields: FC<SchemaProps> = ({ schema, value, root, renderTraits, dept
   return (
     <Styled.FieldTable>
       <tbody>
-        {fields.map((field) => (
-          <tr key={field.key}>
-            <td
-              className={clsx('label', { extra: !field.inSchema })}
-              data-tooltip={field.inSchema ? field.description : 'Not in the trait definition'}
-            >
-              {field.label}
-              {!field.matches && (
-                <span data-tooltip="The stored value does not match the trait definition">
-                  <Icon icon="warning" className="mismatch" />
-                </span>
-              )}
-            </td>
-            <td className="value">
-              {field.inSchema && field.matches ? (
-                <SchemaValue
-                  schema={field.schema}
-                  value={field.value}
-                  root={root}
-                  renderTraits={renderTraits}
-                  depth={depth}
-                />
-              ) : (
-                <GenericValue value={field.value} depth={1} />
-              )}
-            </td>
-          </tr>
-        ))}
+        {fields.map((field) => {
+          const searchName = getFieldSearchName?.(field.key)
+          return (
+            <tr key={field.key}>
+              <td
+                className={clsx('label', { extra: !field.inSchema })}
+                data-tooltip={getLabelTooltip(field, searchName)}
+                data-tooltip-as="pre"
+              >
+                {field.label}
+                {!field.matches && (
+                  <span data-tooltip="The stored value does not match the trait definition">
+                    <Icon icon="warning" className="mismatch" />
+                  </span>
+                )}
+              </td>
+              <td className="value">
+                {field.inSchema && field.matches ? (
+                  <SchemaValue
+                    schema={field.schema}
+                    value={field.value}
+                    root={root}
+                    renderTraits={renderTraits}
+                    depth={depth}
+                  />
+                ) : (
+                  <GenericValue value={field.value} depth={1} />
+                )}
+              </td>
+            </tr>
+          )
+        })}
       </tbody>
     </Styled.FieldTable>
   )
@@ -141,6 +161,7 @@ interface SchemaTraitViewProps {
   value: unknown
   // renders traits nested in the value (Bundle items)
   renderTraits: RenderTraits
+  getFieldSearchName?: GetFieldSearchName
   depth?: number
 }
 
@@ -149,6 +170,7 @@ export const SchemaTraitView: FC<SchemaTraitViewProps> = ({
   schema,
   value,
   renderTraits,
+  getFieldSearchName,
   depth = 0,
 }) => (
   <SchemaFields
@@ -157,5 +179,6 @@ export const SchemaTraitView: FC<SchemaTraitViewProps> = ({
     root={schema}
     renderTraits={renderTraits}
     depth={depth}
+    getFieldSearchName={getFieldSearchName}
   />
 )

@@ -1,7 +1,8 @@
 import { FC } from 'react'
 import SearchFilterWrapper from '@pages/ProjectOverviewPage/containers/SearchFilterWrapper'
 import { useProjectContext } from '@shared/context'
-import { buildScopes } from '@shared/components'
+import { buildScopes, useTraitFieldFilterOptions } from '@shared/components'
+import { usePowerpack } from '@shared/context'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
 
 // folderType/taskType are only whitelisted on the flat versions resolver — the
@@ -16,6 +17,13 @@ interface VPSearchFilterProps {}
 const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
   const { projectName, productBaseTypes, ...projectInfo } = useProjectContext()
   const { filters, onUpdateFilters } = useVPViewsContext()
+  const { powerLicense } = usePowerpack()
+  // representation trait fields, with the `PixelBased:width = 1920` syntax
+  const traitFieldFilters = useTraitFieldFilterOptions({
+    projectName,
+    enableExcludes: powerLicense,
+    enableRelativeValues: true,
+  })
 
   return (
     <SearchFilterWrapper
@@ -31,6 +39,8 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
         keys: { productName: 'name' },
       }}
       enableGlobalSearch={false}
+      extraOptions={traitFieldFilters.options}
+      parseSearchText={traitFieldFilters.parseSearchText}
     />
   )
 }

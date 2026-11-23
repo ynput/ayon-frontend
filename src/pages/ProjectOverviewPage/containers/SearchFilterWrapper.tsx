@@ -3,6 +3,7 @@ import { FC, useMemo, useState, useEffect, useRef } from 'react'
 import {
   Filter,
   Icon,
+  Option,
   SearchFilter,
   SearchFilterProps,
   SearchFilterRef,
@@ -34,6 +35,8 @@ interface SearchFilterWrapperProps
   queryFilters?: QueryFilter
   onChange?: (queryFilters: QueryFilter) => void
   data: BuildFilterOptions['data']
+  // options built elsewhere (e.g. representation trait fields), added to the built options
+  extraOptions?: Option[]
 }
 
 const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
@@ -50,6 +53,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
   scopes,
   config,
   pt,
+  extraOptions,
   ...props
 }) => {
   const { pinnedSlice, setPinnedSlice } = useSlicerContext()
@@ -80,7 +84,7 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     return false
   }
 
-  const { options, groupOptions } = useBuildFilterOptions({
+  const { options: builtOptions, groupOptions } = useBuildFilterOptions({
     filterTypes,
     projectNames,
     scope,
@@ -95,6 +99,10 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
     },
     power: powerLicense,
   })
+  const options = useMemo(
+    () => (extraOptions?.length ? [...builtOptions, ...extraOptions] : builtOptions),
+    [builtOptions, extraOptions],
+  )
 
   // Convert QueryFilter to Filter[] for internal use
   const filters = useMemo(() => {

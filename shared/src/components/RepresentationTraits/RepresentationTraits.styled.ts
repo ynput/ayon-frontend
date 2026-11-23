@@ -33,11 +33,55 @@ export const Section = styled.div`
   overflow: hidden;
 `
 
+export const HeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-hover);
+  }
+`
+
+// segmented icon buttons switching between the views of a trait
+export const ViewSwitcher = styled.div`
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin: 0 6px;
+  padding: 2px;
+  border-radius: var(--border-radius-m);
+  background-color: var(--md-sys-color-surface-container-lowest);
+
+  button {
+    display: flex;
+    padding: 2px 4px;
+    border: none;
+    border-radius: var(--border-radius-m);
+    background: none;
+    color: var(--md-sys-color-outline);
+    cursor: pointer;
+
+    .icon {
+      font-size: 18px;
+    }
+
+    &:hover {
+      color: var(--md-sys-color-on-surface);
+    }
+
+    &.active {
+      background-color: var(--md-sys-color-primary-container);
+      color: var(--md-sys-color-on-primary-container);
+    }
+  }
+`
+
 export const SectionHeader = styled.button`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  width: 100%;
+  flex: 1;
+  min-width: 0;
   padding: 6px 8px;
   border: none;
   background: none;
@@ -45,10 +89,6 @@ export const SectionHeader = styled.button`
   font: inherit;
   text-align: left;
   cursor: pointer;
-
-  &:hover {
-    background-color: var(--md-sys-color-surface-container-hover);
-  }
 
   .name {
     font-weight: 600;

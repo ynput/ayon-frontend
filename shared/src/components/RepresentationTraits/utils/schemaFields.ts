@@ -108,15 +108,17 @@ export const getValueKind = (schema: TraitJsonSchema, value: unknown): ValueKind
   return 'string'
 }
 
-/** `frame_start_handle` -> `Frame start handle`, `displayWindow` -> `Display window` */
-export const humanizeKey = (key: string): string => {
-  const words = key
+/**
+ * Default field title:
+ * `frame_start_handle` -> `Frame Start Handle`, `displayWindow` -> `Display Window`
+ */
+export const humanizeKey = (key: string): string =>
+  key
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .replace(/[_-]+/g, ' ')
     .trim()
     .toLowerCase()
-  return words.charAt(0).toUpperCase() + words.slice(1)
-}
+    .replace(/\b[a-z]/g, (letter) => letter.toUpperCase())
 
 /** Fields of an object value in definition order, followed by stored keys the definition does not know. */
 export const getSchemaFields = (

@@ -8,7 +8,14 @@ import { TraitSection } from './TraitSection'
 import { SchemaTraitView } from './SchemaTraitView'
 import { GenericTraitTable, GenericValue } from './GenericTraitTable'
 import { traitWidgets } from './registry'
-import { buildTraitItems, groupTraits, hasTraitValues, TraitItem } from './utils/traitModel'
+import {
+  buildTraitItems,
+  groupTraits,
+  hasTraitValues,
+  TraitItem,
+  TraitView,
+} from './utils/traitModel'
+import { getFieldSearchName, getSchemaFieldType } from './utils/traitFields'
 
 // Bundles nested deeper than this are shown raw
 const MAX_DEPTH = 4
@@ -16,16 +23,33 @@ const EMPTY_DEFINITIONS: TraitDefinitions = {}
 
 const TraitBody: FC<{
   item: TraitItem
+  view: TraitView
+  // traits next to this one, for views that combine traits
+  traits: Record<string, unknown>
   renderTraits: (traits: Record<string, unknown>) => ReactNode
-}> = ({ item, renderTraits }) => {
-  const { renderer, definition, data } = item
-  const Widget = renderer.widget ? traitWidgets[renderer.widget]?.component : undefined
+}> = ({ item, view, traits, renderTraits }) => {
+  const { definition, data } = item
+  const Widget = view.widget
+    ? traitWidgets[view.widget]?.find((entry) => entry.id === view.id)?.component
+    : undefined
 
-  if (renderer.kind === 'widget' && Widget) {
-    return <Widget traitId={item.id} data={data} definition={definition} />
+  if (view.kind === 'widget' && Widget) {
+    return <Widget traitId={item.id} data={data} definition={definition} traits={traits} />
   }
-  if (renderer.kind === 'schema' && definition?.schema) {
-    return <SchemaTraitView schema={definition.schema} value={data} renderTraits={renderTraits} />
+  if (view.kind === 'schema' && definition?.schema) {
+    return (
+      <SchemaTraitView
+        schema={definition.schema}
+        value={data}
+        renderTraits={renderTraits}
+        getFieldSearchName={(field) =>
+          // indexed fields can be filtered on, top level only
+          getSchemaFieldType(definition.schema?.properties?.[field])
+            ? getFieldSearchName(definition.name, field)
+            : undefined
+        }
+      />
+    )
   }
   return <GenericTraitTable value={data} />
 }
@@ -45,7 +69,7 @@ const TraitList: FC<TraitListProps> = ({ traits, definitions, depth }) => {
 
   if (depth >= MAX_DEPTH) return <GenericValue value={traits} depth={1} />
 
-  const missing = items.filter((item) => item.renderer.kind === 'raw').length
+  const missing = items.filter((item) => !item.definition).length
   const renderTraits = (nested: Record<string, unknown>) => (
     <TraitList traits={nested} definitions={definitions} depth={depth + 1} />
   )
@@ -67,7 +91,9 @@ const TraitList: FC<TraitListProps> = ({ traits, definitions, depth }) => {
               item={item}
               defaultExpanded={depth === 0 && hasTraitValues(item.data)}
             >
-              <TraitBody item={item} renderTraits={renderTraits} />
+              {(view) => (
+                <TraitBody item={item} view={view} traits={traits} renderTraits={renderTraits} />
+              )}
             </TraitSection>
           ))}
         </Styled.Group>

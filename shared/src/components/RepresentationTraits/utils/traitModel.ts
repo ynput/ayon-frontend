@@ -1,25 +1,56 @@
 import type { TraitDefinition, TraitDefinitions } from '@shared/api'
 import { parseTraitId, ParsedTraitId } from './parseTraitId'
+import { isPlainObject } from './isPlainObject'
+import { getFileLayout } from './traitFields'
 
-export type TraitRendererKind = 'widget' | 'schema' | 'raw'
+export type TraitViewKind = 'widget' | 'schema' | 'raw'
 
+/** One way of showing a trait. A trait can have several, the user switches between them. */
 export type TraitWidgetEntry<C = unknown> = {
+  // unique within the trait, used to remember the choice (e.g. `strip`, `table`)
+  id: string
+  label: string
+  // material icon of the view switcher
+  icon: string
   component: C
-  // trait versions the widget can show, all versions when not set
+  // trait versions the view can show, all versions when not set
   versions?: number[]
 }
 
-// keyed by versionless trait id, or by the widget name a definition asks for in `ui.widget`
-export type TraitWidgetRegistry<C = unknown> = Record<string, TraitWidgetEntry<C>>
+// keyed by versionless trait id, or by the widget name a definition asks for in `ui.widget`.
+// Views are listed in order of preference, the first one is the default.
+export type TraitWidgetRegistry<C = unknown> = Record<string, TraitWidgetEntry<C>[]>
 
-export type TraitRenderer = { kind: TraitRendererKind; widget?: string }
+export type TraitView = {
+  // `schema` and `raw` for the built-in views, the entry id for widgets
+  id: string
+  kind: TraitViewKind
+  label: string
+  icon: string
+  // registry key of a widget view
+  widget?: string
+}
+
+export const SCHEMA_VIEW: TraitView = {
+  id: 'schema',
+  kind: 'schema',
+  label: 'Fields',
+  icon: 'list_alt',
+}
+export const RAW_VIEW: TraitView = {
+  id: 'raw',
+  kind: 'raw',
+  label: 'Stored values',
+  icon: 'data_object',
+}
 
 export type TraitItem = {
   id: string
   parsed: ParsedTraitId
   data: unknown
   definition?: TraitDefinition
-  renderer: TraitRenderer
+  // views the trait can be shown with, the default first
+  views: TraitView[]
   label: string
   group: string
   // versions of the same trait that have a definition, when this version has none
@@ -40,8 +71,7 @@ const GROUP_LABELS: Record<string, string> = {
 }
 const GROUP_ORDER = Object.values(GROUP_LABELS)
 
-export const isPlainObject = (value: unknown): value is Record<string, unknown> =>
-  typeof value === 'object' && value !== null && !Array.isArray(value)
+export { isPlainObject }
 
 /** True when a representation `traits` value has at least one trait. */
 export const hasTraits = (value: unknown): value is Record<string, unknown> =>
@@ -51,33 +81,65 @@ export const hasTraits = (value: unknown): value is Record<string, unknown> =>
 export const hasTraitValues = (data: unknown): boolean =>
   data !== null && data !== undefined && !(isPlainObject(data) && !Object.keys(data).length)
 
+// registry keys of the file views, shared by the file traits (see FILE_TRAIT_LAYOUTS)
+export const FILE_LIST_VIEWS = 'files:list'
+export const SINGLE_FILE_VIEWS = 'files:single'
+
+/** Registry key of the file views of a trait: `files:list` for a list of files, `files:single` for one. */
+export const getFileViewKey = (traitId: string): string | null => {
+  const layout = getFileLayout(traitId)
+  if (!layout) return null
+  return layout.items ? FILE_LIST_VIEWS : SINGLE_FILE_VIEWS
+}
+
+const supportsVersion = (entry: TraitWidgetEntry, version: number | null) =>
+  !entry.versions || (version !== null && entry.versions.includes(version))
+
 /**
- * Picks how a trait is shown:
- * 1. a dedicated widget, by `ui.widget` of the definition or by versionless id (if it supports the version)
- * 2. the schema-driven view when the exact version has a definition
- * 3. the raw table otherwise
+ * Lists the views a trait can be shown with, in order of preference:
+ * 1. widgets named by `ui.widget` of the definition
+ * 2. file views, for traits whose file layout the views know (`files:list`, `files:single`)
+ * 3. widgets registered for the versionless id that support the version
+ * 4. the schema-driven view, when the exact version has a definition
+ * 5. the stored values, always
  */
-export const resolveTraitRenderer = (
+export const resolveTraitViews = (
   parsed: ParsedTraitId,
   definition: TraitDefinition | undefined,
   registry: TraitWidgetRegistry,
-): TraitRenderer => {
+): TraitView[] => {
+  const views: TraitView[] = []
+  const seen = new Set<string>([SCHEMA_VIEW.id, RAW_VIEW.id])
+
   const uiWidget = definition?.ui?.widget
-  if (typeof uiWidget === 'string' && registry[uiWidget]) {
-    return { kind: 'widget', widget: uiWidget }
+  const keys = [
+    typeof uiWidget === 'string' ? uiWidget : null,
+    getFileViewKey(parsed.id),
+    parsed.versionlessId,
+  ]
+  for (const key of keys) {
+    if (!key) continue
+    for (const entry of registry[key] || []) {
+      if (seen.has(entry.id) || !supportsVersion(entry, parsed.version)) continue
+      seen.add(entry.id)
+      views.push({
+        id: entry.id,
+        kind: 'widget',
+        label: entry.label,
+        icon: entry.icon,
+        widget: key,
+      })
+    }
   }
 
-  const entry = registry[parsed.versionlessId]
-  if (
-    entry &&
-    (!entry.versions || (parsed.version !== null && entry.versions.includes(parsed.version)))
-  ) {
-    return { kind: 'widget', widget: parsed.versionlessId }
-  }
-
-  if (definition?.schema) return { kind: 'schema' }
-  return { kind: 'raw' }
+  if (definition?.schema) views.push(SCHEMA_VIEW)
+  views.push(RAW_VIEW)
+  return views
 }
+
+/** The view the user picked for the trait when it is still available, the default otherwise. */
+export const pickTraitView = (views: TraitView[], preferred: string | undefined): TraitView =>
+  views.find((view) => view.id === preferred) || views[0]
 
 const getGroupLabel = (parsed: ParsedTraitId, definition?: TraitDefinition): string => {
   const uiGroup = definition?.ui?.group
@@ -104,7 +166,7 @@ export const buildTraitItems = (
       parsed,
       data,
       definition,
-      renderer: resolveTraitRenderer(parsed, definition, registry),
+      views: resolveTraitViews(parsed, definition, registry),
       label: definition?.name || parsed.name,
       group: getGroupLabel(parsed, definition),
       definedVersions: definition

@@ -34,9 +34,23 @@ const getTraitsApi = traitsApi.enhanceEndpoints<TagTypes, UpdatedDefinitions>({
         PubSub.unsubscribe(token)
       },
     },
+    listProjectTraitFields: {
+      providesTags: (_result, _error, { projectName }) => [
+        { type: 'projectTraitFields', id: projectName },
+      ],
+      // the server caches the result for a minute, used fields change with publishing
+      keepUnusedDataFor: 300,
+    },
+    listTraitFieldValues: {
+      keepUnusedDataFor: 60,
+    },
   },
 })
 
 // A 404 means the server has no trait definitions endpoint (older server), treat it as no definitions
-export const { useListTraitDefinitionsQuery: useGetTraitDefinitionsQuery } = getTraitsApi
+export const {
+  useListTraitDefinitionsQuery: useGetTraitDefinitionsQuery,
+  useListProjectTraitFieldsQuery: useGetProjectTraitFieldsQuery,
+  useLazyListTraitFieldValuesQuery,
+} = getTraitsApi
 export { getTraitsApi as traitsQueries }
