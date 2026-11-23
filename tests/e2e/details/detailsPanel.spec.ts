@@ -1,5 +1,5 @@
 import { Page } from '@playwright/test'
-import { dialog } from '@ynput/ayon-e2e'
+import { dialog, menuItem } from '@ynput/ayon-e2e'
 import { expect, test } from '../fixtures'
 import { AyonApi } from '../support/api'
 import { requireAddon } from '../support/addons'
@@ -24,6 +24,27 @@ const openTask = async (page: Page, projectName: string) => {
 }
 
 test.describe('details panel', () => {
+  test('the more menu lists its actions in sections and opens View data', async ({
+    page,
+    api,
+    projectName,
+  }) => {
+    await setup(api, projectName)
+    const { panel } = await openTask(page, projectName)
+    // the slot inspector finds addons' items by the button's slot
+    await expect(panel.moreButton).toHaveAttribute('data-ayon-trigger', 'detailsPanel.menuItem')
+
+    const labels = await panel.openMoreMenu()
+    expect(labels).toContain('Upload thumbnail')
+    // View data is after the entity's own actions (Share), in the last sections
+    expect(labels.indexOf('View data')).toBeGreaterThan(labels.indexOf('Share'))
+    await expect(page.locator('#ayon-menu-content hr')).not.toHaveCount(0)
+
+    await menuItem(page, 'View data').click()
+    await expect(page.locator('#ayon-menu-content')).toBeHidden()
+    await expect(dialog(page, 'task detail')).toBeVisible()
+  })
+
   test('change the priority', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
     const { overview, panel } = await openTask(page, projectName)

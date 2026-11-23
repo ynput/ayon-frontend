@@ -22,9 +22,8 @@ import { useScopedStatuses } from '@shared/hooks/useScopedStatuses'
 import { useEditProjectTags } from '@shared/hooks/useEditProjectTags'
 import { EnumItemDialog } from '@shared/components/EnumItemDialog'
 import { useEntityEditing } from '@shared/components/DetailsPanelDetails/hooks/useEntityEditing'
-import { useDetailsPanelContext, type DetailsPanelTab } from '@shared/context'
+import { useDetailsPanelContext } from '@shared/context'
 
-import DetailsPanelTabs from '../DetailsPanelTabs/DetailsPanelTabs'
 import LinkedTaskRow from './LinkedTaskRow'
 import * as Styled from './DetailsPanelHeader.styled'
 import getThumbnails from '../../helpers/getThumbnails'
@@ -50,8 +49,6 @@ type DetailsPanelHeaderProps = {
   tagsOptions?: any[]
   isFetching?: boolean
   isCompact?: boolean
-  currentTab: DetailsPanelTab
-  onTabChange: (tab: DetailsPanelTab) => void
   onOpenViewer: (args: any) => void
   onEntityFocus: DetailsPanelProps['onEntityFocus']
   projectInfo: ProjectInfo
@@ -69,8 +66,6 @@ const DetailsPanelHeader = ({
   tagsOptions = [],
   isFetching,
   isCompact = false,
-  currentTab,
-  onTabChange,
   projectInfo,
   onOpenViewer,
   onEntityFocus,
@@ -349,7 +344,7 @@ const DetailsPanelHeader = ({
               <Styled.AssigneeSelect
                 value={entityUsers}
                 options={usersOptions}
-                disabledValues={disabledAssignees.map((u) => u.name)}
+                disabledValues={disabledAssignees.map((u) => (typeof u === 'string' ? u : u.name))}
                 isMultiple={isMultiple && entityUsers.length > 1 && entityType === 'task'}
                 readOnly={!canEditAssignees}
                 emptyMessage={canEditAssignees ? 'Assign user' : '-'}
@@ -386,12 +381,6 @@ const DetailsPanelHeader = ({
           ) : (
             <div style={{ height: 32 }}></div>
           )}
-          <DetailsPanelTabs
-            entityType={entityType}
-            currentTab={currentTab}
-            onTabChange={onTabChange}
-            isLoading={isLoading}
-          />
         </Styled.Grid>
       </EntityPanelUploader>
     </Styled.HeaderContainer>

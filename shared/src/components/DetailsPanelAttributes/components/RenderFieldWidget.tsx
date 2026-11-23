@@ -1,6 +1,6 @@
 import { FC, useMemo } from 'react'
 import styled from 'styled-components'
-import { Icon, getMixedCounts, type MixedChange } from '@ynput/ayon-react-components'
+import { getMixedCounts, type MixedChange } from '@ynput/ayon-react-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import {
   TextWidget,
@@ -34,16 +34,10 @@ const FieldValueText = styled.div`
 const DateValue = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
   width: 100%;
 
   > span:first-child {
     flex: 1;
-  }
-
-  .icon {
-    font-size: 18px;
-    color: var(--md-sys-color-on-surface-variant);
   }
 `
 
@@ -173,7 +167,6 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             onCancelEdit={onCancelEdit}
             isMidnightExclusive={isMidnightExclusive}
           />
-          {!isEditing && !isReadOnly && <Icon icon="calendar_today" aria-hidden />}
         </DateValue>
       )
 

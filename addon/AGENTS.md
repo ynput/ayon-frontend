@@ -1,5 +1,5 @@
 <!-- Generated from src/slots.ts by scripts/generate-docs.mjs. Edit those, not this file. -->
-# @ynput/ayon-addon 2.0.0
+# @ynput/ayon-addon 2.1.1
 
 The API for AYON addon frontends. An addon declares what it puts into AYON's **slots** (places in the
 web UI) in one manifest module; AYON reads the descriptions at startup and loads each piece of code
@@ -361,20 +361,60 @@ const [filters, setFilters] = useState<TabHeaderFilter[]>([])
 - An AYON older than this component has no such export (`undefined`): an addon that supports one
   checks `PanelTabHeader &&` before rendering it. `DetailsPanelTabHeader` is its old name.
 
-### An addon's own panel with other addons' tabs: `ContributionTab`
+### An addon's own panel with tabs: `TabbedPanel`
 
-An addon that draws a panel showing a tab slot (Review's session sidebar shows `listDetails.tab`)
-renders the open tab with `ContributionTab`, so the tab gets the same header as in AYON's panels.
-On an AYON without it, the tab renders alone.
+An addon that draws a panel with tabs (Review's session sidebar) uses `TabbedPanel`, AYON's own
+panel frame: the same title row, tools, tab bar and tab headers as the details panels, and the tabs
+other addons contribute to a tab slot (`listDetails.tab`) after the panel's own. The addon keeps
+which tab is open.
 
 ```tsx
-import { ContributionTab, useContributions } from '@ynput/ayon-addon'
+import { TabbedPanel } from '@ynput/ayon-addon'
 
-const { contributions: tabs } = useContributions('listDetails.tab')
-const tab = tabs.find((t) => t.key === openTab)
+const [tab, setTab] = useState('feedback')
+// undefined while the list loads: the addons' tabs wait for it
+const slot = useMemo(
+  () => ({ name: 'listDetails.tab' as const, context: list && { projectName, list, scope: 'review' } }),
+  [projectName, list],
+)
 
-{tab && <ContributionTab contribution={tab} context={{ projectName, list, scope: 'review' }} />}
+<TabbedPanel
+  tabs={[
+    { id: 'feedback', label: 'Feedback', icon: 'forum', render: () => <Feedback /> },
+    // its search bar in the header, as the details panel's Details tab
+    { id: 'notes', label: 'Notes', icon: 'notes', header: { search: <NotesSearch /> }, render: () => <Notes /> },
+  ]}
+  selected={tab}
+  onChange={setTab}
+  slot={slot}
+  fallbackTab="feedback"
+  showLabels
+  tools={[{ id: 'hide', icon: 'right_panel_close', label: 'Hide', shortcut: '.', pinned: true, onClick: hide }]}
+/>
 ```
+
+- `title`: the row at the top, with the tools at its right; without it, the tools go at the end
+  of the tab bar. `beforeTabs`: anything between the title and the tab bar.
+- `tools`: `{ id, icon, label, onClick, pinned? }` buttons, `{ id, element }` drawn by the
+  addon, or `{ divider: true }` lines between menu items. Items not `pinned` go in a "more" (…)
+  menu, placed where the first of them is; `moreButtonProps` sets its tooltip and test hooks. An
+  item takes `tooltip` (when not its label), `danger`, `onPrefetch` (on hover, or when the menu
+  opens) and `buttonProps` for a look that changes (a running timer's `variant`, `className`,
+  `style`); a menu item uses their `className`, `style` and `data-*`. `onClose` adds a close button
+  after them. Shortcuts are only shown in the tooltips: the addon handles its keys.
+- `tabs`: the panel's own. `render` returns what the open one shows (it runs only for that tab:
+  elements, no hooks). The panel draws its header above it, as for an addon tab: the label as title,
+  with `header`'s `search` (and `searchActive`), `menu` and `children`. `header: false` when the
+  tab draws its own (or none). `hidden` leaves a tab out that does not apply: no button, and when it
+  is `selected` the panel falls back to `fallbackTab`. An addon tab draws itself, with its header.
+- `fallbackTab`: opened instead of a `selected` tab that is not there: a `hidden` one, or an addon
+  tab whose addon is gone.
+- `showLabels`: the labels next to the icons. With more tabs than `maxLabeledTabs` (the panel's and
+  the addons', 3 by default) the bar shows icons only; the label stays the tooltip.
+- An AYON older than this component has no such export (`undefined`): an addon that supports one
+  checks `TabbedPanel &&` and draws its own panel otherwise. Such a panel renders the open addon
+  tab with `ContributionTab`, which gives it the same header (on an AYON without it, the tab alone):
+  `<ContributionTab contribution={tab} context={context} />`.
 
 ## Picking lists: `ListPicker`
 
@@ -1014,10 +1054,11 @@ detailsPanelMenuItem({
 
 ### `listDetails.tab`: `listDetailsTab`
 
-A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's sidebar in Review. The tab button shows from the description, after the panel's own tabs; `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to that header. Loads: first shown.
+A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's sidebar in Review. The tab button shows from the description, after the panel's own tabs; `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to that header. It shows on every list unless `entityListTypes` is set (version 2). Loads: first shown.
 
 | Description field | Type | |
 |---|---|---|
+| `entityListTypes` | `string[] \| undefined` | the list types it shows on (`generic`, `review-session`); every list when not set. Needs version 2 of the slot: `listDetailsTab` stamps `slotVersion: 2` when it is set, so an older AYON skips the tab instead of showing it on every list |
 | `id` (required) | `string` | the tab id is `<addon>.<id>` |
 | `label` (required) | `string` | the title of the tab's header, and the tab button's tooltip unless `tooltip` is set |
 | `tooltip` | `string \| undefined` | the tab button's tooltip; the label when not set |

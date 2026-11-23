@@ -10,14 +10,17 @@ export interface PanelSlotTabProps<S extends PanelTabSlotName> {
   slot: PanelTabSlot<S>
   /** the open tab (PanelTabs `selected`) */
   selected: string
-  /** what the slot's tabs get; none renders while it is not set (the panel's subject loads) */
-  context: SlotMap[S]['context'] | undefined
+  /**
+   * what the slot's tabs get, the slot's `context` when not set; none renders while it is not set
+   * (the panel's subject loads)
+   */
+  context?: SlotMap[S]['context']
 }
 
 export const PanelSlotTab = <S extends PanelTabSlotName>({
   slot,
   selected,
-  context,
+  context = slot.context,
 }: PanelSlotTabProps<S>) => {
   const { tabs } = usePanelSlotTabs(slot)
   const tab = tabs.find((t) => t.key === selected)
