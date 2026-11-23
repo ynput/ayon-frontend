@@ -1,4 +1,9 @@
-import { dropHiddenTopic, HIDDEN_TAB_MAX_QUEUED, isHiddenTopicDropped, isTabHidden } from './hiddenTab'
+import {
+  dropHiddenTopic,
+  HIDDEN_TAB_MAX_QUEUED,
+  isHiddenTopicDropped,
+  isTabHidden,
+} from './hiddenTab'
 
 /**
  * The expected structure of a websocket message when a thumbnail is updated.

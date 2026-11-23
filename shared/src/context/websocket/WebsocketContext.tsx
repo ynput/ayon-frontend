@@ -9,7 +9,12 @@ import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
 import { SocketContext } from './WebsocketContextInstance'
-import { createHiddenTabQueue, isLiveWhenHidden, isTabHidden } from '@shared/util/hiddenTab'
+import {
+  createHiddenTabQueue,
+  HIDDEN_TAB_INCOMPLETE_TAG,
+  isLiveWhenHidden,
+  isTabHidden,
+} from '@shared/util/hiddenTab'
 
 // @ts-ignore
 const DISABLE_WS = import.meta.env.VITE_DISABLE_WS === 'true'
@@ -148,7 +153,10 @@ export const SocketProvider = ({
         `WS: tab visible, replaying ${messages.length} of ${received} held messages` +
           (tags.length ? `, refetching ${tags.join(', ')}` : ''),
       )
-      if (tags.length) dispatch(api.util.invalidateTags(tags))
+      // merged or dropped: caches that keep every message refetch too
+      const incomplete = messages.length < received ? [HIDDEN_TAB_INCOMPLETE_TAG] : []
+      if (tags.length || incomplete.length)
+        dispatch(api.util.invalidateTags([...tags, ...incomplete]))
       messages.forEach(({ topic, data }) => PubSub.publish(topic, data))
       // like after a reconnect: tells subscribers that rely on the stream that they missed messages
       if (lostUntagged) PubSub.publish('client.connected', { topic: 'client.connected' })
@@ -163,6 +171,8 @@ export const SocketProvider = ({
     // so we can reset the API state after a short delay
     console.log('Resetting API state due to server restart')
     setServerRestartingVisible(false)
+    // everything refetches now: messages held from before the restart are out of date
+    hiddenQueue.take()
     dispatch(api.util.resetApiState())
   }, 1000)
 
@@ -217,6 +227,8 @@ export const SocketProvider = ({
 
       messageStatsRef.current.callCount += 1
 
+      if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
+
       // a hidden tab holds messages back until it is visible again (hiddenTab.ts)
       if (isTabHidden() && !isLiveWhenHidden(topic, data)) {
         // one nobody subscribes to goes nowhere in a visible tab either, so it isn't held
@@ -225,8 +237,6 @@ export const SocketProvider = ({
       }
 
       console.log('Event RX', data)
-
-      if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
       PubSub.publish(topic, data)
     },

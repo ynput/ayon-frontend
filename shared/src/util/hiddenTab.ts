@@ -44,6 +44,8 @@ const DROPPED_TOPIC_TAGS: Record<string, string[]> = {
     'versionColumnStats',
     'review',
     'viewer',
+    // version thumbnails in the activity feed, patched by the thumbnail socket
+    'entityActivities',
   ],
   'entity.representation': ['entities', 'review', 'viewer'],
   entity_list: ['entityList', 'entityListItem'],
@@ -73,6 +75,12 @@ export const dropHiddenTopic = (root: string) => {
 }
 
 export const isHiddenTopicDropped = (root: string) => droppedTopics.has(root)
+
+/**
+ * Provided by caches that need every message rather than the latest state of each entity (the
+ * Events list). A catch-up that merged or dropped messages invalidates it.
+ */
+export const HIDDEN_TAB_INCOMPLETE_TAG = { type: 'detail', id: 'hidden-tab-incomplete' } as const
 
 /** The tags to invalidate for everything dropped so far, and forgets it. */
 export const takeDroppedTopicTags = () => {
@@ -118,9 +126,10 @@ export const createHiddenTabQueue = () => {
     queue.forEach((message, key) => {
       if (dropHiddenTopic(getTopicRoot(message.topic))) queue.delete(key)
     })
-    // still too long: a flood of topics nothing can refetch for
-    if (queue.size > HIDDEN_TAB_MAX_QUEUED) {
-      queue.clear()
+    // still too long, with topics nothing can refetch for: keep the latest messages
+    for (const key of queue.keys()) {
+      if (queue.size <= HIDDEN_TAB_MAX_QUEUED) break
+      queue.delete(key)
       lostUntagged = true
     }
   }
@@ -140,7 +149,10 @@ export const createHiddenTabQueue = () => {
     },
     /** Everything held since the tab was hidden, and empties the queue. */
     take() {
-      const messages = [...queue.values()]
+      // a root either socket dropped is refetched: replaying older messages would roll that back
+      const messages = [...queue.values()].filter(
+        ({ topic }) => !isHiddenTopicDropped(getTopicRoot(topic)),
+      )
       const result = { messages, received, lostUntagged, tags: takeDroppedTopicTags() }
       queue = new Map()
       received = 0

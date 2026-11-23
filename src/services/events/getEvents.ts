@@ -1,5 +1,6 @@
 import api from '@shared/api'
 import { createRealtimeBatcher, PubSub } from '@shared/util'
+import { HIDDEN_TAB_INCOMPLETE_TAG } from '@shared/util/hiddenTab'
 import type { EventFilters, EventItem } from '@pages/EventsPage/types'
 import {
   buildGqlVariables,
@@ -190,6 +191,8 @@ const eventsApi = api.injectEndpoints({
         }
       },
       keepUnusedDataFor: 60,
+      // lists every event: refetch when a hidden tab caught up on only the latest of them
+      providesTags: [HIDDEN_TAB_INCOMPLETE_TAG],
       async onCacheEntryAdded(filters, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
         let token: string | undefined
         const batcher = createRealtimeBatcher(
