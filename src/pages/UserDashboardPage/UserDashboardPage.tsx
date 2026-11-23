@@ -97,7 +97,6 @@ const UserDashboardPage: React.FC = () => {
     skip: false,
   })
 
-  const hasPlanner = !!getBundleAddonVersion('planner')
   const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
@@ -113,6 +112,9 @@ const UserDashboardPage: React.FC = () => {
     ],
     remotePages.map((p) => p.viewType),
   )
+  // the planner addon's dashboard page is a remote Studio module ('planner' is reserved above,
+  // so no studio.page contribution can take it)
+  const hasPlannerPage = remotePages.some((p) => p.module === 'planner')
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -192,9 +194,9 @@ const UserDashboardPage: React.FC = () => {
         showProjectList: false,
         requiresProjects: true,
       },
-      // Show bookings splash when planner addon is not installed;
-      // when installed the remote page from the planner addon handles /dashboard/bookings
-      ...(!hasPlanner
+      // the planner splash whenever no page from the planner addon fills /dashboard/planner:
+      // not installed, not in the bundle, or in the bundle but its page didn't load
+      ...(!hasPlannerPage
         ? [
             {
               name: 'Planner',
@@ -291,7 +293,7 @@ const UserDashboardPage: React.FC = () => {
       isManager,
       addonName,
       module,
-      hasPlanner,
+      hasPlannerPage,
     ],
   )
 
