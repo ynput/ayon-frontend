@@ -1,41 +1,35 @@
 // The history of the bundles, from addons (bundles.history slot, @ynput/ayon-addon): a row below
 // the toolbar of the selected bundle.
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { ContributionView, prefetchPiece, useContributions } from '@ynput/ayon-addon'
 import type { BundlesHistoryContext, Contribution } from '@ynput/ayon-addon'
 import { usePowerpack } from '@shared/context'
 
 type History = Contribution<'bundles.history'>
 
-/** The contributions to show; a power feature's only with a Power Pack licence */
-export const useBundlesHistory = () => {
+type ListedBundle = { name: string; isProduction?: boolean; isStaging?: boolean; isDev?: boolean }
+
+/**
+ * The contributions to show, a power feature's only with a Power Pack licence, and their context:
+ * `bundles` the list shows, the `selected` bundle names, and `onSelect` to select bundles.
+ */
+export const useBundlesHistory = (
+  bundles: ListedBundle[],
+  selected: string[],
+  onSelect: (names: string[]) => void,
+) => {
   const { contributions } = useContributions('bundles.history')
   const { powerLicense, isLoading } = usePowerpack()
-  const available = useMemo(
+  const histories = useMemo(
     () => contributions.filter((history) => !history.powerFeature || (powerLicense && !isLoading)),
     [contributions, powerLicense, isLoading],
   )
   // loaded with the page, so they are there when a bundle shows
   useEffect(() => {
-    for (const history of available) prefetchPiece(history.component)
-  }, [available])
-  return available
-}
+    for (const history of histories) prefetchPiece(history.component)
+  }, [histories])
 
-type ListedBundle = { name: string; isProduction?: boolean; isStaging?: boolean; isDev?: boolean }
-
-type Props = {
-  histories: History[]
-  /** the bundles the list shows */
-  bundles: ListedBundle[]
-  /** names of the selected bundles */
-  selected: string[]
-  onSelect: (names: string[]) => void
-}
-
-// untagged: the history is a child of the page's section, which sizes its children (`> *`); the
-// slot inspector's wrapper would come between them
-export const BundlesHistory = ({ histories, bundles, selected, onSelect }: Props) => {
+  // selectBundle never changes and calls the latest onSelect
   const select = useRef(onSelect)
   select.current = onSelect
   const [selectBundle] = useState(() => (name: string) => select.current([name]))
@@ -54,18 +48,29 @@ export const BundlesHistory = ({ histories, bundles, selected, onSelect }: Props
     () => ({ bundles: listed, selected, selectBundle }),
     [listed, selected, selectBundle],
   )
-
-  return (
-    <>
-      {histories.map((history) => (
-        <ContributionView
-          key={history.key}
-          contribution={history}
-          context={context}
-          piece="component"
-          untagged
-        />
-      ))}
-    </>
-  )
+  return { histories, context }
 }
+
+type Props = {
+  histories: History[]
+  /** memoized: the pieces re-render when it changes */
+  context: BundlesHistoryContext
+}
+
+// untagged: the history is a child of the page's section, which sizes its children (`> *`); the
+// slot inspector's wrapper would come between them. Memoized: the page re-renders often
+const HistoryPieces = ({ histories, context }: Props) => (
+  <>
+    {histories.map((history) => (
+      <ContributionView
+        key={history.key}
+        contribution={history}
+        context={context}
+        piece="component"
+        untagged
+      />
+    ))}
+  </>
+)
+
+export const BundlesHistory = memo(HistoryPieces)

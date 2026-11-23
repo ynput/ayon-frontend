@@ -39,8 +39,6 @@ const Bundles = () => {
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
 
-  const histories = useBundlesHistory()
-
   // show copy settings dialog
   const initCopySettingsBundle = { env: null, bundle: null, previous: null, pendingChange: null }
   const [copySettingsBundle, setCopySettingsBundle] = useState(initCopySettingsBundle)
@@ -406,14 +404,12 @@ const Bundles = () => {
     },
   ]
 
-  const history = (
-    <BundlesHistory
-      histories={histories}
-      bundles={bundleList}
-      selected={selectedBundles}
-      onSelect={handleBundleSelect}
-    />
+  const { histories, context: historyContext } = useBundlesHistory(
+    bundleList,
+    selectedBundles,
+    handleBundleSelect,
   )
+  const history = <BundlesHistory histories={histories} context={historyContext} />
 
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
