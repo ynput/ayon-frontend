@@ -519,7 +519,6 @@ const Bundles = () => {
                     installers={installerVersions}
                     developerMode={developerMode}
                     isDeveloper={isDeveloper}
-                    history={history}
                   />
                 ) : (
                   !!bundlesData.length &&
