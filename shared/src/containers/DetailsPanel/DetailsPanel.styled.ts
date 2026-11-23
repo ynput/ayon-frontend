@@ -35,13 +35,4 @@ export const Panel = styled(ARCPanel)`
     box-shadow: calc(-1 * var(--padding-m)) 0 0 var(--md-sys-color-surface-container-low),
       var(--padding-m) 0 0 var(--md-sys-color-surface-container-low);
   }
-
-  /* the summary (DetailsPanelHeader) and the tab bar under it, closed off by a line */
-  & > .tabbed-panel > .tabbed-panel-head {
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  }
-
-  & > .tabbed-panel > .tabbed-panel-head > .tabbed-panel-tabs {
-    padding: var(--base-gap-large) 8px 8px;
-  }
 `
