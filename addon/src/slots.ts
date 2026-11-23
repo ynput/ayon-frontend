@@ -250,6 +250,17 @@ export interface SlotMap {
     }
   }
   /**
+   * The history of the bundles on the Bundles page (Studio settings → Bundles), for the bundles
+   * selected in the list: a row below the toolbar of the selected bundle. `component` loads with
+   * the page.
+   */
+  'bundles.history': {
+    version: 1
+    meta: BundlesHistoryMeta
+    context: BundlesHistoryContext
+    pieces: { component: Loader<ComponentType<SlotProps<'bundles.history'>>> }
+  }
+  /**
    * Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to
    * websocket events, registering a store listener. `component` loads at startup and is mounted
    * once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks;
@@ -841,6 +852,32 @@ export interface AddonSettingsHistoryContext {
   setSettingMenu: (menu: AddonSettingsMenu | null) => void
 }
 
+/** Description of a `bundles.history` contribution. */
+export interface BundlesHistoryMeta {
+  /** unique among the addon's contributions to the slot */
+  id: string
+  /** a Power Pack feature: shown only with a Power Pack licence. `false` by default */
+  powerFeature?: boolean
+}
+
+/** A bundle in the list of the Bundles page. */
+export interface BundlesHistoryBundle {
+  name: string
+  isProduction: boolean
+  isStaging: boolean
+  isDev: boolean
+}
+
+/** Context of the bundles history: the Bundles page it is shown on. */
+export interface BundlesHistoryContext {
+  /** the bundles the list shows, with its filters (archived, project, dev bundles) */
+  bundles: BundlesHistoryBundle[]
+  /** names of the bundles selected in the list */
+  selected: string[]
+  /** selects a bundle in the list and shows it */
+  selectBundle: (name: string) => void
+}
+
 /** Description of an `app.service` contribution. */
 export interface AppServiceMeta {
   /** unique among the addon's services */
@@ -1110,6 +1147,15 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     version: 1,
     required: [],
     pieces: ['timeline', 'sidebar'],
+    check: (item) =>
+      item.powerFeature !== undefined && typeof item.powerFeature !== 'boolean'
+        ? 'powerFeature must be true or false'
+        : undefined,
+  },
+  'bundles.history': {
+    version: 1,
+    required: [],
+    pieces: ['component'],
     check: (item) =>
       item.powerFeature !== undefined && typeof item.powerFeature !== 'boolean'
         ? 'powerFeature must be true or false'

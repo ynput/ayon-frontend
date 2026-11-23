@@ -1509,6 +1509,34 @@ addonSettingsHistory({
 })
 ```
 
+### `bundles.history`: `bundlesHistory`
+
+The history of the bundles on the Bundles page (Studio settings → Bundles), for the bundles selected in the list: a row below the toolbar of the selected bundle. `component` loads with the page. Loads: with the page.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's contributions to the slot |
+| `powerFeature` | `boolean \| undefined` | a Power Pack feature: shown only with a Power Pack licence. `false` by default |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'bundles.history'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `bundles` (required) | `BundlesHistoryBundle[]` | the bundles the list shows, with its filters (archived, project, dev bundles) |
+| `selected` (required) | `string[]` | names of the bundles selected in the list |
+| `selectBundle` (required) | `(name: string) => void` | selects a bundle in the list and shows it |
+
+Pieces: `component`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+bundlesHistory({
+  id: 'example',
+  component: () => import('./Component'),
+})
+```
+
 ### `app.service`: `appService`
 
 Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.

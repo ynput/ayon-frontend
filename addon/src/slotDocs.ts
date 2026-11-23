@@ -115,4 +115,10 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
       'the history of the addon settings in the settings editor (Studio settings, Project settings): a timeline above the settings and a sidebar beside them',
     loads: 'first shown',
   },
+  'bundles.history': {
+    helper: 'bundlesHistory',
+    where:
+      'the history of the bundles on the Bundles page (Studio settings → Bundles): a row below the toolbar of the selected bundle',
+    loads: 'with the page',
+  },
 }

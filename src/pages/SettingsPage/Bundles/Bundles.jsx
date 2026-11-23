@@ -22,6 +22,7 @@ import Shortcuts from '@containers/Shortcuts'
 import CopyBundleSettingsDialog from './CopyBundleSettingsDialog/CopyBundleSettingsDialog'
 import BundleFormLoading from './BundleFormLoading'
 import { AddonSearchProvider } from '@pages/SettingsPage/Bundles/context/addon-search'
+import { BundlesHistory, useBundlesHistory } from './BundlesHistory'
 
 const Bundles = () => {
   const userName = useSelector((state) => state.user.name)
@@ -37,6 +38,8 @@ const Bundles = () => {
   // open bundle details
   // set a bundle name to open the new bundle form, plus add any extra data
   const [newBundleOpen, setNewBundleOpen] = useState(null)
+
+  const histories = useBundlesHistory()
 
   // show copy settings dialog
   const initCopySettingsBundle = { env: null, bundle: null, previous: null, pendingChange: null }
@@ -403,6 +406,15 @@ const Bundles = () => {
     },
   ]
 
+  const history = (
+    <BundlesHistory
+      histories={histories}
+      bundles={bundleList}
+      selected={selectedBundles}
+      onSelect={handleBundleSelect}
+    />
+  )
+
   const prodBundle = useMemo(() => bundlesData.find((b) => b.isProduction), [bundlesData])
   const stageBundle = useMemo(() => bundlesData.find((b) => b.isStaging), [bundlesData])
 
@@ -511,6 +523,7 @@ const Bundles = () => {
                     installers={installerVersions}
                     developerMode={developerMode}
                     isDeveloper={isDeveloper}
+                    history={history}
                   />
                 ) : (
                   !!bundlesData.length &&
@@ -520,6 +533,7 @@ const Bundles = () => {
                       isLoading={isLoadingInstallers || isFetching}
                       installers={installerVersions}
                       isDev
+                      history={history}
                     />
                   ) : (
                     <BundleDetail
@@ -529,6 +543,7 @@ const Bundles = () => {
                       installers={installerVersions}
                       toggleBundleStatus={toggleBundleStatus}
                       developerMode={isDeveloper}
+                      history={history}
                     />
                   ))
                 )}
