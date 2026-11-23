@@ -18,7 +18,7 @@ export const Popup = styled.span`
   z-index: 100;
   align-items: center;
 
-  background-color: var(--md-sys-color-surface-container-high);
+  background-color: var(--md-sys-color-surface-overlay);
   border-radius: var(--border-radius-m);
 
   position: fixed;

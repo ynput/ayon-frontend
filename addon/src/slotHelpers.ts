@@ -20,6 +20,13 @@ export const detailsPanelTab = (tab: ContributionFields<'detailsPanel.tab'>) =>
 export const detailsPanelMenuItem = (item: ContributionFields<'detailsPanel.menuItem'>) =>
   contribute('detailsPanel.menuItem', item)
 
+/**
+ * A tab in a list's details panel (Lists and Reviews pages, a review session in Review): on every
+ * list, or the `entityListTypes` listed (version 2 of the slot, so an older AYON skips the tab).
+ */
+export const listDetailsTab = (tab: ContributionFields<'listDetails.tab'>) =>
+  contribute('listDetails.tab', tab.entityListTypes ? { ...tab, slotVersion: 2 } : tab)
+
 /** An item in the project tables' right-click menu, acting on the selected entities. */
 export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
   contribute('entityMenuItem', item)

@@ -1,6 +1,6 @@
 {
   "name": "@ynput/ayon-frontend-shared",
-  "version": "0.12.1",
+  "version": "3.0.2",
   "description": "Shared React components for AYON frontend",
   "repository": {
     "type": "git",
@@ -78,6 +78,10 @@
       "types": "./dist/types/EntityPickerDialog.d.ts",
       "import": "./dist/EntityPickerDialog.es.js"
     },
+    "./ListPicker": {
+      "types": "./dist/types/ListPicker.d.ts",
+      "import": "./dist/ListPicker.es.js"
+    },
     "./ListTable": {
       "types": "./dist/types/ListTable.d.ts",
       "import": "./dist/ListTable.es.js"
@@ -104,8 +108,8 @@
     "@reduxjs/toolkit": "2.11.2",
     "@rtk-query/graphql-request-base-query": "2.3.2",
     "@tanstack/react-table": "8.21.3",
-    "@ynput/ayon-addon": "1.0.1",
-    "@ynput/ayon-react-components": "^1.28.0",
+    "@ynput/ayon-addon": "2.1.1",
+    "@ynput/ayon-react-components": "^1.33.1",
     "graphql-request": "7.4.0",
     "react": "18.3.1",
     "react-dom": "18.3.1",

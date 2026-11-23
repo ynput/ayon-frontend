@@ -44,8 +44,14 @@ chromium`); in the AYON dev workbench the ayon-frontend checkout's copy is used.
 1. `ayon-addon dev --ayon --open` in the addon (`yarn dev:ayon` in the template and the time tracker).
 2. It checks the server, builds, and opens the URL it prints (without `--open`, open it yourself).
    The page loads your addon from the dev server instead of the installed version (also when it
-   isn't installed) and shows a banner. It reloads after every rebuild.
-3. `?addonDev=off`, or the banner's close button, goes back to the installed addon.
+   isn't installed) and shows a small icon in the bottom left corner: hover or click it for the
+   addon's dev server, build and status. It reloads after every rebuild.
+3. `?addonDev=off`, or the close button on the addon's row, goes back to the installed addon.
+
+Two addons at once (a feature that spans both): run `ayon-addon dev --ayon --port <p>` in each and
+open both printed URLs: each URL adds its addon to the ones already loaded. One URL for both works
+too: `?addonDev=a@http://localhost:5173,b@http://localhost:5174`. Each gets its own row; closing
+one keeps the other, `?addonDev=off` drops them all.
 
 - `--frontend http://localhost:3000` puts that page in the URL instead of the server (an
   ayon-frontend dev server in front of it).
@@ -69,7 +75,8 @@ The checks never stop the dev server: fix them while it runs.
 
 ### Why isn't my addon loading?
 
-The page always says why in the banner at the bottom left (also in the console). What it says, and
+The page always says why in the dev panel: the icon in the bottom left corner turns the error
+colour, hover or click it (also in the console). What it says, and
 the fix:
 
 - **ignored ... only users in developer mode**: turn on Developer Mode in AYON's header (a user
@@ -84,13 +91,13 @@ the fix:
   `ayon-addon dev` without `--ayon`), or the first build hasn't finished. The page reloads once it
   answers.
 - **could not load ... serves "x", not "y"**: the name in the URL isn't the addon's name in
-  `package.py`; use the URL the CLI prints.
+  `package.py`: close that row, then use the URL the CLI prints.
 - **its manifest failed to load**: the build is broken or the remote didn't start: see the
   console and the CLI's output; the page reloads after the next build.
 - **The addon loads but its requests answer 404**: the server doesn't have the addon in the
   version the frontend calls. `ayon-addon dev --ayon` reports it (`addon` check); install that
   version.
-- **No banner at all**: the page isn't a frontend with the dev override (an older AYON), or
+- **No icon at all**: the page isn't a frontend with the dev override (an older AYON), or
   `?addonDev=off` cleared it.
 
 ## Developing without AYON: the dev shell (`dev`, the default)
@@ -123,8 +130,8 @@ of AYON:
     not: places (name, package) and slots (label, name, the titles of the addon's
     contributions). A package's heading is its name for people (`@scope/ayon-addon-board` is
     "Board"), with the full name as the tooltip.
-  - **Show slots** and the legend of addons are not in the panel: they are in the slot menu at the
-    right of the top bar, AYON's developer mode menu (below). Off, the stage looks as in AYON.
+  - **Show slots** is not in the panel: it is the switch at the right of the top bar, AYON's
+    developer mode switch (below). Off, the stage looks as in AYON.
   - **Slots**: a read-only overview of the place's slots (label, with the name muted under it),
     and under each the addon's contributions with an icon, with the ones AYON would skip and why.
     Hovering a slot's row outlines it on stage, and hovering a contribution on stage (with a
@@ -208,17 +215,18 @@ contribution is developed without that addon installed:
   tooltip), and under each slot the addon's contributions to it. Selecting it puts the scene on
   stage, full width, with the shell's providers (right-click menus, the details panel, the user).
   A contract slot no scene renders is under Other slots.
-- **Show slots** (the slot menu at the right of the top bar) is AYON's developer mode menu, the
-  same header button, dropdown, state and rendering (`slotInspector` in the shared package, see
-  `src/remote/AGENTS.md`), kept in session storage. It adds every slot's example contribution
+- **Show slots** (the switch at the right of the top bar) is the switch of AYON's developer mode
+  menu, with the same state and rendering (`slotInspector` in the shared package, see
+  `src/remote/AGENTS.md`), kept in session storage. The shell has the switch alone, without
+  AYON's dropdown and its legend of addons. It adds every slot's example contribution
   after the real ones: AYON's for its slots, the contract package's `example` for an addon's (a
   menu gets an entry, an outlet the example's component). Using one only shows "Example
-  contribution to `<slot>`". It also outlines each contribution in its addon's colour (the legend
-  lists them, with a checkbox each) and the buttons that open menus with them; hovering one shows
+  contribution to `<slot>`". It also outlines each contribution in its addon's colour and the
+  buttons that open menus with them; hovering one shows
   a card at its top-right corner (the slot's id, where the slot comes from, the contribution's key)
   with Copy AI prompt: add a contribution to the slot, or for a real contribution edit it, by id.
   A page is outlined on its tab, not over its whole content. A new session in the shell starts
-  with Show slots on. Examples don't count as used: Places and "N of M used" count the addon's own
+  with Show slots off. Examples don't count as used: Places and "N of M used" count the addon's own
   contributions. The scenes need nothing for it: the shell hands the SDK an internal hook
   (`devSlots`) only to learn the context each slot passes (Context), which AYON never sets.
 - A scene's fields are a form under *Input values*, with *Reset* and the values as JSON. The values
@@ -303,6 +311,7 @@ A scene is `{ id, label, description?, slots, fields, component }`:
 | `json` | `default?` | any JSON (null); text that doesn't parse is shown as an error and not applied |
 | `project` | `optional?`, `default?` (a name, or null with `optional`) | a project name; without a default the shell's project, or null when optional |
 | `entity` | `entityType` (`task`, `folder`, `product`, `version`), `project` (the key of a project field) | `{ id, name, label?, entityType, projectName }` or null, picked with AYON's entity picker; cleared when that project changes |
+| `list` | `project` (the key of a project field), `entityListTypes?` (`['generic']` lists, `['review-session']` review sessions; both by default) | `{ id, projectName, label, entityListType, entityType, count }` or null, picked with AYON's list picker (the SDK's `ListPicker`); cleared when that project changes. Read a session's name and item count from it rather than adding fields for them |
 | `pick` | `load(api, values)` returning `[{ value, label, values }]` | an option's `value`; choosing it also merges its `values`. Loaded when the list opens, errors shown under it |
 
 - `api` is `{ fetch(path, init), addonUrl(name) }`: `fetch` reaches the server the shell uses,

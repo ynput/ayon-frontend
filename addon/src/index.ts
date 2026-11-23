@@ -32,6 +32,9 @@ export type {
   PopoverButtonScope,
   MenuPiece,
   RunPiece,
+  ListDetailsTabContext,
+  ListDetailsTabMeta,
+  PanelTabMeta,
   ListMenuItemMeta,
   MenuKind,
   ProjectListMenuItemContext,
@@ -70,6 +73,7 @@ export type {
 export type {
   Access,
   AddonUser,
+  EntityListRef,
   EntityRef,
   EntityScope,
   FolderInfo,
@@ -123,6 +127,9 @@ export type { EntityLinkRef, EntityUrlOptions } from './entityLinks'
 // AYON's details panel and viewer, opened from addon code
 export { closeDetails, openDetails, openViewer } from './openInHost'
 export type { ViewerTarget } from './openInHost'
+// AYON's import dialog (CSV, Excel, pasted tables), for rows the addon's server imports
+export { openImport } from './openImport'
+export type { ImportResult, ImportTarget } from './openImport'
 
 // layout: the host's slicer and project list, placed by the addon
 export { ProjectList, ProjectPageLayout, Slicer, StudioPageLayout } from './layout'
@@ -136,6 +143,8 @@ export type {
 // AYON's entity picker, usable anywhere
 export { EntityPicker } from './EntityPicker'
 export type { EntityPickerProps, PickableEntityType } from './EntityPicker'
+export { ListPicker } from './ListPicker'
+export type { EntityListRef, ListPickerProps, PickableEntityListType } from './ListPicker'
 // AYON's project table for given rows, usable anywhere
 export { EntityTable } from './EntityTable'
 export type {
@@ -149,6 +158,29 @@ export type {
 // AYON's menu under a button, for an addon's own "more" actions
 export { MoreMenu } from './MoreMenu'
 export type { MoreMenuProps } from './MoreMenu'
+// AYON's header and frame of a panel tab (detailsPanel.tab, listDetails.tab)
+export { DetailsPanelTabHeader, PanelTabHeader } from './PanelTabHeader'
+export { ContributionTab } from './ContributionTab'
+export type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
+// AYON's panel with tabs: tools, its own tabs and a slot's (Review's session sidebar)
+export { TabbedPanel } from './TabbedPanel'
+export type {
+  PanelTab,
+  PanelTool,
+  PanelToolButtonProps,
+  PanelToolDivider,
+  PanelToolElement,
+  PanelToolItem,
+  TabbedPanelProps,
+  TabbedPanelSlot,
+} from './TabbedPanel'
+export type {
+  DetailsPanelTabHeaderProps,
+  PanelTabHeaderProps,
+  TabHeaderFilter,
+  TabHeaderFilterOption,
+  TabHeaderSearch,
+} from './PanelTabHeader'
 // AYON's right-click menu, with the same items
 export { useContextMenu } from './useContextMenu'
 export type { OpenContextMenu } from './useContextMenu'

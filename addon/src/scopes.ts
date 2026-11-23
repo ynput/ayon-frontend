@@ -69,6 +69,17 @@ export interface EntityScope {
   entities: EntityRef[]
 }
 
+/** A list a slot is about: one of a project's lists (Lists and Reviews pages) or a review session. */
+export interface EntityListRef {
+  id: string
+  projectName: string
+  label?: string
+  /** the type of the list's items: `folder`, `task`, `product` or `version` */
+  entityType?: string
+  /** `generic`, or `review-session` for a review session */
+  entityListType?: string
+}
+
 /**
  * A user a slot is about, e.g. one selected in Settings → Users. Not the signed-in user: that is
  * `user` in every slot.

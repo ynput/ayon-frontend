@@ -10,6 +10,8 @@ interface ListAttributeFormProps {
   list?: EntityListModel
   isLoading?: boolean
   attributes?: AttributeField[]
+  /** the Details tab's search: only the attributes whose label, name or value match */
+  search?: string
 }
 
 // explicit type for the form state
@@ -28,6 +30,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
   list,
   isLoading,
   attributes = [],
+  search,
 }) => {
   const [form, setForm] = useState<ListFormData>({
     label: '',
@@ -163,6 +166,7 @@ export const ListAttributeForm: FC<ListAttributeFormProps> = ({
       isLoading={isLoading}
       onChange={handleChange}
       title="Attributes"
+      search={search}
     />
   )
 }

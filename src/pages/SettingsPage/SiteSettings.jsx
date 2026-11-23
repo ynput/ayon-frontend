@@ -1,4 +1,7 @@
 import { useState, useEffect } from 'react'
+import { isEqual } from 'lodash'
+import ayonClient from '@/ayon'
+import { EmptyPlaceholder, EmptyPlaceholderFlexWrapper } from '@shared/components'
 import { toast } from 'react-toastify'
 import { Section, Spacer, Panel, Toolbar, ScrollPanel, Button } from '@ynput/ayon-react-components'
 
@@ -28,8 +31,9 @@ const SiteSettingsEditor = ({ addonName, addonVersion, siteId, onChange }) => {
     setFormData(originalData)
   }, [originalData])
 
+  // only edits count as changes, so Save stays disabled until something is changed
   useEffect(() => {
-    onChange(formData)
+    onChange(formData && !isEqual(formData, originalData) ? formData : null)
   }, [formData])
 
   if (!(schema && originalData)) return 'Loading editor...'
@@ -85,7 +89,6 @@ const SiteSettings = () => {
         )
         return
       }
-
     }
     toast.success('Site settings saved')
     setNewData({})
@@ -94,14 +97,15 @@ const SiteSettings = () => {
   const onChange = (addonName, addonVersion, siteId, data) => {
     const key = `${addonName}|${addonVersion}|${siteId}|_`
     setNewData((newData) => {
-      newData[key] = data
+      if (data) newData[key] = data
+      else delete newData[key]
       return { ...newData }
     })
   }
 
   return (
     <main style={{ flexDirection: 'row', flexGrow: 1 }}>
-      <Section style={{ maxWidth: 400 }}>
+      <Section className="standard-rows" style={{ maxWidth: 400 }}>
         <SettingsAddonList
           selectedAddons={selectedAddons}
           setSelectedAddons={setSelectedAddons}
@@ -119,11 +123,16 @@ const SiteSettings = () => {
       <Section style={{ flexGrow: 1 }}>
         <Toolbar>
           <Spacer />
-          <Button label="Save Changes" icon="check" onClick={() => saveChanges()} />
+          <Button
+            label="Save changes"
+            icon="check"
+            onClick={() => saveChanges()}
+            disabled={!Object.keys(newData).length}
+          />
         </Toolbar>
 
-        {(selectedSites.length && (
-          <ScrollPanel style={{ flexGrow: 1 }} className="transparent">
+        {(selectedSites.length && selectedAddons.length && (
+          <ScrollPanel style={{ flexGrow: 1 }}>
             {selectedAddons.map((addon) => {
               return selectedSites.map((siteId) => {
                 return (
@@ -144,8 +153,21 @@ const SiteSettings = () => {
               })
             })}
           </ScrollPanel>
-        )) ||
-          'Select a site to edit settings'}
+        )) || (
+          <EmptyPlaceholderFlexWrapper>
+            {!ayonClient.settings.sites.length ? (
+              <EmptyPlaceholder
+                className="muted"
+                icon="computer"
+                message="Site settings become available once a launcher registers a site"
+              />
+            ) : selectedSites.length ? (
+              <EmptyPlaceholder icon="settings" message="Select an addon to edit its settings" />
+            ) : (
+              <EmptyPlaceholder icon="computer" message="Select a site to edit its settings" />
+            )}
+          </EmptyPlaceholderFlexWrapper>
+        )}
       </Section>
     </main>
   )

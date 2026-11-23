@@ -1,23 +1,38 @@
 import { useState, useMemo, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { toast } from 'react-toastify'
-import { Section, Toolbar, InputText, TablePanel } from '@ynput/ayon-react-components'
+import { Section, Toolbar } from '@ynput/ayon-react-components'
 import { Column } from 'primereact/column'
 import { TreeTable } from 'primereact/treetable'
 import { MultiSelect } from 'primereact/multiselect'
 import { EntityIcon, DetailsDialog } from '@shared/components'
+import SearchInput from '@components/SearchInput'
 import { useGetFolderHierarchyQuery } from '@shared/api'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableKeyboardNavigation, extractIdFromClassList } from '@shared/containers/Feed'
 import { setFocusedFolders, setExpandedFolders, setSelectedVersions } from '@state/context'
 import HierarchyExpandFolders from './HierarchyExpandFolders'
+import { FlatHeaderTablePanel } from './FlatHeaderTablePanel.styled'
 import { openViewer } from '@/features/viewer'
 import clsx from 'clsx'
+import styled from 'styled-components'
 import useTableLoadingData from '@hooks/useTableLoadingData'
+
+// the placeholder reads like the filter input next to it, on the same baseline
+const FolderTypeSelect = styled(MultiSelect)`
+  .p-multiselect-label {
+    padding-top: 5px;
+    padding-bottom: 5px;
+  }
+
+  .p-multiselect-label.p-placeholder {
+    color: var(--md-sys-color-outline);
+  }
+`
 
 // Cell component that uses EntityIcon for proper icon/color from anatomy
 const HierarchyCell = ({ label, name, folderType }) => (
-  <span style={{  alignItems: 'center', gap: '0.5rem', overflow: 'hidden' }}>
+  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, overflow: 'hidden' }}>
     <EntityIcon entity={{ entityType: 'folder', subType: folderType }} />
     <span
       title={name}
@@ -44,9 +59,7 @@ const filterHierarchy = (text, folder) => {
           folderType: item.folderType,
           hasTasks: item.hasTasks,
           parents: item.parents,
-          body: (
-            <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />
-          ),
+          body: <HierarchyCell label={item.label} name={item.name} folderType={item.folderType} />,
         },
       })
     } else if (item.children) {
@@ -97,7 +110,8 @@ const Hierarchy = (props) => {
       const folder_type_label = option ? option.replace(/[a-z]/g, '') : '??'
       return <span style={{ marginRight: '8px' }}>{folder_type_label}</span>
     }
-    return 'Folder types'
+    // nothing selected: the multiselect shows its placeholder
+    return null
   }
 
   //
@@ -388,7 +402,7 @@ const Hierarchy = (props) => {
         onSelectionChange={onSelectionChange}
         onToggle={onToggle}
         onContextMenu={onContextMenu}
-        className={clsx({ loading: isFetching })}
+        className={clsx('no-row-dividers', { loading: isFetching })}
         rowClassName={(rowData) => ({
           ['id-' + rowData.key]: true,
           compact: true,
@@ -414,29 +428,29 @@ const Hierarchy = (props) => {
     <>
       <Section style={props.style}>
         <Toolbar>
-          <InputText
-            style={{ flexGrow: 1, minWidth: 100 }}
-            placeholder="Filter folders..."
+          {/* in a narrow pane the folder types give way before the filter becomes unreadable */}
+          <SearchInput
+            style={{ flex: '1 1 0', minWidth: 128 }}
+            placeholder="Filter folders"
             disabled={!projectName || isFetching}
             value={query}
             onChange={(evt) => setQuery(evt.target.value)}
-            autoComplete="off"
           />
 
-          <MultiSelect
+          <FolderTypeSelect
             value={selectedFolderTypes}
             options={folderTypeList}
-            placeholder="Select folder types"
+            placeholder="Folder types"
             showClear={true}
             optionLabel="label"
             disabled={!projectName || isFetching}
             selectedItemTemplate={selectedTypeTemplate}
             onChange={(e) => setSelectedFolderTypes(e.value || [])}
-            style={{ flexBasis: 150 }}
+            style={{ flexBasis: 150, flexShrink: 1, minWidth: 0 }}
           />
         </Toolbar>
 
-        <TablePanel>
+        <FlatHeaderTablePanel>
           <DetailsDialog
             projectName={projectName}
             entityType="folder"
@@ -446,7 +460,7 @@ const Hierarchy = (props) => {
           />
 
           {table}
-        </TablePanel>
+        </FlatHeaderTablePanel>
       </Section>
       <HierarchyExpandFolders
         parents={parents}

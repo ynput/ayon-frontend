@@ -4,10 +4,16 @@
   height: fit-content;
 }
 
+// like the project tables: folders are rows, the parents above them are group rows (no row hover, the cells have their own)
 .tasks-progress-table.p-datatable .p-datatable-tbody > tr {
   &,
   &:hover {
-    background: var(--md-sys-color-surface-container-low) !important;
+    background: var(--color-table-row) !important;
+  }
+
+  &.parent-row,
+  &.parent-row:hover {
+    background: var(--color-table-row-high) !important;
   }
 }
 
@@ -17,5 +23,5 @@
 
 .tasks-progress-table.p-datatable
   .p-sortable-column:not(.p-highlight):not(.p-sortable-disabled):hover {
-  background: var(--md-sys-color-surface-container-low-hover);
+  background: var(--color-table-header-hover);
 }

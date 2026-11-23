@@ -13,15 +13,15 @@ const ButtonContainer = styled.div`
 const VARIANT_STYLES = {
   production: {
     backgroundColor: 'var(--color-hl-production)',
-    color: 'black',
+    color: 'var(--color-on-hl-production)',
   },
   staging: {
     backgroundColor: 'var(--color-hl-staging)',
-    color: 'black',
+    color: 'var(--color-on-hl-staging)',
   },
   dev: {
     backgroundColor: 'var(--color-hl-developer)',
-    color: 'black',
+    color: 'var(--color-on-hl)',
   },
 } as const
 
@@ -39,11 +39,11 @@ const VariantSelector = ({
   disabled = false,
 }: VariantSelectorProps) => {
   const { data: { bundles = [] } = {} } = useListBundlesQuery({ archived: false })
-  const devMode = useAppSelector((state) => state.user.attrib.developerMode)
+  const isDeveloper = useAppSelector((state) => state.user.data.isDeveloper)
   const userName = useAppSelector((state) => state.user.name)
 
   const buttons =
-    devMode && showDev
+    isDeveloper && showDev
       ? (['production', 'staging', 'dev'] as const)
       : (['production', 'staging'] as const)
 

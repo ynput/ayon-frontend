@@ -55,7 +55,7 @@ export const useProjectTableColumnItems = ({
       },
       {
         value: ENTITY_COLUMN_IDS.folder,
-        label: getColumnLabel(ENTITY_COLUMN_IDS.folder),
+        label: getColumnLabel(ENTITY_COLUMN_IDS.folder, scopes),
         icon: getColumnIcon(ENTITY_COLUMN_IDS.folder),
       },
       {

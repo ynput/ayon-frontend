@@ -1,16 +1,27 @@
-import { FC } from 'react'
+import { FC, MouseEvent, useMemo, useState } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@shared/util'
-import { ListAttributeForm, ListMetaData } from '@shared/components'
+import { ListAttributeForm, ListMetaData, PanelTabSearch, TabbedPanel } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
-import ListDetailsTabs, { ListDetailsTab } from '../ListDetailsTabs/ListDetailsTabs'
+import type { PanelTabSlot, TabbedPanelTab } from '@shared/components'
+import type { ListDetailsTabContext } from '@ynput/ayon-addon'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
 import { StringParam, useQueryParam, withDefault } from 'use-query-params'
+
+// a read-only detail cut short (the list id) shows its full value on hover
+const showFullValueIfCut = (event: MouseEvent<HTMLElement>) => {
+  const value = (event.target as HTMLElement).closest<HTMLElement>(
+    '.with-padding > div:not(.field-row) > :nth-child(2)',
+  )
+  if (!value) return
+  if (value.scrollWidth > value.clientWidth) value.dataset.tooltip = value.textContent || ''
+  else delete value.dataset.tooltip
+}
 
 interface ListDetailsPanelProps {
   listId: string
@@ -20,6 +31,7 @@ interface ListDetailsPanelProps {
 const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) => {
   const {
     data: list,
+    currentData: currentList,
     isFetching,
     isLoading,
     error,
@@ -36,9 +48,42 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   // Combine initial loading with argument change loading
   const isLoadingList = isLoading || isLoadingOnArgChange
 
-  const [selectedTab, setSelectedTab] = useQueryParam<ListDetailsTab>(
+  const [selectedTab, setSelectedTab] = useQueryParam(
     'listTab',
-    withDefault(StringParam, 'details') as unknown as any,
+    withDefault(StringParam, 'details'),
+  )
+
+  // the Details tab's search: it stays while another list is selected
+  const [detailsSearch, setDetailsSearch] = useState('')
+
+  // the selected list only (currentData): while another list loads, a tab must not act on the last one
+  const addonTabContext = useMemo<ListDetailsTabContext | undefined>(
+    () =>
+      currentList?.id
+        ? {
+            projectName,
+            list: {
+              id: currentList.id,
+              projectName,
+              label: currentList.label,
+              entityType: currentList.entityType,
+              entityListType: currentList.entityListType,
+            },
+            scope: isReview ? 'reviews' : 'lists',
+          }
+        : undefined,
+    [
+      projectName,
+      currentList?.id,
+      currentList?.label,
+      currentList?.entityType,
+      currentList?.entityListType,
+      isReview,
+    ],
+  )
+  const addonTabSlot = useMemo<PanelTabSlot<'listDetails.tab'>>(
+    () => ({ name: 'listDetails.tab', context: addonTabContext }),
+    [addonTabContext],
   )
 
   // derive error message
@@ -54,6 +99,58 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     }
   }
 
+  // the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
+  // the contribution key, `<addon>.<id>`
+  const tabs: TabbedPanelTab[] = [
+    {
+      id: 'details',
+      label: 'Details',
+      icon: 'lists',
+      header: {
+        searchActive: !!detailsSearch,
+        search: (
+          <PanelTabSearch
+            value={detailsSearch}
+            onChange={setDetailsSearch}
+            placeholder="Search attributes and details..."
+          />
+        ),
+      },
+      render: () => (
+        <Styled.Scrollable>
+          <Styled.Section>
+            <ListAttributeForm
+              list={list}
+              isLoading={isLoadingList}
+              projectName={projectName}
+              search={detailsSearch}
+            />
+          </Styled.Section>
+          <Styled.Section onMouseOver={showFullValueIfCut}>
+            <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
+          </Styled.Section>
+        </Styled.Scrollable>
+      ),
+    },
+    {
+      id: 'access',
+      label: 'Share',
+      icon: 'share',
+      render: () => (
+        <Styled.Scrollable>
+          {list && (
+            <ListAccessForm
+              list={list}
+              projectName={projectName}
+              isLoading={isLoadingList}
+              isReview={isReview}
+            />
+          )}
+        </Styled.Scrollable>
+      ),
+    },
+  ]
+
   if (errorMessage)
     return (
       <Styled.Panel>
@@ -65,40 +162,31 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     )
 
   return (
-    <Styled.Panel>
-      <Styled.Header>
-        <Styled.Titles>
-          <h2 className={clsx('title', { loading: isLoadingList })}>
-            {isLoadingList ? 'Loading...' : list?.label}
-          </h2>
-          <span className={clsx('type', { loading: isLoadingList })}>
-            {list && <Icon icon={getListIcon(list)} />}
-            {upperFirst(list?.entityType)}s {isReview && '(Review)'}
-          </span>
-        </Styled.Titles>
-        <ListDetailsTabs selected={selectedTab} onChange={setSelectedTab} />
-        <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
-      </Styled.Header>
-      <Styled.Scrollable>
-        {selectedTab === 'details' && (
-          <>
-            <Styled.Section>
-              <ListAttributeForm list={list} isLoading={isLoadingList} projectName={projectName} />
-            </Styled.Section>
-            <Styled.Section>
-              <ListMetaData list={list} isLoading={isLoadingList} />
-            </Styled.Section>
-          </>
-        )}
-        {selectedTab === 'access' && list && (
-          <ListAccessForm
-            list={list}
-            projectName={projectName}
-            isLoading={isLoadingList}
-            isReview={isReview}
-          />
-        )}
-      </Styled.Scrollable>
+    <Styled.Panel data-testid="list-details-panel">
+      <TabbedPanel
+        title={
+          <Styled.Titles>
+            <h2 className={clsx('title', { loading: isLoadingList })}>
+              {isLoadingList ? 'Loading...' : list?.label}
+            </h2>
+            <span className={clsx('type', { loading: isLoadingList })}>
+              {list && <Icon icon={getListIcon(list)} />}
+              {upperFirst(list?.entityType)}s {isReview && '(Review)'}
+            </span>
+          </Styled.Titles>
+        }
+        onClose={() => setListDetailsOpen(false)}
+        tabs={tabs}
+        // the addon tabs get the selected list only: while another list loads, they must not act
+        // on the last one
+        slot={addonTabSlot}
+        selected={selectedTab}
+        onChange={setSelectedTab}
+        // a tab in the URL whose addon is gone
+        fallbackTab="details"
+        // few tabs: each is named, the addons' too (icons only past 3)
+        showLabels
+      />
     </Styled.Panel>
   )
 }

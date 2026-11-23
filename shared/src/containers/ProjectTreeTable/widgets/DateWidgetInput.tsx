@@ -1,156 +1,106 @@
-import { forwardRef, useState, useEffect, useRef } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import styled from 'styled-components'
-import { isValid, parseISO, subMilliseconds } from 'date-fns'
+import { DateField } from '@ynput/ayon-react-components'
 import { WidgetBaseProps } from './CellWidget'
-import { formatUTCDate } from '@shared/util/formatUTCDate'
+import { fromDay, toDay } from './DateWidgetHelpers'
+
+// ARC's date field, looking like the text editor (TextWidgetInput): it fills the cell, dark, with
+// the focus outline
+const StyledDateField = styled(DateField)`
+  &&& {
+    position: absolute;
+    inset: 0;
+    z-index: 10;
+    width: auto;
+    min-width: 0;
+    height: auto;
+    min-height: 0;
+    border: none;
+    border-radius: 0;
+    background-color: var(--md-sys-color-surface-container-lowest);
+    box-shadow: inset 0 0 0 2px var(--md-sys-color-primary);
+    font: inherit;
+  }
+  &&& > div {
+    background-color: transparent;
+    box-shadow: none;
+    font: inherit;
+    color: inherit;
+  }
+  &&& input {
+    padding: 0 8px 0 9px;
+  }
+`
 
 interface DateWidgetInputProps
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'>,
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'value'>,
     WidgetBaseProps {
-  value: string
+  value?: string
   onCancel?: () => void
-  autoFocus?: boolean
   isMidnightExclusive?: boolean
 }
 
-const StyledInput = styled.input`
-  z-index: 10;
-  border: none;
-  outline: none;
-  padding: 0;
-  padding-left: 1px;
-  margin: 0;
-  cursor: text;
-  font-size: inherit;
-  font-family: inherit;
-  font-weight: inherit;
-  background-color: transparent;
-  width: 100%;
-  box-sizing: border-box;
-`
+/**
+ * The date field used across AYON (ARC's DateField) in the cell: typed, or picked in its calendar.
+ * Enter saves what is typed, one click a day; Escape keeps the date, and so does leaving the cell
+ * unless another date is typed.
+ */
+export const DateWidgetInput = ({
+  value,
+  onChange,
+  onCancel,
+  isMidnightExclusive = false,
+  ...props
+}: DateWidgetInputProps) => {
+  const day = toDay(value, isMidnightExclusive)
+  const input = useRef<HTMLInputElement>(null)
+  const lastKey = useRef('')
+  const isDone = useRef(false)
 
-export const DateWidgetInput = forwardRef<HTMLInputElement, DateWidgetInputProps>(
-  (
-    {
-      value: initialValue,
-      onChange,
-      onCancel,
-      autoFocus = true,
-      isMidnightExclusive = false,
-      ...props
-    },
-    _,
-  ) => {
-    const [value, setValue] = useState(() => {
-      if (initialValue) {
-        const parsedDate = parseISO(initialValue)
-        if (isValid(parsedDate)) {
-          return formatUTCDate(
-            isMidnightExclusive ? subMilliseconds(parsedDate, 1) : parsedDate,
-            'yyyy-MM-dd',
-          )
-        }
-      }
-      return ''
-    })
+  /** saves a day, or keeps the date when there is none; once */
+  const finish = (newDay: string | null) => {
+    if (isDone.current) return
+    isDone.current = true
+    const key = lastKey.current === 'Enter' ? 'Enter' : 'Click'
+    if (newDay) onChange(fromDay(newDay, isMidnightExclusive), key)
+    else onCancel?.()
+    // a day picked: the keyboard goes on from the cell, not from the calendar gone with it
+    if (key === 'Click') input.current?.closest('td')?.focus()
+  }
 
-    useEffect(() => {
-      if (initialValue) {
-        const parsedDate = parseISO(initialValue)
-        if (isValid(parsedDate)) {
-          setValue(
-            formatUTCDate(
-              isMidnightExclusive ? subMilliseconds(parsedDate, 1) : parsedDate,
-              'yyyy-MM-dd',
-            ),
-          )
-        } else {
-          setValue('')
-        }
-      }
-    }, [initialValue, isMidnightExclusive])
+  // the date selected to type over
+  useLayoutEffect(() => {
+    input.current?.focus()
+    input.current?.select()
+  }, [])
 
-    const inputRef = useRef<HTMLInputElement>(null)
-
-    useEffect(() => {
-      if (autoFocus && inputRef.current) {
-        inputRef.current.focus()
-        // Delay showPicker call until after focus to ensure it's tied to user interaction
-        setTimeout(() => {
-          try {
-            inputRef.current?.showPicker()
-          } catch (error) {
-            console.debug('Date picker could not be shown automatically:', error)
-          }
-        }, 100)
-      }
-    }, [autoFocus])
-
-    // Ensure the picker opens when clicked directly
-    const handleClick = (e: React.MouseEvent<HTMLInputElement>) => {
-      e.preventDefault() // Prevent default to ensure our handler takes precedence
-      try {
-        inputRef.current?.showPicker()
-      } catch (error) {
-        console.debug('Date picker could not be shown on click:', error)
-      }
-    }
-
-    const handleDateSubmit = (event?: 'Click' | 'Enter') => {
-      if (value) {
-        const [y, m, d] = value.split('-').map(Number)
-        if (y && m && d) {
-          const utcDate = new Date(Date.UTC(y, m - 1, d + Number(isMidnightExclusive)))
-          const newISOValue = utcDate.toISOString()
-
-          // For Click/Blur: only save if value changed
-          // For Enter: always save
-          if (event === 'Enter') {
-            onChange(newISOValue, event)
-            return true
-          } else if (event === 'Click') {
-            // Check if value actually changed
-            const initialDateISO = initialValue ? parseISO(initialValue).toISOString() : ''
-            if (newISOValue !== initialDateISO) {
-              onChange(newISOValue, event)
-              return true
-            }
-            // Value didn't change, cancel edit
-            return false
-          }
-        }
-      }
-      return false
-    }
-
-    const handleBlur = () => {
-      if (!handleDateSubmit('Click')) {
-        onCancel?.()
-      }
-    }
-
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === 'Enter') {
-        e.preventDefault()
-        handleDateSubmit('Enter')
-        inputRef.current?.blur()
-      } else if (e.key === 'Escape') {
-        e.preventDefault()
-        onCancel?.()
-      }
-    }
-
-    return (
-      <StyledInput
+  return (
+    <span
+      style={{ display: 'contents' }}
+      // the calendar is in a portal; its events bubble to the cell, which would take the focus
+      onMouseDown={(event) => event.stopPropagation()}
+      onMouseUp={(event) => event.stopPropagation()}
+      onKeyDown={(event) => {
+        if (event.target !== input.current) event.stopPropagation()
+      }}
+    >
+      <StyledDateField
         {...props}
-        ref={inputRef}
-        type="date"
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
-        onBlur={handleBlur}
-        onKeyDown={handleKeyDown}
-        onClick={handleClick}
+        ref={input}
+        value={day}
+        defaultOpen
+        // an emptied date stays to be fixed: a cell with a date can't be cleared here
+        required={!!day}
+        // saved when committed
+        onChange={() => {}}
+        onCommit={(newDay) => finish(newDay || null)}
+        onKeyDownCapture={(event) => {
+          lastKey.current = event.key
+          if (event.key === 'Escape') finish(null)
+        }}
+        // Enter on the same day still moves on; anything else that leaves keeps the date
+        onBlur={() => finish(lastKey.current === 'Enter' ? day || null : null)}
       />
-    )
-  },
-)
+    </span>
+  )
+}

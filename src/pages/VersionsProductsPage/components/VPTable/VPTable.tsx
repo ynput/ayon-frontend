@@ -1,4 +1,5 @@
 import { ProjectTreeTable, useAddonTableColumns } from '@shared/containers'
+import type { MainBreakdownFields } from '@shared/containers/ProjectTreeTable'
 import { FC, useMemo } from 'react'
 import { useVersionsDataContext } from '../../context/vp-data'
 import { useVPViewsContext } from '@pages/VersionsProductsPage/context/vp-views'
@@ -10,6 +11,8 @@ import {
   VP_PARENT_COLUMNS,
   VP_PARENT_SCOPES,
 } from '../VPTableSettings/VPTableSettingsHelpers'
+
+const MAIN_BREAKDOWN_FIELDS: MainBreakdownFields = { primary: 'productType' }
 
 const VP_EXCLUDED_COLUMNS = ['assignees']
 const VP_LINK_COLUMNS = ['link_*', ...VP_PARENT_SCOPES.map((scope) => `${scope}_link_*`)]
@@ -79,7 +82,7 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         fieldStatsError={fieldStatsError}
         mainCountLabels={{ primary: 'products', secondary: 'versions' }}
         // versions have no subType, so only the products side breaks down
-        mainBreakdownFields={{ primary: 'productType' }}
+        mainBreakdownFields={MAIN_BREAKDOWN_FIELDS}
         columnsConfig={{
           name: {
             display: { path_compact: false, path_full: true },
@@ -88,13 +91,15 @@ const VPTable: FC<VPTableProps> = ({ readOnly = [], contextMenuItems }) => {
         contextMenuItems={[
           addonTopItems,
           'copy-paste',
+          'separator',
           'show-details',
           'open-viewer',
-          'export',
-          uploadVersionItem,
-          addToListItem,
           productDetailItem,
           versionDetailItem,
+          'separator',
+          addToListItem,
+          'export',
+          uploadVersionItem,
           addonItems,
           deleteVersionItem,
           deleteProductItem,

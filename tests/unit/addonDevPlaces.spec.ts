@@ -80,6 +80,7 @@ test("AYON's places are listed by area, the studio's first", () => {
     'slicer',
     'project-tables',
     'details-panel',
+    'list-details',
   ])
   expect(ayon.filter((p) => p.area === 'Settings').map((p) => p.label)).toEqual(['User details', 'Account'])
 })

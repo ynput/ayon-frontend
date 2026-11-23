@@ -162,7 +162,9 @@ export const ColumnHeaderMenu = ({
     })
   }
 
+  // addon items are a section of their own
   const addonItems = getAddonItems?.(addonColumn) ?? []
+  if (addonItems.length) menuItems.push({ id: 'divider', type: 'divider' })
   for (const item of addonItems) {
     menuItems.push({
       ...item,
@@ -174,6 +176,7 @@ export const ColumnHeaderMenu = ({
   }
 
   if (canHide) {
+    if (addonItems.length) menuItems.push({ id: 'divider', type: 'divider' })
     menuItems.push({
       id: 'hide',
       label: isVisible ? 'Hide column' : 'Show column',

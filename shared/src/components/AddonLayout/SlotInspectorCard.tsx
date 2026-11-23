@@ -2,8 +2,8 @@
 // id, where the slot comes from and the contribution. It sits at the element's top-right corner,
 // stays while the pointer is on the element or on it, and copies a prompt for an AI coding
 // assistant: add a contribution to the slot, or edit this one.
-// SlotInspectorMenu renders it, so it shows wherever that menu is (AYON's header in developer
-// mode, the addon dev shell). Internal, like slotInspector.
+// SlotInspectorMenu renders it in AYON's header (developer mode); the addon dev shell renders it
+// next to its Show slots switch. Internal, like slotInspector.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import styled from 'styled-components'

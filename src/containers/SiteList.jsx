@@ -4,6 +4,7 @@ import { Section, TablePanel } from '@ynput/ayon-react-components'
 import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { useLocalStorage } from '@shared/hooks'
+import { EmptyPlaceholder } from '@shared/components'
 
 const SiteList = ({ value, onChange, style, multiselect = false }) => {
   const [preferredSite, setPreferredSite] = useLocalStorage('prefferedSite', null)
@@ -38,20 +39,24 @@ const SiteList = ({ value, onChange, style, multiselect = false }) => {
   return (
     <Section style={style}>
       <TablePanel>
-        <DataTable
-          value={ayonClient.settings.sites}
-          scrollable="true"
-          scrollHeight="flex"
-          selectionMode="multiple"
-          responsive="true"
-          dataKey="id"
-          selection={selection}
-          onSelectionChange={onSelectionChange}
-          emptyMessage="No sites found"
-        >
-          <Column field="id" header="Site ID" />
-          <Column field="platform" header="Platform" />
-        </DataTable>
+        {ayonClient.settings.sites.length ? (
+          <DataTable
+            value={ayonClient.settings.sites}
+            className="standard-rows"
+            scrollable="true"
+            scrollHeight="flex"
+            selectionMode="multiple"
+            responsive="true"
+            dataKey="id"
+            selection={selection}
+            onSelectionChange={onSelectionChange}
+          >
+            <Column field="id" header="Site ID" />
+            <Column field="platform" header="Platform" />
+          </DataTable>
+        ) : (
+          <EmptyPlaceholder className="compact" icon="computer" message="No sites found" />
+        )}
       </TablePanel>
     </Section>
   )

@@ -65,7 +65,7 @@ const MarketFilters = ({ onSelect, selected, onConnection, filterType }: MarketF
       <StyledList>
         {marketFilters.map((filter) => (
           <Fragment key={filter.type}>
-            <div className={clsx('title', Type.titleMedium)}>{filter.name}</div>
+            <div className={clsx('title', Type.labelLarge)}>{filter.name}</div>
             {filter.filters.map((f) => (
               <div
                 key={f.id}

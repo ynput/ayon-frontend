@@ -9,14 +9,15 @@ const Wrapper = styled.div`
   inset: 0;
   padding: 4px;
   display: flex;
+  justify-content: center;
 `
 
+// as wide as the image, so the playable icon sits on the image and not on the cell's corner
 const Inner = styled.div`
   position: relative;
   max-height: 100%;
   height: 100%;
-  width: 100%;
-  //aspect-ratio: 1.77;
+  max-width: 100%;
 
   overflow: hidden;
 
@@ -28,15 +29,17 @@ const Inner = styled.div`
 
 const Image = styled.img`
   position: relative;
-  width: 100%;
+  display: block;
+  width: auto;
+  max-width: 100%;
   height: 100%;
   object-fit: contain;
   z-index: 20;
 `
 
 const StyledPlayableIcon = styled(PlayableIcon)`
-  right: 5px;
-  top: 5px;
+  right: 2px;
+  top: 2px;
 `
 
 interface ThumbnailWidgetProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -76,8 +79,8 @@ const ThumbnailWidgetWrapper: FC<ThumbnailWidgetProps> = ({
             style={{ zIndex: 20 }}
           />
         )}
+        {isPlayable && <StyledPlayableIcon />}
       </Inner>
-      {isPlayable && <StyledPlayableIcon />}
     </Wrapper>
   )
 }

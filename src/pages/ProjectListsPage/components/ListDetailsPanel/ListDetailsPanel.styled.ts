@@ -24,17 +24,44 @@ export const Section = styled.div`
       border-bottom: 1px solid var(--md-sys-color-outline-variant);
     }
   }
+
+  /* labels in a fixed column with their values right next to them */
+  .with-padding > div {
+    grid-template-columns: 120px minmax(0, 1fr) 32px;
+  }
+
+  .field-value > div {
+    text-align: left;
+  }
+
+  /* every value starts at the same x: the text inside the input boxes and the read-only values */
+  .field-value {
+    padding: 0 8px;
+  }
+
+  /* an enum value has its own inner padding */
+  .field-value:has(> .enum) {
+    padding-left: 3px;
+  }
+
+  /* the "-" of an empty read-only field */
+  .field-value.readonly > div:not(:has(*)) {
+    color: var(--md-sys-color-outline);
+  }
+
+  /* read-only details: wrap long values (dates) instead of cutting them; an id has no spaces,
+     so it still ends in an ellipsis, with its full value on hover */
+  .with-padding > div:not(.field-row) > :nth-child(2) {
+    padding-left: 8px;
+    white-space: normal;
+  }
+
+  /* the list id comes last and is muted (the value sets its colour inline) */
+  .with-padding > div:not(.field-row):last-child > :nth-child(2) {
+    color: var(--md-sys-color-outline) !important;
+  }
 `
 
-export const Header = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: var(--padding-m);
-  margin-bottom: var(--padding-s);
-  gap: var(--base-gap-large);
-
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-`
 
 export const Titles = styled.div`
   display: flex;

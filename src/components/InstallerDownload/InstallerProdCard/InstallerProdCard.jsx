@@ -30,7 +30,7 @@ const InstallerProdCard = ({ platform, isFeatured = false, installers = [], onIn
   return (
     <Styled.Card className={clsx({ featured: isFeatured })}>
       {icon}
-      <h2>{title} Installer</h2>
+      <h2>{title} installer</h2>
       <Styled.DownloadLinks>
         {installers?.length ? (
           installers.map((installer) => (

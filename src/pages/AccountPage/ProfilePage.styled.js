@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Panel } from '@ynput/ayon-react-components'
+import { InputText, Panel } from '@ynput/ayon-react-components'
 
 export const PanelButtonsStyled = styled(Panel)`
   flex-direction: row;
@@ -14,4 +14,16 @@ export const AvatarName = styled.span`
   justify-content: center;
   align-items: center;
   padding: 16px 16px 8px 16px;
+`
+
+// a value that can't be changed here: the text without an input box, like the details of a bundle
+export const ReadOnlyInput = styled(InputText)`
+  &,
+  &:hover,
+  &:focus {
+    background-color: transparent;
+    border-color: transparent;
+    outline: none;
+  }
+  cursor: default;
 `

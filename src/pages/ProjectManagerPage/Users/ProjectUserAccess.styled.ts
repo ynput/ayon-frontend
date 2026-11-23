@@ -2,12 +2,15 @@ import { Button } from '@ynput/ayon-react-components'
 import { DataTable as BaseDataTable } from 'primereact/datatable'
 import styled from 'styled-components'
 
+// sits on top of the panel below it, so it reads as that panel's title
 export const StyledHeader = styled.p`
-  font-size: 16px;
+  font-size: 14px;
   line-height: 24px;
-  font-weight: 700;
+  font-weight: 600;
   margin: 0;
-  padding: 4px 0;
+  padding: 4px 8px;
+  background-color: var(--panel-background);
+  border-radius: var(--border-radius-m) var(--border-radius-m) 0 0;
 `
 
 export const DataColumn = styled.div`
@@ -15,11 +18,22 @@ export const DataColumn = styled.div`
   height: 24px;
   align-items: center;
   gap: var(--base-gap-large);
+  .name {
+    flex-grow: 1;
+  }
+  .name,
+  .access-groups {
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
   .partial-match {
     color: var(--md-ref-palette-neutral-variant60);
   }
+  /* out of the layout until the row is hovered, so the name has the whole cell */
   button {
-    visibility: hidden;
+    display: none;
     .shortcut {
       font-size: 11px;
       line-height: 16px;
@@ -61,16 +75,16 @@ export const DataTable = styled(BaseDataTable)`
   /* Make buttons visible on row hover for instant response */
   tr:hover {
     button {
-      visibility: visible;
+      display: flex;
     }
   }
 
   /* Data attribute-based hover highlighting for better performance */
-  tr[data-hover="true"] {
+  tr[data-hover='true'] {
     background-color: rgba(0, 0, 0, 0.05);
 
     button {
-      visibility: visible;
+      display: flex;
     }
   }
 `

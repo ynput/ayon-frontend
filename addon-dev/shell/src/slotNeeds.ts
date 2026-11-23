@@ -21,6 +21,7 @@ const NEEDS: Record<string, PlaceNeeds> = {
   slicer: { project: true, entities: true },
   'project-tables': { project: true, entities: true, tablePage: true },
   'details-panel': { project: true, entities: true },
+  'list-details': { project: true },
   'studio-pages': { projects: true },
   'project-list': { projects: true },
   'user-details': { user: true },

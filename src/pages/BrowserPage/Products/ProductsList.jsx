@@ -102,6 +102,8 @@ const ProductsList = ({
           onKeyDown: handleKeyDown,
           onFocus: onFocus,
         },
+        // the empty state is drawn by the parent, not as a blank table row
+        emptyMessage: { style: { display: 'none' } },
       }}
     >
       {columns.map((col, i) => {

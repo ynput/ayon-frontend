@@ -28,7 +28,7 @@ export const EmptyPlaceholder: FC<EmptyPlaceholderProps> = ({
     return (
       <Placeholder className={clsx(className, 'empty-placeholder', 'isError')} {...props}>
         <Icon icon="error" className="placeholder-icon" />
-        <h3>Something went wrong.</h3>
+        <h3>Something went wrong</h3>
         <span className="error-message" {...pt?.error}>
           ERROR: {getRequestErrorString(error) || 'Unknown error'}
         </span>

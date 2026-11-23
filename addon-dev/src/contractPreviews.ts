@@ -13,6 +13,9 @@
 
 export const PREVIEW_ENTITY_TYPES = ['task', 'folder', 'product', 'version'] as const
 
+/** The kinds of entity lists a `list` field picks: lists and review sessions. */
+export const PREVIEW_LIST_TYPES = ['generic', 'review-session'] as const
+
 export interface PreviewOption {
   value: string
   label: string
@@ -40,6 +43,7 @@ export type PreviewField = { key: string; label: string; hint?: string } & (
   | { type: 'json'; default?: unknown }
   | { type: 'project'; optional?: boolean; default?: string | null }
   | { type: 'entity'; entityType: (typeof PREVIEW_ENTITY_TYPES)[number]; project: string }
+  | { type: 'list'; entityListTypes?: (typeof PREVIEW_LIST_TYPES)[number][]; project: string }
   | {
       type: 'pick'
       load: (api: PreviewApi, values: Record<string, unknown>) => Promise<PreviewPickOption[]>
@@ -68,6 +72,19 @@ export interface PreviewEntity {
   projectName: string
 }
 
+/** The value of a `list` field: the picked list, as the SDK's `ListPicker` returns it. */
+export interface PreviewList {
+  id: string
+  projectName: string
+  label: string
+  /** `generic` or `review-session` */
+  entityListType: string
+  /** the type of the list's items */
+  entityType: string
+  /** how many items the list has */
+  count: number
+}
+
 const FIELD_TYPES: PreviewFieldType[] = [
   'text',
   'number',
@@ -77,6 +94,7 @@ const FIELD_TYPES: PreviewFieldType[] = [
   'json',
   'project',
   'entity',
+  'list',
   'pick',
 ]
 
@@ -143,15 +161,25 @@ const fieldProblems = (field: unknown, fields: unknown[]): string[] => {
       }
       if (fallback === null && !field.optional) problems.push('default null ("No project") needs optional: true')
       break
-    case 'entity': {
-      if (!PREVIEW_ENTITY_TYPES.includes(field.entityType as never)) {
+    case 'entity':
+    case 'list': {
+      if (type === 'entity' && !PREVIEW_ENTITY_TYPES.includes(field.entityType as never)) {
         problems.push(`entityType must be one of ${PREVIEW_ENTITY_TYPES.join(', ')}`)
+      }
+      if (
+        type === 'list' &&
+        field.entityListTypes !== undefined &&
+        (!Array.isArray(field.entityListTypes) ||
+          !field.entityListTypes.length ||
+          field.entityListTypes.some((listType) => !PREVIEW_LIST_TYPES.includes(listType as never)))
+      ) {
+        problems.push(`entityListTypes must be a list of ${PREVIEW_LIST_TYPES.join(', ')}`)
       }
       const project = fields.find((other) => isObject(other) && other.key === field.project)
       if (!isObject(project) || project.type !== 'project') {
         problems.push(`project must be the key of a project field of the scene, not ${JSON.stringify(field.project)}`)
       }
-      if (has) problems.push('an entity field has no default: it starts empty')
+      if (has) problems.push(`${type === 'entity' ? 'an entity' : 'a list'} field has no default: it starts empty`)
       break
     }
     case 'pick':

@@ -1,4 +1,7 @@
-import type { EntityList, EntityListFolderModel } from '@shared/api'
+import type { EntityListFolderModel } from '@shared/api'
+import { isFolderInScope } from '@shared/containers/ListPicker/util/listFolders'
+
+export { isFolderInScope, getNewListFolderId } from '@shared/containers/ListPicker/util/listFolders'
 
 export type FolderMap = Map<string, EntityListFolderModel>
 
@@ -26,14 +29,6 @@ export const wouldCreateCircularDependency = (
   return isDescendant(targetParentId, folderId)
 }
 
-// folders are scoped by list type: no scope = all types, 'review-session' = review sessions only
-export const isFolderInScope = (folder: EntityListFolderModel, isReview?: boolean): boolean => {
-  const scope = folder.data?.scope
-  if (!scope || scope.length === 0) return true
-  const hasReviewScope = scope.includes('review-session')
-  return isReview ? hasReviewScope : !hasReviewScope
-}
-
 // "Parent / Child" label, for places that show folders flat instead of as a tree
 export const getFolderPath = (folderId: string, folderMap: FolderMap): string => {
   const labels: string[] = []
@@ -56,7 +51,7 @@ export const buildListFolderOptions = (
 ): ListFolderOption[] => {
   const folderMap = buildFolderMap(folders)
   return folders
-    .filter((folder) => isFolderInScope(folder, isReview))
+    .filter((folder) => isFolderInScope(folder, [isReview ? 'review-session' : 'generic']))
     .map((folder) => ({
       value: folder.id,
       label: getFolderPath(folder.id, folderMap),
@@ -64,12 +59,3 @@ export const buildListFolderOptions = (
     }))
     .sort((a, b) => a.label.localeCompare(b.label))
 }
-
-// folder a new list starts in: the first selected folder, else the folder of the first selected list
-export const getNewListFolderId = (
-  selectedFolderIds: string[],
-  selectedLists: Pick<EntityList, 'entityListFolderId'>[],
-): string | undefined =>
-  selectedFolderIds[0] ||
-  selectedLists.find((list) => list.entityListFolderId)?.entityListFolderId ||
-  undefined

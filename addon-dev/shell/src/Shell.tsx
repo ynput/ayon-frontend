@@ -24,9 +24,11 @@ import {
   PowerpackProvider,
   ProjectContextProvider,
   ProjectFoldersContextProvider,
+  RemoteModulesContext,
   SettingsPanelProvider,
   URIProvider,
 } from '@ynput/ayon-frontend-shared/context'
+import type { RemoteModulesContextType } from '@ynput/ayon-frontend-shared/context'
 import { ContextMenuProvider, GlobalContextMenu } from '@ynput/ayon-frontend-shared/ContextMenu'
 import { ProjectDataProvider } from '@ynput/ayon-frontend-shared/ProjectTreeTable'
 import {
@@ -82,36 +84,48 @@ const SignedIn = ({ options, children }: { options: ShellOptions; children: Reac
   return <>{children}</>
 }
 
+// The shell loads no other addon's remote modules. Without this, hooks that wait for one (the
+// Power Pack license check, which the list picker waits on) would wait forever; this way they get
+// their fallback at once, as in AYON when that addon is not installed.
+const NO_REMOTE_MODULES: RemoteModulesContextType = {
+  isLoading: false,
+  modules: [],
+  remotesInitialized: true,
+  addonDev: [],
+}
+
 // what the app around AYON's pages provides (src/app.tsx), as far as shared surfaces need it
 const AppProviders = ({ children }: { children: ReactNode }) => {
   const dispatch = useDispatch()
   const { data: user } = useGetCurrentUserQuery()
   return (
-    <GlobalProvider>
-      <PowerpackProvider>
-        <ContextMenuProvider>
-          <GlobalContextMenu />
-          <MenuProvider useNavigate={useNavigate}>
-            <URIProvider>
-              <DetailsPanelProvider
-                user={user as never}
-                dispatch={dispatch}
-                useLocation={useLocation}
-                useNavigate={useNavigate}
-                useParams={useParams}
-                useSearchParams={useSearchParams}
-              >
-                <PiPProvider>
-                  <DeleteEntitiesProvider>
-                    <SettingsPanelProvider>{children}</SettingsPanelProvider>
-                  </DeleteEntitiesProvider>
-                </PiPProvider>
-              </DetailsPanelProvider>
-            </URIProvider>
-          </MenuProvider>
-        </ContextMenuProvider>
-      </PowerpackProvider>
-    </GlobalProvider>
+    <RemoteModulesContext.Provider value={NO_REMOTE_MODULES}>
+      <GlobalProvider>
+        <PowerpackProvider>
+          <ContextMenuProvider>
+            <GlobalContextMenu />
+            <MenuProvider useNavigate={useNavigate}>
+              <URIProvider>
+                <DetailsPanelProvider
+                  user={user as never}
+                  dispatch={dispatch}
+                  useLocation={useLocation}
+                  useNavigate={useNavigate}
+                  useParams={useParams}
+                  useSearchParams={useSearchParams}
+                >
+                  <PiPProvider>
+                    <DeleteEntitiesProvider>
+                      <SettingsPanelProvider>{children}</SettingsPanelProvider>
+                    </DeleteEntitiesProvider>
+                  </PiPProvider>
+                </DetailsPanelProvider>
+              </URIProvider>
+            </MenuProvider>
+          </ContextMenuProvider>
+        </PowerpackProvider>
+      </GlobalProvider>
+    </RemoteModulesContext.Provider>
   )
 }
 
@@ -209,9 +223,9 @@ const Workbench = ({ options, mode }: { options: ShellOptions; mode: 'live' | 'p
     return () => window.removeEventListener('popstate', onPop)
   }, [])
   // AYON's slot inspector (its developer mode's Show slots): always available here, and a new
-  // session starts with it on
+  // session starts with it off, the stage as in AYON
   useEffect(() => {
-    setSlotInspectorAvailable(true, { showSlots: true })
+    setSlotInspectorAvailable(true)
     return () => setSlotInspectorAvailable(false)
   }, [])
   // the menus opened in the last place are not this one's

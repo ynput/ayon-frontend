@@ -22,16 +22,22 @@ import {
 // Import AttributeField as a type to avoid runtime circular dependency with DetailsPanelAttributesEditor
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
+import { isAllDayEndDate } from './RenderFieldWidgetHelpers'
 
 const FieldValueText = styled.div`
   width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-align: right;
+`
 
-  input {
-    text-align: left;
+const DateValue = styled.div`
+  display: flex;
+  align-items: center;
+  width: 100%;
+
+  > span:first-child {
+    flex: 1;
   }
 `
 
@@ -126,14 +132,15 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     onMixedChange: (change: MixedChange) => onMixedChange?.(field.name, change),
   }
 
-  const isMidnightExclusive =
-    field.name === 'attrib.endDate' &&
-    entities.length > 0 &&
-    entities.every((entity) => entity.data?.schedulerSyncData?.allDay === true)
+  const isMidnightExclusive = isAllDayEndDate(field.name, entities)
 
   // Format the value for display
   let displayValue = value === null || value === undefined ? '' : value
   const labelValue = field.data.title || field.name
+  // "Select tags…", but keep acronyms such as "FPS" as they are
+  const placeholderLabel = /^[A-Z][a-z]/.test(labelValue)
+    ? labelValue[0].toLowerCase() + labelValue.slice(1)
+    : labelValue
 
   const isEmptyValue =
     value === null ||
@@ -141,7 +148,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
     value === '' ||
     (Array.isArray(value) && value.length === 0)
   if (type !== 'boolean' && isReadOnly && !isMixed && isEmptyValue) {
-    return <FieldValueText>-</FieldValueText>
+    return <FieldValueText>—</FieldValueText>
   }
 
   // Handle different field types
@@ -153,15 +160,14 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
 
     case type === 'datetime':
       return (
-        <DateWidget
-          value={displayValue}
-          {...widgetCommonProps}
-          isEditing
-          onCancelEdit={onCancelEdit}
-          style={{ width: 'fit-content' }}
-          autoFocus={false}
-          isMidnightExclusive={isMidnightExclusive}
-        />
+        <DateValue>
+          <DateWidget
+            value={displayValue}
+            {...widgetCommonProps}
+            onCancelEdit={onCancelEdit}
+            isMidnightExclusive={isMidnightExclusive}
+          />
+        </DateValue>
       )
 
     case widget === 'tags':
@@ -173,7 +179,7 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           // entities of one project, the tag goes to its anatomy
           isProjectTags={field.name === 'tags' && new Set(projectNames).size <= 1}
           pt={{ template: { style: { height: 32 }, className: 'enum' } }}
-          placeholder={isMixed ? `Mixed ${labelValue}` : `Select ${labelValue}...`}
+          placeholder={isMixed ? `Mixed ${placeholderLabel}` : `Select ${placeholderLabel}…`}
           {...mixedProps}
           onCancelEdit={onCancelEdit}
           align="right"
@@ -246,18 +252,22 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
           value={valueArray}
           options={enumOptions}
           type={type}
+          // coloured values as in the tables: a status filled, a type with only its icon coloured,
+          // other values tinted
+          pill={field.name === 'status' ? 'filled' : 'tinted'}
           pt={{
             template: {
               style: { height: 32 },
               className: 'enum',
+              iconOnlyColor: ['folderType', 'taskType', 'productType'].includes(field.name),
             },
           }}
           placeholder={
             enumError
               ? `Could not load ${labelValue}`
               : isMixed
-              ? `Mixed ${labelValue}`
-              : `Select ${labelValue}...`
+              ? `Mixed ${placeholderLabel}`
+              : `Select ${placeholderLabel}…`
           }
           error={toDropdownErrorText(enumError)}
           onCancelEdit={onCancelEdit}

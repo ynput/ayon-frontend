@@ -2,6 +2,7 @@ import { DataTable } from 'primereact/datatable'
 import { Column } from 'primereact/column'
 import { TablePanel, Section } from '@ynput/ayon-react-components'
 import UserImage from '@shared/components/UserImage'
+import { BooleanValue } from '@shared/components'
 
 import './users.scss'
 
@@ -39,6 +40,12 @@ const StyledProfileRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-large);
+  min-width: 0;
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 `
 
 const StyledLicenseRow = styled.div`
@@ -206,7 +213,12 @@ const UserList = ({
   const [ctxMenuShow] = useCreateContextMenu()
   const addonMenuItemsFor = useAddonUserMenuItemsFor(!!managerDisabled)
 
-  const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
+  // A to Z by default, the users query returns them the other way round
+  const sortedList = useMemo(
+    () => [...(tableList || [])].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
+    [tableList],
+  )
+  const tableData = useTableLoadingData(sortedList, isLoading, 40, 'name')
 
   // The virtual scroller (primereact 9.6) doesn't follow row changes by itself:
   // - it applies a new scroll height only on its next render, so render once more.
@@ -349,7 +361,7 @@ const UserList = ({
           <Column
             header="Has password"
             {...columnProps('hasPassword')}
-            body={(rowData) => (rowData.hasPassword ? 'yes' : 'no')}
+            body={(rowData) => !isLoading && <BooleanValue value={!!rowData.hasPassword} />}
             field="hasPassword"
             sortable
             resizeable
@@ -357,7 +369,7 @@ const UserList = ({
           <Column
             header="Active"
             {...columnProps('active')}
-            body={(rowData) => (rowData.active ? 'yes' : '')}
+            body={(rowData) => !isLoading && <BooleanValue value={!!rowData.active} />}
             field="active"
             sortable
             resizeable

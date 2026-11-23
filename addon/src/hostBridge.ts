@@ -6,11 +6,16 @@ import type {
   StudioPageLayoutProps,
 } from './layout'
 import type { EntityPickerProps } from './EntityPicker'
+import type { ListPickerProps } from './ListPicker'
 import type { EntityTableProps } from './EntityTable'
 import type { HostMoreMenuProps } from './MoreMenu'
+import type { HostPanelTabHeaderProps } from './PanelTabHeader'
+import type { ContributionTabProps, PanelTabSlotName } from './ContributionTab'
+import type { HostTabbedPanelProps } from './TabbedPanel'
 import type { AddonUser } from './scopes'
 import type { EntityLinkRef } from './entityLinks'
 import type { ViewerTarget } from './openInHost'
+import type { ImportTarget } from './openImport'
 import type { HostOpenContextMenu } from './useContextMenu'
 
 export type { AddonUser }
@@ -29,7 +34,7 @@ export interface AddonDispatch {
   <A extends { type: string }>(action: A): A
 }
 
-/** The host's implementations of the layout components, the entity picker and the menu button. */
+/** The host's implementations of the layout components, the pickers and the menu button. */
 export interface HostComponents {
   ProjectPageLayout: ComponentType<ProjectPageLayoutProps>
   Slicer: ComponentType<SlicerProps>
@@ -37,10 +42,18 @@ export interface HostComponents {
   ProjectList: ComponentType<ProjectListProps>
   /** AYON's entity picker, with the project's providers it needs (`EntityPicker`) */
   EntityPicker: ComponentType<EntityPickerProps>
+  /** AYON's list picker, with the project's context it needs (`ListPicker`) */
+  ListPicker: ComponentType<ListPickerProps>
   /** AYON's menu under a button (`MoreMenu`) */
   MoreMenu: ComponentType<HostMoreMenuProps>
   /** AYON's project table with the providers it needs (`EntityTable`); not in the dev shell */
   EntityTable?: ComponentType<EntityTableProps>
+  /** fills the header of the panel tab it is rendered in (`PanelTabHeader`) */
+  PanelTabHeader?: ComponentType<HostPanelTabHeaderProps>
+  /** a panel tab contribution with its header, as AYON's panels draw it (`ContributionTab`) */
+  ContributionTab?: ComponentType<ContributionTabProps<PanelTabSlotName>>
+  /** AYON's panel with tabs, its tools and the tabs of a slot (`TabbedPanel`) */
+  TabbedPanel?: ComponentType<HostTabbedPanelProps>
 }
 
 /**
@@ -73,6 +86,8 @@ export interface HostImplementation {
   openDetails?: (entities: readonly EntityLinkRef[]) => boolean
   /** closes that panel (`closeDetails`) */
   closeDetails?: () => void
+  /** opens AYON's import dialog for an addon's rows (`openImport`) */
+  openImport?: (target: ImportTarget) => void
   /** a hook returning the opener of AYON's right-click menu (`useContextMenu`) */
   useContextMenu?: () => HostOpenContextMenu
   components?: Partial<HostComponents>
