@@ -32,6 +32,11 @@ export interface PanelTabsProps<S extends PanelTabSlotName> {
   slot?: PanelTabSlot<S>
   /** labels next to the icons on every tab; off by default (icons, the label is the tooltip) */
   showLabels?: boolean
+  /**
+   * with `showLabels`, the most tabs (the panel's and the addons') that keep their labels: with
+   * more, the bar shows icons only. 3 by default
+   */
+  maxLabeledTabs?: number
   isLoading?: boolean
   /** a test id for each tab button, by tab id (a panel tab's id or an addon tab's key) */
   tabTestId?: (id: string) => string
@@ -44,12 +49,15 @@ export const PanelTabs = <S extends PanelTabSlotName>({
   onChange,
   slot,
   showLabels,
+  maxLabeledTabs = 3,
   isLoading,
   tabTestId,
   className,
 }: PanelTabsProps<S>) => {
   // the buttons show from the descriptions; a tab's code loads when it is opened
   const { tabs: slotTabs } = usePanelSlotTabs(slot)
+  // labels on too many tabs crowd the bar: past `maxLabeledTabs` it shows icons only
+  const withLabels = showLabels && tabs.length + slotTabs.length <= maxLabeledTabs
 
   // icon-only tabs keep their width whichever is open; the open tab is named in its header. With
   // `showLabels`, a panel may hide the labels when it is narrow (`.panel-tab-label`): the tooltip
@@ -61,7 +69,7 @@ export const PanelTabs = <S extends PanelTabSlotName>({
       ...(tabTestId && { 'data-testid': tabTestId(id) }),
       variant: 'text' as const,
       'aria-label': label,
-      ...((withLabel || showLabels) && {
+      ...((withLabel || withLabels) && {
         children: <span className="panel-tab-label">{label}</span>,
       }),
       ...(hint && { 'data-tooltip': hint, 'data-tooltip-delay': 0 }),
