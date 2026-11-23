@@ -1,11 +1,13 @@
-// The Reports tab without the reports addon's project.page: its legacy page (older reports
-// addon) or a splash screen with PowerpackDialog when the addon is not installed.
+// The Reports tab without the reports addon's project.page: its legacy page (an older reports
+// addon that still exposes the legacy `Reports` module) or the splash screen, which says why the
+// page is missing (not installed, not in the bundle, or in the bundle but its page didn't load).
 
 import { FC } from 'react'
 import ReportsPage from './ReportsPage'
 import LoadingPage from '@pages/LoadingPage'
 import SplashWrapperPage from '@components/SplashWrapperPage'
 import { useGetBundleAddon } from '@shared/hooks'
+import { useRemoteModules } from '@shared/context'
 
 interface ProjectReportsPageProps {
   projectName: string
@@ -13,10 +15,16 @@ interface ProjectReportsPageProps {
 
 const ProjectReportsPage: FC<ProjectReportsPageProps> = ({ projectName }) => {
   const { getBundleAddonVersion, isLoading } = useGetBundleAddon()
+  const { modules } = useRemoteModules()
 
   if (isLoading) return <LoadingPage />
 
-  if (getBundleAddonVersion('reports')) {
+  // the legacy page only for a reports version that has it; a newer one without its
+  // project.page gets the splash's "did not load" notice, not the legacy page's fallback
+  const reportsRemote = modules.find((m) => m.addonName === 'reports')
+  const hasLegacyPage = !!reportsRemote?.modules.reports?.includes('Reports')
+
+  if (getBundleAddonVersion('reports') && hasLegacyPage) {
     return <ReportsPage projectName={projectName} />
   }
 
