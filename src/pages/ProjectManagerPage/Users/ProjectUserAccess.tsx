@@ -9,8 +9,11 @@ import Shortcuts from '@containers/Shortcuts'
 import { useShortcutsContext } from '@context'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
-import { useGetUsersQuery, useGetStudioAccessGroupsQuery } from '@shared/api'
-import { useGlobalContext } from '@shared/context'
+import {
+  useGetUsersQuery,
+  useGetStudioAccessGroupsQuery,
+  useListProjectsQuery,
+} from '@shared/api'
 
 import ProjectManagerPageLayout from '../ProjectManagerPageLayout'
 import {
@@ -94,10 +97,10 @@ const ProjectUserAccess = () => {
     SelectedAccessGroupUsers | undefined
   >()
 
-  const {
-    projects: { all: projects = [] },
-    isLoading,
-  } = useGlobalContext()
+  // include skeleton (planning) projects, the global project list leaves them out
+  const { data: projects = [], isLoading: isLoadingProjects } = useListProjectsQuery({
+    skeleton: true,
+  })
 
   const { setDisabled } = useShortcutsContext()
   const isUser = useSelector((state: $Any) => state.user.data.isUser)
@@ -344,7 +347,7 @@ const ProjectUserAccess = () => {
       <ProjectUserAccessProjectList
         selection={filteredSelectedProjects}
         projects={filteredProjects}
-        isLoading={isLoading.projects}
+        isLoading={isLoadingProjects}
         // @ts-ignore
         userPermissions={userPermissions}
         onSelectionChange={setSelectedProjects}
@@ -422,7 +425,7 @@ const ProjectUserAccess = () => {
     </>
   )
 
-  if (permissionsLoading || isLoadingUsers || isLoading.projects) {
+  if (permissionsLoading || isLoadingUsers || isLoadingProjects) {
     return <LoadingPage message={''} children={''} />
   }
 
