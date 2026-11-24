@@ -5,12 +5,14 @@ import type { UseListItems } from '../listValues/types'
 import type { EntityListItemWithLinks } from './useGetListItemsData'
 import { useListsDataContext } from '../context/lists-data'
 import { isTooBigToCompare, MAX_COMPARE_ITEMS } from '../listValues/compareLimit'
+import { splitFeaturedVersionFilter } from '../util/featuredVersionFilter'
 
 const listItemsArgs = (projectName: string, listId?: string, filter?: string, search?: string) => ({
   projectName,
   listId: listId || '',
   first: MAX_COMPARE_ITEMS,
-  filter,
+  // the module passes the Lists filter on, featured versions in it
+  ...splitFeaturedVersionFilter(filter),
   search,
 })
 

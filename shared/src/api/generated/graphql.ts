@@ -274,6 +274,7 @@ export type EntityListNodeItemsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -1215,6 +1216,7 @@ export type QueryUserArgs = {
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
   isSupport?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1223,6 +1225,8 @@ export type QueryUsersArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   projectName?: InputMaybe<Scalars['String']['input']>;
   projects?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type RepresentationEdge = {
@@ -1888,6 +1892,7 @@ export type GetListItemsQueryVariables = Exact<{
   sortBy?: Array<string> | string | null | undefined;
   filter?: string | null | undefined;
   search?: string | null | undefined;
+  featuredOnly?: Array<string> | string | null | undefined;
   showComments?: boolean;
 }>;
 
@@ -1906,6 +1911,7 @@ export type GetListItemsColumnStatsQueryVariables = Exact<{
   listId: string;
   filter?: string | null | undefined;
   search?: string | null | undefined;
+  featuredOnly?: Array<string> | string | null | undefined;
   targets?: Array<MetricTargetInput> | MetricTargetInput | null | undefined;
 }>;
 
@@ -3299,7 +3305,7 @@ export const GetProductVersionsDocument = new TypedDocumentString(`
 }
     `);
 export const GetListItemsDocument = new TypedDocumentString(`
-    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: [String!], $filter: String, $search: String, $showComments: Boolean! = false) {
+    query GetListItems($projectName: String!, $listId: String!, $first: Int, $after: String, $before: String, $last: Int, $sortBy: [String!], $filter: String, $search: String, $featuredOnly: [String!], $showComments: Boolean! = false) {
   project(name: $projectName) {
     entityLists(ids: [$listId]) {
       pageInfo {
@@ -3318,6 +3324,7 @@ export const GetListItemsDocument = new TypedDocumentString(`
             sortBy: $sortBy
             filter: $filter
             search: $search
+            featuredOnly: $featuredOnly
           ) {
             pageInfo {
               hasNextPage
@@ -3451,14 +3458,19 @@ fragment SubTaskFragment on SubTaskNode {
   isDone
 }`);
 export const GetListItemsColumnStatsDocument = new TypedDocumentString(`
-    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $search: String, $targets: [MetricTargetInput!]) {
+    query GetListItemsColumnStats($projectName: String!, $listId: String!, $filter: String, $search: String, $featuredOnly: [String!], $targets: [MetricTargetInput!]) {
   project(name: $projectName) {
     name
     entityLists(ids: [$listId]) {
       edges {
         node {
           id
-          items(filter: $filter, search: $search, calculateSpecificStatistics: $targets) {
+          items(
+            filter: $filter
+            search: $search
+            featuredOnly: $featuredOnly
+            calculateSpecificStatistics: $targets
+          ) {
             fieldStats {
               ...ColumnStatsFragment
             }

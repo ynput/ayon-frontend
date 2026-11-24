@@ -17,6 +17,7 @@ import { useLazyGetListItemsQuery } from '@shared/api'
 import { useProjectContext } from '@shared/context'
 import { useListItemsDataContext } from '../context/list-items-data'
 import { useListsContext } from '../context'
+import { splitFeaturedVersionFilter } from '../util/featuredVersionFilter'
 
 export const LIST_ITEM_ID_PARAM = 'listItemId'
 
@@ -104,7 +105,7 @@ const useListItemDeepLink = () => {
       const result = await getListItems({
         projectName,
         listId,
-        filter: JSON.stringify({ operator: 'and', conditions }),
+        ...splitFeaturedVersionFilter(JSON.stringify({ operator: 'and', conditions })),
         search,
         first: ids.length,
       }).unwrap()

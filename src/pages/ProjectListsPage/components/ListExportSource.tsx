@@ -14,7 +14,7 @@ const ListExportSource: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ pa
   const { listItemsQueryArgs } = useListItemsDataContext()
 
   if (!selectedList) return null
-  const { filter, search, sortBy, desc } = listItemsQueryArgs
+  const { filter, search, featuredOnly, sortBy, desc } = listItemsQueryArgs
 
   const getRows = (scope: TableExportScope, selectedRowIds: string[]): TableExportRows => ({
     entityList:
@@ -24,6 +24,7 @@ const ListExportSource: FC<{ parentColumns?: ParentColumnDefinition[] }> = ({ pa
             id: selectedList.id,
             filter,
             search: search || undefined,
+            featuredOnly,
             sortBy: getForwardSortBy({ sortBy, desc: !!desc }),
           },
   })

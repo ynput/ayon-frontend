@@ -274,6 +274,7 @@ export type EntityListNodeItemsArgs = {
   before?: InputMaybe<Scalars['String']['input']>;
   calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   calculateStatistics?: Scalars['Boolean']['input'];
+  featuredOnly?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   first?: InputMaybe<Scalars['Int']['input']>;
   last?: InputMaybe<Scalars['Int']['input']>;
@@ -1215,6 +1216,7 @@ export type QueryUserArgs = {
 export type QueryUsersArgs = {
   after?: InputMaybe<Scalars['String']['input']>;
   before?: InputMaybe<Scalars['String']['input']>;
+  calculateSpecificStatistics?: InputMaybe<Array<MetricTargetInput>>;
   emails?: InputMaybe<Array<Scalars['String']['input']>>;
   first?: InputMaybe<Scalars['Int']['input']>;
   isSupport?: InputMaybe<Scalars['Boolean']['input']>;
@@ -1223,6 +1225,8 @@ export type QueryUsersArgs = {
   names?: InputMaybe<Array<Scalars['String']['input']>>;
   projectName?: InputMaybe<Scalars['String']['input']>;
   projects?: InputMaybe<Array<Scalars['String']['input']>>;
+  search?: InputMaybe<Scalars['String']['input']>;
+  sortBy?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export type RepresentationEdge = {

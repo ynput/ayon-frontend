@@ -60,6 +60,7 @@ export type TableExportListQuery = {
   itemIds?: string[]
   filter?: string
   search?: string
+  featuredOnly?: string[] // Latest, Latest Done, Hero of the Version filter
   sortBy?: string[]
 }
 

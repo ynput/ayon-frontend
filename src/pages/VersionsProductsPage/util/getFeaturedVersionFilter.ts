@@ -1,5 +1,5 @@
 import { QueryFilter, QueryCondition } from '@shared/api'
-import { FEATURED_VERSION_TYPES } from '@shared/components'
+import { FEATURED_VERSION_TYPES } from '@shared/components/FeaturedVersionOrder/FeaturedVersionOrderHelpers'
 
 // Get featured version values for quick lookup
 const FEATURED_VERSION_VALUES = FEATURED_VERSION_TYPES.map((type) => type.value)
@@ -104,10 +104,11 @@ export const extractFilters = (
                 return undefined
               }
 
-              // Return condition with remaining values only
+              // Return condition with remaining values only, still a list:
+              // the server rejects `in` with a single value
               return {
                 ...queryCondition,
-                value: remainingValues.length === 1 ? remainingValues[0] : remainingValues,
+                value: Array.isArray(queryCondition.value) ? remainingValues : remainingValues[0],
               }
             }
           }

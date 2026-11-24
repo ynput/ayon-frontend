@@ -89,7 +89,8 @@ export interface ListItemsDataContextValue {
   isUninitialized: boolean
   // any fetch of the list items, also background refetches
   isFetching: boolean
-  // the filter and search sent with the list items query
+  // the Lists filter and search; requests split the featured versions out of the filter
+  // with splitFeaturedVersionFilter
   listItemsQuery: { filter?: string; search?: string }
   isError?: boolean
   error?: unknown
@@ -98,6 +99,7 @@ export interface ListItemsDataContextValue {
   listItemsQueryArgs: {
     filter?: string
     search?: string
+    featuredOnly?: string[]
     sortBy?: string | string[]
     desc?: boolean
   }
