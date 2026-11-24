@@ -98,7 +98,7 @@ export class DetailsPanel {
    * tab header's search button and stays open once opened
    */
   async openSearch(scope: Locator = this.root.locator('.feed')) {
-    const toggle = scope.locator('.panel-tab-header').getByRole('button', { name: /search/i })
+    const toggle = scope.getByTestId('panel-tab-search-toggle')
     if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
     await expect(toggle).toHaveAttribute('aria-expanded', 'true')
   }
@@ -441,6 +441,7 @@ export class DetailsPanel {
       .filter({ visible: true })
       .first()
       .click({ position: { x: 2, y: 2 } })
+    await expect(this.page.locator('.options')).toBeHidden()
     await expect(this.page.locator('.options')).toBeHidden()
   }
 }

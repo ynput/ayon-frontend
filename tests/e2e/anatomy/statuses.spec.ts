@@ -81,7 +81,7 @@ test.describe('project anatomy: statuses', () => {
     await openStatuses(manager, projectName)
     await expect(manager.anatomy.textbox(`${item}_name`)).toHaveValue(WAITING.name)
     await expect(manager.anatomy.dropdownButton(`${item}_icon`)).toContainText(WAITING.icon)
-    await expect(manager.anatomy.dropdownButton(`${item}_scope`)).toHaveText(/^Folder\W*Task/)
+    expect((await manager.anatomy.selectedOptions(`${item}_scope`)).sort()).toEqual(WAITING.scope)
   })
 
   test('a status added in the anatomy is offered in an overview that was already open', async ({

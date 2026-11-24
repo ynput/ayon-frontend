@@ -59,7 +59,10 @@ test.describe('mentions and inbox', () => {
       await message.hover()
       // the message hides at once, the change is saved after: leaving the page before would cancel it
       const cleared = page.waitForResponse(
-        (res) => new URL(res.url()).pathname === '/api/inbox' && res.request().method() === 'POST',
+        (res) =>
+          new URL(res.url()).pathname === '/api/inbox' &&
+          res.request().method() === 'POST' &&
+          res.request().postDataJSON()?.status === 'inactive',
       )
       await message.locator('.clear').click()
 

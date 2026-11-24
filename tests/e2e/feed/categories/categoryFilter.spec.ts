@@ -80,11 +80,9 @@ test.describe('feed category filter', () => {
       const feed = panel.root.locator('.feed')
       await panel.openSearch(feed)
       await feed.getByRole('textbox', { name: 'Search and filter' }).click()
-      // other filters are offered, Category is not
-      await expect(
-        feed.getByRole('listitem').getByText('Posted date', { exact: true }),
-      ).toBeVisible()
-      await expect(feed.getByRole('listitem').getByText('Category', { exact: true })).toHaveCount(0)
+      // other filters are offered, Category is not; options by id, so a renamed label can't hide it
+      await expect(feed.locator('li[id="createdAt"]')).toBeVisible()
+      await expect(feed.locator('li[id="category"]')).toHaveCount(0)
     } finally {
       await context.close()
     }

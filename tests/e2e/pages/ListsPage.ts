@@ -70,12 +70,8 @@ export class ListsPage {
     await expect(this.itemsTable).toBeVisible()
   }
 
-  // the items table is the one with a thumbnail column (the lists table has none); found by the
-  // column's id, as its header may show an icon or a label
   get itemsTable() {
-    return this.page
-      .getByRole('table')
-      .filter({ has: this.page.locator('th[data-column-id="thumbnail"]') })
+    return this.page.getByTestId('list-items-table').getByRole('table')
   }
 
   itemNameCell(label: string) {

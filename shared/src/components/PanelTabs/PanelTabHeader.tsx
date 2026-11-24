@@ -70,6 +70,7 @@ export const PanelTabHeader = ({
             data-tooltip-delay={0}
             aria-label={searchOpen ? 'Hide search and filter' : 'Search and filter'}
             aria-expanded={searchOpen}
+            data-testid="panel-tab-search-toggle"
           />
         )}
       </Styled.TitleRow>

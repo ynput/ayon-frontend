@@ -15,10 +15,9 @@ export class CategorySettingsPage {
   async goto(project: string) {
     await this.page.goto(`/manageProjects/projectSettings?project=${project}`)
     await this.page.getByText('Power Pack', { exact: true }).click()
-    // FLAG: the addon's root section header has no heading of its own, so its toggler is the first one.
-    // Selecting an addon opens its root section, so it is only opened when it is closed
-    await this.editor.expandToggler(this.page.locator('.panel-header .panel-toggler').first())
-    await this.editor.expand('Activity Categories')
+    // selecting an addon opens its root section, so each section is only opened when it is closed
+    await this.editor.expandSection(this.editor.section('root'))
+    await this.editor.expandSection(this.editor.section(LIST))
   }
 
   /** Adds a category at `index` (new items go last) */

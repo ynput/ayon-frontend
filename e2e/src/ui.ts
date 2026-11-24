@@ -26,13 +26,14 @@ export const confirmDialog = (page: Page) => page.locator('.p-confirm-dialog')
  * FLAG: material icon ligatures are not aria-hidden, so accessible names look like "archive Archive";
  * matching the label element, or the name with one icon word before it, avoids depending on the icon.
  * The label matches in any case, so a label changed to sentence case ("Delete File" to "Delete file")
- * is still found.
+ * is still found. Icons are left out of that match: their ligature is lowercase text ("delete").
  */
 export const menuItem = (page: Page, label: string) => {
   const exact = new RegExp(`^${escapeRegExp(label)}$`, 'i')
+  const labelText = page.getByText(exact).and(page.locator(':not(.material-symbols-outlined)'))
   return page
     .getByRole('menuitem')
-    .filter({ has: page.getByText(exact) })
+    .filter({ has: labelText })
     .or(page.getByRole('menuitem', { name: new RegExp(`^(\\S+ )?${escapeRegExp(label)}$`, 'i') }))
     .or(page.getByRole('listitem', { name: exact }))
     .first()
