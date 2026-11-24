@@ -27,9 +27,17 @@ test.describe('addon file types in the import dialog', () => {
     expect(findFileType(new File([''], 'work.ics'))).toBe(undefined)
   })
 
+  test("keeps CSV and Excel files the dialog's own whatever their media type", () => {
+    const anyFile: ImportFileType = { ...calendar, mimeTypes: ['application/octet-stream'] }
+    const xlsx = new File([''], 'budget.xlsx', { type: 'application/octet-stream' })
+    expect(findFileType(xlsx, [anyFile])).toBe(undefined)
+    const ics = new File([''], 'work.ics', { type: 'application/octet-stream' })
+    expect(findFileType(ics, [anyFile])).toBe(anyFile)
+  })
+
   test('offers the addon types next to CSV and Excel', () => {
     expect(acceptedFileTypes([calendar])).toEqual(
-      expect.arrayContaining(['.csv', '.xlsx', '.ics', 'text/calendar']),
+      expect.arrayContaining(['.csv', '.xlsx', '.ics', '.ICS', 'text/calendar']),
     )
     expect(acceptedFileTypes()).not.toContain('.ics')
     expect(fileKinds()).toBe('CSV or Excel')

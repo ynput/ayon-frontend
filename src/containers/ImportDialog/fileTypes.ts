@@ -5,23 +5,29 @@ import { EXCEL_MIME_TYPE } from "./excel"
 // reads itself (`ImportTarget.fileTypes`). The addon turns its files into CSV in the browser, so
 // the server and the rest of the import only ever see CSV, as for Excel files.
 
-const BUILT_IN_TYPES = [".csv", "text/csv", ".xlsx", EXCEL_MIME_TYPE]
+const BUILT_IN_EXTENSIONS = [".csv", ".xlsx"]
+const BUILT_IN_TYPES = [...BUILT_IN_EXTENSIONS, "text/csv", EXCEL_MIME_TYPE]
 
-// for the file picker's `accept`
+const hasExtension = (name: string, extensions: string[]) =>
+  extensions.some((extension) => name.toLowerCase().endsWith(extension.toLowerCase()))
+
+// For the file picker's `accept`. A dropped file is checked against the list as it is, so the
+// addon's extensions are there in upper case too ("WORK.ICS").
 export const acceptedFileTypes = (fileTypes: ImportFileType[] = []) => [
   ...BUILT_IN_TYPES,
-  ...fileTypes.flatMap(({ extensions, mimeTypes = [] }) => [...extensions, ...mimeTypes]),
+  ...fileTypes.flatMap(({ extensions, mimeTypes = [] }) => [
+    ...new Set([...extensions, ...extensions.map((extension) => extension.toUpperCase())]),
+    ...mimeTypes,
+  ]),
 ]
 
-// the addon's type of the file, by name ending or media type
-export const findFileType = (file: File, fileTypes: ImportFileType[] = []) => {
-  const name = file.name.toLowerCase()
-  return fileTypes.find(
-    ({ extensions, mimeTypes = [] }) =>
-      extensions.some((extension) => name.endsWith(extension.toLowerCase())) ||
-      (Boolean(file.type) && mimeTypes.includes(file.type)),
-  )
-}
+// The addon's type of the file, by name ending, else by media type. A CSV or Excel file is the
+// dialog's own whatever media type the browser gives it.
+export const findFileType = (file: File, fileTypes: ImportFileType[] = []) =>
+  fileTypes.find(({ extensions }) => hasExtension(file.name, extensions)) ??
+  (hasExtension(file.name, BUILT_IN_EXTENSIONS) || !file.type
+    ? undefined
+    : fileTypes.find(({ mimeTypes = [] }) => mimeTypes.includes(file.type)))
 
 // "CSV or Excel", "CSV, Excel or calendar"
 export const fileKinds = (fileTypes: ImportFileType[] = []) => {

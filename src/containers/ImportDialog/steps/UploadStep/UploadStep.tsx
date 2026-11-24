@@ -58,6 +58,10 @@ const FileUploadHint = styled.p`
   text-align: center;
 `
 
+const FileUploadError = styled(FileUploadHint)`
+  color: var(--md-sys-color-error);
+`
+
 export default function UploadStep({
   importContext,
   uploaded,
@@ -137,10 +141,12 @@ export default function UploadStep({
       const fileType = typeof file === 'object' ? findFileType(file, fileTypes) : undefined
       if (typeof file === 'object' && fileType) {
         fileTypeToCSV(fileType, file)
-          .then(uploadCSV)
-          .then(
-            (csv) => isCurrent() && setData({ ...csv, fileName: file.name, fileSize: file.size }),
-          )
+          .then(async (text) => {
+            // a file picked while this one was read replaces it
+            if (!isCurrent()) return
+            const csv = await uploadCSV(text)
+            if (isCurrent()) setData({ ...csv, fileName: file.name, fileSize: file.size })
+          })
           .catch((error) => isCurrent() && setError(error))
         return
       }
@@ -272,6 +278,8 @@ export default function UploadStep({
               />
             </label>
             <FileUploadHint>Drop a file here or paste CSV from the clipboard</FileUploadHint>
+            {/* FileUpload shows its error message only in its own footer, which this step hides */}
+            {error && <FileUploadError>Could not parse this file: {error.message}</FileUploadError>}
           </FileUploadButtons>
         </FileUploadWrapper>
       )}
