@@ -166,8 +166,13 @@ const UsersSettings = () => {
     setShowNewServiceUser(true)
   }
 
+  // A to Z, the users query returns them the other way round. The table and its export both start
+  // from this order, so rows a column sort leaves tied stay in the same order in both
   let userListWithAccessGroups = useMemo(
-    () => userList.map((user) => formatAccessGroups(user)),
+    () =>
+      userList
+        .map((user) => formatAccessGroups(user))
+        .sort((a, b) => (a.name || '').localeCompare(b.name || '')),
     [userList],
   )
 
