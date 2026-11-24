@@ -41,7 +41,6 @@ const VPSearchFilter: FC<VPSearchFilterProps> = ({}) => {
       config={{
         keys: { productName: 'name' },
       }}
-      enableGlobalSearch={false}
     />
   )
 }

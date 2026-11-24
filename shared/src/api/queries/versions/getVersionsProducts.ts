@@ -217,6 +217,7 @@ export type GetGroupedVersionsListArgs = {
   groups: { filter: string; count?: number | null; value: string }[]
   groupFilterKey?: string
   versionFilter?: string
+  search?: string
   productFilter?: string
   taskFilter?: string
   folderFilter?: string
@@ -564,6 +565,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
               representationFilter: arg.representationFilter,
+              search: arg.search,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               featuredOnly: arg.featuredOnly,
               featuredOnlyEntityType: arg.featuredOnlyEntityType,
@@ -957,6 +959,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               versionFilter: arg.versionFilter,
               taskFilter: arg.taskFilter,
               representationFilter: arg.representationFilter,
+              search: arg.search,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
               first: productIds.length,
             }
@@ -1044,6 +1047,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               taskFilter: arg.taskFilter,
               folderFilter: arg.folderFilter,
               representationFilter: arg.representationFilter,
+              search: arg.search,
               folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             }),
             checkVersionInCache: (entityId, parentId) => {
@@ -1155,6 +1159,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
           featuredOnlyEntityType,
           latestPerFolder,
           hasReviewables,
+          search,
         } = args
         try {
           const promises = []
@@ -1179,6 +1184,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
               folderFilter,
               representationFilter,
               versionFilter,
+              search,
               // specific group filter
               [groupFilterKey]: group.filter,
               folderIds: folderIds?.length ? folderIds : undefined,
@@ -1288,6 +1294,7 @@ const injectedVersionsPageApi = enhancedVersionsPageApi.injectEndpoints({
             taskFilter: arg.taskFilter,
             folderFilter: arg.folderFilter,
             representationFilter: arg.representationFilter,
+            search: arg.search,
             folderIds: arg.folderIds?.length ? arg.folderIds : undefined,
             sortBy: arg.sortBy,
             featuredOnly: arg.featuredOnly,

@@ -11,6 +11,7 @@ query GetProductsColumnStats(
   $productIds: [String!]
   $targets: [MetricTargetInput!]
   $hasReviewables: Boolean
+  $search: String
 ) {
   project(name: $projectName) {
     products(
@@ -23,6 +24,7 @@ query GetProductsColumnStats(
       representationFilter: $representationFilter
       folderIds: $folderIds
       hasReviewables: $hasReviewables
+      search: $search
       includeFolderChildren: true
     ) {
       fieldStats {

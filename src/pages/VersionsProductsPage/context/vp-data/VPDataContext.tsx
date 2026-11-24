@@ -179,6 +179,8 @@ export type QueryArguments = {
   latestPerFolder?: boolean
   hasReviewables?: boolean
   showComments?: boolean
+  /** the search bar text */
+  search?: string
 }
 
 interface VersionsDataProviderProps {
@@ -485,6 +487,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
         versionIds: scopedVersionIds.length ? scopedVersionIds : undefined,
         productIds: scopedProductIds.length ? scopedProductIds : undefined,
         latestPerFolder,
+        search: countsVersionFilter.search || undefined,
       }
     },
     [
@@ -543,6 +546,8 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       sortBy: sortArgs.version.sortBy,
       desc: sortArgs.version.desc,
       showComments,
+      // the search bar text (unscoped, so it lands in the version filter)
+      search: combinedVersionFilter.search || undefined,
     }),
     [
       projectName,
@@ -556,6 +561,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
       scopedProductIds,
       sortArgs,
       showComments,
+      combinedVersionFilter.search,
     ],
   )
 
@@ -582,6 +588,7 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     latestPerFolder,
     hasReviewables: hasReviewablesFilter,
     showProducts,
+    search: combinedVersionFilter.search || undefined,
   })
 
   const resolveEntityArguments = useCallback(
