@@ -6,6 +6,7 @@ import type { CellMark } from '../../types/table'
 export type TableCellContextValue = {
   mark?: CellMark // TableRow.cellMarks[column id]
   isRowReadOnly?: boolean // TableRow.readOnly or the table's readOnly
+  rowNumber?: number // 1-based position of the row in the table, as shown in the selection column
 }
 
 export const TableCellContext = createContext<TableCellContextValue>({})

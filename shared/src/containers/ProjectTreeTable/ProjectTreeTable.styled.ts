@@ -1,5 +1,5 @@
 import styled, { css } from 'styled-components'
-import { COLUMNS_UNDER_SLOT_ATTRIBUTE } from './constants'
+import { COLUMNS_UNDER_SLOT_ATTRIBUTE, ROW_SELECTION_COLUMN_WIDTH } from './constants'
 
 // Create shadow mixins to make combinations work properly
 const topShadow = `inset 0 1px 0 0 var(--md-sys-color-primary)`
@@ -241,7 +241,7 @@ export const HeaderCell = styled.th`
   /* special styles for the left selection column */
   &.__row_selection__ {
     min-width: unset;
-    width: 20px !important;
+    width: ${ROW_SELECTION_COLUMN_WIDTH}px !important;
 
     .actions {
       display: none;
@@ -565,16 +565,13 @@ export const TD = styled.td<TableCellProps>`
 
   /* special styles for selection bar cells */
   &.__row_selection__ {
-    width: 20px !important;
+    width: ${ROW_SELECTION_COLUMN_WIDTH}px !important;
     min-width: unset;
+    cursor: pointer;
 
     &.selected {
       background-color: var(--md-sys-color-primary-container) !important;
       box-shadow: none !important;
-      /* reveal the check mark */
-      [icon='check'] {
-        display: block;
-      }
     }
   }
 `
