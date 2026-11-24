@@ -75,12 +75,12 @@ test.describe('feed category filter', () => {
 
     const { context, page } = await signInAs(browser, alice.name, alice.password)
     try {
-      // the filter offers Category once the categories arrive: the check below waits for them
+      // the filter offers Category once the categories arrive: they must arrive, and with none in them
       const categories = page.waitForResponse(
         (res) => new URL(res.url()).pathname === `/api/projects/${projectName}/activityCategories`,
       )
       const panel = await openTask(page, projectName)
-      expect((await categories).ok()).toBe(true)
+      expect((await (await categories).json()).categories).toEqual([])
       await expect(panel.comment('Plain note')).toBeVisible()
       const feed = panel.root.locator('.feed')
       await panel.openSearch(feed)
