@@ -30,7 +30,7 @@ import { SplitterPanel } from 'primereact/splitter'
 import EnableNotifications from '@components/EnableNotifications'
 import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import ProjectsList from '@containers/ProjectsList/ProjectsList'
-import type { Hidden } from '@containers/ProjectsList/hooks/useProjectsListMenuItems'
+import type { ProjectsListHidden as Hidden } from '@shared/containers/ProjectsTable'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
 import InboxSearchFilter from '../components/InboxSearchFilter'
 import InboxDateDivider from '../components/InboxDateDivider'
@@ -745,6 +745,7 @@ const Inbox = ({ filter }: InboxProps) => {
                           entityId={group.entityId ?? undefined}
                           projectName={group.projectName}
                           date={group.date}
+                          timeOnly={showDayDividers}
                           userName={group.userName}
                           isRead={group.read || group.active}
                           unReadCount={group.unRead}
@@ -791,7 +792,7 @@ const Inbox = ({ filter }: InboxProps) => {
                   {!isLoadingAny && (errorInbox || !messagesData.length) && (
                     <EmptyPlaceholder
                       icon="done_all"
-                      message="All caught up! No messages to show."
+                      message="All caught up, no messages to show"
                       error={errorInbox || globalError.projects}
                     />
                   )}

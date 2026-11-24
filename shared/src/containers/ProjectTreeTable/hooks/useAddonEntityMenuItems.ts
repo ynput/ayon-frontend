@@ -6,16 +6,18 @@ import type {
   ProjectTablePage,
   ProjectTableState,
 } from '@ynput/ayon-addon'
-import { menuItemsAt } from '@ynput/ayon-addon/host'
+import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import { useProjectContext } from '@shared/context'
 import type { ContextMenuItemConstructor } from './useCellContextMenu'
 import { appliesToPage } from '../addonColumns/addonColumnsHelpers'
+import { menuSection } from '@shared/components/Menu/menuSections'
 
 /**
  * Items addons contribute to the cells' right-click menu (entityMenuItem slot, @ynput/ayon-addon),
  * as one constructor a page adds to its contextMenuItems: the `top` ones first in the list, the
  * `bottom` ones (default) right before 'delete'. The items draw from their descriptions; `run`
  * starts loading when the menu opens. `tableState`: what the table shows (Overview, Products).
+ * The items are tagged for the slot inspector.
  */
 export const useAddonEntityMenuItems = (
   page: ProjectTablePage,
@@ -27,9 +29,7 @@ export const useAddonEntityMenuItems = (
 
   return useCallback<ContextMenuItemConstructor>(
     (_e, cell, selectedCells, meta) => {
-      const items = menuItemsAt(contributions, position).filter((item) =>
-        appliesToPage(item, page),
-      )
+      const items = menuItemsAt(contributions, position).filter((item) => appliesToPage(item, page))
       if (!items.length) return undefined
 
       // like the built-in items: the selected cells (not row checkboxes), else the selected rows,
@@ -51,10 +51,13 @@ export const useAddonEntityMenuItems = (
         })
       }
       const selection = [...entities.values()]
-      if (!selection.length) return undefined
+      // the slot's example (Show slots) shows on any cell
+      const shown = selection.length ? items : items.filter(isExample)
+      if (!shown.length) return undefined
 
       const context = { projectName, page, entities: selection, tableState }
-      return items
+      // addon items are a section of their own
+      const menuItems = shown
         .filter(
           (item) =>
             (item.selection !== 'single' || selection.length === 1) &&
@@ -68,8 +71,10 @@ export const useAddonEntityMenuItems = (
             label: item.label,
             icon: item.icon,
             command: () => runContribution(item, context),
+            ...contributionTags(item),
           }
         })
+      return menuSection(menuItems)
     },
     [contributions, projectName, page, tableState],
   )

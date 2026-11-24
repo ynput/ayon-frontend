@@ -6,11 +6,11 @@ export class AttributesPage {
 
   async goto() {
     await this.page.goto('/settings/attributes')
-    await expect(this.page.getByPlaceholder('Filter attributes...')).toBeVisible()
+    await expect(this.page.getByPlaceholder('Filter attributes')).toBeVisible()
   }
 
   async filter(text: string) {
-    await this.page.getByPlaceholder('Filter attributes...').fill(text)
+    await this.page.getByPlaceholder('Filter attributes').fill(text)
   }
 
   row(name: string) {

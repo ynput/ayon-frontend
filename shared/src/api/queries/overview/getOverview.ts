@@ -1,4 +1,10 @@
 import {
+  queriedFoldersRegistry,
+  getCacheKey,
+  markFoldersAsQueried,
+  getQueriedFolders,
+} from './queriedFolders'
+import {
   gqlApi,
   GetTasksByParentQuery,
   GetTasksListQuery,
@@ -195,30 +201,6 @@ const foldersApiEnhanced = foldersApi.enhanceEndpoints({
 })
 
 export const TASKS_INFINITE_QUERY_COUNT = 100 // Number of items to fetch per page
-
-// --- TRACKING REGISTRY FOR EMPTY FOLDERS (FILTER-AWARE) ---
-const queriedFoldersRegistry: Record<string, Set<string>> = {}
-
-const getCacheKey = (
-  projectName: string,
-  filter?: string,
-  folderFilter?: string,
-  search?: string,
-  showComments?: boolean,
-) => {
-  return JSON.stringify({ projectName, filter, folderFilter, search, showComments })
-}
-
-const markFoldersAsQueried = (cacheKey: string, folderIds: string[]) => {
-  if (!queriedFoldersRegistry[cacheKey]) {
-    queriedFoldersRegistry[cacheKey] = new Set()
-  }
-  folderIds.forEach((id) => queriedFoldersRegistry[cacheKey].add(id))
-}
-
-const getQueriedFolders = (cacheKey: string): Set<string> => {
-  return queriedFoldersRegistry[cacheKey] || new Set()
-}
 
 const injectedApi = enhancedApi.injectEndpoints({
   endpoints: (build) => ({

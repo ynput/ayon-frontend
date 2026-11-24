@@ -14,16 +14,25 @@ const createShot = async (api: AyonApi, projectName: string, tasks: [string, str
   return { folder, tasks: created }
 }
 
-const createShotsWithFps = async (api: AyonApi, projectName: string, shots: [string, number][]) => {
+const createShotsWithFps = async (
+  api: AyonApi,
+  projectName: string,
+  shots: [string, number][],
+  settings: Record<string, unknown> = {},
+) => {
   const folders = []
   for (const [name, fps] of shots) {
     const folder = await api.createFolder(projectName, { name, folderType: 'Shot' })
     await api.updateFolder(projectName, folder.id, { attrib: { fps } })
     folders.push(folder)
   }
-  await api.setWorkingViewColumns('overview', projectName, ['name', 'status', 'attrib_fps'])
+  const columns = ['name', 'status', 'attrib_fps'].map((name) => ({ name, visible: true }))
+  await api.setWorkingViewSettings('overview', projectName, { columns, ...settings })
   return folders
 }
+
+// root folders are not sorted by name: tests that move between rows sort them by fps
+const SORT_BY_FPS = { sortBy: ['attrib_fps'] }
 
 const expectOnlySelected = async (overview: OverviewPage, label: string, columnId: string) => {
   await expect(overview.table.locator('td.selected')).toHaveCount(1)
@@ -176,13 +185,19 @@ test.describe('overview copy and paste', () => {
 
 test.describe('overview keyboard', () => {
   test('arrow keys move the selected cell between rows', async ({ page, api, projectName }) => {
-    await createShotsWithFps(api, projectName, [
-      ['sh010', 24],
-      ['sh020', 25],
-      ['sh030', 30],
-    ])
+    await createShotsWithFps(
+      api,
+      projectName,
+      [
+        ['sh010', 24],
+        ['sh020', 25],
+        ['sh030', 30],
+      ],
+      SORT_BY_FPS,
+    )
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
+    await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/, /sh030$/])
     await overview.clickCell('sh010', 'attrib_fps')
 
     await page.keyboard.press('ArrowDown')
@@ -224,12 +239,18 @@ test.describe('overview keyboard', () => {
   )
 
   test('Enter edits the selected cell', async ({ page, api, projectName }) => {
-    const [shot] = await createShotsWithFps(api, projectName, [
-      ['sh010', 24],
-      ['sh020', 25],
-    ])
+    const [shot] = await createShotsWithFps(
+      api,
+      projectName,
+      [
+        ['sh010', 24],
+        ['sh020', 25],
+      ],
+      SORT_BY_FPS,
+    )
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
+    await expect(overview.nameCells()).toHaveText([/sh010$/, /sh020$/])
     await overview.clickCell('sh010', 'attrib_fps')
 
     await page.keyboard.press('Enter')
@@ -281,7 +302,8 @@ test.describe('overview sorting', () => {
     ])
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
-    await expect(overview.nameCells()).toHaveText([/sh_a$/, /sh_b$/, /sh_c$/])
+    // the rows start in no particular order
+    await expect(overview.nameCells()).toHaveCount(3)
 
     await overview.toggleSort('attrib_fps')
 

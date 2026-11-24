@@ -50,6 +50,14 @@ What the module does, and what core gives it:
   headers show the entity type's icon (`ColumnConfig.headerIcon`). Several list item edits are saved in
   one bulk `PATCH /lists/{id}/items`. `readsEntityValue` (edit target is the entity, i.e. without the
   powerpack) switches sort and filter keys from `attrib.*` to `entityAttrib.*` (`entityValueFilter.ts`).
+- The view's `editTarget` (the module's "List values" toolbar switch, stored in the `listValues`
+  setting) reaches the module as `ListValuesContext.editTarget`, `'entity'` when the view has none (views
+  saved before the switch keep editing the entities). Core fills that default, not the module: a newer
+  module with an older core then still edits list values. `ListValuesProvider` owns that setting
+  (each `useListsViewSettings` call keeps its own pending copy). `editsEntities` is what the module
+  then does with the entities' attributes (an older module ignores the setting): it turns on the
+  per-row attribute locks of the entities (`ignoreEntityAttribLocks`), and switching it clears the undo
+  history, which would otherwise replay an edit to the other target.
 - `useCompareView(host)` (called in `ListItemsDataContext`) owns the compare choice, loads the compared
   list through `host.useListItems` (`useListItemsForListValues`, the page's RTK cache) whole and once,
   not filtered to the rows on screen (that would be a new request for every page), and returns the
@@ -59,7 +67,8 @@ What the module does, and what core gives it:
 - `Controls` (toolbar) and `CompareSettings` (Customize > Compare) are the module's components. The
   compare settings are stored in the view as one opaque `listValues` setting
   (`useListsViewSettings`); the module defines its shape. The list picker dialog is the module's, around
-  core's `ListPicker` (the lists table in picker mode).
+  core's `ListPicker` (`components/ListPicker`: the shared `ListPicker` from
+  `shared/src/containers/ListPicker`, single select, with the page's list type).
 - `getCellMenuItems` and `getColumnMenuItems` are the list value actions in the cell context menu and in
   attribute column header menus (`ColumnConfig.menuItems`); `useListValueActions` gives them the
   requests, loading every list item, toasts and the confirm dialog (`ListValueActionsHost`).

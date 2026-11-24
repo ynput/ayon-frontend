@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
-import HeaderButton from './HeaderButton'
+import { HeaderButton } from '@shared/components'
 import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -169,7 +169,7 @@ const Header: React.FC = () => {
           ref={userButtonRef}
           variant="nav"
         >
-          <UserImage size={26} name={user?.name} imageKey={avatarKey} />
+          <UserImage size={25} name={user?.name} imageKey={avatarKey} />
         </UserButton>
         <MenuContainer id="user" target={userButtonRef.current}>
           <UserMenu user={user} />

@@ -1,5 +1,7 @@
 import { Button, Icon, theme } from '@ynput/ayon-react-components'
 import styled from 'styled-components'
+import clsx from 'clsx'
+import { getPillColors, type PillStyle } from '@shared/util/pillColors'
 
 const Expander = styled(Button)`
   background-color: unset !important;
@@ -66,6 +68,24 @@ const StyledTextContent = styled.div`
     white-space: nowrap;
     text-overflow: ellipsis;
   }
+
+  /* group names read like the names in the rows */
+  .label {
+    font-weight: 600;
+  }
+`
+
+// the group value, a pill when it has a colour
+const StyledValue = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--base-gap-small);
+  min-width: 0;
+
+  &.pill {
+    padding: 1px 6px 1px 4px;
+    border-radius: var(--border-radius-m);
+  }
 `
 
 const StyledImg = styled.img`
@@ -77,6 +97,7 @@ const StyledImg = styled.img`
 
 const Count = styled.span`
   color: var(--md-sys-color-outline);
+  /* the count stays whole, the value before it is cut short */
   white-space: nowrap;
   flex-shrink: 0;
 `
@@ -93,6 +114,7 @@ type GroupHeaderProps = {
   isExpanded: boolean
   isEmpty?: boolean
   toggleExpanded: () => void
+  pill?: PillStyle
 }
 
 export const GroupHeaderWidget = ({
@@ -107,7 +129,11 @@ export const GroupHeaderWidget = ({
   isExpanded,
   isEmpty,
   toggleExpanded,
+  pill,
 }: GroupHeaderProps) => {
+  // a coloured group value shows as a pill, like the value in its cells
+  const pillColors = pill && color ? getPillColors(color, pill) : undefined
+  const textColor = pillColors ? 'inherit' : color || undefined
   return (
     <StyledGroupHeader id={id}>
       <Expander
@@ -122,10 +148,12 @@ export const GroupHeaderWidget = ({
         <StyledContentAbsolute>
           <StyledContent>
             {img && <StyledImg src={img} alt={name} className="img" />}
-            {icon && <Icon icon={icon} style={{ color: color || undefined }} />}
-            <StyledTextContent style={{ color: color || undefined }}>
-              <span className="label">{label || name}</span>
-            </StyledTextContent>
+            <StyledValue className={clsx({ pill: pillColors })} style={pillColors}>
+              {icon && <Icon icon={icon} style={{ color: textColor }} />}
+              <StyledTextContent style={{ color: textColor }}>
+                <span className="label">{label || name}</span>
+              </StyledTextContent>
+            </StyledValue>
             {count !== undefined && count > 0 ? (
               <Count>
                 {count}

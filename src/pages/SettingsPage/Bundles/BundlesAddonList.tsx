@@ -62,6 +62,7 @@ const StyledDataTable = styled(DataTable as unknown as React.FC<any>)`
       }
     }
 
+    th,
     td {
       display: flex;
       align-items: center;
@@ -230,7 +231,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
     const createContextItems = (selected: any) => {
       let items = [
         {
-          label: 'View in Market',
+          label: 'View in market',
           icon: 'store',
           command: () => navigate(`/market/?selected=${selected.name}`),
         },
@@ -321,7 +322,7 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 // TODO: compare with staging version if we're showing a staging project bundle
                 if (currentVersion === undefined || !addon.projectCanOverrideAddonVersion) {
                   return (
-                    <span style={{ color: '#666' }}>
+                    <span style={{ color: 'light-dark(var(--md-sys-color-outline), #666)' }}>
                       <Icon icon="lock" />
                       {productionVersion || 'NONE'}
                       {!addon.projectCanOverrideAddonVersion && ' (cannot override)'}
@@ -330,7 +331,11 @@ const BundlesAddonList = React.forwardRef<any, BundlesAddonListProps>(
                 }
 
                 // when currentVersion is set, show it in orange to indicate project override
-                return <span style={{ color: 'orange' }}>{currentVersion || 'NONE'}</span>
+                return (
+                  <span style={{ color: 'light-dark(var(--md-sys-color-warning), orange)' }}>
+                    {currentVersion || 'NONE'}
+                  </span>
+                )
               }
 
               // Display logic for normal bundles

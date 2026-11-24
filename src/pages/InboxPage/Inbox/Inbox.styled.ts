@@ -35,10 +35,6 @@ export const ProjectsSplitter = styled(Splitter)`
     z-index: 50;
   }
 
-  .projects-list-header {
-    margin-bottom: var(--base-gap-large);
-  }
-
   &.no-projects {
     & > .p-splitter-panel:first-child,
     & > .p-splitter-gutter {
@@ -52,7 +48,8 @@ export const ProjectsSplitter = styled(Splitter)`
 `
 
 export const InboxSection = styled(Section)`
-  padding: var(--padding-s) var(--padding-m) 0;
+  /* the same top padding as the other pages, so the toolbar sits at the same height */
+  padding: var(--padding-m);
 
   overflow: hidden;
   align-items: flex-start;
@@ -83,6 +80,8 @@ export const MessagesList = styled.ul`
   padding: 0;
   flex: 1;
 
+  /* the list sits on a panel, the messages on it are rows */
+  background-color: var(--md-sys-color-surface-container-low);
   border-radius: var(--border-radius-m);
 
   /* remove focus outline */
@@ -112,7 +111,7 @@ export const UnreadCount = styled.div`
   }
 `
 export const LoadMore = styled.li`
-  background-color: var(--md-sys-color-surface-container-low);
+  background-color: var(--color-table-row);
   padding: 0 var(--padding-l);
   min-height: 40px;
   display: flex;
@@ -126,6 +125,6 @@ export const LoadMore = styled.li`
   user-select: none;
 
   &:hover {
-    background-color: var(--md-sys-color-surface-container-low-hover);
+    background-color: var(--color-table-row-hover);
   }
 `

@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import type {
+  EntityListRef,
   EntityRef,
   EntityScope,
   ProjectTablePage,
@@ -67,7 +68,9 @@ export interface SlotMap {
   }
   /**
    * A tab in the details panel. The tab button shows from the description, for `entityTypes`;
-   * `component` loads when the tab is first opened.
+   * `component` loads when the tab is first opened. AYON puts a header above it with `label` as its
+   * title; `PanelTabHeader` adds a "more" menu, a search and filter bar and other content to
+   * that header.
    */
   'detailsPanel.tab': {
     version: 1
@@ -84,6 +87,20 @@ export interface SlotMap {
     meta: DetailsPanelMenuItemMeta
     context: DetailsPanelMenuItemContext
     pieces: { run: Loader<RunPiece<'detailsPanel.menuItem'>> }
+  }
+  /**
+   * A tab in a list's details panel: on the Lists and Reviews pages, and in a review session's
+   * sidebar in Review. The tab button shows from the description, after the panel's own tabs;
+   * `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header
+   * above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter
+   * bar and other content to that header. It shows on every list unless `entityListTypes` is set
+   * (version 2).
+   */
+  'listDetails.tab': {
+    version: 2
+    meta: ListDetailsTabMeta
+    context: ListDetailsTabContext
+    pieces: { component: Loader<ComponentType<SlotProps<'listDetails.tab'>>> }
   }
   /**
    * An item in the project list's menus (dashboard, project menu, studio pages' ProjectList): the
@@ -154,8 +171,10 @@ export interface SlotMap {
    * A read-only column in the project tables (Overview, Products, Lists). It is in the column
    * settings from the description; `cell` and `fetchValues` load with the table. The host draws
    * the cell box (padding, selection, focus), so `cell` renders only its content; selecting, the
-   * right-click menu and Copy (the cell's `value` as text) work as in other columns. Not sortable,
-   * and pasting into it changes nothing. When the values depend on data your mutations change, list
+   * right-click menu and Copy work as in other columns. Copy takes the cell's `value` as text, or
+   * the text `fetchValues` gives with `cellValue(value, { copy })`, so `value` can be data that
+   * only `cell` turns into text. Not sortable, and pasting into it changes nothing. When the
+   * values depend on data your mutations change, list
    * its cache tags in `providesTags` and the column refreshes itself when they are invalidated:
    * `tableColumn({ id, label, cell, fetchValues, providesTags: [{ type: 'myaddonLog', id: 'LIST' }] })`.
    */
@@ -350,14 +369,20 @@ export interface HeaderItemContext extends ButtonScope {
   projectName: string | null
 }
 
-/** Description of a `detailsPanel.tab` contribution. */
-export interface DetailsPanelTabMeta {
+/** Description of a panel tab: `detailsPanel.tab`, `listDetails.tab`. */
+export interface PanelTabMeta {
   /** the tab id is `<addon>.<id>` */
   id: string
-  /** the tab button's tooltip */
+  /** the title of the tab's header, and the tab button's tooltip unless `tooltip` is set */
   label: string
+  /** the tab button's tooltip; the label when not set */
+  tooltip?: string
   /** a Material Symbols icon name, the tab button */
   icon: string
+}
+
+/** Description of a `detailsPanel.tab` contribution. */
+export interface DetailsPanelTabMeta extends PanelTabMeta {
   /** entity types the tab shows for; all when not set */
   entityTypes?: string[]
 }
@@ -405,6 +430,27 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 /** Context of a details panel menu item. */
 export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
+/** Description of a `listDetails.tab` contribution. */
+export interface ListDetailsTabMeta extends PanelTabMeta {
+  /**
+   * the list types it shows on (`generic`, `review-session`); every list when not set. Needs
+   * version 2 of the slot: `listDetailsTab` stamps `slotVersion: 2` when it is set, so an older
+   * AYON skips the tab instead of showing it on every list
+   */
+  entityListTypes?: string[]
+}
+
+/** Context of a list details tab. */
+export interface ListDetailsTabContext extends ProjectNameScope {
+  /** the list the panel shows */
+  list: EntityListRef
+  /**
+   * where the panel is: `lists` (the Lists page), `reviews` (the Reviews page) or `review` (a
+   * review session in Review)
+   */
+  scope: string
+}
+
 /** Description of a `tableColumn` contribution. */
 export interface TableColumnMeta {
   /** part of the column id, so only letters, digits and `_` */
@@ -445,7 +491,10 @@ export type TableColumnTag = string | { type: string; id?: string | number }
 export interface TableCellContext extends ProjectNameScope {
   page: ProjectTablePage
   entity: EntityRef
-  /** what the column's `fetchValues` returned for this entity; `undefined` without `fetchValues` */
+  /**
+   * what the column's `fetchValues` returned for this entity (for a `cellValue(value, { copy })`,
+   * its `value`); `undefined` without `fetchValues`
+   */
   value: unknown
 }
 
@@ -459,7 +508,11 @@ export interface TableColumnFetchArgs extends ProjectNameScope {
 }
 
 /**
- * Gets a column's values, by entity id; each cell gets its own as `value`. AYON calls it with
+ * Gets a column's values, by entity id; each cell gets its own as `value`. A value is any plain
+ * data (no class instances or functions): the value itself, or `cellValue(value, { copy })` to
+ * give Copy its own text, such as `cellValue({ total: 12500, currency: 'EUR' }, { copy: '12500 EUR' })`.
+ * Copy takes `copy`, else the value as text (strings, numbers, booleans, lists joined with `, `;
+ * nothing for other objects). A plain `{ value, copy }` object is a value like any other. AYON calls it with
  * the rows that come on screen and that it has no value for yet, in batches once scrolling
  * pauses, and keeps what it returns: scrolling back costs nothing. A row whose entity changes
  * (here or by someone else) is asked for again; for anything else the values depend on, list its
@@ -776,9 +829,29 @@ export interface SlotDefinition {
 export interface SlotDeclaration extends SlotDefinition {
   /** `<addon>.<name>`, the name without dots, e.g. `example.cardMenuItem` */
   name: string
+  /**
+   * a short title for people, e.g. `Card menu item`: what the dev shell lists the slot as. Without
+   * one, the name after the dot in words (`cardMenuItem`: "Card menu item")
+   */
+  label?: string
   /** where it shows, one line for `ayon-addon slots` */
   description?: string
+  /**
+   * a contribution of the slot's shape that AYON shows with Show slots on (developer mode), after
+   * the slot's real contributions: its description fields and, optionally, its pieces. A required
+   * field or piece left out is filled in: the label, and a piece that shows it in one line, with
+   * the slot and its context in its tooltip (`ExampleInline`), or, for `run`, says it was used.
+   * Its `run` is always AYON's, which only says it was used: using an example changes nothing. Its
+   * components are your code: keep them to display only
+   */
+  example?: SlotExample
 }
+
+/**
+ * A slot's example contribution: the fields of a contribution to the slot, without `id` (AYON
+ * gives it one). Pieces are optional loaders, like a contribution's.
+ */
+export type SlotExample = { readonly [field: string]: unknown }
 
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
@@ -866,6 +939,16 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkButton,
   },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'listDetails.tab': {
+    version: 2,
+    required: ['label', 'icon'],
+    pieces: ['component'],
+    check: (item) =>
+      item.entityListTypes !== undefined &&
+      !(Array.isArray(item.entityListTypes) && item.entityListTypes.every((type) => typeof type === 'string'))
+        ? 'entityListTypes must be a list of list types'
+        : undefined,
+  },
   'detailsPanel.menuItem': {
     version: 1,
     required: ['label', 'icon'],

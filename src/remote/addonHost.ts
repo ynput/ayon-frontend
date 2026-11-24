@@ -6,10 +6,21 @@ import store from '@state/store'
 import { openViewer } from '@state/viewer'
 import { ProjectPageLayoutHost, SlicerHost } from '@shared/components/AddonLayout/AddonLayout'
 import { AddonEntityPicker } from '@shared/components/AddonLayout/AddonEntityPicker'
+import { AddonListPicker } from '@shared/components/AddonLayout/AddonListPicker'
 import { AddonMoreMenu } from '@shared/components/AddonLayout/AddonMoreMenu'
+import { AddonPanelTabHeader } from '@shared/components/AddonLayout/AddonPanelTabHeader'
+import { AddonTabbedPanel } from '@shared/components/AddonLayout/AddonTabbedPanel'
+import { PanelAddonTab } from '@shared/components/PanelTabs'
 import { useAddonContextMenu } from '@shared/components/AddonLayout/useAddonContextMenu'
-import { ProjectListHost, StudioPageLayoutHost } from './AddonLayout'
+import { StudioPageLayoutHost } from '@shared/components/AddonLayout/StudioPageLayout'
+import { AppProjectListHost } from './AddonLayout'
 import { LazyEntityTable } from './EntityTable/LazyEntityTable'
+import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
+import {
+  isDetailsPipPage,
+  openViewerFromPip,
+  usePipNavigate,
+} from '@shared/containers/DetailsPanel/components/DetailsPanelFloating/detailsPip'
 
 // The host's implementations of what @ynput/ayon-addon exports but can't build itself
 // (it imports nothing from this app). See src/remote/AGENTS.md.
@@ -45,23 +56,39 @@ export const provideAddonHost = () =>
     getUser: () => toAddonUser(store.getState().user),
     dispatch: store.dispatch,
     openViewer: (target) => {
-      store.dispatch(openViewer(target))
+      // the picture-in-picture details panel: the viewer opens in the main window
+      if (isDetailsPipPage()) openViewerFromPip(target)
+      else store.dispatch(openViewer(target))
     },
     useContextMenu: useAddonContextMenu,
     components: {
       ProjectPageLayout: ProjectPageLayoutHost,
       Slicer: SlicerHost,
       StudioPageLayout: StudioPageLayoutHost,
-      ProjectList: ProjectListHost,
+      ProjectList: AppProjectListHost,
       EntityPicker: AddonEntityPicker,
+      ListPicker: AddonListPicker,
       MoreMenu: AddonMoreMenu,
+      PanelTabHeader: AddonPanelTabHeader,
+      ContributionTab: PanelAddonTab,
+      TabbedPanel: AddonTabbedPanel,
       EntityTable: LazyEntityTable,
     },
   })
 
+// the picture-in-picture details panel navigates the main window
+const useHostNavigate = isDetailsPipPage() ? usePipNavigate : useNavigate
+
 // Gives the package the router's navigate (navigate, navigateToEntity). Render it inside <BrowserRouter>.
 export const AddonHostNavigation = () => {
-  const navigate = useNavigate()
+  const navigate = useHostNavigate()
   useEffect(() => provideHost({ navigate: (to) => navigate(to) }), [navigate])
+  return null
+}
+
+// Gives the package AYON's import dialog (openImport). Render it inside <ImportDialogProvider>.
+export const AddonHostImport = () => {
+  const { openForAddon } = useImportDialogContext()
+  useEffect(() => provideHost({ openImport: openForAddon }), [openForAddon])
   return null
 }

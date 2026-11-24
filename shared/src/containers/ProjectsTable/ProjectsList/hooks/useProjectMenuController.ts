@@ -1,0 +1,291 @@
+import { useCallback, useMemo, useState } from 'react'
+import { RowSelectionState } from '@tanstack/react-table'
+import { toast } from 'react-toastify'
+import {
+  ListProjectsItemModel,
+  ProjectFolderModel,
+  useDeleteProjectMutation,
+  useUpdateProjectMutation,
+} from '@shared/api'
+import { usePowerpack } from '@shared/context'
+import type { ListTableRowContextMenuContext } from '@shared/containers/ListTable'
+import { buildProjectFolderRowId } from '../../buildProjectsTableData'
+import type { ProjectFolderFormData } from '../ProjectFolderFormDialog'
+import useProjectListUserPreferences from './useProjectListUserPreferences'
+import useProjectListMenuItems, { type Hidden } from './useProjectsListMenuItems'
+import { useProjectFolderActions } from './useProjectFolderActions'
+import { confirmDelete, getProjectDisplayName, getRequestErrorString } from '@shared/util'
+
+type ProjectFolderDialogProps = {
+  isOpen: boolean
+  onClose: () => void
+  initial?: Partial<ProjectFolderFormData>
+  folderId?: string
+  projectNames: string[]
+  onPutProjectsInFolder: (projectNames: string[], folderId: string) => void
+  rowSelection: RowSelectionState
+  folders: ProjectFolderModel[]
+  onFolderCreated?: (folderId: string, hadProjects: boolean) => void
+  onFoldersCreated?: (parentFolderIds: string[], areExpanding: boolean) => void
+}
+
+type BuildListTableContextMenuItemsContext = Pick<
+  ListTableRowContextMenuContext<any>,
+  'selectedRows' | 'isGroupRow' | 'groupColumnId' | 'groupValue'
+>
+
+interface UseProjectMenuControllerProps {
+  projects: ListProjectsItemModel[]
+  folders?: ProjectFolderModel[]
+  selection: string[]
+  onSelect: (ids: string[]) => void
+  onNewProject?: () => void
+  multiSelect?: boolean
+  showArchived?: boolean
+  onSelectAll?: () => void
+  onShowArchivedToggle?: () => void
+  hidden?: Hidden
+  onFolderCreated?: (folderId: string, hadProjects: boolean) => void
+  onFoldersCreated?: (parentFolderIds: string[], areExpanding: boolean) => void
+  folderGroupColumnId?: string
+  /** What the app adds: opening and managing a project (routes, store), and the user's permission
+   * to create projects. Without them, Open and Manage are not in the menus and only admins and
+   * managers may create projects. */
+  onOpenProject?: (projectName: string) => void
+  onManageProject?: (projectName: string) => void
+  canCreateProject?: boolean
+}
+
+export const useProjectMenuController = ({
+  projects,
+  folders = [],
+  selection,
+  onSelect,
+  onNewProject,
+  multiSelect,
+  showArchived = false,
+  onSelectAll,
+  onShowArchivedToggle,
+  hidden = {},
+  onFolderCreated,
+  onFoldersCreated,
+  folderGroupColumnId = 'projectFolder',
+  onOpenProject: openProject,
+  onManageProject,
+  canCreateProject: userCanCreateProject,
+}: UseProjectMenuControllerProps) => {
+  const { rowPinning = [], onRowPinningChange, user } = useProjectListUserPreferences()
+  const { powerLicense } = usePowerpack()
+  const canCreateProject = userCanCreateProject || user?.data?.isAdmin || user?.data?.isManager
+  const canEditProjectLabel = !!(user?.data?.isAdmin || user?.data?.isManager)
+  const [updateProject] = useUpdateProjectMutation()
+  const [deleteProject] = useDeleteProjectMutation()
+  const [folderDialogState, setFolderDialogState] = useState<{
+    isOpen: boolean
+    folderId?: string
+    initial?: Partial<ProjectFolderFormData>
+    // rows to create the folder for, the selection when not set
+    rowIds?: string[]
+  }>({ isOpen: false })
+
+  const handleOpenFolderDialog = useCallback(
+    (data?: Partial<ProjectFolderFormData>, folderId?: string, rowIds?: string[]) => {
+      setFolderDialogState({
+        isOpen: true,
+        folderId,
+        initial: data,
+        rowIds,
+      })
+    },
+    [],
+  )
+
+  const handleCloseFolderDialog = useCallback(() => {
+    setFolderDialogState({ isOpen: false })
+  }, [])
+
+  const {
+    onPutProjectsInFolder,
+    onPutFolderInFolder,
+    onRemoveProjectsFromFolder,
+    onDeleteFolder,
+    onEditFolder,
+    onRenameFolder,
+    renamingFolder,
+    onSubmitRenameFolder,
+    closeRenameFolder,
+    onRenameProject,
+    renamingProject,
+    onSubmitRenameProject,
+    closeRenameProject,
+  } = useProjectFolderActions({
+    folders,
+    onSelect,
+    handleOpenFolderDialog,
+  })
+
+  const onOpenProject = useCallback(
+    (project: string) => {
+      if ((user?.uiExposureLevel || 0) < 500) return
+      openProject?.(project)
+    },
+    [openProject, user?.uiExposureLevel],
+  )
+
+  const handleArchive = useCallback(
+    async (projectName: string, active: boolean) => {
+      try {
+        await updateProject({ projectName, projectPatchModel: { active } }).unwrap()
+      } catch (error: any) {
+        toast.error(getRequestErrorString(error) || 'Failed to update project state')
+      }
+    },
+    [updateProject, showArchived, selection, projects, onSelect],
+  )
+
+  const handleDelete = useCallback(
+    (projectName: string) => {
+      const project = projects.find((p) => p.name === projectName)
+      const displayName = project ? getProjectDisplayName(project) : projectName
+      const confirmLabel =
+        displayName && displayName !== projectName
+          ? `Project: ${displayName} (${projectName})`
+          : `Project: ${projectName}`
+
+      confirmDelete({
+        label: confirmLabel,
+        accept: async () => {
+          await deleteProject({ projectName }).unwrap()
+          onSelect(selection.filter((selectedId) => selectedId !== projectName))
+        },
+      })
+    },
+    [deleteProject, onSelect, projects, selection],
+  )
+
+  const { buildMenuItems, rowContextMenuBuilder } = useProjectListMenuItems({
+    hidden: {
+      'add-project': !canCreateProject,
+      'delete-project': !canEditProjectLabel,
+      'archive-project': !canEditProjectLabel,
+      'edit-label': !canEditProjectLabel,
+      'open-project': !openProject,
+      'manage-projects': !onManageProject,
+      ...hidden,
+    },
+    projects,
+    folders,
+    multiSelect,
+    pinned: rowPinning,
+    showArchived,
+    userLevel: user?.uiExposureLevel,
+    onNewProject,
+    onPin: (pinned) => onRowPinningChange({ top: pinned }),
+    onSelectAll,
+    onArchive: handleArchive,
+    onDelete: handleDelete,
+    onOpen: onOpenProject,
+    onManage: onManageProject,
+    onShowArchivedToggle,
+    powerLicense,
+    onCreateFolder: ({ folderId, projectNames, rowIds }) =>
+      handleOpenFolderDialog({ parentId: folderId, projectNames }, undefined, rowIds),
+    onPutProjectsInFolder,
+    onPutFolderInFolder,
+    onRemoveProjectsFromFolder,
+    onDeleteFolder,
+    onEditFolder,
+    onRenameFolder,
+    onRenameProject: canEditProjectLabel ? onRenameProject : undefined,
+  })
+
+  const buildContextMenuItems = useCallback(
+    (contextSelection: string[], hiddenOverrides: Hidden = {}) =>
+      buildMenuItems(contextSelection, {
+        command: true,
+        hidden: {
+          search: true,
+          'add-project': true,
+          'select-all': true,
+          ...hiddenOverrides,
+        },
+      }),
+    [buildMenuItems],
+  )
+
+  const buildListTableContextMenuItems = useCallback(
+    (context: BuildListTableContextMenuItemsContext) => {
+      if (context.isGroupRow) {
+        if (context.groupColumnId !== folderGroupColumnId) {
+          return undefined
+        }
+
+        const folderId =
+          typeof context.groupValue === 'object' &&
+          context.groupValue !== null &&
+          'value' in context.groupValue
+            ? context.groupValue.value
+            : context.groupValue
+
+        if (!folderId) {
+          return undefined
+        }
+
+        return buildContextMenuItems([buildProjectFolderRowId(String(folderId))])
+      }
+
+      return buildContextMenuItems(context.selectedRows)
+    },
+    [buildContextMenuItems, folderGroupColumnId],
+  )
+
+  // a folder created from a context menu is for the rows the menu acts on, not the selection
+  const folderDialogRowIds = folderDialogState.rowIds ?? selection
+  const rowSelection = useMemo(
+    () =>
+      folderDialogRowIds.reduce((acc, id) => {
+        acc[id] = true
+        return acc
+      }, {} as RowSelectionState),
+    [folderDialogRowIds],
+  )
+
+  const folderDialogProps: ProjectFolderDialogProps = {
+    isOpen: folderDialogState.isOpen,
+    onClose: handleCloseFolderDialog,
+    initial: folderDialogState.initial,
+    folderId: folderDialogState.folderId,
+    projectNames: folderDialogRowIds,
+    onPutProjectsInFolder,
+    rowSelection,
+    folders,
+    onFolderCreated,
+    onFoldersCreated,
+  }
+
+  return {
+    buildMenuItems,
+    rowContextMenuBuilder,
+    buildContextMenuItems,
+    buildListTableContextMenuItems,
+    canCreateProject,
+    canEditProjectLabel,
+    rowPinning,
+    onRowPinningChange,
+    user,
+    onOpenProject,
+    handleOpenFolderDialog,
+    folderDialogProps,
+    renamingFolder,
+    onSubmitRenameFolder,
+    closeRenameFolder,
+    renamingProject,
+    onSubmitRenameProject,
+    closeRenameProject,
+    onRenameFolder,
+    onRenameProject: canEditProjectLabel ? onRenameProject : undefined,
+    powerLicense,
+  }
+}
+
+export default useProjectMenuController

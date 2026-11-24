@@ -183,15 +183,11 @@ const SelectWidget = (props: $Any) => {
     widget === 'sortable_multiselect' ||
     (props.multiple && /applications_profiles_\d+_applications$/.test(props.id))
 
-
   const enumResolverName = props.schema && props.schema['x-enum-resolver']
   const enumResolverSettings = props.schema && props.schema['x-enum-resolver-settings']
 
   const enumResolverData = useMemo(
-    () =>
-      enumResolverName
-        ? { enumResolver: enumResolverName, enumResolverSettings }
-        : undefined,
+    () => (enumResolverName ? { enumResolver: enumResolverName, enumResolverSettings } : undefined),
     [enumResolverName, enumResolverSettings],
   )
 
@@ -211,8 +207,9 @@ const SelectWidget = (props: $Any) => {
     skip: !enumResolverName || (requiresProjectScope && !headerProjectName),
   })
 
-  const enumOptionsError = isEnumOptionsError ? getEnumErrorText(enumOptionsErrorMessage) : undefined
-
+  const enumOptionsError = isEnumOptionsError
+    ? getEnumErrorText(enumOptionsErrorMessage)
+    : undefined
 
   const getDefaultValue = () => props.schema['default'] || (props.multiple ? [] : '')
   const isMissing = props.value === null || props.value === undefined
@@ -270,8 +267,13 @@ const SelectWidget = (props: $Any) => {
   // otherwise the library's own material-symbols item rendering is used as-is.
   const hasImageIcon = options.some((opt) => isEnumIconImage(opt.icon))
   const itemTemplate = hasImageIcon
-    ? (option: $Any, isActive: boolean, isSelected: boolean, index: number, mixedSelected: string[]) =>
-        enumItemTemplate(option, isActive, isSelected, index, mixedSelected, props.multiple)
+    ? (
+        option: $Any,
+        isActive: boolean,
+        isSelected: boolean,
+        index: number,
+        mixedSelected: string[],
+      ) => enumItemTemplate(option, isActive, isSelected, index, mixedSelected, props.multiple)
     : undefined
 
   const onFocus = (e: $Any) => {
@@ -300,6 +302,15 @@ const SelectWidget = (props: $Any) => {
   } else {
     renderableValue = [value]
   }
+
+  // every value of a multiselect, for when they don't fit (in the order the dropdown shows them)
+  const valueTooltip =
+    props.multiple && Array.isArray(value) && value.length > 1
+      ? options
+          .filter((opt) => value.includes(opt.value))
+          .map((opt) => opt.label)
+          .join(', ')
+      : undefined
 
   const placeholder = enumOptionsError
     ? 'Could not load options'
@@ -353,7 +364,9 @@ const SelectWidget = (props: $Any) => {
           ? () => setValue(options.map((opt) => opt.value))
           : undefined
       }
-      valueIconMode="all"
+      // without icons the values are one comma separated text, cut with an ellipsis
+      valueIconMode={options.some((opt) => opt.icon) ? 'all' : undefined}
+      data-tooltip={valueTooltip}
     />
   )
 }

@@ -3,6 +3,7 @@ import styled from 'styled-components'
 import { RepresentationsList } from '@shared/containers/RepresentationsList/RepresentationsList'
 import ReviewablesList from '@shared/components/ReviewablesList/ReviewablesList'
 import type { DetailsPanelEntityData } from '@shared/api'
+import { PanelTabHeader } from '@shared/components/PanelTabs'
 
 const StyledContainer = styled.div`
   display: flex;
@@ -23,8 +24,8 @@ const StyledSection = styled.div`
   padding: var(--padding-m);
   overflow: auto;
 
-  &:first-child {
-    border-bottom: 1px solid var(--md-sys-color-outline-variant);
+  & + & {
+    border-top: 1px solid var(--md-sys-color-outline-variant);
   }
 `
 
@@ -49,8 +50,9 @@ const DetailsPanelFiles: FC<DetailsPanelFilesProps> = ({
 
   return (
     <StyledContainer>
+      {/* the tab button's tooltip stays "Files" (DetailsPanelTabs) */}
+      <PanelTabHeader title={reviewablesTitle} />
       <StyledSection>
-        <h4>{reviewablesTitle}</h4>
         <ReviewablesList
           projectName={firstVersion.projectName}
           // @ts-expect-error - entityType is a version and will have a product

@@ -27,6 +27,28 @@ export const Body = styled.div`
     color: var(--md-sys-color-outline);
     opacity: 0.5;
   }
+
+  /* a status change is one line of the feed's history: the size of the text around it, a small
+     square and a muted name, so it doesn't compete with comments */
+  .status-change {
+    font-size: 12px;
+    color: var(--md-sys-color-on-surface-variant);
+
+    .status {
+      gap: 4px;
+    }
+    .status > :first-child {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+    }
+    .status > :first-child .icon {
+      font-size: 11px;
+    }
+    .arrow {
+      font-size: 14px;
+    }
+  }
 `
 
 export const Text = styled.span`

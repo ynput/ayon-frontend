@@ -27,9 +27,10 @@ const AccessGroups = ({ projectName, canCreateOrDelete }: Props) => {
       {!selectedAccessGroup && (
         <EmptyPlaceholderFlexWrapper>
           <EmptyPlaceholderFlex
-            message="No access group selected"
-            icon={'group'}
-          ></EmptyPlaceholderFlex>
+            className="full"
+            message="Select an access group to see its permissions"
+            icon="group"
+          />
         </EmptyPlaceholderFlexWrapper>
       )}
 

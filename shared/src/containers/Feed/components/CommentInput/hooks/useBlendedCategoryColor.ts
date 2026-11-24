@@ -1,32 +1,18 @@
 import { useMemo } from 'react'
-import { blendCategoryColor } from '@shared/util'
 
 /**
- * Custom hook to compute blended category color with surface container background
- * Reads the CSS variable value at runtime and blends the category color at 10% opacity
+ * The category color blended over the comment surfaces: 10% over surface-container, 20% over
+ * surface-container-high. CSS color-mix, so it follows the theme (and nested theme scopes).
  */
 export const useBlendedCategoryColor = (categoryColor: string | undefined) => {
   return useMemo(() => {
     if (!categoryColor) {
       return { primary: undefined, secondary: undefined }
     }
-    const rootStyles = getComputedStyle(document.documentElement)
-    const surfaceContainer = rootStyles.getPropertyValue('--md-sys-color-surface-container').trim()
-    const surfaceSecondary = rootStyles
-      .getPropertyValue('--md-sys-color-surface-container-high')
-      .trim()
-
-    // Fallbacks if CSS vars are missing
-    const basePrimary = surfaceContainer || categoryColor
-    const baseSecondary = surfaceSecondary || categoryColor
-
-    // Blend category color at 0.1 opacity over primary, 0.5 over secondary
-    const blendedPrimary = blendCategoryColor(categoryColor, basePrimary, 0.1) || categoryColor
-    const blendedSecondary = blendCategoryColor(categoryColor, baseSecondary, 0.2) || categoryColor
 
     return {
-      primary: blendedPrimary,
-      secondary: blendedSecondary,
+      primary: `color-mix(in srgb, ${categoryColor} 10%, var(--md-sys-color-surface-container))`,
+      secondary: `color-mix(in srgb, ${categoryColor} 20%, var(--md-sys-color-surface-container-high))`,
     }
   }, [categoryColor])
 }

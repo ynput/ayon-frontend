@@ -5,11 +5,14 @@ import { useGetEntityListFoldersQuery } from '@shared/api'
 import { useProjectContext, usePowerpack } from '@shared/context'
 import { getListIcon, buildHierarchicalTableRows, HierarchicalFolderNode } from '@shared/util'
 import type { EntityList, EntityListFolderModel } from '@shared/api'
+import {
+  buildListFolderRowId,
+  LIST_FOLDER_ROW_ID_PREFIX,
+} from '@shared/containers/ListPicker/util/buildListsTableData'
+
+export { buildListFolderRowId }
 
 const FOLDER_ICON = 'snippet_folder'
-
-const LIST_FOLDER_ROW_ID_PREFIX = 'folder'
-export const buildListFolderRowId = (folderId: string) => `${LIST_FOLDER_ROW_ID_PREFIX}-${folderId}`
 
 const sortLists = (lists: EntityList[]): EntityList[] =>
   [...lists].sort((a, b) => {

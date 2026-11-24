@@ -28,10 +28,12 @@ import type { EntityType, ParentColumnDefinition, TableRow } from './types/table
 // Component imports
 import buildTreeTableColumns, {
   DefaultColumns,
+  getColumnIcon,
   getNameColumnLabel,
   isEntityExpandable,
   TreeTableExtraColumn,
 } from './buildTreeTableColumns'
+import { insertExtraColumns } from './utils/insertExtraColumns'
 import * as Styled from './ProjectTreeTable.styled'
 import { RowDragHandleCellContent, ColumnHeaderMenu } from './components'
 import { TableFooterRow } from './components/TableFooterRow'
@@ -56,7 +58,13 @@ import {
   usePowerpack,
   setDetailsPanelTabForScope,
 } from '@shared/context'
-import { ROW_SELECTION_COLUMN_ID, DRAG_HANDLE_COLUMN_ID } from './constants'
+import {
+  ROW_SELECTION_COLUMN_ID,
+  DRAG_HANDLE_COLUMN_ID,
+  ADD_COLUMN_BUTTON_SPACE,
+  ADD_COLUMN_SLOT_ATTRIBUTE,
+  COLUMNS_UNDER_SLOT_ATTRIBUTE,
+} from './constants'
 
 // Hook imports
 import useCustomColumnWidthVars from './hooks/useCustomColumnWidthVars'
@@ -137,6 +145,7 @@ import {
   type PrefetchAddonColumnMenuItems,
 } from './addonColumnMenu/useAddonColumnMenuItems'
 import { AddonDialog } from '@shared/components/AddonLayout/AddonDialog'
+import { contributionTags } from '@ynput/ayon-addon/host'
 import type { ProjectTablePage } from '@ynput/ayon-addon'
 
 type CellUpdate = (
@@ -164,10 +173,16 @@ declare module '@tanstack/react-table' {
     selection?: string[]
     columnsConfig?: ColumnsConfig
     loadingLinksEntityIds?: Set<string>
+    // the anatomy's look for product types it does not define
+    defaultProductType?: { icon?: string; color?: string }
     getAddonColumnMenuItems?: GetAddonColumnMenuItems
     prefetchAddonColumnMenuItems?: PrefetchAddonColumnMenuItems
   }
 }
+
+// a column an addon contributes: its header and cells tagged for the slot inspector
+const addonColumnSlot = (meta: { addonColumn?: AddonColumnMeta } | undefined) =>
+  meta?.addonColumn ? contributionTags(meta.addonColumn.contribution) : undefined
 
 const matchesColumnId = (id: string, subscribers: string[]) => {
   return subscribers.some((sub) => {
@@ -291,6 +306,8 @@ export const ProjectTreeTable = ({
     updateColumnSummaryScope,
     columnSummaryFormats,
     updateColumnSummaryFormat,
+    columnSummaryHidden,
+    updateColumnSummaryHidden,
   } = useColumnSettingsContext()
   const { productTypes, projectName, ...projectInfo } = useProjectContext()
 
@@ -519,23 +536,42 @@ export const ProjectTreeTable = ({
   const columnOptionsKey = JSON.stringify([options.status, options.folderType, options.taskType])
   const columnOptions = useMemo(() => options, [columnOptionsKey])
 
-  const columns = useMemo(() => {
-    const baseColumns = buildTreeTableColumns({
+  const builtColumns = useMemo(
+    () =>
+      buildTreeTableColumns({
+        scopes,
+        attribs: columnAttribs,
+        links: linkTypes,
+        includeLinks,
+        includeParents: stableIncludeParents,
+        showHierarchy,
+        isFlatFolderView,
+        options: columnOptions,
+        excluded: excludedColumns,
+        excludedSorting,
+        groupBy,
+        nameLabel: getNameLabelHeader(),
+        parentColumns,
+      }),
+    [
       scopes,
-      attribs: columnAttribs,
-      links: linkTypes,
-      includeLinks,
-      includeParents: stableIncludeParents,
+      JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
       showHierarchy,
       isFlatFolderView,
-      options: columnOptions,
-      extraColumns,
-      excluded: excludedColumns,
+      isExpandable,
+      columnOptions,
+      linkTypes,
+      includeLinks,
+      stableIncludeParents,
+      parentColumns,
+      excludedColumns,
       excludedSorting,
       groupBy,
-      nameLabel: getNameLabelHeader(),
-      parentColumns,
-    })
+    ],
+  )
+
+  const columns = useMemo(() => {
+    const baseColumns = insertExtraColumns(builtColumns, extraColumns)
 
     if (sortableRows && enableSorting) {
       return [
@@ -555,24 +591,7 @@ export const ProjectTreeTable = ({
       ]
     }
     return baseColumns
-  }, [
-    scopes,
-    JSON.stringify(columnAttribs), // columnAttribs is unstable between renders
-    showHierarchy,
-    isFlatFolderView,
-    isExpandable,
-    columnOptions,
-    linkTypes,
-    includeLinks,
-    stableIncludeParents,
-    parentColumns,
-    extraColumns,
-    excludedColumns,
-    excludedSorting,
-    sortableRows,
-    enableSorting,
-    groupBy,
-  ])
+  }, [builtColumns, extraColumns, sortableRows, enableSorting])
 
   // Extra columns placed after another column follow it, also in a saved column order. They are
   // always shown and not saved in the column settings (visibility, order).
@@ -692,6 +711,7 @@ export const ProjectTreeTable = ({
       selection: Array.from(selectedCells),
       columnsConfig,
       loadingLinksEntityIds,
+      defaultProductType: projectInfo.anatomy?.product_base_types?.default,
       getAddonColumnMenuItems,
       prefetchAddonColumnMenuItems,
     },
@@ -878,6 +898,31 @@ export const ProjectTreeTable = ({
     [onScroll, onScrollBottom, onScrollBottomGroupBy, showHierarchy, groupBy, isLoading],
   )
 
+  // marks the container while columns are scrolled under the trailing add column slot; set on
+  // the element directly so scrolling does not re-render the rows
+  useEffect(() => {
+    const container = tableContainerRef.current
+    if (!container) return
+    const update = () => {
+      const { scrollLeft, clientWidth, scrollWidth } = container
+      container.toggleAttribute(
+        COLUMNS_UNDER_SLOT_ATTRIBUTE,
+        scrollLeft + clientWidth < scrollWidth - 1,
+      )
+    }
+    update()
+    container.addEventListener('scroll', update, { passive: true })
+    // the table resizes with its columns, the container with the page
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    const tableEl = container.querySelector('table')
+    if (tableEl) observer.observe(tableEl)
+    return () => {
+      container.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [])
+
   const tableUiContent = (
     <ClipboardProvider
       entitiesMap={entitiesMap}
@@ -917,7 +962,7 @@ export const ProjectTreeTable = ({
               borderCollapse: 'collapse',
               userSelect: 'none',
               ...columnSizeVars,
-              width: table.getTotalSize(),
+              width: table.getTotalSize() + ADD_COLUMN_BUTTON_SPACE,
               cursor: table.getState().columnSizingInfo.isResizingColumn ? 'col-resize' : undefined,
               // stretch tbody to the container so the column dividers fill the empty
               // space below the rows; also pins the summary footer to the bottom
@@ -983,6 +1028,8 @@ export const ProjectTreeTable = ({
                     onFormatChange={(format) => updateColumnSummaryFormat(columnId, format)}
                     scope={columnSummaryScopes[columnId]}
                     onScopeChange={(scope) => updateColumnSummaryScope(columnId, scope)}
+                    hiddenItems={columnSummaryHidden[columnId]}
+                    onHiddenItemsChange={(hidden) => updateColumnSummaryHidden(columnId, hidden)}
                     mainCountLabels={mainCountLabels}
                     fieldOptions={options}
                     parentScopeApplicable={parentScopeApplicable}
@@ -1250,8 +1297,34 @@ const TableHeadRow = ({
         //fake empty column to the right for virtualization scroll padding
         <th style={{ display: 'flex', width: virtualPaddingRight }} />
       ) : null}
+      <Styled.AddColumnSlot
+        {...{ [ADD_COLUMN_SLOT_ATTRIBUTE]: '' }}
+        style={{ width: ADD_COLUMN_BUTTON_SPACE }}
+      />
     </Styled.ColumnHeader>
   )
+}
+
+// the default thumbnail column is narrower than its label, so its header is an icon
+const THUMBNAIL_HEADER_MIN_WIDTH = 84
+
+// a header cut short by its column shows the full label on hover
+const showLabelIfTruncated = (event: React.MouseEvent<HTMLElement>) => {
+  const el = event.currentTarget
+  if (el.scrollWidth > el.clientWidth) el.dataset.tooltip = el.textContent || ''
+  else delete el.dataset.tooltip
+}
+
+const TableHeadLabel = ({ header }: { header: Header<TableRow, unknown> }) => {
+  const { column } = header
+  const label = column.columnDef.header
+  if (typeof label !== 'string') return <>{flexRender(label, header.getContext())}</>
+
+  if (column.id === 'thumbnail' && column.getSize() < THUMBNAIL_HEADER_MIN_WIDTH) {
+    return <Icon icon={getColumnIcon(column.id)} data-tooltip={label} />
+  }
+
+  return <Styled.HeaderLabel onMouseOver={showLabelIfTruncated}>{label}</Styled.HeaderLabel>
 }
 
 interface TableHeadCellProps {
@@ -1350,6 +1423,7 @@ const TableHeadCell = ({
     <Styled.HeaderCell
       ref={setNodeRef}
       data-column-id={column.id}
+      {...addonColumnSlot(column.columnDef.meta)}
       className={clsx(header.id, 'shimmer-dark', {
         loading: isLoading,
         pinned: !!column.getIsPinned(),
@@ -1370,7 +1444,7 @@ const TableHeadCell = ({
           className={clsx('bold', 'header')}
           {...(isDraggable ? { ...attributes, ...listeners } : {})}
         >
-          {flexRender(column.columnDef.header, header.getContext())}
+          <TableHeadLabel header={header} />
           {headerIcon && <Icon icon={headerIcon.icon} data-tooltip={headerIcon.tooltip} />}
           {isReadOnly && (
             <Icon icon="lock" data-tooltip={'You only have permission to read this column.'} />
@@ -1850,7 +1924,30 @@ const TableBodyRow = ({
         //fake empty column to the right for virtualization scroll padding
         <td style={{ display: 'flex', width: paddingRight }} />
       ) : null}
+      <TrailingCell row={row} rowHeight={rowHeight} />
     </Styled.TR>
+  )
+}
+
+// the space of the header's add column slot: same width, row background
+const TrailingCell = ({ row, rowHeight }: { row: Row<TableRow>; rowHeight: number }) => {
+  const { isRowSelected } = useSelectedRowsContext()
+  const isGroup = !!row.original.group
+
+  return (
+    <Styled.TrailingCell
+      aria-hidden
+      className={clsx({
+        'selected-row': isRowSelected(row.id),
+        expandable:
+          !isGroup &&
+          row.getCanExpand() &&
+          !!row.originalSubRows &&
+          isEntityExpandable(row.original.primary.entityType),
+        'group-header': isGroup,
+      })}
+      style={{ width: ADD_COLUMN_BUTTON_SPACE, height: rowHeight }}
+    />
   )
 }
 
@@ -1917,6 +2014,7 @@ const TD = ({
   return (
     <Styled.TD
       {...props}
+      {...addonColumnSlot(cell.column.columnDef.meta)}
       tabIndex={0}
       $isLastPinned={isLastLeftPinnedColumn} // is this column the last pinned column? Custom styling for borders.
       className={clsx(
@@ -1927,10 +2025,13 @@ const TD = ({
           editing: isEditing(cellId),
           'last-pinned-left': isLastLeftPinnedColumn,
           'selected-row': isRowSelected(rowId),
+          // only where the table expands rows: a flat list of folders is not grouped
           expandable:
             !isGroup &&
+            cell.row.getCanExpand() &&
             !!cell.row.originalSubRows &&
             isEntityExpandable(cell.row.original.primary.entityType),
+          'group-header': isGroup,
           'multiple-selected': isMultipleSelected,
           'table-readonly': readOnly,
         },

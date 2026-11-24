@@ -1,7 +1,7 @@
 import { SubtasksManagerWrapper } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import type { SubtasksManagerWrapperProps } from '@shared/components/SubtasksManager/SubtasksManagerWrapper'
 import { FC, useMemo, useState } from 'react'
-import TabHeaderAndFilters from '../components/TabHeaderAndFilters/TabHeaderAndFilters'
+import { PanelTabHeader } from '@shared/components/PanelTabs'
 import SubtasksSearchFilter from '../components/SubtasksSearchFilter/SubtasksSearchFilter'
 import { useGetUsersAssigneeQuery } from '@shared/api'
 import type { QueryFilter } from '@shared/api'
@@ -39,19 +39,20 @@ const DetailsPanelSubtasks: FC<DetailsPanelSubtasksProps> = ({ ...props }) => {
 
   return (
     <>
-      <TabHeaderAndFilters
-        label={`Subtasks (${totalCount})`}
-        filters={[]}
-        currentFilter={subtasksFilters}
-        onFilterChange={setSubtasksFilters}
-      />
-      <SubtasksSearchFilter
-        subtasksFilter={subtasksFilters}
-        setSubtasksFilter={setSubtasksFilters}
-        users={users}
-        totalCount={totalCount}
-        doneCount={doneCount}
-        onSearchTextChange={setSearchText}
+      <PanelTabHeader
+        title={`Subtasks (${totalCount})`}
+        menuClassName="panel-header-filters"
+        searchActive={!!subtasksFilters.conditions?.length || !!searchText}
+        search={
+          <SubtasksSearchFilter
+            subtasksFilter={subtasksFilters}
+            setSubtasksFilter={setSubtasksFilters}
+            users={users}
+            totalCount={totalCount}
+            doneCount={doneCount}
+            onSearchTextChange={setSearchText}
+          />
+        }
       />
       <SubtasksManagerWrapper
         {...props}

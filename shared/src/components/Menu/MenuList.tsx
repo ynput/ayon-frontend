@@ -5,6 +5,7 @@ import * as Styled from './Menu.styled'
 import { MENU_TOP_BOUND } from './Menu.styled'
 import { usePowerpack, type PowerpackFeature } from '@shared/context'
 import type { MenuItemType } from './Menu'
+import { tidyMenuSections } from './menuSections'
 
 interface MenuListProps {
   items: MenuItemType[]
@@ -266,111 +267,109 @@ export const MenuList: React.FC<MenuListProps> = ({
       ref={menuRef}
     >
       <Styled.Menu>
-        {items
-          .filter((item) => !item.hidden)
-          .map((item, i) => {
-            // if item is a node, return it
-            if (item.node) {
-              return item.node
+        {tidyMenuSections(items).map((item, i) => {
+          // if item is a node, return it
+          if (item.node) {
+            return item.node
+          }
+
+          if (item?.id === 'divider' || item?.separator) return <hr key={i} />
+
+          const {
+            label,
+            icon,
+            img,
+            highlighted,
+            onClick,
+            link,
+            items = [],
+            id,
+            disableClose,
+            selected,
+            disabled,
+            powerFeature,
+            active,
+            reserveActiveSlot,
+            endActions,
+            ...props
+          } = item
+
+          const { powerLicense } = usePowerpack()
+          const isPowerFeature = !powerLicense && powerFeature
+
+          const handleClickPowerFeature = (e: React.MouseEvent) => {
+            e.preventDefault()
+            e.stopPropagation()
+            if (powerFeature) {
+              setPowerpackDialog?.(powerFeature)
             }
 
-            if (item?.id === 'divider' || item?.separator) return <hr key={i} />
+            // close the menu
+            onMenuClose?.()
+          }
 
-            const {
-              label,
-              icon,
-              img,
-              highlighted,
-              onClick,
-              link,
-              items = [],
-              id,
-              disableClose,
-              selected,
-              disabled,
-              powerFeature,
-              active,
-              reserveActiveSlot,
-              endActions,
-              ...props
-            } = item
-
-            const { powerLicense } = usePowerpack()
-            const isPowerFeature = !powerLicense && powerFeature
-
-            const handleClickPowerFeature = (e: React.MouseEvent) => {
-              e.preventDefault()
-              e.stopPropagation()
-              if (powerFeature) {
-                setPowerpackDialog?.(powerFeature)
+          return (
+            <MenuItem
+              tabIndex={0}
+              key={`${id}-${i}`}
+              {...{
+                label,
+                icon,
+                img,
+                highlighted,
+                items,
+                selected,
+                disabled,
+                powerFeature,
+                active,
+                reserveActiveSlot,
+                endActions,
+              }}
+              isLink={link}
+              onClick={(e) =>
+                isPowerFeature
+                  ? handleClickPowerFeature(e)
+                  : items.length
+                  ? handleSubMenu(e, id, items)
+                  : handleClick(e, onClick, link, disableClose)
               }
-
-              // close the menu
-              onMenuClose?.()
-            }
-
-            return (
-              <MenuItem
-                tabIndex={0}
-                key={`${id}-${i}`}
-                {...{
-                  label,
-                  icon,
-                  img,
-                  highlighted,
-                  items,
-                  selected,
-                  disabled,
-                  powerFeature,
-                  active,
-                  reserveActiveSlot,
-                  endActions,
-                }}
-                isLink={link}
-                onClick={(e) =>
-                  isPowerFeature
-                    ? handleClickPowerFeature(e)
-                    : items.length
-                    ? handleSubMenu(e, id, items)
-                    : handleClick(e, onClick, link, disableClose)
+              onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
+                if (e.key === 'Enter') {
+                  if (isPowerFeature) {
+                    handleClickPowerFeature(e as any)
+                  } else if (items.length) {
+                    handleSubMenu(e as any, id, items)
+                  } else {
+                    handleClick(e as any, onClick, link)
+                  }
                 }
-                onKeyDown={(e: React.KeyboardEvent<HTMLElement>) => {
-                  if (e.key === 'Enter') {
-                    if (isPowerFeature) {
-                      handleClickPowerFeature(e as any)
-                    } else if (items.length) {
-                      handleSubMenu(e as any, id, items)
-                    } else {
-                      handleClick(e as any, onClick, link)
-                    }
-                  }
-                  const isLastChild = !(e.target as HTMLElement).nextSibling
-                  if (e.key === 'Tab' && isLastChild && !e.shiftKey) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    //   when at bottom of list, tab goes to top
-                    const first = menuRef.current?.querySelectorAll('li, button')[0] as HTMLElement
-                    first?.focus()
-                  }
-                  //   when a submenu is open, esc closes it and sets focus on the parent
-                  if (e.key === 'Escape' && subMenu && parentRef) {
-                    e.preventDefault()
-                    e.stopPropagation()
-                    parentRef.focus()
-                    onClose?.(id)
-                  }
-                }}
-                style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
-                ref={(e) => (itemRefs.current[id] = e)}
-                onMouseEnter={(e) => handleSubMenu(e, id, items)}
-                onMouseLeave={(e) => handleSubMenu(e, id, [])}
-                className={`${itemClassName} ${props.className || ''}`}
-                {...props}
-              >
-                {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
-              </MenuItem>
-            )
-          })}
+                const isLastChild = !(e.target as HTMLElement).nextSibling
+                if (e.key === 'Tab' && isLastChild && !e.shiftKey) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  //   when at bottom of list, tab goes to top
+                  const first = menuRef.current?.querySelectorAll('li, button')[0] as HTMLElement
+                  first?.focus()
+                }
+                //   when a submenu is open, esc closes it and sets focus on the parent
+                if (e.key === 'Escape' && subMenu && parentRef) {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  parentRef.focus()
+                  onClose?.(id)
+                }
+              }}
+              style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
+              ref={(e) => (itemRefs.current[id] = e)}
+              onMouseEnter={(e) => handleSubMenu(e, id, items)}
+              onMouseLeave={(e) => handleSubMenu(e, id, [])}
+              className={`${itemClassName} ${props.className || ''}`}
+              {...props}
+            >
+              {!!items.length && <Icon icon="arrow_right" style={{ marginLeft: 'auto' }} />}
+            </MenuItem>
+          )
+        })}
       </Styled.Menu>
     </Styled.MenuWrapper>
   )

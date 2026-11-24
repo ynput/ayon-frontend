@@ -4,33 +4,9 @@ import styled from 'styled-components'
 import { ListsDataProvider, useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { ListsProvider, useListsContext } from '@pages/ProjectListsPage/context/lists'
 import ListsTable from '../ListsTable/ListsTable'
+import { PickerTableContainer } from '@shared/containers/ListPicker/ListPicker.styled'
 import { buildFolderMap, parseListFolderRowId, wouldCreateCircularDependency } from '../../util'
 import type { EntityListFolderModel } from '@shared/api'
-
-const TableContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  height: 100%;
-  min-height: 0;
-  width: 100%;
-
-  /* circular-move rows: muted, not struck through; the reason gets the space it needs (label truncates first) so it never paints over other text (&& outranks SimpleTable's disabled rule) */
-  && .disabled {
-    .value {
-      text-decoration: none;
-    }
-    .text {
-      min-width: 0;
-    }
-    .badges {
-      flex-shrink: 0;
-    }
-    .badges span {
-      white-space: nowrap;
-    }
-  }
-`
 
 export interface MoveToFolderDialogProps {
   // what is being moved: list ids or folder ids (never mixed)
@@ -122,9 +98,10 @@ const MoveToFolderDialogInner: FC<MoveToFolderDialogProps> = ({
         </Footer>
       }
     >
-      <TableContainer>
+      {/* circular-move rows are muted, with the reason next to the label */}
+      <PickerTableContainer>
         <ListsTable picker foldersOnly singleSelect isReview={isReview} onRowSubmit={moveTo} />
-      </TableContainer>
+      </PickerTableContainer>
     </Dialog>
   )
 }
@@ -153,6 +130,8 @@ export const MoveToFolderDialog: FC<MoveToFolderDialogProps> = (props) => {
       picker
       foldersOnly
       isReview={isReview}
+      // the folders of the moved items' list type
+      entityListTypes={[isReview ? 'review-session' : 'generic']}
       getDisabledFolders={getDisabledFolders}
     >
       <ListsProvider picker isReview={isReview}>

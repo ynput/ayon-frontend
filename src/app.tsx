@@ -21,6 +21,7 @@ import LoadingPage from '@pages/LoadingPage'
 import OnBoardingPage from '@pages/OnBoarding'
 const PasswordResetPage = lazy(() => import('@pages/PasswordResetPage'))
 const AcceptInvitePage = lazy(() => import('@pages/AcceptInvitePage'))
+const DetailsPipPage = lazy(() => import('@pages/DetailsPipPage/DetailsPipPage'))
 
 // components
 import ShareDialog from '@components/ShareDialog'
@@ -75,15 +76,22 @@ import { getAuthReturn } from '@helpers/authReturn'
 
 // hooks
 import useTooltip from '@hooks/Tooltip/useTooltip'
+import { useAppTheme } from '@hooks/useAppTheme'
 import LauncherAuthPage from '@pages/LauncherAuthPage'
 import ReleaseInstallerDialog from '@containers/ReleaseInstallerDialog/ReleaseInstallerDialog'
 import getTrialDates from '@components/TrialBanner/helpers/getTrialDates'
 import TrialEnded from '@containers/TrialEnded/TrialEnded'
-import { DetailsPanelFloating } from '@shared/containers'
+import {
+  DetailsPanelFloating,
+  goToFrameFromPip,
+  isDetailsPipPage,
+  openViewerFromPip,
+  usePipNavigate,
+} from '@shared/containers'
 import { FeedbackProvider, PowerpackDialog, SplitterStyles } from '@shared/components'
 import AppRemoteLoader from './remote/AppRemoteLoader'
 import AppAddonServices from './remote/AppAddonServices'
-import { AddonHostNavigation } from './remote/addonHost'
+import { AddonHostImport, AddonHostNavigation } from './remote/addonHost'
 import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompleteProfilePrompt'
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
@@ -104,6 +112,10 @@ const DetailsPanelProviderWithSubtasks = (
   )
 }
 
+// the picture-in-picture details panel (an iframe): only the panel, and the viewer and other
+// pages open in the main window. Read once, so a navigation inside the frame keeps the panel.
+const isDetailsPip = isDetailsPipPage()
+
 const App = () => {
   const user = useAppSelector((state) => state.user) // NOTE: careful, this does not contain uiExposureLevel on first login!!
   const viewer = useAppSelector((state) => state.viewer) || []
@@ -113,17 +125,21 @@ const App = () => {
   const [isOnboarding, setIsOnboarding] = useState(false)
   const [noAdminUser, setNoAdminUser] = useState(false)
 
+  useAppTheme()
+
   //   handlers for details panel
   const onOpenImage = (args: any) => {
     dispatch(onCommentImageOpen(args))
   }
 
   const onGoToFrame = (frame: number) => {
-    dispatch(goToFrame(frame))
+    if (isDetailsPip) goToFrameFromPip(frame)
+    else dispatch(goToFrame(frame))
   }
 
   const onOpenViewer = (args: any) => {
-    dispatch(openViewer(args))
+    if (isDetailsPip) openViewerFromPip(args)
+    else dispatch(openViewer(args))
   }
 
   const handlerProps = {
@@ -251,7 +267,7 @@ const App = () => {
                                     viewer={viewer}
                                     dispatch={dispatch}
                                     useLocation={useLocation}
-                                    useNavigate={useNavigate}
+                                    useNavigate={isDetailsPip ? usePipNavigate : useNavigate}
                                     useParams={useParams}
                                     useSearchParams={useSearchParams}
                                   >
@@ -261,22 +277,37 @@ const App = () => {
                                           <ImportDialogProvider>
                                             <DeleteEntitiesProvider>
                                               <TableExportProvider>
-                                                <Header />
-                                                <ShareDialog />
-                                                <ViewerDialog />
-                                                <ConfirmDialog />
-                                                <ImportDialog />
-                                                <FileUploadPreviewContainer />
-                                                <ReleaseInstallerDialog />
-                                                <CompleteProfilePrompt />
-                                                <AppRoutes />
-                                                <DetailsPanelFloating />
-                                                <EntityLinksSlot />
-                                                <PowerpackDialog />
-                                                <AppRemoteLoader />
-                                                <AppAddonServices />
-                                                <AddonHostNavigation />
-                                                <TrialBanner />
+                                                {isDetailsPip ? (
+                                                  <>
+                                                    <ShareDialog />
+                                                    <ConfirmDialog />
+                                                    <EntityLinksSlot />
+                                                    <PowerpackDialog />
+                                                    <FileUploadPreviewContainer />
+                                                    <AddonHostNavigation />
+                                                    <DetailsPipPage />
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <Header />
+                                                    <ShareDialog />
+                                                    <ViewerDialog />
+                                                    <ConfirmDialog />
+                                                    <ImportDialog />
+                                                    <FileUploadPreviewContainer />
+                                                    <ReleaseInstallerDialog />
+                                                    <CompleteProfilePrompt />
+                                                    <AppRoutes />
+                                                    <DetailsPanelFloating />
+                                                    <EntityLinksSlot />
+                                                    <PowerpackDialog />
+                                                    <AppRemoteLoader />
+                                                    <AppAddonServices />
+                                                    <AddonHostNavigation />
+                                                    <AddonHostImport />
+                                                    <TrialBanner />
+                                                  </>
+                                                )}
                                               </TableExportProvider>
                                             </DeleteEntitiesProvider>
                                           </ImportDialogProvider>
