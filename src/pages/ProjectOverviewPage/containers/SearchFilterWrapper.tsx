@@ -1,6 +1,6 @@
 import {
   AdvancedFilterDropdownButton,
-  AdvancedFilterMoveButton,
+  AdvancedFilterBarButton,
   AdvancedFilterSlot,
   BuildFilterOptions,
   useAdvancedFilterInSearchBar,
@@ -546,19 +546,24 @@ const SearchFilterWrapper: FC<SearchFilterWrapperProps> = ({
         }}
         {...props}
       />
-      <AdvancedFilterMoveButton
-        searchFilterRef={searchFilterRef}
-        count={advancedFilterBar.movableCount}
-        onMove={advancedFilterBar.moveToAdvancedFilter}
-      />
       {onAdvancedFilterChange && (
-        <AdvancedFilterSlot
-          value={advancedFilter}
-          onChange={onAdvancedFilterChange}
-          editor={advancedFilterBar.editor}
-          fields={advancedFilterBar.fields}
-          openRequest={advancedFilterBar.openRequest}
-        />
+        <>
+          <AdvancedFilterSlot
+            searchFilterRef={searchFilterRef}
+            value={advancedFilter}
+            onChange={onAdvancedFilterChange}
+            editor={advancedFilterBar.editor}
+            fields={advancedFilterBar.fields}
+            openRequest={advancedFilterBar.openRequest}
+          />
+          <AdvancedFilterBarButton
+            searchFilterRef={searchFilterRef}
+            editor={advancedFilterBar.editor}
+            movableCount={advancedFilterBar.movableCount}
+            onMove={advancedFilterBar.moveToAdvancedFilter}
+            onOpen={advancedFilterBar.open}
+          />
+        </>
       )}
       <CustomDateRangeDialog
         isOpen={!!dateRange.customRangeFilterId}

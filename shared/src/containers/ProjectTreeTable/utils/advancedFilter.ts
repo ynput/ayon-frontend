@@ -46,6 +46,8 @@ export type AdvancedFilterProps = {
   disabled?: boolean
   maxDepth?: number
   compact?: boolean // narrow toolbar: the button is an icon with the count badge
+  // "pill": a chip inside the search bar, shown while the filter has rules or is being edited
+  appearance?: 'button' | 'pill'
   openRequest?: number // opens the panel each time it changes
 }
 

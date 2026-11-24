@@ -3,7 +3,7 @@ import { Button } from '@ynput/ayon-react-components'
 import { PowerpackButton } from '../Powerpack'
 import type { AdvancedFilterEditor } from './useAdvancedFilterEditor'
 
-const LABEL = 'Switch to advanced filter'
+const LABEL = 'Add to advanced filter'
 
 export interface AdvancedFilterDropdownButtonProps {
   // from useAdvancedFilterInSearchBar
@@ -21,7 +21,7 @@ const getEditedFilterId = (event: MouseEvent<HTMLElement>) =>
 
 // In the bottom bar of the search bar's dropdown, next to Confirm: moves the filter being edited
 // into the advanced filter, for what the simple filter can't do. Nothing while the editor loads
-// or when the Power Pack is too old (the control next to the search bar says why).
+// or when the Power Pack is too old (the filter button in the search bar says why).
 export const AdvancedFilterDropdownButton: FC<AdvancedFilterDropdownButtonProps> = ({
   editor: { Editor, powerLicense, isLoading },
   onSwitch,

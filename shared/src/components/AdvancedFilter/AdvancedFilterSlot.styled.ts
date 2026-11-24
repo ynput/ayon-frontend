@@ -1,22 +1,36 @@
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
-// same height as the search bar it sits next to
+// no box of its own: its chip is one of the search bar's, at the end before the filter button
+export const SlotContent = styled.span`
+  display: contents;
+
+  & > * {
+    order: 1;
+    flex-shrink: 0;
+  }
+`
+
+// the size of the search bar's chips
 export const Chip = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--base-gap-small);
-  height: 32px;
-  padding: 0 2px 0 8px;
+  gap: 4px;
+  height: 24px;
+  padding: 0 2px 0 6px;
   flex-shrink: 0;
   white-space: nowrap;
   user-select: none;
 
-  border-radius: var(--border-radius-m);
+  border-radius: 4px;
   color: var(--md-sys-color-on-surface);
   background-color: var(--md-sys-color-surface-container-high);
 
-  /* the same badge as on the editor's button */
+  .icon {
+    font-size: 16px;
+  }
+
+  /* the same badge as on the editor's chip */
   .count {
     display: inline-flex;
     align-items: center;
@@ -33,20 +47,19 @@ export const Chip = styled.div`
   }
 
   .remove {
-    padding: 4px;
+    padding: 1px;
   }
 `
 
-// the last item inside the search bar, at its right end whatever the bar holds (React may
-// append its own children after it)
-export const MoveButton = styled(Button)`
-  order: 1;
+// the last item inside the search bar, at its right end whatever the bar holds
+export const BarButton = styled(Button)`
+  order: 2;
   margin-left: auto;
   flex-shrink: 0;
   gap: 0;
   padding: 2px 4px;
 
-  .arrow {
-    font-size: 16px;
+  .bolt {
+    font-size: 14px;
   }
 `
