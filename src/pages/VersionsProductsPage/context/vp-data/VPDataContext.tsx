@@ -381,14 +381,19 @@ export const VersionsDataProvider: FC<VersionsDataProviderProps> = ({
     advancedFilter: advancedFilters.folder,
     sliceFilters: slicerFolderFilters,
   })
-  // no slicer panel is representation scoped, so this is the filter bar's conditions only
+  // no slicer panel is representation scoped, so this is the filter bar's and the advanced
+  // filter's conditions only, with the extension matched against the path in both
   const resolvedRepresentationFilter = useMemo(
     () => resolveExtensionFilter(representationFilter),
     [representationFilter],
   )
+  const resolvedRepresentationAdvancedFilter = useMemo(
+    () => advancedFilters.representation && resolveExtensionFilter(advancedFilters.representation),
+    [advancedFilters.representation],
+  )
   const combinedRepresentationFilter = useQueryFilters({
     queryFilters: resolvedRepresentationFilter,
-    advancedFilter: advancedFilters.representation,
+    advancedFilter: resolvedRepresentationAdvancedFilter,
   })
 
   // When entity list has task IDs, merge them into the task filter

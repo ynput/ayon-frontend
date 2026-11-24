@@ -12,12 +12,9 @@ const SCOPES = buildScopes(['version', 'product', 'task', 'folder', 'representat
 })
 
 // these options are not filter conditions: the page turns them into query arguments
-// (featured versions, reviewables) or into a path match (extension)
-const ADVANCED_FILTER_EXCLUDE = [
-  'version_version',
-  'version_hasReviewables',
-  'representation_extension',
-]
+// (featured versions, reviewables). The extension is one: the page matches it against the
+// representation path, also in the advanced filter
+const ADVANCED_FILTER_EXCLUDE = ['version_version', 'version_hasReviewables']
 
 interface VPSearchFilterProps {}
 
