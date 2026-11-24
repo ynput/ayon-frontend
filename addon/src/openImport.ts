@@ -1,6 +1,7 @@
 // Open AYON's import dialog from addon code, for rows the addon's server imports. The dialog
-// reads CSV and Excel files and pasted tables, maps their columns and values and previews the
-// import, as it does for AYON's own imports. The host does the work (`provideHost`).
+// reads CSV and Excel files, pasted tables and the file types the addon reads itself, maps their
+// columns and values and previews the import, as it does for AYON's own imports. The host does
+// the work (`provideHost`).
 import { getHost } from './hostBridge'
 
 /** The result of an import, as AYON's own imports return it. */
@@ -13,6 +14,25 @@ export interface ImportResult {
   /** row number (from 1): why the row was not imported */
   failedItems?: Record<string, unknown>
   skippedItems?: Record<string, unknown>
+}
+
+/**
+ * A file type the addon reads itself, such as a calendar. The dialog offers it next to CSV and
+ * Excel and turns a file of this type into CSV with `toCSV`; from there the import is the same as
+ * for a CSV file: the server gets the CSV, and the rows go through the column and value mapping.
+ */
+export interface ImportFileType {
+  /** what the files are, for the dialog's file button: `calendar` makes "Choose a CSV, Excel or calendar file" */
+  label: string
+  /** the file name endings, with the dot: `['.ics']`. Matched without regard to case. */
+  extensions: string[]
+  /** the media types, which the file picker also offers: `['text/calendar']` */
+  mimeTypes?: string[]
+  /**
+   * The file as CSV text, with a header row. The dialog shows the message of a thrown error as
+   * the reason it could not read the file.
+   */
+  toCSV: (file: File) => Promise<string>
 }
 
 /**
@@ -39,6 +59,8 @@ export interface ImportTarget {
   projectName?: string
   /** a CSV file to offer as a template, by URL */
   templateUrl?: string
+  /** file types the dialog reads with the addon's code, next to CSV and Excel */
+  fileTypes?: ImportFileType[]
   /** called once the rows are imported (not after a preview), e.g. to refetch what shows them */
   onImported?: (result: ImportResult) => void
 }

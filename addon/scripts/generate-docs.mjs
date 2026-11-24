@@ -238,6 +238,8 @@ The CLI, the dev shell and the preview scenes of other addons' slots are in
   import dialog, with its column and value mapping, presets and preview. Your server answers
   \`target.fieldsUrl\` and \`target.importUrl\` with the contract of AYON's own imports
   (\`/api/csv/export/{type}/fields\` and \`/api/csv/import/{type}\`); see \`ImportTarget\`.
+  To import another file type, such as a calendar, add it to \`target.fileTypes\` with a \`toCSV\`
+  that reads the file into CSV in the browser; the rest of the import is the same as for CSV.
 - Endpoints you inject and tag types you add (\`enhanceEndpoints({ addTagTypes })\`) go into AYON's
   one api, where names are global: prefix them with your addon name (\`myaddonGetLogs\`,
   \`myaddonLog\`). A \`tableColumn\` lists the tags its values depend on in \`providesTags\`
