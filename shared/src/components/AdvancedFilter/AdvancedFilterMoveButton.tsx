@@ -1,6 +1,6 @@
 import { FC, RefObject, useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { SearchFilterRef } from '@ynput/ayon-react-components'
+import { Icon, type SearchFilterRef } from '@ynput/ayon-react-components'
 import * as Styled from './AdvancedFilterSlot.styled'
 
 export interface AdvancedFilterMoveButtonProps {
@@ -24,18 +24,21 @@ export const AdvancedFilterMoveButton: FC<AdvancedFilterMoveButtonProps> = ({
 
   if (!searchBar || !count) return null
   return createPortal(
+    // the filter icon with an arrow towards the Advanced filter button next to the search bar
     <Styled.MoveButton
-      icon="filter_alt"
-      label="Convert filters"
       variant="text"
-      data-tooltip="Move these filters into the advanced filter. Text searches stay here."
+      aria-label="Convert filters"
+      data-tooltip="Convert filters: move them into the advanced filter. Text searches stay here."
       // the search bar opens its dropdown on a click
       onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation()
         onMove()
       }}
-    />,
+    >
+      <Icon icon="filter_alt" />
+      <Icon icon="arrow_forward" className="arrow" />
+    </Styled.MoveButton>,
     searchBar,
   )
 }

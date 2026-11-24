@@ -43,6 +43,10 @@ export const MoveButton = styled(Button)`
   order: 1;
   margin-left: auto;
   flex-shrink: 0;
-  padding: 2px 6px;
-  white-space: nowrap;
+  gap: 0;
+  padding: 2px 4px;
+
+  .arrow {
+    font-size: 16px;
+  }
 `
