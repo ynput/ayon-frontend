@@ -216,7 +216,16 @@ export class ListsPage {
   async stableItemCell(label: string, columnId: string) {
     const nameId = await this.itemRow(label).locator('td.name > [id^="cell-"]').getAttribute('id')
     const rowId = nameId!.slice('cell-'.length, -'-name'.length)
-    return this.page.locator(`td:has(> [id="cell-${rowId}-${columnId}"])`)
+    const cell = this.page.locator(`td:has(> [id="cell-${rowId}-${columnId}"])`)
+    // columns far off screen are not mounted: scroll the table sideways until the cell is
+    const container = this.page.getByTestId('list-items-table').locator('.table-container')
+    await expect(async () => {
+      if ((await cell.count()) === 0) {
+        await container.evaluate((el) => el.scrollBy({ left: el.clientWidth / 2 }))
+      }
+      await expect(cell).toHaveCount(1, { timeout: 500 })
+    }).toPass({ timeout: 15_000 })
+    return cell
   }
 
   async dragItem(label: string, ontoLabel: string) {
