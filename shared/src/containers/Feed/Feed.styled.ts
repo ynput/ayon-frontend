@@ -8,8 +8,9 @@ export const FeedContainer = styled.section`
   height: 100%;
 
   /* the search bar has its own row, so the activities scroll below it rather than under it */
+  /* the comment box never grows past the feed, so its attachments scroll instead of pushing the editor out of view */
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr minmax(0, auto);
   background-color: var(--md-sys-color-surface-container-low);
 `
 

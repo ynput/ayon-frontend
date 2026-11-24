@@ -1,21 +1,13 @@
-import { FC, MouseEvent, useEffect, useMemo, useState } from 'react'
+import { FC, MouseEvent, useMemo, useState } from 'react'
 import * as Styled from './ListDetailsPanel.styled'
 import { Icon } from '@ynput/ayon-react-components'
 import { upperFirst } from 'lodash'
 import { getListIcon } from '@shared/util'
-import {
-  ListAttributeForm,
-  ListMetaData,
-  PanelSlotTab,
-  PanelTabHeader,
-  PanelTabSearch,
-  PanelTabs,
-  usePanelSlotTabs,
-} from '@shared/components'
+import { ListAttributeForm, ListMetaData, PanelTabSearch, TabbedPanel } from '@shared/components'
 import { useGetEntityListQuery } from '@shared/api'
 import { useQueryArgumentChangeLoading } from '@shared/hooks'
 import clsx from 'clsx'
-import type { PanelTab, PanelTabSlot } from '@shared/components'
+import type { PanelTabSlot, TabbedPanelTab } from '@shared/components'
 import type { ListDetailsTabContext } from '@ynput/ayon-addon'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { ListAccessForm } from '../ListAccessForm'
@@ -30,14 +22,6 @@ const showFullValueIfCut = (event: MouseEvent<HTMLElement>) => {
   if (value.scrollWidth > value.clientWidth) value.dataset.tooltip = value.textContent || ''
   else delete value.dataset.tooltip
 }
-
-// the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
-// the contribution key, `<addon>.<id>`
-const LIST_DETAILS_TABS: PanelTab[] = [
-  { id: 'details', label: 'Details', icon: 'lists' },
-  { id: 'access', label: 'Share', icon: 'share' },
-]
-const LIST_DETAILS_SLOT: PanelTabSlot<'listDetails.tab'> = { name: 'listDetails.tab' }
 
 interface ListDetailsPanelProps {
   listId: string
@@ -72,15 +56,6 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
   // the Details tab's search: it stays while another list is selected
   const [detailsSearch, setDetailsSearch] = useState('')
 
-  const { tabs: addonTabs, isLoading: isLoadingAddonTabs } = usePanelSlotTabs(LIST_DETAILS_SLOT)
-  const ownTab = LIST_DETAILS_TABS.find((tab) => tab.id === selectedTab)
-  // a tab in the URL whose addon is gone (known once the manifests have loaded)
-  const isUnknownTab =
-    !ownTab && !addonTabs.some((tab) => tab.key === selectedTab) && !isLoadingAddonTabs
-  useEffect(() => {
-    if (isUnknownTab) setSelectedTab('details')
-  }, [isUnknownTab, setSelectedTab])
-
   // the selected list only (currentData): while another list loads, a tab must not act on the last one
   const addonTabContext = useMemo<ListDetailsTabContext | undefined>(
     () =>
@@ -106,6 +81,10 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
       isReview,
     ],
   )
+  const addonTabSlot = useMemo<PanelTabSlot<'listDetails.tab'>>(
+    () => ({ name: 'listDetails.tab', context: addonTabContext }),
+    [addonTabContext],
+  )
 
   // derive error message
   let errorMessage: string | null = null
@@ -120,6 +99,58 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
     }
   }
 
+  // the panel's own tabs, then the addons' (listDetails.tab slot, @ynput/ayon-addon), whose tab id is
+  // the contribution key, `<addon>.<id>`
+  const tabs: TabbedPanelTab[] = [
+    {
+      id: 'details',
+      label: 'Details',
+      icon: 'lists',
+      header: {
+        searchActive: !!detailsSearch,
+        search: (
+          <PanelTabSearch
+            value={detailsSearch}
+            onChange={setDetailsSearch}
+            placeholder="Search attributes and details..."
+          />
+        ),
+      },
+      render: () => (
+        <Styled.Scrollable>
+          <Styled.Section>
+            <ListAttributeForm
+              list={list}
+              isLoading={isLoadingList}
+              projectName={projectName}
+              search={detailsSearch}
+            />
+          </Styled.Section>
+          <Styled.Section onMouseOver={showFullValueIfCut}>
+            <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
+          </Styled.Section>
+        </Styled.Scrollable>
+      ),
+    },
+    {
+      id: 'access',
+      label: 'Share',
+      icon: 'share',
+      render: () => (
+        <Styled.Scrollable>
+          {list && (
+            <ListAccessForm
+              list={list}
+              projectName={projectName}
+              isLoading={isLoadingList}
+              isReview={isReview}
+            />
+          )}
+        </Styled.Scrollable>
+      ),
+    },
+  ]
+
   if (errorMessage)
     return (
       <Styled.Panel>
@@ -132,69 +163,30 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
 
   return (
     <Styled.Panel data-testid="list-details-panel">
-      <Styled.Header>
-        <Styled.Titles>
-          <h2 className={clsx('title', { loading: isLoadingList })}>
-            {isLoadingList ? 'Loading...' : list?.label}
-          </h2>
-          <span className={clsx('type', { loading: isLoadingList })}>
-            {list && <Icon icon={getListIcon(list)} />}
-            {upperFirst(list?.entityType)}s {isReview && '(Review)'}
-          </span>
-        </Styled.Titles>
-        <PanelTabs
-          tabs={LIST_DETAILS_TABS}
-          slot={LIST_DETAILS_SLOT}
-          selected={selectedTab}
-          onChange={setSelectedTab}
-        />
-        <Styled.CloseButton icon="close" variant="text" onClick={() => setListDetailsOpen(false)} />
-      </Styled.Header>
-      {/* an addon's tab, with its own header; it gets the selected list only */}
-      <PanelSlotTab slot={LIST_DETAILS_SLOT} selected={selectedTab} context={addonTabContext} />
-      {ownTab && (
-        <>
-          {/* the tab buttons are icons: the open tab is named here */}
-          <PanelTabHeader
-            title={ownTab.label}
-            searchActive={ownTab.id === 'details' && !!detailsSearch}
-            search={
-              ownTab.id === 'details' && (
-                <PanelTabSearch
-                  value={detailsSearch}
-                  onChange={setDetailsSearch}
-                  placeholder="Search attributes and details..."
-                />
-              )
-            }
-          />
-          <Styled.Scrollable>
-            {ownTab.id === 'details' && (
-              <>
-                <Styled.Section>
-                  <ListAttributeForm
-                    list={list}
-                    isLoading={isLoadingList}
-                    projectName={projectName}
-                    search={detailsSearch}
-                  />
-                </Styled.Section>
-                <Styled.Section onMouseOver={showFullValueIfCut}>
-                  <ListMetaData list={list} isLoading={isLoadingList} search={detailsSearch} />
-                </Styled.Section>
-              </>
-            )}
-            {ownTab.id === 'access' && list && (
-              <ListAccessForm
-                list={list}
-                projectName={projectName}
-                isLoading={isLoadingList}
-                isReview={isReview}
-              />
-            )}
-          </Styled.Scrollable>
-        </>
-      )}
+      <TabbedPanel
+        title={
+          <Styled.Titles>
+            <h2 className={clsx('title', { loading: isLoadingList })}>
+              {isLoadingList ? 'Loading...' : list?.label}
+            </h2>
+            <span className={clsx('type', { loading: isLoadingList })}>
+              {list && <Icon icon={getListIcon(list)} />}
+              {upperFirst(list?.entityType)}s {isReview && '(Review)'}
+            </span>
+          </Styled.Titles>
+        }
+        onClose={() => setListDetailsOpen(false)}
+        tabs={tabs}
+        // the addon tabs get the selected list only: while another list loads, they must not act
+        // on the last one
+        slot={addonTabSlot}
+        selected={selectedTab}
+        onChange={setSelectedTab}
+        // a tab in the URL whose addon is gone
+        fallbackTab="details"
+        // few tabs: each is named, the addons' too (icons only past 3)
+        showLabels
+      />
     </Styled.Panel>
   )
 }

@@ -59,14 +59,12 @@ export const DateWidget = forwardRef<HTMLSpanElement, DateWidgetProps>(
       }
     }
 
-    if (isEditing) {
+    if (isEditing && !isReadOnly) {
       return (
         <DateWidgetInput
           value={value}
           onChange={onChange}
           onCancel={onCancelEdit}
-          readOnly={isReadOnly}
-          disabled={isReadOnly}
           isMidnightExclusive={isMidnightExclusive}
           {...(props as any)}
         />

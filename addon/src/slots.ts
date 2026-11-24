@@ -93,10 +93,11 @@ export interface SlotMap {
    * sidebar in Review. The tab button shows from the description, after the panel's own tabs;
    * `component` loads when the tab is first opened. Like `detailsPanel.tab`, AYON puts a header
    * above it with `label` as its title; `PanelTabHeader` adds a "more" menu, a search and filter
-   * bar and other content to that header.
+   * bar and other content to that header. It shows on every list unless `entityListTypes` is set
+   * (version 2).
    */
   'listDetails.tab': {
-    version: 1
+    version: 2
     meta: ListDetailsTabMeta
     context: ListDetailsTabContext
     pieces: { component: Loader<ComponentType<SlotProps<'listDetails.tab'>>> }
@@ -430,7 +431,14 @@ export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
 export interface DetailsPanelMenuItemContext extends ProjectNameScope, EntityScope {}
 
 /** Description of a `listDetails.tab` contribution. */
-export type ListDetailsTabMeta = PanelTabMeta
+export interface ListDetailsTabMeta extends PanelTabMeta {
+  /**
+   * the list types it shows on (`generic`, `review-session`); every list when not set. Needs
+   * version 2 of the slot: `listDetailsTab` stamps `slotVersion: 2` when it is set, so an older
+   * AYON skips the tab instead of showing it on every list
+   */
+  entityListTypes?: string[]
+}
 
 /** Context of a list details tab. */
 export interface ListDetailsTabContext extends ProjectNameScope {
@@ -931,7 +939,16 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkButton,
   },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
-  'listDetails.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
+  'listDetails.tab': {
+    version: 2,
+    required: ['label', 'icon'],
+    pieces: ['component'],
+    check: (item) =>
+      item.entityListTypes !== undefined &&
+      !(Array.isArray(item.entityListTypes) && item.entityListTypes.every((type) => typeof type === 'string'))
+        ? 'entityListTypes must be a list of list types'
+        : undefined,
+  },
   'detailsPanel.menuItem': {
     version: 1,
     required: ['label', 'icon'],
