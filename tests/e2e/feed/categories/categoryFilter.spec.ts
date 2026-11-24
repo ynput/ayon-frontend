@@ -78,6 +78,7 @@ test.describe('feed category filter', () => {
       const panel = await openTask(page, projectName)
       await expect(panel.comment('Plain note')).toBeVisible()
       const feed = panel.root.locator('.feed')
+      await panel.openSearch(feed)
       await feed.getByRole('textbox', { name: 'Search and filter' }).click()
       // other filters are offered, Category is not
       await expect(

@@ -16,9 +16,9 @@ test.describe('addons manager', () => {
 
     await other.click({ button: 'right' })
 
-    await expect(menuItem(page, 'View in Market')).toBeVisible()
+    await expect(menuItem(page, 'View in market')).toBeVisible()
     await expectRowSelection([selected], [other])
-    await menuItem(page, 'View in Market').click()
+    await menuItem(page, 'View in market').click()
     await expect(page).toHaveURL(new RegExp(`/market\\?selected=${otherName}$`))
   })
 })

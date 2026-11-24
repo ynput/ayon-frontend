@@ -25,14 +25,18 @@ export const confirmDialog = (page: Page) => page.locator('.p-confirm-dialog')
  * - menu items whose label is a bare text node after the icon (e.g. addons' own menus)
  * FLAG: material icon ligatures are not aria-hidden, so accessible names look like "archive Archive";
  * matching the label element, or the name with one icon word before it, avoids depending on the icon.
+ * The label matches in any case, so a label changed to sentence case ("Delete File" to "Delete file")
+ * is still found.
  */
-export const menuItem = (page: Page, label: string) =>
-  page
+export const menuItem = (page: Page, label: string) => {
+  const exact = new RegExp(`^${escapeRegExp(label)}$`, 'i')
+  return page
     .getByRole('menuitem')
-    .filter({ has: page.getByText(label, { exact: true }) })
-    .or(page.getByRole('menuitem', { name: new RegExp(`^(\\S+ )?${escapeRegExp(label)}$`) }))
-    .or(page.getByRole('listitem', { name: label, exact: true }))
+    .filter({ has: page.getByText(exact) })
+    .or(page.getByRole('menuitem', { name: new RegExp(`^(\\S+ )?${escapeRegExp(label)}$`, 'i') }))
+    .or(page.getByRole('listitem', { name: exact }))
     .first()
+}
 
 const escapeRegExp = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 

@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test'
+import { expect, Locator, Page } from '@playwright/test'
 
 export class SettingsEditor {
   constructor(readonly page: Page) {}
@@ -11,7 +11,11 @@ export class SettingsEditor {
   }
 
   async expand(title: string) {
-    const toggler = this.sectionHeader(title).locator('.panel-toggler')
+    await this.expandToggler(this.sectionHeader(title).locator('.panel-toggler'))
+  }
+
+  /** Opens a section by its toggler, unless it is open already */
+  async expandToggler(toggler: Locator) {
     await expect(toggler).toHaveText(/^(chevron_right|expand_more)$/)
     if ((await toggler.textContent()) === 'chevron_right') await toggler.click()
     await expect(toggler).toHaveText('expand_more')

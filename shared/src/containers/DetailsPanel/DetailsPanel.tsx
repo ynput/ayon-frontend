@@ -634,6 +634,7 @@ DetailsPanelProps) => {
               },
             ]}
             moreButtonProps={moreMenu.moreButtonProps}
+            tabTestId={(id) => `details-panel-tab-${id}`}
             // Escape closes it too (above)
             onClose={onClose && handleClose}
             closeShortcut="Escape"

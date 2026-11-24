@@ -80,10 +80,9 @@ export class DetailsPanel {
     await expect(this.page.locator('.options')).toBeHidden()
   }
 
-  // the tab buttons are named by their labels, also the icon-only ones
-  async openTab(tab: 'feed' | 'subtasks' | 'details') {
-    const name = { feed: 'Activity', subtasks: 'Subtasks', details: 'Details' }[tab]
-    await this.root.getByRole('navigation').getByRole('button', { name, exact: true }).click()
+  // the tab buttons by their tab ids, whatever their labels and icons
+  async openTab(tab: 'feed' | 'subtasks' | 'files' | 'details') {
+    await this.root.getByTestId(`details-panel-tab-${tab}`).click()
   }
 
   subtask(label: string) {
@@ -94,10 +93,18 @@ export class DetailsPanel {
     await this.search(this.root, text)
   }
 
-  private async search(scope: Locator, text: string) {
-    // the search bar is behind the tab header's search button, which stays open once opened
-    const toggle = scope.getByRole('button', { name: /^(hide )?search and filter$/i })
+  /**
+   * Show the search bar of the open tab (the feed's by default), with its filters: it is behind the
+   * tab header's search button and stays open once opened
+   */
+  async openSearch(scope: Locator = this.root.locator('.feed')) {
+    const toggle = scope.locator('.panel-tab-header').getByRole('button', { name: /search/i })
     if ((await toggle.getAttribute('aria-expanded')) === 'false') await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+  }
+
+  private async search(scope: Locator, text: string) {
+    await this.openSearch(scope)
     await scope.getByRole('textbox', { name: 'Search and filter' }).click()
     await this.page.keyboard.type(text)
     // Cmd/Ctrl+Enter adds the text as a search even when a filter name contains it
@@ -231,18 +238,20 @@ export class DetailsPanel {
       .click()
   }
 
-  // FLAG: the feed filters are icon-only buttons named by their ligature ("chat", "check_circle 1/2")
+  // FLAG: the feed's quick filters are icon-only buttons named by their ligature, found by their tooltip.
+  // They are in the search bar: `openSearch()` first
   get commentsFilter() {
-    return this.root.locator('.feed').getByRole('button', { name: 'chat', exact: true })
+    return this.root.locator('.feed .quick-action[data-tooltip="Comments"]')
   }
 
   get checklistsFilter() {
-    return this.root.locator('.feed').getByRole('button', { name: /^check_circle \d+\/\d+$/ })
+    return this.root.locator('.feed .quick-action[data-tooltip="Checklists"]')
   }
 
   // FLAG: the feed filter dropdown entries are plain list items ("<icon> <label>")
   async addFeedFilter(label: string) {
     const feed = this.root.locator('.feed')
+    await this.openSearch(feed)
     await feed.getByRole('textbox', { name: 'Search and filter' }).click()
     // wait for the refetch, until then the feed shows the old entries (a cached filter set is not refetched)
     const reloaded = this.page.waitForResponse(
@@ -277,6 +286,7 @@ export class DetailsPanel {
           (res.request().postData() ?? '').includes('query GetActivities('),
       )
 
+    await this.openSearch(feed)
     await feed.getByRole('textbox', { name: 'Search and filter' }).click()
     await option('Category').click()
     // the first value applies at once
@@ -423,8 +433,14 @@ export class DetailsPanel {
   }
 
   private async closeDropdown() {
-    // click outside to close: Escape also reaches the overview table, which clears the selection and the panel
-    await this.root.getByRole('heading', { level: 2 }).click()
+    // click outside to close: Escape also reaches the overview table, which clears the selection and the
+    // panel. The left edge of the open tab's title: the header dropdowns open right-aligned, over the
+    // summary, so they do not cover it
+    await this.root
+      .locator('.panel-tab-header .panel-header-label')
+      .filter({ visible: true })
+      .first()
+      .click({ position: { x: 2, y: 2 } })
     await expect(this.page.locator('.options')).toBeHidden()
   }
 }

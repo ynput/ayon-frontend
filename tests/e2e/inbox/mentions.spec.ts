@@ -57,9 +57,14 @@ test.describe('mentions and inbox', () => {
       await expect(message).toContainText('comp')
 
       await message.hover()
+      // the message hides at once, the change is saved after: leaving the page before would cancel it
+      const cleared = page.waitForResponse(
+        (res) => new URL(res.url()).pathname === '/api/inbox' && res.request().method() === 'POST',
+      )
       await message.locator('.clear').click()
 
       await expect(message).toBeHidden()
+      expect((await cleared).ok()).toBe(true)
       await page.goto('/inbox/cleared')
       await expect(page.locator('.inbox-message').filter({ hasText: 'notes for you' })).toBeVisible(
         {
