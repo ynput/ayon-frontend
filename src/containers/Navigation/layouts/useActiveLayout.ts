@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 import {
   useCreateViewMutation,
   useGetBaseViewQuery,
@@ -15,7 +15,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
 import { isNotFound, useUserLayout } from './useUserLayout'
 import { resolveLayout, toNavLayout } from './applyLayout'
-import { startEditing, useLayoutEdit } from './layoutEditor'
+import { getLayoutEdit, startEditing, useLayoutEdit } from './layoutEditor'
 import { LAYOUT_KEY, LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
 
 /** at least this access level changes a shared layout (owner, or shared with update rights) */
@@ -214,14 +214,18 @@ export const useNavLayout = (context: 'project' | 'studio', projectName?: string
   const edit = useLayoutEdit()
   const settings = edit ? edit.draft : layout
   const navLayout = useMemo(() => toNavLayout(settings, context), [settings, context])
-  const customize =
-    enabled && ready && !edit
-      ? () => {
-          // a change is being saved into a copy, which then applies: edit that one once it does
-          if (id && copies.has(id))
-            return void toast.info('Saving your last change to the layout. Try again in a moment.')
-          startEditing({ name, layout, save: update })
-        }
-      : undefined
+  // A menu may call Customize after the layout changed (a copy got picked meanwhile): it edits
+  // the layout that applies when it is called.
+  const latest = useRef({ ready, id, name, layout, update })
+  latest.current = { ready, id, name, layout, update }
+  const start = useCallback(() => {
+    const now = latest.current
+    if (getLayoutEdit()) return
+    // a change is still being saved (into a copy, which then applies): edit what applies after
+    if (!now.ready || (now.id && copies.has(now.id)))
+      return void toast.info('Saving your last change to the layout. Try again in a moment.')
+    startEditing({ name: now.name, layout: now.layout, save: now.update })
+  }, [])
+  const customize = enabled && ready && !edit ? start : undefined
   return { layout: navLayout, id, ready, editing: !!edit, customize }
 }

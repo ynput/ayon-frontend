@@ -79,6 +79,9 @@ export const swallowNextClick = () => {
   setTimeout(() => window.removeEventListener('click', stop, { capture: true }))
 }
 
+/** The layout being edited, if any, outside React. */
+export const getLayoutEdit = () => edit
+
 /** The layout being edited, if any. */
 export const useLayoutEdit = () => useSyncExternalStore(subscribe, () => edit)
 
