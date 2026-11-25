@@ -12,7 +12,7 @@ import {
 import { generateViewId } from '@shared/containers/Views'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
-import { useUserLayout } from './useUserLayout'
+import { isNotFound, useUserLayout } from './useUserLayout'
 import { resolveLayout, toNavLayout } from './applyLayout'
 import { LAYOUT_KEY, LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
 
@@ -27,10 +27,6 @@ let namedQueue: Promise<unknown> = Promise.resolve()
 // The copy being made of a layout the user can't change, by that layout's id: a change made
 // before the copy is picked goes into it too, instead of making another one.
 const copies = new Map<string, Promise<string>>()
-
-/** a query that has answered for its current arguments, with data or an error */
-const settled = (query: { currentData?: unknown; error?: unknown }) =>
-  query.currentData !== undefined || query.error !== undefined
 
 /**
  * The layout that applies here (`resolveLayout`: picked, the project's default, the studio
@@ -88,16 +84,16 @@ export const useActiveLayout = (projectName?: string) => {
     { skip: !named },
   )
 
-  // Everything that decides the layout has answered (the list and the project with data: without
-  // them a picked or project layout would be skipped). Until then the layout may still switch, so
-  // it isn't changed, and a switch isn't told from the first load.
+  // Everything that decides the layout has answered with data, or that there is no studio default
+  // (404): after another error the layout would be a fallback. Until then the layout may still
+  // switch, so it isn't changed, and a switch isn't told from the first load.
   const ready =
     enabled &&
     own.ready &&
     layouts !== undefined &&
-    settled(baseQuery) &&
+    (studioDefault !== undefined || isNotFound(baseQuery.error)) &&
     (!projectName || projectQuery.currentData !== undefined) &&
-    (!named || settled(namedQuery))
+    (!named || namedQuery.currentData !== undefined)
 
   const layout: LayoutSettings | undefined = !enabled
     ? undefined

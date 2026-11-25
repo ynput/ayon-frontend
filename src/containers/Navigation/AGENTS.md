@@ -70,8 +70,8 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   orders them within their section (unmentioned ones at the end), `arrangeTabs` the tab rows (an
   unmentioned pin follows its page, other unmentioned tabs at the end), `splitAdminItems` the
   promoted admin pages. A hidden page still opens by its link; when another layout applies while
-  a page it hides is open (and the one before showed it), the sidebar opens the new layout's first
-  item. The first load and another project aren't a switch. Pages find themselves in AYON's tabs,
+  a page or pinned tab it hides is open (and the one before showed it), the sidebar opens the
+  item's first shown tab, or the new layout's first item when it hides the item too. The first load and another project aren't a switch. Pages find themselves in AYON's tabs,
   not in the arranged row, so a hidden or reordered tab doesn't lose its page.
 - **A pinned tab shows only for a view the user can read**: one in the views list for its type
   (the list checks read access), not one a GET by id returns.

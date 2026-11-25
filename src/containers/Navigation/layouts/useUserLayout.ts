@@ -24,7 +24,7 @@ let lastSaved: SavedLayout | null = null
 // writes run one at a time, each from the layout the previous one saved
 let queue: Promise<unknown> = Promise.resolve()
 
-const isNotFound = (error: unknown) => (error as { status?: unknown })?.status === 404
+export const isNotFound = (error: unknown) => (error as { status?: unknown })?.status === 404
 
 /**
  * The user's own layout: their working view of type `layout`, studio-wide. It holds their pinned
@@ -118,8 +118,9 @@ export const useUserLayout = () => {
     [createView, updateView, dispatch],
   )
 
-  // the lookup has answered: with the layout, or that there is none yet
-  const ready = enabled && (!!current?.id || error !== undefined)
+  // the lookup has answered: with the layout, or that there is none yet (another error isn't an
+  // answer: a change then could replace a layout that exists)
+  const ready = enabled && (!!current?.id || isNotFound(error))
 
   return { enabled, ready, id: current?.id, layout: current?.layout, isLoading, update }
 }

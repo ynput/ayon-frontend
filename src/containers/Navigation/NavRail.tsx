@@ -43,7 +43,9 @@ const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
 
 const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps) => {
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
+  // a pinned view open on the page
+  const viewId = new URLSearchParams(search).get('view')
   const navigate = useNavigate()
   const access = useNavAccess()
   const { toggleMenuOpen } = useMenuContext()
@@ -64,14 +66,15 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
     if (!layoutReady) return
     const before = shown.current
     const itemShown = !!active && visible.some((item) => item.id === active.id)
-    const page = itemShown && !!active && isTabShown(active, pathname, layout)
-    shown.current = { scope, id: layoutId, path: pathname, page }
+    const page = itemShown && !!active && isTabShown(active, pathname, layout, viewId)
+    const path = `${pathname}?view=${viewId ?? ''}`
+    shown.current = { scope, id: layoutId, path, page }
     if (!before || before.scope !== scope || before.id === layoutId) return
-    if (!active || before.path !== pathname || !before.page || page) return
+    if (!active || before.path !== path || !before.page || page) return
     const target = itemShown ? active : visible[0]
     const to = target && itemLandingPath(target, access, layout)
     if (to) navigate(to)
-  }, [layoutReady, layoutId, scope, pathname, active, visible, access, layout, navigate])
+  }, [layoutReady, layoutId, scope, pathname, viewId, active, visible, access, layout, navigate])
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
