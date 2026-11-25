@@ -91,7 +91,6 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
       viewParam && tabLinks.some((link) => link?.pinnedView === viewParam && pathMatches(link))
     )
   }
-  const firstPinnedIndex = tabLinks.findIndex((item) => item?.pinnedView)
 
   // the tabs the user sees, by their index in tabLinks
   const shownTabs = tabLinks
@@ -163,6 +162,10 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   }, [widths, available, activeIndex, tabLinks, access.manager, access.admin])
 
   const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
+  // the divider goes before the first pinned tab still in the row
+  const firstPinnedIndex = shownTabs.find(
+    ({ item, index }) => item?.pinnedView && !folded.has(index),
+  )?.index
   const moreMenuId = 'nav-more-tabs'
 
   const renderLinks = (items: NavLinkItem[], offset = 0) =>

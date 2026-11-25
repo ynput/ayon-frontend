@@ -1,4 +1,4 @@
-import { ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
+import { Fragment, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Button, Dialog, InputText, SaveButton } from '@ynput/ayon-react-components'
@@ -8,7 +8,7 @@ import { copyToClipboard } from '@shared/util'
 import { generateViewId, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
-import { pinnedViewPath, type VisiblePin } from './pins'
+import { applyDraft, pinnedViewPath, type VisiblePin } from './pins'
 import { PINNED_PAGES, type PinnableViewType, type PinnedView } from './types'
 import { UPDATE_ACCESS, usePinnedView, usePinnedViewDrafts } from './PinnedViewsHelpers'
 import * as Styled from './PinnedViews.styled'
@@ -38,24 +38,38 @@ export const PinnedViewPage = ({
 }: PinnedViewPageProps) => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const { views, listed, view, isFetching } = usePinnedView(projectName, viewType, viewId)
+  const { views, listed, view, isFetching, isError } = usePinnedView(projectName, viewType, viewId)
   const { drafts, mergeDraft } = usePinnedViewDrafts()
   const draft = drafts[viewId]
 
   useEffect(() => {
     // a view just saved may not be in the list yet
-    if (views && !listed && !isFetching) {
-      toast.warning("You can't open this view")
+    if (isError || (views && !listed && !isFetching)) {
+      toast.warning(isError ? "Couldn't open this view" : "You can't open this view")
       navigate(fallbackPath, { replace: true })
     }
-  }, [views, listed, isFetching, fallbackPath, navigate])
+  }, [views, listed, isFetching, isError, fallbackPath, navigate])
+
+  // pages keep some settings in their own state (Products' grid, grouping, columns): they start
+  // again from the view on another view, and when the draft is reverted or saved
+  const [resets, setResets] = useState(0)
+  const hadDraft = useRef(!!draft)
+  useEffect(() => {
+    if (hadDraft.current && !draft) setResets((count) => count + 1)
+    hadDraft.current = !!draft
+  }, [draft])
 
   const settings = useMemo(
-    () => (view ? ({ ...(view.settings as ViewSettings), ...draft } as ViewSettings) : undefined),
+    () => (view ? applyDraft(view.settings as ViewSettings, draft) : undefined),
     [view, draft],
   )
   const onChange = useCallback(
     (changed: ViewSettings) => mergeDraft(viewId, changed),
+    [mergeDraft, viewId],
+  )
+  // "Reset filters" on a pinned tab clears the filters in its draft
+  const onReset = useCallback(
+    () => mergeDraft(viewId, { filter: undefined, folderFilter: undefined } as ViewSettings),
     [mergeDraft, viewId],
   )
 
@@ -63,11 +77,11 @@ export const PinnedViewPage = ({
 
   return (
     <ViewsProvider
-      controlled={{ settings, onChange }}
+      controlled={{ settings, onChange, onReset }}
       projectName={projectName}
       dispatch={dispatch}
     >
-      {children}
+      <Fragment key={`${viewId}:${resets}`}>{children}</Fragment>
     </ViewsProvider>
   )
 }
@@ -92,6 +106,8 @@ const NameDialog = ({ header, initial, submitLabel, onSubmit, onClose }: NameDia
     try {
       await onSubmit(name.trim())
       onClose()
+    } catch {
+      // the caller showed what failed; the dialog stays open to try again
     } finally {
       setSaving(false)
     }
@@ -136,10 +152,10 @@ interface PinnedTabMenuProps {
   openViewId?: string | null
   target: PinnedTabMenuTarget | null
   onClose: () => void
-  rename: (id: string, label: string) => void
-  move: (id: string, delta: number) => void
-  unpin: (id: string) => void
-  repoint: (id: string, view: PinnedView) => void
+  rename: (id: string, label: string) => Promise<unknown>
+  move: (id: string, delta: -1 | 1) => Promise<unknown>
+  unpin: (id: string) => Promise<unknown>
+  repoint: (id: string, view: PinnedView) => Promise<unknown>
 }
 
 export const PinnedTabMenu = ({
@@ -167,17 +183,21 @@ export const PinnedTabMenu = ({
   const draft = pin ? drafts[pin.id] : undefined
 
   // the open view's saved settings, already loaded by the page
+  // the open view's saved settings, already loaded by the page; nothing while the menu is closed
   const { view, refetchList } = usePinnedView(
     projectName,
     pin?.viewType ?? 'overview',
     pin?.id ?? '',
+    !pin,
   )
   const viewProject = listed?.scope === 'project' ? projectName : undefined
-  const merged = view ? { ...(view.settings as ViewSettings), ...draft } : undefined
+  const merged = view ? applyDraft(view.settings as ViewSettings, draft) : undefined
   const label = (pin && (pin.label || listed?.label)) || 'View'
 
   const saveChanges = async () => {
     if (!pin || !merged) return
+    // edits made while it saves stay a draft
+    const submitted = draft
     try {
       await updateView({
         viewType: pin.viewType,
@@ -185,7 +205,7 @@ export const PinnedTabMenu = ({
         projectName: viewProject,
         genericViewPatchModel: { settings: merged },
       }).unwrap()
-      clearDraft(pin.id)
+      clearDraft(pin.id, submitted)
       toast.success(`Saved the changes to "${listed?.label ?? label}"`)
     } catch (error: any) {
       toast.error(error?.data?.detail || "Couldn't save the view")
@@ -206,15 +226,22 @@ export const PinnedTabMenu = ({
       toast.error(error?.data?.detail || "Couldn't save the view")
       throw error
     }
-    // a studio view: creating it refreshes the studio list, not this project's, which holds it too
-    await refetchList()
     const next: PinnedView = {
       id,
       viewType: old.viewType,
       scope: viewProject ? 'project' : 'studio',
       ...(viewProject ? { projectName: viewProject } : {}),
     }
-    repoint(old.id, next)
+    // a studio view: creating it refreshes the studio list, not this project's, which holds it too
+    try {
+      const refreshed = await refetchList()
+      if (!refreshed.data?.some((item) => item.id === id)) throw new Error('not listed')
+      await repoint(old.id, next)
+    } catch (error) {
+      // the view is saved; the tab and its draft stay as they were
+      toast.error(`Saved "${name}", but couldn't move the tab to it`)
+      throw error
+    }
     clearDraft(old.id)
     navigate(pinnedViewPath(projectName, next))
   }

@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test'
 import {
+  applyDraft,
   getPins,
-  movePin,
+  movePinPast,
   pinnedViewPath,
   renamePin,
   repointPin,
@@ -35,11 +36,14 @@ test('pinning adds a view at the end with where it is stored; pinning it again u
   expect(togglePin([], { id: 'r', label: 'R', viewType: 'reviews' }, 'p1')).toEqual([])
 })
 
-test('a pin moves within the pins, renames, and repoints in place', () => {
+test('a pin moves past the tab next to it, renames, and repoints in place', () => {
   const pins = [pin('a'), pin('b'), pin('c')]
-  expect(ids(movePin(pins, 'a', 1))).toEqual(['b', 'a', 'c'])
-  expect(ids(movePin(pins, 'a', -1))).toEqual(['a', 'b', 'c'])
-  expect(ids(movePin(pins, 'c', 1))).toEqual(['a', 'b', 'c'])
+  expect(ids(movePinPast(pins, 'a', 'b', true))).toEqual(['b', 'a', 'c'])
+  expect(ids(movePinPast(pins, 'c', 'b', false))).toEqual(['a', 'c', 'b'])
+  // a pin from another project between two tabs keeps its place
+  const mixed = [pin('a'), pin('other', { scope: 'project', projectName: 'p2' }), pin('c')]
+  expect(ids(movePinPast(mixed, 'a', 'c', true))).toEqual(['other', 'c', 'a'])
+  expect(ids(movePinPast(pins, 'a', 'missing', true))).toEqual(['a', 'b', 'c'])
   expect(renamePin(pins, 'b', '  Lighting  ')[1].label).toBe('Lighting')
   expect(renamePin(renamePin(pins, 'b', 'X'), 'b', '  ')[1].label).toBeUndefined()
   expect(ids(repointPin(pins, 'b', pin('z')))).toEqual(['a', 'z', 'c'])
@@ -76,4 +80,12 @@ test('pins live in the layout next to what else it holds, and link to their page
   expect(pinnedViewPath('p1', { id: 'x', viewType: 'versions' })).toBe(
     '/projects/p1/products?view=x',
   )
+})
+
+test('a draft keeps a cleared field through session storage', () => {
+  const saved = { groupBy: 'status', showHierarchy: false } as any
+  // what mergeDraft stores for "no grouping", after a JSON round trip
+  const draft = JSON.parse(JSON.stringify({ groupBy: null, rowHeight: 40 }))
+  expect(applyDraft(saved, draft)).toEqual({ showHierarchy: false, rowHeight: 40 })
+  expect(applyDraft(saved, undefined)).toEqual(saved)
 })

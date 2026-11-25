@@ -58,6 +58,10 @@ export const ViewItem = styled.li`
       visibility: visible;
     }
   }
+  /* reachable from the keyboard too */
+  &:focus-within .pin {
+    visibility: visible;
+  }
 
   /* a pinned view keeps its filled pin */
   .pin.pinned .icon {

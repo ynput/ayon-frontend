@@ -103,6 +103,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
               pin.onToggle()
             }}
             data-tooltip={pin.pinned ? 'Unpin tab' : 'Pin as tab'}
+            aria-label={pin.pinned ? 'Unpin tab' : 'Pin as tab'}
           />
         )}
         {isEditable && onEdit && (

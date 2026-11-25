@@ -2,7 +2,15 @@ import { useCallback, useMemo } from 'react'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
 import { useUserLayout } from './useUserLayout'
-import { getPins, movePin, renamePin, repointPin, togglePin, visiblePins, withPins } from './pins'
+import {
+  getPins,
+  movePinPast,
+  renamePin,
+  repointPin,
+  togglePin,
+  visiblePins,
+  withPins,
+} from './pins'
 import { PINNED_PAGES, type PinnedView } from './types'
 
 const VIEW_TYPES = Object.keys(PINNED_PAGES)
@@ -70,7 +78,12 @@ export const usePinnedViews = (projectName: string) => {
     /** for the views menu's pin buttons */
     viewPins,
     rename: (id: string, label: string) => change((all) => renamePin(all, id, label)),
-    move: (id: string, delta: number) => change((all) => movePin(all, id, delta)),
+    /** moves a tab past the shown tab next to it */
+    move: (id: string, delta: -1 | 1) => {
+      const index = visible.findIndex((item) => item.pin.id === id)
+      const other = visible[index + delta]?.pin.id
+      return other ? change((all) => movePinPast(all, id, other, delta > 0)) : Promise.resolve()
+    },
     unpin: (id: string) => change((all) => all.filter((pin) => pin.id !== id)),
     repoint: (id: string, view: PinnedView) => change((all) => repointPin(all, id, view)),
   }

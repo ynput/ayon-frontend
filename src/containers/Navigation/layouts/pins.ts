@@ -1,5 +1,5 @@
 import type { ViewListItemModel } from '@shared/api'
-import type { PinnableView } from '@shared/containers/Views'
+import type { PinnableView, ViewSettings } from '@shared/containers/Views'
 import { PINNED_PAGES, isPinnableViewType, type LayoutSettings, type PinnedView } from './types'
 
 /** A layout's pinned views. */
@@ -38,15 +38,21 @@ export const togglePin = (
 export const renamePin = (pins: PinnedView[], id: string, label: string): PinnedView[] =>
   pins.map((pin) => (pin.id === id ? { ...pin, label: label.trim() || undefined } : pin))
 
-/** Moves a pin by `delta` places among the pins. */
-export const movePin = (pins: PinnedView[], id: string, delta: number): PinnedView[] => {
-  const from = pins.findIndex((pin) => pin.id === id)
-  const to = from + delta
-  if (from === -1 || to < 0 || to >= pins.length) return pins
-  const next = [...pins]
-  const [pin] = next.splice(from, 1)
-  next.splice(to, 0, pin)
-  return next
+/**
+ * Moves a pin past another one, the tab next to it: to its right when `after`, else to its left.
+ * Pins in between that aren't shown here (another project's) keep their place.
+ */
+export const movePinPast = (
+  pins: PinnedView[],
+  id: string,
+  otherId: string,
+  after: boolean,
+): PinnedView[] => {
+  const pin = pins.find((item) => item.id === id)
+  if (!pin || !pins.some((item) => item.id === otherId) || id === otherId) return pins
+  const rest = pins.filter((item) => item.id !== id)
+  const at = rest.findIndex((item) => item.id === otherId) + (after ? 1 : 0)
+  return [...rest.slice(0, at), pin, ...rest.slice(at)]
 }
 
 /** Points a pin at another view (after "Save as new view"), in the same place. */
@@ -76,3 +82,13 @@ export const visiblePins = (
 /** The tab's link: the page with the view applied. */
 export const pinnedViewPath = (projectName: string, pin: Pick<PinnedView, 'id' | 'viewType'>) =>
   `/projects/${projectName}/${PINNED_PAGES[pin.viewType].module}?view=${pin.id}`
+
+/** The saved settings with a draft over them; a field the draft cleared is left out. */
+export const applyDraft = (saved: ViewSettings, draft?: ViewSettings): ViewSettings => {
+  const result: Record<string, unknown> = { ...saved }
+  Object.entries(draft ?? {}).forEach(([key, value]) => {
+    if (value === null) delete result[key]
+    else result[key] = value
+  })
+  return result as ViewSettings
+}

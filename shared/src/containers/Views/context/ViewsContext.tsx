@@ -117,6 +117,8 @@ export interface ViewsProviderProps {
   controlled?: {
     settings: ViewSettings | undefined
     onChange: (changed: ViewSettings) => void
+    /** what "reset" (Reset filters, the reset shortcut) does instead of resetting the working view */
+    onReset?: () => void
   }
 }
 
@@ -244,6 +246,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     ? workingSettings
     : selectedView?.settings
   const updateControlledSettings = controlled?.onChange
+  const onControlledReset = controlled?.onReset
 
   // is the working view selected?
   const isViewWorking = selectedView?.id === workingView?.id
@@ -307,7 +310,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
     // the caller holds the settings: there is no working view to reset
-    if (updateControlledSettings) return
+    if (updateControlledSettings) return onControlledReset?.()
     try {
       await onResetWorkingView({
         existingWorkingViewId: workingView?.id,
@@ -321,6 +324,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     }
   }, [
     updateControlledSettings,
+    onControlledReset,
     workingView,
     onResetWorkingView,
     selectedView,

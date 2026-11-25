@@ -20,31 +20,38 @@ export const useUserLayout = () => {
   const [updateView] = useUpdateViewMutation()
   const layout = workingView?.settings as LayoutSettings | undefined
 
-  // a second change before the first one's working view exists must not create another one
-  const creating = useRef<Promise<unknown> | null>(null)
+  // Writes run one at a time, each from the layout the previous one left: quick changes (two pins
+  // in a row) neither overwrite each other nor create a second working view.
+  const pending = useRef(0)
+  const latest = useRef<{ id?: string; layout?: LayoutSettings }>({})
+  if (!pending.current) latest.current = { id: workingView?.id, layout }
+  const queue = useRef<Promise<unknown>>(Promise.resolve())
 
   const update = useCallback(
-    async (change: (layout: LayoutSettings | undefined) => LayoutSettings) => {
-      if (creating.current) await creating.current
-      if (workingView?.id) {
-        await updateView({
-          viewType: LAYOUT_VIEW_TYPE,
-          viewId: workingView.id,
-          genericViewPatchModel: { settings: change(layout) },
-        }).unwrap()
-        return
+    (change: (layout: LayoutSettings | undefined) => LayoutSettings) => {
+      const write = async () => {
+        const next = change(latest.current.layout)
+        latest.current = { ...latest.current, layout: next }
+        if (latest.current.id) {
+          await updateView({
+            viewType: LAYOUT_VIEW_TYPE,
+            viewId: latest.current.id,
+            genericViewPatchModel: { settings: next },
+          }).unwrap()
+          return
+        }
+        const view = { ...generateWorkingView(next), label: 'My layout' }
+        await createView({ viewType: LAYOUT_VIEW_TYPE, genericViewPostModel: view }).unwrap()
+        latest.current = { ...latest.current, id: view.id }
       }
-      creating.current = createView({
-        viewType: LAYOUT_VIEW_TYPE,
-        genericViewPostModel: { ...generateWorkingView(change(layout)), label: 'My layout' },
-      }).unwrap()
-      try {
-        await creating.current
-      } finally {
-        creating.current = null
-      }
+      pending.current += 1
+      const result = queue.current.then(write).finally(() => {
+        pending.current -= 1
+      })
+      queue.current = result.catch(() => undefined)
+      return result
     },
-    [workingView?.id, layout, createView, updateView],
+    [createView, updateView],
   )
 
   return { enabled, layout, isLoading, update }
