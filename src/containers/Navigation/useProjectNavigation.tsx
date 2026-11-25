@@ -242,13 +242,24 @@ export const useProjectNavigation = (projectName: string) => {
         },
       }))
 
-    // today's tab order, so the flattened tabs match the old tab row
+    // one pass, so one addon's group spans its reserved and contributed pages
+    const placed = placePages(
+      production,
+      [...owned, ...remotes, ...contributed, ...classic],
+      KNOWN_PROJECT_PAGES,
+    )
+    // Workfiles after the reserved pages' items: today's tab order for the flattened tabs
+    const ownedModules = owned.map((entry) => entry.tab.module)
+    let afterOwned = 0
+    placed.forEach((item, index) => {
+      if (item.tabs.some((tab) => ownedModules.includes(tab.module))) afterOwned = index + 1
+    })
     return [
       production,
       review,
-      ...placePages(production, owned, KNOWN_PROJECT_PAGES),
+      ...placed.slice(0, afterOwned),
       workfiles,
-      ...placePages(production, [...remotes, ...contributed, ...classic], KNOWN_PROJECT_PAGES),
+      ...placed.slice(afterOwned),
     ]
   }, [
     projectName,

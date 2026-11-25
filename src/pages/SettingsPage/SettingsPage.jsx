@@ -77,6 +77,8 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
+    if (!addonsData) return item.tabs
+
     const addonTitle =
       addonName && addonsData
         ? addonsData.find((addon) => addon.name === addonName)?.title

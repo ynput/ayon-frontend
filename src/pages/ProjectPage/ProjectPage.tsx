@@ -59,11 +59,11 @@ import {
 } from '@containers/Navigation'
 
 // what an addon page AYON reserves shows without its addon (or with an older addon)
-const OWNED_PAGE_FALLBACKS: Record<string, React.ComponentType<{ projectName: string }>> = {
-  scheduler: SchedulerSplashscreen,
+const OWNED_PAGE_FALLBACKS = new Map<string, React.ComponentType<{ projectName: string }>>([
+  ['scheduler', SchedulerSplashscreen],
   // an older reports addon has only the legacy page
-  reports: ProjectReportsPage,
-}
+  ['reports', ProjectReportsPage],
+])
 
 const ProjectContextInfo = () => {
   /**
@@ -344,7 +344,7 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
-      const Fallback = OWNED_PAGE_FALLBACKS[module]
+      const Fallback = OWNED_PAGE_FALLBACKS.get(module)
       if (Fallback && !isHiddenOwnedPage(hiddenPages, module)) {
         component = <Fallback projectName={projectName} />
       } else {
