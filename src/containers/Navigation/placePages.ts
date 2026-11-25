@@ -58,7 +58,6 @@ export const placePages = (
       const group = groups.get(groupId)
       if (group) {
         group.tabs.push({ tab, order: meta.order })
-        if (!group.item.startContent) group.item.startContent = tab.startContent
         continue
       }
       const item: NavItem = {
@@ -68,7 +67,6 @@ export const placePages = (
         section,
         order: meta.order,
         tabs: [],
-        startContent: tab.startContent,
         tags,
       }
       groups.set(groupId, { item, tabs: [{ tab, order: meta.order }] })
@@ -84,7 +82,6 @@ export const placePages = (
       order: meta.order,
       // a renamed item's one tab takes the same name
       tabs: [placement?.label ? { ...tab, name: placement.label } : tab],
-      startContent: tab.startContent,
       tags,
     })
   }

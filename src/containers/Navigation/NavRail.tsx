@@ -74,7 +74,8 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
     const cost = (item: NavItem, index: number) =>
       (heights[item.id] ?? 0) +
       2 +
-      (index > 0 && visible[index - 1].section !== item.section ? DIVIDER_HEIGHT : 0)
+      // a divider and its 2px gap
+      (index > 0 && visible[index - 1].section !== item.section ? DIVIDER_HEIGHT + 2 : 0)
     if (!Number.isFinite(available) || visible.some((item) => heights[item.id] === undefined))
       return new Set<string>()
     const total = visible.reduce((sum, item, index) => sum + cost(item, index), 0)
@@ -160,7 +161,11 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
                 id: item.id,
                 label: item.label,
                 icon: item.icon,
-                link: itemLandingPath(item, access),
+                // the selected item keeps its current tab, as on the rail
+                link:
+                  item.id === active?.id
+                    ? pathname + window.location.search
+                    : itemLandingPath(item, access),
                 selected: item.id === active?.id,
               }))}
             />

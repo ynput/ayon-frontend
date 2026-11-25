@@ -4,8 +4,6 @@ import styled from 'styled-components'
 
 // a dropdown under the context pill: left, top and height come from the pill
 export const ProjectSidebar = styled(Sidebar)`
-  width: 380px;
-  max-width: calc(100vw - 16px);
   border-radius: var(--border-radius-l);
 
   background: none;

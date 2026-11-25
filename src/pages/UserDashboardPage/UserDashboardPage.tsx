@@ -245,9 +245,9 @@ const UserDashboardPage: React.FC = () => {
   // the page at this URL, when the user has its tab (the registry leaves out what they can't
   // open); an unknown module shows My tasks, an addon page they can't open shows nothing
   const activePage = useMemo(() => {
-    const page = pages.find(
-      (p) => p.path === pathname && links.some((link) => link.path === p.path),
-    )
+    // react-router also matches the URL with a trailing slash
+    const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+    const page = pages.find((p) => p.path === path && links.some((link) => link.path === p.path))
     if (page || addonName) return page
     return pages.find((p) => p.module === 'tasks')
   }, [pages, links, pathname, addonName])

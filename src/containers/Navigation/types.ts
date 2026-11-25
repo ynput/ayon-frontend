@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react'
 import type { contributionTags } from '@ynput/ayon-addon/host'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 
@@ -35,8 +34,6 @@ export interface NavItem {
    * path prefix
    */
   match?: string[]
-  /** shown on the item, e.g. the addon bundle dot */
-  startContent?: ReactNode
   /** the slot inspector's tags, spread on the item like on a tab */
   tags?: InspectorTags
 }
