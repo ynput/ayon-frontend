@@ -223,7 +223,7 @@ test.describe('overview import', () => {
     },
   )
 
-  // FLAG (app bug): the preview already creates the folder type (ayon-backend import_data.py _validate_enum_value calls EnumRegistry.create_item with preview=True), so it stays after the wizard is closed
+  // FLAG (app bug): the preview already creates the folder type (ayon-backend import_data.py _validate_enum_value calls EnumRegistry.create_item in preview too), so it stays after the wizard is closed
   test.fixme(
     'a folder type created from a value waits for the import',
     async ({ page, api, projectName }) => {
@@ -412,28 +412,36 @@ test.describe('overview import', () => {
       })
       shotIds.push(shot.id)
     }
+    const statusesBefore = await Promise.all(
+      shotIds.map(async (id) => (await api.getFolder(projectName, id)).status),
+    )
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
+    const file = csvFile('approvals.csv', [
+      ['name', 'status'],
+      ['sh010', 'Approved'],
+    ])
 
-    const wizard = await overview.openImport()
-    await wizard.upload(
-      csvFile('approvals.csv', [
-        ['name', 'status'],
-        ['sh010', 'Approved'],
-      ]),
-    )
+    // "Skip the row" is the default
+    let wizard = await overview.openImport()
+    await wizard.upload(file)
     await wizard.setImportMode('Update only')
     await wizard.continueToValues()
-    // "Skip the row" is the default
     await wizard.continueToPreview({ updated: 0, errors: 1 })
-    await wizard.expectRowReasons(
-      'errors',
-      {
-        1: "Name 'sh010' matches 2 folders, map a Path column to pick one or choose to update all matches",
-      },
-      false,
-    )
-    await wizard.openStep('Map columns')
+    const reasons = {
+      1: "Name 'sh010' matches 2 folders, map a Path column to pick one or choose to update all matches",
+    }
+    await wizard.expectRowReasons('errors', reasons, false)
+    await wizard.importData({ updated: 0, errors: 1 })
+    await wizard.expectRowReasons('errors', reasons, true)
+    await wizard.close()
+    for (const [index, id] of shotIds.entries()) {
+      expect((await api.getFolder(projectName, id)).status).toBe(statusesBefore[index])
+    }
+
+    wizard = await overview.openImport()
+    await wizard.upload(file)
+    await wizard.setImportMode('Update only')
     await wizard.setDuplicateStrategy('Update all of them')
     await wizard.continueToValues()
     await wizard.continueToPreview({ updated: 2, errors: 0 })

@@ -13,7 +13,9 @@ const test = base.extend<{ fileUser: (label: string) => string }>({
       names.push(name)
       return name
     })
-    for (const name of names) await api.deleteUser(name)
+    const errors: unknown[] = []
+    for (const name of names) await api.deleteUser(name).catch((error) => errors.push(error))
+    if (errors.length) throw errors[0]
   },
 })
 
@@ -262,7 +264,11 @@ test.describe('users import', () => {
       email: 'old.lead@e2e.test',
       isManager: true,
     })
-    const artist = await createUser({ fullName: 'Old Artist', email: 'old.artist@e2e.test' })
+    const artist = await createUser({
+      fullName: 'Old Artist',
+      email: 'old.artist@e2e.test',
+      developerMode: true,
+    })
     const file = csvFile('renamed-users.csv', [
       ['name', 'Full name', 'E-Mail', 'Developer mode'],
       [lead.name, 'Rosa Lindqvist', email(lead.name), 'true'],

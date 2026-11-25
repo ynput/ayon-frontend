@@ -9,21 +9,12 @@ export class ListImportDialog extends ImportDialog {
     return this.root.getByPlaceholder('List name')
   }
 
-  /** The list an import creates: its name (the file's name by default) and what it lists */
-  async setNewList({
-    label,
-    entityType,
-  }: {
-    label?: string
-    entityType?: 'Folders' | 'Tasks' | 'Products' | 'Versions'
-  }) {
-    if (label !== undefined) await this.newListLabel.fill(label)
-    if (entityType) {
-      // FLAG: the option buttons' names start with their icon ligature
-      const option = this.root.getByRole('button', { name: new RegExp(`^\\w+ ${entityType}$`) })
-      await option.click()
-      await expect(option).toHaveClass(/selected/)
-    }
+  /** What the list an import creates lists */
+  async setNewListType(entityType: 'Folders' | 'Tasks' | 'Products' | 'Versions') {
+    // FLAG: the option buttons' names start with their icon ligature
+    const option = this.root.getByRole('button', { name: new RegExp(`^\\w+ ${entityType}$`) })
+    await option.click()
+    await expect(option).toHaveClass(/selected/)
   }
 
   /** After an import that created a list: open it and close the wizard */

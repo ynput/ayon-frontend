@@ -25,7 +25,7 @@ test.describe('list CSV import', () => {
     api,
     projectName,
   }) => {
-    await requireAddon(api, 'powerpack', { license: true })
+    await requireAddon(api, 'powerpack', { license: true, minVersion: '1.6.8' })
     const { sh010, sh020 } = await seedShots(api, projectName, ['sh010', 'sh020'])
     const comp = await api.createTask(projectName, {
       folderId: sh010.id,
@@ -46,7 +46,7 @@ test.describe('list CSV import', () => {
     await lists.goto(projectName)
 
     const wizard = await lists.openCreateListFromCsv()
-    await wizard.setNewList({ entityType: 'Tasks' })
+    await wizard.setNewListType('Tasks')
     await wizard.upload(
       csvFile('Client review.csv', [
         ['folder_path', 'priority', 'frameStart'],
@@ -172,7 +172,7 @@ test.describe('list CSV import', () => {
     api,
     projectName,
   }) => {
-    await requireAddon(api, 'powerpack', { license: true })
+    await requireAddon(api, 'powerpack', { license: true, minVersion: '1.6.8' })
     const { sh010 } = await seedShots(api, projectName, ['sh010'])
     const [comp, anim, light] = await Promise.all(
       ['comp', 'anim', 'light'].map((name) =>
@@ -288,7 +288,7 @@ test.describe('list CSV import', () => {
     await lists.goto(projectName)
 
     const wizard = await lists.openCreateListFromCsvIn('Dailies')
-    await wizard.setNewList({ entityType: 'Versions' })
+    await wizard.setNewListType('Versions')
     await wizard.upload(csvFile('Monday review.csv', [['entity_id'], [v2.id], [v1.id]]), {
       rows: 2,
     })
