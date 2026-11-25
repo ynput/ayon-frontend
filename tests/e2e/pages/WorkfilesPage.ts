@@ -21,7 +21,7 @@ export class WorkfilesPage {
 
   async deleteWorkfile(name: string) {
     await this.row(name).click({ button: 'right' })
-    await menuItem(this.page, 'Delete File').click()
+    await menuItem(this.page, 'Delete file').click()
     const confirm = confirmDialog(this.page)
     await expect(confirm).toContainText(name)
     await confirm.getByRole('button', { name: 'Delete' }).click()

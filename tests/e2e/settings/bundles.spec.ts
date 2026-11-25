@@ -28,9 +28,9 @@ test.describe('bundles', () => {
 
     await other.click({ button: 'right' })
 
-    await expect(menuItem(page, 'Duplicate and Edit')).toBeVisible()
+    await expect(menuItem(page, 'Duplicate and edit')).toBeVisible()
     await expectRowSelection([selected], [other])
-    await menuItem(page, 'Duplicate and Edit').click()
+    await menuItem(page, 'Duplicate and edit').click()
     const escaped = prefix(otherName).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     await expect(page.getByLabel('Bundle name')).toHaveValue(new RegExp(`^${escaped}\\d+$`))
   })

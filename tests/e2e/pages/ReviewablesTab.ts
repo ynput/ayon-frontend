@@ -4,19 +4,13 @@ import { DetailsPanel } from './DetailsPanel'
 export class ReviewablesTab {
   constructor(readonly panel: DetailsPanel) {}
 
-  // FLAG: the tab buttons are icon-only; the files tab is named by its icon ligature "order_play"
   async open() {
-    await this.panel.root
-      .getByRole('navigation')
-      .getByRole('button', { name: 'order_play', exact: true })
-      .click()
+    await this.panel.openTab('files')
     await expect(this.section).toBeVisible()
   }
 
   get section() {
-    return this.panel.root
-      .getByRole('heading', { name: 'Reviewables', level: 4 })
-      .locator('xpath=..')
+    return this.panel.root.getByTestId('details-panel-reviewables')
   }
 
   // FLAG: the cards are plain divs whose id is the file id; they have no role or name
