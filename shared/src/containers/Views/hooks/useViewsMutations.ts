@@ -131,14 +131,8 @@ export const useViewsMutations = ({
 
   const onResetWorkingView = useCallback<R['onResetWorkingView']>(
     async (args) => {
-      const {
-        existingWorkingViewId,
-        selectedViewId,
-        setSelectedView,
-        setSettingsChanged,
-        notify,
-        preset,
-      } = args || {}
+      const { existingWorkingViewId, setSelectedView, setSettingsChanged, notify, preset } =
+        args || {}
       if (!viewType) {
         throw new Error('viewType are required for resetting a view')
       }
