@@ -130,7 +130,8 @@ const Breadcrumbs = () => {
 
   const [localUri, setLocalUri] = useState<string>('')
   const [editMode, setEditMode] = useState<boolean>(false)
-  const { uri = '' } = useURIContext()
+  // addon settings clear it with null
+  const uri = useURIContext().uri ?? ''
 
   const inputRef = useRef<HTMLInputElement>(null)
 

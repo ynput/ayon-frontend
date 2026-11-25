@@ -15,6 +15,10 @@ const Name = styled.span`
   line-height: 20px;
   letter-spacing: 0.02em;
   white-space: nowrap;
+  max-width: 240px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
   color: var(--md-sys-color-on-surface);
 `
 
