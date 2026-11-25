@@ -47,6 +47,8 @@ import {
   type PinnedTabMenuTarget,
 } from '@containers/Navigation/layouts/PinnedViews'
 import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
+import { arrangeTabs } from '@containers/Navigation/layouts/applyLayout'
+import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -248,9 +250,11 @@ const ProjectPageInner = () => {
 
   // the tab row belongs to the selected sidebar item (Production on an unknown path)
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  // the layout that applies: the tab row's order and what it hides
+  const { layout: navLayout } = useNavLayout('project', projectName)
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...activeItem.tabs.map((tab) => {
+      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id).map((tab) => {
         const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
         if (!pin) return tab
         const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
@@ -285,7 +289,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [activeItem, addonName, module, pinnedViews.visible, drafts, openViewId],
+    [activeItem, navLayout, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
   const activeLink = useMemo(() => {

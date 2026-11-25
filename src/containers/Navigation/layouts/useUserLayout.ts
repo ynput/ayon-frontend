@@ -107,6 +107,8 @@ export const useUserLayout = () => {
           lastSaved = { id: created?.id ?? id, layout: next }
         }
         rerender((count) => count + 1)
+        // the layout's id, for picking it after a first change made a copy
+        return lastSaved.id
       }
       const result = queue.then(write)
       queue = result.catch(() => undefined)
@@ -115,5 +117,5 @@ export const useUserLayout = () => {
     [createView, updateView, dispatch],
   )
 
-  return { enabled, layout: current?.layout, isLoading, update }
+  return { enabled, id: current?.id, layout: current?.layout, isLoading, update }
 }

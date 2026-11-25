@@ -3,7 +3,7 @@ import { toast } from 'react-toastify'
 import { getRequestErrorString } from '@shared/util'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
-import { useUserLayout } from './useUserLayout'
+import { useActiveLayout } from './useActiveLayout'
 import {
   getPins,
   movePinPast,
@@ -24,7 +24,8 @@ const VIEW_TYPES = Object.keys(PINNED_PAGES)
  * so they come from the cache.
  */
 export const usePinnedViews = (projectName: string) => {
-  const { enabled, layout, update } = useUserLayout()
+  // the pins of the layout that applies here; a change may make it the user's own (see there)
+  const { enabled, layout, update } = useActiveLayout(projectName)
   const pins = getPins(layout)
 
   // one list per view type in PINNED_PAGES (hooks can't loop): a type added there needs its list here

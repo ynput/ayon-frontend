@@ -1,4 +1,6 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
+import { arrangeTabs } from '@containers/Navigation/layouts/applyLayout'
+import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
@@ -59,7 +61,6 @@ const NewProjectDialog = lazy(() => import('../ProjectManagerPage/NewProjectDial
 const UserDashboardNoProjects = lazy(
   () => import('./UserDashboardNoProjects/UserDashboardNoProjects'),
 )
-
 
 const UserDashboardPage: React.FC = () => {
   const { module, addonName } = useParams<{ module?: string; addonName?: string }>()
@@ -225,9 +226,11 @@ const UserDashboardPage: React.FC = () => {
   // the tab row belongs to the selected sidebar item (My work on an unknown path)
   const { pathname } = useLocation()
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  // the layout that applies: the tab row's order and what it hides
+  const { layout: navLayout } = useNavLayout('studio')
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...activeItem.tabs,
+      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id),
       { node: 'spacer' },
       {
         node: (
@@ -239,7 +242,7 @@ const UserDashboardPage: React.FC = () => {
         ),
       },
     ],
-    [activeItem, addonName, module],
+    [activeItem, navLayout, addonName, module],
   )
 
   // the page at this URL, when the user has its tab (the registry leaves out what they can't

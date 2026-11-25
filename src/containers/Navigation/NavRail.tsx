@@ -1,5 +1,5 @@
-import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { Fragment, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer } from '@shared/components'
 import { useMenuContext } from '@shared/context'
@@ -13,7 +13,9 @@ import {
 } from './filterNavigation'
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
-import type { NavItem } from './types'
+import type { NavItem, NavLayout } from './types'
+import { arrangeItems } from './layouts/applyLayout'
+import { useNavLayout } from './layouts/useActiveLayout'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
 import * as Styled from './NavRail.styled'
@@ -25,21 +27,41 @@ interface RailProps {
   items: NavItem[]
   /** pinned to the bottom, after the sections: the admin area */
   footer: ReactNode
+  /** the layout that applies: which items show, in what order */
+  layout: NavLayout
+  /** that layout's id: when another one applies, a page it hides gives way to its first item */
+  layoutId?: string
 }
 
 // what folds into More: the rail's divider (with its margins) and an item's height
 const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
 
-const Rail = ({ items, footer }: RailProps) => {
+const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
   const { pathname } = useLocation()
+  const navigate = useNavigate()
   const access = useNavAccess()
   const { toggleMenuOpen } = useMenuContext()
   const railRef = useRef<HTMLElement>(null)
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
-  const visible = useMemo(() => sortForSidebar(filterNavigation(items, access)), [items, access])
+  const visible = useMemo(
+    () => arrangeItems(sortForSidebar(filterNavigation(items, access, layout)), layout),
+    [items, access, layout],
+  )
   const active = findActiveItem(items, pathname)
+
+  // switching layouts while on a page the new one hides opens its first item; a hidden page is
+  // still reachable by its link while the layout stays the same
+  const shownLayout = useRef(layoutId)
+  useEffect(() => {
+    if (shownLayout.current === layoutId) return
+    shownLayout.current = layoutId
+    if (active && !visible.some((item) => item.id === active.id) && visible[0]) {
+      const to = itemLandingPath(visible[0], access)
+      if (to) navigate(to)
+    }
+  }, [layoutId, active, visible, access, navigate])
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
@@ -168,12 +190,21 @@ const Rail = ({ items, footer }: RailProps) => {
 
 const ProjectRail = ({ projectName }: { projectName: string }) => {
   const { items } = useProjectNavigation(projectName)
-  return <Rail items={items} footer={<AdminDock projectName={projectName} />} />
+  const { layout, id } = useNavLayout('project', projectName)
+  return (
+    <Rail
+      items={items}
+      layout={layout}
+      layoutId={id}
+      footer={<AdminDock projectName={projectName} layout={layout} />}
+    />
+  )
 }
 
 const StudioRail = () => {
   const { items } = useStudioNavigation()
-  return <Rail items={items} footer={<AdminDock />} />
+  const { layout, id } = useNavLayout('studio')
+  return <Rail items={items} layout={layout} layoutId={id} footer={<AdminDock layout={layout} />} />
 }
 
 /**

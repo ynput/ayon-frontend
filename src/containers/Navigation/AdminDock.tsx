@@ -17,6 +17,7 @@ import {
 } from './filterNavigation'
 import { useAdminNavigation } from './useSettingsNavigation'
 import RailItem from './RailItem'
+import type { NavLayout } from './types'
 import * as Styled from './NavRail.styled'
 
 /**
@@ -25,7 +26,7 @@ import * as Styled from './NavRail.styled'
  * actions, the top bar's old apps menu. The menu's id is the one the /appMenu redirect (after
  * signing in to Ynput Cloud) opens.
  */
-const AdminDock = ({ projectName }: { projectName?: string }) => {
+const AdminDock = ({ projectName, layout }: { projectName?: string; layout?: NavLayout }) => {
   const { pathname } = useLocation()
   const access = useNavAccess()
   const user = useAppSelector((state) => state.user)
@@ -35,7 +36,7 @@ const AdminDock = ({ projectName }: { projectName?: string }) => {
 
   const items = filterNavigation(useAdminNavigation(projectName), access)
   const active = findActiveItem(items, pathname)
-  const { docked, folded } = splitAdminItems(items)
+  const { docked, folded } = splitAdminItems(items, layout)
 
   // loaded before the menu opens: its Ynput Cloud row or prompt is there from the first frame,
   // so the menu keeps the height it was placed with

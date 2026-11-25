@@ -48,6 +48,10 @@ export type NavAccess = Record<string, boolean>
 export interface NavLayout {
   /** item ids not shown */
   hidden?: string[]
+  /** item ids in this order within their section; the others follow in registry order */
+  order?: string[]
+  /** each item's tab row, by item id (a tab's id: its module, or `view:<id>`) */
+  tabs?: Record<string, { order?: string[]; hidden?: string[] }>
   /**
    * admin item ids shown as items at the sidebar's bottom; the others are in its Admin menu
    * (`DEFAULT_PROMOTED` when not set)
