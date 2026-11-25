@@ -68,6 +68,12 @@ export const usePinnedViews = (projectName: string) => {
     action.catch((error) => {
       toast.error(`Couldn't change your pinned tabs: ${getRequestErrorString(error)}`)
     })
+  // the same, still failing for a caller that keeps its form open to try again
+  const reportAndFail = (action: Promise<unknown>) =>
+    action.catch((error) => {
+      toast.error(`Couldn't change your pinned tabs: ${getRequestErrorString(error)}`)
+      throw error
+    })
 
   const viewPins: ViewPins | null = useMemo(
     () =>
@@ -87,7 +93,9 @@ export const usePinnedViews = (projectName: string) => {
     visible,
     /** for the views menu's pin buttons */
     viewPins,
-    rename: (id: string, label: string) => report(change((all) => renamePin(all, id, label))),
+    // the rename dialog stays open when it fails
+    rename: (id: string, label: string) =>
+      reportAndFail(change((all) => renamePin(all, id, label))),
     /** moves a tab past the next shown pin of the same page */
     move: (id: string, delta: -1 | 1) => {
       const siblings = samePagePins(visible, id)
