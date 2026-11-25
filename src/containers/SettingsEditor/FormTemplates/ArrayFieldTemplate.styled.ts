@@ -20,12 +20,14 @@ export const AddItemButton = styled(Button)`
   &.array-add-button {
     flex: 1;
     width: 100%;
-    height: var(--base-input-size);
+    /* slimmer than the items above it */
+    height: calc(var(--base-input-size) - var(--space-2, 8px));
+    min-height: 0;
+    padding-block: 0;
     justify-content: center;
     border: 1px dashed var(--md-sys-color-outline-variant);
     border-radius: var(--border-radius-m);
-    /* the fill of the list's items, so it reads as the list's next, empty item */
-    background-color: var(--settings-input-bg, transparent);
+    background-color: transparent;
     color: var(--md-sys-color-outline);
     transition: color 0.15s, border-color 0.15s;
   }
@@ -33,6 +35,7 @@ export const AddItemButton = styled(Button)`
   &.array-add-button:hover,
   &.array-add-button:focus-visible {
     border-color: var(--md-sys-color-outline);
+    background-color: transparent;
     color: var(--md-sys-color-on-surface);
   }
 `

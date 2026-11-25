@@ -254,7 +254,10 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
 - The colour scheme picker (`ListColorScheme/`) needs `formContext.onSetValue`, which only
   `AnatomyEditor` provides. Other editors don't show it.
 - The flat sheet takes the colour of the panel the editor sits on (`--settings-sheet-bg`, which is
-  ARC's `--panel-background`). Sticky titles paint it, and settings panels sit one step off it.
+  ARC's `--panel-background`). Sticky titles paint it, and settings panels sit one step off it, in `--settings-panel-bg`: the
+  table rows' colour (`--color-table-row`), the darkest surface the app uses for a large area.
+  `surface-container-lowest` is darker on the dark theme and only fills small things elsewhere.
+  `flatForm.scss` uses the same colour.
   A page that hosts the editor puts it on a panel (a `ScrollPanel` without `transparent`, or a
   wrapper with `--panel-background`, as in the New project dialog). On any other surface the
   sticky titles show as bands.

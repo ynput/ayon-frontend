@@ -392,6 +392,11 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   --settings-sheet-bg: var(--panel-background)
   --settings-card-bg: var(--md-sys-color-surface-container-low)
   --settings-input-bg: var(--md-sys-color-surface-container)
+  // settings panels: the darkest surface the app uses for a large area, its table rows (a
+  // touch lighter than surface-container-lowest on the dark theme, the same on the light one)
+  --settings-panel-bg: var(--color-table-row, var(--md-sys-color-surface-container-lowest))
+  // the hairline between settings in a panel: half a control's step, so rows read as one list
+  --settings-divider: color-mix(in srgb, var(--md-sys-color-surface-container-high) 50%, transparent)
   // Spacing: a 4px grid, applied by proximity (closer means more related):
   //   4 inside a setting (label to control, list item to item)
   //   8 a title to its content
@@ -627,7 +632,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       padding-block: 0
 
       & + .settings-switchbox-option
-        border-top: 1px solid var(--md-sys-color-surface-container-high)
+        border-top: 1px solid var(--settings-divider)
 
   // every other kind puts its label above the control; in a compact row the
   // fixed-size ones do too (a switch keeps its line), since each field is a column
@@ -998,7 +1003,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       top: 0
       left: var(--settings-gutter)
       right: var(--settings-gutter)
-      border-top: 1px solid var(--md-sys-color-surface-container-high)
+      border-top: 1px solid var(--settings-divider)
 
   // A complex list item is a bordered box like a simple list item: handle at its start,
   // X at its end, a chevron before its title. Opening it grows the same box, one fill
@@ -1404,7 +1409,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   // gutter. Inside, rows and boxes use a 12px gutter, and inputs keep the lighter fill.
   // Nested panels alternate shades, so a panel never melts into the one around it
   .settings-panel
-    --settings-surface: var(--md-sys-color-surface-container-lowest)
+    --settings-surface: var(--settings-panel-bg)
     --settings-input-bg: var(--md-sys-color-surface-container)
     // a title's content starts 8 below its text; a panel ends a setting's gap before
     // what follows; inside, content sits a panel inset (12) from every edge
@@ -1422,7 +1427,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       margin-inline: var(--settings-gutter)
 
       .settings-panel
-        --settings-surface: var(--md-sys-color-surface-container-lowest)
+        --settings-surface: var(--settings-panel-bg)
 
   // a search hides the settings it doesn't match (SearchHidden, data-hidden), not the panel
   // around them: a panel whose settings are all hidden would show as an empty dark strip.
@@ -1433,7 +1438,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   // a box (a list item, a folding group) already sets its content apart from the panel around
   // it, so the panels inside it all take the same shade, however deep the item sits
   :is(.settings-array-item, .settings-folding-group) .settings-panel
-    --settings-surface: var(--md-sys-color-surface-container-lowest)
+    --settings-surface: var(--settings-panel-bg)
 
   // a section's sub-groups are panels beside its own, never inside: a panel that follows
   // one starts a group's distance (16) below it, as a title would
