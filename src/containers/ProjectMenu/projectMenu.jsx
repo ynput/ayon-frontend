@@ -5,7 +5,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Section } from '@ynput/ayon-react-components'
 import SearchInput from '@components/SearchInput'
 import { useLocalStorage } from '@shared/hooks'
-import { createPortal } from 'react-dom'
 import { useShortcutsContext } from '@context'
 import { useProjectSelectDispatcher } from './hooks/useProjectSelectDispatcher'
 import { updateUserPreferences as updateUserPreferencesAction } from '@state/user'
@@ -316,9 +315,17 @@ const ProjectMenu = ({ isOpen, onHide }) => {
 
   if (!isOpen) return null
 
+  // the switcher drops down from the context pill's project name
+  const anchor = document.getElementById('context-pill')?.getBoundingClientRect()
+  const top = (anchor?.bottom ?? 48) + 4
+  const style = {
+    left: anchor?.left ?? 8,
+    top,
+    height: `min(640px, calc(100vh - ${top + 16}px))`,
+  }
+
   return (
     <>
-      {createPortal(<Styled.Overlay />, document.body)}
       <Styled.ProjectSidebar
         position="left"
         visible={true}
@@ -328,6 +335,8 @@ const ProjectMenu = ({ isOpen, onHide }) => {
         closeOnEscape={false}
         ref={menuRef}
         className="project-menu"
+        style={style}
+        aria-label="Switch project"
       >
         <Section>
           {!searchOpen ? (

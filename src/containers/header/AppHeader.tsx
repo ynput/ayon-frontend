@@ -59,11 +59,6 @@ const Center = styled.div`
   }
 `
 
-const ProjectsButton = styled(HeaderButton)`
-  align-items: center;
-  display: flex;
-`
-
 const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
@@ -120,20 +115,13 @@ const Header: React.FC = () => {
   return (
     <nav className="primary" onClick={handleNavClick}>
       <Side>
-        {user.uiExposureLevel >= 500 && (
-          <ProjectsButton
-            icon="left_panel_open"
-            variant="nav"
-            onClick={() => handleToggleMenu('project')}
-          />
-        )}
-
         <Link to={'/dashboard/tasks'}>
           <HeaderButton
             icon="home"
             label="Home"
             variant="nav"
-            className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
+            // Home is the context of every page outside a project
+            className={clsx({ selected: !location.pathname.startsWith('/projects/') })}
             id="home-button"
             iconProps={{ filled: true }}
           />
@@ -141,7 +129,13 @@ const Header: React.FC = () => {
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
 
-        <Breadcrumbs />
+        {/* the project name opens the project switcher */}
+        <Breadcrumbs
+          onProjectsClick={
+            user.uiExposureLevel >= 500 ? () => handleToggleMenu('project') : undefined
+          }
+          projectsOpen={menuOpen === 'project'}
+        />
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </Side>

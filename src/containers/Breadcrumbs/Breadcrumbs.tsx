@@ -109,23 +109,25 @@ interface CrumbContext {
   path: string[]
 }
 
-// what the pill shows: the project in bold, then the path to the selected entity.
-// Pages outside a project keep their own crumbs; home without a selection has none.
+// what the pill shows: the project (the switcher), then the path to the selected entity, or the
+// crumbs of another URI; the sidebar and the tabs say which page this is
 const getCrumbContext = (uri: string, pathname: string): CrumbContext => {
-  const crumbs = uri2crumbs(uri, pathname)
-  if (uri.startsWith('ayon+entity')) {
-    const [, project, ...path] = crumbs
-    return { project, path }
-  }
-
   const [, root, projectName] = pathname.split('/')
-  if (root === 'projects' && projectName) return { project: projectName, path: [] }
-  if (root === 'dashboard' || !root) return { path: [] }
-
-  return { path: crumbs }
+  const project = root === 'projects' && projectName ? decodeURIComponent(projectName) : undefined
+  if (uri.startsWith('ayon+entity')) {
+    const [, entityProject, ...path] = uri2crumbs(uri, pathname)
+    return { project: entityProject, path }
+  }
+  return { project, path: uri ? uri2crumbs(uri, pathname) : [] }
 }
 
-const Breadcrumbs = () => {
+interface BreadcrumbsProps {
+  /** opens the project switcher; without it the project name is plain text */
+  onProjectsClick?: () => void
+  projectsOpen?: boolean
+}
+
+const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   const location = window.location
 
   const [localUri, setLocalUri] = useState<string>('')
@@ -170,13 +172,33 @@ const Breadcrumbs = () => {
   }
 
   const { project, path } = getCrumbContext(uri, location.pathname)
-  const isEmpty = !project && !path.length
   // long entity paths keep the last level, the full path is in the tooltip
   const shownPath = project && path.length > 2 ? ['…', path[path.length - 1]] : path
   const fullText = [project, ...path].filter(Boolean).join(' / ')
 
   return (
-    <Styled.Pill className={clsx({ empty: isEmpty && !editMode })}>
+    <Styled.Pill id="context-pill">
+      {onProjectsClick ? (
+        <Styled.ProjectButton
+          onClick={onProjectsClick}
+          className={clsx({ open: projectsOpen, choose: !project })}
+          aria-haspopup="dialog"
+          aria-expanded={!!projectsOpen}
+          data-tooltip={project ? 'Switch project' : undefined}
+          data-tooltip-delay={500}
+        >
+          <Icon icon="category" />
+          <strong>{project || 'Choose a project'}</strong>
+          <Icon icon="expand_more" />
+        </Styled.ProjectButton>
+      ) : (
+        project && (
+          <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
+            <Icon icon="category" />
+            <strong>{project}</strong>
+          </Styled.ProjectButton>
+        )
+      )}
       {editMode ? (
         <Styled.Form onSubmit={goThere}>
           <input
@@ -190,20 +212,24 @@ const Breadcrumbs = () => {
           />
           <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
         </Styled.Form>
-      ) : (
+      ) : shownPath.length ? (
         <Styled.Display
           onClick={() => setEditMode(true)}
           data-tooltip={shownPath !== path ? `${fullText} (click to edit the URI)` : 'Click to edit the URI'}
           data-tooltip-delay={500}
         >
-          {(project || isEmpty) && <Icon icon="category" />}
           <Styled.Text>
-            {project && <strong>{project}</strong>}
-            {project && shownPath.length > 0 && ' / '}
+            {project && '/ '}
             {shownPath.join(' / ')}
-            {isEmpty && 'No project context'}
           </Styled.Text>
         </Styled.Display>
+      ) : (
+        <Styled.PillButton
+          icon="edit"
+          onClick={() => setEditMode(true)}
+          variant="text"
+          data-tooltip="Go to a URI"
+        />
       )}
       {!editMode && (
         <Styled.PillButton

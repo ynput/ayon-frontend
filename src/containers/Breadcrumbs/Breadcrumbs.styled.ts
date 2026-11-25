@@ -11,13 +11,47 @@ export const Pill = styled.div`
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-highest);
 
-  /* no project and nothing selected */
-  &.empty {
-    opacity: 0.4;
-    &:hover,
-    &:focus-within {
-      opacity: 1;
-    }
+`
+
+// the project name: opens the project switcher
+export const ProjectButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  max-width: 240px;
+  height: 100%;
+  padding: 6px 6px 6px 10px;
+  border: none;
+  background: none;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  white-space: nowrap;
+
+  font-family: var(--md-sys-typescale-body-large-font-family-name);
+  font-size: 14px;
+  line-height: 20px;
+
+  strong {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-weight: 700;
+  }
+
+  .icon {
+    font-size: 18px;
+  }
+
+  &:hover,
+  &.open {
+    background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  /* on Home: no project yet */
+  &.choose strong {
+    font-weight: 500;
+    color: var(--md-sys-color-on-surface-variant);
   }
 `
 
@@ -27,7 +61,7 @@ export const Display = styled.button`
   gap: var(--base-gap-large);
   min-width: 0;
   height: 100%;
-  padding: 6px 4px 6px 12px;
+  padding: 6px 4px 6px 2px;
   border: none;
   background: none;
   color: var(--md-sys-color-on-surface);
