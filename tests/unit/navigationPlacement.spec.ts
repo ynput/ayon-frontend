@@ -6,6 +6,7 @@ import { KNOWN_PROJECT_PAGES, KNOWN_STUDIO_PAGES } from '../../src/containers/Na
 import {
   filterNavigation,
   findActiveItem,
+  fitDocked,
   splitAdminItems,
   itemLandingPath,
   sortForSidebar,
@@ -202,4 +203,20 @@ test('a layout promotes admin items to the sidebar; the rest go in the Admin men
   const promoted = splitAdminItems(items, { promoted: ['services', 'settings'] })
   expect(ids(promoted.docked)).toEqual(['services', 'settings'])
   expect(ids(promoted.folded)).toEqual(['projects', 'events', 'market'])
+})
+
+test('admin pages that do not fit go into the Admin menu from the bottom, the button counted', () => {
+  const heights = { a: 40, b: 40, c: 40 }
+  const fit = (space: number, menuShown = false) =>
+    fitDocked({ ids: ['a', 'b', 'c'], heights, space, button: 40, menuShown })
+  // divider 9, each page 40 + a 2px gap
+  expect(fit(Infinity)).toBe(3)
+  expect(fit(135)).toBe(3)
+  // the menu shows anyway: its button needs room too
+  expect(fit(135, true)).toBe(2)
+  // a page that goes brings the button, as high as a page: one more goes
+  expect(fit(134)).toBe(1)
+  expect(fit(50)).toBe(0)
+  // not measured yet: all stay
+  expect(fitDocked({ ids: ['a', 'x'], heights, space: 10, button: 40, menuShown: true })).toBe(2)
 })

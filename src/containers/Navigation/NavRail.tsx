@@ -30,6 +30,7 @@ import {
   findActiveItem,
   isTabShown,
   itemLandingPath,
+  RAIL_DIVIDER_HEIGHT,
   sortForSidebar,
   useNavAccess,
 } from './filterNavigation'
@@ -49,8 +50,11 @@ const PROJECT_PATH = /^\/projects\/([^/]+)/
 
 interface RailProps {
   items: NavItem[]
-  /** pinned to the bottom, after the sections: the admin area */
-  footer: ReactNode
+  /**
+   * pinned to the bottom, after the sections: the admin area, given the height left after every
+   * item (it folds its own pages into the Admin menu first; Infinity: no limit)
+   */
+  footer: (space: number) => ReactNode
   /**
    * The layout that applies (`useNavLayout`): which items show, in what order, and editing it.
    * When another one applies (its id), a page it hides gives way to its first item; before it is
@@ -64,8 +68,7 @@ interface RailProps {
 }
 
 // an item the user drags within its section while the layout is edited
-// what folds into More: the rail's divider (with its margins) and an item's height
-const DIVIDER_HEIGHT = 9
+// what folds into More: an item's height
 const MORE_HEIGHT = 54
 
 const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
@@ -127,6 +130,8 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
+  // the rail's height for its items and the admin area, and what the admin area leaves of it
+  const [space, setSpace] = useState(Infinity)
   const [available, setAvailable] = useState(Infinity)
   const measure = () => {
     const rail = railRef.current
@@ -143,8 +148,9 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
       0,
     )
     // the rail's padding (12) and the spacer's least height (8)
-    const free = rail.clientHeight - 12 - 8 - pinnedHeight
-    if (available !== free) setAvailable(free)
+    const railSpace = rail.clientHeight - 12 - 8
+    if (space !== railSpace) setSpace(railSpace)
+    if (available !== railSpace - pinnedHeight) setAvailable(railSpace - pinnedHeight)
   }
   useLayoutEffect(() => {
     measure()
@@ -153,22 +159,20 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     return () => observer.disconnect()
   })
 
-  // items that don't fit fold into More, from the last one in sidebar order
+  // Items that don't fit fold into More, from the last one in sidebar order. The admin area gives
+  // way first: it gets what every item leaves, and folds its pages into the Admin menu.
+  const cost = (item: NavItem, index: number) =>
+    (heights[item.id] ?? 0) +
+    2 +
+    // a divider and its 2px gap
+    (index > 0 && visible[index - 1].section !== item.section ? RAIL_DIVIDER_HEIGHT + 2 : 0)
+  // nothing folds while the layout is edited: every item can be shown or hidden
+  const measured = !editing && visible.every((item) => heights[item.id] !== undefined)
+  const total = measured ? visible.reduce((sum, item, index) => sum + cost(item, index), 0) : 0
+  // the admin area and its 2px gap
+  const dockSpace = measured && Number.isFinite(space) ? space - total - 2 : Infinity
   const folded = useMemo(() => {
-    const cost = (item: NavItem, index: number) =>
-      (heights[item.id] ?? 0) +
-      2 +
-      // a divider and its 2px gap
-      (index > 0 && visible[index - 1].section !== item.section ? DIVIDER_HEIGHT + 2 : 0)
-    // nothing folds while the layout is edited: every item can be shown or hidden
-    if (
-      editing ||
-      !Number.isFinite(available) ||
-      visible.some((item) => heights[item.id] === undefined)
-    )
-      return new Set<string>()
-    const total = visible.reduce((sum, item, index) => sum + cost(item, index), 0)
-    if (total <= available) return new Set<string>()
+    if (!measured || !Number.isFinite(available) || total <= available) return new Set<string>()
     let used = MORE_HEIGHT + 2
     const fit = new Set<string>()
     for (const [index, item] of visible.entries()) {
@@ -177,7 +181,9 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
       used += cost(item, index)
     }
     return new Set(visible.filter((item) => !fit.has(item.id)).map((item) => item.id))
-  }, [editing, visible, heights, available])
+    // `cost` reads `heights` and `visible`
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [measured, total, visible, heights, available])
 
   const sections = useMemo(
     () =>
@@ -339,7 +345,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
         </>
       )}
       <Styled.Spacer />
-      {footer}
+      {footer(dockSpace)}
     </Styled.Rail>
   )
 }
@@ -353,7 +359,14 @@ const ProjectRail = ({ projectName }: { projectName: string }) => {
       nav={nav}
       context="project"
       scope={projectName}
-      footer={<AdminDock projectName={projectName} layout={nav.layout} editing={nav.editing} />}
+      footer={(space) => (
+        <AdminDock
+          projectName={projectName}
+          layout={nav.layout}
+          editing={nav.editing}
+          space={space}
+        />
+      )}
     />
   )
 }
@@ -367,7 +380,7 @@ const StudioRail = () => {
       nav={nav}
       context="studio"
       scope="studio"
-      footer={<AdminDock layout={nav.layout} editing={nav.editing} />}
+      footer={(space) => <AdminDock layout={nav.layout} editing={nav.editing} space={space} />}
     />
   )
 }

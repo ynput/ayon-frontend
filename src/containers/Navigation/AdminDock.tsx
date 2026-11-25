@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   closestCenter,
@@ -21,6 +21,7 @@ import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   filterNavigation,
   findActiveItem,
+  fitDocked,
   itemLandingPath,
   splitAdminItems,
   useNavAccess,
@@ -41,6 +42,11 @@ interface AdminDockProps {
   layout?: NavLayout
   /** the layout is edited: every admin page shows, the Admin menu's dimmed, with an eye */
   editing?: boolean
+  /**
+   * the height the area may take (what the sidebar's items leave): the pages that don't fit go
+   * into the Admin menu, from the bottom; Infinity or not set: all stay
+   */
+  space?: number
 }
 
 /**
@@ -49,7 +55,7 @@ interface AdminDockProps {
  * admin pages and the server's actions, the top bar's old apps menu. The menu's id is the one the
  * /appMenu redirect (after signing in to Ynput Cloud) opens.
  */
-const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
+const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDockProps) => {
   const { pathname } = useLocation()
   const access = useNavAccess()
   const user = useAppSelector((state) => state.user)
@@ -65,10 +71,44 @@ const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
   // so the menu keeps the height it was placed with
   useGetYnputConnectionsQuery({}, { skip: !user.data?.isAdmin })
 
-  const isOpen = menuOpen === 'app'
-  const hasMenu = !!folded.length || !!user.data?.isAdmin || !!user.attrib?.developerMode
+  // the pages' and the Admin button's heights while they are on the sidebar
+  const dockRef = useRef<HTMLDivElement>(null)
+  const [heights, setHeights] = useState<Record<string, number>>({})
+  const [buttonHeight, setButtonHeight] = useState<number>()
+  const measure = () => {
+    const dock = dockRef.current
+    if (!dock) return
+    const measured: Record<string, number> = {}
+    dock.querySelectorAll<HTMLElement>('[data-rail-dock-item]').forEach((el) => {
+      measured[el.dataset.railItem!] = el.offsetHeight
+    })
+    // only a change re-renders: this runs after every render
+    if (Object.entries(measured).some(([id, height]) => heights[id] !== height))
+      setHeights({ ...heights, ...measured })
+    const button = dock.querySelector<HTMLElement>('[data-rail-item="admin-menu"]')
+    if (button && button.offsetHeight !== buttonHeight) setButtonHeight(button.offsetHeight)
+  }
+  useLayoutEffect(measure)
 
-  const renderItem = (item: NavItem, inMenu = false) => {
+  // the pages that don't fit go into the Admin menu, from the bottom; none while editing
+  const menuShown = !!folded.length || !!user.data?.isAdmin || !!user.attrib?.developerMode
+  const fit = editing
+    ? docked.length
+    : fitDocked({
+        ids: docked.map((item) => item.id),
+        heights,
+        space,
+        // before it has shown, the button is as high as a page
+        button: buttonHeight ?? Math.max(0, ...Object.values(heights)),
+        menuShown,
+      })
+  const onSidebar = docked.slice(0, fit)
+  const inMenu = [...docked.slice(fit), ...folded]
+
+  const isOpen = menuOpen === 'app'
+  const hasMenu = !!inMenu.length || menuShown
+
+  const renderItem = (item: NavItem, menuPage = false) => {
     const to = itemLandingPath(item, access)
     if (!to) return null
     return (
@@ -78,11 +118,12 @@ const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
         to={to}
         isActive={item.id === active?.id}
         compact
+        data-rail-dock-item={menuPage ? undefined : ''}
         edit={
           editing
             ? {
-                hidden: inMenu,
-                dimmed: inMenu,
+                hidden: menuPage,
+                dimmed: menuPage,
                 toggle: () => changeDraft((draft) => togglePromoted(draft, item.id)),
                 labels: MOVE_LABELS,
               }
@@ -102,7 +143,7 @@ const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
   }
 
   return (
-    <Styled.Dock data-rail-pinned="" data-rail-dock="">
+    <Styled.Dock data-rail-pinned="" data-rail-dock="" ref={dockRef}>
       <Styled.Divider />
       {editing ? (
         <>
@@ -127,14 +168,14 @@ const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
           {folded.map((item) => renderItem(item, true))}
         </>
       ) : (
-        docked.map((item) => renderItem(item))
+        onSidebar.map((item) => renderItem(item))
       )}
       {hasMenu && (
         <>
           <Styled.MoreItem
             type="button"
             className={clsx('compact', {
-              active: isOpen || folded.some((item) => item.id === active?.id),
+              active: isOpen || inMenu.some((item) => item.id === active?.id),
             })}
             aria-label="Admin"
             aria-haspopup="menu"
@@ -154,7 +195,7 @@ const AdminDock = ({ projectName, layout, editing }: AdminDockProps) => {
           <MenuContainer id="app" target={anchorRef.current} align="left">
             <AppMenu
               user={user}
-              places={folded.map((item) => ({
+              places={inMenu.map((item) => ({
                 id: item.id,
                 label: item.label,
                 icon: item.icon,

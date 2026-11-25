@@ -34,6 +34,39 @@ export const filterNavigation = (
       arrangeTabs(item.tabs, layout, item.id).some((tab) => canOpenTab(tab, access)),
   )
 
+/** a sidebar divider's height with its margins */
+export const RAIL_DIVIDER_HEIGHT = 9
+/** the gap between sidebar items */
+const RAIL_GAP = 2
+
+/**
+ * How many of the sidebar's admin pages (`ids`, top down) fit in the admin area's `space`: its
+ * divider, the pages, and the Admin menu's button when the menu shows (`menuShown`, or as soon as
+ * a page goes into it). The rest go in the Admin menu. Before every page is measured, all stay.
+ */
+export const fitDocked = ({
+  ids,
+  heights,
+  space,
+  button,
+  menuShown,
+}: {
+  ids: string[]
+  heights: Record<string, number>
+  space: number
+  button: number
+  menuShown: boolean
+}): number => {
+  if (!Number.isFinite(space) || ids.some((id) => heights[id] === undefined)) return ids.length
+  const pages = (count: number) =>
+    ids.slice(0, count).reduce((sum, id) => sum + heights[id] + RAIL_GAP, 0)
+  const menu = button + RAIL_GAP
+  if (RAIL_DIVIDER_HEIGHT + pages(ids.length) + (menuShown ? menu : 0) <= space) return ids.length
+  let count = ids.length - 1
+  while (count > 0 && RAIL_DIVIDER_HEIGHT + pages(count) + menu > space) count -= 1
+  return count
+}
+
 /**
  * The admin items a layout promotes to the sidebar (in its order), and the rest, which go in the
  * Admin menu.

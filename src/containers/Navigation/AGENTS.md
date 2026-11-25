@@ -21,6 +21,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   Restart, Ynput Cloud). `splitAdminItems` decides which are items, in their order:
   `NavLayout.promoted`, else `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect
   (Ynput Cloud sign-in) reopens.
+- **When the sidebar is too short** nothing scrolls (Milan, 2026-11-25). The admin area gives way
+  first: `NavRail` hands it the height its items leave (`footer(space)`), and it keeps the pages
+  that fit, top down (`fitDocked`, counting the Admin button that then shows); the rest go into
+  the Admin menu. Only when it is down to the Admin button do the items fold into More, from the
+  last one. While a layout is edited nothing folds and the sidebar scrolls.
 - **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products, Lists or
   Review view (`PINNED_PAGES`: pages that read the host's views context) pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
   right after its page's tab, in whichever sidebar item holds it (`placePinnedTabs`), linking to
