@@ -203,7 +203,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
               >
                 {startContent && startContent}
                 <span className="tab-name" data-name={name}>
-                  {name}
+                  <span className="tab-label">{name}</span>
                 </span>
                 {deprecated && (
                   <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />

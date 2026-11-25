@@ -109,7 +109,8 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
   const renderItem = (item: NavItem, place: 'section' | 'pinned') => {
     const isActive = item.id === active?.id
     // the selected item stays where it is: a click doesn't leave its current tab
-    const to = isActive ? pathname + window.location.search : itemLandingPath(item, access)
+    const here = pathname + window.location.search + window.location.hash
+    const to = isActive ? here : itemLandingPath(item, access)
     if (!to) return null
     return (
       <Styled.Item
@@ -164,7 +165,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
                 // the selected item keeps its current tab, as on the rail
                 link:
                   item.id === active?.id
-                    ? pathname + window.location.search
+                    ? pathname + window.location.search + window.location.hash
                     : itemLandingPath(item, access),
                 selected: item.id === active?.id,
               }))}

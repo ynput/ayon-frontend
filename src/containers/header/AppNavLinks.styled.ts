@@ -72,6 +72,15 @@ export const NavItem = styled.li`
     .tab-name {
       display: inline-flex;
       flex-direction: column;
+      /* an addon's long title can't take the row: the tabs fold by these widths */
+      max-width: 240px;
+
+      .tab-label,
+      &::after {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       &::after {
         content: attr(data-name);
