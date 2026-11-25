@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useLayoutEffect, useState, useRef } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import * as Styled from './Breadcrumbs.styled'
 
@@ -121,6 +121,14 @@ const getCrumbContext = (uri: string, pathname: string): CrumbContext => {
   return { project, path: uri ? uri2crumbs(uri, pathname) : [] }
 }
 
+// the path with `cut` levels left out: the middle ones first, then the first; the last stays
+const collapsePath = (path: string[], cut: number): string[] => {
+  if (!cut) return path
+  const middle = path.slice(1, -1)
+  const last = path[path.length - 1]
+  return cut <= middle.length ? [path[0], '…', ...middle.slice(cut), last] : ['…', last]
+}
+
 interface BreadcrumbsProps {
   /** opens the project switcher; without it the project name is plain text */
   onProjectsClick?: () => void
@@ -136,6 +144,8 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   const uri = useURIContext().uri ?? ''
 
   const inputRef = useRef<HTMLInputElement>(null)
+  const pillRef = useRef<HTMLDivElement>(null)
+  const textRef = useRef<HTMLSpanElement>(null)
 
   // keep localUri in sync with real uri
   useEffect(() => {
@@ -172,12 +182,35 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   }
 
   const { project, path } = getCrumbContext(uri, location.pathname)
-  // long entity paths keep the last level, the full path is in the tooltip
-  const shownPath = project && path.length > 2 ? ['…', path[path.length - 1]] : path
   const fullText = [project, ...path].filter(Boolean).join(' / ')
 
+  // the whole path when the bar has room for it; otherwise levels from the middle go, one at a
+  // time, until it fits (the full path is in the tooltip)
+  const [cut, setCut] = useState(0)
+  const [room, setRoom] = useState(0)
+  const measured = useRef('')
+  useEffect(() => {
+    // the header's left side: its width is the room the pill has, whatever it shows
+    const side = pillRef.current?.parentElement
+    if (!side) return
+    const observer = new ResizeObserver(([entry]) => setRoom(Math.round(entry.contentRect.width)))
+    observer.observe(side)
+    return () => observer.disconnect()
+  }, [])
+  useLayoutEffect(() => {
+    // a new path or more room: start again from the whole path
+    const key = `${fullText}|${room}`
+    if (measured.current !== key) {
+      measured.current = key
+      if (cut) return setCut(0)
+    }
+    const text = textRef.current
+    if (text && text.scrollWidth > text.clientWidth && cut < path.length - 1) setCut(cut + 1)
+  }, [fullText, room, cut, path.length])
+  const shownPath = collapsePath(path, cut)
+
   return (
-    <Styled.Pill id="context-pill">
+    <Styled.Pill id="context-pill" ref={pillRef}>
       {onProjectsClick ? (
         <Styled.ProjectButton
           onClick={onProjectsClick}
@@ -215,10 +248,10 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
       ) : shownPath.length ? (
         <Styled.Display
           onClick={() => setEditMode(true)}
-          data-tooltip={shownPath !== path ? `${fullText} (click to edit the URI)` : 'Click to edit the URI'}
+          data-tooltip={cut ? `${fullText} (click to edit the URI)` : 'Click to edit the URI'}
           data-tooltip-delay={500}
         >
-          <Styled.Text>
+          <Styled.Text ref={textRef}>
             {project && '/ '}
             {shownPath.join(' / ')}
           </Styled.Text>

@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react'
-import type { MouseEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
@@ -27,9 +27,9 @@ const Side = styled.div`
   align-items: center;
   gap: var(--base-gap-large);
 
-  /* stop short of the centred studio brand (max 240px wide) */
+  /* stop 32px short of the centred studio brand (--brand-width, measured) */
   @media (min-width: 1281px) {
-    max-width: calc(50% - 136px);
+    max-width: calc(50% - var(--brand-width, 240px) / 2 - 32px);
   }
 `
 
@@ -79,10 +79,21 @@ const Header: React.FC = () => {
   const user = useAppSelector((state) => state.user)
   const avatarKey = useAppSelector((state) => state.user.avatarKey)
 
-
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const userButtonRef = useRef<HTMLButtonElement>(null)
+
+  // the studio brand's width: the left side runs up to it
+  const brandRef = useRef<HTMLDivElement>(null)
+  const [brandWidth, setBrandWidth] = useState<number>()
+  useEffect(() => {
+    if (!brandRef.current) return
+    const observer = new ResizeObserver(([entry]) =>
+      setBrandWidth(Math.round(entry.contentRect.width)),
+    )
+    observer.observe(brandRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -116,7 +127,9 @@ const Header: React.FC = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <Side>
+      <Side
+        style={brandWidth ? ({ '--brand-width': `${brandWidth}px` } as CSSProperties) : undefined}
+      >
         <Link to={'/dashboard/tasks'}>
           <HomeButton
             icon="home"
@@ -142,7 +155,7 @@ const Header: React.FC = () => {
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </Side>
 
-      <Center>
+      <Center ref={brandRef}>
         <StudioBrand />
       </Center>
 
