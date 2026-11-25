@@ -275,6 +275,8 @@ export type ActionContext = {
   entitySubtypes?: string[] | null
   /** The IDs of the entities */
   entityIds?: string[] | null
+  /** The platform of the client that requests the actions, as detected by the client. It is a hint only: a launcher action may be handled on a different machine than the one that lists it. None when the client does not know it. */
+  platform?: ('windows' | 'linux' | 'darwin') | null
   /** The data from the form */
   formData?: {
     [key: string]: any
@@ -300,6 +302,8 @@ export type ActionConfig = {
   entitySubtypes?: string[] | null
   /** The IDs of the entities */
   entityIds?: string[] | null
+  /** The platform of the client that requests the actions, as detected by the client. It is a hint only: a launcher action may be handled on a different machine than the one that lists it. None when the client does not know it. */
+  platform?: ('windows' | 'linux' | 'darwin') | null
   /** The data from the form */
   formData?: {
     [key: string]: any
