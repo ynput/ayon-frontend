@@ -124,8 +124,20 @@ export const useProjectNavigation = (projectName: string) => {
       icon: 'table_rows',
       section: 'main',
       tabs: [
-        { name: 'Overview', path: path('overview'), module: 'overview', viewType: 'overview', uriSync: true },
-        { name: 'Task progress', path: path('tasks'), module: 'tasks', viewType: 'taskProgress', uriSync: true },
+        {
+          name: 'Overview',
+          path: path('overview'),
+          module: 'overview',
+          viewType: 'overview',
+          uriSync: true,
+        },
+        {
+          name: 'Task progress',
+          path: path('tasks'),
+          module: 'tasks',
+          viewType: 'taskProgress',
+          uriSync: true,
+        },
         {
           name: 'Browser',
           path: path('browser'),
@@ -134,7 +146,13 @@ export const useProjectNavigation = (projectName: string) => {
           deprecated: true,
           enabled: showBrowser,
         },
-        { name: 'Products', path: path('products'), module: 'products', viewType: 'versions', uriSync: true },
+        {
+          name: 'Products',
+          path: path('products'),
+          module: 'products',
+          viewType: 'versions',
+          uriSync: true,
+        },
         { name: 'Lists', path: path('lists'), module: 'lists', viewType: 'lists' },
       ],
     }

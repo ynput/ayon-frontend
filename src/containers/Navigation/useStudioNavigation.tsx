@@ -93,7 +93,12 @@ export const useStudioNavigation = () => {
         ? [
             {
               id: 'planner',
-              tab: { name: 'Planner', path: '/dashboard/planner', module: 'planner', accessLevels: [] },
+              tab: {
+                name: 'Planner',
+                path: '/dashboard/planner',
+                module: 'planner',
+                accessLevels: [],
+              },
             },
           ]
         : []),
@@ -139,7 +144,15 @@ export const useStudioNavigation = () => {
     ]
 
     return [myWork, ...placePages(myWork, entries, KNOWN_STUDIO_PAGES)]
-  }, [hasPlanner, dashboardAddons, remotePages, addonStudioPages, getAddonBundle, isAdmin, isManager])
+  }, [
+    hasPlanner,
+    dashboardAddons,
+    remotePages,
+    addonStudioPages,
+    getAddonBundle,
+    isAdmin,
+    isManager,
+  ])
 
   return {
     items,

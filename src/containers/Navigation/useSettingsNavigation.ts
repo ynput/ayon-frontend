@@ -136,7 +136,13 @@ export const useAdminNavigation = (projectName?: string): NavItem[] => {
         icon: 'history',
         section: 'admin',
         tabs: [
-          { name: 'Events', path: '/events', module: 'events', accessLevels: ['manager'], shortcut: 'E+E' },
+          {
+            name: 'Events',
+            path: '/events',
+            module: 'events',
+            accessLevels: ['manager'],
+            shortcut: 'E+E',
+          },
         ],
       },
       {
@@ -160,7 +166,13 @@ export const useAdminNavigation = (projectName?: string): NavItem[] => {
         icon: 'store',
         section: 'admin',
         tabs: [
-          { name: 'Market', path: '/market', module: 'market', accessLevels: ['admin'], shortcut: 'M+M' },
+          {
+            name: 'Market',
+            path: '/market',
+            module: 'market',
+            accessLevels: ['admin'],
+            shortcut: 'M+M',
+          },
         ],
       },
     ],

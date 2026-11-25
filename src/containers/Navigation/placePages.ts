@@ -20,10 +20,7 @@ const byOrder = <T extends { order?: number }>(list: T[]) =>
   // stable: items without an order keep their place after the ordered ones
   list
     .map((value, index) => ({ value, index }))
-    .sort(
-      (a, b) =>
-        (a.value.order ?? Infinity) - (b.value.order ?? Infinity) || a.index - b.index,
-    )
+    .sort((a, b) => (a.value.order ?? Infinity) - (b.value.order ?? Infinity) || a.index - b.index)
     .map(({ value }) => value)
 
 /**
@@ -51,8 +48,8 @@ export const placePages = (
     const groupId = meta.group
       ? `group:${addon}/${meta.group}`
       : placement?.group && placement.group.addon === (addon ?? placement.group.addon)
-        ? `group:${placement.group.addon}/${placement.group.id}`
-        : undefined
+      ? `group:${placement.group.addon}/${placement.group.id}`
+      : undefined
 
     if (groupId) {
       const group = groups.get(groupId)

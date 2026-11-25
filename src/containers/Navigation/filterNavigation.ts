@@ -28,8 +28,7 @@ export const filterNavigation = (
   layout: NavLayout = {},
 ): NavItem[] =>
   items.filter(
-    (item) =>
-      !layout.hidden?.includes(item.id) && item.tabs.some((tab) => canOpenTab(tab, access)),
+    (item) => !layout.hidden?.includes(item.id) && item.tabs.some((tab) => canOpenTab(tab, access)),
   )
 
 /** The admin pages shown as items until a layout promotes others. */
