@@ -5,6 +5,7 @@ import {
   movePinPast,
   pinnedViewPath,
   placePinnedTabs,
+  samePageLink,
   samePagePins,
   renamePin,
   repointPin,
@@ -35,7 +36,7 @@ test('pinning adds a view at the end with where it is stored; pinning it again u
     'b',
   ])
   // a view of a page that can't be pinned
-  expect(togglePin([], { id: 'r', label: 'R', viewType: 'reviews' }, 'p1')).toEqual([])
+  expect(togglePin([], { id: 'e', label: 'E', viewType: 'events' }, 'p1')).toEqual([])
 })
 
 test('a pin moves past the tab next to it, renames, and repoints in place', () => {
@@ -121,4 +122,20 @@ test("a pinned tab sits right after its page, after that page's earlier pins", (
     { pin: pin('3'), view: { id: '3' } },
   ]
   expect(samePagePins(visible, '3').map((v) => v.pin.id)).toEqual(['1', '3'])
+})
+
+test('a link to a tab of the open page keeps its open list, and nothing one-shot', () => {
+  const here = '/projects/p1/lists'
+  const search = '?list=L1&listItemId=I9&uri=ayon%2Bentity%3A%2F%2Fp1%2Fa'
+  expect(samePageLink('/projects/p1/lists?view=V', here, search)).toBe(
+    '/projects/p1/lists?view=V&list=L1',
+  )
+  expect(samePageLink('/projects/p1/lists', here, search)).toBe('/projects/p1/lists?list=L1')
+  // another page keeps its own link
+  expect(samePageLink('/projects/p1/overview?view=V', here, search)).toBe(
+    '/projects/p1/overview?view=V',
+  )
+  expect(samePageLink('/projects/p1/reviews?view=V', '/projects/p1/reviews', '?review=R')).toBe(
+    '/projects/p1/reviews?view=V&review=R',
+  )
 })
