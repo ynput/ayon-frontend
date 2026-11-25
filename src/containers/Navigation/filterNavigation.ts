@@ -1,6 +1,6 @@
 import { useSelector } from 'react-redux'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
-import type { NavAccess, NavItem, NavLayout } from './types'
+import { NAV_SECTIONS, type NavAccess, type NavItem, type NavLayout } from './types'
 
 /** The access levels tabs check, as the tab row computes them. */
 export const useNavAccess = (): NavAccess => {
@@ -34,3 +34,33 @@ export const filterNavigation = (
 
 /** Every item's tabs in registry order: the single tab row before the sidebar existed. */
 export const flattenTabs = (items: NavItem[]): NavLinkItem[] => items.flatMap((item) => item.tabs)
+
+const pathOf = (path: string) => path.split('?')[0]
+const isUnder = (pathname: string, path: string) =>
+  pathname === path || pathname.startsWith(path.endsWith('/') ? path : `${path}/`)
+
+/** The item a path belongs to: one of its tabs, or one of its `match` prefixes, holds the path. */
+export const findActiveItem = (items: NavItem[], pathname: string): NavItem | undefined =>
+  items.find(
+    (item) =>
+      item.tabs.some((tab) => !!tab.path && isUnder(pathname, pathOf(tab.path))) ||
+      item.match?.some((prefix) => isUnder(pathname, prefix)),
+  )
+
+/** Where an item opens: its landing tab, else the first tab the user can open. */
+export const itemLandingPath = (item: NavItem, access: NavAccess): string | undefined => {
+  const openable = item.tabs.filter((tab) => canOpenTab(tab, access))
+  return (openable.find((tab) => tab.module === item.landing) ?? openable[0])?.path
+}
+
+/** Items in sidebar order: by section, then `order`, then registry order. */
+export const sortForSidebar = (items: NavItem[]): NavItem[] =>
+  items
+    .map((item, index) => ({ item, index }))
+    .sort(
+      (a, b) =>
+        NAV_SECTIONS.indexOf(a.item.section) - NAV_SECTIONS.indexOf(b.item.section) ||
+        (a.item.order ?? Infinity) - (b.item.order ?? Infinity) ||
+        a.index - b.index,
+    )
+    .map(({ item }) => item)

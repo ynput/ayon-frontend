@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import AppNavLinks from '@containers/header/AppNavLinks'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
@@ -30,7 +30,11 @@ import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
-import { STUDIO_BUILT_IN_MODULES, flattenTabs, useStudioNavigation } from '@containers/Navigation'
+import {
+  STUDIO_BUILT_IN_MODULES,
+  findActiveItem,
+  useStudioNavigation,
+} from '@containers/Navigation'
 
 interface ProjectInfo {
   projectNames: Array<{ id: string; name: string }>
@@ -204,9 +208,12 @@ const UserDashboardPage: React.FC = () => {
     ],
   )
 
+  // the tab row belongs to the selected sidebar item (My work on an unknown path)
+  const { pathname } = useLocation()
+  const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...flattenTabs(navItems),
+      ...activeItem.tabs,
       { node: 'spacer' },
       {
         node: (
@@ -218,7 +225,7 @@ const UserDashboardPage: React.FC = () => {
         ),
       },
     ],
-    [navItems, addonName, module],
+    [activeItem, addonName, module],
   )
 
   // Find active page based on current module/addonName; a page opens only with its tab

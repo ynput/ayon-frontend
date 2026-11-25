@@ -96,6 +96,7 @@ import CompleteProfilePrompt from '@components/CompleteProfilePrompt/CompletePro
 import { goToFrame, openViewer } from '@state/viewer'
 import { onCommentImageOpen } from '@state/context'
 import AppRoutes from './containers/AppRoutes'
+import { NavRail } from '@containers/Navigation'
 import type { DetailsPanelProviderProps } from '@shared/context'
 import { ImportDialogProvider } from '@containers/ImportDialog/context/ImportDialogProvider'
 import ImportDialog from '@containers/ImportDialog/ImportDialog'
@@ -297,7 +298,12 @@ const App = () => {
                                                     <FileUploadPreviewContainer />
                                                     <ReleaseInstallerDialog />
                                                     <CompleteProfilePrompt />
-                                                    <AppRoutes />
+                                                    <div className="app-body">
+                                                      <NavRail />
+                                                      <div className="app-page">
+                                                        <AppRoutes />
+                                                      </div>
+                                                    </div>
                                                     <DetailsPanelFloating />
                                                     <EntityLinksSlot />
                                                     <PowerpackDialog />

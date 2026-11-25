@@ -53,7 +53,7 @@ import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 import {
   BROWSER_FLAG,
   PROJECT_BUILT_IN_MODULES,
-  flattenTabs,
+  findActiveItem,
   isHiddenOwnedPage,
   useProjectNavigation,
 } from '@containers/Navigation'
@@ -232,9 +232,11 @@ const ProjectPageInner = () => {
     }
   }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
+  // the tab row belongs to the selected sidebar item (Production on an unknown path)
+  const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...flattenTabs(navItems),
+      ...activeItem.tabs,
       { node: 'spacer' },
       {
         node: <HelpButton module={addonName || module} />,
@@ -251,7 +253,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [navItems, addonName, module],
+    [activeItem, addonName, module],
   )
 
   const activeLink = useMemo(() => {

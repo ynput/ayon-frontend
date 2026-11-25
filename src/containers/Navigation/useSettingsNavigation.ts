@@ -77,8 +77,79 @@ export const useSettingsNavigation = () => {
       })),
     ]
 
-    return { id: 'settings', label: 'Settings', icon: 'settings', section: 'admin', tabs }
+    return {
+      id: 'settings',
+      label: 'Settings',
+      icon: 'settings',
+      section: 'admin',
+      // where the apps menu's Studio settings went; regular users get Site settings
+      landing: 'studio',
+      tabs,
+    }
   }, [addonsData, isManager])
 
   return { item, addonsData: addonsData as SettingsAddon[] | undefined, isManager }
+}
+
+/**
+ * Home's admin section, which replaces the apps menu's links: who sees an item is who could open
+ * its page from the menu. The Project manager draws its own tab row.
+ */
+export const useAdminNavigation = (): NavItem[] => {
+  const { item: settings } = useSettingsNavigation()
+
+  return useMemo(
+    () => [
+      {
+        id: 'projects',
+        label: 'Projects',
+        icon: 'category',
+        section: 'admin',
+        match: ['/manageProjects'],
+        tabs: [
+          {
+            name: 'Projects',
+            path: '/manageProjects/projectSettings',
+            module: 'projectSettings',
+            shortcut: 'P+P',
+          },
+        ],
+      },
+      settings,
+      {
+        id: 'market',
+        label: 'Market',
+        icon: 'store',
+        section: 'admin',
+        tabs: [
+          { name: 'Market', path: '/market', module: 'market', accessLevels: ['admin'], shortcut: 'M+M' },
+        ],
+      },
+      {
+        id: 'events',
+        label: 'Events',
+        icon: 'history',
+        section: 'admin',
+        tabs: [
+          { name: 'Events', path: '/events', module: 'events', accessLevels: ['manager'], shortcut: 'E+E' },
+        ],
+      },
+      {
+        id: 'services',
+        label: 'Services',
+        icon: 'home_repair_service',
+        section: 'admin',
+        tabs: [
+          {
+            name: 'Services',
+            path: '/services',
+            module: 'services',
+            accessLevels: ['manager'],
+            shortcut: 'V+V',
+          },
+        ],
+      },
+    ],
+    [settings],
+  )
 }

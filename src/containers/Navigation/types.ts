@@ -28,6 +28,13 @@ export interface NavItem {
   order?: number
   /** the tab row while the item is selected; the first tab the user can open is its landing */
   tabs: NavLinkItem[]
+  /** the tab (module) the item opens on, when not its first */
+  landing?: string
+  /**
+   * Other paths the item is selected on: pages with their own tab row (the Project manager), by
+   * path prefix
+   */
+  match?: string[]
   /** shown on the item, e.g. the addon bundle dot */
   startContent?: ReactNode
   /** the slot inspector's tags, spread on the item like on a tab */
