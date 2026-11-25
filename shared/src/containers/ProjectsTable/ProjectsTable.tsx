@@ -188,13 +188,13 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
 
   const pinnedProjects = data.flatMap(function collectPinned(row): SimpleTableRow[] {
     const result: SimpleTableRow[] = []
-    if (pinnedSet.has(row.name)) result.push(row)
+    // by id: a project's is its name, a folder's never is (so a same-named folder isn't pinned)
+    if (pinnedSet.has(row.id)) result.push(row)
     if (row.subRows?.length) result.push(...row.subRows.flatMap(collectPinned))
     return result
   })
 
-  // the list without the pinned projects, while the pinned section shows them; by id, which is
-  // the project's name (a folder's id never is)
+  // the list without the pinned projects, while the pinned section shows them
   const withoutPinned = (rows: SimpleTableRow[]): SimpleTableRow[] =>
     rows.flatMap((row) =>
       pinnedSet.has(row.id)
