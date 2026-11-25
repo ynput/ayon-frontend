@@ -17,6 +17,12 @@ interface DetailsPanelTasksProps {
   folders: DetailsPanelEntityData[]
   projectInfo?: Partial<ProjectModel>
   users?: User[]
+  /** opens an entity instead of the slide-out (a preview's host) */
+  onOpen?: (entity: {
+    entityType: 'task' | 'version'
+    entityId: string
+    projectName: string
+  }) => void
 }
 
 export const DetailsPanelTasks = ({
@@ -24,6 +30,7 @@ export const DetailsPanelTasks = ({
   folders,
   projectInfo,
   users = [],
+  onOpen,
 }: DetailsPanelTasksProps) => {
   const { openSlideOut } = useDetailsPanelContext()
   const folderIds = useMemo(() => folders.map((folder) => folder.id).filter(Boolean), [folders])
@@ -68,7 +75,11 @@ export const DetailsPanelTasks = ({
         return (
           <Styled.Row
             key={task.id}
-            onClick={() => openSlideOut({ entityId: task.id, entityType: 'task', projectName })}
+            onClick={() =>
+              onOpen
+                ? onOpen({ entityType: 'task', entityId: task.id, projectName })
+                : openSlideOut({ entityId: task.id, entityType: 'task', projectName })
+            }
             data-testid="details-panel-task"
           >
             <Icon icon={type?.icon || 'task_alt'} style={{ color: type?.color || undefined }} />

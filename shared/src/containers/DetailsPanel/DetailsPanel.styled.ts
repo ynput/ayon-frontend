@@ -46,8 +46,10 @@ export const Panel = styled(ARCPanel)`
 `
 
 // isPreview: a recessed panel (darker, no shadow) inside the window that shows it
+// the path is where the entity is; its segments don't open anything from a preview
 export const PreviewPath = styled.div`
   flex: none;
+  pointer-events: none;
   display: flex;
   align-items: center;
   height: 32px;

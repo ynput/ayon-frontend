@@ -20,6 +20,12 @@ interface DetailsPanelVersionsProps {
   entity?: DetailsPanelEntityData
   projectInfo?: Partial<ProjectModel>
   users?: User[]
+  /** opens an entity instead of the slide-out (a preview's host) */
+  onOpen?: (entity: {
+    entityType: 'task' | 'version'
+    entityId: string
+    projectName: string
+  }) => void
 }
 
 const formatDate = (iso?: string) =>
@@ -31,6 +37,7 @@ export const DetailsPanelVersions = ({
   entity,
   projectInfo,
   users = [],
+  onOpen,
 }: DetailsPanelVersionsProps) => {
   const { openSlideOut } = useDetailsPanelContext()
   const productId = entityType === 'version' ? entity?.product?.id : undefined
@@ -81,7 +88,9 @@ export const DetailsPanelVersions = ({
             key={version.id}
             className={clsx({ current: version.id === entity?.id })}
             onClick={() =>
-              openSlideOut({ entityId: version.id, entityType: 'version', projectName })
+              onOpen
+                ? onOpen({ entityType: 'version', entityId: version.id, projectName })
+                : openSlideOut({ entityId: version.id, entityType: 'version', projectName })
             }
             data-testid="details-panel-version"
           >

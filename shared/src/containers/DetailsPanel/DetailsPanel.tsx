@@ -95,6 +95,12 @@ export type DetailsPanelProps = {
    * its URL, URI, its panel's entities and slide-out stay as they are.
    */
   isPreview?: boolean
+  /** a preview's host opens an entity of its lists (a folder's tasks, the versions) itself */
+  onOpenEntity?: (entity: {
+    entityType: 'task' | 'version'
+    entityId: string
+    projectName: string
+  }) => void
   // optional tab state for independent tab management
 }
 
@@ -131,6 +137,7 @@ const DetailsPanelInner = ({
   entityListsContext,
   resolveVersionJump,
   isPreview = false,
+  onOpenEntity,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -674,6 +681,7 @@ DetailsPanelProps) => {
                 folders={entityDetailsData}
                 projectInfo={firstProjectInfo}
                 users={projectUsers}
+                onOpen={onOpenEntity}
               />
             ),
           }
@@ -687,6 +695,7 @@ DetailsPanelProps) => {
                 entity={entityDetailsData.length === 1 ? firstEntityData : undefined}
                 projectInfo={firstProjectInfo}
                 users={projectUsers}
+                onOpen={onOpenEntity}
               />
             ),
           }

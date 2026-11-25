@@ -54,7 +54,10 @@ type DetailsPanelHeaderProps = {
   projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
-  /** a preview (DetailsPanel isPreview): the thumbnail across the top, the status next to the name */
+  /**
+   * a preview (DetailsPanel isPreview): the thumbnail across the top, the status next to the name,
+   * read only, and the thumbnail scrubs its filmstrip without opening the viewer
+   */
   isPreview?: boolean
 }
 
@@ -175,10 +178,12 @@ const DetailsPanelHeader = ({
     entityType,
   })
   const { writableFields } = attribAccess
-  const canEditStatus = !writableFields || writableFields.includes('status')
-  const canEditTags = !writableFields || writableFields.includes('tags')
+  const canEdit = (field: string) =>
+    !isPreview && (!writableFields || writableFields.includes(field))
+  const canEditStatus = canEdit('status')
+  const canEditTags = canEdit('tags')
   const canEditAssignees =
-    entityType === 'task' && (!writableFields || writableFields.includes('assignees'))
+    !isPreview && entityType === 'task' && (!writableFields || writableFields.includes('assignees'))
 
   const handleUpdate = (field: string, value: any) => {
     if (field !== 'attrib' && writableFields && !writableFields.includes(field)) return
@@ -259,8 +264,8 @@ const DetailsPanelHeader = ({
         isLoading={isLoading}
         shimmer={isLoading}
         thumbnails={thumbnails}
-        onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
-        hoverIcon={isPlayable ? 'play_circle' : undefined}
+        onClick={isThumbnailClickable && !isPreview ? handleThumbnailClick : undefined}
+        hoverIcon={isPlayable && !isPreview ? 'play_circle' : undefined}
         filmstrip={isPlayable}
       />
       {isPlayable && <PlayableIcon />}
@@ -393,6 +398,7 @@ const DetailsPanelHeader = ({
               value={priorityValues}
               onChange={(value) => handleUpdate('attrib', { priority: value[0] })}
               align="right"
+              disabled={isPreview}
             />
           ) : (
             <div style={{ height: 32 }}></div>

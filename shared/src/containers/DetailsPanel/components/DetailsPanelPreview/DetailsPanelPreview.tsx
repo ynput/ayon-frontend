@@ -14,6 +14,8 @@ export type DetailsPanelPreviewProps = {
   scope?: string
   style?: React.CSSProperties
   className?: string
+  /** opens an entity of the preview's lists (a folder's tasks, the versions) */
+  onOpenEntity?: DetailsPanelProps['onOpenEntity']
 }
 
 export const DetailsPanelPreview = ({
@@ -23,6 +25,7 @@ export const DetailsPanelPreview = ({
   scope = 'preview',
   style,
   className,
+  onOpenEntity,
 }: DetailsPanelPreviewProps) => {
   const { onOpenViewer } = useDetailsPanelContext()
   const { data: projectsInfo = {} } = useGetProjectsInfoQuery({ projects: [projectName] })
@@ -43,6 +46,7 @@ export const DetailsPanelPreview = ({
         scope={scope}
         onOpenViewer={(args) => onOpenViewer?.(args)}
         isPreview
+        onOpenEntity={onOpenEntity}
       />
     </div>
   )
