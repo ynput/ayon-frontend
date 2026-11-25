@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import clsx from 'clsx'
 import {
   closestCenter,
@@ -59,7 +59,7 @@ const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDock
   const { pathname } = useLocation()
   const access = useNavAccess()
   const user = useAppSelector((state) => state.user)
-  const { menuOpen, toggleMenuOpen } = useMenuContext()
+  const { menuOpen, setMenuOpen, toggleMenuOpen } = useMenuContext()
   const { isSnoozing } = useRestart()
   const anchorRef = useRef<HTMLSpanElement>(null)
 
@@ -107,6 +107,10 @@ const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDock
 
   const isOpen = menuOpen === 'app'
   const hasMenu = !!inMenu.length || menuShown
+  // the menu goes with its button (a taller window put its pages back): it doesn't reopen later
+  useEffect(() => {
+    if (!hasMenu && isOpen) setMenuOpen(false)
+  }, [hasMenu, isOpen, setMenuOpen])
 
   const renderItem = (item: NavItem, menuPage = false) => {
     const to = itemLandingPath(item, access)

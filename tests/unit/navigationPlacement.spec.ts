@@ -219,4 +219,6 @@ test('admin pages that do not fit go into the Admin menu from the bottom, the bu
   expect(fit(50)).toBe(0)
   // not measured yet: all stay
   expect(fitDocked({ ids: ['a', 'x'], heights, space: 10, button: 40, menuShown: true })).toBe(2)
+  // no pages on the sidebar: none, whatever the room
+  expect(fitDocked({ ids: [], heights, space: 5, button: 40, menuShown: true })).toBe(0)
 })

@@ -62,7 +62,7 @@ export const fitDocked = ({
     ids.slice(0, count).reduce((sum, id) => sum + heights[id] + RAIL_GAP, 0)
   const menu = button + RAIL_GAP
   if (RAIL_DIVIDER_HEIGHT + pages(ids.length) + (menuShown ? menu : 0) <= space) return ids.length
-  let count = ids.length - 1
+  let count = Math.max(0, ids.length - 1)
   while (count > 0 && RAIL_DIVIDER_HEIGHT + pages(count) + menu > space) count -= 1
   return count
 }
