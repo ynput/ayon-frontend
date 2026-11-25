@@ -42,6 +42,11 @@ looks the same and typing never flips it.
   so the budget and the drawn row never disagree.
 - A list narrower than its rows need (`getRowNeededWidth`, which adds `ROW_CHROME`, the handle, X
   and gutters from the Sass) draws them as cards or folds (`asNarrowListItem`, via `useFitsWidth`).
+- Boxes alternate two fills by depth, `surface-container` and the card colour
+  (`--settings-input-bg` / `--settings-input-alt-bg`). A box takes its parent's fill and its
+  content takes the other, so a list inside an open item never melts into it. A box copies the
+  pair into `--settings-box-bg` / `--settings-box-alt-bg` first: swapping two properties on one
+  element is a cycle. A panel starts the pair over.
 - An item whose only field is a group of single values (a path mapping) is drawn as that group's
   row or card (`wrapped`), not as a fold holding a group.
 - Fields out of the level being edited (studio, project, site) take no room (`isPropertyInScope`).
