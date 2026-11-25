@@ -138,4 +138,8 @@ test('a link to a tab of the open page keeps its open list, and nothing one-shot
   expect(samePageLink('/projects/p1/reviews?view=V', '/projects/p1/reviews', '?review=R')).toBe(
     '/projects/p1/reviews?view=V&review=R',
   )
+  // the same page reached with a trailing slash
+  expect(samePageLink('/projects/p1/lists?view=V', '/projects/p1/lists/', '?list=L1')).toBe(
+    '/projects/p1/lists?view=V&list=L1',
+  )
 })

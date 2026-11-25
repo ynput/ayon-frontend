@@ -126,7 +126,9 @@ const PAGE_STATE_PARAMS = ['list', 'review']
  */
 export const samePageLink = (path: string, pathname: string, search: string): string => {
   const [base, query = ''] = path.split('?')
-  if (base !== pathname) return path
+  // the router also matches the page with a trailing slash
+  const trim = (value: string) => (value.length > 1 ? value.replace(/\/+$/, '') : value)
+  if (trim(base) !== trim(pathname)) return path
   const current = new URLSearchParams(search)
   const params = new URLSearchParams(query)
   PAGE_STATE_PARAMS.forEach((key) => {
