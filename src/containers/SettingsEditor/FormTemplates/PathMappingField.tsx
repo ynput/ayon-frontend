@@ -4,6 +4,7 @@ import { Icon } from '@ynput/ayon-react-components'
 import { DndContext, DragEndEvent, closestCenter } from '@dnd-kit/core'
 import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { Registry } from '@rjsf/utils'
 import { $Any } from '@types'
 import { AddItemButton, RemoveItemButton } from './ArrayFieldTemplate.styled'
 import {
@@ -105,6 +106,7 @@ type PathMappingFieldProps = {
   schema: $Any
   formData: PathMappingData | undefined
   formContext: $Any
+  registry: Registry
   onChange: (data: PathMappingData) => void
 }
 
@@ -118,13 +120,26 @@ export const PathMappingField = ({
   schema,
   formData,
   formContext,
+  registry,
   onChange,
 }: PathMappingFieldProps) => {
   const pairs = getPathPairs(formData)
   const sourceId = `${id}_${SOURCE_FIELD}`
   const destinationId = `${id}_${DESTINATION_FIELD}`
-  const source = useFieldOverride(sourceId, formContext, formData?.[SOURCE_FIELD])
-  const destination = useFieldOverride(destinationId, formContext, formData?.[DESTINATION_FIELD])
+  const source = useFieldOverride({
+    fieldId: sourceId,
+    schema: schema.properties?.[SOURCE_FIELD],
+    value: formData?.[SOURCE_FIELD],
+    formContext,
+    registry,
+  })
+  const destination = useFieldOverride({
+    fieldId: destinationId,
+    schema: schema.properties?.[DESTINATION_FIELD],
+    value: formData?.[DESTINATION_FIELD],
+    formContext,
+    registry,
+  })
   const labels = {
     source: schema.properties?.[SOURCE_FIELD]?.title || 'Source',
     destination: schema.properties?.[DESTINATION_FIELD]?.title || 'Destination',

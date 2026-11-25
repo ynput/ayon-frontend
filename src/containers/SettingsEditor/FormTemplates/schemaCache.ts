@@ -1,9 +1,8 @@
 import { $Any } from '@types'
 
-// RJSF's retrieveSchema resolves refs and merges schemas (deep clones, validator code) on every
-// call. The flat layout asks it about every setting on every change (is it a group, do groups
-// fold), so on a big addon each keystroke or added item paid for the whole sheet. A schema's
-// resolution only depends on its value through these keys: any other is resolved once
+// RJSF's retrieveSchema deep clones on every call, and the flat layout asks it about every
+// setting on every change. A schema's resolution only depends on its value through these
+// keys, so any other schema is resolved once
 const VALUE_DEPENDENT_KEYS = ['if', 'then', 'else', 'dependencies', 'oneOf', 'anyOf']
 
 const isValueDependent = (schema: $Any) =>

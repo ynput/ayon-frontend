@@ -12,6 +12,7 @@ import { DetailHeader, EmptyPlaceholderFlex } from '@shared/components'
 import { pluralize } from '@shared/util'
 import styled from 'styled-components'
 import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import { FlatFormCard } from '@components/FlatFormCard'
 
 // a role's row in the flat layout: rename it, or delete it
 const FlatRoleField = styled.div`
@@ -157,12 +158,10 @@ const TeamDetails = ({
         {flatLayout ? (
           // flat settings layout: cards of rows, like a flat settings page
           <div className="flat-form" style={{ marginTop: 'var(--base-gap-large)' }}>
-            <section>
-              <h3 className="flat-form-title">Team</h3>
+            <FlatFormCard title="Team">
               <FormLayout>{nameRow}</FormLayout>
-            </section>
-            <section>
-              <h3 className="flat-form-title">Roles</h3>
+            </FlatFormCard>
+            <FlatFormCard title="Roles">
               <FormLayout>
                 {roles.map((role) => (
                   <FormRow key={role} label={role}>
@@ -174,7 +173,7 @@ const TeamDetails = ({
                 ))}
                 {!roles.length && <p className="flat-form-note">No roles</p>}
               </FormLayout>
-            </section>
+            </FlatFormCard>
           </div>
         ) : (
           <>

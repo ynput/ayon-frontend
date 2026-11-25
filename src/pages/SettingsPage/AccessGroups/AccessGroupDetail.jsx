@@ -20,7 +20,7 @@ import {
   useGetAccessGroupSchemaQuery,
 } from '@shared/api'
 import { confirmDelete } from '@shared/util'
-import { useSelector } from 'react-redux'
+import { useAppSelector } from '@state/store'
 import useUserProjectPermissions, { UserPermissionsEntity } from '@hooks/useUserProjectPermissions'
 
 const PROJECT_GROUP_MSG = 'Clear project overrides'
@@ -29,7 +29,7 @@ const AccessGroupDetail = ({ projectName, accessGroupName }) => {
   const [originalData, setOriginalData] = useState(null)
   // a project's access groups are read-only without write access to its "Project access" (the
   // studio's are for managers, who can always edit them)
-  const isUser = useSelector((state) => state.user.data.isUser)
+  const isUser = useAppSelector((state) => state.user.data.isUser)
   const { permissions: userPermissions } = useUserProjectPermissions(isUser)
   const readOnly =
     !!projectName && !userPermissions.canEdit(UserPermissionsEntity.access, projectName)

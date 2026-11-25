@@ -16,7 +16,7 @@ const TITLE_FIELDS = ['label', 'title']
 
 type ListItemFoldArgs = {
   formContext: $Any
-  /** How the item is drawn (useListItemLayouts); none in the classic layout */
+  /** How the item is drawn (useListItemLayouts). None in the classic layout */
   layout?: ListItemLayout
   /** props of the item's SchemaField: its schema, data and id */
   childProps: $Any
@@ -24,14 +24,14 @@ type ListItemFoldArgs = {
 }
 
 /**
- * Folding of one list item in the flat layout. A complex object folds to one line; a record
+ * Folding of one list item in the flat layout. A complex object folds to one line. A record
  * of single values becomes a boxed row or a card (`contentSchema`, the item's schema drawn
  * that way, see getListItemLayout). Open items are stored for the browser session,
  * keyed by list and index (useFoldState).
  */
 export const useListItemFold = ({ formContext, layout, childProps, index }: ListItemFoldArgs) => {
   const flatLayout = !!formContext?.flatLayout
-  // the fields decide how the item looks; the schema's layout hint never does
+  // the fields decide how the item looks. The schema's layout hint never does
   const itemSchema = layout?.itemSchema ?? null
   const presentation = layout?.presentation ?? 'plain'
   const isFoldable = presentation === 'fold'
@@ -64,7 +64,7 @@ export const useListItemFold = ({ formContext, layout, childProps, index }: List
   })
 
   // an item is titled by its name, else its label or title (a menu item's), and shows its
-  // first values beside it; an item with none of these is titled by its first value and
+  // first values beside it. An item with none of these is titled by its first value and
   // shows the next ones
   const properties = itemSchema?.properties || {}
   const named = 'name' in properties

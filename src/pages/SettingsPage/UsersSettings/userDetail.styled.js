@@ -31,6 +31,7 @@ export const FormsStyled = styled.section`
   flex-direction: column;
 
   &.flat-form {
+    /* flatForm.scss sets this gap too, but loses to the gap above (same specificity) */
     gap: 20px;
     padding: 4px 16px 16px;
     border-radius: var(--border-radius-m);

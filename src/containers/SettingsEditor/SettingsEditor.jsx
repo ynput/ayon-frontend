@@ -13,7 +13,6 @@ import { SelectWidget } from './Widgets/SelectWidget'
 import { DateTimeWidget } from './Widgets/DateTimeWidget'
 import SettingsObjectField from './FormTemplates/SettingsObjectField'
 import { FormWrapper } from './SettingsEditor.styled'
-import { useAppSelector } from '@state/store'
 import clsx from 'clsx'
 import { SettingsOutline } from './SettingsOutline'
 import { SettingsAnchorScopeContext } from './SettingsGroup/SettingsGroupContextInstance'
@@ -21,7 +20,7 @@ import { SettingsJsonDialog } from './SettingsJsonDialog/SettingsJsonDialog'
 import { compareObjects, getValueByPath, setValueByPath } from '@containers/AddonSettings/utils'
 import cloneDeep from 'lodash/cloneDeep'
 import { useStableFormContext } from './formContextStore'
-import { useFlatSettingsLayoutClassName } from '@hooks/useFlatSettingsLayout'
+import { useFlatSettingsLayout, useFlatSettingsLayoutClassName } from '@hooks/useFlatSettingsLayout'
 
 const waitForElm = (selector, timeout = 3000) => {
   return new Promise((resolve, reject) => {
@@ -121,10 +120,7 @@ const SettingsEditor = ({
   const [jsonEdit, setJsonEdit] = useState(null)
   const formWrapperRef = useRef()
   const sheetRef = useRef(null)
-  // per-user choice between the classic nested panels and the flat card layout
-  const flatLayout = useAppSelector(
-    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
-  )
+  const flatLayout = useFlatSettingsLayout()
   const layoutClassName = useFlatSettingsLayoutClassName()
 
   const originalOverrides = useMemo(() => {
@@ -226,7 +222,7 @@ const SettingsEditor = ({
     const newData = setValueByPath(cloneDeep(formData), path, value)
     onChange(newData)
     // the keys the value changes, so an editor that saves only with changed keys can (a whole
-    // sheet edited has no path of its own); a group of anything but settings counts as one
+    // sheet edited has no path of its own). A group of anything but settings counts as one
     const isGroup = (data) => !!data && typeof data === 'object' && !Array.isArray(data)
     const oldValue = getValueByPath(formData, path)
     const changed =

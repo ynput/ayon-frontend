@@ -19,6 +19,7 @@ import {
 } from '@shared/util'
 import { copyToClipboard } from '@shared/util'
 import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import { FlatFormCard } from '@components/FlatFormCard'
 import {
   SettingsFormSection,
   SettingsFormTitle,
@@ -241,14 +242,12 @@ const Secrets = () => {
           <SettingsFormContent>
             {flatLayout ? (
               <div className="flat-form">
-                <section>
-                  <h3 className="flat-form-title">New secret</h3>
+                <FlatFormCard title="New secret">
                   <div>
                     <SecretItem name="" value="" stored={false} flat />
                   </div>
-                </section>
-                <section>
-                  <h3 className="flat-form-title">Stored secrets</h3>
+                </FlatFormCard>
+                <FlatFormCard title="Stored secrets">
                   <div>
                     {secrets?.map((secret) => (
                       <SecretItem
@@ -261,7 +260,7 @@ const Secrets = () => {
                     ))}
                     {secrets?.length === 0 && <span>No stored secrets</span>}
                   </div>
-                </section>
+                </FlatFormCard>
               </div>
             ) : (
               <>

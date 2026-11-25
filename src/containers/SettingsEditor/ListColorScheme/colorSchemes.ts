@@ -1,16 +1,19 @@
-// Palettes a list of types, statuses or tags can take its colours from. All are published
-// qualitative (categorical) palettes, made so that neighbouring colours are told apart:
-// - Tableau 10, Tableau's default categorical palette (values as in d3-scale-chromatic)
-// - Okabe-Ito, the colour-blind safe set (Okabe and Ito 2008, popularised by Wong 2011,
-//   Nature Methods 8:441). Its black is left out: it vanishes on the dark theme
-// - ColorBrewer Set1, Set2, Dark2, Pastel1 and Paired (Cynthia Brewer, colorbrewer2.org)
-// The values are data written to the settings (hex, like the colour field), not styling.
 export type ColorScheme = {
   id: string
   label: string
   colors: string[]
 }
 
+/**
+ * Palettes a list of types, statuses or tags can take its colours from. All are published
+ * qualitative palettes, made so that neighbouring colours are told apart:
+ * - Tableau 10, Tableau's default categorical palette (values as in d3-scale-chromatic)
+ * - Okabe-Ito, the colour-blind safe set (Okabe and Ito 2008, popularised by Wong 2011,
+ *   Nature Methods 8:441). Its black is left out: it vanishes on the dark theme
+ * - ColorBrewer Set1, Set2, Dark2, Pastel1 and Paired (Cynthia Brewer, colorbrewer2.org)
+ *
+ * The values are data written to the settings (hex, like the colour field), not styling.
+ */
 export const COLOR_SCHEMES: ColorScheme[] = [
   {
     id: 'tableau10',

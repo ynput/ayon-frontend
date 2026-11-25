@@ -9,7 +9,7 @@ type SettingsTextFoldProps = {
 
 /**
  * A text area or code editor folded to one line in the flat layout, as tall as a text
- * input. Hovering previews the whole value over the rows below; focusing opens it in
+ * input. Hovering previews the whole value over the rows below. Focusing opens it in
  * place, and it stays open while it holds an unsaved edit.
  */
 export const SettingsTextFold = ({ changed, children }: SettingsTextFoldProps) => {

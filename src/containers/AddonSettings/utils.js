@@ -34,7 +34,7 @@ const sameKeysStructure = (obj1, obj2, strict = false) => {
     }
   }
 
-  // an empty value takes anything; a group or list doesn't become empty (null)
+  // an empty value takes anything, but a group or list doesn't become empty (null)
   if (obj1 === null) return true
   if (obj2 === null) return false
 

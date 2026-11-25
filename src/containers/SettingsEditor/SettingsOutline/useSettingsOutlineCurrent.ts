@@ -5,7 +5,7 @@ import { SettingsOutlineItem, findSettingsGroup, getScrollParent } from './Setti
 // styles that link with :target-current
 const NATIVE_SCROLLSPY = typeof CSS !== 'undefined' && CSS.supports('scroll-target-group: auto')
 
-// Input that scrolls the sheet by hand; a jump from the outline scrolls without any
+// Input that scrolls the sheet by hand. A jump from the outline scrolls without any
 const USER_SCROLL_EVENTS = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const
 
 /**
@@ -27,9 +27,8 @@ export const useSettingsOutlineCurrent = (
   // any scrolling by hand gives the highlight back to the scroll position
   const pinned = !!pinnedId
   useEffect(() => {
-    const scroller = getScrollParent(sheetRef.current)
-    const target: HTMLElement | Window = scroller ?? window
     if (!pinned) return
+    const target: HTMLElement | Window = getScrollParent(sheetRef.current) ?? window
     // scrolling the rail itself, or clicking in it, isn't reading the sheet
     const unpin = (e: Event) => {
       if (e.target instanceof Node && navRef.current?.contains(e.target)) return
@@ -63,7 +62,7 @@ export const useSettingsOutlineCurrent = (
       syncSoon()
       scrollTarget.addEventListener('scrollend', syncSoon)
       // cards rendering after a long jump (content-visibility) move the groups without
-      // scrolling; the sheet's height changes when they do
+      // scrolling. The sheet's height changes when they do
       const resizes = new ResizeObserver(syncSoon)
       resizes.observe(sheet)
       return () => {

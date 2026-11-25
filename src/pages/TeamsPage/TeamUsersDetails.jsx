@@ -13,7 +13,8 @@ import { EmptyPlaceholderFlex } from '@shared/components'
 import addRemoveMembers from './addRemoveMembers'
 import UserSubtitle from './UserSubtitle'
 import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
-import UserDataDialog from '../SettingsPage/UsersSettings/UserDataDialog'
+import UserDataDialog from '@components/UserDataDialog'
+import { FlatFormCard } from '@components/FlatFormCard'
 
 const getFieldValues = (users, field, selectedTeams) => {
   let values = []
@@ -274,18 +275,16 @@ const TeamUsersDetails = ({
         {flatLayout ? (
           // flat settings layout: cards of rows, like a flat settings page
           <div className="flat-form" style={{ marginTop: 'var(--base-gap-large)' }}>
-            <section>
-              <h3 className="flat-form-title">Teams</h3>
+            <FlatFormCard title="Teams">
               <FormLayout>{teamsRow}</FormLayout>
-            </section>
-            <section>
-              <h3 className="flat-form-title">Roles</h3>
+            </FlatFormCard>
+            <FlatFormCard title="Roles">
               <FormLayout>
                 <p className="flat-form-note">{formSubtitle}</p>
                 {rolesRow}
                 {leaderRow}
               </FormLayout>
-            </section>
+            </FlatFormCard>
           </div>
         ) : (
           <>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'react-toastify'
 import {
   FormLayout,
@@ -25,6 +25,7 @@ import { AddonProfileSections } from '@shared/components'
 import { PersonalApiKeysPreview } from './PersonalApiKeysPreview'
 import clsx from 'clsx'
 import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import { FlatFormCard } from '@components/FlatFormCard'
 import { AvatarName, ReadOnlyInput } from './ProfilePage.styled'
 import { EditableLockedInput } from '../SettingsPage/UsersSettings/userDetail.styled'
 import { DividerSmallStyled } from '../SettingsPage/UsersSettings/UserAttribForm.styled'
@@ -183,10 +184,10 @@ const ProfilePage = ({ user = {}, isLoading }) => {
   const [updatePreferences, { isLoading: isUpdatingPreferences }] =
     useSetFrontendPreferencesMutation()
 
-  const initPreferencesData = useRef(initialPreferences)
+  // the last saved preferences: state, so a save re-renders and clears the changes flag
+  const [savedPreferences, setSavedPreferences] = useState(initialPreferences)
   const [preferencesData, setPreferencesData] = useState(initialPreferences)
-  const preferenceChanges =
-    JSON.stringify(preferencesData) !== JSON.stringify(initPreferencesData.current)
+  const preferenceChanges = JSON.stringify(preferencesData) !== JSON.stringify(savedPreferences)
 
   // once user data is loaded, set form data
   useEffect(() => {
@@ -203,12 +204,12 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       setPreferencesData(newPreferencesData)
       // used to reset form and detect changes
-      initPreferencesData.current = newPreferencesData
+      setSavedPreferences(newPreferencesData)
     }
 
     return () => {
       // reset forms
-      initPreferencesData.current = initialPreferences
+      setSavedPreferences(initialPreferences)
       setPreferencesData(initialPreferences)
     }
   }, [isLoading, user])
@@ -230,7 +231,7 @@ const ProfilePage = ({ user = {}, isLoading }) => {
 
       dispatch(updateUserPreferences(preferencesData))
       // reset form
-      initPreferencesData.current = preferencesData
+      setSavedPreferences(preferencesData)
 
       // if the user has enabled notifications for the first time, ask for permission
       if (preferencesData.notifications && Notification.permission !== 'granted') {
@@ -403,18 +404,13 @@ const ProfilePage = ({ user = {}, isLoading }) => {
           <ColumnsStyled>
             {flatLayout ? (
               <div className="flat-form">
-                <section>
-                  {/* saves this card and the preferences: addon sections save their own data */}
-                  <header className="flat-form-title">
-                    <span>Profile</span>
-                    {saveButton}
-                  </header>
+                {/* saves this card and the preferences: addon sections save their own data */}
+                <FlatFormCard title="Profile" action={saveButton}>
                   <FormLayout>{profileRows}</FormLayout>
-                </section>
-                <section>
-                  <h3 className="flat-form-title">Preferences</h3>
+                </FlatFormCard>
+                <FlatFormCard title="Preferences">
                   <FormLayout>{preferenceRows}</FormLayout>
-                </section>
+                </FlatFormCard>
               </div>
             ) : (
               <Panel>

@@ -6,7 +6,8 @@ import isEqual from 'lodash/isEqual'
 import { $Any } from '@types'
 import { FieldTemplateProps } from '@rjsf/utils'
 import { CSS } from 'styled-components/dist/types'
-import { arrayStartsWith, matchesFilterKeys } from './searchMatcher'
+import { matchesFilterKeys } from './searchMatcher'
+import { isInsidePath } from './settingsPath'
 import { renderFieldTemplate } from './FieldTemplateHelpers'
 import { buildOverrideContextMenu } from './ObjectFieldTemplateHelpers'
 import { getReadOnlyReason } from './readOnlySettings'
@@ -38,8 +39,7 @@ function FieldTemplate(props: FieldTemplateProps) {
         override: fieldOverride,
         fieldChanged: arrayContainsArray(changedKeys, fieldPath),
         // a list drawn as a group shows a change anywhere inside it
-        listChanged:
-          isListGroup && changedKeys.some((key: $Any) => arrayStartsWith(key, fieldPath)),
+        listChanged: isListGroup && changedKeys.some((key: $Any) => isInsidePath(key, fieldPath)),
         matches: matchesFilterKeys(
           context.searchText,
           context.filterKeys,
@@ -64,7 +64,7 @@ function FieldTemplate(props: FieldTemplateProps) {
   const path = useMemo(() => override?.path || [], [override?.path])
 
   const overrideLevel = fieldChanged ? 'edit' : override?.level || 'default'
-  // classic marks a value overridden with its whole group in italics; flat leaves it out
+  // classic marks a value overridden with its whole group in italics. Flat leaves it out
   const labelStyle: CSS.Properties = override?.inGroup && !flatLayout ? { fontStyle: 'italic' } : {}
 
   // Context menu
@@ -107,6 +107,7 @@ function FieldTemplate(props: FieldTemplateProps) {
     overrideLevel,
     labelStyle,
     matches,
+    isListGroup,
     listChanged,
     currentId,
     onContextMenu,

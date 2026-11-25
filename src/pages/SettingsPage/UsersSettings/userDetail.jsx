@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, memo } from 'react'
+import { Fragment, useState, useEffect, useRef, memo } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
 import {
@@ -17,7 +17,7 @@ import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
-import UserDataDialog from './UserDataDialog'
+import UserDataDialog from '@components/UserDataDialog'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
@@ -217,6 +217,8 @@ const UserDetail = ({
   const dispatch = useDispatch()
   // the user's flat settings layout preference draws these forms like a flat settings sheet
   const flatLayout = useFlatSettingsLayout()
+  // the flat form styles its rows through a FormLayout. Classic keeps them straight in the panel
+  const ProfileRows = flatLayout ? FormLayout : Fragment
 
   useEffect(() => {
     // have the selected users changed?
@@ -421,7 +423,7 @@ const UserDetail = ({
           {singleUserEdit && (
             <Panel>
               {flatLayout && <b className="flat-form-title">Profile</b>}
-              <FormLayout>
+              <ProfileRows>
                 <FormRow label="Username" key="Username">
                   <EditableLockedInput
                     value={singleUserEdit.name}
@@ -446,7 +448,7 @@ const UserDetail = ({
                     disabled={managerDisabled}
                   />
                 )}
-              </FormLayout>
+              </ProfileRows>
             </Panel>
           )}
           {formData && (

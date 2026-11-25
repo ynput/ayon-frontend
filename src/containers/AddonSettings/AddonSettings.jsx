@@ -46,6 +46,7 @@ import EmptyPlaceholder from '@shared/components/EmptyPlaceholder'
 import ayonClient from '@/ayon'
 import { attachLabels } from './searchTools'
 import useUserProjectPermissions from '@hooks/useUserProjectPermissions'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import LoadingPage from '@pages/LoadingPage'
 import PerProjectBundleConfig, {
   FROZEN_BUNDLE_ICON,
@@ -95,10 +96,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   const developerMode = user?.attrib?.developerMode
   const isDeveloper = user?.data?.isDeveloper
   const userName = useSelector((state) => state.user.name)
-  // per-user choice between the classic nested panels and the flat card layout
-  const flatLayout = useSelector(
-    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
-  )
+  const flatLayout = useFlatSettingsLayout()
 
   const [showHelp, setShowHelp] = useState(false)
   const [selectedAddons, setSelectedAddons] = useState([])
@@ -183,11 +181,13 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
   // rather than loading production's whole settings payload for nothing
   const waitingForBundle = bundlesLoading && developerMode && storedBundle.variant === 'dev'
 
+  // the saved settings, kept current: after a save the panel loads them again, and changes
+  // (raw settings, revert) are worked out against them, not the first load
   const onSettingsLoad = useCallback(
     (addon, siteId, data) => {
       const key = `${addon.name}|${addon.version}|${addon.variant}|${siteId}|${projectKey}`
       setOriginalData((currentData) =>
-        key in currentData ? currentData : { ...currentData, [key]: data },
+        currentData[key] === data ? currentData : { ...currentData, [key]: data },
       )
     },
     [projectKey],
@@ -558,7 +558,7 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
     }
 
     // under the path, the changed keys are worked out again against the saved settings, so a
-    // value set back to what is saved is no longer a change; the addon's other changes stay
+    // value set back to what is saved is no longer a change. The addon's other changes stay
     const isUnderPath = (keyPath) =>
       keyPath.length >= path.length &&
       path.every((part, index) => String(keyPath[index]) === String(part))
@@ -699,29 +699,15 @@ const AddonSettings = ({ projectName, showSites = false, bypassPermissions = fal
         <SaveButton
           label="Save changes"
           style={{ flexShrink: 0 }}
-          disabled={
-            (!bypassPermissions && !userPermissions.canEditSettings(projectName)) || !canCommit
-          }
-          data-tooltip={
-            !bypassPermissions && !userPermissions.canEditSettings(projectName)
-              ? "You don't have edit permissions"
-              : undefined
-          }
+          disabled={!canEditSettings || !canCommit}
+          data-tooltip={canEditSettings ? undefined : "You don't have edit permissions"}
           onClick={onSave}
           active={canCommit}
           saving={setAddonSettingsUpdating}
         />
       </>
     ),
-    [
-      onRevertAllChanges,
-      onSave,
-      canCommit,
-      bypassPermissions,
-      projectName,
-      setAddonSettingsUpdating,
-      userPermissions,
-    ],
+    [onRevertAllChanges, onSave, canCommit, canEditSettings, setAddonSettingsUpdating],
   )
 
   const onSelectAddon = (newSelection) => {

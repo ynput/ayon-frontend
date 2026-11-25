@@ -9,9 +9,12 @@ user with `frontendPreferences.flatSettingsLayout` (_Profile > Flat settings lay
 as it is when changing the flat layout.
 
 Forms outside the editor follow the same preference (`useFlatSettingsLayout`): the Users details
-panel, the profile, Secrets, the attribute dialog, and the Teams page's member and team settings. They are ARC `FormRow`s, drawn flat by the
-global `src/styles/flatForm.scss` (`flat-form`, `flat-form-title`, `flat-form-panel`; global, as
-dialogs are portalled). Keep its spacing and surfaces in step with `SettingsEditor.sass`.
+panel, the profile, Secrets, the attribute dialog, and the Teams page's member and team settings.
+They are ARC `FormRow`s, drawn flat by the global `src/styles/flatForm.scss` (`flat-form`,
+`flat-form-title`, `flat-form-panel`, global because dialogs are portalled). A titled card of them
+is `FlatFormCard` (`src/components`). Panel and divider colours are app tokens shared with the
+editor (`--color-form-panel`, `--color-form-divider` in `index.scss`). Keep the spacing in step
+with `SettingsEditor.sass`.
 
 ## Flat layout
 
@@ -32,14 +35,13 @@ looks the same and typing never flips it.
 | Presentation | When |
 | --- | --- |
 | `plain` | A single value (a path in a list of paths), or a record with one field showing |
-| `row` | Single-value fields only, up to 6, whose cells fit in 660px. Labels once, as column headings |
-| `card` | Single-value fields that don't fit a row, up to 8, whose values are paths per platform (`windows`, `linux`, `darwin`). The name on top, the values in a grid |
-| `fold` | Anything else: unrelated values too wide for a row, more than 8 fields, or a list, group, code editor or multi-select with many options inside. A titled line with a summary |
+| `row` | Single-value fields only, up to `ROW_MAX_FIELDS`, whose cells fit in `ROW_WIDTH`. Labels once, as column headings |
+| `card` | Single-value fields that don't fit a row, up to `CARD_MAX_FIELDS`, whose values are paths per platform (`windows`, `linux`, `darwin`). The name on top, the values in a grid |
+| `fold` | Anything else: unrelated values too wide for a row, more fields than a card holds, or a list, group, code editor or multi-select with many options inside. A titled line with a summary |
 
-- Cell widths (`CELL_WIDTH`): text 200, date 160, multi-select with up to 8 options 160, name 120,
-  dropdown 120, number 100, short code 88, switch 72, colour 48. They are also the widths the
-  cells are drawn at: `ObjectFields` sets `--settings-cell-width` from them (`getRowCellWidth`),
-  so the budget and the drawn row never disagree.
+- Cell widths (`CELL_WIDTH`) go from free text, the widest, down to a colour swatch. They are
+  also the widths the cells are drawn at: `ObjectFields` sets `--settings-cell-width` from them
+  (`getRowCellWidth`), so the budget and the drawn row never disagree.
 - A list narrower than its rows need (`getRowNeededWidth`, which adds `ROW_CHROME`, the handle, X
   and gutters from the Sass) draws them as cards or folds (`asNarrowListItem`, via `useFitsWidth`).
 - Boxes alternate two fills by depth, `surface-container` and the card colour
@@ -151,9 +153,8 @@ by addon, project, site and the editor's `anchorScope` (`getListItemsPrefix`). A
 pointing inside an item (`formContext.currentId`) opens it once; folding it again afterwards
 sticks. Outline jumps don't open folds: the outline lists cards and sections, never what's inside
 a fold. While `formContext.searchText` is set, every fold is open and its toggle is disabled
-(`forcedOpen`), so no match is hidden. That makes the search
-in the flat layout costly on big addons: 2.4s of long tasks with Core, Maya and Applications open,
-in a single run on a dev server.
+(`forcedOpen`), so no match is hidden. That makes the search in the flat layout costly on big
+addons, with Core, Maya and Applications open.
 
 ### Outline
 
@@ -162,10 +163,9 @@ being read (`useSettingsOutlineCurrent`). A link's tooltip shows the group's ful
 description, read from the title's own tooltip (`data-tooltip`). A name the rail cuts short
 scrolls left in a loop on hover or focus (`startRollingLink`): a hidden copy follows it after a
 gap, and a pass moves exactly one name and gap, so the loop restarts unseen. Not with reduced
-motion. A clicked item stays highlighted until the user scrolls
-by hand. Where CSS scroll-spy is supported (`scroll-target-group`, Chrome), the highlight reads the
-browser's `:target-current` link; elsewhere an `IntersectionObserver` tracks the group crossing the
-middle of the view. Only Chrome has been checked. A jump (`scrollToSettingsGroup`) renders every
+motion. A clicked item stays highlighted until the user scrolls by hand. Where CSS scroll-spy is
+supported (`scroll-target-group`, Chrome), the highlight reads the browser's `:target-current`
+link. Elsewhere an `IntersectionObserver` tracks the group crossing the middle of the view. A jump (`scrollToSettingsGroup`) renders every
 card until `scrollend`, or 2 seconds at most; a new jump ends the one still settling. The toolbar
 toggle shows only while an outline has links (`outlineAvailability.ts`).
 
@@ -189,12 +189,12 @@ places that draw the grid (`SettingsEditor.jsx`, `AddonSettingsSheets`):
 | Preference | Class | Effect |
 | --- | --- | --- |
 | `fullWidthSettings` (_Full width settings_) | `is-full-width` | No margins: the rail, then the sheet filling the rest. Narrow panels (720px or less) still drop the rail |
-| `outlineFitsTitles` (_Outline fits titles_) | `outline-fits-titles` | `--settings-outline-width` becomes `max-content`, so the rail is as wide as its longest title, up to 400px. Longer names still roll. A dragged width wins over it |
+| `outlineFitsTitles` (_Outline fits titles_) | `outline-fits-titles` | `--settings-outline-width` becomes `max-content`, so the rail is as wide as its longest title, up to the rail's cap (`--settings-outline-max-width`). Longer names still roll. A dragged width wins over it |
 
 **Resizing the rail.** A line in the gap between the rail and the sheet, as tall as the panel,
-sets the rail's width from 120px to 400px (`useSettingsOutlineResize`). It looks like the app's
-splitters (`SplitterStyles`). Double-click goes back to the default; the arrow keys move it by
-16px. The line always follows the pointer, up to those limits:
+sets the rail's width, from `OUTLINE_MIN_WIDTH` to the rail's cap (`useSettingsOutlineResize`).
+It looks like the app's splitters (`SplitterStyles`). Double-click goes back to the default, and
+the arrow keys move it by `KEY_STEP`. The line always follows the pointer, up to those limits:
 
 | Layout | Dragging the line |
 | --- | --- |
@@ -206,9 +206,10 @@ splitters (`SplitterStyles`). Double-click goes back to the default; the arrow k
   It is set inline on the grid (`--settings-outline-width`, `--settings-outline-shift` and
   `data-outline-resized`), so it beats both defaults above. React owns the grid's `className`,
   hence an attribute and not a class.
-- A resized centred grid sizes the rail's column as `max(width, margin + shift)`. The margin is
-  worked out from the 1040px sheet and 24px gaps, in the Sass and in the hook: change them
-  together.
+- A resized centred grid sizes the rail's column as `max(width, margin + shift)`. The sheet's
+  width, the gap and the rail's cap are custom properties on `.settings-flat-layout`
+  (`--settings-sheet-width`, `--settings-layout-gap`, `--settings-outline-max-width`), and the hook
+  reads them from the page, so the Sass is their only source.
 - The rail is two elements: `.settings-outline`, the sticky grid item that also holds the line,
   and the `nav` inside it that scrolls. A line inside the `nav` would scroll away with the links.
   `--settings-outline-height` is set on the outer one, for both.
@@ -241,7 +242,7 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
 - `:has()` can't be nested, and `X > :is(a, b > c)` never matches its second branch. Both fail
   silently, so the flat rules write those selectors out in full.
 - Group element ids are `settings-<fieldId>` (`getSettingsGroupAnchor`). Field ids start with
-  `root`, and a bare one gave the root group `id="root"`, the app's mount element.
+  `root`, so a bare one would give the root group `id="root"`, the app's mount element.
 - Field ids repeat across addons (Maya, Nuke and Houdini all have `root_publish`). Editors that
   share a page pass `anchorScope` (addon name and site), and their ids become
   `settings-<scope>-<fieldId>`. Outline items are keyed by that element id, and the native
@@ -259,10 +260,10 @@ sheet's title without the bundle, project and site badges (`.settings-title-badg
 - The colour scheme picker (`ListColorScheme/`) needs `formContext.onSetValue`, which only
   `AnatomyEditor` provides. Other editors don't show it.
 - The flat sheet takes the colour of the panel the editor sits on (`--settings-sheet-bg`, which is
-  ARC's `--panel-background`). Sticky titles paint it, and settings panels sit one step off it, in `--settings-panel-bg`: the
-  table rows' colour (`--color-table-row`), the darkest surface the app uses for a large area.
-  `surface-container-lowest` is darker on the dark theme and only fills small things elsewhere.
-  `flatForm.scss` uses the same colour.
+  ARC's `--panel-background`). Sticky titles paint it, and settings panels sit one step off it,
+  in `--settings-panel-bg` (`--color-form-panel`): the table rows' colour, the darkest surface the
+  app uses for a large area. `surface-container-lowest` is darker on the dark theme and only fills
+  small things elsewhere.
   A page that hosts the editor puts it on a panel (a `ScrollPanel` without `transparent`, or a
   wrapper with `--panel-background`, as in the New project dialog). On any other surface the
   sticky titles show as bands.
@@ -291,7 +292,11 @@ These apply to both layouts.
   one of them reads it with `useFormContextSelector(formContext, select)`, selecting only what it
   uses, and draws from the returned value. Widgets use `useParsedContext`. Event handlers can
   read the context directly, since it's always current.
-- `select` runs for every mounted field after each editor render, so keep it cheap.
+- `select` runs for every mounted field after each editor render, so keep it cheap. A group's
+  override level (`getObjectOverrideLevel`) is kept per changed keys and overrides objects, which
+  are new only when they change.
+- Keys the editor stops passing are dropped from the shared object, so a host that leaves out
+  `onSetRawValue` or `readOnly` doesn't keep the old one.
 - A component that reads a changing value straight from the context still looks right after an
   edit inside it. It goes stale only when the value changes elsewhere: the changed marks after a
   save or Clear, or a fold that a search should open. Check those cases after adding a reader.
@@ -307,13 +312,16 @@ These apply to both layouts.
 
 These apply to both layouts.
 
-- Resting the pointer on an addon for 80ms prefetches its schema, values and overrides
+- Resting the pointer on an addon for `HOVER_DELAY` prefetches its schema, values and overrides
   (`useAddonSettingsPrefetch.ts`). The arguments must match the queries in `AddonSettingsPanel`
   exactly (`projectName: null`, `siteId: null`), or the cache misses. Site settings aren't
   prefetched, as they load per selected site.
-- Search (`SettingsListHeader.tsx`) waits for a 250ms pause, skips a search it already ran, and
+- Search (`SettingsListHeader.tsx`) waits for a pause (`SEARCH_DELAY`), skips a search it already ran, and
   applies the result in a React transition. The delayed search runs the latest search function
   (a ref), so it matches addons selected while the user was typing.
+- The saved settings each addon's changes are worked out against (`originalData`) are replaced on
+  every load (`onSettingsLoad`), so after a save, raw settings and revert compare with what is
+  saved now, not the first load.
 - After a save or an override change, `reloadAddons` clears the addon's form data and
   `AddonSettingsPanel` refills it from a request made after the save, never from the cached copy.
   Until then the editor keeps showing the last values: RJSF fills an empty form with the schema

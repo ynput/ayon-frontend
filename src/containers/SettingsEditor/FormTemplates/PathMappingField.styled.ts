@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 // handle, source, arrow, destination, X: the headings use the same columns as the pairs
 const PAIR_COLUMNS =
-  'var(--settings-handle-size, 24px) minmax(0, 1fr) var(--space-8) minmax(0, 1fr) var(--base-input-size)'
+  'var(--settings-handle-size, 24px) minmax(0, 1fr) var(--space-8, 32px) minmax(0, 1fr) var(--base-input-size)'
 
 export const Mapping = styled.div`
   display: flex;
@@ -10,7 +10,7 @@ export const Mapping = styled.div`
   gap: var(--space-2, 8px);
   width: 100%;
   /* inset like a list in a panel: 12px from its edges, with the 6px the panel already gives */
-  padding: calc(var(--space-3) / 2) var(--space-3);
+  padding: calc(var(--space-3, 12px) / 2) var(--space-3, 12px);
 `
 
 export const Headings = styled.div`
@@ -58,7 +58,10 @@ export const Pair = styled.div`
   &.is-dragging {
     position: relative;
     z-index: 1;
-    box-shadow: 0 2px 8px var(--md-sys-color-shadow);
+    box-shadow: var(
+      --settings-lift-shadow,
+      0 4px 12px color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent)
+    );
   }
 `
 

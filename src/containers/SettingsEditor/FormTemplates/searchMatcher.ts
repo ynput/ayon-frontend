@@ -1,15 +1,3 @@
-import { $Any } from '@types'
-
-/** Whether `arr1` starts with all of `arr2`: a path inside another one */
-const arrayStartsWith = (arr1: $Any, arr2: $Any) => {
-  if ((arr2 || []).length > (arr1 || []).length) return false
-  if ((arr2 || []).length === 0) return true
-  for (let i = 0; i < arr2.length; i++) {
-    if (arr1[i] !== arr2[i]) return false
-  }
-  return true
-}
-
 const arrayMatchingRegex = new RegExp(/([\w_+]+?)_[\d+]_[\d]*\w+$/)
 
 const matchesFilterKeys = (
@@ -52,4 +40,4 @@ const getArrayMatch = (key: string) => {
   return key.match(arrayMatchingRegex)
 }
 
-export { arrayStartsWith, matchesFilterKeys }
+export { matchesFilterKeys }

@@ -1,12 +1,10 @@
-// Forms drawn like a flat settings sheet (SettingsEditor.sass), outside the settings editor, when
-// the user turned on the flat settings layout (frontendPreferences.flatSettingsLayout): the user
-// details panel, the profile, secrets, the attribute dialog. Built from ARC FormRows (a .label and
-// a .field). Global, so it reaches dialogs, which are portalled out of the page.
-//
-//   .flat-form             cards stacked on the sheet
-//     > card with a .flat-form-title: the title on the sheet, what follows it is a panel of rows
-//     > card without one: a box of its own content (add-on sections)
-//   .flat-form-panel       a panel of rows without a title (a dialog's form)
+// Forms drawn like a flat settings sheet (SettingsEditor.sass) outside the settings editor, with
+// the flat layout on: the user details panel, the profile, secrets, the attribute dialog. Global,
+// so it reaches dialogs, which are portalled out of the page.
+
+// .flat-form stacks cards: a card with a .flat-form-title is its title over a panel of rows, one
+// without is a box of its own content (add-on sections). .flat-form-panel is a panel of rows
+// without a title (a dialog's form)
 
 // an ARC FormRow: a label and its field
 $row: 'div:has(> .label + .field)';
@@ -33,7 +31,7 @@ $panel: ':is(.flat-form .flat-form-title + *, .flat-form-panel)';
   > :not(:has(> .flat-form-title), .flat-form-panel) {
     padding: 12px;
     border-radius: var(--border-radius-m);
-    background-color: var(--color-table-row, var(--md-sys-color-surface-container-lowest));
+    background-color: var(--color-form-panel);
   }
 
   .flat-form-title {
@@ -72,7 +70,7 @@ $panel: ':is(.flat-form .flat-form-title + *, .flat-form-panel)';
   gap: 0;
   padding: 6px 0;
   border-radius: var(--border-radius-m);
-  background-color: var(--color-table-row, var(--md-sys-color-surface-container-lowest));
+  background-color: var(--color-form-panel);
 
   // forms nested in a panel (attributes, a key handler) add no gaps of their own
   > div:not(#{$row}) {
@@ -116,9 +114,7 @@ $panel: ':is(.flat-form .flat-form-title + *, .flat-form-panel)';
     top: 0;
     left: 12px;
     right: 12px;
-    // as the settings editor's --settings-divider
-    border-top: 1px solid
-      color-mix(in srgb, var(--md-sys-color-surface-container-high) 50%, transparent);
+    border-top: 1px solid var(--color-form-divider);
   }
 
   // the panel's first row, also inside a form or a wrapper of its own
@@ -127,7 +123,7 @@ $panel: ':is(.flat-form .flat-form-title + *, .flat-form-panel)';
     content: none;
   }
 
-  // labels take the free room, on the line of the field's first control; text fields and
+  // labels take the free room, on the line of the field's first control. Text fields and
   // dropdowns take the row's second half
   #{$row} > .label {
     flex: 1 1 0;

@@ -29,10 +29,10 @@ $field-gap: 8px
     
 .rjsf
   // override colours as text: the accents are too light on the light theme, so there an
-  // override shows as a darker shade of its accent (labels, group titles, mapping headings)
-  --settings-text-studio: light-dark(#006b2b, var(--color-hl-studio))
-  --settings-text-project: light-dark(#8a4d00, var(--color-hl-project))
-  --settings-text-site: light-dark(#9b3f53, var(--color-hl-site))
+  // override shows as its accent darkened with the text colour (labels, titles, headings)
+  --settings-text-studio: light-dark(color-mix(in srgb, var(--color-hl-studio) 40%, var(--md-sys-color-on-surface)), var(--color-hl-studio))
+  --settings-text-project: light-dark(color-mix(in srgb, var(--color-hl-project) 40%, var(--md-sys-color-on-surface)), var(--color-hl-project))
+  --settings-text-site: light-dark(color-mix(in srgb, var(--color-hl-site) 40%, var(--md-sys-color-on-surface)), var(--color-hl-site))
 
   // TODO: do we have any instance in the app where we don't want
   // the following behavior? Shouldn't we move this to ayon-react-components
@@ -298,7 +298,7 @@ $field-gap: 8px
     
 
 // Flat layout, opt-in per user (frontendPreferences.flatSettingsLayout). SettingsGroup
-// draws the groups; this turns every field into a full width row, spaced, not divided.
+// draws the groups. This turns every field into a full width row, spaced, not divided.
 // The second selector covers the drag overlay, which is portalled to the body.
 
 // a field that is a row of its own, not one of several fields sharing a row
@@ -307,22 +307,85 @@ $flat-row: '.form-inline-field:not(.form-inline-field-widget *, .layout-compact 
 // a field with a label of its own: a row, or one field of a compact row
 $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-header-enabled-toggler *)'
 
-// the outline rail and the sheet: the sheet is one readable column centred in the panel, the
-// rail in the margin on its left. The rail's column is kept while it is hidden (toolbar
-// button), so the sheet never moves when it is shown or hidden. The
-// margin on the right grows with the left one: the sheet is centred while there is room for
-// the rail beside it, and takes the right margin first when there isn't. Narrow panels drop the
-// rail and keep the sheet
+// a row inside a list box: a control's height within the box's 1px borders
+$row-height: calc(var(--base-input-size) - 2px)
+
+// list boxes (simple, complex, row and card items) and folding groups share this edge and fill
+=box-edge
+  border: 1px solid var(--md-sys-color-outline-variant)
+  border-radius: var(--border-radius-m)
+  background-color: var(--settings-input-bg)
+
+// a list item's box sits in the fields' column, a small gap above the next one
+=list-box
+  margin: 0 var(--settings-card-gutter) var(--space-1)
+  padding: 0
+  +box-edge
+
+// a folding box (a complex list item, a folding group): rows inside need less room, and sticky
+// group titles inside take its fill. It keeps its fill and the other one for its content to swap
+// (two properties can't swap on one element: that's a cycle)
+=fold-box-tokens
+  --settings-gutter: var(--space-3)
+  --settings-row-padding: var(--settings-row-y) var(--settings-gutter)
+  --settings-surface: var(--settings-input-bg)
+  --settings-box-bg: var(--settings-input-bg)
+  --settings-box-alt-bg: var(--settings-input-alt-bg)
+
+// the group folding in that box. Its title row doesn't stick, so it stacks under the handle,
+// the X and the sticky titles
+=fold-box-group($title-padding)
+  > .settings-group-header
+    position: relative
+    top: auto
+    z-index: 0
+    min-height: $row-height
+    margin: 0
+    padding: $title-padding
+    border-radius: var(--border-radius-m)
+    background-color: var(--settings-input-bg)
+
+    // a long summary is cut short first, then the name ends in an ellipsis, so the
+    // switch keeps its place at the end
+    > .settings-group-title
+      max-width: 60%
+
+  &:not(.settings-group-folded)
+    padding-bottom: var(--space-1)
+
+  // everything below the title row: controls, and the boxes of a list in it, take the
+  // other fill, so nested items alternate
+  > :not(.settings-group-header)
+    --settings-input-bg: var(--settings-box-alt-bg)
+    --settings-input-alt-bg: var(--settings-box-bg)
+
+// a label kept for screen readers only
+=visually-hidden
+  position: absolute
+  width: 1px
+  height: 1px
+  overflow: hidden
+  clip-path: inset(50%)
+  white-space: nowrap
+
+// the outline rail and the sheet: one readable column centred in the panel, the rail in the
+// margin on its left. A hidden rail (toolbar button) keeps its column, so the sheet never moves
 .settings-flat:not(.rjsf)
   padding-inline: 16px
   container-type: inline-size
 
 .settings-flat-layout
-  // the rail's width: fixed, or as wide as its longest title, up to a cap (Profile)
+  // the sheet's width, the gap beside it and the rail's cap, also read by the rail's resize
+  --settings-sheet-width: 1040px
+  --settings-layout-gap: 24px
+  --settings-outline-max-width: 400px
+  // the rail's width: fixed, or as wide as its longest title, up to the cap (Profile)
   --settings-outline-width: 200px
   display: grid
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1040px) minmax(0, 1fr)
-  column-gap: 24px
+  // the right margin grows with the left one: the sheet stays centred while the rail fits
+  // beside it, and gives up the right margin first when it doesn't
+  grid-template-columns: minmax(0, 1fr) minmax(0, var(--settings-sheet-width)) minmax(0, 1fr)
+  column-gap: var(--settings-layout-gap)
   align-items: start
 
   &.outline-fits-titles
@@ -330,14 +393,14 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
   // shown or hidden, the rail keeps its room: only a sheet too short for one goes without
   &:has(> .settings-outline)
-    grid-template-columns: minmax(var(--settings-outline-width), 1fr) minmax(0, 1040px) minmax(0, 1fr)
+    grid-template-columns: minmax(var(--settings-outline-width), 1fr) minmax(0, var(--settings-sheet-width)) minmax(0, 1fr)
 
   // beside the sheet however wide its margin grows
   > .settings-outline
     grid-column: 1
     justify-self: end
     width: var(--settings-outline-width)
-    max-width: 400px
+    max-width: var(--settings-outline-max-width)
 
   > :not(.settings-outline)
     grid-column: 2
@@ -347,7 +410,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 // room on its left, the rail starts at the grid's edge. Full width beats this (more specific)
 @container (min-width: 721px)
   .settings-flat-layout[data-outline-resized]:has(> .settings-outline)
-    grid-template-columns: max(var(--settings-outline-width), calc((100% - 1040px - 48px) / 2 + var(--settings-outline-shift, 0px))) minmax(0, 1040px) minmax(0, 1fr)
+    grid-template-columns: max(var(--settings-outline-width), calc((100% - var(--settings-sheet-width) - 2 * var(--settings-layout-gap)) / 2 + var(--settings-outline-shift, 0px))) minmax(0, var(--settings-sheet-width)) minmax(0, 1fr)
 
 // full width (Profile): the sheet fills the panel beside the rail, with no margins. Not in
 // nested layouts, and not in narrow panels, which drop the rail (below)
@@ -358,7 +421,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
     &:has(> .settings-outline)
       grid-template-columns: var(--settings-outline-width) minmax(0, 1fr)
-      column-gap: 24px
+      column-gap: var(--settings-layout-gap)
 
 // editors stacked beside one shared rail (AddonSettings, SiteSettings) take that layout's
 // margins and column: their own layout holds just their sheet
@@ -372,6 +435,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   > :not(.settings-outline)
     grid-column: 1
 
+// narrow panels drop the rail and keep the sheet
 @container (max-width: 720px)
   .settings-flat-layout,
   .settings-flat-layout:has(> .settings-outline)
@@ -395,29 +459,27 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   // the other of the two fills list items alternate: inside an item's box, its controls and
   // the items of a list in it take this one, and so on, swapping at each level
   --settings-input-alt-bg: var(--settings-card-bg)
-  // settings panels: the darkest surface the app uses for a large area, its table rows (a
-  // touch lighter than surface-container-lowest on the dark theme, the same on the light one)
-  --settings-panel-bg: var(--color-table-row, var(--md-sys-color-surface-container-lowest))
-  // the hairline between settings in a panel: half a control's step, so rows read as one list
-  --settings-divider: color-mix(in srgb, var(--md-sys-color-surface-container-high) 50%, transparent)
-  // Spacing: a 4px grid, applied by proximity (closer means more related):
-  //   4 inside a setting (label to control, list item to item)
-  //   8 a title to its content
-  //  12 a setting to the next one, and a panel's inner inset
-  //  16 a group to the next group
-  //  32 a card to the next card (cards have no box: a title over its panels)
-  // Other values below are derived from these, never set on their own.
+  // shared with the flat forms (index.scss)
+  --settings-panel-bg: var(--color-form-panel)
+  --settings-divider: var(--color-form-divider)
+  // a lifted thing casts this: a dragged item, a value previewed over the rows below
+  --settings-lift-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent)
+  // spacing is a 4px grid: the closer two things sit, the more related they are. Other spacing
+  // is derived from these. 4 inside a setting (label to control, list item to item)
   --space-1: 4px
+  // 8 a title to its content, 12 a setting to the next one and a panel's inner inset
   --space-2: 8px
   --space-3: 12px
+  // 16 a group to the next group, 32 a card to the next card (a title over its panels, no box)
   --space-4: 16px
   --space-8: 32px
-  // a drag handle or remove button: a 24px column, the smallest comfortable target
+  // a drag handle or remove button: a 24px column, the smallest comfortable target.
+  // ROW_CHROME (FormTemplates/listItemLayout.ts) adds this up with the gutters: keep them in step
   --settings-handle-size: 24px
-  // sizes can animate to and from "auto" (the text folds); ignored where unsupported
+  // sizes can animate to and from "auto" (the text folds). Ignored where unsupported
   interpolate-size: allow-keywords
 
-  // panels span the sheet; titles and rows start a panel inset in
+  // panels span the sheet, titles and rows start a panel inset in (ROW_CHROME counts it)
   --settings-card-gutter: var(--space-3)
   --settings-gutter: var(--settings-card-gutter)
   // rows: half the gap between two settings above and below each one
@@ -458,7 +520,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         flex: 1 1 200px
 
   // cards after the first two skip rendering until scrolled near (Maya's sheet is about
-  // 50,000px); each keeps its last rendered height, so the scrollbar doesn't jump.
+  // 55,000px). Each keeps its last rendered height, so the scrollbar doesn't jump.
   // Group cards are display: contents items, so it goes on the box inside
   $deferred-card: '.settings-sheet-items > .form-object-field-item:nth-child(n + 3) > div, .settings-sheet-items > .settings-group:nth-child(n + 3)'
 
@@ -486,7 +548,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   .settings-group[data-fieldid]
     background-color: transparent
 
-  // the surface sticky titles paint over; panels set their own
+  // the surface sticky titles paint over. Panels set their own
   .settings-group-body
     --settings-surface: var(--settings-sheet-bg)
 
@@ -572,7 +634,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     // flush with the input's edge and with group titles, not indented by classic's 4px
     padding-left: 0
 
-    // classic labels are right-aligned with a tighter line; a wrapped flat label keeps its own
+    // classic labels are right-aligned with a tighter line. A wrapped flat label keeps its own
     span
       justify-content: flex-start
       height: auto
@@ -607,7 +669,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   #{$flat-row}:is(.setting-field-number, .setting-field-date) .form-inline-field-widget
     width: 160px
 
-  // text fields, text areas and code editors take the row's second half; an open text
+  // text fields, text areas and code editors take the row's second half. An open text
   // area keeps its label on its first line
   #{$flat-row}:is(.setting-field-text, .setting-field-textarea, .setting-field-code)
     .form-inline-field-widget
@@ -637,7 +699,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       & + .settings-switchbox-option
         border-top: 1px solid var(--settings-divider)
 
-  // every other kind puts its label above the control; in a compact row the
+  // every other kind puts its label above the control. In a compact row the
   // fixed-size ones do too (a switch keeps its line), since each field is a column
   #{$flat-field}.setting-field-stacked,
   .layout-compact #{$flat-field}.setting-field-inline:not(.setting-field-toggle)
@@ -653,13 +715,13 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     > .form-inline-field-label > span
       min-height: 0
 
-  // Switchbox fields already show their choices as labeled rows; an extra field label
+  // Switchbox fields already show their choices as labeled rows. An extra field label
   // reserves an empty control-height row above Select all in the permissions settings.
   #{$flat-field}.setting-field-switchbox > .form-inline-field-label
     display: none
 
   // a dropdown on its label's line is sized to its value, from a number field's width
-  // up to half the row; a long value is cut short
+  // up to half the row. A long value is cut short
   #{$flat-row}.setting-field-select .form-inline-field-widget
     flex: 0 1 auto
     align-items: stretch
@@ -670,7 +732,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       width: 100%
 
       // the widget gives its value no width of its own (StyledDropdown in SelectWidget),
-      // so in classic it fills the field; here the field is sized to it
+      // so in classic it fills the field. Here the field is sized to it
       > button > .template-value > div:first-child
         width: auto
 
@@ -708,19 +770,18 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     min-block-size: calc(3lh + 14px)
     max-block-size: calc(20lh + 14px)
 
-  // Text areas and code editors fold to one line, as tall as a text input (see
-  // SettingsTextFold). Hovering previews the whole value over the rows below, without
-  // moving them; an open one (focused, or holding an unsaved edit) grows in place.
-  // Both slide to their full height where sizes to "auto" can animate (interpolate-size)
+  // text areas and code editors fold to one line, as tall as a text input (SettingsTextFold).
+  // Hovering previews the whole value over the rows below, without moving them
   .settings-text-fold
     position: relative
     width: 100%
     transition: height 0.2s ease
 
+    // an open one (focused, or holding an unsaved edit) grows in place, clipped while it
+    // slides. The margin keeps the focus ring
     &.is-open
-      // clipped while it slides open; the margin keeps the focus ring
       overflow: clip
-      overflow-clip-margin: 4px
+      overflow-clip-margin: var(--space-1)
 
     > .settings-text-fold-box
       transition: height 0.2s ease, box-shadow 0.2s ease
@@ -743,7 +804,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         height: auto
         max-height: 400px
         background-color: var(--settings-input-bg)
-        box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent)
+        box-shadow: var(--settings-lift-shadow)
 
   // Template keys in text inputs are coloured (see SettingsTemplateText): a copy is drawn
   // over the input, whose own text turns transparent so its caret and selection stay
@@ -771,7 +832,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       top: 0
       border-radius: var(--border-radius-m)
       background-color: var(--settings-input-bg)
-      box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent)
+      box-shadow: var(--settings-lift-shadow)
 
   // the opened field draws over the fields after it
   .form-inline-field:has(.settings-template-text.is-expanded)
@@ -798,7 +859,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     .template-key-2
       color: color-mix(in srgb, var(--md-sys-color-primary), var(--md-sys-color-tertiary))
 
-    // literal words keep the text colour; braces, brackets, format specs and the
+    // literal words keep the text colour. Braces, brackets, format specs and the
     // separators between words step back
     .template-mark,
     .template-separator
@@ -831,16 +892,15 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     > .drag-handle:hover
       opacity: 1
 
-  // While a coloured text field (one with template keys, see SettingsTemplateText) of a list
-  // is in use (hovered or focused), everything else in that list steps back, so the field
-  // stands out: the other items, and the other fields of its own item, those on its row too.
-  // Leaving the field brings them back after a short delay, so crossing the gap between two
-  // fields doesn't flicker. Dropdowns and plain fields don't start it, except the fields of a
-  // group of per-platform values (a path mapping), which dim each other and the rest of their list
+  // a coloured text field of a list (template keys) in use, hovered or focused, dims the rest of
+  // its list so it stands out. Dropdowns and plain fields don't, except in a group of
+  // per-platform values (a path mapping), whose fields dim each other and the rest of the list
   $key-in-use: '.settings-template-text.has-keys:is(:hover, :focus-within)'
   $widget-in-use: '.form-inline-field-widget:is(:hover, :focus-within)'
   $platform-in-use: '.settings-panel.layout-compact #{$widget-in-use}'
 
+  // dimmed fields come back after a short delay, so crossing the gap between two fields
+  // doesn't flicker
   .array-dnd > div > .settings-array-item,
   .array-dnd .settings-array-item .form-inline-field,
   .settings-panel.layout-compact .form-inline-field
@@ -925,7 +985,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   // the dragged copy keeps the look of the item it lifts, plus a shadow to show it's lifted
   .settings-array-item.isOverlay
     background-color: var(--settings-card-bg)
-    box-shadow: 0 4px 12px color-mix(in srgb, var(--md-sys-color-shadow) 40%, transparent)
+    box-shadow: var(--settings-lift-shadow)
 
   // untitled object items are spaced apart, so it stays clear which X removes which item
   // (rows and cards are boxes, set apart by their borders)
@@ -939,9 +999,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     min-height: var(--base-input-size)
     margin: 0 0 var(--space-1)
     padding: 0
-    border: 1px solid var(--md-sys-color-outline-variant)
-    border-radius: var(--border-radius-m)
-    background-color: var(--settings-input-bg)
+    +box-edge
 
     // the box is the field, so it carries the focus ring of the control inside
     &:focus-within
@@ -973,7 +1031,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
     input.form-field,
     .dropdown.form-field > button
-      height: calc(var(--base-input-size) - 2px)
+      height: $row-height
       min-height: 0
       padding-left: 0
       border: 0
@@ -1008,36 +1066,22 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       right: var(--settings-gutter)
       border-top: 1px solid var(--settings-divider)
 
-  // A complex list item is a bordered box like a simple list item: handle at its start,
-  // X at its end, a chevron before its title. Opening it grows the same box, one fill
-  // throughout; the inputs inside take the card colour so they keep their contrast. An
-  // item's box is classed by how it is drawn (DraggableItem, from getListItemLayout)
+  // a complex list item is a bordered box like a simple one, with a chevron before its title.
+  // Opening it grows the same box. Boxes are classed by how they are drawn (DraggableItem, from
+  // getListItemLayout)
   $fold-item: '.settings-array-item.is-fold'
-  $fold-row-height: calc(var(--base-input-size) - 2px)
 
   // the second form matches the drag copy, whose one wrapper carries both classes
   :is(.settings-group-body .array-dnd, .settings-group-body.array-dnd) > div > #{$fold-item}:not(.form-inline-field-widget *)
-    // the box sits in the fields' column; inside it, rows need less room
-    --settings-gutter: var(--space-3)
-    --settings-row-padding: var(--settings-row-y) var(--settings-gutter)
-    margin: 0 var(--settings-card-gutter) var(--space-1)
-    padding: 0
-    border: 1px solid var(--md-sys-color-outline-variant)
-    border-radius: var(--border-radius-m)
-    background-color: var(--settings-input-bg)
-    // titles of groups inside the box (sticky, so filled) take the box's fill, not the panel's
-    --settings-surface: var(--settings-input-bg)
-    // its fill and the other one, for its content to swap (two properties can't swap on one
-    // element: that's a cycle)
-    --settings-box-bg: var(--settings-input-bg)
-    --settings-box-alt-bg: var(--settings-input-alt-bg)
+    +fold-box-tokens
+    +list-box
 
     // handle and X sit inside the box, on its title row, always shown like a simple item's
     > .drag-handle
       top: 0
       left: 0
       width: var(--settings-handle-size)
-      height: $fold-row-height
+      height: $row-height
       opacity: 0.6
 
       &:hover
@@ -1047,75 +1091,26 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       top: 0
       right: 0
       width: var(--settings-handle-size)
-      height: $fold-row-height
+      height: $row-height
 
     > div > .array-item-row > div > .settings-group-foldable
       padding-bottom: 0
+      +fold-box-group(0 var(--settings-handle-size))
 
-      // the title row doesn't stick, so it stacks under the handle, the X and the
-      // sticky titles
-      > .settings-group-header
-        position: relative
-        top: auto
-        z-index: 0
-        min-height: $fold-row-height
-        margin: 0
-        padding: 0 var(--settings-handle-size)
-        border-radius: var(--border-radius-m)
-        background-color: var(--settings-input-bg)
-
-        // a long summary is cut short first, then the name ends in an ellipsis, so the
-        // switch keeps its place beside the X
-        > .settings-group-title
-          max-width: 60%
-
-      &:not(.settings-group-folded)
-        padding-bottom: var(--space-1)
-
-      // everything below the title row: controls, and the boxes of a list in it, take the
-      // other fill, so nested items alternate
-      > :not(.settings-group-header)
-        --settings-input-bg: var(--settings-box-alt-bg)
-        --settings-input-alt-bg: var(--settings-box-bg)
-
-  // Groups among 4+ of one shape or of plugins (getFoldingGroupNames) fold like complex list
-  // items, in the same bordered box, but they are fixed entries: no handle and no X, so
-  // the title row starts at the box's inset. Items are display: contents, so the box is
+  // groups among 4+ of one shape or of plugins (getFoldingGroupNames) fold in the same box as
+  // complex list items, without a handle or an X. Items are display: contents, so the box is
   // the wrapper inside
   .settings-panel > .settings-folding-group > div[data-hidden="false"]
-    --settings-gutter: var(--space-3)
-    --settings-row-padding: var(--settings-row-y) var(--settings-gutter)
-    --settings-surface: var(--settings-input-bg)
-    --settings-box-bg: var(--settings-input-bg)
-    --settings-box-alt-bg: var(--settings-input-alt-bg)
+    +fold-box-tokens
     // the wrapper is full width by default: inset, it takes what's left
     width: auto
     margin: 0 var(--space-3) var(--space-1)
-    border: 1px solid var(--md-sys-color-outline-variant)
-    border-radius: var(--border-radius-m)
-    background-color: var(--settings-input-bg)
+    +box-edge
 
+    // the title starts at the box's inset and ends at the rows' gutter, so its switch lines
+    // up with theirs
     > .settings-group-foldable
-      > .settings-group-header
-        position: relative
-        top: auto
-        z-index: 0
-        min-height: $fold-row-height
-        margin: 0
-        // the right edge is the rows' (a gutter), so the title's switch lines up with theirs
-        padding: 0 var(--settings-gutter) 0 var(--space-3)
-        border-radius: var(--border-radius-m)
-        background-color: var(--settings-input-bg)
-
-        > .settings-group-title
-          max-width: 60%
-
-      &:not(.settings-group-folded)
-        padding-bottom: var(--space-1)
-
-      > :not(.settings-group-header)
-        --settings-input-bg: var(--settings-box-alt-bg)
-        --settings-input-alt-bg: var(--settings-box-bg)
+      +fold-box-group(0 var(--settings-gutter) 0 var(--space-3))
 
   // boxes bring no row padding, so a panel of them gets its inset above and below
   .settings-panel:has(> .settings-folding-group:first-child)
@@ -1126,20 +1121,15 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
 
   // A list of short rows (up to 6 fields side by side) is a list of boxes like simple
   // items: handle, fields as cells parted by thin lines, X. The labels show once, above
-  // the first box, as column headings; the other rows keep them for screen readers
+  // the first box, as column headings. The other rows keep them for screen readers
   $row-item: '.settings-array-item.is-row'
   // a card is a record of parallel values that don't fit a row (paths per platform), up to
   // 8: same box, its values in a grid (below)
   $card-item: '.settings-array-item.is-card'
-  $row-height: calc(var(--base-input-size) - 2px)
   $row-label-room: calc(var(--settings-label-height) + var(--space-3))
 
   :is(.settings-group-body .array-dnd, .settings-group-body.array-dnd) > div > :is(#{$row-item}, #{$card-item}):not(.form-inline-field-widget *)
-    margin: 0 var(--settings-card-gutter) var(--space-1)
-    padding: 0
-    border: 1px solid var(--md-sys-color-outline-variant)
-    border-radius: var(--border-radius-m)
-    background-color: var(--settings-input-bg)
+    +list-box
 
     // the box is the field: it carries the focus ring of the control inside
     &:focus-within
@@ -1184,12 +1174,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
           justify-content: center
 
           > .form-inline-field-label
-            position: absolute
-            width: 1px
-            height: 1px
-            overflow: hidden
-            clip-path: inset(50%)
-            white-space: nowrap
+            +visually-hidden
 
         // cells after the first are parted by a thin line
         > .form-object-field-item + .form-object-field-item > div[data-hidden="false"]
@@ -1212,14 +1197,13 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
         .dropdown.form-field .template-value > #clear
           display: none
 
-        // every cell starts at the room the row's layout counted for it (--settings-cell-width,
-        // set from getRowCellWidth, the same numbers that decide whether a record is a row),
-        // and text, dates and dropdowns share what is left. A cell never gets less: in a
-        // narrower panel the list scrolls sideways instead (below). Its content (a dropdown's
-        // value, say) doesn't widen it past that: the inline-size containment
+        // each cell starts at the width its row's layout counted (getRowCellWidth, which also
+        // decides whether a record is a row), and text, dates and dropdowns share what is left.
+        // A narrower panel scrolls the list sideways (below) rather than shrink a cell
         > .form-object-field-item > div[data-hidden="false"]
           flex: 1 1 var(--settings-cell-width, auto)
           min-width: var(--settings-cell-width, 0)
+          // its content (a dropdown's value, say) can't widen it past that
           contain: inline-size
 
         // a name is short beside other text (paths, templates): it grows slower, and alone
@@ -1281,17 +1265,15 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
             min-height: 22px
             max-height: 22px
 
-  // A card: parallel values that don't fit a row, up to 8 (anatomy roots). Its name leads on a
-  // title line, as high as a row, between the handle and the X; the other values wrap in
-  // lines below, each with its label above (a card's cells aren't a table's columns)
+  // a card: parallel values that don't fit a row, up to 8 (anatomy roots). Its name leads on a
+  // title line as high as a row, between the handle and the X. The other values wrap in lines
+  // below, each with its label above (a card's cells aren't a table's columns)
+
   // the box of a card doesn't light up: each of its inputs has its own ring
   :is(.settings-group-body .array-dnd, .settings-group-body.array-dnd) > div > #{$card-item}:not(.form-inline-field-widget *):focus-within
     border-color: var(--md-sys-color-outline-variant)
 
-  // A card's values share its lines in equal columns, each at least 180px wide: all on one
-  // line when they fit, else two balanced lines (5 values: 3 and 2, never 4 and 1), else one
-  // column. The card's wrapper is the container its width is read from; ObjectFields classes
-  // the card by its number of values (card-cells-N). See card-width at the top
+  // the card's wrapper is the container its width is read from
   :is(.settings-group-body .array-dnd, .settings-group-body.array-dnd) > div > #{$card-item}:not(.form-inline-field-widget *)
     > div > .array-item-row > div:has(> .form-object-field.layout-card)
       container: settings-card / inline-size
@@ -1299,6 +1281,9 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       flex: 1 1 0
       min-width: 0
 
+  // values share the card's lines in equal columns at least 180px wide: all on one line when
+  // they fit, else two balanced lines (5 values: 3 and 2, never 4 and 1), else one column.
+  // ObjectFields classes the card by its number of values (card-cells-N), see card-width at the top
   :is(.settings-group-body .array-dnd, .settings-group-body.array-dnd) > div > #{$card-item}:not(.form-inline-field-widget *)
     > div > .array-item-row > div > .form-object-field.layout-card
       // inputs take the other fill, like the fields of an open item
@@ -1365,12 +1350,7 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
           justify-content: center
 
           > .form-inline-field-label
-            position: absolute
-            width: 1px
-            height: 1px
-            overflow: hidden
-            clip-path: inset(50%)
-            white-space: nowrap
+            +visually-hidden
 
         input.form-field
           height: $row-height
@@ -1379,10 +1359,9 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
           background-color: transparent
           font-weight: 500
 
-  // A list of rows is a table: in a panel narrower than its rows, it scrolls sideways, as a
-  // table would, rather than squeezing the cells under their headings. Its one column is as
-  // wide as a row needs, or the panel when that is wider, so the rows and the add button
-  // keep one width. (Drag and drop's live regions are fixed or hidden: they take no cell)
+  // a list of rows is a table: a panel narrower than its rows scrolls it sideways rather than
+  // squeeze the cells. Its one column is as wide as a row needs, or the panel when wider, so the
+  // rows and the add button keep one width (drag and drop's live regions take no cell)
   .array-dnd:has(> div > .settings-array-item.is-row)
     display: grid
     grid-template-columns: minmax(min-content, 1fr)
@@ -1395,13 +1374,13 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     > div > .array-item-row > div > .form-object-field.layout-compact > .form-object-field-item > div[data-hidden="false"] > .form-inline-field > .form-inline-field-label
       top: calc(-1 * #{$row-label-room} - 1px)
       // where the text of the controls below starts
-      left: 8px
+      left: var(--space-2)
       width: auto
       height: var(--settings-label-height)
       overflow: visible
       clip-path: none
 
-      // a switch's label is as tall as a control to centre beside it; as a heading it
+      // a switch's label is as tall as a control to centre beside it. As a heading it
       // sits on the same line as the others
       span
         min-height: 0
@@ -1415,17 +1394,14 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       translate: -50% 0
       white-space: nowrap
 
-  // Panels hold a card's or section's fields, like the lists of a macOS settings pane: one
-  // step off the surface around them. An open list item's fields sit on its box, no panel.
-  // On the sheet they span its width; inside a panel or list item they are inset by a
-  // gutter. Inside, rows and boxes use a 12px gutter, and inputs keep the lighter fill.
-  // Nested panels alternate shades, so a panel never melts into the one around it
+  // panels hold a card's or section's fields, one step off the surface around them, like the
+  // lists of a macOS settings pane. An open list item's fields sit on its box, without a panel
   .settings-panel
     --settings-surface: var(--settings-panel-bg)
     --settings-input-bg: var(--md-sys-color-surface-container)
     --settings-input-alt-bg: var(--settings-card-bg)
-    // a title's content starts 8 below its text; a panel ends a setting's gap before
-    // what follows; inside, content sits a panel inset (12) from every edge
+    // a title's content starts 8 below its text. A panel ends a setting's gap before
+    // what follows. Inside, content sits a panel inset (12) from every edge
     margin: calc(var(--space-2) - var(--settings-title-slack)) 0 calc(var(--space-3) - var(--settings-row-y))
     padding-block: calc(var(--space-3) - var(--settings-row-y))
     border-radius: var(--border-radius-m)
@@ -1435,8 +1411,10 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
       --settings-gutter: var(--space-3)
       --settings-row-padding: var(--settings-row-y) var(--space-3)
 
+    // nested panels are inset by a gutter and alternate shades, so a panel never melts into
+    // the one around it
     .settings-panel
-      --settings-surface: var(--md-sys-color-surface-container-low)
+      --settings-surface: var(--settings-card-bg)
       margin-inline: var(--settings-gutter)
 
       .settings-panel
@@ -1472,15 +1450,15 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
     min-height: calc(var(--base-input-size) + 2 * var(--settings-row-y))
     padding: var(--settings-row-padding)
 
-  // a panel holding only a list's boxes: rows bring their own padding, boxes don't, so
-  // the panel gives them the same inset above and below as at the sides. The last box
-  // keeps its 4px gap to a next one, and the add row its own padding: take them off the
-  // bottom inset, so the list sits as far from the bottom edge as from the top.
-  // (The list's last child is drag and drop's live region, so :last-child can't tell)
+  // list boxes bring no padding, so a panel of them insets them above and below as at the
+  // sides. The last box's 4px gap comes off the bottom inset, so the list sits as far from
+  // the bottom edge as from the top
   .settings-panel:has(> .array-dnd)
     padding-top: var(--space-3)
     padding-bottom: calc(var(--space-3) - var(--space-1))
 
+  // a list ending in an add row takes the row's own padding off instead (the list's last
+  // child is drag and drop's live region, so :last-child can't tell)
   .settings-panel:has(> .array-dnd > .array-add-controls)
     padding-bottom: calc(var(--space-3) - var(--settings-row-y))
 
@@ -1488,12 +1466,13 @@ $flat-field: '.form-inline-field:not(.form-inline-field-widget *, .form-object-h
   .settings-panel.settings-panel .array-dnd > div > :is(#{$fold-item}, #{$row-item}, #{$card-item}):not(.form-inline-field-widget *)
     margin-inline: var(--settings-gutter)
 
-  // nor above the add button that follows them, which keeps the list's own 4px gap
+  // an add button after list boxes has no line or padding above it: the last box's 4px gap
+  // is space enough
   .settings-group-body .array-dnd > div:has(> :is(#{$fold-item}, #{$row-item}, #{$card-item})) + .array-add-controls
     border-top: 0
     padding-top: 0
 
-  // override levels and unsaved edits colour the group title, like field labels; a
+  // override levels and unsaved edits colour the group title, like field labels. A
   // section with a switch has its title row in its first panel
   $title-states: (obj-override-studio: --settings-text-studio, obj-override-project: --settings-text-project, obj-override-site: --settings-text-site, obj-override-edit: --color-changed, group-changed: --color-changed)
 

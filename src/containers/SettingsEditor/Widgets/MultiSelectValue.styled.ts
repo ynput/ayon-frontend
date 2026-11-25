@@ -34,7 +34,7 @@ export const Item = styled.span`
   }
 `
 
-// keeps the room a cut value lost in the field's natural width; gives it up first
+// keeps the room a cut value lost in the field's natural width. Gives it up first
 export const Sizer = styled.span`
   flex: 0 1 auto;
   min-width: 0;

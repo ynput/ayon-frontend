@@ -150,7 +150,11 @@ export interface AttributeEditorProps {
   onHide: () => void
   onEdit: (attribute: AttributeForm) => void
   onDelete?: () => void
-  /** Draws the form as a panel of rows, like a flat settings sheet (the host's flat-form styles) */
+  /**
+   * Adds the `flat-form-panel` class, drawn as a panel of rows by the AYON frontend's flat form
+   * styles (src/styles/flatForm.scss). Those styles live in the host app, not in this package,
+   * so an addon passing it sees no change unless it styles the class itself.
+   */
   flat?: boolean
 }
 

@@ -6,7 +6,6 @@ import { $Any } from '@types'
 import SettingsPanel from '../SettingsPanel'
 import SearchHidden from './SearchHidden'
 import { SettingsGroup } from '../SettingsGroup/SettingsGroup'
-import { isListGroupSchema } from '../SettingsGroup/SettingsGroupHelpers'
 import { SettingField, getSettingFieldKind } from '../SettingField'
 import AccessWidget from '../Widgets/AccessWidget/AccessWidget'
 import { ListColorScheme, hasColorField } from '../ListColorScheme'
@@ -21,6 +20,8 @@ type RenderFieldArgs = {
   labelStyle?: CSSProperties
   /** Whether the field matches the search */
   matches: boolean
+  /** A list drawn as a group, not as a field (isListGroupSchema) */
+  isListGroup: boolean
   /** Whether a list drawn as a group changed anywhere inside */
   listChanged: boolean
   /** The selected field id, while it is inside a list drawn as a group */
@@ -37,6 +38,7 @@ export const renderFieldTemplate = ({
   overrideLevel,
   labelStyle,
   matches,
+  isListGroup,
   listChanged,
   currentId,
   onContextMenu,
@@ -50,7 +52,7 @@ export const renderFieldTemplate = ({
     )
   }
 
-  if (isListGroupSchema(props.schema, flatLayout)) {
+  if (isListGroup) {
     const classes = listChanged
       ? ['obj-override-edit', 'group-changed']
       : [`obj-override-${overrideLevel}`]

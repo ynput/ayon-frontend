@@ -27,9 +27,9 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
   const flatLayout = !!props.formContext.flatLayout
   const isRoot = props.idSchema.$id === 'root'
   const groupDepth = useSettingsGroupDepth()
-  // set when this object is a list item that folds; it then always gets a header
+  // set when this object is a list item that folds. It then always gets a header
   const listItem = useSettingsListItem()
-  // an open list item leads with its name (or first field); the rest sit in a panel
+  // an open list item leads with its name (or first field). The rest sit in a panel
   const leadsListItem = flatLayout && !!listItem
   // the field the open item leads with: its name, label or title
   const leadField = leadsListItem ? listItem?.leadField : undefined
@@ -55,7 +55,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
       return {
         override: objOverride,
         overrideLevel: getObjectOverrideLevel(
-          context.changedKeys || [],
+          context.changedKeys,
           context.overrides,
           objOverride?.path,
         ),
@@ -84,8 +84,7 @@ function ObjectFieldTemplate(props: { id: string } & ObjectFieldTemplateProps) {
     [props.schema.description],
   )
 
-  // formContext and registry are new objects on every render, so this is worked out each time
-  const enabledToggler = getEnabledToggler(props.properties)
+  const enabledToggler = useMemo(() => getEnabledToggler(props.properties), [props.properties])
 
   const { properties } = props
   // a group's title row may lead its first panel (SettingsGroup hands it over)

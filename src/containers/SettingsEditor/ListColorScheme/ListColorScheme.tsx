@@ -68,7 +68,7 @@ export const ListColorScheme = ({ listId, path, items, onSetValue }: ListColorSc
     )
   }
 
-  // the title row selects the list when clicked; its controls act on their own
+  // the title row selects the list when clicked. Its controls act on their own
   const stop = (e: MouseEvent) => e.stopPropagation()
 
   return (

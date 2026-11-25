@@ -28,7 +28,7 @@ export const useListItemLayouts = (
   listRef: RefObject<HTMLElement>,
 ): ListItemLayouts | null => {
   const flatLayout = !!formContext?.flatLayout
-  // the registry and the form context are new objects on every render; these are not
+  // the registry is a new object on every render, so the memo below keys on these instead
   const { schemaUtils } = registry
   const level = formContext?.level
   const includeStudioScope = formContext?.includeStudioScope

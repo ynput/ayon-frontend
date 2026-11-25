@@ -7,8 +7,8 @@ export type ObjectFieldElement = ObjectFieldTemplateProps['properties'][number]
 
 /**
  * How an object lays out its fields:
- * - `sheet`: the form root in the flat layout; its loose fields get cards of their own
- * - `panels`: a card or section in the flat layout; its fields sit in inset panels, between
+ * - `sheet`: the form root in the flat layout. Its loose fields get cards of their own
+ * - `panels`: a card or section in the flat layout. Its fields sit in inset panels, between
  *   its sub-groups
  * - `plain`: everything else (classic, list items, inline layouts): the fields in order
  */
@@ -54,7 +54,7 @@ export const getVisibleFields = (
 
 /** The layout an object's fields get. In the flat layout a list row or card (listLayout, see
  * getListItemLayout) keeps the compact layout past the three fields a plain compact object
- * holds; a card wraps its values into a grid */
+ * holds. A card wraps its values into a grid */
 export const getObjectFieldsLayout = (
   schema: ObjectFieldTemplateProps['schema'],
   flatLayout: boolean,
@@ -102,7 +102,7 @@ export const orderPlainFields = (
 }
 
 /** The values of a card that share its lines: all but its name and its switches (switches have
- * rows of their own), at most 8 */
+ * rows of their own). A card holds at most CARD_MAX_FIELDS (listItemLayout) */
 export const getCardCells = (fields: ObjectFieldElement[]) =>
   Math.max(1, fields.filter((element) => element.name !== 'name' && !isSwitchField(element)).length)
 

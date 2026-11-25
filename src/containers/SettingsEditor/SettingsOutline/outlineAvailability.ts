@@ -7,7 +7,7 @@ const listeners = new Set<() => void>()
 
 const notify = () => listeners.forEach((listener) => listener())
 
-/** Called by an outline while it has links; returns the call that withdraws it */
+/** Called by an outline while it has links. Returns the call that withdraws it */
 export const announceOutline = () => {
   shown += 1
   notify()

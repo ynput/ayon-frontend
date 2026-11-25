@@ -1,14 +1,15 @@
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
-// Colour and spacing tokens (--settings-*) are declared on .settings-flat in SettingsEditor.sass
+// Colour and spacing tokens (--settings-*, --space-*) are declared on the flat editor's .rjsf
+// (.settings-flat .rjsf) in SettingsEditor.sass
 
 export const Group = styled.section`
   display: flex;
   flex-direction: column;
   min-width: 0;
 
-  /* the addon title gets room of its own; the next addon starts well clear of it */
+  /* the addon title gets room of its own. The next addon starts well clear of it */
   &.settings-group-sheet {
     gap: var(--space-4);
     margin-bottom: calc(var(--space-8) + var(--space-4));
@@ -39,7 +40,7 @@ export const Header = styled.header`
     background-color: var(--settings-sheet-bg);
   }
 
-  /* deeper titles stick under the ones above; the innermost covers its parents' */
+  /* deeper titles stick under the ones above. The innermost covers its parents' */
   .settings-group-subgroup > & {
     position: sticky;
     top: calc(var(--settings-card-title-height) + var(--settings-subgroup-title-height));
@@ -199,7 +200,7 @@ export const HeaderToggle = styled.span`
   }
 `
 
-// The chevron of a list item that folds; it sits where the title starts
+// The chevron of a list item that folds. It sits where the title starts
 export const FoldButton = styled(Button)`
   &.settings-group-fold {
     flex: none;
@@ -217,7 +218,7 @@ export const FoldButton = styled(Button)`
 `
 
 // A folded item's first values, dimmed at the end of its title row like a classic
-// panel's description; it gives up its room before the title does
+// panel's description. It gives up its room before the title does
 export const Summary = styled.span`
   flex: 0 1000 auto;
   min-width: 0;

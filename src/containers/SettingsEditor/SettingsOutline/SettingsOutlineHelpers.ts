@@ -135,7 +135,7 @@ export const scrollToSettingsGroup = (sheet: HTMLElement, group: HTMLElement) =>
 const ROLL_SPEED = 40 // px per second
 // the gap between the name's end and its start coming round again
 const ROLL_GAP = 32
-// the share of each pass spent moving; the rest pauses with the name's start in place
+// the share of each pass spent moving. The rest pauses with the name's start in place
 const ROLL_MOVING = 0.88
 
 /** Starts rolling an outline link's name when the rail cuts it short */

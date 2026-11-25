@@ -102,6 +102,15 @@ strong {
   --color-table-row-hover: var(--md-sys-color-surface-container);
   --color-table-hover: var(--md-sys-color-surface-container-hover);
   --color-table-selected: var(--md-sys-color-primary-container);
+
+  // flat forms and the settings editor: panels take the darkest large surface (the table
+  // rows), with a faint line between their rows
+  --color-form-panel: var(--color-table-row);
+  --color-form-divider: color-mix(
+    in srgb,
+    var(--md-sys-color-surface-container-high) 50%,
+    transparent
+  );
   --color-table-selected-row: var(--md-sys-color-surface-container-high);
   --color-table-selected-row-hover: var(--md-sys-color-surface-container-high-hover);
   --color-table-selected-row-cell-hover: var(--md-sys-color-surface-container-high-active);

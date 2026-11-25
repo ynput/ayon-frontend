@@ -9,7 +9,7 @@ import SettingsEditor from '@containers/SettingsEditor'
 import { SettingsOutlineToggle } from '@containers/SettingsEditor/SettingsOutline'
 import SettingsAddonList from '@containers/AddonSettings/SettingsAddonList'
 import { AddonSettingsSheets } from '@containers/AddonSettings/AddonSettingsSheets'
-import { useAppSelector } from '@state/store'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
 import SiteList from '@containers/SiteList'
 
 import { useGetSiteSettingsSchemaQuery, useGetSiteSettingsQuery } from '@queries/siteSettings'
@@ -61,9 +61,7 @@ const SiteSettings = () => {
   const [selectedAddons, setSelectedAddons] = useState([])
   const [selectedSites, setSelectedSites] = useState([])
   const [newData, setNewData] = useState({})
-  const flatLayout = useAppSelector(
-    (state) => !!state.user?.data?.frontendPreferences?.flatSettingsLayout,
-  )
+  const flatLayout = useFlatSettingsLayout()
   const [setSiteSettings] = useSetSiteSettingsMutation()
 
   const saveChanges = async () => {

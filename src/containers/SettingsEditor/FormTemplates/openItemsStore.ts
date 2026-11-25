@@ -2,15 +2,14 @@ import { useSyncExternalStore } from 'react'
 import { readSessionStorage, writeSessionStorage } from '@shared/hooks'
 import { OPEN_LIST_ITEMS_KEY } from '../SettingsGroup/SettingsGroupHelpers'
 
-// The open folding items of the flat layout, kept for the browser session. One store
-// serves every item on the page: an item listens for its own key only, so folding one
-// item re-renders that item, not every list item of every list.
-// The session copy is written through; it is read once, as only this tab writes it.
+// The open folding items of the flat layout, kept for the browser session. One store serves
+// every item: an item listens for its own key only, so folding one redraws only that one.
 
 let openItems: string[] | null = null
 let openSet = new Set<string>()
 const listeners = new Set<() => void>()
 
+// the session copy is written on every change and read once, as only this tab writes it
 const load = () => {
   if (openItems) return
   const stored = readSessionStorage<unknown>(OPEN_LIST_ITEMS_KEY, [])

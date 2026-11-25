@@ -12,10 +12,8 @@ import {
 // Field kinds that fit in a table cell: one line, one value, nothing nested
 const CELL_KINDS: SettingFieldKind[] = ['text', 'number', 'date', 'select', 'color', 'toggle']
 
-// The room a cell takes in a row, in px: free text (paths, templates, patterns) is the
-// widest, a date, a name and a dropdown less, a number less again, a code, a swatch or a
-// switch the least. A record whose cells fit side by side in ROW_WIDTH is a row, and each
-// cell starts at this width in the row (--settings-cell-width, SettingsEditor.sass), so the
+// The room a cell takes in a row, in px. A record whose cells fit in ROW_WIDTH is a row, and
+// each cell is drawn at this width (--settings-cell-width, SettingsEditor.sass), so the
 // budget and the drawn row never disagree
 const CELL_WIDTH: Record<string, number> = {
   text: 200,
@@ -28,11 +26,11 @@ const CELL_WIDTH: Record<string, number> = {
 const NAME_WIDTH = 120
 // a short code (a type's short name): room for its column heading ("Short name")
 const SHORT_WIDTH = 88
-// A multi-select with a few options is a cell (a status's scope); one with many options
+// A multi-select with a few options is a cell (a status's scope). One with many options
 // (Applications' lists of apps) outgrows it and folds
 const MULTI_SELECT_WIDTH = 160
 const MULTI_SELECT_MAX_OPTIONS = 8
-// a status (name, short name, state, colour, icon, scope: 656) is the widest row; anatomy
+// a status (name, short name, state, colour, icon, scope: 656) is the widest row. Anatomy
 // roots (name and three paths: 720) are cards
 const ROW_WIDTH = 660
 const ROW_MAX_FIELDS = 6
@@ -151,7 +149,7 @@ const getListItemShape = (schema: $Any, context: LayoutContext): ListItemShape =
 // and the gutters between the box and its list (12 each). See SettingsEditor.sass
 const ROW_CHROME = 2 * 24 + 2 + 2 * 12
 
-/** The width a list needs to draw this item as a row; none when it isn't a row */
+/** The width a list needs to draw this item as a row. None when it isn't a row */
 export const getRowNeededWidth = (layout?: ListItemLayout) =>
   layout?.presentation === 'row' && layout.rowWidth ? layout.rowWidth + ROW_CHROME : 0
 
@@ -166,7 +164,7 @@ export const asNarrowListItem = (layout: ListItemLayout): ListItemLayout =>
 const PLAIN_TYPES = ['string', 'integer', 'number', 'boolean']
 
 export type ListItemLayout = ListItemShape & {
-  /** The item's schema, resolved against its value; none for a single value */
+  /** The item's schema, resolved against its value. None for a single value */
   itemSchema: $Any | null
   /** A single value (a path in a list of paths): one bordered field */
   simple: boolean
@@ -202,7 +200,7 @@ const getGroupShape = (property: $Any, resolved: $Any) =>
     .join('|')
 
 // AYON keys a plugin's settings by the plugin's class name ("CameraLoader",
-// "ValidateMeshUVs"); other groups of settings are snake_case
+// "ValidateMeshUVs"). Other groups of settings are snake_case
 const PLUGIN_NAME = /^[A-Z](?=.*[a-z])[A-Za-z0-9]*$/
 
 /**

@@ -14,11 +14,7 @@ import {
 } from './SettingsOutlineHelpers'
 import { useSettingsOutlineCurrent } from './useSettingsOutlineCurrent'
 import { useSettingsOutlineCollapsed } from './useSettingsOutlineCollapsed'
-import {
-  OUTLINE_MAX_WIDTH,
-  OUTLINE_MIN_WIDTH,
-  useSettingsOutlineResize,
-} from './useSettingsOutlineResize'
+import { OUTLINE_MIN_WIDTH, useSettingsOutlineResize } from './useSettingsOutlineResize'
 import { announceOutline } from './outlineAvailability'
 import * as Styled from './SettingsOutline.styled'
 
@@ -125,7 +121,7 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   useEffect(() => (hasLinks ? announceOutline() : undefined), [hasLinks])
 
   // a wheel over the rail never scrolls the sheet. A rail that scrolls is held at its ends
-  // by overscroll-behavior; one short enough not to scroll has to stop the wheel itself
+  // by overscroll-behavior. One short enough not to scroll has to stop the wheel itself
   useEffect(() => {
     const nav = navRef.current
     if (!nav) return
@@ -207,7 +203,7 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
         aria-orientation="vertical"
         aria-label="Resize outline"
         aria-valuemin={OUTLINE_MIN_WIDTH}
-        aria-valuemax={OUTLINE_MAX_WIDTH}
+        aria-valuemax={resize.maxWidth}
         aria-valuenow={resize.width}
         tabIndex={0}
         data-tooltip="Drag to resize, double-click to reset"

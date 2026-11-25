@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { isEqual } from 'lodash'
 import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 
@@ -8,8 +8,14 @@ import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 
 const RESIZED_WIDTHS_KEY = 'users-table-column-widths'
 const MIN_WIDTH = 40
-// the sort arrow a sorted header shows: room for it, so sorting doesn't cut the title
-const SORT_ICON_ROOM = 21
+// Room for a header's sort arrow, so sorting doesn't cut the title. PrimeReact draws the arrow
+// on every sortable column and the app only hides it (src/styles/index.scss), so it can be
+// measured: its svg plus the margin ARC's theme gives `.p-sortable-column-icon`.
+const sortIconRoom = (cell) => {
+  const icon = cell.querySelector('.p-sortable-column-icon')
+  if (!icon) return 0
+  return icon.getBoundingClientRect().width + parseFloat(getComputedStyle(icon).marginLeft)
+}
 
 // Width of the widest text in px. Only texts close to the longest are measured: measuring every
 // text of thousands of users takes long, and a much shorter text is hardly ever wider.
@@ -91,6 +97,7 @@ export const useColumnWidths = (tableRef, rows, columns, ready) => {
     const scroller = tableRef.current.getVirtualScroller()
     const first = scroller.getRenderedRange().first
     const renderedRows = [...table.querySelectorAll('tbody tr')]
+    // the scroller's items are the rows sorted and filtered, the order its range indexes into
     const rendered = scroller.props.items.slice(first, first + renderedRows.length)
 
     const next = {}
@@ -99,7 +106,8 @@ export const useColumnWidths = (tableRef, rows, columns, ready) => {
       if (!(key in headers.current)) {
         const title = table.querySelector(`thead th.col-${key} .p-column-title`)
         if (title) {
-          headers.current[key] = naturalWidth(measurer, title, title.closest('th')) + SORT_ICON_ROOM
+          const cell = title.closest('th')
+          headers.current[key] = naturalWidth(measurer, title, cell) + sortIconRoom(cell)
         }
       }
       if (!(key in extras.current)) {
@@ -126,8 +134,12 @@ export const useColumnWidths = (tableRef, rows, columns, ready) => {
     setAutoWidths((previous) => (isEqual(previous, next) ? previous : next))
   })
 
+  // a table that goes mid-drag leaves no listeners or cursor behind
+  const stopResize = useRef(null)
+  useEffect(() => () => stopResize.current?.(), [])
+
   // Dragging a column's edge sets its width as a CSS variable on the table, without rendering
-  // the table on every move; letting go keeps it
+  // the table on every move. Letting go keeps it
   const startResize = useCallback(
     (key, event) => {
       if (event.button !== 0) return
@@ -145,17 +157,28 @@ export const useColumnWidths = (tableRef, rows, columns, ready) => {
         width = Math.max(MIN_WIDTH, Math.round(startWidth + e.clientX - startX))
         root.style.setProperty(`--col-${key}`, `${width}px`)
       }
-      const onUp = () => {
+      const stop = () => {
         document.removeEventListener('mousemove', onMove)
         document.removeEventListener('mouseup', onUp)
+        window.removeEventListener('blur', onUp)
         document.body.style.removeProperty('cursor')
-        if (width !== null && width !== startWidth) {
-          setResizedWidths((previous) => ({ ...previous, [key]: width }))
-        }
+        stopResize.current = null
+      }
+      const onUp = () => {
+        stop()
+        if (width === null) return
+        // the click that follows a drag lands on the header title, which sorts the column
+        const swallowClick = (e) => e.stopPropagation()
+        window.addEventListener('click', swallowClick, { capture: true, once: true })
+        setTimeout(() => window.removeEventListener('click', swallowClick, { capture: true }))
+        if (width !== startWidth) setResizedWidths((previous) => ({ ...previous, [key]: width }))
       }
       document.addEventListener('mousemove', onMove)
       document.addEventListener('mouseup', onUp)
+      // the window losing focus mid-drag never sends the mouseup
+      window.addEventListener('blur', onUp)
       document.body.style.cursor = 'col-resize'
+      stopResize.current = stop
     },
     [tableRef, setResizedWidths],
   )

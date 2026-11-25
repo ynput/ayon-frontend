@@ -14,10 +14,9 @@ export type SettingFieldKind =
   | 'switchbox'
   | 'other'
 
-// Settings share one line with their label, like the rows of a macOS settings list:
-// fixed-size controls, dropdowns (sized to their value), and text fields in a column
-// (text areas and code editors fold to one line, see SettingsTextFold). Lists, switchboxes
-// (a switch per option) and controls without a known kind put their label above
+// Kinds that share one line with their label: fixed-size controls, dropdowns and text fields
+// (long text folds to one line, SettingsTextFold). Lists, switchboxes and unknown kinds put
+// their label above
 const INLINE_KINDS: SettingFieldKind[] = [
   'toggle',
   'number',
@@ -39,7 +38,7 @@ const MAX_FLAT_ROW_FIELDS = 3
 
 /**
  * The layout an object actually gets in the flat layout, from its schema hint.
- * Short compact rows stay rows; long ones and "expanded" (a name column beside
+ * Short compact rows stay rows. Long ones and "expanded" (a name column beside
  * the other fields) become ordinary vertical groups.
  */
 export const resolveFlatObjectLayout = (layout: string | undefined, visibleFieldCount: number) => {

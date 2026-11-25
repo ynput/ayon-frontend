@@ -31,7 +31,7 @@ const StyledContent = styled(SettingsFormContent)`
 `
 
 const ServerConfig = () => {
-  // only admins can change the server's configuration; a manager who opens the page reads it
+  // only admins can change the server's configuration. A manager who opens the page reads it
   const isAdmin = useAppSelector((state) => !!state.user?.data?.isAdmin)
   const { bgElement, logoElement, containerRef } = usePortalElements()
 

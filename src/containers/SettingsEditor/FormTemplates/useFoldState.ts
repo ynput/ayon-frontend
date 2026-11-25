@@ -15,9 +15,9 @@ type FoldStateArgs = {
 
 /**
  * Open state of a folding item (a list item, or a group among groups of the same shape).
- * Open items are stored for the browser session (openItemsStore). A link or the outline
- * pointing inside an item opens it once, like classic panels; folding it again
- * afterwards sticks.
+ * Open items are stored for the browser session (openItemsStore). A breadcrumb link
+ * pointing inside an item opens it once, like classic panels, and folding it again
+ * afterwards sticks. Outline jumps don't open folds.
  */
 export const useFoldState = ({ formContext, itemKey, itemId, foldable }: FoldStateArgs) => {
   const isOpen = useOpenItem(itemKey, foldable)

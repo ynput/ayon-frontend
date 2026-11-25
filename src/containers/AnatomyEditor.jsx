@@ -84,7 +84,7 @@ const AnatomyEditor = ({
   }, [formData, originalData, setIsChanged])
 
   const onPasteValue = useSettingsPaste(formData, setFormData)
-  // lists of types, statuses and tags can take their colours from a scheme (ListColorScheme)
+  // sets a value at a path: raw settings and colour schemes (ListColorScheme) write through it
   const onSetValue = useSettingsSetValue(formData, setFormData)
 
   const editor = useMemo(() => {

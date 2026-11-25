@@ -361,7 +361,7 @@ const SelectWidget = (props: $Any) => {
     })
   }
 
-  // the flat layout sizes the menu to its options and keeps it on screen; the classic
+  // the flat layout sizes the menu to its options and keeps it on screen. The classic
   // layout keeps the library's own menu
   const flatMenuProps = props.formContext?.flatLayout
     ? {
@@ -419,7 +419,7 @@ const SelectWidget = (props: $Any) => {
               placeholder={placeholder}
               isOpen={isOpen}
               hasError={!!dropdownError}
-              // the dropdown's own button runs the clear (onClear below); this shows its icon
+              // the dropdown's own button runs the clear (onClear below). This shows its icon
               onClear={shown.length ? () => undefined : undefined}
               clearTooltip="Clear selection"
             >

@@ -17,7 +17,7 @@ const shallowEqualEntries = (a, b) =>
 
 /**
  * The parent builds `context` on every render. This one stays the same object while its
- * values do, so the editor can skip a render; its callbacks always call the latest ones.
+ * values do, so the editor can skip a render. Its callbacks always call the latest ones.
  */
 const useStableContext = (context) => {
   const latest = useRef(context)

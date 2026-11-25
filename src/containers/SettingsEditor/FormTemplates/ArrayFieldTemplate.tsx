@@ -86,6 +86,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
       : undefined
   const compactRows = itemsSchema?.type === 'object' && itemsSchema?.layout === 'compact'
 
+  // index of the added item, which takes the focus when it mounts so typing goes there
   const [itemToFocus, setItemToFocus] = useState<number | null>(null)
   const openItemsPrefix = getListItemsPrefix(props.formContext, props.idSchema.$id)
   const listRef = useRef<HTMLDivElement>(null)
@@ -103,6 +104,8 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
       updateOpenItems((prev) => [...prev, `${openItemsPrefix}${props.items.length}`])
   }
 
+  // Shift+Enter in a field of an item saves it and starts the next item. Runs in the capture
+  // phase, as text fields stop Enter from bubbling
   const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key !== 'Enter' || !e.shiftKey || !canAddItems) return
     const target = e.target as HTMLElement
@@ -111,6 +114,7 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
     if (itemArrayId !== props.idSchema.$id) return
     e.preventDefault()
     e.stopPropagation()
+    // text fields save on blur, so the item is added once that change is in the form data
     target.blur()
     setTimeout(onAddItem)
   }
@@ -191,7 +195,9 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
                 icon="add"
                 variant="text"
                 className="array-add-button"
-                aria-label="Add new setting"
+                aria-label="Add item"
+                data-tooltip="Add item"
+                data-shortcut="Shift+Enter"
               />
             ) : (
               <Button

@@ -4,8 +4,8 @@ import styled, { keyframes } from 'styled-components'
 // handle that resizes it. Hidden, it keeps its column (SettingsEditor.sass), so the sheet
 // never moves
 export const Outline = styled.div`
-  /* from the rail's edge to the resize line, the middle of the 24px gap before the sheet */
-  --settings-outline-line: 12px;
+  /* from the rail's edge to the resize line, the middle of the gap before the sheet */
+  --settings-outline-line: calc(var(--settings-layout-gap, 24px) / 2);
   position: sticky;
   top: 0;
   transition: opacity 0.2s ease, translate 0.25s ease;
@@ -49,7 +49,7 @@ export const Rail = styled.nav`
   max-height: var(--settings-outline-height, calc(100dvh - 180px));
   /* the first link's text centres on the sheet's title, which is 32px tall */
   padding: 2px 0 16px;
-  /* it reaches the resize line, so its scrollbar sits against it; the padding keeps the links
+  /* it reaches the resize line, so its scrollbar sits against it. The padding keeps the links
      at the rail's width */
   margin-right: calc(-1 * var(--settings-outline-line));
   padding-right: var(--settings-outline-line);
@@ -68,9 +68,8 @@ export const Rail = styled.nav`
   }
 `
 
-// The line between the rail and the sheet that resizes the rail (useSettingsOutlineResize), in
-// the middle of their 24px gap and as tall as the panel. It looks like the app's splitters
-// (SplitterStyles): a thin line, and a primary bar on hover and while dragging. Its grab area
+// The line between the rail and the sheet that resizes the rail (useSettingsOutlineResize), in the
+// middle of their 24px gap. It looks like the app's splitters (SplitterStyles), and its grab area
 // starts a little over the rail's scrollbar, which ends at the line
 export const Resizer = styled.div`
   position: absolute;

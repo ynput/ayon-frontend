@@ -229,6 +229,7 @@ export const ObjectFields = ({
             schema={schema}
             formData={formData}
             formContext={formContext}
+            registry={registry}
             onChange={pathMapping.onChange}
           />
         </div>
@@ -254,7 +255,7 @@ export const ObjectFields = ({
     )
   }
 
-  // groups among 4+ of the same shape fold like list items; they sit in panels as rows
+  // groups among 4+ of the same shape fold like list items. They sit in panels as rows
   const foldingGroups =
     mode === 'panels'
       ? getFoldingGroupNames(

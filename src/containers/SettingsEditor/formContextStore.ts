@@ -54,7 +54,12 @@ export const useStableFormContext = (context: Record<string, unknown>) => {
   if (!stable.current.context || !isEqual(stable.current.values, values)) {
     stable.current = { values, context: {} }
   }
-  return Object.assign(stable.current.context, context, { formContextEmitter: emitter })
+  const target = stable.current.context
+  // a key the editor stops passing (a host dropping onSetRawValue) mustn't keep its old value
+  for (const key of Object.keys(target)) {
+    if (key !== 'formContextEmitter' && !(key in context)) delete target[key]
+  }
+  return Object.assign(target, context, { formContextEmitter: emitter })
 }
 
 const noSubscription = () => () => {}

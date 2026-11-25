@@ -2,7 +2,7 @@ import { $Any } from '@types'
 import { isEqual } from 'lodash'
 import { useFormContextSelector } from './formContextStore'
 
-/** A widget's saved value and its path in the settings; the widget draws again when they change */
+/** A widget's saved value and its path in the settings. The widget draws again when they change */
 const useParsedContext = (props: $Any): { originalValue: $Any; path: $Any } =>
   useFormContextSelector(props.formContext, (context) => {
     const override = context.overrides?.[props.id]

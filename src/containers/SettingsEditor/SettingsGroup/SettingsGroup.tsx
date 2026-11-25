@@ -123,7 +123,7 @@ type SettingsGroupBodyProps = {
   children: ReactNode
 }
 
-// A group's content. A card's fields sit in panels its form template makes; a list
+// A group's content. A card's fields sit in panels its form template makes. A list
 // card has only its items, which share one panel
 const SettingsGroupBody = ({ body, isList, children }: SettingsGroupBodyProps) => {
   if (body === 'none') return null
@@ -142,7 +142,7 @@ const SettingsGroupBody = ({ body, isList, children }: SettingsGroupBodyProps) =
  * - the root is the sheet title
  * - top-level groups (cards) have their title on the sheet, above their panels
  * - deeper groups (sections) have their title above the inset panels holding their
- *   fields; one with an "enabled" switch makes it the first row of its first panel
+ *   fields. One with an "enabled" switch makes it the first row of its first panel
  * The "enabled" switch sits at the end of its title row, like every other switch.
  * A list item that folds (see ArrayFieldItemTemplate) gets a chevron, and while folded
  * shows only its title and a summary of its values.
@@ -190,7 +190,7 @@ export const SettingsGroup = ({
   const inner = typeof children === 'function' ? children(headerInPanel ? header : null) : children
 
   // the root is linked only from a rail shared by several sheets, where it is the sheet's
-  // own link; it needs a scope, or two sheets would share its id
+  // own link. It needs a scope, or two sheets would share its id
   const anchor =
     objId && (!isRoot || anchorScope) ? getSettingsGroupAnchor(objId, anchorScope) : undefined
 

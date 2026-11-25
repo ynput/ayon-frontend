@@ -6,26 +6,48 @@ import { $Any } from '@types'
 import { NO_EDIT_PERMISSION } from './readOnlySettings'
 import { Badge, BadgeWrapper } from '@shared/components'
 import { copyToClipboard } from '@shared/util'
-import { arrayStartsWith } from './searchMatcher'
+import { isInsidePath } from './settingsPath'
 import ReactMarkdown from 'react-markdown'
 import type { MouseEvent } from 'react'
 import type { ContextMenuItemType } from '@shared/containers/ContextMenu'
 
-export const getObjectOverrideLevel = (
-  changedKeys: ObjectFieldTemplateProps['formContext']['changedKeys'],
-  overrides: ObjectFieldTemplateProps['formContext']['overrides'],
-  path?: $Any[],
-) => {
+const findObjectOverrideLevel = (changedKeys: $Any[], overrides: $Any, path?: $Any[]): string => {
   for (const changedPath of changedKeys) {
-    if (arrayStartsWith(changedPath, path)) return 'edit'
+    if (isInsidePath(changedPath, path)) return 'edit'
   }
 
   for (const changedId in overrides) {
     const changedPath = overrides[changedId].path
-    if (arrayStartsWith(changedPath, path)) return overrides[changedId].level
+    if (isInsidePath(changedPath, path)) return overrides[changedId].level
   }
 
   return 'default'
+}
+
+// every group asks after each editor render (a search keystroke too). The changed keys and the
+// overrides are new objects when they change, so until then each group's answer is kept
+const NO_CHANGES: $Any[] = []
+const NO_OVERRIDES = {}
+const levelCache = new WeakMap<object, WeakMap<object, Map<string, string>>>()
+
+/** A group's override level: edit when a change is inside it, else the first override inside */
+export const getObjectOverrideLevel = (
+  changedKeys: $Any[] | undefined,
+  overrides: ObjectFieldTemplateProps['formContext']['overrides'],
+  path?: $Any[],
+): string => {
+  const keys = changedKeys ?? NO_CHANGES
+  const byOverrides = levelCache.get(keys) ?? new WeakMap<object, Map<string, string>>()
+  levelCache.set(keys, byOverrides)
+  const overridesKey = overrides ?? NO_OVERRIDES
+  const byPath = byOverrides.get(overridesKey) ?? new Map<string, string>()
+  byOverrides.set(overridesKey, byPath)
+  const pathKey = JSON.stringify(path ?? null)
+  const known = byPath.get(pathKey)
+  if (known !== undefined) return known
+  const level = findObjectOverrideLevel(keys, overrides, path)
+  byPath.set(pathKey, level)
+  return level
 }
 
 export const buildLongDescription = (description?: string) =>

@@ -1,7 +1,3 @@
-// Template values ("{root[work]}/{folder[name]}<_{variant}>.{ext}") split into parts to
-// colour. Keys are coloured by depth (a key, its sub-key, deeper sub-keys), so dict
-// lookups like {user[attrib][email]} read as a path; punctuation, format specs and
-// separators between literal words are dimmed; "<" and ">" mark optional parts
 export type TemplatePartKind =
   | 'text'
   | 'separator'
@@ -21,7 +17,7 @@ export type TemplatePart = {
 // Sub-keys deeper than this share the last colour
 const MAX_KEY_LEVEL = 2
 
-// literal text outside keys: letters, digits and spaces; anything else is a separator
+// literal text outside keys: letters, digits and spaces. Anything else is a separator
 const WORD_CHAR = /[\p{L}\p{N} ]/u
 const isWordChar = (char: string) => WORD_CHAR.test(char)
 
@@ -33,9 +29,14 @@ type OpenKey = {
 }
 
 /**
- * Splits a value into template parts. Keys nest ("{frame:0>{@frame_padding}}"), and
- * each nested key starts again at the top level. "@" opens a reference to another
- * template. A key left open while typing colours the rest of the value as a key.
+ * Splits a template value ("{root[work]}/{folder[name]}<_{variant}>.{ext}") into parts to
+ * colour. Keys are coloured by depth (a key, its sub-key, deeper sub-keys), so dict lookups
+ * like {user[attrib][email]} read as a path. Punctuation, format specs and separators between
+ * literal words are dimmed, and "<" and ">" mark optional parts.
+ *
+ * Keys nest ("{frame:0>{@frame_padding}}"), and each nested key starts again at the top level.
+ * "@" opens a reference to another template. A key left open while typing colours the rest of
+ * the value as a key.
  */
 export const splitTemplateKeys = (value: string): TemplatePart[] => {
   const parts: TemplatePart[] = []

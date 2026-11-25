@@ -1,7 +1,7 @@
 import { ReactNode } from 'react'
 
 type SearchHiddenProps = {
-  /** Whether the field matches the search; one that doesn't stays mounted, but takes no room */
+  /** Whether the field matches the search. One that doesn't stays mounted, but takes no room */
   matches: boolean
   schemaId?: string
   className?: string
