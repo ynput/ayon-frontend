@@ -1,19 +1,11 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useState } from 'react'
 import { Button, Icon, Section } from '@ynput/ayon-react-components'
-import { StringParam, useQueryParam, withDefault } from 'use-query-params'
 import YnputCloudButton from './YnputCloudButton'
-import {
-  useConnectYnputMutation,
-  useDiscountYnputMutation,
-  useGetYnputConnectionsQuery,
-} from '@queries/ynputConnect'
 import LoadingPage from '@pages/LoadingPage'
 import * as Styled from './YnputCloud.styled'
-import { useLocation } from 'react-router-dom'
-import { useSelector } from 'react-redux'
 import clsx from 'clsx'
-import { isBefore } from 'date-fns'
 import { Link } from 'react-router-dom'
+import { useYnputCloud } from './useYnputCloud'
 
 const YnputConnector = ({
   onConnection,
@@ -35,58 +27,16 @@ const YnputConnector = ({
   skip,
   ...props
 }) => {
-  const location = useLocation()
   const [isOpen, setIsOpen] = useState(initIsOpen)
-  const currentUser = useSelector((state) => state.user)
-  const [queryKey, setQueryKey] = useQueryParam('key', withDefault(StringParam, ''))
   const {
-    data: connectData,
+    connectData,
     isLoading,
-    isError,
-  } = useGetYnputConnectionsQuery({}, { skip: !currentUser.name || skip })
-
-  const [connect, { isLoading: isLoadingConnect }] = useConnectYnputMutation()
-  const [disconnect] = useDiscountYnputMutation()
-
-  const hasTrialExpired = (date) => {
-    if (!date) return false
-    const trialDate = new Date(date)
-    return isBefore(trialDate, new Date())
-  }
-  const hasActiveSub = (subs) => {
-    if (!subs) return false
-    return subs.some((sub) => sub.productType === 'ayon' && !hasTrialExpired(sub.trialEnd))
-  }
-
-  useEffect(() => {
-    if (queryKey) {
-      setQueryKey(undefined)
-      onRedirect && onRedirect(queryKey)
-
-      connect({ key: queryKey })
-        .unwrap()
-        .then((res) => {
-          console.log('ynput account connected', res)
-          onConnection && onConnection(res, hasActiveSub(res.subscriptions))
-        })
-    }
-  }, [queryKey])
-
-  useEffect(() => {
-    if (!isLoading && onConnection) {
-      if (!isError && connectData?.connected && onConnection) {
-        onConnection(true, hasActiveSub(connectData.subscriptions))
-      } else {
-        onConnection(false, false)
-      }
-    }
-  }, [isLoading, isError, connectData, onConnection])
-
-  const productName = useMemo(() => {
-    if (!connectData?.subscriptions?.length) return
-
-    return connectData.subscriptions.find((sub) => sub.productType === 'ayon')?.name
-  }, [connectData])
+    isLoadingConnect,
+    isConnected,
+    productName,
+    handleConnect,
+    disconnect,
+  } = useYnputCloud({ redirect, onConnection, onRedirect, skip, user })
 
   if (isLoading && showLoading)
     return (
@@ -95,18 +45,7 @@ const YnputConnector = ({
       </Section>
     )
 
-  const isConnected = (connectData?.connected && !isError) || user
-
   if (isConnected && hideSignOut) return null
-
-  redirect = redirect || location.pathname
-  const redirectUrl = `${window.location.origin}${redirect}`
-  const loginUrl = `/api/connect/authorize?origin_url=${redirectUrl}`
-
-  const handleConnect = () => {
-    // redirect to login url
-    window.location.href = loginUrl
-  }
 
   const handleDisconnect = async () => {
     setIsOpen(false)

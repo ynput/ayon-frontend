@@ -69,7 +69,7 @@ const AdminDock = ({ projectName }: { projectName?: string }) => {
             <Styled.Label>Admin</Styled.Label>
             {isSnoozing && <Styled.NotificationDot />}
             {/* the menu opens beside the sidebar */}
-            <Styled.MoreAnchor ref={anchorRef} />
+            <Styled.DockAnchor ref={anchorRef} />
           </Styled.MoreItem>
           <MenuContainer id="app" target={anchorRef.current} align="left">
             <AppMenu

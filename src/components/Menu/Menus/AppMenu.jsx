@@ -1,5 +1,5 @@
 import { Menu } from '@shared/components'
-import YnputConnector from '@components/YnputCloud/YnputConnector'
+import { useYnputCloud } from '@components/YnputCloud/useYnputCloud'
 import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
 import { toast } from 'react-toastify'
 import ayonClient from '@/ayon'
@@ -8,11 +8,14 @@ import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
 // the sidebar's Admin menu (it was the apps menu in the top bar): the admin pages the sidebar
-// doesn't show as items (`places`), then the server's actions
+// doesn't show as items (`places`), then the server's actions and its Ynput Cloud connection
 export const AppMenu = ({ user, places, ...props }) => {
   const dispatch = useAppDispatch()
   const isAdmin = user?.data?.isAdmin
   const developerMode = user?.attrib.developerMode
+
+  // signing in to Ynput Cloud comes back to this page with the menu open (/appMenu)
+  const cloud = useYnputCloud({ redirect: location.pathname + '/appMenu', enabled: !!isAdmin })
 
   // restart server
   const { confirmRestart, isRestartRequired } = useRestart()
@@ -59,6 +62,49 @@ export const AppMenu = ({ user, places, ...props }) => {
       },
     ])
 
+  // the row is there from the start: the menu keeps the height it opened with
+  if (isAdmin)
+    addGroup([
+      cloud.isLoading
+        ? { id: 'cloud', label: 'Ynput Cloud', icon: 'cloud', disabled: true }
+        : cloud.isConnected
+        ? {
+            id: 'cloud',
+            label: 'Ynput Cloud',
+            icon: 'cloud_done',
+            shortcut: 'Connected',
+            items: [
+              ...[
+                cloud.productName,
+                cloud.connectData?.orgName && `Organization: ${cloud.connectData.orgName}`,
+                cloud.connectData?.instanceName && `Instance: ${cloud.connectData.instanceName}`,
+              ]
+                .filter(Boolean)
+                .map((label, index) => ({ id: `cloud-info-${index}`, label, disabled: true })),
+              {
+                id: 'cloud-account',
+                label: 'Ynput Cloud Account',
+                icon: 'open_in_new',
+                link: `https://ynput.cloud/orgs/${cloud.connectData?.orgId}`,
+                target: '_blank',
+              },
+              { id: 'divider' },
+              {
+                id: 'cloud-disconnect',
+                label: 'Disconnect',
+                icon: 'link_off',
+                onClick: () => cloud.disconnect(),
+              },
+            ],
+          }
+        : {
+            id: 'cloud',
+            label: 'Connect to Ynput Cloud',
+            icon: 'cloud',
+            onClick: cloud.handleConnect,
+          },
+    ])
+
   if (developerMode)
     addGroup([
       {
@@ -70,19 +116,7 @@ export const AppMenu = ({ user, places, ...props }) => {
       },
     ])
 
-  return (
-    <>
-      <Menu menu={items} {...props} footer={ayonClient.settings?.version} />
-      {isAdmin && (
-        <YnputConnector
-          redirect={location.pathname + '/appMenu'}
-          smallLogo
-          darkMode
-          showStudioLink
-        />
-      )}
-    </>
-  )
+  return <Menu menu={items} {...props} footer={ayonClient.settings?.version} />
 }
 
 export default AppMenu

@@ -135,6 +135,12 @@ export const MoreAnchor = styled.span.attrs({
   height: 0;
 `
 
+// the Admin menu opens upwards from the button's bottom, so it ends level with the button
+export const DockAnchor = styled(MoreAnchor)`
+  top: auto;
+  bottom: 0;
+`
+
 // a restart is waiting: the dot the apps menu's button had
 export const NotificationDot = styled.span`
   position: absolute;
