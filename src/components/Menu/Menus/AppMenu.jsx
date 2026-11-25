@@ -74,6 +74,10 @@ export const AppMenu = ({ user, places, ...props }) => {
             label: 'Ynput Cloud',
             icon: 'cloud_done',
             shortcut: 'Connected',
+            shortcutStyle: {
+              backgroundColor: 'var(--md-sys-color-tertiary)',
+              color: 'var(--md-sys-color-on-tertiary)',
+            },
             items: [
               ...[
                 cloud.productName,

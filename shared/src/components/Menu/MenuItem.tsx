@@ -20,6 +20,8 @@ export interface MenuItemProps extends Omit<React.HTMLAttributes<HTMLElement>, '
   isLink?: string
   isDev?: boolean
   shortcut?: string
+  /** the shortcut tag's style, e.g. to colour a status shown in its place */
+  shortcutStyle?: React.CSSProperties
   disabled?: boolean
   powerFeature?: string
   active?: boolean
@@ -45,6 +47,7 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
       isLink,
       isDev,
       shortcut,
+      shortcutStyle,
       disabled,
       powerFeature,
       active,
@@ -86,7 +89,10 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
           <span key={index}>{label}</span>
         ))}
         {shortcut && (
-          <ShortcutTag style={{ minWidth: 22, textAlign: 'center' }} align={'right'}>
+          <ShortcutTag
+            style={{ minWidth: 22, textAlign: 'center', ...shortcutStyle }}
+            align={'right'}
+          >
             {shortcut}
           </ShortcutTag>
         )}
