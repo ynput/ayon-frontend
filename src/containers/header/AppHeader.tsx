@@ -177,18 +177,25 @@ const Header: React.FC = () => {
             {/* Inbox icon */}
             <InboxNotificationIcon />
 
-            {/* App icon and menu vvv */}
-            <HeaderButton
-              icon="apps"
-              onClick={() => handleToggleMenu('app')}
-              ref={appButtonRef}
-              variant="nav"
-              className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-            />
+            {/* Server menu vvv: the apps menu's links moved to Home's sidebar, the server's
+            actions (update, restart, Ynput Cloud, bootstrap) stay here */}
+            {(user.data.isAdmin || user.attrib?.developerMode) && (
+              <>
+                <HeaderButton
+                  icon="dns"
+                  onClick={() => handleToggleMenu('app')}
+                  ref={appButtonRef}
+                  variant="nav"
+                  aria-label="Server"
+                  data-tooltip="Server"
+                  className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
+                />
 
-            <MenuContainer id="app" target={appButtonRef.current}>
-              <AppMenu user={user} />
-            </MenuContainer>
+                <MenuContainer id="app" target={appButtonRef.current}>
+                  <AppMenu user={user} />
+                </MenuContainer>
+              </>
+            )}
           </>
         )}
         {/* App icon and menu ^^^ */}
