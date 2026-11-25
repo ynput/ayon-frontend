@@ -1,7 +1,8 @@
 import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
 import { FC, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import clsx from 'clsx'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
@@ -22,6 +23,8 @@ export interface NavLinkItem {
   endContent?: ReactNode
   uriSync?: boolean
   viewType?: string
+  /** a saved view pinned as a tab: its id, the `view` parameter that selects this tab */
+  pinnedView?: string
   deprecated?: string | boolean
   [key: string]: unknown
 }
@@ -36,7 +39,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
-  useSearchParams()
+  const [searchParams] = useSearchParams()
   const isManager = useSelector((state: any) => state.user.data.isManager)
   const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
   useURIContext()
@@ -74,6 +77,22 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   const { pathname } = useLocation()
   const { toggleMenuOpen } = useMenuContext()
 
+  // a tab is open when the page is its path; a pinned view's tab when the page shows its view,
+  // and then not the page's own tab
+  const viewParam = searchParams.get('view')
+  const pathMatches = (item?: NavLinkItem) => {
+    const path = item?.path?.split('?')[0]
+    return !!path && (pathname === path || pathname.startsWith(path + '/'))
+  }
+  const isLinkActive = (item?: NavLinkItem) => {
+    if (!pathMatches(item)) return false
+    if (item?.pinnedView) return item.pinnedView === viewParam
+    return !(
+      viewParam && tabLinks.some((link) => link?.pinnedView === viewParam && pathMatches(link))
+    )
+  }
+  const firstPinnedIndex = tabLinks.findIndex((item) => item?.pinnedView)
+
   // the tabs the user sees, by their index in tabLinks
   const shownTabs = tabLinks
     .map((item, index) => ({ item, index }))
@@ -82,10 +101,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
         item?.enabled !== false &&
         (!item?.accessLevels?.length || item.accessLevels.every((level) => access[level])),
     )
-  const activeIndex = shownTabs.find(
-    ({ item }) =>
-      !!item?.path && (pathname === item.path.split('?')[0] || pathname.startsWith(item.path.split('?')[0] + '/')),
-  )?.index
+  const activeIndex = shownTabs.find(({ item }) => isLinkActive(item))?.index
 
   // each tab's width, measured while it is in the row; the row's width for tabs
   const [widths, setWidths] = useState<Record<string, number>>({})
@@ -100,7 +116,9 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
       measured[tabKey(Number(li.dataset.tabIndex))] = li.offsetWidth
     })
     // only a change re-renders: this runs after every render
-    if (Object.entries(measured).some(([key, width]) => Math.abs((widths[key] ?? -1) - width) > 0.5))
+    if (
+      Object.entries(measured).some(([key, width]) => Math.abs((widths[key] ?? -1) - width) > 0.5)
+    )
       setWidths({ ...widths, ...measured })
     // the nav's padding (16) and the gaps around the trailing items
     const free = nav.clientWidth - 16 - (trailingRef.current?.offsetWidth ?? 0) - 8
@@ -163,6 +181,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
           uriSync,
           module: itemModule,
           viewType,
+          pinnedView,
           deprecated,
           ...props
         }: Partial<NavLinkItem> = {},
@@ -186,6 +205,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
           } else return <li key={idx}>{node}</li>
         }
 
+        const active = isLinkActive({ path, pinnedView })
         return (
           <Styled.NavItem
             key={idx}
@@ -193,8 +213,16 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
             data-tooltip={tooltip}
             data-tab-index={offset === 0 ? index : undefined}
             {...props}
+            className={clsx(props.className as string | undefined, {
+              pinned: !!pinnedView,
+              'first-pinned': offset === 0 && index === firstPinnedIndex,
+            })}
           >
-            <NavLink to={path!}>
+            <Link
+              to={path!}
+              className={active ? 'active' : undefined}
+              aria-current={active ? 'page' : undefined}
+            >
               <Button
                 variant="nav"
                 style={{ border: 'none' }}
@@ -211,7 +239,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
                 {endContent && endContent}
                 {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
               </Button>
-            </NavLink>
+            </Link>
           </Styled.NavItem>
         )
       },

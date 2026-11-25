@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
@@ -40,6 +40,15 @@ import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
 import { WithViews } from '@/hoc/WithViews'
+import { ViewPinsProvider } from '@shared/containers/Views'
+import {
+  PinnedTabEnd,
+  PinnedTabMenu,
+  PinnedViewPage,
+  type PinnedTabMenuTarget,
+} from '@containers/Navigation/layouts/PinnedViews'
+import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
+import { isPinnableViewType } from '@containers/Navigation/layouts/types'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -172,6 +181,35 @@ const ProjectSlicerWithViews = ({
   )
 }
 
+// the page's views: its own selected view, or a saved view a pinned tab or link opens (?view=)
+const PageViews = ({
+  projectName,
+  viewType,
+  openViewId,
+  fallbackPath,
+  children,
+}: {
+  projectName: string
+  viewType?: string
+  openViewId: string | null
+  fallbackPath: string
+  children: React.ReactNode
+}) =>
+  openViewId && isPinnableViewType(viewType) ? (
+    <PinnedViewPage
+      projectName={projectName}
+      viewType={viewType}
+      viewId={openViewId}
+      fallbackPath={fallbackPath}
+    >
+      {children}
+    </PinnedViewPage>
+  ) : (
+    <WithViews viewType={viewType} projectName={projectName}>
+      {children}
+    </WithViews>
+  )
+
 const ProjectPageInner = () => {
   /**
    * This component is a wrapper for all project pages
@@ -222,7 +260,14 @@ const ProjectPageInner = () => {
     addonPages,
     isLoadingContributions,
     hiddenPages,
+    pinnedViews,
   } = useProjectNavigation(projectName)
+
+  // a saved view pinned as a tab (or linked) opens with ?view=<id>
+  const [searchParams] = useSearchParams()
+  const openViewId = searchParams.get('view')
+  const { drafts } = usePinnedViewDrafts()
+  const [pinMenu, setPinMenu] = useState<PinnedTabMenuTarget | null>(null)
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -236,7 +281,25 @@ const ProjectPageInner = () => {
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...activeItem.tabs,
+      ...activeItem.tabs.map((tab) => {
+        const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
+        if (!pin) return tab
+        const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
+        return {
+          ...tab,
+          onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
+            e.preventDefault()
+            openMenu(e.currentTarget)
+          },
+          endContent: (
+            <PinnedTabEnd
+              edited={!!drafts[pin.id]}
+              open={openViewId === pin.id}
+              onMenu={openMenu}
+            />
+          ),
+        }
+      }),
       { node: 'spacer' },
       {
         node: <HelpButton module={addonName || module} />,
@@ -253,7 +316,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [activeItem, addonName, module],
+    [activeItem, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
   const activeLink = useMemo(() => {
@@ -432,18 +495,37 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <DetailsPanelEntityProvider>
-            <WithViews viewType={page.viewType} projectName={projectName}>
-              <EntityUpdatesProvider projectNames={[projectName]}>
-                <ProjectSlicerWithViews page={module} projectName={projectName}>
-                  <NewEntityProvider>
-                    {module !== 'overview' && (
-                      <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
-                    )}
-                    {page.component}
-                  </NewEntityProvider>
-                </ProjectSlicerWithViews>
-              </EntityUpdatesProvider>
-            </WithViews>
+            <ViewPinsProvider value={pinnedViews.viewPins}>
+              <PageViews
+                projectName={projectName}
+                viewType={page.viewType}
+                // views open by link only with pinning (the licence): otherwise the page as before
+                openViewId={pinnedViews.enabled ? openViewId : null}
+                fallbackPath={pathname}
+              >
+                <EntityUpdatesProvider projectNames={[projectName]}>
+                  <ProjectSlicerWithViews page={module} projectName={projectName}>
+                    <NewEntityProvider>
+                      {module !== 'overview' && (
+                        <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
+                      )}
+                      {page.component}
+                    </NewEntityProvider>
+                  </ProjectSlicerWithViews>
+                </EntityUpdatesProvider>
+              </PageViews>
+            </ViewPinsProvider>
+            <PinnedTabMenu
+              projectName={projectName}
+              pins={pinnedViews.visible}
+              openViewId={openViewId}
+              target={pinMenu}
+              onClose={() => setPinMenu(null)}
+              rename={pinnedViews.rename}
+              move={pinnedViews.move}
+              unpin={pinnedViews.unpin}
+              repoint={pinnedViews.repoint}
+            />
           </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>

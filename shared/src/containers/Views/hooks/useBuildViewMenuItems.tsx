@@ -13,7 +13,7 @@ import { toast } from 'react-toastify'
 import { useLoadModule } from '@shared/hooks/useLoadModule'
 import { getCustomViewsFallback } from '../utils/getCustomViewsFallback'
 import { usePowerpack } from '@shared/context'
-import type { CollapsedViewState } from '../context'
+import { useViewPins, type CollapsedViewState } from '../context'
 import { WORKING_VIEW_ID } from '../types'
 export type ViewListItemModelExtended = ViewListItemModel & {
   isOwner: boolean
@@ -56,6 +56,7 @@ const useBuildViewMenuItems = ({
   selectedId,
 }: Props): ViewMenuItem[] => {
   const { powerLicense } = usePowerpack()
+  const viewPins = useViewPins()
 
   // MUTATIONS
   const [createView] = useCreateViewMutation()
@@ -224,6 +225,31 @@ const useBuildViewMenuItems = ({
     }
   }, [handleWorkingViewChange, onResetWorkingView])
 
+  // saved views of a pinnable type get a pin button; the working view never does
+  const withPin = useCallback(
+    (item: ViewItem): ViewItem => {
+      const type = viewType
+      if (!viewPins || !type || !viewPins.viewTypes.includes(type)) return item
+      const view = viewsList.find((v) => v.id === item.id)
+      const id = view?.id
+      if (!view || !id || view.working) return item
+      return {
+        ...item,
+        pin: {
+          pinned: viewPins.isPinned(id),
+          onToggle: () =>
+            viewPins.togglePin({
+              id,
+              label: view.label,
+              viewType: type,
+              scope: view.scope === 'project' ? 'project' : 'studio',
+            }),
+        },
+      }
+    },
+    [viewPins, viewType, viewsList],
+  )
+
   // Build list with headers after computing items, omit sections with no items, and hide items when collapsed
   const viewItems: ViewMenuItem[] = useMemo(() => {
     const result: ViewMenuItem[] = [workingViewItem]
@@ -242,15 +268,23 @@ const useBuildViewMenuItems = ({
         onToggle: () => toggleSection(section.id),
       })
       if (!isCollapsed) {
-        result.push(...section.items)
+        result.push(...section.items.map(withPin))
       } else if (selectedId) {
         const selectedItem = section.items.find((i) => i.id === selectedId)
-        if (selectedItem) result.push(selectedItem)
+        if (selectedItem) result.push(withPin(selectedItem))
       }
     })
 
     return result
-  }, [workingViewItem, sections, isSectionCollapsed, toggleSection, selectedId, powerLicense])
+  }, [
+    workingViewItem,
+    sections,
+    isSectionCollapsed,
+    toggleSection,
+    selectedId,
+    powerLicense,
+    withPin,
+  ])
 
   return viewItems
 }

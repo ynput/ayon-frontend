@@ -46,6 +46,22 @@ export const NavBar = styled.nav`
 
 export const NavItem = styled.li`
   user-select: none;
+
+  /* pinned views follow the page's own tabs, after a divider */
+  &.first-pinned {
+    position: relative;
+    padding-left: 9px;
+
+    &::before {
+      content: '';
+      position: absolute;
+      left: 4px;
+      top: 10px;
+      bottom: 12px;
+      border-left: 1px solid var(--md-sys-color-outline-variant);
+    }
+  }
+
   /* NavLink */
   a {
     padding: 2px 4px;

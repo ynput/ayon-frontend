@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Icon } from '@ynput/ayon-react-components'
 import { useContributions } from '@ynput/ayon-addon'
 import type { Contribution } from '@ynput/ayon-addon'
 import { contributionTags, useHiddenContributions } from '@ynput/ayon-addon/host'
@@ -15,6 +16,9 @@ import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { KNOWN_PROJECT_PAGES } from './knownPages'
 import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
+import { usePinnedViews } from './layouts/usePinnedViews'
+import { pinnedViewPath } from './layouts/pins'
+import { PINNED_PAGES } from './layouts/types'
 
 export const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -114,6 +118,10 @@ export const useProjectNavigation = (projectName: string) => {
   const hiddenPages = useHiddenContributions('project.page')
 
   const showBrowser = frontendFlags.includes(BROWSER_FLAG)
+
+  // saved views pinned as tabs, after Production's own
+  const pinnedViews = usePinnedViews(projectName)
+  const { visible: pinned } = pinnedViews
 
   const items: NavItem[] = useMemo(() => {
     const path = (module: string) => `/projects/${projectName}/${module}`
@@ -266,6 +274,15 @@ export const useProjectNavigation = (projectName: string) => {
       [...owned, ...remotes, ...contributed, ...classic],
       KNOWN_PROJECT_PAGES,
     )
+    production.tabs.push(
+      ...pinned.map(({ pin, view }) => ({
+        name: pin.label || view.label,
+        path: pinnedViewPath(projectName, pin),
+        module: PINNED_PAGES[pin.viewType].module,
+        pinnedView: pin.id,
+        startContent: <Icon icon={PINNED_PAGES[pin.viewType].icon} />,
+      })),
+    )
     // the sidebar orders by section; within one, by this order
     return [production, review, workfiles, ...placed]
   }, [
@@ -278,6 +295,7 @@ export const useProjectNavigation = (projectName: string) => {
     getAddonBundle,
     isAdmin,
     isManager,
+    pinned,
   ])
 
   return {
@@ -292,5 +310,6 @@ export const useProjectNavigation = (projectName: string) => {
     addonPages,
     isLoadingContributions,
     hiddenPages,
+    pinnedViews,
   }
 }

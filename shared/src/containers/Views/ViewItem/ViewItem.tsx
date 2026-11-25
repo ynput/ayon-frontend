@@ -17,6 +17,8 @@ export interface ViewItem {
   onEdit?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void
   onSave?: (e: React.MouseEvent<HTMLButtonElement>, viewId: string) => void // saves the view settings from selected view
   onResetView?: (e: React.MouseEvent<HTMLButtonElement>) => void // resets working view
+  /** a saved view that can be pinned as a tab */
+  pin?: { pinned: boolean; onToggle: () => void }
   onClick?: (e: React.MouseEvent<HTMLLIElement>) => void
 }
 
@@ -38,6 +40,7 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
       onEdit,
       onSave,
       onResetView,
+      pin,
       className,
       ...props
     },
@@ -87,6 +90,19 @@ export const ViewItem = forwardRef<HTMLLIElement, ViewMenuItemProps>(
             className={clsx('save', { active: highlighted === 'save' })}
             onClick={(e) => handleSave(e, highlighted !== 'save')}
             data-tooltip={`Save ${viewAlias} settings from current ${viewAlias}`}
+          />
+        )}
+        {pin && (
+          <Styled.ActionButton
+            variant="text"
+            icon="keep"
+            className={clsx('pin', { pinned: pin.pinned })}
+            onClick={(e) => {
+              // pinning doesn't select the view
+              e.stopPropagation()
+              pin.onToggle()
+            }}
+            data-tooltip={pin.pinned ? 'Unpin tab' : 'Pin as tab'}
           />
         )}
         {isEditable && onEdit && (

@@ -20,16 +20,22 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   Restart, Ynput Cloud). `splitAdminItems` decides which are items: `NavLayout.promoted`, else
   `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
   reopens.
+- **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products or Lists
+  view pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
+  after Production's own, linking to `…/<page>?view=<id>`. The page then runs on a controlled
+  `ViewsProvider` (`PinnedViewPage`): it never selects the view or writes the working view; changes
+  are a draft per view in session storage (`pinned-view-drafts`, the dot on the tab) until Save
+  changes, Save as new or Revert in the tab's menu (`PinnedTabMenu`, also on right-click).
 - **Addon routes** (`Route` keyword modules: review and storyboard sessions) add `addon-route` to
   `#root`: the sidebar hides and the wrappers are `display: contents`, so the page lays out as before
   the sidebar existed. The review player is `position: fixed` without offsets: it relies on that.
 
 ## Contracts
-- **Item ids are stable** and are what layouts (workspaces) will refer to: a core module key
+- **Item ids are stable** and are what layouts refer to: a core module key
   (`production`, `reviews`, `workfiles`), `addon:<addon>/<page id>`, `group:<addon>/<group>`,
   `remote:<module>`, `classic:<addon>`. Don't derive them from labels or positions.
 - **`filterNavigation` is the only filter** over the registry: access and the layout's hidden ids.
-  Workspaces (Power Pack, a later spike) plug in through `NavLayout` there and in
+  Layouts plug in through `NavLayout` there and in
   `splitAdminItems` (which admin pages are promoted from the Admin menu), nowhere else. It
   decides which items show; tabs keep their `accessLevels`, so the tab row can still redirect from a
   tab the user can't open.
@@ -38,6 +44,14 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   declare yet; anything else is `other` with the `extension` icon. `placement: 'tab'` puts the page
   in the first item (Production, My work).
 - **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order.
+- **Layouts are views of type `layout`.** Until named layouts exist, pins live in the user's own
+  layout, their studio working view of that type (`useUserLayout`): `settings.project.pinned`.
+  A pin stores the view id, its view type and where it's stored (a project view shows in its
+  project only).
+- **A pinned tab shows only for a view the user can read**: one in the views list for its type
+  (the list checks read access), not one a GET by id returns.
+- **A pinned tab is active by `?view=`**, not by path: `AppNavLinks` marks the page's own tab
+  active only when no pinned tab of that page matches the parameter.
 
 ## Gotchas
 - `AppNavLinks` and `NavRail` measure themselves after every render to fold (tabs into "+N", items
@@ -48,9 +62,13 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   without the router.
 - A rail menu opens from `MoreAnchor`, a span beside the button; Escape focuses it and it hands the
   focus to its button.
+- Creating a view needs `working: false`, or it replaces the user's working view of that type.
+- A studio view created from a project page refreshes the studio list, not the project's, which
+  holds studio views too: refetch the project's list before linking to the new view.
 
 ## Checking a change
-- `tests/unit/navigationPlacement.spec.ts` (placement, filter, order, active item).
+- `tests/unit/navigationPlacement.spec.ts` (placement, filter, order, active item) and
+  `tests/unit/pinnedViews.spec.ts` (pins: add, move, rename, repoint, which ones show).
 - `tests/e2e/permissions/navigation.spec.ts` (who sees which settings) and
   `tests/e2e/bundles/bundleAddons.spec.ts` (addon pages follow the user's bundle).
 - Look at a project, Home, Settings, the Project manager, Inbox and a review session, as an admin and

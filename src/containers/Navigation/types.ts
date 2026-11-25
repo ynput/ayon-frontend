@@ -42,7 +42,7 @@ export interface NavItem {
 export type NavAccess = Record<string, boolean>
 
 /**
- * A layout over the registry: which items show and in what order. Workspaces provide one later;
+ * A layout over the registry: which items show and in what order. Named layouts provide one later;
  * until then every context uses the identity layout.
  */
 export interface NavLayout {
