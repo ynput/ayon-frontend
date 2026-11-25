@@ -63,9 +63,13 @@ export const useActiveLayout = (projectName?: string) => {
   const baseQuery = useGetBaseViewQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
   const studioDefault = baseQuery.currentData
 
+  // the studio default is readable by everyone, also when the list leaves it out
   const readable = useMemo(
-    () => (layouts ?? []).flatMap((view) => (view.id ? [view.id] : [])),
-    [layouts],
+    () => [
+      ...(layouts ?? []).flatMap((view) => (view.id ? [view.id] : [])),
+      ...(studioDefault?.id ? [studioDefault.id] : []),
+    ],
+    [layouts, studioDefault?.id],
   )
   const { source, id } = resolveLayout({
     picked,
@@ -84,14 +88,15 @@ export const useActiveLayout = (projectName?: string) => {
     { skip: !named },
   )
 
-  // Everything that decides the layout has answered. Until then the layout may still switch, so
+  // Everything that decides the layout has answered (the list and the project with data: without
+  // them a picked or project layout would be skipped). Until then the layout may still switch, so
   // it isn't changed, and a switch isn't told from the first load.
   const ready =
     enabled &&
     own.ready &&
-    settled(listQuery) &&
+    layouts !== undefined &&
     settled(baseQuery) &&
-    (!projectName || settled(projectQuery)) &&
+    (!projectName || projectQuery.currentData !== undefined) &&
     (!named || settled(namedQuery))
 
   const layout: LayoutSettings | undefined = !enabled

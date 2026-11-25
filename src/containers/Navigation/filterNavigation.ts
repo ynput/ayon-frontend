@@ -18,10 +18,10 @@ export const canOpenTab = (tab: NavLinkItem, access: NavAccess) =>
   (!tab.accessLevels?.length || tab.accessLevels.every((level) => access[level]))
 
 /**
- * The one filter over the registry: an item shows when the user can open one of its tabs and the
- * layout doesn't hide it. Exposure levels and hidden contributions are applied before the items
- * are built (an addon page the user can't see has no tab). Tabs stay as they are, so the tab row
- * can still redirect from a tab the user can't open.
+ * The one filter over the registry: an item shows when the layout doesn't hide it and the user can
+ * open one of the tabs the layout shows. Exposure levels and hidden contributions are applied
+ * before the items are built (an addon page the user can't see has no tab). Tabs stay as they are,
+ * so the tab row can still redirect from a tab the user can't open.
  */
 export const filterNavigation = (
   items: NavItem[],
@@ -29,7 +29,9 @@ export const filterNavigation = (
   layout: NavLayout = {},
 ): NavItem[] =>
   items.filter(
-    (item) => !layout.hidden?.includes(item.id) && item.tabs.some((tab) => canOpenTab(tab, access)),
+    (item) =>
+      !layout.hidden?.includes(item.id) &&
+      arrangeTabs(item.tabs, layout, item.id).some((tab) => canOpenTab(tab, access)),
   )
 
 /** The admin pages shown as items until a layout promotes others. */
@@ -55,6 +57,14 @@ export const findActiveItem = (items: NavItem[], pathname: string): NavItem | un
       item.tabs.some((tab) => !!tab.path && isUnder(pathname, pathOf(tab.path))) ||
       item.match?.some((prefix) => isUnder(pathname, prefix)),
   )
+
+/** Whether the layout shows the page at a path in its item's tab row (a path no tab holds is). */
+export const isTabShown = (item: NavItem, pathname: string, layout: NavLayout) => {
+  const tab = item.tabs.find(
+    (link) => !link.pinnedView && !!link.path && isUnder(pathname, pathOf(link.path)),
+  )
+  return !tab || arrangeTabs(item.tabs, layout, item.id).includes(tab)
+}
 
 /** Where an item opens: its landing tab, else the first tab the user can open. */
 export const itemLandingPath = (

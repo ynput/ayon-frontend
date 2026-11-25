@@ -112,6 +112,15 @@ test('a tab moves within the row as shown, and a pin keeps its place when its vi
   expect(moved.studio).toEqual({ items: { hidden: ['x'] } })
   // nothing past the row's ends
   expect(moveTabInRow(moved, 'project', 'production', row, 'overview', -1)).toEqual(moved)
+  // a tab the row doesn't show (another project's pin) keeps its place
+  const stored = {
+    version: 1 as const,
+    project: { tabs: { production: { order: ['view:x', 'overview', 'view:a', 'versions'] } } },
+  }
+  expect(
+    moveTabInRow(stored, 'project', 'production', [...row], 'view:a', -1).project?.tabs?.production
+      ?.order,
+  ).toEqual(['view:x', 'view:a', 'overview', 'versions', 'lists'])
 
   const repointed = replaceTabId(moved, 'view:a', 'view:b')
   expect(repointed.project?.tabs?.production?.order).toEqual([

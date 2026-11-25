@@ -7,6 +7,7 @@ import { useAppSelector } from '@state/store'
 import {
   filterNavigation,
   findActiveItem,
+  isTabShown,
   itemLandingPath,
   sortForSidebar,
   useNavAccess,
@@ -55,21 +56,22 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
   )
   const active = findActiveItem(items, pathname)
 
-  // Switching layouts while on a page the new one hides opens its first item. A page hidden
-  // before stays, as it was opened by its link; so does a page on the first load or in another
-  // project, which aren't switches.
-  const shown = useRef<{ scope: string; id?: string; items: Set<string> } | null>(null)
+  // Switching layouts while on a page the new one hides (its item, or its tab) opens the item's
+  // first shown tab, else the layout's first item. A page hidden before stays, as it was opened by
+  // its link; so does a page on the first load or in another project, which aren't switches.
+  const shown = useRef<{ scope: string; id?: string; path: string; page: boolean } | null>(null)
   useEffect(() => {
     if (!layoutReady) return
     const before = shown.current
-    const items = new Set(visible.map((item) => item.id))
-    shown.current = { scope, id: layoutId, items }
+    const itemShown = !!active && visible.some((item) => item.id === active.id)
+    const page = itemShown && !!active && isTabShown(active, pathname, layout)
+    shown.current = { scope, id: layoutId, path: pathname, page }
     if (!before || before.scope !== scope || before.id === layoutId) return
-    if (active && before.items.has(active.id) && !items.has(active.id) && visible[0]) {
-      const to = itemLandingPath(visible[0], access, layout)
-      if (to) navigate(to)
-    }
-  }, [layoutReady, layoutId, scope, active, visible, access, layout, navigate])
+    if (!active || before.path !== pathname || !before.page || page) return
+    const target = itemShown ? active : visible[0]
+    const to = target && itemLandingPath(target, access, layout)
+    if (to) navigate(to)
+  }, [layoutReady, layoutId, scope, pathname, active, visible, access, layout, navigate])
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})

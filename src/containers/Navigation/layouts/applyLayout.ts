@@ -95,7 +95,8 @@ export const resolveLayout = ({
 
 /**
  * The layout with a tab moved one place within the row the user sees (`rowIds`, the arranged
- * row's tab ids), recorded as that item's tab order.
+ * row's tab ids), recorded in that item's tab order. Ids the row doesn't show (a pin of another
+ * project) keep their place in it.
  */
 export const moveTabInRow = (
   layout: LayoutSettings | undefined,
@@ -108,9 +109,16 @@ export const moveTabInRow = (
   const from = rowIds.indexOf(id)
   const to = from + delta
   if (from === -1 || to < 0 || to >= rowIds.length) return { ...layout }
-  const order = [...rowIds]
-  ;[order[from], order[to]] = [order[to], order[from]]
   const own: ContextLayout = layout?.[context] ?? {}
+  // the stored order with the row's other tabs in it, each after the one before it in the row
+  // (the row follows the stored order), then the two tabs swap places
+  const order = [...(own.tabs?.[itemId]?.order ?? [])]
+  rowIds.forEach((rowId, index) => {
+    if (!order.includes(rowId))
+      order.splice(index ? order.indexOf(rowIds[index - 1]) + 1 : 0, 0, rowId)
+  })
+  const [a, b] = [order.indexOf(id), order.indexOf(rowIds[to])]
+  ;[order[a], order[b]] = [order[b], order[a]]
   return {
     ...layout,
     version: 1,

@@ -70,13 +70,19 @@ export const usePinnedViews = (projectName: string) => {
     ],
   )
 
-  // a change to the pins; a pin whose view changes (`from` to `to`, or none when it's removed)
-  // keeps its place in the layout's tab order
+  // a change to the pins: a repointed pin keeps its place in the layout's tab order, a removed one
+  // (here or from the views menu) leaves it
   const change = useCallback(
-    (next: (pins: PinnedView[]) => PinnedView[], from?: string, to?: string) =>
+    (next: (pins: PinnedView[]) => PinnedView[], repointed?: { from: string; to: string }) =>
       update((current) => {
-        const changed = withPins(current, next(getPins(current)))
-        return from ? replaceTabId(changed, pinTabId(from), to && pinTabId(to)) : changed
+        const before = getPins(current)
+        const after = next(before)
+        const changed = withPins(current, after)
+        if (repointed)
+          return replaceTabId(changed, pinTabId(repointed.from), pinTabId(repointed.to))
+        return before
+          .filter((pin) => !after.some((other) => other.id === pin.id))
+          .reduce((layout, pin) => replaceTabId(layout, pinTabId(pin.id)), changed)
       }),
     [update],
   )
@@ -122,9 +128,9 @@ export const usePinnedViews = (projectName: string) => {
           moveTabInRow(current, 'project', row.itemId, row.ids, pinTabId(id), delta),
         ),
       ),
-    unpin: (id: string) => report(change((all) => all.filter((pin) => pin.id !== id), id)),
+    unpin: (id: string) => report(change((all) => all.filter((pin) => pin.id !== id))),
     // Save as new reports its own failure
     repoint: (id: string, view: PinnedView) =>
-      change((all) => repointPin(all, id, view), id, view.id),
+      change((all) => repointPin(all, id, view), { from: id, to: view.id }),
   }
 }
