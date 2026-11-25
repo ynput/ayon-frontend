@@ -162,13 +162,24 @@ strong {
     flex-direction: row;
     overflow: hidden;
   }
+  // an addon's own route (AppRoutes): no sidebar, the page lays out in #root as before
+  &.addon-route {
+    .app-body,
+    .app-page {
+      display: contents;
+    }
+    [data-nav-rail] {
+      display: none;
+    }
+  }
+
+  // not positioned: full-window pages (a review session) still cover the top bar and sidebar
   .app-page {
     flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    position: relative;
   }
 
   // a page's main area, in the page column (or the whole window, e.g. a detached panel)

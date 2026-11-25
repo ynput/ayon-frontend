@@ -1,4 +1,4 @@
-import { FC, ReactNode, lazy, useCallback, useEffect, useState } from 'react'
+import { FC, ReactNode, lazy, useCallback, useEffect, useLayoutEffect, useState } from 'react'
 import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
@@ -44,6 +44,17 @@ const WaitForAddonRoutes = ({
   return isLoading ? <LoadingPage /> : <>{children}</>
 }
 
+// An addon's own route (a review or storyboard session) is a whole page of its own: while it is
+// open, the sidebar hides and the page lays out in the window as before the sidebar existed
+const AddonRouteLayout = ({ children }: { children: ReactNode }) => {
+  useLayoutEffect(() => {
+    const root = document.getElementById('root')
+    root?.classList.add('addon-route')
+    return () => root?.classList.remove('addon-route')
+  }, [])
+  return <>{children}</>
+}
+
 const AppRoutes: FC<AppRoutesProps> = () => {
   const { user } = useGlobalContext()
   const { uiExposureLevel: level = 0 } = user || {}
@@ -76,12 +87,14 @@ const AppRoutes: FC<AppRoutesProps> = () => {
           key={remote.id}
           path={remote.path}
           element={
-            <remote.component
-              router={{
-                ...{ useParams, useNavigate, useLocation, useSearchParams },
-              }}
-              toast={toast}
-            />
+            <AddonRouteLayout>
+              <remote.component
+                router={{
+                  ...{ useParams, useNavigate, useLocation, useSearchParams },
+                }}
+                toast={toast}
+              />
+            </AddonRouteLayout>
           }
         />
       ))}
