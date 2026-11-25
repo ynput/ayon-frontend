@@ -8,7 +8,7 @@ import { copyToClipboard } from '@shared/util'
 import { generateViewId, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
-import { applyDraft, pinnedViewPath, type VisiblePin } from './pins'
+import { applyDraft, pinnedViewPath, samePagePins, type VisiblePin } from './pins'
 import { PINNED_PAGES, type PinnableViewType, type PinnedView } from './types'
 import { UPDATE_ACCESS, usePinnedView, usePinnedViewDrafts } from './PinnedViewsHelpers'
 import * as Styled from './PinnedViews.styled'
@@ -44,11 +44,13 @@ export const PinnedViewPage = ({
 
   useEffect(() => {
     // a view just saved may not be in the list yet
-    if (isError || (views && !listed && !isFetching)) {
-      toast.warning(isError ? "Couldn't open this view" : "You can't open this view")
+    // a failed request only matters when there is nothing to show
+    const failed = isError && !view
+    if (failed || (views && !listed && !isFetching && !isError)) {
+      toast.warning(failed ? "Couldn't open this view" : "You can't open this view")
       navigate(fallbackPath, { replace: true })
     }
-  }, [views, listed, isFetching, isError, fallbackPath, navigate])
+  }, [views, listed, view, isFetching, isError, fallbackPath, navigate])
 
   // pages keep some settings in their own state (Products' grid, grouping, columns): they start
   // again from the view on another view, and when the draft is reverted or saved
@@ -170,15 +172,17 @@ export const PinnedTabMenu = ({
   repoint,
 }: PinnedTabMenuProps) => {
   const navigate = useNavigate()
-  const { drafts, clearDraft } = usePinnedViewDrafts()
+  const { drafts, clearDraft, clearSavedDraft } = usePinnedViewDrafts()
   const [dialog, setDialog] = useState<null | { kind: 'rename' | 'saveAs'; pin: PinnedView }>(null)
   const [createView] = useCreateViewMutation()
   const [updateView] = useUpdateViewMutation()
 
   // the menu's tab, or the dialog's once the menu has closed
   const pin = target?.pin ?? dialog?.pin
-  const index = pin ? pins.findIndex((item) => item.pin.id === pin.id) : -1
-  const listed = index === -1 ? undefined : pins[index].view
+  const listed = pin ? pins.find((item) => item.pin.id === pin.id)?.view : undefined
+  // a tab moves among the pins next to the same page
+  const siblings = pin ? samePagePins(pins, pin.id) : []
+  const index = pin ? siblings.findIndex((item) => item.pin.id === pin.id) : -1
   const isOpen = !!pin && pin.id === openViewId
   const draft = pin ? drafts[pin.id] : undefined
 
@@ -205,7 +209,7 @@ export const PinnedTabMenu = ({
         projectName: viewProject,
         genericViewPatchModel: { settings: merged },
       }).unwrap()
-      clearDraft(pin.id, submitted)
+      clearSavedDraft(pin.id, submitted)
       toast.success(`Saved the changes to "${listed?.label ?? label}"`)
     } catch (error: any) {
       toast.error(error?.data?.detail || "Couldn't save the view")
@@ -214,6 +218,8 @@ export const PinnedTabMenu = ({
 
   const saveAsNew = async (old: PinnedView, name: string) => {
     if (!merged) return
+    // edits made while it saves stay a draft of the old view
+    const submitted = draft
     const id = generateViewId()
     try {
       await createView({
@@ -234,15 +240,15 @@ export const PinnedTabMenu = ({
     }
     // a studio view: creating it refreshes the studio list, not this project's, which holds it too
     try {
-      const refreshed = await refetchList()
-      if (!refreshed.data?.some((item) => item.id === id)) throw new Error('not listed')
+      const refreshed = await refetchList().unwrap()
+      if (!refreshed.some((item) => item.id === id)) throw new Error('not listed')
       await repoint(old.id, next)
-    } catch (error) {
-      // the view is saved; the tab and its draft stay as they were
-      toast.error(`Saved "${name}", but couldn't move the tab to it`)
-      throw error
+    } catch {
+      // the view is saved (trying again would save it twice): the tab and its draft stay
+      toast.error(`Saved "${name}", but couldn't move the tab to it. Pin it from the views menu.`)
+      return
     }
-    clearDraft(old.id)
+    clearSavedDraft(old.id, submitted)
     navigate(pinnedViewPath(projectName, next))
   }
 
@@ -291,7 +297,7 @@ export const PinnedTabMenu = ({
           id: 'right',
           label: 'Move right',
           icon: 'arrow_forward',
-          disabled: index === -1 || index >= pins.length - 1,
+          disabled: index === -1 || index >= siblings.length - 1,
           onClick: () => move(pin.id, 1),
         },
         { id: 'divider' },

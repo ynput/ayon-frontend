@@ -7,6 +7,7 @@ import {
   movePinPast,
   renamePin,
   repointPin,
+  samePagePins,
   togglePin,
   visiblePins,
   withPins,
@@ -78,10 +79,11 @@ export const usePinnedViews = (projectName: string) => {
     /** for the views menu's pin buttons */
     viewPins,
     rename: (id: string, label: string) => change((all) => renamePin(all, id, label)),
-    /** moves a tab past the shown tab next to it */
+    /** moves a tab past the next shown pin of the same page */
     move: (id: string, delta: -1 | 1) => {
-      const index = visible.findIndex((item) => item.pin.id === id)
-      const other = visible[index + delta]?.pin.id
+      const siblings = samePagePins(visible, id)
+      const index = siblings.findIndex((item) => item.pin.id === id)
+      const other = siblings[index + delta]?.pin.id
       return other ? change((all) => movePinPast(all, id, other, delta > 0)) : Promise.resolve()
     },
     unpin: (id: string) => change((all) => all.filter((pin) => pin.id !== id)),

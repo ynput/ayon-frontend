@@ -22,27 +22,32 @@ export const useUserLayout = () => {
 
   // Writes run one at a time, each from the layout the previous one left: quick changes (two pins
   // in a row) neither overwrite each other nor create a second working view.
+  // `latest` is the last layout a write saved; it follows the cache once nothing is pending and
+  // the cache has caught up (a just-created working view isn't in it until it refetches)
   const pending = useRef(0)
   const latest = useRef<{ id?: string; layout?: LayoutSettings }>({})
-  if (!pending.current) latest.current = { id: workingView?.id, layout }
+  if (!pending.current && (workingView?.id || !latest.current.id))
+    latest.current = { id: workingView?.id, layout }
   const queue = useRef<Promise<unknown>>(Promise.resolve())
 
   const update = useCallback(
     (change: (layout: LayoutSettings | undefined) => LayoutSettings) => {
       const write = async () => {
+        // the next write starts from this one only once it is saved
         const next = change(latest.current.layout)
-        latest.current = { ...latest.current, layout: next }
-        if (latest.current.id) {
+        const { id } = latest.current
+        if (id) {
           await updateView({
             viewType: LAYOUT_VIEW_TYPE,
-            viewId: latest.current.id,
+            viewId: id,
             genericViewPatchModel: { settings: next },
           }).unwrap()
+          latest.current = { id, layout: next }
           return
         }
         const view = { ...generateWorkingView(next), label: 'My layout' }
         await createView({ viewType: LAYOUT_VIEW_TYPE, genericViewPostModel: view }).unwrap()
-        latest.current = { ...latest.current, id: view.id }
+        latest.current = { id: view.id, layout: next }
       }
       pending.current += 1
       const result = queue.current.then(write).finally(() => {

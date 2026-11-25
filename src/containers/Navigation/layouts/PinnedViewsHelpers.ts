@@ -28,17 +28,23 @@ export const usePinnedViewDrafts = () => {
     },
     [setDrafts],
   )
-  /** drops the draft; with `saved`, only when nothing changed since that draft was saved */
+  /** drops the draft (Revert) */
   const clearDraft = useCallback(
-    (id: string, saved?: ViewSettings) =>
+    (id: string) =>
+      setDrafts((all) => Object.fromEntries(Object.entries(all).filter(([key]) => key !== id))),
+    [setDrafts],
+  )
+  /** drops the draft only if it is still the one that was saved: later edits stay */
+  const clearSavedDraft = useCallback(
+    (id: string, saved: ViewSettings | undefined) =>
       setDrafts((all) =>
-        saved && !isEqual(all[id], saved)
-          ? all
-          : Object.fromEntries(Object.entries(all).filter(([key]) => key !== id)),
+        isEqual(all[id], saved)
+          ? Object.fromEntries(Object.entries(all).filter(([key]) => key !== id))
+          : all,
       ),
     [setDrafts],
   )
-  return { drafts, mergeDraft, clearDraft }
+  return { drafts, mergeDraft, clearDraft, clearSavedDraft }
 }
 
 /** A view of the page by its id: the one a pinned tab, or a link, opens. */
@@ -50,15 +56,16 @@ export const usePinnedView = (
 ) => {
   // the list holds only the views the user can read; it also says where the view is stored
   const list = useListViewsQuery({ viewType, projectName }, { skip })
-  const listed = list.currentData?.find((view) => view.id === viewId)
+  const listed = list.data?.find((view) => view.id === viewId)
   const full = useGetViewQuery(
     { viewType, viewId, projectName: listed?.scope === 'project' ? projectName : undefined },
     { skip: skip || !listed },
   )
   return {
-    views: list.currentData,
+    // the last good data: a failed refresh keeps a page that was showing
+    views: list.data,
     listed,
-    view: listed ? full.currentData : undefined,
+    view: listed ? full.data : undefined,
     isFetching: list.isFetching,
     isError: list.isError || full.isError,
     refetchList: list.refetch,

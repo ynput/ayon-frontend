@@ -1,4 +1,5 @@
 import type { ViewListItemModel } from '@shared/api'
+import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import type { PinnableView, ViewSettings } from '@shared/containers/Views'
 import { PINNED_PAGES, isPinnableViewType, type LayoutSettings, type PinnedView } from './types'
 
@@ -91,4 +92,26 @@ export const applyDraft = (saved: ViewSettings, draft?: ViewSettings): ViewSetti
     else result[key] = value
   })
   return result as ViewSettings
+}
+
+/**
+ * The tab row with each pinned view's tab right after its page's tab (and the page's other pins,
+ * in pin order). A pin whose page has no tab here goes at the end.
+ */
+export const placePinnedTabs = (tabs: NavLinkItem[], pinned: NavLinkItem[]): NavLinkItem[] => {
+  const result = [...tabs]
+  pinned.forEach((tab) => {
+    const page = result.findIndex((item) => !item.pinnedView && item.module === tab.module)
+    if (page === -1) return result.push(tab)
+    let at = page + 1
+    while (result[at]?.pinnedView && result[at]?.module === tab.module) at += 1
+    result.splice(at, 0, tab)
+  })
+  return result
+}
+
+/** The pins shown with the same page's tab as this one: the ones a tab moves among. */
+export const samePagePins = (visible: VisiblePin[], id: string): VisiblePin[] => {
+  const viewType = visible.find((item) => item.pin.id === id)?.pin.viewType
+  return visible.filter((item) => item.pin.viewType === viewType)
 }

@@ -22,7 +22,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   reopens.
 - **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products or Lists
   view pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
-  after Production's own, linking to `…/<page>?view=<id>`. The page then runs on a controlled
+  right after its page's tab (`placePinnedTabs`), linking to `…/<page>?view=<id>`. The page then runs on a controlled
   `ViewsProvider` (`PinnedViewPage`): it never selects the view or writes the working view; changes
   are a draft per view in session storage (`pinned-view-drafts`, the dot on the tab) until Save
   changes, Save as new or Revert in the tab's menu (`PinnedTabMenu`, also on right-click).
@@ -63,6 +63,8 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 - A rail menu opens from `MoreAnchor`, a span beside the button; Escape focuses it and it hands the
   focus to its button.
 - Creating a view needs `working: false`, or it replaces the user's working view of that type.
+- A pinned tab's draft stores a cleared field as `null` (session storage is JSON and drops
+  `undefined`); `applyDraft` leaves those fields out.
 - A studio view created from a project page refreshes the studio list, not the project's, which
   holds studio views too: refetch the project's list before linking to the new view.
 

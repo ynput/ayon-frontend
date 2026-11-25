@@ -17,7 +17,7 @@ import { KNOWN_PROJECT_PAGES } from './knownPages'
 import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
 import { usePinnedViews } from './layouts/usePinnedViews'
-import { pinnedViewPath } from './layouts/pins'
+import { pinnedViewPath, placePinnedTabs } from './layouts/pins'
 import { PINNED_PAGES } from './layouts/types'
 
 export const BROWSER_FLAG = 'enable-legacy-version-browser'
@@ -274,8 +274,10 @@ export const useProjectNavigation = (projectName: string) => {
       [...owned, ...remotes, ...contributed, ...classic],
       KNOWN_PROJECT_PAGES,
     )
-    production.tabs.push(
-      ...pinned.map(({ pin, view }) => ({
+    // pinned views sit next to the page they come from
+    production.tabs = placePinnedTabs(
+      production.tabs,
+      pinned.map(({ pin, view }) => ({
         name: pin.label || view.label,
         path: pinnedViewPath(projectName, pin),
         module: PINNED_PAGES[pin.viewType].module,

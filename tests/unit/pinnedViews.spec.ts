@@ -4,6 +4,8 @@ import {
   getPins,
   movePinPast,
   pinnedViewPath,
+  placePinnedTabs,
+  samePagePins,
   renamePin,
   repointPin,
   togglePin,
@@ -88,4 +90,35 @@ test('a draft keeps a cleared field through session storage', () => {
   const draft = JSON.parse(JSON.stringify({ groupBy: null, rowHeight: 40 }))
   expect(applyDraft(saved, draft)).toEqual({ showHierarchy: false, rowHeight: 40 })
   expect(applyDraft(saved, undefined)).toEqual(saved)
+})
+
+test("a pinned tab sits right after its page, after that page's earlier pins", () => {
+  const tabs = [
+    { name: 'Overview', module: 'overview' },
+    { name: 'Task progress', module: 'tasks' },
+    { name: 'Products', module: 'products' },
+    { name: 'Lists', module: 'lists' },
+  ]
+  const pinned = [
+    { name: 'Lighting', module: 'overview', pinnedView: '1' },
+    { name: 'Delivery', module: 'products', pinnedView: '2' },
+    { name: 'Comp', module: 'overview', pinnedView: '3' },
+    { name: 'Elsewhere', module: 'browser', pinnedView: '4' },
+  ]
+  expect(placePinnedTabs(tabs, pinned).map((t) => t.name)).toEqual([
+    'Overview',
+    'Lighting',
+    'Comp',
+    'Task progress',
+    'Products',
+    'Delivery',
+    'Lists',
+    'Elsewhere',
+  ])
+  const visible = [
+    { pin: pin('1'), view: { id: '1' } },
+    { pin: pin('2', { viewType: 'versions' }), view: { id: '2' } },
+    { pin: pin('3'), view: { id: '3' } },
+  ]
+  expect(samePagePins(visible, '3').map((v) => v.pin.id)).toEqual(['1', '3'])
 })

@@ -162,10 +162,6 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   }, [widths, available, activeIndex, tabLinks, access.manager, access.admin])
 
   const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
-  // the divider goes before the first pinned tab still in the row
-  const firstPinnedIndex = shownTabs.find(
-    ({ item, index }) => item?.pinnedView && !folded.has(index),
-  )?.index
   const moreMenuId = 'nav-more-tabs'
 
   const renderLinks = (items: NavLinkItem[], offset = 0) =>
@@ -216,10 +212,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
             data-tooltip={tooltip}
             data-tab-index={offset === 0 ? index : undefined}
             {...props}
-            className={clsx(props.className as string | undefined, {
-              pinned: !!pinnedView,
-              'first-pinned': offset === 0 && index === firstPinnedIndex,
-            })}
+            className={clsx(props.className as string | undefined, { pinned: !!pinnedView })}
           >
             <Link
               to={path!}
