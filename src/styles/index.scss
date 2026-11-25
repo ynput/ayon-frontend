@@ -177,10 +177,9 @@ strong {
 nav.primary {
   background-color: var(--md-sys-color-surface-container-low);
   padding: 6px;
-  // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
-  // page's centre line on every page; a side wider than its half pushes them over, never under it
-  display: grid;
-  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  // left controls with the context pill, right controls; the studio brand is centred on the bar
+  // itself (AppHeader), so the sides lay out as flex items
+  display: flex;
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);
