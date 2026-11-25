@@ -74,6 +74,8 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
     const target = itemShown ? active : visible[0]
     const to = target && itemLandingPath(target, access, layout)
     if (to) navigate(to)
+    // nowhere to go yet (its only tabs are pins still loading): tried again when the items change
+    else shown.current = before
   }, [layoutReady, layoutId, scope, pathname, viewId, active, visible, access, layout, navigate])
 
   // each item's height while it is on the rail, and the rail's height for the sections
