@@ -1,8 +1,14 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, useState } from 'react'
+import { isEqual } from 'lodash'
 import { useCreateViewMutation, useGetWorkingViewQuery, useUpdateViewMutation } from '@shared/api'
 import { usePowerpack } from '@shared/context'
-import { generateWorkingView } from '@shared/containers/Views'
+import { generateViewId, generateWorkingView } from '@shared/containers/Views'
 import { LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
+
+interface SavedLayout {
+  id: string
+  layout: LayoutSettings
+}
 
 /**
  * The user's own layout: their working view of type `layout`, studio-wide. It holds their pinned
@@ -12,56 +18,60 @@ export const useUserLayout = () => {
   const { powerLicense } = usePowerpack()
   const enabled = !!powerLicense
 
-  const {
-    currentData: workingView,
-    isLoading,
-    refetch: refetchWorking,
-  } = useGetWorkingViewQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
+  const { currentData: workingView, isLoading } = useGetWorkingViewQuery(
+    { viewType: LAYOUT_VIEW_TYPE },
+    { skip: !enabled },
+  )
   const [createView] = useCreateViewMutation()
   const [updateView] = useUpdateViewMutation()
-  const layout = workingView?.settings as LayoutSettings | undefined
 
-  // Writes run one at a time, each from the layout the previous one left: quick changes (two pins
-  // in a row) neither overwrite each other nor create a second working view.
-  // `latest` is the last layout a write saved; it follows the cache once nothing is pending and
-  // the cache has caught up (a just-created working view isn't in it until it refetches)
-  const pending = useRef(0)
-  const latest = useRef<{ id?: string; layout?: LayoutSettings }>({})
-  if (!pending.current && (workingView?.id || !latest.current.id))
-    latest.current = { id: workingView?.id, layout }
+  // What this session last saved. A refetch can still bring back an older layout (creating the
+  // working view refreshes it, and that can land after a quick second change), so this is what's
+  // shown and built on until the cache has caught up with it.
+  const saved = useRef<SavedLayout | null>(null)
+  const cached = workingView?.id
+    ? { id: workingView.id, layout: workingView.settings as LayoutSettings }
+    : undefined
+  if (
+    saved.current &&
+    cached?.id === saved.current.id &&
+    isEqual(cached.layout, saved.current.layout)
+  )
+    saved.current = null
+  const current: Partial<SavedLayout> | undefined = saved.current ?? cached
+  const currentRef = useRef(current)
+  currentRef.current = current
+  const [, rerender] = useState(0)
+
+  // writes run one at a time, each from the layout the previous one saved
   const queue = useRef<Promise<unknown>>(Promise.resolve())
 
   const update = useCallback(
     (change: (layout: LayoutSettings | undefined) => LayoutSettings) => {
       const write = async () => {
-        // the next write starts from this one only once it is saved
-        const next = change(latest.current.layout)
-        const { id } = latest.current
-        if (id) {
+        const base = saved.current ?? currentRef.current
+        const next = change(base?.layout)
+        if (base?.id) {
           await updateView({
             viewType: LAYOUT_VIEW_TYPE,
-            viewId: id,
+            viewId: base.id,
             genericViewPatchModel: { settings: next },
           }).unwrap()
-          latest.current = { id, layout: next }
-          return
+          saved.current = { id: base.id, layout: next }
+        } else {
+          const id = generateViewId()
+          const view = { ...generateWorkingView(next), id, label: 'My layout' }
+          await createView({ viewType: LAYOUT_VIEW_TYPE, genericViewPostModel: view }).unwrap()
+          saved.current = { id, layout: next }
         }
-        const view = { ...generateWorkingView(next), label: 'My layout' }
-        await createView({ viewType: LAYOUT_VIEW_TYPE, genericViewPostModel: view }).unwrap()
-        latest.current = { id: view.id, layout: next }
-        // the next write patches the cached layout (settings-only updates don't refetch), so it
-        // waits until the new working view is in the cache
-        await refetchWorking()
+        rerender((count) => count + 1)
       }
-      pending.current += 1
-      const result = queue.current.then(write).finally(() => {
-        pending.current -= 1
-      })
+      const result = queue.current.then(write)
       queue.current = result.catch(() => undefined)
       return result
     },
-    [createView, updateView, refetchWorking],
+    [createView, updateView],
   )
 
-  return { enabled, layout, isLoading, update }
+  return { enabled, layout: current?.layout, isLoading, update }
 }

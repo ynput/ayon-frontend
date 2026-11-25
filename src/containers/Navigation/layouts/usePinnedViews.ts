@@ -1,4 +1,6 @@
 import { useCallback, useMemo } from 'react'
+import { toast } from 'react-toastify'
+import { getRequestErrorString } from '@shared/util'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
 import { useUserLayout } from './useUserLayout'
@@ -61,13 +63,20 @@ export const usePinnedViews = (projectName: string) => {
     [update],
   )
 
+  // what the user does from a button or menu: a failure says so instead of failing silently
+  const report = (action: Promise<unknown>) =>
+    action.catch((error) => {
+      toast.error(`Couldn't change your pinned tabs: ${getRequestErrorString(error)}`)
+    })
+
   const viewPins: ViewPins | null = useMemo(
     () =>
       enabled
         ? {
             viewTypes: VIEW_TYPES,
             isPinned: (viewId: string) => pins.some((pin) => pin.id === viewId),
-            togglePin: (view: PinnableView) => change((all) => togglePin(all, view, projectName)),
+            togglePin: (view: PinnableView) =>
+              void report(change((all) => togglePin(all, view, projectName))),
           }
         : null,
     [enabled, pins, change, projectName],
@@ -78,15 +87,18 @@ export const usePinnedViews = (projectName: string) => {
     visible,
     /** for the views menu's pin buttons */
     viewPins,
-    rename: (id: string, label: string) => change((all) => renamePin(all, id, label)),
+    rename: (id: string, label: string) => report(change((all) => renamePin(all, id, label))),
     /** moves a tab past the next shown pin of the same page */
     move: (id: string, delta: -1 | 1) => {
       const siblings = samePagePins(visible, id)
       const index = siblings.findIndex((item) => item.pin.id === id)
       const other = siblings[index + delta]?.pin.id
-      return other ? change((all) => movePinPast(all, id, other, delta > 0)) : Promise.resolve()
+      return other
+        ? report(change((all) => movePinPast(all, id, other, delta > 0)))
+        : Promise.resolve()
     },
-    unpin: (id: string) => change((all) => all.filter((pin) => pin.id !== id)),
+    unpin: (id: string) => report(change((all) => all.filter((pin) => pin.id !== id))),
+    // Save as new reports its own failure
     repoint: (id: string, view: PinnedView) => change((all) => repointPin(all, id, view)),
   }
 }
