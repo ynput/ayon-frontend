@@ -3,6 +3,7 @@ import { FC, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } 
 import { useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
+import { samePageLink } from '@containers/Navigation/layouts/pins'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
@@ -92,18 +93,8 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     )
   }
 
-  // A tab of the open page (its own tab or one of its pinned views) keeps the page's state in the
-  // URL, such as the open list: only the view changes.
-  const linkTo = (path?: string) => {
-    if (!path) return path
-    const [base, query = ''] = path.split('?')
-    if (base !== pathname) return path
-    const params = new URLSearchParams(search)
-    params.delete('view')
-    new URLSearchParams(query).forEach((value, key) => params.set(key, value))
-    const next = params.toString()
-    return next ? `${base}?${next}` : base
-  }
+  // a tab of the open page (its own or a pinned view of it) keeps the page's open list
+  const linkTo = (path?: string) => path && samePageLink(path, pathname, search)
 
   // the tabs the user sees, by their index in tabLinks
   const shownTabs = tabLinks

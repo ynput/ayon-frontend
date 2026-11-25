@@ -1,5 +1,5 @@
 import { ReactNode, useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Button, Dialog, InputText, SaveButton } from '@ynput/ayon-react-components'
 import { useCreateViewMutation, useUpdateViewMutation } from '@shared/api'
@@ -8,7 +8,7 @@ import { copyToClipboard } from '@shared/util'
 import { generateViewId, Views, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
-import { applyDraft, pinnedViewPath, samePagePins, type VisiblePin } from './pins'
+import { applyDraft, pinnedViewPath, samePageLink, samePagePins, type VisiblePin } from './pins'
 import { isPinnableViewType, PINNED_PAGES, type PinnedView } from './types'
 import {
   UPDATE_ACCESS,
@@ -149,6 +149,9 @@ export const PinnedTabMenu = ({
   repoint,
 }: PinnedTabMenuProps) => {
   const navigate = useNavigate()
+  const { pathname, search } = useLocation()
+  // to the same page, keeping its open list
+  const goTo = (path: string) => navigate(samePageLink(path, pathname, search))
   const { drafts, clearDraft, clearSavedDraft } = usePinnedViewDrafts()
   const [dialog, setDialog] = useState<null | { kind: 'rename' | 'saveAs'; pin: PinnedView }>(null)
   const [createView] = useCreateViewMutation()
@@ -226,7 +229,7 @@ export const PinnedTabMenu = ({
       return
     }
     clearSavedDraft(old.id, submitted)
-    navigate(pinnedViewPath(projectName, next))
+    goTo(pinnedViewPath(projectName, next))
   }
 
   const items = !pin
@@ -298,7 +301,7 @@ export const PinnedTabMenu = ({
           onClick: () => {
             unpin(pin.id)
             // the open tab is gone: back to the page with its own view
-            if (isOpen) navigate(`/projects/${projectName}/${PINNED_PAGES[pin.viewType].module}`)
+            if (isOpen) goTo(`/projects/${projectName}/${PINNED_PAGES[pin.viewType].module}`)
           },
         },
       ]

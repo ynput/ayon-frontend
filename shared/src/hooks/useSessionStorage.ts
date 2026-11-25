@@ -79,6 +79,8 @@ export function useSessionStorage<T>(
               ? (valueOrFn as (prevState: T) => T)(prevValue)
               : valueOrFn
 
+          // an update that keeps the value writes nothing and tells nobody
+          if (Object.is(nextValue, prevValue)) return prevValue
           sessionStorage.setItem(key, JSON.stringify(nextValue))
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('session-storage', { detail: { key } }))

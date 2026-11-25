@@ -115,3 +115,24 @@ export const samePagePins = (visible: VisiblePin[], id: string): VisiblePin[] =>
   const viewType = visible.find((item) => item.pin.id === id)?.pin.viewType
   return visible.filter((item) => item.pin.viewType === viewType)
 }
+
+/** What a page keeps in its URL across its tabs (its own and its pinned views): the open list. */
+const PAGE_STATE_PARAMS = ['list', 'review']
+
+/**
+ * A link to a tab of the page that is open keeps the page's lasting state from the current URL
+ * (`PAGE_STATE_PARAMS`), so only the view changes. One-shot parameters (a deep link to an item,
+ * the selected entity) stay behind. A link to another page is left as it is.
+ */
+export const samePageLink = (path: string, pathname: string, search: string): string => {
+  const [base, query = ''] = path.split('?')
+  if (base !== pathname) return path
+  const current = new URLSearchParams(search)
+  const params = new URLSearchParams(query)
+  PAGE_STATE_PARAMS.forEach((key) => {
+    const value = current.get(key)
+    if (value && !params.has(key)) params.set(key, value)
+  })
+  const next = params.toString()
+  return next ? `${base}?${next}` : base
+}
