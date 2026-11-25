@@ -7,6 +7,7 @@ import { useMenuContext } from '@shared/context'
 import { useRestart } from '@context'
 import { useAppSelector } from '@state/store'
 import AppMenu from '@components/Menu/Menus/AppMenu'
+import { useGetYnputConnectionsQuery } from '@queries/ynputConnect'
 import {
   filterNavigation,
   findActiveItem,
@@ -35,6 +36,10 @@ const AdminDock = ({ projectName }: { projectName?: string }) => {
   const items = filterNavigation(useAdminNavigation(projectName), access)
   const active = findActiveItem(items, pathname)
   const { docked, folded } = splitAdminItems(items)
+
+  // loaded before the menu opens: its Ynput Cloud row or prompt is there from the first frame,
+  // so the menu keeps the height it was placed with
+  useGetYnputConnectionsQuery({}, { skip: !user.data?.isAdmin })
 
   const isOpen = menuOpen === 'app'
   const hasMenu = !!folded.length || !!user.data?.isAdmin || !!user.attrib?.developerMode

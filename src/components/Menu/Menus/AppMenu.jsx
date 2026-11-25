@@ -1,3 +1,5 @@
+import styled from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
 import { Menu } from '@shared/components'
 import { useYnputCloud } from '@components/YnputCloud/useYnputCloud'
 import { useRestartOnBoardingMutation } from '@queries/onBoarding/onBoarding'
@@ -6,6 +8,25 @@ import ayonClient from '@/ayon'
 import { useRestart } from '@context'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
+
+// not connected: the menu's call to action, in Ynput Cloud's green
+const CloudPrompt = styled.li`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 4px 0 2px;
+  list-style: none;
+
+  button {
+    width: 100%;
+    justify-content: center;
+  }
+  span {
+    font-size: 12px;
+    text-align: center;
+    color: var(--md-sys-color-outline);
+  }
+`
 
 // the sidebar's Admin menu (it was the apps menu in the top bar): the admin pages the sidebar
 // doesn't show as items (`places`), then the server's actions and its Ynput Cloud connection
@@ -104,9 +125,14 @@ export const AppMenu = ({ user, places, ...props }) => {
           }
         : {
             id: 'cloud',
-            label: 'Connect to Ynput Cloud',
-            icon: 'cloud',
-            onClick: cloud.handleConnect,
+            node: (
+              <CloudPrompt key="cloud">
+                <Button variant="tertiary" icon="cloud" onClick={cloud.handleConnect}>
+                  Connect to Ynput Cloud
+                </Button>
+                <span>Addon market, release bundles and updates</span>
+              </CloudPrompt>
+            ),
           },
     ])
 
