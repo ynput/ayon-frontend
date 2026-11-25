@@ -17,9 +17,9 @@ function calculateMenuPosition(
   if (!targetElement) return null
 
   const targetRect = targetElement.getBoundingClientRect()
-  const menuRect = menuElement?.getBoundingClientRect()
-  const menuWidth = menuRect?.width || 200
-  const menuHeight = menuRect?.height || 300
+  // the layout size: the open animation scales the menu, which its bounding rect would include
+  const menuWidth = menuElement?.offsetWidth || 200
+  const menuHeight = menuElement?.offsetHeight || 300
   const padding = 8 // Minimum distance from screen edges
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
