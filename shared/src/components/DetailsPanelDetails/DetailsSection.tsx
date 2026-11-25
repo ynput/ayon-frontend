@@ -1,4 +1,5 @@
 import React from 'react'
+import clsx from 'clsx'
 import styled from 'styled-components'
 import type { AttributeField } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor'
 import { NoMatches } from '../DetailsPanelAttributes/DetailsPanelAttributesEditor.styled'
@@ -10,7 +11,7 @@ import { UserImage } from '../UserImage/UserImage'
 
 const StyledRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(200px, 1fr) 1fr 32px;
+  grid-template-columns: minmax(80px, 40%) minmax(0, 1fr) 32px;
   row-gap: 2px;
   column-gap: 4px;
   align-items: center;
@@ -31,7 +32,23 @@ const StyledRow = styled.div`
   &:hover .copy-icon {
     opacity: 1;
   }
+
+  /* what the entity is, its creation and its last update, each apart */
+  &.separated {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
+  }
 `
+
+// rows of a block sit together, a line between blocks; anything else is the first block
+const FIELD_BLOCKS: Record<string, number> = {
+  createdAt: 1,
+  createdBy: 1,
+  updatedAt: 2,
+  updatedBy: 2,
+}
+const fieldBlock = (name: string) => FIELD_BLOCKS[name] ?? 0
 
 const StyledValue = styled.div`
   text-align: left;
@@ -79,6 +96,9 @@ interface DetailsSectionProps {
   users?: { name: string; fullName?: string | null }[]
   /** the Details tab's search: only the fields whose label, name or value as shown match */
   search?: string
+  title?: string
+  /** a line between what the entity is, its creation and its last update */
+  separateBlocks?: boolean
 }
 
 export const DetailsSection: React.FC<DetailsSectionProps> = ({
@@ -88,6 +108,8 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
   isLoading,
   users = [],
   search,
+  title = 'Details',
+  separateBlocks,
 }) => {
   const formatValue = (value: any, fieldName: string): string => {
     if (value === null || value === undefined) {
@@ -103,7 +125,7 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Details" withPadding>
+      <BorderedSection title={title} withPadding>
         {Array.from({ length: 6 }).map((_, index) => (
           <StyledRow key={index}>
             <StyledShimmer style={{ width: '80px' }} />
@@ -132,11 +154,15 @@ export const DetailsSection: React.FC<DetailsSectionProps> = ({
     )
 
   return (
-    <BorderedSection title="Details" autoHeight showHeader withPadding>
+    <BorderedSection title={title} autoHeight showHeader withPadding>
       {!rows.length && search && <NoMatches>No matching details</NoMatches>}
-      {rows.map(({ field, fieldValue, isMixed, displayValue, author }) => {
+      {rows.map(({ field, fieldValue, isMixed, displayValue, author }, index) => {
+        const startsBlock =
+          separateBlocks &&
+          index > 0 &&
+          fieldBlock(field.name) !== fieldBlock(rows[index - 1].field.name)
         return (
-          <StyledRow key={field.name}>
+          <StyledRow key={field.name} className={clsx({ separated: startsBlock })}>
             <FieldLabel name={field.name} data={field.data} showDetailedTooltip={true} />
             <StyledValue
               style={{

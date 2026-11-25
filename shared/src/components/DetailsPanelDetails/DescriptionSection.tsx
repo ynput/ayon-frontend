@@ -18,6 +18,8 @@ import {
 interface DescriptionSectionProps {
   description: string
   isLarge?: boolean
+  /** no "Description" header: the placeholder says what it is, and an empty one is a single row */
+  compact?: boolean
   isMixed: boolean
   enableEditing: boolean
   initialEdit?: boolean
@@ -36,6 +38,7 @@ interface DescriptionSectionProps {
 export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   description,
   isLarge = true,
+  compact,
   isMixed,
   enableEditing,
   initialEdit,
@@ -64,7 +67,7 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
 
   if (isLoading) {
     return (
-      <BorderedSection title="Description">
+      <BorderedSection title="Description" showHeader={!compact} autoHeight={compact}>
         <StyledLoadingSkeleton />
       </BorderedSection>
     )
@@ -92,14 +95,19 @@ export const DescriptionSection: React.FC<DescriptionSectionProps> = ({
   return (
     <BorderedSection
       title="Description"
-      showHeader={!isEditing}
+      showHeader={!compact && !isEditing}
+      // without a header the section is 300px tall at least, unless its height is automatic
+      autoHeight={compact && !isEditing}
       enableHover={!isEditing}
       onClick={!isEditing ? handleStartEditing : undefined}
-      // the large layout only once there is text: an empty one stays a one line prompt
-      description={isLarge && (!!description || isEditing)}
+      // the large layout only once there is text: an empty one stays a one line prompt. Compact
+      // grows with its text, and is large only while editing
+      description={isLarge && (isEditing || (!compact && !!description))}
     >
       <StyledContent className={clsx({ editing: isEditing })} onClick={handleContentClick}>
-        <StyledEditor className="block-shortcuts">
+        <StyledEditor
+          className={clsx('block-shortcuts', { compact: compact && !description && !isEditing })}
+        >
           {/* remount between viewing and editing: view shows the saved value, edit the draft */}
           <MarkdownEditor
             key={isEditing ? 'edit' : 'view'}

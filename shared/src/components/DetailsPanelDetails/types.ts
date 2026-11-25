@@ -36,6 +36,8 @@ export const visibleFields: Array<keyof EntityForm> = [
   'description',
 ]
 
+// the order of the Entity details section (path is sorted to the top): what the entity is, then
+// when and by whom it was created, then updated
 export const readOnlyFields: Array<keyof EntityForm> = [
   'id',
   'entityType',
