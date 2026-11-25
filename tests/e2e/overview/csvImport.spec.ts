@@ -409,12 +409,10 @@ test.describe('overview import', () => {
         name: 'sh010',
         folderType: 'Shot',
         parentId: sequence.id,
+        status: 'In progress',
       })
       shotIds.push(shot.id)
     }
-    const statusesBefore = await Promise.all(
-      shotIds.map(async (id) => (await api.getFolder(projectName, id)).status),
-    )
     const overview = new OverviewPage(page)
     await overview.goto(projectName)
     const file = csvFile('approvals.csv', [
@@ -435,8 +433,8 @@ test.describe('overview import', () => {
     await wizard.importData({ updated: 0, errors: 1 })
     await wizard.expectRowReasons('errors', reasons, true)
     await wizard.close()
-    for (const [index, id] of shotIds.entries()) {
-      expect((await api.getFolder(projectName, id)).status).toBe(statusesBefore[index])
+    for (const id of shotIds) {
+      expect((await api.getFolder(projectName, id)).status).toBe('In progress')
     }
 
     wizard = await overview.openImport()
