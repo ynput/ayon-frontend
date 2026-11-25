@@ -108,9 +108,9 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
 
   const renderItem = (item: NavItem, place: 'section' | 'pinned') => {
     const isActive = item.id === active?.id
-    // the selected item stays where it is: a click doesn't leave its current tab
-    const here = pathname + window.location.search + window.location.hash
-    const to = isActive ? here : itemLandingPath(item, access)
+    // the item's landing page; the selected item stays where it is (a page may have changed the
+    // URL without the router), so its click does nothing and only a new browser tab uses this
+    const to = itemLandingPath(item, access)
     if (!to) return null
     return (
       <Styled.Item
@@ -118,6 +118,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
         to={to}
         className={isActive ? 'active' : undefined}
         aria-current={isActive ? 'page' : undefined}
+        onClick={isActive ? (e) => e.preventDefault() : undefined}
         aria-label={item.label}
         data-rail-item={item.id}
         data-rail-section-item={place === 'section' ? '' : undefined}
@@ -162,11 +163,10 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
                 id: item.id,
                 label: item.label,
                 icon: item.icon,
-                // the selected item keeps its current tab, as on the rail
-                link:
-                  item.id === active?.id
-                    ? pathname + window.location.search + window.location.hash
-                    : itemLandingPath(item, access),
+                // the selected item only closes the menu, as on the rail
+                ...(item.id === active?.id
+                  ? { onClick: () => {} }
+                  : { link: itemLandingPath(item, access) }),
                 selected: item.id === active?.id,
               }))}
             />
