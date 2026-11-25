@@ -62,10 +62,11 @@ export const AppMenu = ({ user, places, ...props }) => {
       },
     ])
 
-  // the row is there from the start: the menu keeps the height it opened with
+  // the row is there from the start, so the menu keeps the height it opened with; it waits while a
+  // sign-in that came back is exchanged
   if (isAdmin)
     addGroup([
-      cloud.isLoading
+      cloud.isLoading || cloud.isLoadingConnect
         ? { id: 'cloud', label: 'Ynput Cloud', icon: 'cloud', disabled: true }
         : cloud.isConnected
         ? {

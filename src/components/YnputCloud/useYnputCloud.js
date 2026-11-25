@@ -93,5 +93,3 @@ export const useYnputCloud = ({
     disconnect,
   }
 }
-
-export default useYnputCloud
