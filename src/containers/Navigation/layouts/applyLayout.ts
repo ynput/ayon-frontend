@@ -231,15 +231,18 @@ export const toggleTabHidden = (
 }
 
 /**
- * What editing changes (the sidebar and the tab rows of both contexts) put onto the layout as it
- * is now, which keeps its pins and promoted admin pages.
+ * What editing changes (the sidebar, the tab rows and the pinned views of both contexts) put onto
+ * the layout as it is now, which keeps its promoted admin pages.
  */
 export const applyEdits = (
   current: LayoutSettings | undefined,
   draft: LayoutSettings,
-): LayoutSettings => ({
-  ...current,
-  version: 1,
-  project: { ...current?.project, items: draft.project?.items, tabs: draft.project?.tabs },
-  studio: { ...current?.studio, items: draft.studio?.items, tabs: draft.studio?.tabs },
-})
+): LayoutSettings => {
+  const edited = (context: 'project' | 'studio') => ({
+    ...current?.[context],
+    items: draft[context]?.items,
+    tabs: draft[context]?.tabs,
+    pinned: draft[context]?.pinned,
+  })
+  return { ...current, version: 1, project: edited('project'), studio: edited('studio') }
+}

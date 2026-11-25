@@ -255,7 +255,7 @@ const ProjectPageInner = () => {
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   // the layout that applies: the tab row's order and what it hides
   const { layout: navLayout, editing } = useNavLayout('project', projectName)
-  // while the layout is edited, its hidden tabs show too (dimmed), and pinned tabs have no menu
+  // while the layout is edited, its hidden tabs show too (dimmed)
   const tabEdit = useTabRowEdit('project', activeItem.id)
   const access = useNavAccess()
   const arranged = useMemo(
@@ -277,7 +277,7 @@ const ProjectPageInner = () => {
     () => [
       ...arranged.map((tab) => {
         const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
-        if (!pin || editing) return tab
+        if (!pin) return tab
         const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
         return {
           ...tab,
@@ -310,7 +310,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [arranged, editing, addonName, module, pinnedViews.visible, drafts, openViewId],
+    [arranged, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
   // the page's own tabs, as AYON has them: the page is found there also when the layout hides

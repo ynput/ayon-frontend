@@ -4,10 +4,10 @@ import { getRequestErrorString } from '@shared/util'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
 import { useActiveLayout } from './useActiveLayout'
-import { useLayoutEdit } from './layoutEditor'
+import { changeDraft, getLayoutEdit, useLayoutEdit } from './layoutEditor'
 import { moveTabInRow, pinTabId, replaceTabId } from './applyLayout'
 import { getPins, renamePin, repointPin, togglePin, visiblePins, withPins } from './pins'
-import { PINNED_PAGES, type PinnedView } from './types'
+import { PINNED_PAGES, type LayoutSettings, type PinnedView } from './types'
 
 const VIEW_TYPES = Object.keys(PINNED_PAGES)
 
@@ -19,14 +19,15 @@ export interface TabRow {
 
 /**
  * The saved views pinned as tabs in a project, and the changes to them. Pins are kept in the
- * user's own layout. Every view type is listed once per project: the same queries the pages use,
- * so they come from the cache.
+ * layout that applies; while a layout is edited, in its draft (saved with it, dropped on Cancel).
+ * Every view type is listed once per project: the same queries the pages use, so they come from
+ * the cache.
  */
 export const usePinnedViews = (projectName: string) => {
   // the pins of the layout that applies here; a change may make it the user's own (see there)
   const { enabled, ready, layout, update } = useActiveLayout(projectName)
-  // while a layout is edited its draft is the one change, so pins wait; the tabs are its pins,
-  // also in a project whose own default is another layout
+  // while a layout is edited the tabs are its draft's pins, also in a project whose own default is
+  // another layout
   const edit = useLayoutEdit()
   const editing = !!edit
   const pins = getPins(edit ? edit.draft : layout)
@@ -75,11 +76,23 @@ export const usePinnedViews = (projectName: string) => {
     ],
   )
 
+  // a change goes into the draft of the layout being edited, else into the layout that applies
+  const write = useCallback(
+    (change: (layout: LayoutSettings | undefined) => LayoutSettings): Promise<unknown> => {
+      const editing = getLayoutEdit()
+      if (!editing) return update(change)
+      if (editing.saving) return Promise.reject(new Error('the layout is being saved'))
+      changeDraft(change)
+      return Promise.resolve()
+    },
+    [update],
+  )
+
   // a change to the pins: a repointed pin keeps its place in the layout's tab order, a removed one
   // (here or from the views menu) leaves it
   const change = useCallback(
     (next: (pins: PinnedView[]) => PinnedView[], repointed?: { from: string; to: string }) =>
-      update((current) => {
+      write((current) => {
         const before = getPins(current)
         const after = next(before)
         const changed = withPins(current, after)
@@ -89,7 +102,7 @@ export const usePinnedViews = (projectName: string) => {
           .filter((pin) => !after.some((other) => other.id === pin.id))
           .reduce((layout, pin) => replaceTabId(layout, pinTabId(pin.id)), changed)
       }),
-    [update],
+    [write],
   )
 
   // what the user does from a button or menu: a failure says so instead of failing silently
@@ -107,7 +120,7 @@ export const usePinnedViews = (projectName: string) => {
   // the pin buttons wait for the layout: a pin made before it loads would be made on nothing
   const viewPins: ViewPins | null = useMemo(
     () =>
-      enabled && ready && !editing
+      enabled && (ready || editing)
         ? {
             viewTypes: VIEW_TYPES,
             isPinned: (viewId: string) => pins.some((pin) => pin.id === viewId),
@@ -129,7 +142,7 @@ export const usePinnedViews = (projectName: string) => {
     /** moves a pinned tab one place within its row, as the user sees it */
     move: (id: string, delta: -1 | 1, row: TabRow) =>
       report(
-        update((current) =>
+        write((current) =>
           moveTabInRow(current, 'project', row.itemId, row.ids, pinTabId(id), delta),
         ),
       ),

@@ -69,10 +69,12 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   dimmed, each with an eye, and nothing folds into More or "+N"; drag reorders tabs in their row
   and items within their section (`reorderTabs`, `reorderItems`, merged into the stored order).
   The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
-  `update` of the layout that applied when editing began, wherever the user is: only the sidebar
-  and tab rows (`applyEdits`), pins and promoted pages stay as they are now. Pinning and the
-  pinned tab menu wait while editing. The rail's switch check reads the draft, so a page hidden in
-  it stays open when Save makes a copy. Settings' own tab row doesn't follow layouts (no eyes).
+  `update` of the layout that applied when editing began, wherever the user is: the sidebar, the
+  tab rows and the pins (`applyEdits`); promoted pages stay as they are now. While editing,
+  pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
+  (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
+  switch check reads the draft, so a page hidden in it stays open when Save makes a copy.
+  Settings' own tab row doesn't follow layouts (no eyes).
 - **Moving a pinned tab** moves it within its row as shown (`moveTabInRow`) and records the row's
   order in the layout; repointing or unpinning a pin replaces or drops its id there
   (`replaceTabId`).

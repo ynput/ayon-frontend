@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test'
 import {
+  applyEdits,
   arrangeItems,
   arrangeTabs,
   moveTabInRow,
@@ -150,4 +151,29 @@ test('a drop puts a tab or item where another one is; what the row does not show
     reorderTabs(undefined, 'studio', 'my-work', ['tasks', 'projects', 'view:x'], 'tasks', 'view:x')
       .studio?.tabs?.['my-work']?.order,
   ).toEqual(['projects', 'view:x', 'tasks'])
+})
+
+test('saving an edit takes its sidebar, tab rows and pins, and keeps promoted pages', () => {
+  const current = {
+    version: 1 as const,
+    promoted: ['bundles'],
+    project: {
+      items: { hidden: ['workfiles'] },
+      pinned: [{ id: 'a', viewType: 'overview' as const }],
+    },
+  }
+  const draft = {
+    version: 1 as const,
+    promoted: [],
+    project: {
+      items: { hidden: [] },
+      tabs: { production: { hidden: ['lists'] } },
+      pinned: [{ id: 'b', viewType: 'lists' as const }],
+    },
+  }
+  const saved = applyEdits(current, draft)
+  expect(saved.promoted).toEqual(['bundles'])
+  expect(saved.project?.items).toEqual({ hidden: [] })
+  expect(saved.project?.tabs).toEqual({ production: { hidden: ['lists'] } })
+  expect(saved.project?.pinned?.map((pin) => pin.id)).toEqual(['b'])
 })
