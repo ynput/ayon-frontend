@@ -6,6 +6,8 @@ import {
   KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useState,
 } from 'react'
 import * as Styled from './SimpleTable.styled'
 import {
@@ -24,6 +26,7 @@ import {
   OnChangeFn,
   RowSelectionState,
   functionalUpdate,
+  ExpandedState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 
@@ -502,23 +505,33 @@ const SimpleTable: FC<SimpleTableProps> = ({
     [onRowPinningChange],
   )
 
+  // While searching, folders have their own expanded state and the stored one comes back when the
+  // search is cleared. A folder opens when it starts holding matches, so matches inside collapsed
+  // folders show. After that the user can collapse it, and it stays collapsed while they type.
+  const isSearching = !!globalFilter
+  const [searchExpanded, setSearchExpanded] = useState<ExpandedState>({})
+  const searchParentIdsRef = useRef<Set<string>>(new Set())
+
   const handleExpandedChange = useCallback(
     (updater: any) => {
+      if (isSearching) {
+        setSearchExpanded((old) => functionalUpdate(updater, old))
+        return
+      }
       setExpanded?.((old) => {
         const newExpanded = updater instanceof Function ? updater(old) : updater
         onExpandedChange?.(newExpanded)
         return newExpanded
       })
     },
-    [setExpanded],
+    [setExpanded, isSearching],
   )
 
   const table = useReactTable({
     data: tableData,
     columns,
     state: {
-      // while searching, every folder is open so matches inside collapsed ones show
-      expanded: globalFilter ? true : expanded,
+      expanded: isSearching ? searchExpanded : expanded,
       rowSelection,
       globalFilter,
       rowPinning,
@@ -551,6 +564,23 @@ const SimpleTable: FC<SimpleTableProps> = ({
       [isExpandable, isLoading, children, meta],
     ),
   })
+
+  // open the folders that start holding matches, before paint so the search never shows them closed
+  const searchRows = isSearching ? table.getFilteredRowModel().flatRows : null
+  useLayoutEffect(() => {
+    if (!searchRows) {
+      searchParentIdsRef.current = new Set()
+      setSearchExpanded((old) => (old !== true && !Object.keys(old).length ? old : {}))
+      return
+    }
+    const parentIds = searchRows.filter((row) => row.subRows.length).map((row) => row.id)
+    const newParentIds = parentIds.filter((id) => !searchParentIdsRef.current.has(id))
+    searchParentIdsRef.current = new Set(parentIds)
+    if (!newParentIds.length) return
+    setSearchExpanded((old) =>
+      old === true ? old : { ...old, ...Object.fromEntries(newParentIds.map((id) => [id, true])) },
+    )
+  }, [searchRows])
 
   // Update tableRef whenever the table instance changes.
   // This ensures handleRowSelectForKeydown uses the current table instance.
