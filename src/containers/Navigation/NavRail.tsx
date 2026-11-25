@@ -118,7 +118,15 @@ const Rail = ({ items, footer }: RailProps) => {
         to={to}
         className={isActive ? 'active' : undefined}
         aria-current={isActive ? 'page' : undefined}
-        onClick={isActive ? (e) => e.preventDefault() : undefined}
+        // a plain click on the open item does nothing; a modified one still opens a new tab
+        onClick={
+          isActive
+            ? (e) => {
+                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey)
+                  e.preventDefault()
+              }
+            : undefined
+        }
         aria-label={item.label}
         data-rail-item={item.id}
         data-rail-section-item

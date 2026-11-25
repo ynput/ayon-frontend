@@ -9,9 +9,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   legacy keyword remotes, `project.page` / `studio.page` contributions, classic iframe addons,
   settings sub-pages). The pages call the same hooks, so a tab and its page always agree.
 - **The sidebar** (`NavRail`) is mounted once in `app.tsx`, beside `AppRoutes`, inside
-  `.app-body` / `.app-page`. Pages still render their own `AppNavLinks`, with only the active
-  item's tabs (`findActiveItem` by path): the views button portals into the tab and the tab row's
-  access redirect keys on `useParams().module`, so the row can't move into a shared shell.
+  `.app-body` / `.app-page`. Pages still render their own `AppNavLinks`: the project page and Home
+  with only the active item's tabs (`findActiveItem` by path), Studio settings with the Settings
+  item's tabs, and the Project manager, Inbox and Account with rows they build themselves. The views
+  button portals into the tab and the tab row's access redirect keys on `useParams().module`, so the
+  row can't move into a shared shell.
 - **Settings** is one button at the bottom of every sidebar (`SettingsMenuButton`): the old apps
   menu (`AppMenu`) with the admin pages and the server's actions. `useAdminNavigation` only tells
   which pages select it. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
