@@ -1,8 +1,11 @@
-import { useCallback } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { toast } from 'react-toastify'
 import { isEqual } from 'lodash'
 import { useGetViewQuery, useListViewsQuery } from '@shared/api'
 import { useSessionStorage } from '@shared/hooks'
-import type { ViewSettings } from '@shared/containers/Views'
+import type { ViewSettings, ViewsProviderProps } from '@shared/containers/Views'
+import { applyDraft } from './pins'
 import type { PinnableViewType } from './types'
 
 /** at least this access level saves changes into a view (owner, or shared with update rights) */
@@ -71,4 +74,65 @@ export const usePinnedView = (
     isError: list.isError || full.isError,
     refetchList: list.refetch,
   }
+}
+
+/**
+ * The settings a pinned view's page runs on (a controlled views provider), or null when no pinned
+ * view is open or it hasn't loaded. They are held here instead of in the user's selected view:
+ * changes stay a draft for the session until saved, and the page's own view doesn't change.
+ */
+export const usePinnedViewSettings = (
+  projectName: string,
+  pinned: { viewType: PinnableViewType; viewId: string } | null,
+  fallbackPath: string,
+): ViewsProviderProps['controlled'] | null => {
+  const navigate = useNavigate()
+  const viewId = pinned?.viewId ?? ''
+  const { views, listed, view, isFetching, isError } = usePinnedView(
+    projectName,
+    pinned?.viewType ?? 'overview',
+    viewId,
+    !pinned,
+  )
+  const { drafts, mergeDraft } = usePinnedViewDrafts()
+  const draft = pinned ? drafts[viewId] : undefined
+
+  useEffect(() => {
+    if (!pinned) return
+    // a view just saved may not be in the list yet; a failed request only matters when there is
+    // nothing to show
+    const failed = isError && !view
+    if (failed || (views && !listed && !isFetching && !isError)) {
+      toast.warning(failed ? "Couldn't open this view" : "You can't open this view")
+      navigate(fallbackPath, { replace: true })
+    }
+  }, [pinned, views, listed, view, isFetching, isError, fallbackPath, navigate])
+
+  // pages keep some settings in their own state (Products' grid, grouping, columns): the key tells
+  // them to start again from the view on another view, and when the draft is reverted or saved
+  const [resets, setResets] = useState(0)
+  const hadDraft = useRef(!!draft)
+  useEffect(() => {
+    if (hadDraft.current && !draft) setResets((count) => count + 1)
+    hadDraft.current = !!draft
+  }, [draft])
+
+  const settings = useMemo(
+    () => (view ? applyDraft(view.settings as ViewSettings, draft) : undefined),
+    [view, draft],
+  )
+  const onChange = useCallback(
+    (changed: ViewSettings) => mergeDraft(viewId, changed),
+    [mergeDraft, viewId],
+  )
+  // "Reset filters" on a pinned tab clears the filters in its draft
+  const onReset = useCallback(
+    () => mergeDraft(viewId, { filter: undefined, folderFilter: undefined } as ViewSettings),
+    [mergeDraft, viewId],
+  )
+
+  return useMemo(
+    () => (pinned && settings ? { settings, onChange, onReset, key: `${viewId}:${resets}` } : null),
+    [pinned, settings, onChange, onReset, viewId, resets],
+  )
 }

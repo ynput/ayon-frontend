@@ -65,7 +65,7 @@ interface VersionsViewsProviderProps {
 
 export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) => {
   // this views context is per page/project
-  const { viewSettings } = useViewsContext()
+  const { viewSettings, controlledKey } = useViewsContext()
 
   // Memoize versionsSettings to prevent unnecessary re-renders when viewSettings
   // reference changes but values are the same
@@ -139,6 +139,23 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     () => convertColumnConfigToTanstackStates(versionsSettings),
     [versionsSettings],
   )
+
+  // another view's settings (a pinned view's tab), or the same view started over: every local copy
+  // goes, including the ones kept below across setting changes
+  useEffect(() => {
+    if (controlledKey === undefined) return
+    setLocalFilters(null)
+    setLocalColumns(null)
+    setLocalViewGroupBy(null)
+    setLocalShowGrid(null)
+    setLocalGridHeight(null)
+    setLocalGridHeightImmediate(null)
+    setLocalRowHeight(null)
+    setLocalFeaturedVersionOrder(null)
+    setLocalShowEmptyGroups(null)
+    setLocalLatestPerFolder(null)
+    setLocalSorting(null)
+  }, [controlledKey])
 
   // Sync local state with server when viewSettings change
   // Note: Excluded localColumns, localSorting, localShowGrid, and localViewGroupBy

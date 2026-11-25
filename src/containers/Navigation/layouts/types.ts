@@ -6,6 +6,7 @@ export const PINNED_PAGES = {
   overview: { module: 'overview', icon: 'table_rows' },
   versions: { module: 'products', icon: 'layers' },
   lists: { module: 'lists', icon: 'list' },
+  reviews: { module: 'reviews', icon: 'play_circle' },
 } as const
 
 export type PinnableViewType = keyof typeof PINNED_PAGES

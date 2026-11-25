@@ -39,16 +39,14 @@ import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
-import { WithViews } from '@/hoc/WithViews'
 import { ViewPinsProvider } from '@shared/containers/Views'
 import {
+  PageViews,
   PinnedTabEnd,
   PinnedTabMenu,
-  PinnedViewPage,
   type PinnedTabMenuTarget,
 } from '@containers/Navigation/layouts/PinnedViews'
 import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
-import { isPinnableViewType } from '@containers/Navigation/layouts/types'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -180,35 +178,6 @@ const ProjectSlicerWithViews = ({
     </SlicerWithViews>
   )
 }
-
-// the page's views: its own selected view, or a saved view a pinned tab or link opens (?view=)
-const PageViews = ({
-  projectName,
-  viewType,
-  openViewId,
-  fallbackPath,
-  children,
-}: {
-  projectName: string
-  viewType?: string
-  openViewId: string | null
-  fallbackPath: string
-  children: React.ReactNode
-}) =>
-  openViewId && isPinnableViewType(viewType) ? (
-    <PinnedViewPage
-      projectName={projectName}
-      viewType={viewType}
-      viewId={openViewId}
-      fallbackPath={fallbackPath}
-    >
-      {children}
-    </PinnedViewPage>
-  ) : (
-    <WithViews viewType={viewType} projectName={projectName}>
-      {children}
-    </WithViews>
-  )
 
 const ProjectPageInner = () => {
   /**

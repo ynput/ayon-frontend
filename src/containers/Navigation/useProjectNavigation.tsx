@@ -274,19 +274,24 @@ export const useProjectNavigation = (projectName: string) => {
       [...owned, ...remotes, ...contributed, ...classic],
       KNOWN_PROJECT_PAGES,
     )
-    // pinned views sit next to the page they come from
-    production.tabs = placePinnedTabs(
-      production.tabs,
-      pinned.map(({ pin, view }) => ({
-        name: pin.label || view.label,
-        path: pinnedViewPath(projectName, pin),
-        module: PINNED_PAGES[pin.viewType].module,
-        pinnedView: pin.id,
-        startContent: <Icon icon={PINNED_PAGES[pin.viewType].icon} />,
-      })),
-    )
     // the sidebar orders by section; within one, by this order
-    return [production, review, workfiles, ...placed]
+    const items = [production, review, workfiles, ...placed]
+    // pinned views sit next to the page they come from, in whichever item holds it; a pin whose
+    // page isn't here (an addon that isn't installed) has no tab
+    const pinnedTabs = pinned.map(({ pin, view }) => ({
+      name: pin.label || view.label,
+      path: pinnedViewPath(projectName, pin),
+      module: PINNED_PAGES[pin.viewType].module,
+      pinnedView: pin.id,
+      startContent: <Icon icon={PINNED_PAGES[pin.viewType].icon} />,
+    }))
+    items.forEach((item) => {
+      const own = pinnedTabs.filter((tab) =>
+        item.tabs.some((page) => !page.pinnedView && page.module === tab.module),
+      )
+      if (own.length) item.tabs = placePinnedTabs(item.tabs, own)
+    })
+    return items
   }, [
     projectName,
     showBrowser,

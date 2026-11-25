@@ -86,6 +86,8 @@ export interface ViewsContextValue {
   resetWorkingView: () => Promise<void>
   // set with `controlled`: hands the changed settings to the caller instead of saving a view
   updateControlledSettings?: (updated: ViewSettings) => void
+  // set with `controlled`: changes when the caller's settings are another view's, or start over
+  controlledKey?: string
 
   // api
   api: typeof viewsQueries
@@ -119,6 +121,11 @@ export interface ViewsProviderProps {
     onChange: (changed: ViewSettings) => void
     /** what "reset" (Reset filters, the reset shortcut) does instead of resetting the working view */
     onReset?: () => void
+    /**
+     * changes when the settings are another view's or start over (a revert): pages that keep
+     * local copies of some settings drop them
+     */
+    key?: string
   }
 }
 
@@ -399,6 +406,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     // shared actions
     resetWorkingView,
     updateControlledSettings,
+    controlledKey: controlled?.key,
     // api
     api: viewsQueries,
     dispatch,

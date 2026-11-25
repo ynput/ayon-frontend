@@ -4,6 +4,7 @@ Spec: AYON-20261125-001 (variant B). A context is a project (`/projects/<name>/�
 other page). Its sidebar lists places; the selected place owns the tab row.
 
 ## How it fits together
+
 - **One registry.** `useProjectNavigation`, `useStudioNavigation` and `useSettingsNavigation` build
   `NavItem`s from the sources the pages render from (core modules, the addon pages AYON reserves,
   legacy keyword remotes, `project.page` / `studio.page` contributions, classic iframe addons,
@@ -20,10 +21,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   Restart, Ynput Cloud). `splitAdminItems` decides which are items: `NavLayout.promoted`, else
   `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
   reopens.
-- **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products or Lists
-  view pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
-  right after its page's tab (`placePinnedTabs`), linking to `…/<page>?view=<id>`. The page then runs on a controlled
-  `ViewsProvider` (`PinnedViewPage`): it never selects the view or writes the working view; changes
+- **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products, Lists or
+  Review view (`PINNED_PAGES`: pages that read the host's views context) pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
+  right after its page's tab, in whichever sidebar item holds it (`placePinnedTabs`), linking to
+  `…/<page>?view=<id>`. The page then runs on the same `ViewsProvider`, controlled (`PageViews`,
+  `usePinnedViewSettings`): it never selects the view or writes the working view; changes
   are a draft per view in session storage (`pinned-view-drafts`, the dot on the tab) until Save
   changes, Save as new or Revert in the tab's menu (`PinnedTabMenu`, also on right-click).
 - **Addon routes** (`Route` keyword modules: review and storyboard sessions) add `addon-route` to
@@ -31,6 +33,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   the sidebar existed. The review player is `position: fixed` without offsets: it relies on that.
 
 ## Contracts
+
 - **Item ids are stable** and are what layouts refer to: a core module key
   (`production`, `reviews`, `workfiles`), `addon:<addon>/<page id>`, `group:<addon>/<group>`,
   `remote:<module>`, `classic:<addon>`. Don't derive them from labels or positions.
@@ -54,6 +57,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   active only when no pinned tab of that page matches the parameter.
 
 ## Gotchas
+
 - `AppNavLinks` and `NavRail` measure themselves after every render to fold (tabs into "+N", items
   into More). Compare with the current state before `setState`: an unconditional functional update
   in a layout effect loops ("Maximum update depth exceeded"). Tab titles are capped at 240px and
@@ -67,8 +71,14 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   `undefined`); `applyDraft` leaves those fields out.
 - A studio view created from a project page refreshes the studio list, not the project's, which
   holds studio views too: refetch the project's list before linking to the new view.
+- Don't remount a page to reset it for another pinned view: the slicer flickers. Pages that keep
+  local copies of view settings drop them when `controlledKey` changes (Products:
+  `VPViewsContext`); Overview and Lists drop theirs when the settings change.
+- An addon page with its own views handling (Reports bundles its own) doesn't read this context:
+  pinning its views needs the addon to add the pin and open `?view=` itself.
 
 ## Checking a change
+
 - `tests/unit/navigationPlacement.spec.ts` (placement, filter, order, active item) and
   `tests/unit/pinnedViews.spec.ts` (pins: add, move, rename, repoint, which ones show).
 - `tests/e2e/permissions/navigation.spec.ts` (who sees which settings) and

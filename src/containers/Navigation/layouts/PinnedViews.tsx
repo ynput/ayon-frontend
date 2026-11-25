@@ -1,89 +1,66 @@
-import { Fragment, ReactNode, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { ReactNode, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Button, Dialog, InputText, SaveButton } from '@ynput/ayon-react-components'
 import { useCreateViewMutation, useUpdateViewMutation } from '@shared/api'
 import { Menu, MenuContainer } from '@shared/components'
 import { copyToClipboard } from '@shared/util'
-import { generateViewId, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
+import { generateViewId, Views, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { applyDraft, pinnedViewPath, samePagePins, type VisiblePin } from './pins'
-import { PINNED_PAGES, type PinnableViewType, type PinnedView } from './types'
-import { UPDATE_ACCESS, usePinnedView, usePinnedViewDrafts } from './PinnedViewsHelpers'
+import { isPinnableViewType, PINNED_PAGES, type PinnedView } from './types'
+import {
+  UPDATE_ACCESS,
+  usePinnedView,
+  usePinnedViewDrafts,
+  usePinnedViewSettings,
+} from './PinnedViewsHelpers'
 import * as Styled from './PinnedViews.styled'
 
 // ---------------------------------------------------------------------------------------------
-// the page a pinned tab opens
+// the views a project page runs on
 
-interface PinnedViewPageProps {
+interface PageViewsProps {
   projectName: string
-  viewType: PinnableViewType
-  viewId: string
-  /** where to go when the user can't open the view: the page without it */
+  viewType?: string
+  /** a saved view a pinned tab (or a link) opens, `?view=` */
+  openViewId: string | null
+  /** where to go when the user can't open that view: the page without it */
   fallbackPath: string
   children: ReactNode
 }
 
 /**
- * The page with a saved view's settings, held here instead of in the user's selected view:
- * changes stay a draft for the session until saved, and the page's own view doesn't change.
+ * The page's views: its own selected view, or a saved view a pinned tab opens. Both are the same
+ * provider, so switching between the page's tab and its pinned tabs keeps the slicer and the page.
  */
-export const PinnedViewPage = ({
+export const PageViews = ({
   projectName,
   viewType,
-  viewId,
+  openViewId,
   fallbackPath,
   children,
-}: PinnedViewPageProps) => {
+}: PageViewsProps) => {
   const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const { views, listed, view, isFetching, isError } = usePinnedView(projectName, viewType, viewId)
-  const { drafts, mergeDraft } = usePinnedViewDrafts()
-  const draft = drafts[viewId]
-
-  useEffect(() => {
-    // a view just saved may not be in the list yet
-    // a failed request only matters when there is nothing to show
-    const failed = isError && !view
-    if (failed || (views && !listed && !isFetching && !isError)) {
-      toast.warning(failed ? "Couldn't open this view" : "You can't open this view")
-      navigate(fallbackPath, { replace: true })
-    }
-  }, [views, listed, view, isFetching, isError, fallbackPath, navigate])
-
-  // pages keep some settings in their own state (Products' grid, grouping, columns): they start
-  // again from the view on another view, and when the draft is reverted or saved
-  const [resets, setResets] = useState(0)
-  const hadDraft = useRef(!!draft)
-  useEffect(() => {
-    if (hadDraft.current && !draft) setResets((count) => count + 1)
-    hadDraft.current = !!draft
-  }, [draft])
-
-  const settings = useMemo(
-    () => (view ? applyDraft(view.settings as ViewSettings, draft) : undefined),
-    [view, draft],
+  const pinned = useMemo(
+    () => (openViewId && isPinnableViewType(viewType) ? { viewType, viewId: openViewId } : null),
+    [openViewId, viewType],
   )
-  const onChange = useCallback(
-    (changed: ViewSettings) => mergeDraft(viewId, changed),
-    [mergeDraft, viewId],
-  )
-  // "Reset filters" on a pinned tab clears the filters in its draft
-  const onReset = useCallback(
-    () => mergeDraft(viewId, { filter: undefined, folderFilter: undefined } as ViewSettings),
-    [mergeDraft, viewId],
-  )
+  const controlled = usePinnedViewSettings(projectName, pinned, fallbackPath)
 
-  if (!settings) return <LoadingPage />
+  // a pinned view that hasn't loaded yet
+  if (pinned && !controlled) return <LoadingPage />
 
   return (
     <ViewsProvider
-      controlled={{ settings, onChange, onReset }}
+      viewType={viewType}
       projectName={projectName}
       dispatch={dispatch}
+      controlled={controlled ?? undefined}
     >
-      <Fragment key={`${viewId}:${resets}`}>{children}</Fragment>
+      <Views />
+      {children}
     </ViewsProvider>
   )
 }

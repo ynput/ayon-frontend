@@ -27,6 +27,7 @@ export const usePinnedViews = (projectName: string) => {
   const { enabled, layout, update } = useUserLayout()
   const pins = getPins(layout)
 
+  // one list per view type in PINNED_PAGES (hooks can't loop): a type added there needs its list here
   const has = (viewType: string) => pins.some((pin) => pin.viewType === viewType)
   const overview = useListViewsQuery(
     { viewType: 'overview', projectName },
@@ -40,6 +41,10 @@ export const usePinnedViews = (projectName: string) => {
     { viewType: 'lists', projectName },
     { skip: !enabled || !has('lists') },
   )
+  const reviews = useListViewsQuery(
+    { viewType: 'reviews', projectName },
+    { skip: !enabled || !has('reviews') },
+  )
 
   const visible = useMemo(
     () =>
@@ -50,11 +55,20 @@ export const usePinnedViews = (projectName: string) => {
               overview: overview.currentData,
               versions: versions.currentData,
               lists: lists.currentData,
+              reviews: reviews.currentData,
             },
             projectName,
           )
         : [],
-    [enabled, pins, overview.currentData, versions.currentData, lists.currentData, projectName],
+    [
+      enabled,
+      pins,
+      overview.currentData,
+      versions.currentData,
+      lists.currentData,
+      reviews.currentData,
+      projectName,
+    ],
   )
 
   const change = useCallback(
