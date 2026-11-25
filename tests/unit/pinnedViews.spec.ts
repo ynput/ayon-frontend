@@ -2,11 +2,9 @@ import { expect, test } from '@playwright/test'
 import {
   applyDraft,
   getPins,
-  movePinPast,
   pinnedViewPath,
   placePinnedTabs,
   samePageLink,
-  samePagePins,
   renamePin,
   repointPin,
   togglePin,
@@ -39,14 +37,8 @@ test('pinning adds a view at the end with where it is stored; pinning it again u
   expect(togglePin([], { id: 'e', label: 'E', viewType: 'events' }, 'p1')).toEqual([])
 })
 
-test('a pin moves past the tab next to it, renames, and repoints in place', () => {
+test('a pin renames, and repoints in place', () => {
   const pins = [pin('a'), pin('b'), pin('c')]
-  expect(ids(movePinPast(pins, 'a', 'b', true))).toEqual(['b', 'a', 'c'])
-  expect(ids(movePinPast(pins, 'c', 'b', false))).toEqual(['a', 'c', 'b'])
-  // a pin from another project between two tabs keeps its place
-  const mixed = [pin('a'), pin('other', { scope: 'project', projectName: 'p2' }), pin('c')]
-  expect(ids(movePinPast(mixed, 'a', 'c', true))).toEqual(['other', 'c', 'a'])
-  expect(ids(movePinPast(pins, 'a', 'missing', true))).toEqual(['a', 'b', 'c'])
   expect(renamePin(pins, 'b', '  Lighting  ')[1].label).toBe('Lighting')
   expect(renamePin(renamePin(pins, 'b', 'X'), 'b', '  ')[1].label).toBeUndefined()
   expect(ids(repointPin(pins, 'b', pin('z')))).toEqual(['a', 'z', 'c'])
@@ -116,12 +108,6 @@ test("a pinned tab sits right after its page, after that page's earlier pins", (
     'Lists',
     'Elsewhere',
   ])
-  const visible = [
-    { pin: pin('1'), view: { id: '1' } },
-    { pin: pin('2', { viewType: 'versions' }), view: { id: '2' } },
-    { pin: pin('3'), view: { id: '3' } },
-  ]
-  expect(samePagePins(visible, '3').map((v) => v.pin.id)).toEqual(['1', '3'])
 })
 
 test('a link to a tab of the open page keeps its open list, and nothing one-shot', () => {

@@ -37,6 +37,7 @@ export const useUserLayout = () => {
 
   const {
     currentData: workingView,
+    error,
     isLoading,
     isFetching,
   } = useGetWorkingViewQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
@@ -117,5 +118,8 @@ export const useUserLayout = () => {
     [createView, updateView, dispatch],
   )
 
-  return { enabled, id: current?.id, layout: current?.layout, isLoading, update }
+  // the lookup has answered: with the layout, or that there is none yet
+  const ready = enabled && (!!current?.id || error !== undefined)
+
+  return { enabled, ready, id: current?.id, layout: current?.layout, isLoading, update }
 }

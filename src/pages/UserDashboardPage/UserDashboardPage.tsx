@@ -250,12 +250,15 @@ const UserDashboardPage: React.FC = () => {
   const activePage = useMemo(() => {
     // react-router also matches the URL with a trailing slash
     const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
-    const page = pages.find((p) => p.path === path && links.some((link) => link.path === p.path))
+    // AYON's tabs: the page is found also when the layout hides its tab
+    const page = pages.find(
+      (p) => p.path === path && activeItem.tabs.some((link) => link.path === p.path),
+    )
     if (page || addonName) return page
     return pages.find((p) => p.module === 'tasks')
-  }, [pages, links, pathname, addonName])
+  }, [pages, activeItem, pathname, addonName])
 
-  const title = useTitle(addonName || module || '', links, 'AYON', '')
+  const title = useTitle(addonName || module || '', activeItem.tabs, 'AYON', '')
 
   // Early returns after all hooks
   // the built in pages render while the projects load (the projects list shows its own loading

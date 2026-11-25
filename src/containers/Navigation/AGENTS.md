@@ -53,17 +53,26 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   the `promoted` admin pages.
 - **Which layout applies** (`useActiveLayout`, `resolveLayout`): the one the user picked (user
   preferences, `navigationLayout`), else the project's default (project data, same key), else the
-  studio default (the `layout` base view), else the user's own layout (their working view), else
-  none. A picked or project layout the user can't read (not in their list) is skipped.
-- **Changing it** (pins today, edit mode later): into that layout when the user may (their own, or
-  a shared one with update access); otherwise the first change makes it their own layout, a copy
-  with the change, and picks that. The user's own layout keeps what this browser tab saved over an
-  older refetch (`useUserLayout`).
+  studio default (the `layout` base view, also when it is picked or a project's default), else the
+  user's own layout (their working view), else none. A picked or project layout the user can't
+  read (not in their list) is skipped. `ready` says every lookup that decides it has answered.
+- **Changing it** (pins today, edit mode later) waits for `ready`: a change made earlier would be
+  made on nothing. It goes into that layout when the user may (their own, or a shared one with
+  update access); otherwise (the studio default, a read-only share) the first change saves a copy
+  the user owns, "{name} (mine)", and picks it; changes made while that copy is saved go into it.
+  Their working view is never overwritten by a copy. Changes to one layout run one at a time,
+  each on what the one before saved. The user's own layout keeps what this browser tab saved over
+  an older refetch (`useUserLayout`).
+- **Moving a pinned tab** moves it within its row as shown (`moveTabInRow`) and records the row's
+  order in the layout; repointing or unpinning a pin replaces or drops its id there
+  (`replaceTabId`).
 - **Applying it** (`useNavLayout` → `NavLayout`): `filterNavigation` hides items, `arrangeItems`
   orders them within their section (unmentioned ones at the end), `arrangeTabs` the tab rows (an
   unmentioned pin follows its page, other unmentioned tabs at the end), `splitAdminItems` the
   promoted admin pages. A hidden page still opens by its link; when another layout applies while
-  it is open, the sidebar opens the new layout's first item.
+  a page it hides is open (and the one before showed it), the sidebar opens the new layout's first
+  item. The first load and another project aren't a switch. Pages find themselves in AYON's tabs,
+  not in the arranged row, so a hidden or reordered tab doesn't lose its page.
 - **A pinned tab shows only for a view the user can read**: one in the views list for its type
   (the list checks read access), not one a GET by id returns.
 - **A pinned tab is active by `?view=`**, not by path: `AppNavLinks` marks the page's own tab
@@ -93,8 +102,9 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 ## Checking a change
 
 - `tests/unit/navigationPlacement.spec.ts` (placement, filter, order, active item),
-  `tests/unit/pinnedViews.spec.ts` (pins: add, move, rename, repoint, which ones show, links) and
-  `tests/unit/navigationLayouts.spec.ts` (arranging items and tabs, which layout applies).
+  `tests/unit/pinnedViews.spec.ts` (pins: add, rename, repoint, which ones show, links) and
+  `tests/unit/navigationLayouts.spec.ts` (arranging items and tabs, moving a tab, which layout
+  applies).
 - `tests/e2e/permissions/navigation.spec.ts` (who sees which settings) and
   `tests/e2e/bundles/bundleAddons.spec.ts` (addon pages follow the user's bundle).
 - Look at a project, Home, Settings, the Project manager, Inbox and a review session, as an admin and

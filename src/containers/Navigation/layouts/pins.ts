@@ -39,23 +39,6 @@ export const togglePin = (
 export const renamePin = (pins: PinnedView[], id: string, label: string): PinnedView[] =>
   pins.map((pin) => (pin.id === id ? { ...pin, label: label.trim() || undefined } : pin))
 
-/**
- * Moves a pin past another one, the tab next to it: to its right when `after`, else to its left.
- * Pins in between that aren't shown here (another project's) keep their place.
- */
-export const movePinPast = (
-  pins: PinnedView[],
-  id: string,
-  otherId: string,
-  after: boolean,
-): PinnedView[] => {
-  const pin = pins.find((item) => item.id === id)
-  if (!pin || !pins.some((item) => item.id === otherId) || id === otherId) return pins
-  const rest = pins.filter((item) => item.id !== id)
-  const at = rest.findIndex((item) => item.id === otherId) + (after ? 1 : 0)
-  return [...rest.slice(0, at), pin, ...rest.slice(at)]
-}
-
 /** Points a pin at another view (after "Save as new view"), in the same place. */
 export const repointPin = (pins: PinnedView[], id: string, view: PinnedView): PinnedView[] =>
   pins.map((pin) => (pin.id === id ? view : pin))
@@ -108,12 +91,6 @@ export const placePinnedTabs = (tabs: NavLinkItem[], pinned: NavLinkItem[]): Nav
     result.splice(at, 0, tab)
   })
   return result
-}
-
-/** The pins shown with the same page's tab as this one: the ones a tab moves among. */
-export const samePagePins = (visible: VisiblePin[], id: string): VisiblePin[] => {
-  const viewType = visible.find((item) => item.pin.id === id)?.pin.viewType
-  return visible.filter((item) => item.pin.viewType === viewType)
 }
 
 /** What a page keeps in its URL across its tabs (its own and its pinned views): the open list. */

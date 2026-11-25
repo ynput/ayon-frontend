@@ -4,19 +4,17 @@ import { getRequestErrorString } from '@shared/util'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
 import { useActiveLayout } from './useActiveLayout'
-import {
-  getPins,
-  movePinPast,
-  renamePin,
-  repointPin,
-  samePagePins,
-  togglePin,
-  visiblePins,
-  withPins,
-} from './pins'
+import { moveTabInRow, pinTabId, replaceTabId } from './applyLayout'
+import { getPins, renamePin, repointPin, togglePin, visiblePins, withPins } from './pins'
 import { PINNED_PAGES, type PinnedView } from './types'
 
 const VIEW_TYPES = Object.keys(PINNED_PAGES)
+
+/** a tab row as the user sees it: its sidebar item, and its tabs' ids in order */
+export interface TabRow {
+  itemId: string
+  ids: string[]
+}
 
 /**
  * The saved views pinned as tabs in a project, and the changes to them. Pins are kept in the
@@ -25,7 +23,7 @@ const VIEW_TYPES = Object.keys(PINNED_PAGES)
  */
 export const usePinnedViews = (projectName: string) => {
   // the pins of the layout that applies here; a change may make it the user's own (see there)
-  const { enabled, layout, update } = useActiveLayout(projectName)
+  const { enabled, ready, layout, update } = useActiveLayout(projectName)
   const pins = getPins(layout)
 
   // one list per view type in PINNED_PAGES (hooks can't loop): a type added there needs its list here
@@ -72,9 +70,14 @@ export const usePinnedViews = (projectName: string) => {
     ],
   )
 
+  // a change to the pins; a pin whose view changes (`from` to `to`, or none when it's removed)
+  // keeps its place in the layout's tab order
   const change = useCallback(
-    (next: (pins: PinnedView[]) => PinnedView[]) =>
-      update((current) => withPins(current, next(getPins(current)))),
+    (next: (pins: PinnedView[]) => PinnedView[], from?: string, to?: string) =>
+      update((current) => {
+        const changed = withPins(current, next(getPins(current)))
+        return from ? replaceTabId(changed, pinTabId(from), to && pinTabId(to)) : changed
+      }),
     [update],
   )
 
@@ -90,9 +93,10 @@ export const usePinnedViews = (projectName: string) => {
       throw error
     })
 
+  // the pin buttons wait for the layout: a pin made before it loads would be made on nothing
   const viewPins: ViewPins | null = useMemo(
     () =>
-      enabled
+      enabled && ready
         ? {
             viewTypes: VIEW_TYPES,
             isPinned: (viewId: string) => pins.some((pin) => pin.id === viewId),
@@ -100,7 +104,7 @@ export const usePinnedViews = (projectName: string) => {
               void report(change((all) => togglePin(all, view, projectName))),
           }
         : null,
-    [enabled, pins, change, projectName],
+    [enabled, ready, pins, change, projectName],
   )
 
   return {
@@ -111,17 +115,16 @@ export const usePinnedViews = (projectName: string) => {
     // the rename dialog stays open when it fails
     rename: (id: string, label: string) =>
       reportAndFail(change((all) => renamePin(all, id, label))),
-    /** moves a tab past the next shown pin of the same page */
-    move: (id: string, delta: -1 | 1) => {
-      const siblings = samePagePins(visible, id)
-      const index = siblings.findIndex((item) => item.pin.id === id)
-      const other = siblings[index + delta]?.pin.id
-      return other
-        ? report(change((all) => movePinPast(all, id, other, delta > 0)))
-        : Promise.resolve()
-    },
-    unpin: (id: string) => report(change((all) => all.filter((pin) => pin.id !== id))),
+    /** moves a pinned tab one place within its row, as the user sees it */
+    move: (id: string, delta: -1 | 1, row: TabRow) =>
+      report(
+        update((current) =>
+          moveTabInRow(current, 'project', row.itemId, row.ids, pinTabId(id), delta),
+        ),
+      ),
+    unpin: (id: string) => report(change((all) => all.filter((pin) => pin.id !== id), id)),
     // Save as new reports its own failure
-    repoint: (id: string, view: PinnedView) => change((all) => repointPin(all, id, view)),
+    repoint: (id: string, view: PinnedView) =>
+      change((all) => repointPin(all, id, view), id, view.id),
   }
 }

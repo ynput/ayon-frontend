@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 import {
   arrangeItems,
   arrangeTabs,
+  moveTabInRow,
+  replaceTabId,
   resolveLayout,
   toNavLayout,
 } from '../../src/containers/Navigation/layouts/applyLayout'
@@ -88,4 +90,39 @@ test('the layout that applies: picked, project default, studio default, own, non
   })
   expect(resolveLayout({ readable, own: 'mine' })).toEqual({ source: 'own', id: 'mine' })
   expect(resolveLayout({ readable: [] })).toEqual({ source: 'none' })
+})
+
+test('a tab moves within the row as shown, and a pin keeps its place when its view changes', () => {
+  const row = ['overview', 'view:a', 'versions', 'lists']
+  const moved = moveTabInRow(
+    { version: 1, studio: { items: { hidden: ['x'] } } },
+    'project',
+    'production',
+    row,
+    'view:a',
+    1,
+  )
+  expect(moved.project?.tabs?.production?.order).toEqual([
+    'overview',
+    'versions',
+    'view:a',
+    'lists',
+  ])
+  // the other context is kept
+  expect(moved.studio).toEqual({ items: { hidden: ['x'] } })
+  // nothing past the row's ends
+  expect(moveTabInRow(moved, 'project', 'production', row, 'overview', -1)).toEqual(moved)
+
+  const repointed = replaceTabId(moved, 'view:a', 'view:b')
+  expect(repointed.project?.tabs?.production?.order).toEqual([
+    'overview',
+    'versions',
+    'view:b',
+    'lists',
+  ])
+  const removed = replaceTabId(
+    { version: 1, project: { tabs: { production: { order: ['view:a'], hidden: ['view:a'] } } } },
+    'view:a',
+  )
+  expect(removed.project?.tabs?.production).toEqual({ order: [], hidden: [] })
 })

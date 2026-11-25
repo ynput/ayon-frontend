@@ -47,7 +47,7 @@ import {
   type PinnedTabMenuTarget,
 } from '@containers/Navigation/layouts/PinnedViews'
 import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
-import { arrangeTabs } from '@containers/Navigation/layouts/applyLayout'
+import { arrangeTabs, tabId } from '@containers/Navigation/layouts/applyLayout'
 import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
 import { ProjectPageRemote } from '@shared/components'
 import {
@@ -62,8 +62,10 @@ import { ProjectNewEntityHost } from './ProjectNewEntityHost'
 import {
   BROWSER_FLAG,
   PROJECT_BUILT_IN_MODULES,
+  canOpenTab,
   findActiveItem,
   isHiddenOwnedPage,
+  useNavAccess,
   useProjectNavigation,
 } from '@containers/Navigation'
 
@@ -252,9 +254,25 @@ const ProjectPageInner = () => {
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   // the layout that applies: the tab row's order and what it hides
   const { layout: navLayout } = useNavLayout('project', projectName)
+  const access = useNavAccess()
+  const arranged = useMemo(
+    () => arrangeTabs(activeItem.tabs, navLayout, activeItem.id),
+    [activeItem, navLayout],
+  )
+  // the tabs the row shows, by id: a pinned tab moves within them
+  const shownRow = useMemo(
+    () =>
+      arranged
+        .filter((tab) => canOpenTab(tab, access))
+        .flatMap((tab) => {
+          const id = tabId(tab)
+          return id ? [id] : []
+        }),
+    [arranged, access],
+  )
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id).map((tab) => {
+      ...arranged.map((tab) => {
         const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
         if (!pin) return tab
         const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
@@ -289,19 +307,23 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [activeItem, navLayout, addonName, module, pinnedViews.visible, drafts, openViewId],
+    [arranged, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
-  const activeLink = useMemo(() => {
-    return links.find((link) => link.module === module) || null
-  }, [links, module])
+  // the page's own tabs, as AYON has them: the page is found there also when the layout hides
+  // its tab or puts a pinned tab of it first
+  const pageTabs = useMemo(() => activeItem.tabs.filter((tab) => !tab.pinnedView), [activeItem])
+  const activeLink = useMemo(
+    () => pageTabs.find((tab) => tab.module === module) || null,
+    [pageTabs, module],
+  )
 
   // the page's views load with the project instead of after it (the page waits for both)
   usePrefetchViews({ viewType: activeLink?.viewType, projectName })
 
   const title = useTitle(
     module,
-    links,
+    pageTabs,
     getProjectDisplayName({ name: projectName, label: projectLabel }) || 'AYON',
   )
 
@@ -494,8 +516,11 @@ const ProjectPageInner = () => {
               openViewId={openViewId}
               target={pinMenu}
               onClose={() => setPinMenu(null)}
+              row={shownRow}
               rename={pinnedViews.rename}
-              move={pinnedViews.move}
+              move={(id, delta) =>
+                pinnedViews.move(id, delta, { itemId: activeItem.id, ids: shownRow })
+              }
               unpin={pinnedViews.unpin}
               repoint={pinnedViews.repoint}
             />

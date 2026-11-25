@@ -1,6 +1,7 @@
 import { useSelector } from 'react-redux'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { NAV_SECTIONS, type NavAccess, type NavItem, type NavLayout } from './types'
+import { arrangeTabs } from './layouts/applyLayout'
 
 /** The access levels tabs check, as the tab row computes them. */
 export const useNavAccess = (): NavAccess => {
@@ -56,8 +57,14 @@ export const findActiveItem = (items: NavItem[], pathname: string): NavItem | un
   )
 
 /** Where an item opens: its landing tab, else the first tab the user can open. */
-export const itemLandingPath = (item: NavItem, access: NavAccess): string | undefined => {
-  const openable = item.tabs.filter((tab) => canOpenTab(tab, access))
+export const itemLandingPath = (
+  item: NavItem,
+  access: NavAccess,
+  layout?: NavLayout,
+): string | undefined => {
+  // with a layout, the tabs it shows, in its order
+  const tabs = layout ? arrangeTabs(item.tabs, layout, item.id) : item.tabs
+  const openable = tabs.filter((tab) => canOpenTab(tab, access))
   return (openable.find((tab) => tab.module === item.landing) ?? openable[0])?.path
 }
 

@@ -8,7 +8,8 @@ import { copyToClipboard } from '@shared/util'
 import { generateViewId, Views, ViewsProvider, type ViewSettings } from '@shared/containers/Views'
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
-import { applyDraft, pinnedViewPath, samePageLink, samePagePins, type VisiblePin } from './pins'
+import { applyDraft, pinnedViewPath, samePageLink, type VisiblePin } from './pins'
+import { pinTabId } from './applyLayout'
 import { isPinnableViewType, PINNED_PAGES, type PinnedView } from './types'
 import {
   UPDATE_ACCESS,
@@ -131,6 +132,8 @@ interface PinnedTabMenuProps {
   openViewId?: string | null
   target: PinnedTabMenuTarget | null
   onClose: () => void
+  /** the tab row as shown, by tab id: a tab moves within it */
+  row: string[]
   rename: (id: string, label: string) => Promise<unknown>
   move: (id: string, delta: -1 | 1) => Promise<unknown>
   unpin: (id: string) => Promise<unknown>
@@ -143,6 +146,7 @@ export const PinnedTabMenu = ({
   openViewId,
   target,
   onClose,
+  row,
   rename,
   move,
   unpin,
@@ -160,13 +164,10 @@ export const PinnedTabMenu = ({
   // the menu's tab, or the dialog's once the menu has closed
   const pin = target?.pin ?? dialog?.pin
   const listed = pin ? pins.find((item) => item.pin.id === pin.id)?.view : undefined
-  // a tab moves among the pins next to the same page
-  const siblings = pin ? samePagePins(pins, pin.id) : []
-  const index = pin ? siblings.findIndex((item) => item.pin.id === pin.id) : -1
+  const index = pin ? row.indexOf(pinTabId(pin.id)) : -1
   const isOpen = !!pin && pin.id === openViewId
   const draft = pin ? drafts[pin.id] : undefined
 
-  // the open view's saved settings, already loaded by the page
   // the open view's saved settings, already loaded by the page; nothing while the menu is closed
   const { view, refetchList } = usePinnedView(
     projectName,
@@ -277,7 +278,7 @@ export const PinnedTabMenu = ({
           id: 'right',
           label: 'Move right',
           icon: 'arrow_forward',
-          disabled: index === -1 || index >= siblings.length - 1,
+          disabled: index === -1 || index >= row.length - 1,
           onClick: () => move(pin.id, 1),
         },
         { id: 'divider' },

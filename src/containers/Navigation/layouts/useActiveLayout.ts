@@ -1,12 +1,15 @@
 import { useCallback, useMemo } from 'react'
 import {
+  useCreateViewMutation,
   useGetBaseViewQuery,
   useGetProjectQuery,
   useGetViewQuery,
   useListViewsQuery,
   useSetFrontendPreferencesMutation,
   useUpdateViewMutation,
+  viewsQueries,
 } from '@shared/api'
+import { generateViewId } from '@shared/containers/Views'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
 import { useUserLayout } from './useUserLayout'
@@ -16,11 +19,24 @@ import { LAYOUT_KEY, LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
 /** at least this access level changes a shared layout (owner, or shared with update rights) */
 const UPDATE_ACCESS = 20
 
+type LayoutChange = (layout: LayoutSettings | undefined) => LayoutSettings
+
+// Changes to a named layout run one at a time, each on what the one before saved: updating a view
+// puts its settings into the cache, where the next change reads them.
+let namedQueue: Promise<unknown> = Promise.resolve()
+// The copy being made of a layout the user can't change, by that layout's id: a change made
+// before the copy is picked goes into it too, instead of making another one.
+const copies = new Map<string, Promise<string>>()
+
+/** a query that has answered for its current arguments, with data or an error */
+const settled = (query: { currentData?: unknown; error?: unknown }) =>
+  query.currentData !== undefined || query.error !== undefined
+
 /**
  * The layout that applies here (`resolveLayout`: picked, the project's default, the studio
  * default, the user's own, or none) and how to change it. A change goes into that layout when the
- * user may change it; otherwise the first change makes it the user's own layout ("My layout", a
- * copy with the change) and picks that. Needs the Power Pack licence; without it there is none.
+ * user may change it; otherwise the first change saves a copy the user owns ("{name} (mine)") and
+ * picks it. Needs the Power Pack licence; without it there is none.
  */
 export const useActiveLayout = (projectName?: string) => {
   const own = useUserLayout()
@@ -35,21 +51,17 @@ export const useActiveLayout = (projectName?: string) => {
       ] as string | undefined,
   )
 
-  const { currentData: project } = useGetProjectQuery(
+  const projectQuery = useGetProjectQuery(
     { projectName: projectName ?? '' },
     { skip: !enabled || !projectName },
   )
-  const projectDefault = (project?.data as Record<string, unknown> | undefined)?.[LAYOUT_KEY] as
-    | string
-    | undefined
-  const { currentData: layouts } = useListViewsQuery(
-    { viewType: LAYOUT_VIEW_TYPE },
-    { skip: !enabled },
-  )
-  const { currentData: studioDefault } = useGetBaseViewQuery(
-    { viewType: LAYOUT_VIEW_TYPE },
-    { skip: !enabled },
-  )
+  const projectDefault = (projectQuery.currentData?.data as Record<string, unknown> | undefined)?.[
+    LAYOUT_KEY
+  ] as string | undefined
+  const listQuery = useListViewsQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
+  const layouts = listQuery.currentData
+  const baseQuery = useGetBaseViewQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
+  const studioDefault = baseQuery.currentData
 
   const readable = useMemo(
     () => (layouts ?? []).flatMap((view) => (view.id ? [view.id] : [])),
@@ -63,61 +75,134 @@ export const useActiveLayout = (projectName?: string) => {
     own: own.id,
   })
   const isOwn = !!id && id === own.id
-  // a named layout: picked, or the project's default
-  const named = (source === 'picked' || source === 'project') && !isOwn ? id : undefined
-  const { currentData: namedView } = useGetViewQuery(
+  // the studio default is the layout base view, also when it is picked or a project's default
+  const isBase = !!id && id === studioDefault?.id
+  // any other layout: picked, or a project's default
+  const named = id && !isOwn && !isBase ? id : undefined
+  const namedQuery = useGetViewQuery(
     { viewType: LAYOUT_VIEW_TYPE, viewId: named ?? '' },
     { skip: !named },
   )
 
-  const layout: LayoutSettings | undefined = isOwn
+  // Everything that decides the layout has answered. Until then the layout may still switch, so
+  // it isn't changed, and a switch isn't told from the first load.
+  const ready =
+    enabled &&
+    own.ready &&
+    settled(listQuery) &&
+    settled(baseQuery) &&
+    (!projectName || settled(projectQuery)) &&
+    (!named || settled(namedQuery))
+
+  const layout: LayoutSettings | undefined = !enabled
+    ? undefined
+    : isOwn
     ? own.layout
-    : source === 'studio'
+    : isBase
     ? (studioDefault?.settings as LayoutSettings | undefined)
     : named
-    ? (namedView?.settings as LayoutSettings | undefined)
+    ? (namedQuery.currentData?.settings as LayoutSettings | undefined)
     : undefined
-  const canUpdate =
-    isOwn ||
-    (!!named && (layouts?.find((view) => view.id === named)?.accessLevel ?? 0) >= UPDATE_ACCESS)
+  const listed = layouts?.find((view) => view.id === named)
+  const canUpdate = isOwn || (!!named && (listed?.accessLevel ?? 0) >= UPDATE_ACCESS)
 
   const [updateView] = useUpdateViewMutation()
+  const [createView] = useCreateViewMutation()
   const [setPreferences] = useSetFrontendPreferencesMutation()
 
   const pick = useCallback(
     async (layoutId: string) => {
-      dispatch(updateUserPreferences({ [LAYOUT_KEY]: layoutId }))
+      // saved first: the navigation switches once the choice is kept
       if (userName)
         await setPreferences({ userName, patchData: { [LAYOUT_KEY]: layoutId } }).unwrap()
+      dispatch(updateUserPreferences({ [LAYOUT_KEY]: layoutId }))
     },
     [dispatch, setPreferences, userName],
   )
 
-  const update = useCallback(
-    async (change: (layout: LayoutSettings | undefined) => LayoutSettings) => {
-      if (isOwn || source === 'none') return own.update(change)
-      if (canUpdate && named) {
+  const writeNamed = useCallback(
+    (viewId: string, change: LayoutChange) => {
+      const write = async () => {
+        // the layout as last saved: from the cache, else from the server
+        const view = await dispatch(
+          viewsQueries.endpoints.getView.initiate(
+            { viewType: LAYOUT_VIEW_TYPE, viewId },
+            { subscribe: false },
+          ),
+        ).unwrap()
         await updateView({
           viewType: LAYOUT_VIEW_TYPE,
-          viewId: named,
-          genericViewPatchModel: { settings: change(layout) },
+          viewId,
+          genericViewPatchModel: { settings: change(view.settings as LayoutSettings) },
         }).unwrap()
-        return named
+        return viewId
       }
-      // the studio default, or a layout shared read-only: the change makes it the user's own
-      const ownId = await own.update(() => change(layout))
-      await pick(ownId)
-      return ownId
+      const result = namedQueue.then(write)
+      namedQueue = result.catch(() => undefined)
+      return result
     },
-    [isOwn, source, canUpdate, named, layout, own, updateView, pick],
+    [dispatch, updateView],
   )
 
-  return { enabled, source, id, layout, canUpdate, update, pick }
+  const update = useCallback(
+    async (change: LayoutChange): Promise<string> => {
+      // a copy of this layout is being saved: the change goes into it
+      const copying = id ? copies.get(id) : undefined
+      if (copying) return writeNamed(await copying, change)
+      if (!enabled) throw new Error('Layouts are not available')
+      if (!ready) throw new Error("The layout hasn't loaded yet")
+      if (isOwn || source === 'none') return own.update(change)
+      if (named && canUpdate) return writeNamed(named, change)
+      // the studio default, or a layout shared read-only: the change goes into a copy the user
+      // owns, which is then picked
+      if (!id || !layout) throw new Error("The layout couldn't be loaded")
+      const name = isBase ? 'Studio default' : listed?.label || 'Layout'
+      const copy = (async () => {
+        const copyId = generateViewId()
+        // a saved view: without `working: false` it would replace the user's own layout
+        await createView({
+          viewType: LAYOUT_VIEW_TYPE,
+          genericViewPostModel: {
+            id: copyId,
+            label: `${name} (mine)`,
+            working: false,
+            settings: change(layout),
+          },
+        }).unwrap()
+        await pick(copyId)
+        return copyId
+      })()
+      copies.set(id, copy)
+      copy.then(
+        () => copies.delete(id),
+        () => copies.delete(id),
+      )
+      return copy
+    },
+    [
+      id,
+      enabled,
+      ready,
+      isOwn,
+      source,
+      named,
+      canUpdate,
+      layout,
+      isBase,
+      listed,
+      own,
+      writeNamed,
+      createView,
+      pick,
+    ],
+  )
+
+  return { enabled, ready, source, id, layout, canUpdate, update, pick }
 }
 
 /** The layout that applies to a context (a project, or Home), as the navigation applies it. */
 export const useNavLayout = (context: 'project' | 'studio', projectName?: string) => {
-  const { layout, id } = useActiveLayout(projectName)
+  const { layout, id, ready } = useActiveLayout(projectName)
   const navLayout = useMemo(() => toNavLayout(layout, context), [layout, context])
-  return { layout: navLayout, id }
+  return { layout: navLayout, id, ready }
 }

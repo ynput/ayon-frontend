@@ -31,13 +31,17 @@ interface RailProps {
   layout: NavLayout
   /** that layout's id: when another one applies, a page it hides gives way to its first item */
   layoutId?: string
+  /** everything deciding the layout has loaded: before that, a change isn't a switch */
+  layoutReady: boolean
+  /** where the rail is (a project, or Home): a layout that applies elsewhere isn't a switch */
+  scope: string
 }
 
 // what folds into More: the rail's divider (with its margins) and an item's height
 const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
 
-const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
+const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps) => {
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const access = useNavAccess()
@@ -51,17 +55,21 @@ const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
   )
   const active = findActiveItem(items, pathname)
 
-  // switching layouts while on a page the new one hides opens its first item; a hidden page is
-  // still reachable by its link while the layout stays the same
-  const shownLayout = useRef(layoutId)
+  // Switching layouts while on a page the new one hides opens its first item. A page hidden
+  // before stays, as it was opened by its link; so does a page on the first load or in another
+  // project, which aren't switches.
+  const shown = useRef<{ scope: string; id?: string; items: Set<string> } | null>(null)
   useEffect(() => {
-    if (shownLayout.current === layoutId) return
-    shownLayout.current = layoutId
-    if (active && !visible.some((item) => item.id === active.id) && visible[0]) {
-      const to = itemLandingPath(visible[0], access)
+    if (!layoutReady) return
+    const before = shown.current
+    const items = new Set(visible.map((item) => item.id))
+    shown.current = { scope, id: layoutId, items }
+    if (!before || before.scope !== scope || before.id === layoutId) return
+    if (active && before.items.has(active.id) && !items.has(active.id) && visible[0]) {
+      const to = itemLandingPath(visible[0], access, layout)
       if (to) navigate(to)
     }
-  }, [layoutId, active, visible, access, navigate])
+  }, [layoutReady, layoutId, scope, active, visible, access, layout, navigate])
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
@@ -129,7 +137,7 @@ const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
   const moreMenuId = 'nav-rail-more'
 
   const renderItem = (item: NavItem) => {
-    const to = itemLandingPath(item, access)
+    const to = itemLandingPath(item, access, layout)
     if (!to) return null
     return (
       <RailItem
@@ -175,7 +183,7 @@ const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
                 // the selected item only closes the menu, as on the rail
                 ...(item.id === active?.id
                   ? { onClick: () => {} }
-                  : { link: itemLandingPath(item, access) }),
+                  : { link: itemLandingPath(item, access, layout) }),
                 selected: item.id === active?.id,
               }))}
             />
@@ -190,12 +198,14 @@ const Rail = ({ items, footer, layout, layoutId }: RailProps) => {
 
 const ProjectRail = ({ projectName }: { projectName: string }) => {
   const { items } = useProjectNavigation(projectName)
-  const { layout, id } = useNavLayout('project', projectName)
+  const { layout, id, ready } = useNavLayout('project', projectName)
   return (
     <Rail
       items={items}
       layout={layout}
       layoutId={id}
+      layoutReady={ready}
+      scope={projectName}
       footer={<AdminDock projectName={projectName} layout={layout} />}
     />
   )
@@ -203,8 +213,17 @@ const ProjectRail = ({ projectName }: { projectName: string }) => {
 
 const StudioRail = () => {
   const { items } = useStudioNavigation()
-  const { layout, id } = useNavLayout('studio')
-  return <Rail items={items} layout={layout} layoutId={id} footer={<AdminDock layout={layout} />} />
+  const { layout, id, ready } = useNavLayout('studio')
+  return (
+    <Rail
+      items={items}
+      layout={layout}
+      layoutId={id}
+      layoutReady={ready}
+      scope="studio"
+      footer={<AdminDock layout={layout} />}
+    />
+  )
 }
 
 /**

@@ -1,6 +1,6 @@
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import type { NavItem, NavLayout } from '../types'
-import type { LayoutSettings } from './types'
+import type { ContextLayout, LayoutSettings } from './types'
 
 /** A layout's settings for one context, as the navigation applies them. */
 export const toNavLayout = (
@@ -37,9 +37,12 @@ export const arrangeItems = (items: NavItem[], layout: NavLayout): NavItem[] => 
     .map(({ item }) => item)
 }
 
+/** A pinned view's tab id in a layout. */
+export const pinTabId = (viewId: string) => `view:${viewId}`
+
 /** A tab's id in a layout: its module, or `view:<id>` for a pinned view. */
 export const tabId = (tab: NavLinkItem) =>
-  tab.pinnedView ? `view:${tab.pinnedView}` : (tab.module as string | undefined)
+  tab.pinnedView ? pinTabId(tab.pinnedView) : (tab.module as string | undefined)
 
 /**
  * An item's tab row in the layout's order, without the tabs it hides. A pin it doesn't mention
@@ -88,4 +91,54 @@ export const resolveLayout = ({
   if (studioDefault) return { source: 'studio', id: studioDefault }
   if (own) return { source: 'own', id: own }
   return { source: 'none' }
+}
+
+/**
+ * The layout with a tab moved one place within the row the user sees (`rowIds`, the arranged
+ * row's tab ids), recorded as that item's tab order.
+ */
+export const moveTabInRow = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  itemId: string,
+  rowIds: string[],
+  id: string,
+  delta: -1 | 1,
+): LayoutSettings => {
+  const from = rowIds.indexOf(id)
+  const to = from + delta
+  if (from === -1 || to < 0 || to >= rowIds.length) return { ...layout }
+  const order = [...rowIds]
+  ;[order[from], order[to]] = [order[to], order[from]]
+  const own: ContextLayout = layout?.[context] ?? {}
+  return {
+    ...layout,
+    version: 1,
+    [context]: {
+      ...own,
+      tabs: { ...own.tabs, [itemId]: { ...own.tabs?.[itemId], order } },
+    },
+  }
+}
+
+/** The layout with one tab id replaced (`to`), or left out (no `to`), in every tab arrangement. */
+export const replaceTabId = (
+  layout: LayoutSettings | undefined,
+  from: string,
+  to?: string,
+): LayoutSettings => {
+  const swap = (ids?: string[]) => ids?.flatMap((id) => (id === from ? (to ? [to] : []) : [id]))
+  const context = (own?: ContextLayout): ContextLayout | undefined =>
+    own?.tabs
+      ? {
+          ...own,
+          tabs: Object.fromEntries(
+            Object.entries(own.tabs).map(([item, tabs]) => [
+              item,
+              { ...tabs, order: swap(tabs.order), hidden: swap(tabs.hidden) },
+            ]),
+          ),
+        }
+      : own
+  return { ...layout, project: context(layout?.project), studio: context(layout?.studio) }
 }
