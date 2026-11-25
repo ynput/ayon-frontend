@@ -9,6 +9,7 @@ import {
   useUpdateViewMutation,
   viewsQueries,
 } from '@shared/api'
+import { toast } from 'react-toastify'
 import { generateViewId } from '@shared/containers/Views'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
@@ -214,6 +215,13 @@ export const useNavLayout = (context: 'project' | 'studio', projectName?: string
   const settings = edit ? edit.draft : layout
   const navLayout = useMemo(() => toNavLayout(settings, context), [settings, context])
   const customize =
-    enabled && ready && !edit ? () => startEditing({ name, layout, save: update }) : undefined
+    enabled && ready && !edit
+      ? () => {
+          // a change is being saved into a copy, which then applies: edit that one once it does
+          if (id && copies.has(id))
+            return void toast.info('Saving your last change to the layout. Try again in a moment.')
+          startEditing({ name, layout, save: update })
+        }
+      : undefined
   return { layout: navLayout, id, ready, editing: !!edit, customize }
 }

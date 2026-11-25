@@ -51,12 +51,14 @@ export const saveEdit = async (
 ) => {
   const current = edit
   if (!current || current.saving) return
-  set({ ...current, saving: true })
+  // nothing replaces it while it saves (changes wait, Cancel and Customize are off)
+  const saving = { ...current, saving: true }
+  set(saving)
   try {
     await current.save((layout) => apply(layout, current.draft))
-    if (edit?.save === current.save) set(null)
+    if (edit === saving) set(null)
   } catch (error) {
-    if (edit) set({ ...edit, saving: false })
+    if (edit === saving) set({ ...saving, saving: false })
     throw error
   }
 }
