@@ -44,6 +44,8 @@ interface ProjectInfo {
 // what renders for a module; its tab comes from the navigation registry
 type PageContent = {
   module: string
+  /** the page's URL: it opens only when the registry gives the user a tab with it */
+  path: string
   component?: ReactNode
   viewType?: ViewType
   showProjectList?: boolean
@@ -129,6 +131,7 @@ const UserDashboardPage: React.FC = () => {
     () => [
       {
         module: 'tasks',
+        path: '/dashboard/tasks',
         component: (
           <UserTasksContainer
             projectsInfo={projectsInfoWithProjects}
@@ -141,6 +144,7 @@ const UserDashboardPage: React.FC = () => {
       },
       {
         module: 'projects',
+        path: '/dashboard/projects',
         viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
@@ -149,11 +153,19 @@ const UserDashboardPage: React.FC = () => {
       // Show bookings splash when planner addon is not installed;
       // when installed the remote page from the planner addon handles /dashboard/bookings
       ...(!hasPlanner
-        ? [{ module: 'planner', component: <BookingsSplashscreen />, showProjectList: false }]
+        ? [
+            {
+              module: 'planner',
+              path: '/dashboard/planner',
+              component: <BookingsSplashscreen />,
+              showProjectList: false,
+            },
+          ]
         : []),
       // legacy dashboard addons
       ...dashboardAddons.map((addon) => ({
         module: addon.name,
+        path: `/dashboard/addon/${addon.name}`,
         component: <DashboardAddon addonName={addon.name} addonVersion={addon.version} />,
         showProjectList: false,
       })),
@@ -170,6 +182,7 @@ const UserDashboardPage: React.FC = () => {
         )
         return {
           module: remote.module,
+          path: `/dashboard/${remote.module}`,
           // the `projects` key renders through the layout components studio.page contributions use
           component: showProjectList ? (
             <StudioPageSelectionProvider value={legacyStudioSelection} key={remote.id}>
@@ -185,6 +198,7 @@ const UserDashboardPage: React.FC = () => {
       }),
       ...addonStudioPages.map((page) => ({
         module: page.id,
+        path: `/dashboard/${page.id}`,
         component: (
           <AddonStudioPage
             contribution={page}
@@ -228,16 +242,15 @@ const UserDashboardPage: React.FC = () => {
     [activeItem, addonName, module],
   )
 
-  // Find active page based on current module/addonName; a page opens only with its tab
+  // the page at this URL, when the user has its tab (the registry leaves out what they can't
+  // open); an unknown module shows My tasks, an addon page they can't open shows nothing
   const activePage = useMemo(() => {
-    const opens = (p: PageContent) => links.some((link) => link.module === p.module)
-    if (addonName) {
-      return pages.find((p) => p.module === addonName && opens(p))
-    }
-    return (
-      pages.find((p) => p.module === module && opens(p)) || pages.find((p) => p.module === 'tasks')
+    const page = pages.find(
+      (p) => p.path === pathname && links.some((link) => link.path === p.path),
     )
-  }, [pages, links, module, addonName])
+    if (page || addonName) return page
+    return pages.find((p) => p.module === 'tasks')
+  }, [pages, links, pathname, addonName])
 
   const title = useTitle(addonName || module || '', links, 'AYON', '')
 

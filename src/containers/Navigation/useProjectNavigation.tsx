@@ -248,19 +248,8 @@ export const useProjectNavigation = (projectName: string) => {
       [...owned, ...remotes, ...contributed, ...classic],
       KNOWN_PROJECT_PAGES,
     )
-    // Workfiles after the reserved pages' items: today's tab order for the flattened tabs
-    const ownedModules = owned.map((entry) => entry.tab.module)
-    let afterOwned = 0
-    placed.forEach((item, index) => {
-      if (item.tabs.some((tab) => ownedModules.includes(tab.module))) afterOwned = index + 1
-    })
-    return [
-      production,
-      review,
-      ...placed.slice(0, afterOwned),
-      workfiles,
-      ...placed.slice(afterOwned),
-    ]
+    // the sidebar orders by section; within one, by this order
+    return [production, review, workfiles, ...placed]
   }, [
     projectName,
     showBrowser,

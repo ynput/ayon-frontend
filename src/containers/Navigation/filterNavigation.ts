@@ -32,8 +32,6 @@ export const filterNavigation = (
       !layout.hidden?.includes(item.id) && item.tabs.some((tab) => canOpenTab(tab, access)),
   )
 
-/** Every item's tabs in registry order: the single tab row before the sidebar existed. */
-export const flattenTabs = (items: NavItem[]): NavLinkItem[] => items.flatMap((item) => item.tabs)
 
 const pathOf = (path: string) => path.split('?')[0]
 const isUnder = (pathname: string, path: string) =>
