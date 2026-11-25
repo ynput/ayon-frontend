@@ -139,18 +139,21 @@ export const pick = (file: ExportedFile, headers: string[]) => {
 
 /**
  * The export's header starts with the table's column headers, left to right, without the ones the
- * export skips (the row selection column, whose header is a select all icon, and thumbnails).
+ * export skips (the row selection column, whose header is a select all icon, and thumbnails), found by
+ * their column ids.
  * Columns scrolled out of view are not rendered, so they are not compared.
  * FLAG: a sorted header also shows its sort icon and index, so only the first line is its label.
  */
 export const expectTableHeaders = async (file: ExportedFile, table: Locator) => {
   const headers = (
     await table
-      .locator('thead th[data-column-id]:not([data-column-id="__row_selection__"])')
+      .locator(
+        'thead th[data-column-id]:not([data-column-id="__row_selection__"]):not([data-column-id="thumbnail"])',
+      )
       .allInnerTexts()
   )
     .map((text) => text.split('\n')[0].trim())
-    .filter((text) => text && text !== 'Thumbnail')
+    .filter(Boolean)
   expect(headers.length).toBeGreaterThan(1)
   expect(file.rows[0].slice(0, headers.length)).toEqual(headers)
 }

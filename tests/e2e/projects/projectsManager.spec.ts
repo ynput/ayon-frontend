@@ -147,7 +147,7 @@ test.describe('projects manager', () => {
       await expect(page).toHaveURL(new RegExp(`[?&]project=${projectName}(&|$)`))
 
       await menuItem(page, 'Create folder').click()
-      const folderDialog = dialog(page, /^Create Folder/)
+      const folderDialog = dialog(page, /^Create folder/i)
       await folderDialog.getByPlaceholder('Enter folder label').fill(label)
       await folderDialog.getByRole('button', { name: /Create folder$/ }).click()
       await expect(folderDialog).toBeHidden()

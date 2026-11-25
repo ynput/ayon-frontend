@@ -47,6 +47,8 @@ test.describe('details panel', () => {
 
   test('change the priority', async ({ page, api, projectName }) => {
     const { task } = await setup(api, projectName)
+    // only the columns the test reads: with the panel open, columns past the visible ones are not rendered
+    await api.setWorkingViewColumns('overview', projectName, ['name', 'attrib_priority'])
     const { overview, panel } = await openTask(page, projectName)
 
     await panel.setPriority('urgent', 'Urgent')

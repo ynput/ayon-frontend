@@ -160,8 +160,7 @@ test.describe('project anatomy: attributes and roots', () => {
     await products.goto(projectName)
     await products.openDetails('plate - v001')
     const panel = new DetailsPanel(page)
-    // FLAG: the "Version files" tab is an icon-only button named after its icon
-    await panel.root.getByRole('button', { name: 'order_play', exact: true }).click()
+    await panel.openTab('files')
     await panel.root.getByRole('row', { name: /exr/ }).click({ button: 'right' })
     await menuItem(page, 'Copy path').hover()
     await menuItem(page, 'Copy Linux path').click()

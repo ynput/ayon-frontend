@@ -41,9 +41,10 @@ test.describe('list attributes', () => {
     await lists.openList('Client picks')
     await lists.showItemColumn('Client note', 'Task attributes')
 
-    await lists.editItemTextCell('comp', 'attrib_clientNote', 'More grain')
+    const note = await lists.stableItemCell('comp', 'attrib_clientNote')
+    await lists.editItemTextCell(note, 'More grain')
 
-    await expect(lists.itemCell('comp', 'attrib_clientNote')).toHaveText('More grain')
+    await expect(note).toHaveText('More grain')
     await expect
       .poll(async () =>
         (

@@ -184,6 +184,7 @@ const ListDetailsPanel: FC<ListDetailsPanelProps> = ({ listId, projectName }) =>
         onChange={setSelectedTab}
         // a tab in the URL whose addon is gone
         fallbackTab="details"
+        tabTestId={(id) => `list-details-tab-${id}`}
         // few tabs: each is named, the addons' too (icons only past 3)
         showLabels
       />

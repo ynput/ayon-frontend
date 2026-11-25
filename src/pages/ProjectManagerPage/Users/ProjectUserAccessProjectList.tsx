@@ -80,7 +80,11 @@ const formatName = (rowData: ProjectNode, userPermissions: UserPermissions) => {
   const readOnly =
     !userPermissions.canEdit(UserPermissionsEntity.access, rowData.name) &&
     userPermissions.canView(UserPermissionsEntity.access, rowData.name)
-  return getProjectDisplayName(rowData) + (readOnly ? ' (read only)' : '')
+  return (
+    getProjectDisplayName(rowData) +
+    (rowData.skeleton ? ' (planning)' : '') +
+    (readOnly ? ' (read only)' : '')
+  )
 }
 
 type Props = {

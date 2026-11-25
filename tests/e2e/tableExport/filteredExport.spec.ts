@@ -22,10 +22,12 @@ import { requireTableExport } from './requireTableExport'
 const sorted = (names: string[]) => [...names].sort()
 
 // name cells hold icons and paths ("sh010/anim010", "render010 - v002"), exports the plain name
+// (the name and version may be separate elements, so their text is joined by a line break)
 const tableName = (text: string) => {
-  const version = text.match(/(\S+) - (v\d{3})/)
+  const flat = text.replace(/\s+/g, ' ').trim()
+  const version = flat.match(/(\S+) - (v\d{3})/)
   if (version) return `${version[1]} ${version[2]}`
-  return text.trim().split(/[\s/]/).pop() ?? ''
+  return flat.split(/[\s/]/).pop() ?? ''
 }
 
 /**

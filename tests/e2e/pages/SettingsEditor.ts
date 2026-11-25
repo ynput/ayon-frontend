@@ -1,4 +1,4 @@
-import { expect, Page } from '@playwright/test'
+import { expect, Locator, Page } from '@playwright/test'
 
 export class SettingsEditor {
   constructor(readonly page: Page) {}
@@ -11,10 +11,21 @@ export class SettingsEditor {
   }
 
   async expand(title: string) {
-    const toggler = this.sectionHeader(title).locator('.panel-toggler')
-    await expect(toggler).toHaveText(/^(chevron_right|expand_more)$/)
-    if ((await toggler.textContent()) === 'chevron_right') await toggler.click()
-    await expect(toggler).toHaveText('expand_more')
+    await this.expandSection(this.sectionHeader(title).locator('xpath=..'))
+  }
+
+  /** A section by its schema id; `root` is the addon's own section */
+  section(schemaId: string) {
+    return this.page.locator(`.panel[data-fieldid="${schemaId}"]`)
+  }
+
+  /** Opens a section by its toggler, unless it is open already */
+  async expandSection(section: Locator) {
+    await expect(section).toHaveAttribute('data-expanded', /^(true|false)$/)
+    if ((await section.getAttribute('data-expanded')) === 'false') {
+      await section.locator(':scope > .panel-header > .panel-toggler').click()
+    }
+    await expect(section).toHaveAttribute('data-expanded', 'true')
   }
 
   // FLAG: field labels are not associated with their inputs, so `getByLabel` does not work
@@ -58,6 +69,19 @@ export class SettingsEditor {
     }
     await this.page.keyboard.press('Escape')
     await expect(this.page.locator('.options')).toBeHidden()
+  }
+
+  /** The values a multi-select has selected, by option value: the button shows labels and an icon */
+  async selectedOptions(schemaId: string) {
+    await this.dropdownButton(schemaId).click()
+    const options = this.page.locator('.options li.option')
+    await expect(options.first()).toBeVisible()
+    const values = await options
+      .filter({ has: this.page.locator('.option-child.selected') })
+      .evaluateAll((els) => els.map((el) => (el as HTMLElement).dataset.value!))
+    await this.page.keyboard.press('Escape')
+    await expect(this.page.locator('.options')).toBeHidden()
+    return values
   }
 
   // FLAG: the icon search input has no label or placeholder, it is found by its container's class

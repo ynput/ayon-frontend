@@ -75,15 +75,19 @@ test.describe('feed category filter', () => {
 
     const { context, page } = await signInAs(browser, alice.name, alice.password)
     try {
+      // the filter offers Category once the categories arrive: they must arrive, and with none in them
+      const categories = page.waitForResponse(
+        (res) => new URL(res.url()).pathname === `/api/projects/${projectName}/activityCategories`,
+      )
       const panel = await openTask(page, projectName)
+      expect((await (await categories).json()).categories).toEqual([])
       await expect(panel.comment('Plain note')).toBeVisible()
       const feed = panel.root.locator('.feed')
+      await panel.openSearch(feed)
       await feed.getByRole('textbox', { name: 'Search and filter' }).click()
-      // other filters are offered, Category is not
-      await expect(
-        feed.getByRole('listitem').getByText('Posted date', { exact: true }),
-      ).toBeVisible()
-      await expect(feed.getByRole('listitem').getByText('Category', { exact: true })).toHaveCount(0)
+      // other filters are offered, Category is not; options by id, so a renamed label can't hide it
+      await expect(feed.locator('li[id="createdAt"]')).toBeVisible()
+      await expect(feed.locator('li[id="category"]')).toHaveCount(0)
     } finally {
       await context.close()
     }

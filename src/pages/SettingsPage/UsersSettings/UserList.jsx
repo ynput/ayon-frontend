@@ -207,12 +207,8 @@ const UserList = ({
 
   const [ctxMenuShow] = useCreateContextMenu()
 
-  // A to Z by default, the users query returns them the other way round
-  const sortedList = useMemo(
-    () => [...(tableList || [])].sort((a, b) => (a.name || '').localeCompare(b.name || '')),
-    [tableList],
-  )
-  const tableData = useTableLoadingData(sortedList, isLoading, 40, 'name')
+  // tableList is A to Z already (UsersSettings), as the export reads it
+  const tableData = useTableLoadingData(tableList, isLoading, 40, 'name')
 
   // The virtual scroller (primereact 9.6) doesn't follow row changes by itself:
   // - it applies a new scroll height only on its next render, so render once more.
