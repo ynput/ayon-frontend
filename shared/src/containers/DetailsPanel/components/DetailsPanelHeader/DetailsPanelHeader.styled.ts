@@ -52,11 +52,15 @@ export const Grid = styled.div`
   }
 
   /* isPreview: the status at the end of the name's row */
-  &.isPreview .titles {
-    .preview-status {
+  &.isPreview {
+    .titles .preview-status {
       margin-left: auto;
       align-self: flex-start;
       flex: none;
+    }
+    /* the assignees (or author) at the start of their row, the priority at the end */
+    .assignee-select {
+      justify-self: start;
     }
   }
 
