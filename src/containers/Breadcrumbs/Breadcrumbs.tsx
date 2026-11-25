@@ -144,7 +144,7 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   const uri = useURIContext().uri ?? ''
 
   const inputRef = useRef<HTMLInputElement>(null)
-  const pillRef = useRef<HTMLDivElement>(null)
+  const slotRef = useRef<HTMLDivElement>(null)
   const textRef = useRef<HTMLSpanElement>(null)
 
   // keep localUri in sync with real uri
@@ -190,90 +190,91 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   const [room, setRoom] = useState(0)
   const measured = useRef('')
   useEffect(() => {
-    // the header's left side: its width is the room the pill has, whatever it shows
-    const side = pillRef.current?.parentElement
-    if (!side) return
+    if (!slotRef.current) return
     const observer = new ResizeObserver(([entry]) => setRoom(Math.round(entry.contentRect.width)))
-    observer.observe(side)
+    observer.observe(slotRef.current)
     return () => observer.disconnect()
   }, [])
+  const hasSwitcher = !!onProjectsClick
   useLayoutEffect(() => {
-    // a new path or more room: start again from the whole path
-    const key = `${fullText}|${room}`
+    // a new path, other room or the text back from editing: start again from the whole path
+    const key = `${fullText}|${room}|${hasSwitcher}|${editMode}`
     if (measured.current !== key) {
       measured.current = key
       if (cut) return setCut(0)
     }
     const text = textRef.current
     if (text && text.scrollWidth > text.clientWidth && cut < path.length - 1) setCut(cut + 1)
-  }, [fullText, room, cut, path.length])
+  }, [fullText, room, hasSwitcher, editMode, cut, path.length])
   const shownPath = collapsePath(path, cut)
 
   return (
-    <Styled.Pill id="context-pill" ref={pillRef}>
-      {onProjectsClick ? (
-        <Styled.ProjectButton
-          onClick={onProjectsClick}
-          className={clsx({ open: projectsOpen, choose: !project })}
-          aria-haspopup="dialog"
-          aria-expanded={!!projectsOpen}
-          data-tooltip={project ? 'Switch project' : undefined}
-          data-tooltip-delay={500}
-        >
-          <Icon icon="category" />
-          <strong>{project || 'Choose a project'}</strong>
-          <Icon icon="expand_more" />
-        </Styled.ProjectButton>
-      ) : (
-        project && (
-          <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
+    <Styled.Slot ref={slotRef}>
+      <Styled.Pill id="context-pill">
+        {onProjectsClick ? (
+          <Styled.ProjectButton
+            onClick={onProjectsClick}
+            className={clsx({ open: projectsOpen, choose: !project })}
+            aria-haspopup="dialog"
+            aria-expanded={!!projectsOpen}
+            data-tooltip={project ? 'Switch project' : undefined}
+            data-tooltip-delay={500}
+          >
             <Icon icon="category" />
-            <strong>{project}</strong>
+            <strong>{project || 'Choose a project'}</strong>
+            <Icon icon="expand_more" />
           </Styled.ProjectButton>
-        )
-      )}
-      {editMode ? (
-        <Styled.Form onSubmit={goThere}>
-          <input
-            value={localUri}
-            placeholder="Go to URI..."
-            onChange={(e) => setLocalUri(e.target.value)}
-            onBlur={() => setEditMode(false)}
-            onKeyDown={handleKeyDown}
-            ref={inputRef}
-            aria-label="URI"
+        ) : (
+          project && (
+            <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
+              <Icon icon="category" />
+              <strong>{project}</strong>
+            </Styled.ProjectButton>
+          )
+        )}
+        {editMode ? (
+          <Styled.Form onSubmit={goThere}>
+            <input
+              value={localUri}
+              placeholder="Go to URI..."
+              onChange={(e) => setLocalUri(e.target.value)}
+              onBlur={() => setEditMode(false)}
+              onKeyDown={handleKeyDown}
+              ref={inputRef}
+              aria-label="URI"
+            />
+            <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
+          </Styled.Form>
+        ) : shownPath.length ? (
+          <Styled.Display
+            onClick={() => setEditMode(true)}
+            data-tooltip={`${fullText} (click to edit the URI)`}
+            data-tooltip-delay={500}
+          >
+            <Styled.Text ref={textRef}>
+              {project && '/ '}
+              {shownPath.join(' / ')}
+            </Styled.Text>
+          </Styled.Display>
+        ) : (
+          <Styled.PillButton
+            icon="edit"
+            onClick={() => setEditMode(true)}
+            variant="text"
+            data-tooltip="Go to a URI"
           />
-          <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
-        </Styled.Form>
-      ) : shownPath.length ? (
-        <Styled.Display
-          onClick={() => setEditMode(true)}
-          data-tooltip={cut ? `${fullText} (click to edit the URI)` : 'Click to edit the URI'}
-          data-tooltip-delay={500}
-        >
-          <Styled.Text ref={textRef}>
-            {project && '/ '}
-            {shownPath.join(' / ')}
-          </Styled.Text>
-        </Styled.Display>
-      ) : (
-        <Styled.PillButton
-          icon="edit"
-          onClick={() => setEditMode(true)}
-          variant="text"
-          data-tooltip="Go to a URI"
-        />
-      )}
-      {!editMode && (
-        <Styled.PillButton
-          icon="content_copy"
-          onClick={() => copyToClipboard(localUri)}
-          disabled={!localUri}
-          variant="text"
-          data-tooltip={localUri ? 'Copy URI' : undefined}
-        />
-      )}
-    </Styled.Pill>
+        )}
+        {!editMode && (
+          <Styled.PillButton
+            icon="content_copy"
+            onClick={() => copyToClipboard(localUri)}
+            disabled={!localUri}
+            variant="text"
+            data-tooltip={localUri ? 'Copy URI' : undefined}
+          />
+        )}
+      </Styled.Pill>
+    </Styled.Slot>
   )
 }
 

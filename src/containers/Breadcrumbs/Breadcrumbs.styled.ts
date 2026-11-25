@@ -1,6 +1,14 @@
 import styled from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
+// the room the pill has: what the header's left side leaves after its other items, whatever
+// the pill shows
+export const Slot = styled.div`
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+`
+
 // the context pill: project, path to the selected entity and a copy button
 export const Pill = styled.div`
   display: flex;
@@ -10,7 +18,6 @@ export const Pill = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-highest);
-
 `
 
 // the project name: opens the project switcher

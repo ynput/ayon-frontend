@@ -128,7 +128,11 @@ const Header: React.FC = () => {
   return (
     <nav className="primary" onClick={handleNavClick}>
       <Side
-        style={brandWidth ? ({ '--brand-width': `${brandWidth}px` } as CSSProperties) : undefined}
+        style={
+          brandWidth !== undefined
+            ? ({ '--brand-width': `${brandWidth}px` } as CSSProperties)
+            : undefined
+        }
       >
         <Link to={'/dashboard/tasks'}>
           <HomeButton
