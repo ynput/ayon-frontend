@@ -56,7 +56,15 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   studio default (the `layout` base view, also when it is picked or a project's default), else the
   user's own layout (their working view), else none. A picked or project layout the user can't
   read (not in their list) is skipped. `ready` says every lookup that decides it has answered.
-- **Changing it** (pins today, edit mode later) waits for `ready`: a change made earlier would be
+- **The layout menu** (`LayoutMenuHost` in the header, before the icons) is Power Pack's
+  `views/LayoutMenu`; a Power Pack that doesn't list it shows nothing. Core hands it
+  `LayoutMenuProps` (`useLayoutMenu`): the readable layouts, which applies here, the pick, the
+  project and studio defaults, and the actions that change them (`pick`, `null` to follow the
+  defaults; `setProjectDefault` for managers, project data; `setStudioDefault` for admins, which
+  copies the layout into the base view). Core reports how they went (toasts). Save as new,
+  sharing, renaming and deleting are the views API's, in the menu's own dialog. Keep the type in
+  step with its copy in Power Pack (`frontend/modules/views/src/layouts/types.ts`).
+- **Changing it** (pins, edit mode) waits for `ready`: a change made earlier would be
   made on nothing. It goes into that layout when the user may (their own, or a shared one with
   update access); otherwise (the studio default, a read-only share) the first change saves a copy
   the user owns, "{name} (mine)", and picks it; changes made while that copy is saved go into it.
@@ -64,7 +72,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   each on what the one before saved. The user's own layout keeps what this browser tab saved over
   an older refetch (`useUserLayout`).
 - **Editing a layout** (`layoutEditor.ts`, one edit for the whole app): Customize (right-click the
-  sidebar; the layout menu later) copies the layout that applies into a draft, which `useNavLayout`
+  sidebar, or the layout menu) copies the layout that applies into a draft, which `useNavLayout`
   hands the sidebar and the tab rows instead. They then show every item and tab, hidden ones
   dimmed, each with an eye, and nothing folds into More or "+N"; drag reorders tabs in their row
   and items within their section (`reorderTabs`, `reorderItems`, merged into the stored order).

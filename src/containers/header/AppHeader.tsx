@@ -18,6 +18,7 @@ import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseIn
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
+import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
 import StudioBrand from './StudioBrand'
 
 const Side = styled.div`
@@ -170,6 +171,7 @@ const Header: React.FC = () => {
 
         {!user.data.isGuest && (
           <>
+            <LayoutMenuHost />
             <ChatBubbleButton />
 
             {/* help icon and menu vvv */}

@@ -52,3 +52,48 @@ export interface LayoutSettings {
 
 /** Where a user's picked layout (user preferences) and a project's default (project data) live. */
 export const LAYOUT_KEY = 'navigationLayout'
+
+/** A layout as the layout menu lists it. */
+export interface LayoutMenuItem {
+  id: string
+  label: string
+  owner?: string
+  /** the user's own layout that has no name yet ("My layout") */
+  working?: boolean
+  /** 30 the owner, 20 may change it, 10 may read it */
+  accessLevel?: number
+}
+
+/**
+ * What the layout menu gets (Power Pack's `views/LayoutMenu`, in the header): the layouts, which
+ * one applies here and why, and what the user may do with them. Saving, sharing, renaming and
+ * deleting a layout are the views API's.
+ */
+export interface LayoutMenuProps {
+  userName: string
+  /** the layouts the user can read; the studio default is `studioDefaultId`, not one of these */
+  layouts: LayoutMenuItem[]
+  /** the layout that applies here, if any */
+  activeId?: string
+  /** its name, for the menu's button */
+  activeName: string
+  /** its settings, for Save as new */
+  activeSettings?: LayoutSettings
+  /** the layout the user picked; without one, the default applies */
+  pickedId?: string
+  /** the studio default (the base view), if there is one */
+  studioDefaultId?: string
+  /** the open project, if any, and its default layout */
+  projectName?: string
+  projectDefaultId?: string
+  /** picks a layout, everywhere; `null` follows the defaults again */
+  pick: (layoutId: string | null) => Promise<void>
+  /** edits the layout that applies here; missing while that can't start */
+  customize?: () => void
+  /** managers, in a project: makes a layout its default, or clears it with `null` */
+  setProjectDefault?: (layoutId: string | null) => Promise<void>
+  /** admins: copies a layout into the studio default */
+  setStudioDefault?: (layoutId: string) => Promise<void>
+  /** the app store's dispatch, for the views dialogs (as `ViewFormDialog` gets it) */
+  dispatch: (action: any) => any
+}

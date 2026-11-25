@@ -6,11 +6,12 @@ import {
   useGetViewQuery,
   useListViewsQuery,
   useSetFrontendPreferencesMutation,
+  useUpdateProjectMutation,
   useUpdateViewMutation,
   viewsQueries,
 } from '@shared/api'
 import { toast } from 'react-toastify'
-import { generateViewId } from '@shared/containers/Views'
+import { BASE_VIEW_ID, generateViewId } from '@shared/containers/Views'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
 import { isNotFound, useUserLayout } from './useUserLayout'
@@ -114,15 +115,59 @@ export const useActiveLayout = (projectName?: string) => {
   const [updateView] = useUpdateViewMutation()
   const [createView] = useCreateViewMutation()
   const [setPreferences] = useSetFrontendPreferencesMutation()
+  const [updateProject] = useUpdateProjectMutation()
 
+  /** picks a layout for the user, everywhere; `null` follows the defaults again */
   const pick = useCallback(
-    async (layoutId: string) => {
+    async (layoutId: string | null) => {
       // saved first: the navigation switches once the choice is kept
       if (userName)
         await setPreferences({ userName, patchData: { [LAYOUT_KEY]: layoutId } }).unwrap()
       dispatch(updateUserPreferences({ [LAYOUT_KEY]: layoutId }))
     },
     [dispatch, setPreferences, userName],
+  )
+
+  /** the project's default layout (managers); `null` removes it */
+  const setProjectDefault = useCallback(
+    async (layoutId: string | null) => {
+      if (!projectName) throw new Error('No project is open')
+      // project data is patched one key at a time: null removes the key
+      await updateProject({
+        projectName,
+        projectPatchModel: { data: { [LAYOUT_KEY]: layoutId } },
+      }).unwrap()
+    },
+    [projectName, updateProject],
+  )
+
+  /**
+   * Makes a layout the studio default (admins): the base view gets a copy of its settings, so
+   * later changes to that layout don't change the default.
+   */
+  const setStudioDefault = useCallback(
+    async (layoutId: string) => {
+      const view = await dispatch(
+        viewsQueries.endpoints.getView.initiate(
+          { viewType: LAYOUT_VIEW_TYPE, viewId: layoutId },
+          { subscribe: false },
+        ),
+      ).unwrap()
+      const settings = (view.settings ?? {}) as LayoutSettings
+      if (studioDefault?.id)
+        await updateView({
+          viewType: LAYOUT_VIEW_TYPE,
+          viewId: studioDefault.id,
+          genericViewPatchModel: { settings },
+        }).unwrap()
+      // the base view's label makes it one; the server gives it its id
+      else
+        await createView({
+          viewType: LAYOUT_VIEW_TYPE,
+          genericViewPostModel: { label: BASE_VIEW_ID, working: false, settings },
+        }).unwrap()
+    },
+    [dispatch, studioDefault?.id, updateView, createView],
   )
 
   const writeNamed = useCallback(
@@ -200,7 +245,24 @@ export const useActiveLayout = (projectName?: string) => {
     ],
   )
 
-  return { enabled, ready, source, id, name, layout, canUpdate, update, pick }
+  return {
+    enabled,
+    ready,
+    source,
+    id,
+    name,
+    layout,
+    canUpdate,
+    update,
+    pick,
+    /** the layouts the user can read, as listed (the studio default may be one of them) */
+    layouts,
+    picked,
+    projectDefault,
+    studioDefaultId: studioDefault?.id,
+    setProjectDefault,
+    setStudioDefault,
+  }
 }
 
 export type NavLayoutState = ReturnType<typeof useNavLayout>
