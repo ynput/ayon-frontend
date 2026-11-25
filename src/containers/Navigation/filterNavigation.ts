@@ -59,8 +59,9 @@ export const findActiveItem = (items: NavItem[], pathname: string): NavItem | un
   )
 
 /**
- * Whether the layout shows the open tab in its item's row: the pinned view open by `?view=`, else
- * the page's own tab (a path no tab holds counts as shown).
+ * Whether the layout shows the open tab in its item's row: the pinned view open by `?view=` (not
+ * shown when the layout doesn't pin it), else the page's own tab (a path no tab holds counts as
+ * shown).
  */
 export const isTabShown = (
   item: NavItem,
@@ -69,10 +70,11 @@ export const isTabShown = (
   viewId?: string | null,
 ) => {
   const holds = (link: NavLinkItem) => !!link.path && isUnder(pathname, pathOf(link.path))
-  const tab =
-    (viewId && item.tabs.find((link) => link.pinnedView === viewId && holds(link))) ||
-    item.tabs.find((link) => !link.pinnedView && holds(link))
-  return !tab || arrangeTabs(item.tabs, layout, item.id).includes(tab)
+  const tab = viewId
+    ? item.tabs.find((link) => link.pinnedView === viewId && holds(link))
+    : item.tabs.find((link) => !link.pinnedView && holds(link))
+  if (!tab) return !viewId
+  return arrangeTabs(item.tabs, layout, item.id).includes(tab)
 }
 
 /** Where an item opens: its landing tab, else the first tab the user can open. */
