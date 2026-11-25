@@ -78,7 +78,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   and items within their section (`reorderTabs`, `reorderItems`, merged into the stored order).
   The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
   `update` of the layout that applied when editing began, wherever the user is: the sidebar, the
-  tab rows and the pins (`applyEdits`); promoted pages stay as they are now. While editing,
+  tab rows, the pins and the admin pages on the sidebar (`applyEdits`). While editing,
   pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
   (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
   switch check reads the draft, so a page hidden in it stays open when Save makes a copy.

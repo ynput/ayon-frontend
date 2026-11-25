@@ -238,16 +238,11 @@ export const promotedIds = (layout?: { promoted?: string[] }) =>
   layout?.promoted ?? DEFAULT_PROMOTED
 
 /** Moves an admin page from the Admin menu to the end of the sidebar's, or back. */
-export const togglePromoted = (layout: LayoutSettings, id: string): LayoutSettings => {
-  const promoted = promotedIds(layout)
-  return {
-    ...layout,
-    version: 1,
-    promoted: promoted.includes(id)
-      ? promoted.filter((other) => other !== id)
-      : [...promoted, id],
-  }
-}
+export const togglePromoted = (layout: LayoutSettings, id: string): LayoutSettings => ({
+  ...layout,
+  version: 1,
+  promoted: toggled(promotedIds(layout), id),
+})
 
 /** Drops an admin page on the sidebar where another one is. */
 export const reorderPromoted = (
@@ -255,13 +250,9 @@ export const reorderPromoted = (
   id: string,
   overId: string,
 ): LayoutSettings => {
-  const promoted = [...promotedIds(layout)]
-  const from = promoted.indexOf(id)
-  const to = promoted.indexOf(overId)
-  if (from === -1 || to === -1) return layout
-  promoted.splice(from, 1)
-  promoted.splice(to, 0, id)
-  return { ...layout, version: 1, promoted }
+  const promoted = promotedIds(layout)
+  const next = moveTo(promoted, id, overId)
+  return next === promoted ? layout : { ...layout, version: 1, promoted: next }
 }
 
 /**

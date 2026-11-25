@@ -41,7 +41,9 @@ export const filterNavigation = (
 export const splitAdminItems = (items: NavItem[], layout: NavLayout = {}) => {
   const promoted = promotedIds(layout)
   return {
-    docked: promoted.flatMap((id) => items.filter((item) => item.id === id)),
+    docked: items
+      .filter((item) => promoted.includes(item.id))
+      .sort((a, b) => promoted.indexOf(a.id) - promoted.indexOf(b.id)),
     folded: items.filter((item) => !promoted.includes(item.id)),
   }
 }
