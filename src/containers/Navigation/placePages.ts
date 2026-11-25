@@ -82,7 +82,8 @@ export const placePages = (
       icon,
       section,
       order: meta.order,
-      tabs: [tab],
+      // a renamed item's one tab takes the same name
+      tabs: [placement?.label ? { ...tab, name: placement.label } : tab],
       startContent: tab.startContent,
       tags,
     })

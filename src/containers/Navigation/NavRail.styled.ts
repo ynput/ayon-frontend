@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Link } from 'react-router-dom'
 
 // one static width: the icons need their labels, addon icons are not recognisable alone
@@ -30,7 +30,8 @@ export const Spacer = styled.div`
   min-height: 8px;
 `
 
-export const Item = styled(Link)`
+const itemStyles = css`
+  position: relative;
   flex-shrink: 0;
   width: 68px;
   min-height: 52px;
@@ -72,6 +73,10 @@ export const Item = styled(Link)`
   }
 `
 
+export const Item = styled(Link)`
+  ${itemStyles}
+`
+
 export const Label = styled.span`
   max-width: 100%;
   overflow: hidden;
@@ -81,4 +86,22 @@ export const Label = styled.span`
   line-height: 14px;
   font-weight: 500;
   letter-spacing: -0.01em;
+`
+
+// More: a button styled as an item
+export const MoreItem = styled.button`
+  ${itemStyles}
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+`
+
+// where More's menu opens: beside the rail, level with the item
+export const MoreAnchor = styled.span`
+  position: absolute;
+  left: calc(100% + 4px);
+  top: -8px;
+  width: 0;
+  height: 0;
 `

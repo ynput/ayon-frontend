@@ -1,13 +1,13 @@
-import { Button, Spacer } from '@ynput/ayon-react-components'
-import { FC, ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import clsx from 'clsx'
+import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import { FC, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useSelector } from 'react-redux'
-import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
-import { useURIContext } from '@shared/context'
+import { useMenuContext, useURIContext } from '@shared/context'
+import { Menu, MenuContainer } from '@shared/components'
 
 export interface NavLinkItem {
   name?: string
@@ -62,49 +62,90 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     }
   }, [module, links, access])
 
-  // everything after the first spacer (help, menus) stays visible; only the tabs scroll
+  // everything after the first spacer (help, menus) stays visible; tabs that don't fit fold
   const spacerIndex = links.findIndex((item) => item?.node === 'spacer')
   const tabLinks = spacerIndex === -1 ? links : links.slice(0, spacerIndex)
   const trailingLinks = spacerIndex === -1 ? [] : links.slice(spacerIndex + 1)
 
+  const navRef = useRef<HTMLElement>(null)
   const tabsRef = useRef<HTMLUListElement>(null)
-  const [overflow, setOverflow] = useState({ start: false, end: false })
+  const trailingRef = useRef<HTMLUListElement>(null)
+  const moreRef = useRef<HTMLButtonElement>(null)
+  const { pathname } = useLocation()
+  const { toggleMenuOpen } = useMenuContext()
 
-  const updateOverflow = () => {
-    const el = tabsRef.current
-    if (!el) return
-    const start = el.scrollLeft > 1
-    const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-    setOverflow((prev) => (prev.start === start && prev.end === end ? prev : { start, end }))
+  // the tabs the user sees, by their index in tabLinks
+  const shownTabs = tabLinks
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item }) =>
+        item?.enabled !== false &&
+        (!item?.accessLevels?.length || item.accessLevels.every((level) => access[level])),
+    )
+  const activeIndex = shownTabs.find(
+    ({ item }) =>
+      !!item?.path && (pathname === item.path.split('?')[0] || pathname.startsWith(item.path.split('?')[0] + '/')),
+  )?.index
+
+  // each tab's width, measured while it is in the row; the row's width for tabs
+  const [widths, setWidths] = useState<Record<string, number>>({})
+  const [available, setAvailable] = useState(Infinity)
+  const tabKey = (index: number) => `${index}:${tabLinks[index]?.path ?? tabLinks[index]?.name}`
+
+  const measure = () => {
+    const nav = navRef.current
+    if (!nav) return
+    const measured: Record<string, number> = {}
+    tabsRef.current?.querySelectorAll<HTMLElement>(':scope > li[data-tab-index]').forEach((li) => {
+      measured[tabKey(Number(li.dataset.tabIndex))] = li.offsetWidth
+    })
+    // only a change re-renders: this runs after every render
+    if (Object.entries(measured).some(([key, width]) => Math.abs((widths[key] ?? -1) - width) > 0.5))
+      setWidths({ ...widths, ...measured })
+    // the nav's padding (16) and the gaps around the trailing items
+    const free = nav.clientWidth - 16 - (trailingRef.current?.offsetWidth ?? 0) - 8
+    if (Math.abs(available - free) > 0.5) setAvailable(free)
   }
 
   useLayoutEffect(() => {
-    const el = tabsRef.current
-    if (!el) return
-    updateOverflow()
-    const observer = new ResizeObserver(updateOverflow)
-    observer.observe(el)
+    measure()
+    const observer = new ResizeObserver(measure)
+    if (navRef.current) observer.observe(navRef.current)
+    // a tab grows when its page's views button moves in
+    tabsRef.current?.querySelectorAll(':scope > li').forEach((li) => observer.observe(li))
     return () => observer.disconnect()
-  }, [links.length])
+  })
 
-  // keep the active tab in view when the tabs don't fit
-  useEffect(() => {
-    const active = tabsRef.current?.querySelector('a.active')
-    active?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [module])
+  // tabs fold from the end into "+N"; the open tab always stays in the row
+  const folded = useMemo(() => {
+    const GAP = 4
+    const MORE_WIDTH = 64
+    const width = (index: number) => widths[tabKey(index)]
+    if (!Number.isFinite(available) || shownTabs.some(({ index }) => width(index) === undefined))
+      return new Set<number>()
+    const total = shownTabs.reduce((sum, { index }) => sum + width(index) + GAP, 0)
+    if (total <= available) return new Set<number>()
 
-  // the scroll bar is hidden, so let a vertical wheel scroll the tabs sideways
-  const handleWheel = (e: React.WheelEvent<HTMLUListElement>) => {
-    const el = e.currentTarget
-    if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
-    el.scrollLeft += e.deltaY
-  }
+    const budget = available - MORE_WIDTH
+    const visible: number[] = []
+    let used = 0
+    for (const { index } of shownTabs) {
+      if (used + width(index) + GAP > budget) break
+      visible.push(index)
+      used += width(index) + GAP
+    }
+    if (activeIndex !== undefined && !visible.includes(activeIndex)) {
+      used += width(activeIndex) + GAP
+      while (visible.length && used > budget) used -= width(visible.pop()!) + GAP
+      visible.push(activeIndex)
+    }
+    return new Set(shownTabs.map(({ index }) => index).filter((index) => !visible.includes(index)))
+    // tabKey and shownTabs follow tabLinks, which the widths are keyed by
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widths, available, activeIndex, tabLinks, access.manager, access.admin])
 
-  const scrollTabs = (direction: 1 | -1) => {
-    const el = tabsRef.current
-    if (!el) return
-    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' })
-  }
+  const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
+  const moreMenuId = 'nav-more-tabs'
 
   const renderLinks = (items: NavLinkItem[], offset = 0) =>
     items.map(
@@ -129,6 +170,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
       ) => {
         const idx = index + offset
         if (!enabled) return null
+        if (offset === 0 && folded.has(index)) return null
         // if item has restrictions, check if user has access
         let hasAccess = true
         if (accessLevels?.length) {
@@ -145,7 +187,13 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
         }
 
         return (
-          <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
+          <Styled.NavItem
+            key={idx}
+            data-shortcut={shortcut}
+            data-tooltip={tooltip}
+            data-tab-index={offset === 0 ? index : undefined}
+            {...props}
+          >
             <NavLink to={path!}>
               <Button
                 variant="nav"
@@ -170,28 +218,36 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     )
 
   return (
-    <Styled.NavBar className="secondary">
-      <ul
-        ref={tabsRef}
-        className={clsx('tabs', {
-          'overflow-start': overflow.start,
-          'overflow-end': overflow.end,
-        })}
-        onScroll={updateOverflow}
-        onWheel={handleWheel}
-      >
+    <Styled.NavBar className="secondary" ref={navRef}>
+      <ul ref={tabsRef} className="tabs">
         {renderLinks(tabLinks)}
       </ul>
-      {(overflow.start || overflow.end) && (
-        <Button
-          variant="text"
-          icon={overflow.end ? 'chevron_right' : 'chevron_left'}
-          data-tooltip={overflow.end ? 'More tabs' : 'Previous tabs'}
-          onClick={() => scrollTabs(overflow.end ? 1 : -1)}
-        />
+      {!!foldedTabs.length && (
+        <>
+          <Styled.MoreTabs
+            ref={moreRef}
+            variant="text"
+            data-tooltip="More tabs"
+            onClick={() => toggleMenuOpen(moreMenuId)}
+          >
+            +{foldedTabs.length}
+            <Icon icon="expand_more" />
+          </Styled.MoreTabs>
+          <MenuContainer id={moreMenuId} target={moreRef.current} align="left">
+            <Menu
+              menu={foldedTabs.map(({ item, index }) => ({
+                id: `${index}`,
+                label: item.name,
+                link: item.path,
+              }))}
+            />
+          </MenuContainer>
+        </>
       )}
       {!!trailingLinks.length && (
-        <ul className="trailing">{renderLinks(trailingLinks, tabLinks.length + 1)}</ul>
+        <ul className="trailing" ref={trailingRef}>
+          {renderLinks(trailingLinks, tabLinks.length + 1)}
+        </ul>
       )}
     </Styled.NavBar>
   )

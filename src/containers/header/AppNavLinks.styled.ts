@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { Button } from '@ynput/ayon-react-components'
 
 export const NavBar = styled.nav`
   padding-right: 8px;
@@ -30,35 +31,15 @@ export const NavBar = styled.nav`
     flex-shrink: 0;
   }
 
+  /* tabs that don't fit fold into the "+N" menu, so the row never scrolls */
   ul.tabs {
     flex: 1;
     min-width: 0;
-    overflow-x: auto;
-    /* hide scroll bar */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    overflow: hidden;
 
-    /* fade the edge where more tabs are hidden */
-    --fade-start: 0px;
-    --fade-end: 0px;
-    &.overflow-start {
-      --fade-start: 48px;
-    }
-    &.overflow-end {
-      --fade-end: 48px;
-    }
-    &.overflow-start,
-    &.overflow-end {
-      mask-image: linear-gradient(
-        to right,
-        transparent 0,
-        #000 var(--fade-start),
-        #000 calc(100% - var(--fade-end)),
-        transparent 100%
-      );
+    /* tabs keep their width, which is what the row measures to fold them */
+    & > li {
+      flex-shrink: 0;
     }
   }
 `
@@ -118,4 +99,9 @@ export const Views = styled.span`
   display: flex;
   align-items: center;
   margin-left: -8px;
+`
+
+export const MoreTabs = styled(Button)`
+  flex-shrink: 0;
+  padding: 4px 6px 4px 10px;
 `
