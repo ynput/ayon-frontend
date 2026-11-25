@@ -506,11 +506,11 @@ const SimpleTable: FC<SimpleTableProps> = ({
   )
 
   // While searching, folders have their own expanded state and the stored one comes back when the
-  // search is cleared. A folder opens when it starts holding matches, so matches inside collapsed
-  // folders show. After that the user can collapse it, and it stays collapsed while they type.
+  // search is cleared. Rows that newly show up in the results open their parents, so matches inside
+  // collapsed folders show. Other folders the user collapses stay collapsed while they type.
   const isSearching = !!globalFilter
   const [searchExpanded, setSearchExpanded] = useState<ExpandedState>({})
-  const searchParentIdsRef = useRef<Set<string>>(new Set())
+  const searchRowIdsRef = useRef<Set<string>>(new Set())
 
   const handleExpandedChange = useCallback(
     (updater: any) => {
@@ -565,21 +565,22 @@ const SimpleTable: FC<SimpleTableProps> = ({
     ),
   })
 
-  // open the folders that start holding matches, before paint so the search never shows them closed
+  // open the parents of rows new to the results, before paint so the search never shows them closed
   const searchRows = isSearching ? table.getFilteredRowModel().flatRows : null
   useLayoutEffect(() => {
     if (!searchRows) {
-      searchParentIdsRef.current = new Set()
+      searchRowIdsRef.current = new Set()
       setSearchExpanded((old) => (old !== true && !Object.keys(old).length ? old : {}))
       return
     }
-    const parentIds = searchRows.filter((row) => row.subRows.length).map((row) => row.id)
-    const newParentIds = parentIds.filter((id) => !searchParentIdsRef.current.has(id))
-    searchParentIdsRef.current = new Set(parentIds)
-    if (!newParentIds.length) return
-    setSearchExpanded((old) =>
-      old === true ? old : { ...old, ...Object.fromEntries(newParentIds.map((id) => [id, true])) },
-    )
+    const toOpen: Record<string, boolean> = {}
+    for (const row of searchRows) {
+      if (searchRowIdsRef.current.has(row.id)) continue
+      for (const parent of row.getParentRows()) toOpen[parent.id] = true
+    }
+    searchRowIdsRef.current = new Set(searchRows.map((row) => row.id))
+    if (!Object.keys(toOpen).length) return
+    setSearchExpanded((old) => (old === true ? old : { ...old, ...toOpen }))
   }, [searchRows])
 
   // Update tableRef whenever the table instance changes.
