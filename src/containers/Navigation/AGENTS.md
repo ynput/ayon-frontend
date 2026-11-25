@@ -63,6 +63,16 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   Their working view is never overwritten by a copy. Changes to one layout run one at a time,
   each on what the one before saved. The user's own layout keeps what this browser tab saved over
   an older refetch (`useUserLayout`).
+- **Editing a layout** (`layoutEditor.ts`, one edit for the whole app): Customize (right-click the
+  sidebar; the layout menu later) copies the layout that applies into a draft, which `useNavLayout`
+  hands the sidebar and the tab rows instead. They then show every item and tab, hidden ones
+  dimmed, each with an eye, and nothing folds into More or "+N"; drag reorders tabs in their row
+  and items within their section (`reorderTabs`, `reorderItems`, merged into the stored order).
+  The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
+  `update` of the layout that applied when editing began, wherever the user is: only the sidebar
+  and tab rows (`applyEdits`), pins and promoted pages stay as they are now. Pinning and the
+  pinned tab menu wait while editing. The rail's switch check reads the draft, so a page hidden in
+  it stays open when Save makes a copy. Settings' own tab row doesn't follow layouts (no eyes).
 - **Moving a pinned tab** moves it within its row as shown (`moveTabInRow`) and records the row's
   order in the layout; repointing or unpinning a pin replaces or drops its id there
   (`replaceTabId`).
@@ -89,6 +99,9 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 - A rail menu opens from `MoreAnchor`, a span beside the button; Escape focuses it and it hands the
   focus to its button.
 - Creating a view needs `working: false`, or it replaces the user's working view of that type.
+- A dragged tab or sidebar item is a link: after the drop the browser clicks what is under the
+  pointer, so `swallowNextClick` drops that click at the window. Dragged tabs are keyed by tab id;
+  index keys move the drag's transform onto another tab's element.
 - A pinned tab's draft stores a cleared field as `null` (session storage is JSON and drops
   `undefined`); `applyDraft` leaves those fields out.
 - A studio view created from a project page refreshes the studio list, not the project's, which

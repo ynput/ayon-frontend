@@ -99,10 +99,66 @@ export const resolveLayout = ({
 }
 
 /**
- * The layout with a tab moved one place within the row the user sees (`rowIds`, the arranged
- * row's tab ids), recorded in that item's tab order. Ids the row doesn't show (a pin of another
- * project) keep their place in it.
+ * A stored order with a row the user sees (`row`, the ids it shows in their order) changed to
+ * `next`, the same ids in a new order. The row's ids missing from the stored order go in first,
+ * each after the one before it in the row (the row follows the stored order); then the row's
+ * places take `next`. Ids the row doesn't show (a pin of another project) keep their place.
  */
+export const placeRowOrder = (stored: string[] | undefined, row: string[], next: string[]) => {
+  const order = [...(stored ?? [])]
+  row.forEach((id, index) => {
+    if (!order.includes(id)) order.splice(index ? order.indexOf(row[index - 1]) + 1 : 0, 0, id)
+  })
+  let at = 0
+  return order.map((id) => (row.includes(id) ? next[at++] : id))
+}
+
+/** `ids` with `id` moved to where `overId` is (dropped on it). */
+const moveTo = (ids: string[], id: string, overId: string) => {
+  const from = ids.indexOf(id)
+  const to = ids.indexOf(overId)
+  if (from === -1 || to === -1 || from === to) return ids
+  const next = ids.filter((other) => other !== id)
+  next.splice(to, 0, id)
+  return next
+}
+
+/** The layout with a tab of an item's row (`rowIds`, as shown) dropped where `overId` is. */
+export const reorderTabs = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  itemId: string,
+  rowIds: string[],
+  id: string,
+  overId: string,
+): LayoutSettings => {
+  const own: ContextLayout = layout?.[context] ?? {}
+  const row = own.tabs?.[itemId]
+  const order = placeRowOrder(row?.order, rowIds, moveTo(rowIds, id, overId))
+  return {
+    ...layout,
+    version: 1,
+    [context]: { ...own, tabs: { ...own.tabs, [itemId]: { ...row, order } } },
+  }
+}
+
+/**
+ * The layout with a sidebar item (of `rowIds`, the items as shown, in sidebar order) dropped
+ * where `overId` is. The caller keeps it within its section.
+ */
+export const reorderItems = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  rowIds: string[],
+  id: string,
+  overId: string,
+): LayoutSettings => {
+  const own: ContextLayout = layout?.[context] ?? {}
+  const order = placeRowOrder(own.items?.order, rowIds, moveTo(rowIds, id, overId))
+  return { ...layout, version: 1, [context]: { ...own, items: { ...own.items, order } } }
+}
+
+/** The layout with a tab moved one place within the row the user sees (`rowIds`). */
 export const moveTabInRow = (
   layout: LayoutSettings | undefined,
   context: 'project' | 'studio',
@@ -111,27 +167,9 @@ export const moveTabInRow = (
   id: string,
   delta: -1 | 1,
 ): LayoutSettings => {
-  const from = rowIds.indexOf(id)
-  const to = from + delta
-  if (from === -1 || to < 0 || to >= rowIds.length) return { ...layout }
-  const own: ContextLayout = layout?.[context] ?? {}
-  // the stored order with the row's other tabs in it, each after the one before it in the row
-  // (the row follows the stored order), then the two tabs swap places
-  const order = [...(own.tabs?.[itemId]?.order ?? [])]
-  rowIds.forEach((rowId, index) => {
-    if (!order.includes(rowId))
-      order.splice(index ? order.indexOf(rowIds[index - 1]) + 1 : 0, 0, rowId)
-  })
-  const [a, b] = [order.indexOf(id), order.indexOf(rowIds[to])]
-  ;[order[a], order[b]] = [order[b], order[a]]
-  return {
-    ...layout,
-    version: 1,
-    [context]: {
-      ...own,
-      tabs: { ...own.tabs, [itemId]: { ...own.tabs?.[itemId], order } },
-    },
-  }
+  const neighbour = rowIds[rowIds.indexOf(id) + delta]
+  if (!rowIds.includes(id) || !neighbour) return { ...layout }
+  return reorderTabs(layout, context, itemId, rowIds, id, neighbour)
 }
 
 /** The layout with one tab id replaced (`to`), or left out (no `to`), in every tab arrangement. */

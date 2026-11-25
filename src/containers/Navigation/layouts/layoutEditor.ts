@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { toggleTabHidden } from './applyLayout'
+import { reorderTabs, toggleTabHidden } from './applyLayout'
 import type { LayoutSettings } from './types'
 
 export interface LayoutEdit {
@@ -45,13 +45,31 @@ export const changeDraft = (change: (draft: LayoutSettings) => LayoutSettings) =
 
 export const stopEditing = () => set(null)
 
+/**
+ * After a drag ends, the click the browser then sends to what is under the pointer opens nothing:
+ * a dragged tab or sidebar item is a link.
+ */
+export const swallowNextClick = () => {
+  const stop = (e: Event) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }
+  window.addEventListener('click', stop, { capture: true, once: true })
+  // the click comes with the pointer's release, before any timer
+  setTimeout(() => window.removeEventListener('click', stop, { capture: true }))
+}
+
 /** The layout being edited, if any. */
 export const useLayoutEdit = () => useSyncExternalStore(subscribe, () => edit)
 
-/** A tab row's controls while a layout is being edited: which tabs it hides, and hiding one. */
+/**
+ * A tab row's controls while a layout is being edited: which tabs it hides, hiding or showing one,
+ * and dropping one where another is (`rowIds`, the row's tab ids as shown).
+ */
 export interface TabRowEdit {
   hidden: string[]
   toggle: (id: string) => void
+  reorder: (rowIds: string[], id: string, overId: string) => void
 }
 
 /** The controls for an item's tab row while a layout is being edited; none otherwise. */
@@ -64,5 +82,7 @@ export const useTabRowEdit = (
   return {
     hidden: current.draft[context]?.tabs?.[itemId]?.hidden ?? [],
     toggle: (id) => changeDraft((draft) => toggleTabHidden(draft, context, itemId, id)),
+    reorder: (rowIds, id, overId) =>
+      changeDraft((draft) => reorderTabs(draft, context, itemId, rowIds, id, overId)),
   }
 }

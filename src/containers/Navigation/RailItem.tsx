@@ -23,6 +23,8 @@ const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps)
   <Styled.Item
     to={to}
     className={clsx({ active: isActive, compact, 'layout-hidden': edit?.hidden })}
+    // while editing, the item drags to a new place instead of the browser dragging its link
+    draggable={edit ? false : undefined}
     aria-current={isActive ? 'page' : undefined}
     onClick={
       isActive

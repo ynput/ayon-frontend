@@ -106,6 +106,13 @@ const itemStyles = css`
   }
 `
 
+// while the layout is edited: an item that can be dragged within its section
+export const SortableEntry = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  touch-action: none;
+`
+
 // while the layout is edited: hides or shows the item; always there on a hidden one
 export const ItemEye = styled(Icon)`
   position: absolute;

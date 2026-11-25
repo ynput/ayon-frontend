@@ -34,8 +34,8 @@ const LayoutEditBanner = () => {
     <Styled.Banner data-layout-edit-banner="">
       <Styled.Main>
         <span className={Type.titleMedium}>
-          Editing layout &ldquo;{edit.name}&rdquo;. Use the eye on sidebar items and tabs to hide or
-          show them.
+          Editing layout &ldquo;{edit.name}&rdquo;. Hide or show sidebar items and tabs with the
+          eye, drag them to reorder.
         </span>
         <Button variant="text" label="Cancel" disabled={saving} onClick={stopEditing} />
         <SaveButton label="Save layout" active={changed} saving={saving} onClick={save} />

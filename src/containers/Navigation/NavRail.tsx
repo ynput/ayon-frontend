@@ -10,6 +10,17 @@ import {
 } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '@ynput/ayon-react-components'
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { CSS } from '@dnd-kit/utilities'
 import { Menu, MenuContainer } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useMenuContext } from '@shared/context'
@@ -25,9 +36,9 @@ import {
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
 import type { NavItem } from './types'
-import { arrangeItems, toggleItemHidden } from './layouts/applyLayout'
+import { arrangeItems, reorderItems, toggleItemHidden } from './layouts/applyLayout'
 import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
-import { changeDraft } from './layouts/layoutEditor'
+import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
 import * as Styled from './NavRail.styled'
@@ -49,6 +60,27 @@ interface RailProps {
   context: 'project' | 'studio'
   /** where the rail is (a project, or Home): a layout that applies elsewhere isn't a switch */
   scope: string
+}
+
+// an item the user drags within its section while the layout is edited
+const SortableEntry = ({ id, children }: { id: string; children: ReactNode }) => {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id,
+  })
+  return (
+    <Styled.SortableEntry
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      style={{
+        transform: CSS.Translate.toString(transform),
+        transition,
+        zIndex: isDragging ? 1 : undefined,
+      }}
+    >
+      {children}
+    </Styled.SortableEntry>
+  )
 }
 
 // what folds into More: the rail's divider (with its margins) and an item's height
@@ -187,7 +219,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     const to =
       itemLandingPath(item, access, layout) ?? (editing ? itemLandingPath(item, access) : undefined)
     if (!to) return null
-    return (
+    const railItem = (
       <RailItem
         key={item.id}
         item={item}
@@ -204,7 +236,41 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
         data-rail-section-item=""
       />
     )
+    return editing ? (
+      <SortableEntry key={item.id} id={item.id}>
+        {railItem}
+      </SortableEntry>
+    ) : (
+      railItem
+    )
   }
+
+  // while editing, an item drops within its own section; the click that ends a drag opens nothing
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const onDragEnd = ({ active: dragItem, over }: DragEndEvent) => {
+    swallowNextClick()
+    const id = String(dragItem.id)
+    const overId = over && String(over.id)
+    const section = (itemId: string) => visible.find((item) => item.id === itemId)?.section
+    if (!overId || overId === id || section(id) !== section(overId)) return
+    const rowIds = visible.map((item) => item.id)
+    changeDraft((draft) => reorderItems(draft, context, rowIds, id, overId))
+  }
+  const sectionItems = sections.map((section, index) => (
+    <Fragment key={section[0].section}>
+      {index > 0 && <Styled.Divider />}
+      {editing ? (
+        <SortableContext
+          items={section.map((item) => item.id)}
+          strategy={verticalListSortingStrategy}
+        >
+          {section.map(renderItem)}
+        </SortableContext>
+      ) : (
+        section.map(renderItem)
+      )}
+    </Fragment>
+  ))
 
   // right-click: customize the layout (an item's link can still open in a new browser tab)
   const [showContextMenu] = useCreateContextMenu([])
@@ -233,12 +299,18 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
       className={editing ? 'editing' : undefined}
       onContextMenu={onContextMenu}
     >
-      {sections.map((section, index) => (
-        <Fragment key={section[0].section}>
-          {index > 0 && <Styled.Divider />}
-          {section.map(renderItem)}
-        </Fragment>
-      ))}
+      {editing ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis]}
+          onDragEnd={onDragEnd}
+        >
+          {sectionItems}
+        </DndContext>
+      ) : (
+        sectionItems
+      )}
       {!!foldedItems.length && (
         <>
           <Styled.MoreItem

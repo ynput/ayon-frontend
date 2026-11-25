@@ -1,11 +1,31 @@
 import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
-import { FC, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  FC,
+  LiHTMLAttributes,
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { horizontalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable'
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers'
+import { CSS } from '@dnd-kit/utilities'
 import { useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import { samePageLink } from '@containers/Navigation/layouts/pins'
 import { tabId } from '@containers/Navigation/layouts/applyLayout'
-import type { TabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
+import { swallowNextClick, type TabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
@@ -38,6 +58,31 @@ interface AppNavLinksProps {
   projectName?: string
   /** while the layout is edited: the tabs it hides (in `links`, dimmed) and the eye on each tab */
   edit?: TabRowEdit
+}
+
+// a tab the user drags within the row while the layout is edited
+const SortableNavItem = ({
+  sortableId,
+  style,
+  ...props
+}: LiHTMLAttributes<HTMLLIElement> & { sortableId: string; [data: string]: unknown }) => {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id: sortableId,
+  })
+  return (
+    <Styled.NavItem
+      ref={setNodeRef}
+      {...props}
+      {...attributes}
+      {...listeners}
+      style={{
+        ...style,
+        transform: CSS.Translate.toString(transform),
+        transition,
+        zIndex: isDragging ? 1 : undefined,
+      }}
+    />
+  )
 }
 
 const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
@@ -175,6 +220,17 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
   const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
   const moreMenuId = 'nav-more-tabs'
 
+  // while editing, a tab drops in a new place in the row; the click that ends a drag opens nothing
+  const rowIds = shownTabs.flatMap(({ item }) => {
+    const id = item.node ? undefined : tabId(item)
+    return id ? [id] : []
+  })
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    swallowNextClick()
+    if (over && active.id !== over.id) edit?.reorder(rowIds, String(active.id), String(over.id))
+  }
+
   const renderLinks = (items: NavLinkItem[], offset = 0) =>
     items.map(
       (
@@ -216,57 +272,67 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
         }
 
         const active = isLinkActive({ path, pinnedView })
-        // while the layout is edited, a tab of the row has an eye to hide or show it
+        // while the layout is edited, a tab of the row has an eye to hide or show it and drags
         const id = edit && offset === 0 ? tabId({ module: itemModule, pinnedView }) : undefined
         const hidden = !!id && !!edit?.hidden.includes(id)
-        return (
-          <Styled.NavItem
-            key={idx}
-            data-shortcut={shortcut}
-            data-tooltip={tooltip}
-            data-tab-index={offset === 0 ? index : undefined}
-            {...props}
-            className={clsx(props.className as string | undefined, {
-              pinned: !!pinnedView,
-              'layout-hidden': hidden,
-            })}
+        const itemProps = {
+          'data-shortcut': shortcut,
+          'data-tooltip': tooltip,
+          'data-tab-index': offset === 0 ? index : undefined,
+          ...props,
+          className: clsx(props.className as string | undefined, {
+            pinned: !!pinnedView,
+            'layout-hidden': hidden,
+          }),
+        }
+        const link = (
+          <Link
+            to={linkTo(path)!}
+            className={active ? 'active' : undefined}
+            aria-current={active ? 'page' : undefined}
+            // while editing, the tab drags to a new place instead of the browser dragging its link
+            draggable={id ? false : undefined}
           >
-            <Link
-              to={linkTo(path)!}
-              className={active ? 'active' : undefined}
-              aria-current={active ? 'page' : undefined}
+            <Button
+              variant="nav"
+              style={{ border: 'none' }}
+              className={Typography.titleSmall}
+              tabIndex={-1}
             >
-              <Button
-                variant="nav"
-                style={{ border: 'none' }}
-                className={Typography.titleSmall}
-                tabIndex={-1}
-              >
-                {startContent && startContent}
-                <span className="tab-name" data-name={name}>
-                  <span className="tab-label">{name}</span>
-                </span>
-                {deprecated && (
-                  <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
-                )}
-                {endContent && endContent}
-                {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
-                {id && (
-                  <Styled.TabEye
-                    icon={hidden ? 'visibility_off' : 'visibility'}
-                    role="button"
-                    aria-label={hidden ? `Show ${name}` : `Hide ${name}`}
-                    data-tooltip={hidden ? 'Show' : 'Hide'}
-                    onClick={(e) => {
-                      // the eye sits inside the tab's link
-                      e.preventDefault()
-                      e.stopPropagation()
-                      edit?.toggle(id)
-                    }}
-                  />
-                )}
-              </Button>
-            </Link>
+              {startContent && startContent}
+              <span className="tab-name" data-name={name}>
+                <span className="tab-label">{name}</span>
+              </span>
+              {deprecated && (
+                <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
+              )}
+              {endContent && endContent}
+              {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
+              {id && (
+                <Styled.TabEye
+                  icon={hidden ? 'visibility_off' : 'visibility'}
+                  role="button"
+                  aria-label={hidden ? `Show ${name}` : `Hide ${name}`}
+                  data-tooltip={hidden ? 'Show' : 'Hide'}
+                  onClick={(e) => {
+                    // the eye sits inside the tab's link
+                    e.preventDefault()
+                    e.stopPropagation()
+                    edit?.toggle(id)
+                  }}
+                />
+              )}
+            </Button>
+          </Link>
+        )
+        return id ? (
+          // keyed by tab: a drop moves the tab's own element
+          <SortableNavItem key={id} sortableId={id} {...itemProps}>
+            {link}
+          </SortableNavItem>
+        ) : (
+          <Styled.NavItem key={idx} {...itemProps}>
+            {link}
           </Styled.NavItem>
         )
       },
@@ -274,9 +340,24 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
 
   return (
     <Styled.NavBar className={clsx('secondary', { editing: !!edit })} ref={navRef}>
-      <ul ref={tabsRef} className="tabs">
-        {renderLinks(tabLinks)}
-      </ul>
+      {edit ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToHorizontalAxis]}
+          onDragEnd={onDragEnd}
+        >
+          <SortableContext items={rowIds} strategy={horizontalListSortingStrategy}>
+            <ul ref={tabsRef} className="tabs">
+              {renderLinks(tabLinks)}
+            </ul>
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <ul ref={tabsRef} className="tabs">
+          {renderLinks(tabLinks)}
+        </ul>
+      )}
       {!!foldedTabs.length && (
         <>
           <Styled.MoreTabs

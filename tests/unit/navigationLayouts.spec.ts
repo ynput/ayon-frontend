@@ -3,6 +3,8 @@ import {
   arrangeItems,
   arrangeTabs,
   moveTabInRow,
+  reorderItems,
+  reorderTabs,
   replaceTabId,
   resolveLayout,
   toNavLayout,
@@ -134,4 +136,18 @@ test('a tab moves within the row as shown, and a pin keeps its place when its vi
     'view:a',
   )
   expect(removed.project?.tabs?.production).toEqual({ order: [], hidden: [] })
+})
+
+test('a drop puts a tab or item where another one is; what the row does not show keeps its place', () => {
+  const stored = { version: 1 as const, project: { items: { order: ['gone', 'b'] } } }
+  expect(reorderItems(stored, 'project', ['a', 'b', 'c'], 'c', 'a').project?.items?.order).toEqual([
+    'c',
+    'gone',
+    'a',
+    'b',
+  ])
+  expect(
+    reorderTabs(undefined, 'studio', 'my-work', ['tasks', 'projects', 'view:x'], 'tasks', 'view:x')
+      .studio?.tabs?.['my-work']?.order,
+  ).toEqual(['projects', 'view:x', 'tasks'])
 })
