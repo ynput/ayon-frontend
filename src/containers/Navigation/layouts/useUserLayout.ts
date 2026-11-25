@@ -12,10 +12,11 @@ export const useUserLayout = () => {
   const { powerLicense } = usePowerpack()
   const enabled = !!powerLicense
 
-  const { currentData: workingView, isLoading } = useGetWorkingViewQuery(
-    { viewType: LAYOUT_VIEW_TYPE },
-    { skip: !enabled },
-  )
+  const {
+    currentData: workingView,
+    isLoading,
+    refetch: refetchWorking,
+  } = useGetWorkingViewQuery({ viewType: LAYOUT_VIEW_TYPE }, { skip: !enabled })
   const [createView] = useCreateViewMutation()
   const [updateView] = useUpdateViewMutation()
   const layout = workingView?.settings as LayoutSettings | undefined
@@ -48,6 +49,9 @@ export const useUserLayout = () => {
         const view = { ...generateWorkingView(next), label: 'My layout' }
         await createView({ viewType: LAYOUT_VIEW_TYPE, genericViewPostModel: view }).unwrap()
         latest.current = { id: view.id, layout: next }
+        // the next write patches the cached layout (settings-only updates don't refetch), so it
+        // waits until the new working view is in the cache
+        await refetchWorking()
       }
       pending.current += 1
       const result = queue.current.then(write).finally(() => {
@@ -56,7 +60,7 @@ export const useUserLayout = () => {
       queue.current = result.catch(() => undefined)
       return result
     },
-    [createView, updateView],
+    [createView, updateView, refetchWorking],
   )
 
   return { enabled, layout, isLoading, update }

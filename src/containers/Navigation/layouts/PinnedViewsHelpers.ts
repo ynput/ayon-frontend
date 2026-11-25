@@ -56,16 +56,17 @@ export const usePinnedView = (
 ) => {
   // the list holds only the views the user can read; it also says where the view is stored
   const list = useListViewsQuery({ viewType, projectName }, { skip })
-  const listed = list.data?.find((view) => view.id === viewId)
+  const listed = list.currentData?.find((view) => view.id === viewId)
   const full = useGetViewQuery(
     { viewType, viewId, projectName: listed?.scope === 'project' ? projectName : undefined },
     { skip: skip || !listed },
   )
   return {
-    // the last good data: a failed refresh keeps a page that was showing
-    views: list.data,
+    // data for these arguments only (another view's never shows under this link); a failed
+    // refresh keeps what was cached
+    views: list.currentData,
     listed,
-    view: listed ? full.data : undefined,
+    view: listed ? full.currentData : undefined,
     isFetching: list.isFetching,
     isError: list.isError || full.isError,
     refetchList: list.refetch,
