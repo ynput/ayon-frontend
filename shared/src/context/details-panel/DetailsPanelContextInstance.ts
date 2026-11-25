@@ -15,7 +15,7 @@ import {
 // Create the context
 export const DetailsPanelContext = createContext<DetailsPanelContextType | undefined>(undefined)
 
-const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'subtasks', 'details', 'files']
+const DETAILS_PANEL_TABS: DetailsPanelTab[] = ['feed', 'tasks', 'subtasks', 'details', 'files']
 // an addon tab: the contribution key, <addon>.<id>
 const ADDON_TAB = /^[^.\s]+\.[A-Za-z][A-Za-z0-9_]*$/
 
