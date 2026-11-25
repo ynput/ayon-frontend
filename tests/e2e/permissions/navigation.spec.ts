@@ -3,12 +3,14 @@ import { expect, test } from './restrictedUser'
 import { DashboardTasksPage } from '../pages/DashboardTasksPage'
 import { ProjectsList } from '../pages/ProjectsList'
 import { UsersSettingsPage } from '../pages/UsersSettingsPage'
-import { signInAs } from '@ynput/ayon-e2e'
+import { menuItem, signInAs } from '@ynput/ayon-e2e'
 import { apiAs } from '../support/api'
 
-// Home's sidebar holds the pages the apps menu used to link to
-const railItem = (page: Page, name: string) =>
-  page.locator('[data-nav-rail]').getByRole('link', { name, exact: true })
+// the settings menu is the sidebar's bottom button
+const openAppMenu = async (page: Page) => {
+  await page.locator('[data-nav-rail]').getByRole('button', { name: 'Settings', exact: true }).click()
+  await expect(menuItem(page, 'Projects Settings')).toBeVisible()
+}
 
 const navTab = (page: Page, name: string) => page.getByRole('link', { name, exact: true })
 
@@ -78,13 +80,11 @@ test.describe('permissions: studio and project access', () => {
     const { context, page } = await signInAs(browser, user.name, user.password)
     const userApi = await apiAs(testInfo, user.name, user.password)
     try {
-      await expect(railItem(page, 'Projects')).toBeVisible()
-      for (const item of ['Events', 'Services', 'Market']) {
-        await expect(railItem(page, item)).toHaveCount(0)
-      }
-      // a regular user's settings are their site settings
-      await railItem(page, 'Settings').click()
-      await expect(page).toHaveURL(/\/settings\/site$/, { timeout: 30_000 })
+      await openAppMenu(page)
+      await expect(menuItem(page, 'Site Settings')).toBeVisible()
+      await expect(menuItem(page, 'Studio Settings')).toHaveCount(0)
+      await expect(menuItem(page, 'Event Viewer')).toHaveCount(0)
+      await expect(menuItem(page, 'Services')).toHaveCount(0)
 
       await page.goto('/settings/users')
       await expect(page).toHaveURL(/\/settings\/site$/, { timeout: 30_000 })
@@ -154,10 +154,9 @@ test.describe('permissions: studio and project access', () => {
     const { context, page } = await signInAs(browser, manager.name, manager.password)
     const managerApi = await apiAs(testInfo, manager.name, manager.password)
     try {
-      for (const item of ['Settings', 'Events', 'Services']) {
-        await expect(railItem(page, item)).toBeVisible({ timeout: 30_000 })
-      }
-      await expect(railItem(page, 'Market')).toHaveCount(0)
+      await openAppMenu(page)
+      await expect(menuItem(page, 'Studio Settings')).toBeVisible()
+      await expect(menuItem(page, 'Event Viewer')).toBeVisible()
 
       const users = new UsersSettingsPage(page)
       await users.goto()

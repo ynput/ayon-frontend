@@ -1,4 +1,4 @@
-import { Fragment, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, ReactNode, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer } from '@shared/components'
@@ -15,6 +15,7 @@ import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
 import { useAdminNavigation } from './useSettingsNavigation'
 import type { NavItem } from './types'
+import SettingsMenuButton from './SettingsMenuButton'
 import * as Styled from './NavRail.styled'
 
 // the project path a page is on: the project rail shows there, Home's rail everywhere else
@@ -22,15 +23,15 @@ const PROJECT_PATH = /^\/projects\/([^/]+)/
 
 interface RailProps {
   items: NavItem[]
-  /** pinned to the bottom, after the sections */
-  bottom?: NavItem[]
+  /** pinned to the bottom, after the sections: the Settings menu */
+  footer: ReactNode
 }
 
 // what folds into More: the rail's divider (with its margins) and an item's height
 const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
 
-const Rail = ({ items, bottom = [] }: RailProps) => {
+const Rail = ({ items, footer }: RailProps) => {
   const { pathname } = useLocation()
   const access = useNavAccess()
   const { toggleMenuOpen } = useMenuContext()
@@ -38,8 +39,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
   const visible = useMemo(() => sortForSidebar(filterNavigation(items, access)), [items, access])
-  const pinned = useMemo(() => filterNavigation(bottom, access), [bottom, access])
-  const active = findActiveItem([...items, ...bottom], pathname)
+  const active = findActiveItem(items, pathname)
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
@@ -106,7 +106,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
   const foldedItems = visible.filter((item) => folded.has(item.id))
   const moreMenuId = 'nav-rail-more'
 
-  const renderItem = (item: NavItem, place: 'section' | 'pinned') => {
+  const renderItem = (item: NavItem) => {
     const isActive = item.id === active?.id
     // the item's landing page; the selected item stays where it is (a page may have changed the
     // URL without the router), so its click does nothing and only a new browser tab uses this
@@ -121,8 +121,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
         onClick={isActive ? (e) => e.preventDefault() : undefined}
         aria-label={item.label}
         data-rail-item={item.id}
-        data-rail-section-item={place === 'section' ? '' : undefined}
-        data-rail-pinned={place === 'pinned' ? '' : undefined}
+        data-rail-section-item
         data-tooltip={item.label}
         data-tooltip-position="right"
         {...item.tags}
@@ -138,7 +137,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
       {sections.map((section, index) => (
         <Fragment key={section[0].section}>
           {index > 0 && <Styled.Divider />}
-          {section.map((item) => renderItem(item, 'section'))}
+          {section.map(renderItem)}
         </Fragment>
       ))}
       {!!foldedItems.length && (
@@ -174,40 +173,23 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
         </>
       )}
       <Styled.Spacer />
-      {pinned.map((item) => renderItem(item, 'pinned'))}
+      {footer}
     </Styled.Rail>
   )
 }
 
 const ProjectRail = ({ projectName }: { projectName: string }) => {
   const { items } = useProjectNavigation(projectName)
-  const bottom: NavItem[] = useMemo(
-    () => [
-      {
-        id: 'project-settings',
-        label: 'Settings',
-        icon: 'settings',
-        section: 'admin',
-        // the Project manager, on this project
-        tabs: [
-          {
-            name: 'Project settings',
-            path: `/manageProjects/projectSettings?project=${encodeURIComponent(projectName)}`,
-            module: 'projectSettings',
-          },
-        ],
-      },
-    ],
-    [projectName],
-  )
-  return <Rail items={items} bottom={bottom} />
+  return <Rail items={items} footer={<SettingsMenuButton projectName={projectName} />} />
 }
 
 const StudioRail = () => {
+  const { pathname } = useLocation()
   const { items } = useStudioNavigation()
+  // the admin pages are in the Settings menu, which shows as selected on them
   const admin = useAdminNavigation()
-  const all = useMemo(() => [...items, ...admin], [items, admin])
-  return <Rail items={all} />
+  const onAdminPage = !!findActiveItem(admin, pathname)
+  return <Rail items={items} footer={<SettingsMenuButton active={onAdminPage} />} />
 }
 
 /**

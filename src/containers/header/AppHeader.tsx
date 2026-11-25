@@ -5,7 +5,6 @@ import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import { HeaderButton } from '@shared/components'
-import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
@@ -13,7 +12,6 @@ import { useMenuContext } from '@shared/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import { MenuContainer } from '@shared/components'
 import styled from 'styled-components'
-import { useRestart } from '@context'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
@@ -74,13 +72,10 @@ const Header: React.FC = () => {
   const user = useAppSelector((state) => state.user)
   const avatarKey = useAppSelector((state) => state.user.avatarKey)
 
-  // restart server notification
-  const { isSnoozing } = useRestart()
 
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const userButtonRef = useRef<HTMLButtonElement>(null)
-  const appButtonRef = useRef<HTMLButtonElement>(null)
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -170,29 +165,8 @@ const Header: React.FC = () => {
 
             {/* Inbox icon */}
             <InboxNotificationIcon />
-
-            {/* Server menu vvv: the apps menu's links moved to Home's sidebar, the server's
-            actions (update, restart, Ynput Cloud, bootstrap) stay here */}
-            {(user.data.isAdmin || user.attrib?.developerMode) && (
-              <>
-                <HeaderButton
-                  icon="dns"
-                  onClick={() => handleToggleMenu('app')}
-                  ref={appButtonRef}
-                  variant="nav"
-                  aria-label="Server"
-                  data-tooltip="Server"
-                  className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-                />
-
-                <MenuContainer id="app" target={appButtonRef.current}>
-                  <AppMenu user={user} />
-                </MenuContainer>
-              </>
-            )}
           </>
         )}
-        {/* App icon and menu ^^^ */}
 
         {/* User icon and menu vvv */}
         <UserButton

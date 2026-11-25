@@ -105,3 +105,15 @@ export const MoreAnchor = styled.span`
   width: 0;
   height: 0;
 `
+
+// a restart is waiting: the dot the apps menu's button had
+export const NotificationDot = styled.span`
+  position: absolute;
+  top: 6px;
+  right: 16px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-error);
+  pointer-events: none;
+`
