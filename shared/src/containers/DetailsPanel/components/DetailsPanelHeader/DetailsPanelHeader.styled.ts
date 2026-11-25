@@ -9,6 +9,26 @@ import {
 
 export const HeaderContainer = styled.div`
   position: relative;
+
+  /* wideThumbnail: the thumbnail across the header, above the name */
+  .wide-thumbnail {
+    padding: 8px 8px 0;
+
+    .stacked-thumbnails {
+      width: 100%;
+      height: auto;
+    }
+    .thumbnail {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 16 / 9;
+      border-radius: 8px;
+
+      .type-icon {
+        font-size: 48px;
+      }
+    }
+  }
 `
 
 export const Grid = styled.div`

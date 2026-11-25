@@ -43,6 +43,7 @@ import FeedContextWrapper from './containers/FeedContextWrapper'
 import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
+import { DetailsPanelTasks } from './components/DetailsPanelTasks'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
 import { useDetailsPanelTabSlot } from './hooks/useDetailsPanelTabSlot'
 import { PanelTabSearch } from '@shared/components/PanelTabs'
@@ -86,6 +87,13 @@ export type DetailsPanelProps = {
    *  is preserved. */
   entityListsContext?: DetailsPanelEntityListsContext
   resolveVersionJump?: ResolveVersionJump
+  /** the thumbnail across the panel's width below the path, instead of next to the name */
+  wideThumbnail?: boolean
+  /**
+   * false for a panel that only shows the entities it is given (a preview, e.g. in a dialog): it
+   * leaves the page alone, so the page's URL, URI, its panel's entities and slide-out stay as they are
+   */
+  syncWithPage?: boolean
   // optional tab state for independent tab management
 }
 
@@ -121,6 +129,8 @@ const DetailsPanelInner = ({
   guestCategories = {},
   entityListsContext,
   resolveVersionJump,
+  wideThumbnail = false,
+  syncWithPage = true,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -128,7 +138,7 @@ DetailsPanelProps) => {
     openPip,
     user,
     isGuest,
-    entities: contextEntities,
+    entities: pageEntities,
     setEntities,
     slideOut,
     useSearchParams,
@@ -141,6 +151,8 @@ DetailsPanelProps) => {
   const [_searchParams, setSearchParams] = useSearchParams()
   const hasCalledOnOpen = useRef(false)
 
+  // a panel that leaves the page alone shows only its own entities
+  const contextEntities = syncWithPage ? pageEntities : null
   // Use context entities if available, otherwise use props
   const activeEntityType = contextEntities?.entityType ?? entityType
   const activeEntities = contextEntities?.entities ?? entities
@@ -152,7 +164,9 @@ DetailsPanelProps) => {
 
   // let global features (e.g. the links dialog) know what is being shown
   useRegisterActiveEntities(
-    activeEntityType ? activeEntities.map((e) => ({ ...e, entityType: activeEntityType })) : [],
+    activeEntityType && syncWithPage
+      ? activeEntities.map((e) => ({ ...e, entityType: activeEntityType }))
+      : [],
     isSlideOut ? ACTIVE_ENTITIES_PRIORITY.slideOut : ACTIVE_ENTITIES_PRIORITY.detailsPanel,
   )
 
@@ -211,6 +225,9 @@ DetailsPanelProps) => {
         setTab('feed')
       }
     }
+    if (currentTab === 'tasks' && activeEntityType !== 'folder') {
+      setTab('feed')
+    }
     // Reset to feed if subtasks tab is selected but entity is not a task
     if (currentTab === 'subtasks' && activeEntityType !== 'task') {
       setTab('feed')
@@ -243,7 +260,7 @@ DetailsPanelProps) => {
 
   // the entity changes then we close the slide out
   useEffect(() => {
-    if (!isSlideOut) {
+    if (!isSlideOut && syncWithPage) {
       closeSlideOut()
     }
   }, [originalArgs, isSlideOut])
@@ -302,6 +319,7 @@ DetailsPanelProps) => {
   const { setEntityUri, setUri } = useURIContext()
   // sync the uri when entity changes
   useEffect(() => {
+    if (!syncWithPage) return
     if (!lastEntityData?.parents) return
     if (!lastProject) return
     const { folderPath, taskName, versionName, productName } = extractEntityHierarchyFromParents(
@@ -326,7 +344,7 @@ DetailsPanelProps) => {
 
   // sync the details panel url (panel) with entity
   useDetailsPanelURLSync({
-    entityData: lastEntityData,
+    entityData: syncWithPage ? lastEntityData : undefined,
     project: lastProject,
     activeEntityType,
     entitiesToQuery,
@@ -348,6 +366,7 @@ DetailsPanelProps) => {
 
   const handleClose = () => {
     onClose?.()
+    if (!syncWithPage) return
     // also remove any entities in context
     setEntities(null)
     // drop the uri so an in-flight resolve can't reopen the panel after close
@@ -519,6 +538,20 @@ DetailsPanelProps) => {
         ),
     },
     {
+      id: 'tasks',
+      label: 'Tasks',
+      icon: 'task_alt',
+      hidden: activeEntityType !== 'folder',
+      render: () => (
+        <DetailsPanelTasks
+          projectName={firstProject}
+          folders={entityDetailsData}
+          projectInfo={firstProjectInfo}
+          users={projectUsers}
+        />
+      ),
+    },
+    {
       id: 'subtasks',
       label: 'Subtasks',
       icon: 'checklist',
@@ -661,6 +694,7 @@ DetailsPanelProps) => {
                   onEntityFocus={onEntityFocus}
                   thumbnailInputRef={thumbnailInputRef}
                   versionsInputRef={versionsInputRef}
+                  wideThumbnail={wideThumbnail}
                 />
               </>
             }

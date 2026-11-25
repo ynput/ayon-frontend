@@ -54,6 +54,8 @@ type DetailsPanelHeaderProps = {
   projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
+  /** the thumbnail across the header's width above the name, instead of next to it */
+  wideThumbnail?: boolean
 }
 
 const DetailsPanelHeader = ({
@@ -71,6 +73,7 @@ const DetailsPanelHeader = ({
   onEntityFocus,
   thumbnailInputRef,
   versionsInputRef,
+  wideThumbnail = false,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate, bundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -234,6 +237,21 @@ const DetailsPanelHeader = ({
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
   const status =
     statuses?.length !== 0 && statuses?.find((status) => status.name === statusesValue[0])
+
+  const thumbnail = (
+    <div style={{ position: 'relative' }} className={clsx({ 'wide-thumbnail': wideThumbnail })}>
+      <StackedThumbnails
+        isLoading={isLoading}
+        shimmer={isLoading}
+        thumbnails={thumbnails}
+        onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
+        hoverIcon={isPlayable ? 'play_circle' : undefined}
+        filmstrip={isPlayable}
+      />
+      {isPlayable && <PlayableIcon />}
+    </div>
+  )
+
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -244,21 +262,12 @@ const DetailsPanelHeader = ({
         versionsInputRef={versionsInputRef}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
       >
+        {wideThumbnail ? thumbnail : <></>}
         <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            <div style={{ position: 'relative' }}>
-              <StackedThumbnails
-                isLoading={isLoading}
-                shimmer={isLoading}
-                thumbnails={thumbnails}
-                onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
-                hoverIcon={isPlayable ? 'play_circle' : undefined}
-                filmstrip={isPlayable}
-              />
-              {isPlayable && <PlayableIcon />}
-            </div>
+            {!wideThumbnail && thumbnail}
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
                 <h2>{title}</h2>
