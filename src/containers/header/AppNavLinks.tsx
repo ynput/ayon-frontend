@@ -60,27 +60,37 @@ interface AppNavLinksProps {
   edit?: TabRowEdit
 }
 
-// a tab the user drags within the row while the layout is edited
+// A tab of the row; the user drags it within the row while the layout is edited. The same element
+// in and out of editing, so what is inside (the page's Views button portal) stays mounted.
 const SortableNavItem = ({
   sortableId,
+  editing,
   style,
   ...props
-}: LiHTMLAttributes<HTMLLIElement> & { sortableId: string; [data: string]: unknown }) => {
+}: LiHTMLAttributes<HTMLLIElement> & {
+  sortableId: string
+  editing: boolean
+  [data: string]: unknown
+}) => {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id: sortableId,
+    disabled: !editing,
   })
   return (
     <Styled.NavItem
       ref={setNodeRef}
       {...props}
-      {...attributes}
-      {...listeners}
-      style={{
-        ...style,
-        transform: CSS.Translate.toString(transform),
-        transition,
-        zIndex: isDragging ? 1 : undefined,
-      }}
+      {...(editing ? { ...attributes, ...listeners } : {})}
+      style={
+        editing
+          ? {
+              ...style,
+              transform: CSS.Translate.toString(transform),
+              transition,
+              zIndex: isDragging ? 1 : undefined,
+            }
+          : style
+      }
     />
   )
 }
@@ -272,8 +282,10 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
         }
 
         const active = isLinkActive({ path, pinnedView })
-        // while the layout is edited, a tab of the row has an eye to hide or show it and drags
-        const id = edit && offset === 0 ? tabId({ module: itemModule, pinnedView }) : undefined
+        // a tab of the row (by its id in a layout); while the layout is edited it has an eye to
+        // hide or show it, and drags
+        const rowId = offset === 0 ? tabId({ module: itemModule, pinnedView }) : undefined
+        const id = edit ? rowId : undefined
         const hidden = !!id && !!edit?.hidden.includes(id)
         const itemProps = {
           'data-shortcut': shortcut,
@@ -325,9 +337,9 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
             </Button>
           </Link>
         )
-        return id ? (
+        return rowId ? (
           // keyed by tab: a drop moves the tab's own element
-          <SortableNavItem key={id} sortableId={id} {...itemProps}>
+          <SortableNavItem key={rowId} sortableId={rowId} editing={!!edit} {...itemProps}>
             {link}
           </SortableNavItem>
         ) : (
@@ -340,24 +352,19 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
 
   return (
     <Styled.NavBar className={clsx('secondary', { editing: !!edit })} ref={navRef}>
-      {edit ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToHorizontalAxis]}
-          onDragEnd={onDragEnd}
-        >
-          <SortableContext items={rowIds} strategy={horizontalListSortingStrategy}>
-            <ul ref={tabsRef} className="tabs">
-              {renderLinks(tabLinks)}
-            </ul>
-          </SortableContext>
-        </DndContext>
-      ) : (
-        <ul ref={tabsRef} className="tabs">
-          {renderLinks(tabLinks)}
-        </ul>
-      )}
+      {/* always there, so the tabs keep their elements in and out of editing */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToHorizontalAxis]}
+        onDragEnd={onDragEnd}
+      >
+        <SortableContext items={rowIds} strategy={horizontalListSortingStrategy}>
+          <ul ref={tabsRef} className="tabs">
+            {renderLinks(tabLinks)}
+          </ul>
+        </SortableContext>
+      </DndContext>
       {!!foldedTabs.length && (
         <>
           <Styled.MoreTabs

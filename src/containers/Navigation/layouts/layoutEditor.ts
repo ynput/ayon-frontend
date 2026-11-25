@@ -9,6 +9,8 @@ export interface LayoutEdit {
   initial: LayoutSettings
   /** its settings with the changes made so far */
   draft: LayoutSettings
+  /** Save is under way: the draft stays as it was sent */
+  saving: boolean
   /**
    * Saves a change into the layout being edited, or the user's copy of it when they can't change
    * it: the layout that applied where editing began, wherever the user is when they save.
@@ -36,11 +38,27 @@ export const startEditing = ({
   save,
 }: Pick<LayoutEdit, 'name' | 'save'> & { layout?: LayoutSettings }) => {
   const initial = layout ?? { version: 1 }
-  set({ name, initial, draft: initial, save })
+  set({ name, initial, draft: initial, saving: false, save })
 }
 
 export const changeDraft = (change: (draft: LayoutSettings) => LayoutSettings) => {
-  if (edit) set({ ...edit, draft: change(edit.draft) })
+  if (edit && !edit.saving) set({ ...edit, draft: change(edit.draft) })
+}
+
+/** Saves the draft, once: changes wait meanwhile, and editing ends when it is saved. */
+export const saveEdit = async (
+  apply: (current: LayoutSettings | undefined, draft: LayoutSettings) => LayoutSettings,
+) => {
+  const current = edit
+  if (!current || current.saving) return
+  set({ ...current, saving: true })
+  try {
+    await current.save((layout) => apply(layout, current.draft))
+    if (edit?.save === current.save) set(null)
+  } catch (error) {
+    if (edit) set({ ...edit, saving: false })
+    throw error
+  }
 }
 
 export const stopEditing = () => set(null)

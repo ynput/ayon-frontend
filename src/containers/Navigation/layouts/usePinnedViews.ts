@@ -25,9 +25,11 @@ export interface TabRow {
 export const usePinnedViews = (projectName: string) => {
   // the pins of the layout that applies here; a change may make it the user's own (see there)
   const { enabled, ready, layout, update } = useActiveLayout(projectName)
-  // while a layout is edited, its draft is the one change: pins wait
-  const editing = !!useLayoutEdit()
-  const pins = getPins(layout)
+  // while a layout is edited its draft is the one change, so pins wait; the tabs are its pins,
+  // also in a project whose own default is another layout
+  const edit = useLayoutEdit()
+  const editing = !!edit
+  const pins = getPins(edit ? edit.draft : layout)
 
   // one list per view type in PINNED_PAGES (hooks can't loop): a type added there needs its list here
   const has = (viewType: string) => pins.some((pin) => pin.viewType === viewType)

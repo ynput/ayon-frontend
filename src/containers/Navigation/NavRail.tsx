@@ -228,7 +228,10 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
         edit={
           editing
             ? {
-                hidden: !shownIds.has(item.id),
+                // the eye is the item's own flag; an item also goes when the layout hides all
+                // its tabs, which only dims it
+                hidden: !!layout.hidden?.includes(item.id),
+                dimmed: !shownIds.has(item.id),
                 toggle: () => changeDraft((draft) => toggleItemHidden(draft, context, item.id)),
               }
             : undefined

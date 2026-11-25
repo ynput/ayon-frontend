@@ -1,11 +1,10 @@
-import { useState } from 'react'
 import { toast } from 'react-toastify'
 import { isEqual } from 'lodash'
 import { Button, SaveButton } from '@ynput/ayon-react-components'
 import { getRequestErrorString } from '@shared/util'
 import Type from '@/theme/typography.module.css'
 import { applyEdits } from './applyLayout'
-import { stopEditing, useLayoutEdit } from './layoutEditor'
+import { saveEdit, stopEditing, useLayoutEdit } from './layoutEditor'
 import * as Styled from './LayoutEditBanner.styled'
 
 /**
@@ -14,21 +13,13 @@ import * as Styled from './LayoutEditBanner.styled'
  */
 const LayoutEditBanner = () => {
   const edit = useLayoutEdit()
-  const [saving, setSaving] = useState(false)
   if (!edit) return null
 
   const changed = !isEqual(edit.initial, edit.draft)
-  const save = async () => {
-    setSaving(true)
-    try {
-      await edit.save((current) => applyEdits(current, edit.draft))
-      stopEditing()
-    } catch (error) {
-      toast.error(`Couldn't save the layout: ${getRequestErrorString(error)}`)
-    } finally {
-      setSaving(false)
-    }
-  }
+  const save = () =>
+    saveEdit(applyEdits).catch((error) =>
+      toast.error(`Couldn't save the layout: ${getRequestErrorString(error)}`),
+    )
 
   return (
     <Styled.Banner data-layout-edit-banner="">
@@ -37,8 +28,13 @@ const LayoutEditBanner = () => {
           Editing layout &ldquo;{edit.name}&rdquo;. Hide or show sidebar items and tabs with the
           eye, drag them to reorder.
         </span>
-        <Button variant="text" label="Cancel" disabled={saving} onClick={stopEditing} />
-        <SaveButton label="Save layout" active={changed} saving={saving} onClick={save} />
+        <Button variant="text" label="Cancel" disabled={edit.saving} onClick={stopEditing} />
+        <SaveButton
+          label="Save layout"
+          active={changed && !edit.saving}
+          saving={edit.saving}
+          onClick={save}
+        />
       </Styled.Main>
     </Styled.Banner>
   )

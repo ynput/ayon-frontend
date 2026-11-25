@@ -10,8 +10,11 @@ interface RailItemProps {
   isActive: boolean
   /** the smaller items of the admin area */
   compact?: boolean
-  /** while the layout is edited: whether it hides the item, and the eye that hides or shows it */
-  edit?: { hidden: boolean; toggle: () => void }
+  /**
+   * While the layout is edited: whether it hides the item (the eye), whether the item is gone from
+   * the sidebar (dimmed: hidden, or all its tabs are), and hiding or showing it.
+   */
+  edit?: { hidden: boolean; dimmed: boolean; toggle: () => void }
   [data: `data-${string}`]: string | boolean | undefined
 }
 
@@ -22,7 +25,7 @@ interface RailItemProps {
 const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps) => (
   <Styled.Item
     to={to}
-    className={clsx({ active: isActive, compact, 'layout-hidden': edit?.hidden })}
+    className={clsx({ active: isActive, compact, 'layout-hidden': edit?.dimmed })}
     // while editing, the item drags to a new place instead of the browser dragging its link
     draggable={edit ? false : undefined}
     aria-current={isActive ? 'page' : undefined}
