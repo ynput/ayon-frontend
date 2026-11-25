@@ -1,3 +1,4 @@
+import type { FocusEvent } from 'react'
 import styled, { css } from 'styled-components'
 import { Link } from 'react-router-dom'
 
@@ -28,6 +29,17 @@ export const Divider = styled.hr`
 export const Spacer = styled.div`
   flex: 1;
   min-height: 8px;
+`
+
+export const Label = styled.span`
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 `
 
 const itemStyles = css`
@@ -71,21 +83,34 @@ const itemStyles = css`
       font-variation-settings: 'FILL' 1;
     }
   }
+
+  /* the admin area's items: smaller, so it takes little of the sidebar */
+  &.compact {
+    min-height: 44px;
+    padding: 4px 1px 3px;
+    gap: 2px;
+
+    .icon {
+      font-size: 20px;
+    }
+    ${Label} {
+      font-size: 10px;
+      line-height: 13px;
+    }
+  }
 `
 
 export const Item = styled(Link)`
   ${itemStyles}
 `
 
-export const Label = styled.span`
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 11px;
-  line-height: 14px;
-  font-weight: 500;
-  letter-spacing: -0.01em;
+// the admin area at the bottom: a divider, then its items
+export const Dock = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 `
 
 // More: a button styled as an item
@@ -97,8 +122,12 @@ export const MoreItem = styled.button`
   font: inherit;
 `
 
-// where More's menu opens: beside the rail, level with the item
-export const MoreAnchor = styled.span`
+// where a menu opens: beside the rail, level with the item. Escape focuses it, which hands the
+// focus back to its button.
+export const MoreAnchor = styled.span.attrs({
+  tabIndex: -1,
+  onFocus: (e: FocusEvent<HTMLSpanElement>) => e.currentTarget.closest('button')?.focus(),
+})`
   position: absolute;
   left: calc(100% + 4px);
   top: -8px;
@@ -109,8 +138,8 @@ export const MoreAnchor = styled.span`
 // a restart is waiting: the dot the apps menu's button had
 export const NotificationDot = styled.span`
   position: absolute;
-  top: 6px;
-  right: 16px;
+  top: 4px;
+  right: 18px;
   width: 8px;
   height: 8px;
   border-radius: 50%;

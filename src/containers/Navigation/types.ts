@@ -48,4 +48,9 @@ export type NavAccess = Record<string, boolean>
 export interface NavLayout {
   /** item ids not shown */
   hidden?: string[]
+  /**
+   * admin item ids shown as items at the sidebar's bottom; the others are in its Admin menu
+   * (`DEFAULT_PROMOTED` when not set)
+   */
+  promoted?: string[]
 }

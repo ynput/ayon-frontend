@@ -13,9 +13,9 @@ import {
 } from './filterNavigation'
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
-import { useAdminNavigation } from './useSettingsNavigation'
 import type { NavItem } from './types'
-import SettingsMenuButton from './SettingsMenuButton'
+import AdminDock from './AdminDock'
+import RailItem from './RailItem'
 import * as Styled from './NavRail.styled'
 
 // the project path a page is on: the project rail shows there, Home's rail everywhere else
@@ -23,7 +23,7 @@ const PROJECT_PATH = /^\/projects\/([^/]+)/
 
 interface RailProps {
   items: NavItem[]
-  /** pinned to the bottom, after the sections: the Settings menu */
+  /** pinned to the bottom, after the sections: the admin area */
   footer: ReactNode
 }
 
@@ -107,36 +107,16 @@ const Rail = ({ items, footer }: RailProps) => {
   const moreMenuId = 'nav-rail-more'
 
   const renderItem = (item: NavItem) => {
-    const isActive = item.id === active?.id
-    // the item's landing page; the selected item stays where it is (a page may have changed the
-    // URL without the router), so its click does nothing and only a new browser tab uses this
     const to = itemLandingPath(item, access)
     if (!to) return null
     return (
-      <Styled.Item
+      <RailItem
         key={item.id}
+        item={item}
         to={to}
-        className={isActive ? 'active' : undefined}
-        aria-current={isActive ? 'page' : undefined}
-        // a plain click on the open item does nothing; a modified one still opens a new tab
-        onClick={
-          isActive
-            ? (e) => {
-                if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey)
-                  e.preventDefault()
-              }
-            : undefined
-        }
-        aria-label={item.label}
-        data-rail-item={item.id}
-        data-rail-section-item
-        data-tooltip={item.label}
-        data-tooltip-position="right"
-        {...item.tags}
-      >
-        <Icon icon={item.icon} />
-        <Styled.Label>{item.label}</Styled.Label>
-      </Styled.Item>
+        isActive={item.id === active?.id}
+        data-rail-section-item=""
+      />
     )
   }
 
@@ -188,26 +168,23 @@ const Rail = ({ items, footer }: RailProps) => {
 
 const ProjectRail = ({ projectName }: { projectName: string }) => {
   const { items } = useProjectNavigation(projectName)
-  return <Rail items={items} footer={<SettingsMenuButton projectName={projectName} />} />
+  return <Rail items={items} footer={<AdminDock projectName={projectName} />} />
 }
 
 const StudioRail = () => {
-  const { pathname } = useLocation()
   const { items } = useStudioNavigation()
-  // the admin pages are in the Settings menu, which shows as selected on them
-  const admin = useAdminNavigation()
-  const onAdminPage = !!findActiveItem(admin, pathname)
-  return <Rail items={items} footer={<SettingsMenuButton active={onAdminPage} />} />
+  return <Rail items={items} footer={<AdminDock />} />
 }
 
 /**
  * The sidebar: the current context's places (a project's, or Home's), the selected one owning
- * the tab row. Signed-in users from the regular user level up; guests only get shared pages.
+ * the tab row, and the admin area at the bottom. Every signed-in user but guests, who only get
+ * shared pages: the items follow what the user's exposure level shows.
  */
 export const NavRail = () => {
   const { pathname } = useLocation()
   const user = useAppSelector((state) => state.user)
-  if (user.data?.isGuest || (user.uiExposureLevel ?? 0) < 500) return null
+  if (user.data?.isGuest) return null
 
   const projectName = pathname.match(PROJECT_PATH)?.[1]
   if (projectName) return <ProjectRail projectName={decodeURIComponent(projectName)} />

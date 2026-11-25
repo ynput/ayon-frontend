@@ -6,6 +6,7 @@ import { KNOWN_PROJECT_PAGES, KNOWN_STUDIO_PAGES } from '../../src/containers/Na
 import {
   filterNavigation,
   findActiveItem,
+  splitAdminItems,
   itemLandingPath,
   sortForSidebar,
 } from '../../src/containers/Navigation/filterNavigation'
@@ -187,4 +188,17 @@ test('the active item holds the path in a tab or a match prefix', () => {
   expect(findActiveItem(items, '/projects/p/reviews/abc')?.id).toBe('reviews')
   expect(findActiveItem(items, '/projects/p/reviewsX')).toBeUndefined()
   expect(findActiveItem(items, '/manageProjects/anatomy')?.id).toBe('projects')
+})
+
+test('a layout promotes admin items to the sidebar; the rest go in the Admin menu', () => {
+  const items = ['settings', 'projects', 'events', 'services', 'market'].map((id) =>
+    item(id, 'admin', [{ path: `/${id}` }]),
+  )
+  const ids = (list: NavItem[]) => list.map((i) => i.id)
+  const defaults = splitAdminItems(items)
+  expect(ids(defaults.docked)).toEqual(['settings', 'projects', 'events'])
+  expect(ids(defaults.folded)).toEqual(['services', 'market'])
+  const promoted = splitAdminItems(items, { promoted: ['settings', 'services'] })
+  expect(ids(promoted.docked)).toEqual(['settings', 'services'])
+  expect(ids(promoted.folded)).toEqual(['projects', 'events', 'market'])
 })

@@ -32,6 +32,17 @@ export const filterNavigation = (
       !layout.hidden?.includes(item.id) && item.tabs.some((tab) => canOpenTab(tab, access)),
   )
 
+/** The admin pages shown as items until a layout promotes others. */
+export const DEFAULT_PROMOTED = ['settings', 'projects', 'events']
+
+/** The admin items a layout promotes to the sidebar, and the rest, which go in the Admin menu. */
+export const splitAdminItems = (items: NavItem[], layout: NavLayout = {}) => {
+  const promoted = layout.promoted ?? DEFAULT_PROMOTED
+  return {
+    docked: items.filter((item) => promoted.includes(item.id)),
+    folded: items.filter((item) => !promoted.includes(item.id)),
+  }
+}
 
 const pathOf = (path: string) => path.split('?')[0]
 const isUnder = (pathname: string, path: string) =>

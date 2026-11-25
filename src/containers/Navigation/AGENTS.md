@@ -14,9 +14,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   item's tabs, and the Project manager, Inbox and Account with rows they build themselves. The views
   button portals into the tab and the tab row's access redirect keys on `useParams().module`, so the
   row can't move into a shared shell.
-- **Settings** is one button at the bottom of every sidebar (`SettingsMenuButton`): the old apps
-  menu (`AppMenu`) with the admin pages and the server's actions. `useAdminNavigation` only tells
-  which pages select it. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
+- **The admin area** (`AdminDock`) closes every sidebar: the admin pages (`useAdminNavigation`:
+  Settings, Projects, Events, Services, Market) as smaller items, and an Admin menu (`AppMenu`, the
+  old apps menu) with the ones not shown as items and the server's actions (Update pipeline,
+  Restart, Ynput Cloud). `splitAdminItems` decides which are items: `NavLayout.promoted`, else
+  `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
   reopens.
 - **Addon routes** (`Route` keyword modules: review and storyboard sessions) add `addon-route` to
   `#root`: the sidebar hides and the wrappers are `display: contents`, so the page lays out as before
@@ -27,7 +29,8 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   (`production`, `reviews`, `workfiles`), `addon:<addon>/<page id>`, `group:<addon>/<group>`,
   `remote:<module>`, `classic:<addon>`. Don't derive them from labels or positions.
 - **`filterNavigation` is the only filter** over the registry: access and the layout's hidden ids.
-  Workspaces (Power Pack, a later spike) plug in through `NavLayout` there and nowhere else. It
+  Workspaces (Power Pack, a later spike) plug in through `NavLayout` there and in
+  `splitAdminItems` (which admin pages are promoted from the Admin menu), nowhere else. It
   decides which items show; tabs keep their `accessLevels`, so the tab row can still redirect from a
   tab the user can't open.
 - **Page placement** (`addon/src/scopes.ts` `PageMeta`): `placement`, `icon`, `section`, `group`,
@@ -41,7 +44,10 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   into More). Compare with the current state before `setState`: an unconditional functional update
   in a layout effect loops ("Maximum update depth exceeded"). Tab titles are capped at 240px and
   `li`s don't shrink, so the measured widths are stable.
-- The selected sidebar item's click does nothing: a page can change its URL without the router.
+- A plain click on the selected sidebar item does nothing (`RailItem`): a page can change its URL
+  without the router.
+- A rail menu opens from `MoreAnchor`, a span beside the button; Escape focuses it and it hands the
+  focus to its button.
 
 ## Checking a change
 - `tests/unit/navigationPlacement.spec.ts` (placement, filter, order, active item).

@@ -7,13 +7,10 @@ import { useRestart } from '@context'
 import { useAppDispatch } from '@state/store'
 import { toggleReleaseInstaller } from '@state/releaseInstaller'
 
-// the sidebar's Settings menu (it was the apps menu in the top bar); in a project, Projects Settings
-// opens that project
-export const AppMenu = ({ user, projectName, ...props }) => {
+// the sidebar's Admin menu (it was the apps menu in the top bar): the admin pages the sidebar
+// doesn't show as items (`places`), then the server's actions
+export const AppMenu = ({ user, places, ...props }) => {
   const dispatch = useAppDispatch()
-  // check if user is logged in and is manager or admin
-  const isUser = user?.data?.isUser
-  const isManager = user?.data?.isManager
   const isAdmin = user?.data?.isAdmin
   const developerMode = user?.attrib.developerMode
 
@@ -37,102 +34,41 @@ export const AppMenu = ({ user, projectName, ...props }) => {
     dispatch(toggleReleaseInstaller({ open: true }))
   }
 
-  const items = [
-    {
-      id: 'projectsManager',
-      link: projectName
-        ? `/manageProjects/projectSettings?project=${encodeURIComponent(projectName)}`
-        : '/manageProjects/projectSettings',
-      label: 'Projects Settings',
-      icon: 'settings_applications',
-      shortcut: 'P+P',
-    },
-  ]
-
-  if (isUser)
-    items.unshift({
-      id: 'siteSettings',
-      link: '/settings/site',
-      label: 'Site Settings',
-      icon: 'computer',
-      shortcut: 'S+S',
-    })
-
-  if (!isUser)
-    items.unshift({
-      id: 'settings',
-      link: '/settings/studio',
-      label: 'Studio Settings',
-      icon: 'settings',
-      shortcut: 'S+S',
-    })
-
-  const managerItems = [
-    {
-      id: 'events',
-      link: '/events',
-      label: 'Event Viewer',
-      icon: 'history',
-      shortcut: 'E+E',
-    },
-    {
-      id: 'services',
-      link: '/services',
-      label: 'Services',
-      icon: 'home_repair_service',
-      shortcut: 'V+V',
-    },
-  ]
-
-  // add protected items if user is manager or admin
-  if (isManager || isAdmin) items.push(...managerItems)
-
-  const adminItems = [
-    {
-      id: 'divider',
-    },
-    {
-      id: 'market',
-      link: '/market',
-      label: 'Market',
-      icon: 'store',
-      shortcut: 'M+M',
-    },
-    {
-      id: 'releases',
-      label: 'Update Pipeline',
-      onClick: handleReleaseInstaller,
-      icon: 'valve',
-    },
-    {
-      id: 'restart',
-      label: isRestartRequired ? 'Restart Required' : 'Restart Server',
-      icon: 'restart_alt',
-      onClick: confirmRestart,
-      highlighted: isRestartRequired,
-      notification: isRestartRequired,
-    },
-  ]
-
-  // add protected items if user is admin
-  if (isAdmin) items.push(...adminItems)
-
-  const developerItems = [
-    {
-      id: 'divider',
-    },
-    {
-      id: 'onboarding',
-      label: 'Launch Bootstrap Setup',
-      onClick: handleBootstrapLaunch,
-      icon: 'verified_user',
-      isDev: true,
-    },
-  ]
-  // if developer add dev items
-  if (developerMode) {
-    items.push(...developerItems)
+  const items = [...(places || [])]
+  // a group of actions, after a divider
+  const addGroup = (group) => {
+    if (items.length) items.push({ id: 'divider' })
+    items.push(...group)
   }
+
+  if (isAdmin)
+    addGroup([
+      {
+        id: 'releases',
+        label: 'Update Pipeline',
+        onClick: handleReleaseInstaller,
+        icon: 'valve',
+      },
+      {
+        id: 'restart',
+        label: isRestartRequired ? 'Restart Required' : 'Restart Server',
+        icon: 'restart_alt',
+        onClick: confirmRestart,
+        highlighted: isRestartRequired,
+        notification: isRestartRequired,
+      },
+    ])
+
+  if (developerMode)
+    addGroup([
+      {
+        id: 'onboarding',
+        label: 'Launch Bootstrap Setup',
+        onClick: handleBootstrapLaunch,
+        icon: 'verified_user',
+        isDev: true,
+      },
+    ])
 
   return (
     <>
