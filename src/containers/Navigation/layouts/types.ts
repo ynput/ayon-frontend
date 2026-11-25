@@ -71,6 +71,11 @@ export interface LayoutMenuItem {
  */
 export interface LayoutMenuProps {
   userName: string
+  /**
+   * the layout that applies has loaded: until then (just after a switch, or while a project
+   * loads) the actions on it wait
+   */
+  ready: boolean
   /** the layouts the user can read; the studio default is `studioDefaultId`, not one of these */
   layouts: LayoutMenuItem[]
   /** the layout that applies here, if any */

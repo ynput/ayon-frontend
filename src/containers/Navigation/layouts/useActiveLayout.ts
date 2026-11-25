@@ -154,12 +154,15 @@ export const useActiveLayout = (projectName?: string) => {
         ),
       ).unwrap()
       const settings = (view.settings ?? {}) as LayoutSettings
-      if (studioDefault?.id)
+      if (studioDefault?.id) {
         await updateView({
           viewType: LAYOUT_VIEW_TYPE,
           viewId: studioDefault.id,
           genericViewPatchModel: { settings },
         }).unwrap()
+        // a settings-only update leaves the base view's cache as it was
+        dispatch(viewsQueries.util.invalidateTags([{ type: 'view', id: studioDefault.id }]))
+      }
       // the base view's label makes it one; the server gives it its id
       else
         await createView({
