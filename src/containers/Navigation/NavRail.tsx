@@ -52,6 +52,7 @@ const Rail = ({ items, bottom = [] }: RailProps) => {
         to={to}
         className={isActive ? 'active' : undefined}
         aria-current={isActive ? 'page' : undefined}
+        aria-label={item.label}
         data-rail-item={item.id}
         data-tooltip={item.label}
         data-tooltip-position="right"
