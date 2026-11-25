@@ -23,6 +23,7 @@ import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { CSS } from '@dnd-kit/utilities'
 import { Menu, MenuContainer } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { CONTEXT_MENU_TARGET_ATTR } from '@shared/containers/ContextMenu/context/context-menu/ContextMenuContextInstance'
 import { useMenuContext } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
@@ -277,20 +278,19 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
 
   // right-click: customize the layout (an item's link can still open in a new browser tab)
   const [showContextMenu, closeContextMenu] = useCreateContextMenu([])
-  // a menu opened here goes with this sidebar: after Back to another context its Customize would
-  // edit this one's layout
-  const menuOpened = useRef(false)
+  // The sidebar's menu closes when the page changes or the sidebar goes (Back to Home, or into a
+  // review session, which hides it): its Customize is about what this sidebar showed. Only while
+  // it is the sidebar's (the menu marks what it was opened on until it closes).
   const closeMenu = useRef(closeContextMenu)
   closeMenu.current = closeContextMenu
-  useEffect(
-    () => () => {
-      if (menuOpened.current) closeMenu.current()
-    },
-    [],
-  )
+  useEffect(() => {
+    const rail = railRef.current
+    return () => {
+      if (rail?.hasAttribute(CONTEXT_MENU_TARGET_ATTR)) closeMenu.current()
+    }
+  }, [pathname])
   const onContextMenu = (e: MouseEvent<HTMLElement>) => {
     if (!customize) return
-    menuOpened.current = true
     const link = (e.target as HTMLElement).closest('a')?.getAttribute('href')
     showContextMenu(e, [
       ...(link
