@@ -54,7 +54,7 @@ export interface NavLayout {
   tabs?: Record<string, { order?: string[]; hidden?: string[] }>
   /**
    * admin item ids shown as items at the sidebar's bottom; the others are in its Admin menu
-   * (`DEFAULT_PROMOTED` when not set)
+   * (`DEFAULT_PROMOTED` in `layouts/applyLayout.ts` when not set)
    */
   promoted?: string[]
 }

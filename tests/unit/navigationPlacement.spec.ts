@@ -198,7 +198,8 @@ test('a layout promotes admin items to the sidebar; the rest go in the Admin men
   const defaults = splitAdminItems(items)
   expect(ids(defaults.docked)).toEqual(['settings', 'projects', 'events'])
   expect(ids(defaults.folded)).toEqual(['services', 'market'])
-  const promoted = splitAdminItems(items, { promoted: ['settings', 'services'] })
-  expect(ids(promoted.docked)).toEqual(['settings', 'services'])
+  // in the layout's order
+  const promoted = splitAdminItems(items, { promoted: ['services', 'settings'] })
+  expect(ids(promoted.docked)).toEqual(['services', 'settings'])
   expect(ids(promoted.folded)).toEqual(['projects', 'events', 'market'])
 })

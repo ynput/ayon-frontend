@@ -18,9 +18,9 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 - **The admin area** (`AdminDock`) closes every sidebar: the admin pages (`useAdminNavigation`:
   Settings, Projects, Events, Services, Market) as smaller items, and an Admin menu (`AppMenu`, the
   old apps menu) with the ones not shown as items and the server's actions (Update pipeline,
-  Restart, Ynput Cloud). `splitAdminItems` decides which are items: `NavLayout.promoted`, else
-  `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect (Ynput Cloud sign-in)
-  reopens.
+  Restart, Ynput Cloud). `splitAdminItems` decides which are items, in their order:
+  `NavLayout.promoted`, else `DEFAULT_PROMOTED`. Menu id `app` is the one the `/appMenu` redirect
+  (Ynput Cloud sign-in) reopens.
 - **Pinned views** (`layouts/`, behind the Power Pack licence): a saved Overview, Products, Lists or
   Review view (`PINNED_PAGES`: pages that read the host's views context) pinned from the views menu (`ViewPinsProvider`, the pin on a saved view's row) becomes a tab
   right after its page's tab, in whichever sidebar item holds it (`placePinnedTabs`), linking to
@@ -82,7 +82,10 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
   (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
   switch check reads the draft, so a page hidden in it stays open when Save makes a copy.
-  Settings' own tab row doesn't follow layouts (no eyes).
+  Settings' own tab row doesn't follow layouts (no eyes; decided 2026-11-25). The admin area does:
+  while editing it shows every admin page, the Admin menu's dimmed; the eye moves one between the
+  sidebar and the Admin menu (`togglePromoted`) and drag orders the sidebar's (`reorderPromoted`),
+  both into the layout's `promoted`.
 - **Moving a pinned tab** moves it within its row as shown (`moveTabInRow`) and records the row's
   order in the layout; repointing or unpinning a pin replaces or drops its id there
   (`replaceTabId`).

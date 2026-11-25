@@ -5,8 +5,10 @@ import {
   arrangeTabs,
   moveTabInRow,
   reorderItems,
+  reorderPromoted,
   reorderTabs,
   replaceTabId,
+  togglePromoted,
   resolveLayout,
   toNavLayout,
 } from '../../src/containers/Navigation/layouts/applyLayout'
@@ -153,7 +155,7 @@ test('a drop puts a tab or item where another one is; what the row does not show
   ).toEqual(['projects', 'view:x', 'tasks'])
 })
 
-test('saving an edit takes its sidebar, tab rows and pins, and keeps promoted pages', () => {
+test('saving an edit takes its sidebar, tab rows, pins and admin pages', () => {
   const current = {
     version: 1 as const,
     promoted: ['bundles'],
@@ -172,8 +174,22 @@ test('saving an edit takes its sidebar, tab rows and pins, and keeps promoted pa
     },
   }
   const saved = applyEdits(current, draft)
-  expect(saved.promoted).toEqual(['bundles'])
+  expect(saved.promoted).toEqual([])
   expect(saved.project?.items).toEqual({ hidden: [] })
   expect(saved.project?.tabs).toEqual({ production: { hidden: ['lists'] } })
   expect(saved.project?.pinned?.map((pin) => pin.id)).toEqual(['b'])
+})
+
+test('an admin page moves between the sidebar and the Admin menu, and orders on the sidebar', () => {
+  const moved = togglePromoted({ version: 1 }, 'bundles')
+  expect(moved.promoted).toEqual(['settings', 'projects', 'events', 'bundles'])
+  expect(togglePromoted(moved, 'projects').promoted).toEqual(['settings', 'events', 'bundles'])
+  expect(reorderPromoted(moved, 'bundles', 'settings').promoted).toEqual([
+    'bundles',
+    'settings',
+    'projects',
+    'events',
+  ])
+  // a page that isn't on the sidebar doesn't move
+  expect(reorderPromoted(moved, 'market', 'settings')).toBe(moved)
 })

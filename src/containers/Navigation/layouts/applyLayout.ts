@@ -230,9 +230,43 @@ export const toggleTabHidden = (
   }
 }
 
+/** The admin pages on the sidebar until a layout says which; the others are in the Admin menu. */
+export const DEFAULT_PROMOTED = ['settings', 'projects', 'events']
+
+/** The admin pages a layout puts on the sidebar, in their order. */
+export const promotedIds = (layout?: { promoted?: string[] }) =>
+  layout?.promoted ?? DEFAULT_PROMOTED
+
+/** Moves an admin page from the Admin menu to the end of the sidebar's, or back. */
+export const togglePromoted = (layout: LayoutSettings, id: string): LayoutSettings => {
+  const promoted = promotedIds(layout)
+  return {
+    ...layout,
+    version: 1,
+    promoted: promoted.includes(id)
+      ? promoted.filter((other) => other !== id)
+      : [...promoted, id],
+  }
+}
+
+/** Drops an admin page on the sidebar where another one is. */
+export const reorderPromoted = (
+  layout: LayoutSettings,
+  id: string,
+  overId: string,
+): LayoutSettings => {
+  const promoted = [...promotedIds(layout)]
+  const from = promoted.indexOf(id)
+  const to = promoted.indexOf(overId)
+  if (from === -1 || to === -1) return layout
+  promoted.splice(from, 1)
+  promoted.splice(to, 0, id)
+  return { ...layout, version: 1, promoted }
+}
+
 /**
- * What editing changes (the sidebar, the tab rows and the pinned views of both contexts) put onto
- * the layout as it is now, which keeps its promoted admin pages.
+ * What editing changes (the sidebar, the tab rows and the pinned views of both contexts, and
+ * which admin pages are on the sidebar) put onto the layout as it is now.
  */
 export const applyEdits = (
   current: LayoutSettings | undefined,
@@ -244,5 +278,11 @@ export const applyEdits = (
     tabs: draft[context]?.tabs,
     pinned: draft[context]?.pinned,
   })
-  return { ...current, version: 1, project: edited('project'), studio: edited('studio') }
+  return {
+    ...current,
+    version: 1,
+    project: edited('project'),
+    studio: edited('studio'),
+    promoted: draft.promoted,
+  }
 }

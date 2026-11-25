@@ -18,9 +18,8 @@ import {
   useSensors,
   type DragEndEvent,
 } from '@dnd-kit/core'
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
-import { CSS } from '@dnd-kit/utilities'
 import { Menu, MenuContainer } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { CONTEXT_MENU_TARGET_ATTR } from '@shared/containers/ContextMenu/context/context-menu/ContextMenuContextInstance'
@@ -42,6 +41,7 @@ import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
 import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
+import SortableEntry from './SortableEntry'
 import * as Styled from './NavRail.styled'
 
 // the project path a page is on: the project rail shows there, Home's rail everywhere else
@@ -64,26 +64,6 @@ interface RailProps {
 }
 
 // an item the user drags within its section while the layout is edited
-const SortableEntry = ({ id, children }: { id: string; children: ReactNode }) => {
-  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
-    id,
-  })
-  return (
-    <Styled.SortableEntry
-      ref={setNodeRef}
-      {...attributes}
-      {...listeners}
-      style={{
-        transform: CSS.Translate.toString(transform),
-        transition,
-        zIndex: isDragging ? 1 : undefined,
-      }}
-    >
-      {children}
-    </Styled.SortableEntry>
-  )
-}
-
 // what folds into More: the rail's divider (with its margins) and an item's height
 const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
@@ -373,7 +353,7 @@ const ProjectRail = ({ projectName }: { projectName: string }) => {
       nav={nav}
       context="project"
       scope={projectName}
-      footer={<AdminDock projectName={projectName} layout={nav.layout} />}
+      footer={<AdminDock projectName={projectName} layout={nav.layout} editing={nav.editing} />}
     />
   )
 }
@@ -387,7 +367,7 @@ const StudioRail = () => {
       nav={nav}
       context="studio"
       scope="studio"
-      footer={<AdminDock layout={nav.layout} />}
+      footer={<AdminDock layout={nav.layout} editing={nav.editing} />}
     />
   )
 }

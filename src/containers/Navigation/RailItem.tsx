@@ -12,9 +12,15 @@ interface RailItemProps {
   compact?: boolean
   /**
    * While the layout is edited: whether it hides the item (the eye), whether the item is gone from
-   * the sidebar (dimmed: hidden, or all its tabs are), and hiding or showing it.
+   * the sidebar (dimmed: hidden, or all its tabs are), and hiding or showing it. `labels` say what
+   * the eye does when that isn't Show and Hide (an admin page moves to or from the Admin menu).
    */
-  edit?: { hidden: boolean; dimmed: boolean; toggle: () => void }
+  edit?: {
+    hidden: boolean
+    dimmed: boolean
+    toggle: () => void
+    labels?: { show: string; hide: string }
+  }
   [data: `data-${string}`]: string | boolean | undefined
 }
 
@@ -50,8 +56,16 @@ const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps)
       <Styled.ItemEye
         icon={edit.hidden ? 'visibility_off' : 'visibility'}
         role="button"
-        aria-label={edit.hidden ? `Show ${item.label}` : `Hide ${item.label}`}
-        data-tooltip={edit.hidden ? 'Show' : 'Hide'}
+        aria-label={
+          edit.labels
+            ? `${item.label}: ${edit.hidden ? edit.labels.show : edit.labels.hide}`
+            : edit.hidden
+            ? `Show ${item.label}`
+            : `Hide ${item.label}`
+        }
+        data-tooltip={
+          edit.hidden ? edit.labels?.show ?? 'Show' : edit.labels?.hide ?? 'Hide'
+        }
         onClick={(e) => {
           // the eye sits inside the item's link
           e.preventDefault()

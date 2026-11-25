@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { NAV_SECTIONS, type NavAccess, type NavItem, type NavLayout } from './types'
-import { arrangeTabs } from './layouts/applyLayout'
+import { arrangeTabs, promotedIds } from './layouts/applyLayout'
 
 /** The access levels tabs check, as the tab row computes them. */
 export const useNavAccess = (): NavAccess => {
@@ -34,14 +34,14 @@ export const filterNavigation = (
       arrangeTabs(item.tabs, layout, item.id).some((tab) => canOpenTab(tab, access)),
   )
 
-/** The admin pages shown as items until a layout promotes others. */
-export const DEFAULT_PROMOTED = ['settings', 'projects', 'events']
-
-/** The admin items a layout promotes to the sidebar, and the rest, which go in the Admin menu. */
+/**
+ * The admin items a layout promotes to the sidebar (in its order), and the rest, which go in the
+ * Admin menu.
+ */
 export const splitAdminItems = (items: NavItem[], layout: NavLayout = {}) => {
-  const promoted = layout.promoted ?? DEFAULT_PROMOTED
+  const promoted = promotedIds(layout)
   return {
-    docked: items.filter((item) => promoted.includes(item.id)),
+    docked: promoted.flatMap((id) => items.filter((item) => item.id === id)),
     folded: items.filter((item) => !promoted.includes(item.id)),
   }
 }
