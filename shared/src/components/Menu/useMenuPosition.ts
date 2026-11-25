@@ -131,7 +131,12 @@ export function useMenuPosition(
     // We need the menu element to calculate its dimensions
     if (!menuRef.current) return
 
-    const newPosition = calculateMenuPosition(targetElement, menuRef.current, align)
+    // measured at its full height: capped by an earlier pass, it would stay that small
+    const menu = menuRef.current
+    const cap = menu.style.maxHeight
+    menu.style.maxHeight = 'none'
+    const newPosition = calculateMenuPosition(targetElement, menu, align)
+    menu.style.maxHeight = cap
     if (!newPosition) return
 
     setPosition((prev) =>

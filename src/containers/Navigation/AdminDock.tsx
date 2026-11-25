@@ -107,10 +107,15 @@ const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDock
 
   const isOpen = menuOpen === 'app'
   const hasMenu = !!inMenu.length || menuShown
-  // the menu goes with its button (a taller window put its pages back): it doesn't reopen later
+  // the menu goes with its button (a taller window put its pages back): it doesn't reopen later;
+  // and it closes when pages move in or out while it is open (the window is resized), instead of
+  // staying where its old rows put it
+  const placed = useRef(fit)
   useEffect(() => {
-    if (!hasMenu && isOpen) setMenuOpen(false)
-  }, [hasMenu, isOpen, setMenuOpen])
+    const moved = placed.current !== fit
+    placed.current = fit
+    if (isOpen && (!hasMenu || moved)) setMenuOpen(false)
+  }, [hasMenu, isOpen, fit, setMenuOpen])
 
   const renderItem = (item: NavItem, menuPage = false) => {
     const to = itemLandingPath(item, access)
