@@ -13,7 +13,8 @@ import { getInvitationState } from './InvitationStatusHelpers'
  * 3. No pool (null/undefined)
  */
 export const userPoolSortFunction = (event: ColumnSortEvent, userPools: UserPoolModel[]) => {
-  return event.data.sort((a: any, b: any) => {
+  // a copy: the table passes its own rows, which the export also reads in their A to Z order
+  return [...event.data].sort((a: any, b: any) => {
     const aPool = userPools?.find((p) => p?.id === a?.userPool)?.label
     const bPool = userPools?.find((p) => p?.id === b?.userPool)?.label
 
