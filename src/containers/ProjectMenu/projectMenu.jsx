@@ -372,6 +372,7 @@ const ProjectMenu = ({ isOpen, onHide }) => {
               selection={[]}
               onSettingsClick={handleSettingsClick}
               containerClassName="menu-list"
+              pinnedOnlyOnTop
             />
           </Styled.All>
         </Section>

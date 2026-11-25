@@ -62,6 +62,8 @@ export interface ProjectsTableProps {
   enableClickToDeselect?: boolean
   /** an "All projects" row in its own section at the top; it is selected when no project is */
   allProjects?: boolean
+  /** pinned projects are only in the pinned section, not again in the list below it */
+  pinnedOnlyOnTop?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -103,6 +105,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   containerClassName,
   enableClickToDeselect,
   allProjects,
+  pinnedOnlyOnTop,
   pt,
 }) => {
   // Track which table has active selection: 'pinned' | 'all'
@@ -189,6 +192,15 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     if (row.subRows?.length) result.push(...row.subRows.flatMap(collectPinned))
     return result
   })
+
+  // the list without the pinned projects, while the pinned section shows them
+  const withoutPinned = (rows: SimpleTableRow[]): SimpleTableRow[] =>
+    rows.flatMap((row) =>
+      pinnedSet.has(row.name)
+        ? []
+        : [row.subRows?.length ? { ...row, subRows: withoutPinned(row.subRows) } : row],
+    )
+  const listData = pinnedOnlyOnTop && pinnedProjects.length && !search ? withoutPinned(data) : data
 
   return (
     <Container
@@ -277,7 +289,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
         }}
       >
         <ProjectsSimpleTable
-          tableData={data}
+          tableData={listData}
           search={search}
           isLoading={isLoading}
           multiSelect={multiSelect}

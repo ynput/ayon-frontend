@@ -12,6 +12,17 @@ export const ProjectSidebar = styled(Sidebar)`
 
   overflow: hidden;
 
+  /* it drops down from the pill: a short fade instead of the drawer's slide in from the left */
+  &&.p-sidebar-enter {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  &&.p-sidebar-enter-active {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+  }
+
   h3 {
     border: none;
     padding-left: var(--padding-m);
