@@ -45,14 +45,19 @@ export const tabId = (tab: NavLinkItem) =>
   tab.pinnedView ? pinTabId(tab.pinnedView) : (tab.module as string | undefined)
 
 /**
- * An item's tab row in the layout's order, without the tabs it hides. A pin it doesn't mention
- * follows its page's tab (and that page's pins); any other tab it doesn't mention (a new addon
- * page) goes at the end.
+ * An item's tab row in the layout's order, without the tabs it hides (with them, `keepHidden`,
+ * while it is being edited). A pin it doesn't mention follows its page's tab (and that page's
+ * pins); any other tab it doesn't mention (a new addon page) goes at the end.
  */
-export const arrangeTabs = (tabs: NavLinkItem[], layout: NavLayout, itemId: string) => {
+export const arrangeTabs = (
+  tabs: NavLinkItem[],
+  layout: NavLayout,
+  itemId: string,
+  keepHidden = false,
+) => {
   const own = layout.tabs?.[itemId]
   if (!own) return tabs
-  const hidden = new Set(own.hidden ?? [])
+  const hidden = new Set(keepHidden ? [] : own.hidden ?? [])
   const shown = tabs.filter((tab) => !hidden.has(tabId(tab) ?? ''))
   const order = own.order ?? []
   const result = order.flatMap((id) => shown.filter((tab) => tabId(tab) === id))
@@ -150,3 +155,53 @@ export const replaceTabId = (
       : own
   return { ...layout, project: context(layout?.project), studio: context(layout?.studio) }
 }
+
+const toggled = (ids: string[] | undefined, id: string) =>
+  ids?.includes(id) ? ids.filter((other) => other !== id) : [...(ids ?? []), id]
+
+/** The layout with a sidebar item shown again, or hidden. */
+export const toggleItemHidden = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  itemId: string,
+): LayoutSettings => {
+  const own: ContextLayout = layout?.[context] ?? {}
+  return {
+    ...layout,
+    version: 1,
+    [context]: { ...own, items: { ...own.items, hidden: toggled(own.items?.hidden, itemId) } },
+  }
+}
+
+/** The layout with a tab of an item's row shown again, or hidden. */
+export const toggleTabHidden = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  itemId: string,
+  id: string,
+): LayoutSettings => {
+  const own: ContextLayout = layout?.[context] ?? {}
+  const row = own.tabs?.[itemId]
+  return {
+    ...layout,
+    version: 1,
+    [context]: {
+      ...own,
+      tabs: { ...own.tabs, [itemId]: { ...row, hidden: toggled(row?.hidden, id) } },
+    },
+  }
+}
+
+/**
+ * What editing changes (the sidebar and the tab rows of both contexts) put onto the layout as it
+ * is now, which keeps its pins and promoted admin pages.
+ */
+export const applyEdits = (
+  current: LayoutSettings | undefined,
+  draft: LayoutSettings,
+): LayoutSettings => ({
+  ...current,
+  version: 1,
+  project: { ...current?.project, items: draft.project?.items, tabs: draft.project?.tabs },
+  studio: { ...current?.studio, items: draft.studio?.items, tabs: draft.studio?.tabs },
+})

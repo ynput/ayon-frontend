@@ -4,6 +4,8 @@ import { useSelector } from 'react-redux'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import clsx from 'clsx'
 import { samePageLink } from '@containers/Navigation/layouts/pins'
+import { tabId } from '@containers/Navigation/layouts/applyLayout'
+import type { TabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
@@ -34,9 +36,11 @@ interface AppNavLinksProps {
   links?: NavLinkItem[]
   currentModule?: string
   projectName?: string
+  /** while the layout is edited: the tabs it hides (in `links`, dimmed) and the eye on each tab */
+  edit?: TabRowEdit
 }
 
-const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
+const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
@@ -137,10 +141,13 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     return () => observer.disconnect()
   })
 
+  const editing = !!edit
   // tabs fold from the end into "+N"; the open tab always stays in the row
   const folded = useMemo(() => {
     const GAP = 4
     const MORE_WIDTH = 64
+    // nothing folds while the layout is edited: every tab can be shown or hidden
+    if (editing) return new Set<number>()
     const width = (index: number) => widths[tabKey(index)]
     if (!Number.isFinite(available) || shownTabs.some(({ index }) => width(index) === undefined))
       return new Set<number>()
@@ -163,7 +170,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     return new Set(shownTabs.map(({ index }) => index).filter((index) => !visible.includes(index)))
     // tabKey and shownTabs follow tabLinks, which the widths are keyed by
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [widths, available, activeIndex, tabLinks, access.manager, access.admin])
+  }, [widths, available, activeIndex, tabLinks, access.manager, access.admin, editing])
 
   const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
   const moreMenuId = 'nav-more-tabs'
@@ -209,6 +216,9 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
         }
 
         const active = isLinkActive({ path, pinnedView })
+        // while the layout is edited, a tab of the row has an eye to hide or show it
+        const id = edit && offset === 0 ? tabId({ module: itemModule, pinnedView }) : undefined
+        const hidden = !!id && !!edit?.hidden.includes(id)
         return (
           <Styled.NavItem
             key={idx}
@@ -216,7 +226,10 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
             data-tooltip={tooltip}
             data-tab-index={offset === 0 ? index : undefined}
             {...props}
-            className={clsx(props.className as string | undefined, { pinned: !!pinnedView })}
+            className={clsx(props.className as string | undefined, {
+              pinned: !!pinnedView,
+              'layout-hidden': hidden,
+            })}
           >
             <Link
               to={linkTo(path)!}
@@ -238,6 +251,20 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
                 )}
                 {endContent && endContent}
                 {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
+                {id && (
+                  <Styled.TabEye
+                    icon={hidden ? 'visibility_off' : 'visibility'}
+                    role="button"
+                    aria-label={hidden ? `Show ${name}` : `Hide ${name}`}
+                    data-tooltip={hidden ? 'Show' : 'Hide'}
+                    onClick={(e) => {
+                      // the eye sits inside the tab's link
+                      e.preventDefault()
+                      e.stopPropagation()
+                      edit?.toggle(id)
+                    }}
+                  />
+                )}
               </Button>
             </Link>
           </Styled.NavItem>
@@ -246,7 +273,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     )
 
   return (
-    <Styled.NavBar className="secondary" ref={navRef}>
+    <Styled.NavBar className={clsx('secondary', { editing: !!edit })} ref={navRef}>
       <ul ref={tabsRef} className="tabs">
         {renderLinks(tabLinks)}
       </ul>

@@ -1,6 +1,7 @@
 import type { FocusEvent } from 'react'
 import styled, { css } from 'styled-components'
 import { Link } from 'react-router-dom'
+import { Icon } from '@ynput/ayon-react-components'
 
 // one static width: the icons need their labels, addon icons are not recognisable alone
 export const RAIL_WIDTH = 72
@@ -16,6 +17,11 @@ export const Rail = styled.nav`
   overflow: hidden;
   /* the app chrome sits on the page background, like the top bar and the tabs */
   background-color: var(--md-sys-color-surface-container-low);
+
+  /* editing the layout: every item shows, nothing folds into More */
+  &.editing {
+    overflow-y: auto;
+  }
 `
 
 export const Divider = styled.hr`
@@ -100,8 +106,39 @@ const itemStyles = css`
   }
 `
 
+// while the layout is edited: hides or shows the item; always there on a hidden one
+export const ItemEye = styled(Icon)`
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  padding: 2px;
+  border-radius: var(--border-radius-m);
+  font-size: 16px !important;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
 export const Item = styled(Link)`
   ${itemStyles}
+
+  &:hover ${ItemEye}, &:focus-visible ${ItemEye} {
+    opacity: 1;
+  }
+  &.layout-hidden {
+    & > .icon:not(${ItemEye}),
+    & > ${Label} {
+      opacity: 0.4;
+    }
+    ${ItemEye} {
+      opacity: 1;
+    }
+  }
 `
 
 // the admin area at the bottom: a divider, then its items

@@ -49,6 +49,7 @@ import {
 import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
 import { arrangeTabs, tabId } from '@containers/Navigation/layouts/applyLayout'
 import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
+import { useTabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -253,11 +254,13 @@ const ProjectPageInner = () => {
   // the tab row belongs to the selected sidebar item (Production on an unknown path)
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   // the layout that applies: the tab row's order and what it hides
-  const { layout: navLayout } = useNavLayout('project', projectName)
+  const { layout: navLayout, editing } = useNavLayout('project', projectName)
+  // while the layout is edited, its hidden tabs show too (dimmed), and pinned tabs have no menu
+  const tabEdit = useTabRowEdit('project', activeItem.id)
   const access = useNavAccess()
   const arranged = useMemo(
-    () => arrangeTabs(activeItem.tabs, navLayout, activeItem.id),
-    [activeItem, navLayout],
+    () => arrangeTabs(activeItem.tabs, navLayout, activeItem.id, editing),
+    [activeItem, navLayout, editing],
   )
   // the tabs the row shows, by id: a pinned tab moves within them
   const shownRow = useMemo(
@@ -274,7 +277,7 @@ const ProjectPageInner = () => {
     () => [
       ...arranged.map((tab) => {
         const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
-        if (!pin) return tab
+        if (!pin || editing) return tab
         const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
         return {
           ...tab,
@@ -307,7 +310,7 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [arranged, addonName, module, pinnedViews.visible, drafts, openViewId],
+    [arranged, editing, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
   // the page's own tabs, as AYON has them: the page is found there also when the layout hides
@@ -482,7 +485,7 @@ const ProjectPageInner = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      <AppNavLinks links={links} currentModule={module} projectName={projectName} />
+      <AppNavLinks links={links} currentModule={module} projectName={projectName} edit={tabEdit} />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}

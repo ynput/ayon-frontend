@@ -14,6 +14,7 @@ import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
 import { isNotFound, useUserLayout } from './useUserLayout'
 import { resolveLayout, toNavLayout } from './applyLayout'
+import { startEditing, useLayoutEdit } from './layoutEditor'
 import { LAYOUT_KEY, LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
 
 /** at least this access level changes a shared layout (owner, or shared with update rights) */
@@ -106,6 +107,8 @@ export const useActiveLayout = (projectName?: string) => {
     : undefined
   const listed = layouts?.find((view) => view.id === named)
   const canUpdate = isOwn || (!!named && (listed?.accessLevel ?? 0) >= UPDATE_ACCESS)
+  // what the user sees it called
+  const name = isBase ? 'Studio default' : named ? listed?.label || 'Layout' : 'My layout'
 
   const [updateView] = useUpdateViewMutation()
   const [createView] = useCreateViewMutation()
@@ -157,7 +160,6 @@ export const useActiveLayout = (projectName?: string) => {
       // the studio default, or a layout shared read-only: the change goes into a copy the user
       // owns, which is then picked
       if (!id || !layout) throw new Error("The layout couldn't be loaded")
-      const name = isBase ? 'Studio default' : listed?.label || 'Layout'
       const copy = (async () => {
         const copyId = generateViewId()
         // a saved view: without `working: false` it would replace the user's own layout
@@ -189,8 +191,7 @@ export const useActiveLayout = (projectName?: string) => {
       named,
       canUpdate,
       layout,
-      isBase,
-      listed,
+      name,
       own,
       writeNamed,
       createView,
@@ -198,12 +199,21 @@ export const useActiveLayout = (projectName?: string) => {
     ],
   )
 
-  return { enabled, ready, source, id, layout, canUpdate, update, pick }
+  return { enabled, ready, source, id, name, layout, canUpdate, update, pick }
 }
 
-/** The layout that applies to a context (a project, or Home), as the navigation applies it. */
+export type NavLayoutState = ReturnType<typeof useNavLayout>
+
+/**
+ * The layout that applies to a context (a project, or Home), as the navigation applies it: while a
+ * layout is being edited, its draft. `customize` starts editing the one that applies.
+ */
 export const useNavLayout = (context: 'project' | 'studio', projectName?: string) => {
-  const { layout, id, ready } = useActiveLayout(projectName)
-  const navLayout = useMemo(() => toNavLayout(layout, context), [layout, context])
-  return { layout: navLayout, id, ready }
+  const { enabled, ready, id, name, layout, update } = useActiveLayout(projectName)
+  const edit = useLayoutEdit()
+  const settings = edit ? edit.draft : layout
+  const navLayout = useMemo(() => toNavLayout(settings, context), [settings, context])
+  const customize =
+    enabled && ready && !edit ? () => startEditing({ name, layout, save: update }) : undefined
+  return { layout: navLayout, id, ready, editing: !!edit, customize }
 }

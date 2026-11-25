@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
 import { arrangeTabs } from '@containers/Navigation/layouts/applyLayout'
+import { useTabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -227,10 +228,12 @@ const UserDashboardPage: React.FC = () => {
   const { pathname } = useLocation()
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   // the layout that applies: the tab row's order and what it hides
-  const { layout: navLayout } = useNavLayout('studio')
+  const { layout: navLayout, editing } = useNavLayout('studio')
+  // while the layout is edited, its hidden tabs show too (dimmed)
+  const tabEdit = useTabRowEdit('studio', activeItem.id)
   const links: NavLinkItem[] = useMemo(
     () => [
-      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id),
+      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id, editing),
       { node: 'spacer' },
       {
         node: (
@@ -242,7 +245,7 @@ const UserDashboardPage: React.FC = () => {
         ),
       },
     ],
-    [activeItem, navLayout, addonName, module],
+    [activeItem, navLayout, editing, addonName, module],
   )
 
   // the page at this URL, when the user has its tab (the registry leaves out what they can't
@@ -298,7 +301,7 @@ const UserDashboardPage: React.FC = () => {
   return (
     <>
       <DocumentTitle title={title} />
-      <AppNavLinks links={links} />
+      <AppNavLinks links={links} edit={tabEdit} />
       <UserDashboardProvider>
         <main>
           <WithViews viewType={viewType}>

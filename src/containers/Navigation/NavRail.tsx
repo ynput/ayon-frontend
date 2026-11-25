@@ -1,7 +1,17 @@
-import { Fragment, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+  Fragment,
+  MouseEvent,
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer } from '@shared/components'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useMenuContext } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
@@ -14,9 +24,10 @@ import {
 } from './filterNavigation'
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
-import type { NavItem, NavLayout } from './types'
-import { arrangeItems } from './layouts/applyLayout'
-import { useNavLayout } from './layouts/useActiveLayout'
+import type { NavItem } from './types'
+import { arrangeItems, toggleItemHidden } from './layouts/applyLayout'
+import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
+import { changeDraft } from './layouts/layoutEditor'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
 import * as Styled from './NavRail.styled'
@@ -28,12 +39,14 @@ interface RailProps {
   items: NavItem[]
   /** pinned to the bottom, after the sections: the admin area */
   footer: ReactNode
-  /** the layout that applies: which items show, in what order */
-  layout: NavLayout
-  /** that layout's id: when another one applies, a page it hides gives way to its first item */
-  layoutId?: string
-  /** everything deciding the layout has loaded: before that, a change isn't a switch */
-  layoutReady: boolean
+  /**
+   * The layout that applies (`useNavLayout`): which items show, in what order, and editing it.
+   * When another one applies (its id), a page it hides gives way to its first item; before it is
+   * `ready`, a change isn't a switch.
+   */
+  nav: NavLayoutState
+  /** the layout's context the rail shows */
+  context: 'project' | 'studio'
   /** where the rail is (a project, or Home): a layout that applies elsewhere isn't a switch */
   scope: string
 }
@@ -42,7 +55,8 @@ interface RailProps {
 const DIVIDER_HEIGHT = 9
 const MORE_HEIGHT = 54
 
-const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps) => {
+const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
+  const { layout, id: layoutId, ready: layoutReady, editing, customize } = nav
   const { pathname, search } = useLocation()
   // a pinned view open on the page
   const viewId = new URLSearchParams(search).get('view')
@@ -52,10 +66,18 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
   const railRef = useRef<HTMLElement>(null)
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
-  const visible = useMemo(
+  // the items the layout shows
+  const shownItems = useMemo(
     () => arrangeItems(sortForSidebar(filterNavigation(items, access, layout)), layout),
     [items, access, layout],
   )
+  // while it is being edited, the hidden ones too (dimmed)
+  const visible = useMemo(
+    () =>
+      editing ? arrangeItems(sortForSidebar(filterNavigation(items, access)), layout) : shownItems,
+    [editing, items, access, layout, shownItems],
+  )
+  const shownIds = useMemo(() => new Set(shownItems.map((item) => item.id)), [shownItems])
   const active = findActiveItem(items, pathname)
 
   // Switching layouts while on a page the new one hides (its item, or its tab) opens the item's
@@ -65,18 +87,30 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
   useEffect(() => {
     if (!layoutReady) return
     const before = shown.current
-    const itemShown = !!active && visible.some((item) => item.id === active.id)
+    const itemShown = !!active && shownIds.has(active.id)
     const page = itemShown && !!active && isTabShown(active, pathname, layout, viewId)
     const path = `${pathname}?view=${viewId ?? ''}`
     shown.current = { scope, id: layoutId, path, page }
     if (!before || before.scope !== scope || before.id === layoutId) return
     if (!active || before.path !== path || !before.page || page) return
-    const target = itemShown ? active : visible[0]
+    const target = itemShown ? active : shownItems[0]
     const to = target && itemLandingPath(target, access, layout)
     if (to) navigate(to)
     // nowhere to go yet (its only tabs are pins still loading): tried again when the items change
     else shown.current = before
-  }, [layoutReady, layoutId, scope, pathname, viewId, active, visible, access, layout, navigate])
+  }, [
+    layoutReady,
+    layoutId,
+    scope,
+    pathname,
+    viewId,
+    active,
+    shownItems,
+    shownIds,
+    access,
+    layout,
+    navigate,
+  ])
 
   // each item's height while it is on the rail, and the rail's height for the sections
   const [heights, setHeights] = useState<Record<string, number>>({})
@@ -113,7 +147,12 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
       2 +
       // a divider and its 2px gap
       (index > 0 && visible[index - 1].section !== item.section ? DIVIDER_HEIGHT + 2 : 0)
-    if (!Number.isFinite(available) || visible.some((item) => heights[item.id] === undefined))
+    // nothing folds while the layout is edited: every item can be shown or hidden
+    if (
+      editing ||
+      !Number.isFinite(available) ||
+      visible.some((item) => heights[item.id] === undefined)
+    )
       return new Set<string>()
     const total = visible.reduce((sum, item, index) => sum + cost(item, index), 0)
     if (total <= available) return new Set<string>()
@@ -125,7 +164,7 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
       used += cost(item, index)
     }
     return new Set(visible.filter((item) => !fit.has(item.id)).map((item) => item.id))
-  }, [visible, heights, available])
+  }, [editing, visible, heights, available])
 
   const sections = useMemo(
     () =>
@@ -144,7 +183,9 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
   const moreMenuId = 'nav-rail-more'
 
   const renderItem = (item: NavItem) => {
-    const to = itemLandingPath(item, access, layout)
+    // while editing, an item whose tabs the layout hides still opens its first tab
+    const to =
+      itemLandingPath(item, access, layout) ?? (editing ? itemLandingPath(item, access) : undefined)
     if (!to) return null
     return (
       <RailItem
@@ -152,13 +193,46 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
         item={item}
         to={to}
         isActive={item.id === active?.id}
+        edit={
+          editing
+            ? {
+                hidden: !shownIds.has(item.id),
+                toggle: () => changeDraft((draft) => toggleItemHidden(draft, context, item.id)),
+              }
+            : undefined
+        }
         data-rail-section-item=""
       />
     )
   }
 
+  // right-click: customize the layout (an item's link can still open in a new browser tab)
+  const [showContextMenu] = useCreateContextMenu([])
+  const onContextMenu = (e: MouseEvent<HTMLElement>) => {
+    if (!customize) return
+    const link = (e.target as HTMLElement).closest('a')?.getAttribute('href')
+    showContextMenu(e, [
+      ...(link
+        ? [
+            {
+              label: 'Open in new browser tab',
+              icon: 'open_in_new',
+              command: () => window.open(link, '_blank'),
+            },
+          ]
+        : []),
+      { label: 'Customize layout', icon: 'dashboard_customize', command: customize },
+    ])
+  }
+
   return (
-    <Styled.Rail aria-label="Sidebar" data-nav-rail ref={railRef}>
+    <Styled.Rail
+      aria-label="Sidebar"
+      data-nav-rail
+      ref={railRef}
+      className={editing ? 'editing' : undefined}
+      onContextMenu={onContextMenu}
+    >
       {sections.map((section, index) => (
         <Fragment key={section[0].section}>
           {index > 0 && <Styled.Divider />}
@@ -205,30 +279,28 @@ const Rail = ({ items, footer, layout, layoutId, layoutReady, scope }: RailProps
 
 const ProjectRail = ({ projectName }: { projectName: string }) => {
   const { items } = useProjectNavigation(projectName)
-  const { layout, id, ready } = useNavLayout('project', projectName)
+  const nav = useNavLayout('project', projectName)
   return (
     <Rail
       items={items}
-      layout={layout}
-      layoutId={id}
-      layoutReady={ready}
+      nav={nav}
+      context="project"
       scope={projectName}
-      footer={<AdminDock projectName={projectName} layout={layout} />}
+      footer={<AdminDock projectName={projectName} layout={nav.layout} />}
     />
   )
 }
 
 const StudioRail = () => {
   const { items } = useStudioNavigation()
-  const { layout, id, ready } = useNavLayout('studio')
+  const nav = useNavLayout('studio')
   return (
     <Rail
       items={items}
-      layout={layout}
-      layoutId={id}
-      layoutReady={ready}
+      nav={nav}
+      context="studio"
       scope="studio"
-      footer={<AdminDock layout={layout} />}
+      footer={<AdminDock layout={nav.layout} />}
     />
   )
 }

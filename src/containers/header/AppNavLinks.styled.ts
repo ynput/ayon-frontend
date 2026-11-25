@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 
 export const NavBar = styled.nav`
   padding-right: 8px;
@@ -42,10 +42,35 @@ export const NavBar = styled.nav`
       flex-shrink: 0;
     }
   }
+
+  /* editing the layout: every tab shows, the row scrolls instead of folding */
+  &.editing ul.tabs {
+    overflow-x: auto;
+  }
+`
+
+// while the layout is edited: hides or shows the tab
+export const TabEye = styled(Icon)`
+  margin: -4px -8px -4px 4px;
+  padding: 2px;
+  border-radius: var(--border-radius-m);
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+  }
 `
 
 export const NavItem = styled.li`
   user-select: none;
+
+  /* a tab the edited layout hides */
+  &.layout-hidden .tab-name,
+  &.layout-hidden button > .icon:not(${TabEye}) {
+    opacity: 0.4;
+  }
 
   /* NavLink */
   a {

@@ -4,6 +4,7 @@ import { getRequestErrorString } from '@shared/util'
 import { useListViewsQuery } from '@shared/api'
 import type { PinnableView, ViewPins } from '@shared/containers/Views'
 import { useActiveLayout } from './useActiveLayout'
+import { useLayoutEdit } from './layoutEditor'
 import { moveTabInRow, pinTabId, replaceTabId } from './applyLayout'
 import { getPins, renamePin, repointPin, togglePin, visiblePins, withPins } from './pins'
 import { PINNED_PAGES, type PinnedView } from './types'
@@ -24,6 +25,8 @@ export interface TabRow {
 export const usePinnedViews = (projectName: string) => {
   // the pins of the layout that applies here; a change may make it the user's own (see there)
   const { enabled, ready, layout, update } = useActiveLayout(projectName)
+  // while a layout is edited, its draft is the one change: pins wait
+  const editing = !!useLayoutEdit()
   const pins = getPins(layout)
 
   // one list per view type in PINNED_PAGES (hooks can't loop): a type added there needs its list here
@@ -102,7 +105,7 @@ export const usePinnedViews = (projectName: string) => {
   // the pin buttons wait for the layout: a pin made before it loads would be made on nothing
   const viewPins: ViewPins | null = useMemo(
     () =>
-      enabled && ready
+      enabled && ready && !editing
         ? {
             viewTypes: VIEW_TYPES,
             isPinned: (viewId: string) => pins.some((pin) => pin.id === viewId),
@@ -110,7 +113,7 @@ export const usePinnedViews = (projectName: string) => {
               void report(change((all) => togglePin(all, view, projectName))),
           }
         : null,
-    [enabled, ready, pins, change, projectName],
+    [enabled, ready, editing, pins, change, projectName],
   )
 
   return {

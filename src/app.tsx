@@ -31,6 +31,7 @@ import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
+import LayoutEditBanner from '@containers/Navigation/layouts/LayoutEditBanner'
 
 // context
 import {
@@ -304,6 +305,7 @@ const App = () => {
                                                         <AppRoutes />
                                                       </div>
                                                     </div>
+                                                    <LayoutEditBanner />
                                                     <DetailsPanelFloating />
                                                     <EntityLinksSlot />
                                                     <PowerpackDialog />
