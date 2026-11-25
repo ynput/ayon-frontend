@@ -193,10 +193,11 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     return result
   })
 
-  // the list without the pinned projects, while the pinned section shows them
+  // the list without the pinned projects, while the pinned section shows them; by id, which is
+  // the project's name (a folder's id never is)
   const withoutPinned = (rows: SimpleTableRow[]): SimpleTableRow[] =>
     rows.flatMap((row) =>
-      pinnedSet.has(row.name)
+      pinnedSet.has(row.id)
         ? []
         : [row.subRows?.length ? { ...row, subRows: withoutPinned(row.subRows) } : row],
     )
