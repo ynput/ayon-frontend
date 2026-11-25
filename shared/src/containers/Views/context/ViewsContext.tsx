@@ -154,6 +154,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
+  // the same provider can switch to settings held by the caller (a pinned view): the views menu
+  // and editor of the page's own views close, before anything draws
+  const [wasControlled, setWasControlled] = useState(!!controlled)
+  if (wasControlled !== !!controlled) {
+    setWasControlled(!!controlled)
+    setIsMenuOpen(false)
+    setEditingView(null)
+  }
   // Collapsed state persisted globally across all viewTypes and projects
   const stateKey = 'viewsMenuCollapsed'
 
@@ -274,7 +282,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
         viewType: viewType as string,
       },
-      { skip: !(typeof editingView === 'string') || !powerLicense },
+      { skip: !(typeof editingView === 'string') || !powerLicense || !viewType },
     )
 
   const editingViewData = useMemo(

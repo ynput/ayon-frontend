@@ -140,10 +140,12 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     [versionsSettings],
   )
 
-  // another view's settings (a pinned view's tab), or the same view started over: every local copy
-  // goes, including the ones kept below across setting changes
-  useEffect(() => {
-    if (controlledKey === undefined) return
+  // another view's settings (a pinned view's tab, or back to the page's own view), or the same
+  // view started over: every local copy goes, including the ones kept below across setting
+  // changes. Reset while rendering, so the other view never draws with these copies.
+  const [seenKey, setSeenKey] = useState(controlledKey)
+  if (seenKey !== controlledKey) {
+    setSeenKey(controlledKey)
     setLocalFilters(null)
     setLocalColumns(null)
     setLocalViewGroupBy(null)
@@ -155,7 +157,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
     setLocalShowEmptyGroups(null)
     setLocalLatestPerFolder(null)
     setLocalSorting(null)
-  }, [controlledKey])
+  }
 
   // Sync local state with server when viewSettings change
   // Note: Excluded localColumns, localSorting, localShowGrid, and localViewGroupBy

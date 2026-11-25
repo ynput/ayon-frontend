@@ -74,7 +74,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
   const tabsRef = useRef<HTMLUListElement>(null)
   const trailingRef = useRef<HTMLUListElement>(null)
   const moreRef = useRef<HTMLButtonElement>(null)
-  const { pathname } = useLocation()
+  const { pathname, search } = useLocation()
   const { toggleMenuOpen } = useMenuContext()
 
   // a tab is open when the page is its path; a pinned view's tab when the page shows its view,
@@ -90,6 +90,19 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     return !(
       viewParam && tabLinks.some((link) => link?.pinnedView === viewParam && pathMatches(link))
     )
+  }
+
+  // A tab of the open page (its own tab or one of its pinned views) keeps the page's state in the
+  // URL, such as the open list: only the view changes.
+  const linkTo = (path?: string) => {
+    if (!path) return path
+    const [base, query = ''] = path.split('?')
+    if (base !== pathname) return path
+    const params = new URLSearchParams(search)
+    params.delete('view')
+    new URLSearchParams(query).forEach((value, key) => params.set(key, value))
+    const next = params.toString()
+    return next ? `${base}?${next}` : base
   }
 
   // the tabs the user sees, by their index in tabLinks
@@ -215,7 +228,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
             className={clsx(props.className as string | undefined, { pinned: !!pinnedView })}
           >
             <Link
-              to={path!}
+              to={linkTo(path)!}
               className={active ? 'active' : undefined}
               aria-current={active ? 'page' : undefined}
             >
@@ -262,7 +275,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
               menu={foldedTabs.map(({ item, index }) => ({
                 id: `${index}`,
                 label: item.name,
-                link: item.path,
+                link: linkTo(item.path),
               }))}
             />
           </MenuContainer>

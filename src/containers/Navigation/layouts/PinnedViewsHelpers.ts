@@ -27,7 +27,11 @@ export const usePinnedViewDrafts = () => {
       const kept = Object.fromEntries(
         Object.entries(changed).map(([key, value]) => [key, value === undefined ? null : value]),
       )
-      setDrafts((all) => ({ ...all, [id]: { ...all[id], ...kept } }))
+      setDrafts((all) => {
+        const next = { ...all[id], ...kept }
+        // nothing changed: no new draft, so a page that repeats the same change doesn't loop
+        return isEqual(all[id], next) ? all : { ...all, [id]: next }
+      })
     },
     [setDrafts],
   )
