@@ -32,13 +32,24 @@ function calculateMenuPosition(
 
   // top is relative to the dialog, which starts below the app header
   const minTop = MENU_TOP_BOUND - DIALOG_TOP_OFFSET
+  // above the target, the menu ends 8px above it
+  let above = false
 
   // Check if menu fits below, otherwise flip to above
   if (top + DIALOG_TOP_OFFSET + menuHeight > viewportHeight - padding) {
     // If it doesn't fit below, check if it fits above
     const topAbove = targetRect.top - 8 - menuHeight - DIALOG_TOP_OFFSET
-    // Fits neither way: keep it below the target and let it scroll to the window bottom
-    if (topAbove >= minTop) top = topAbove
+    // Fits neither way: the side with more room, scrolling inside (a button at the window's
+    // bottom has none below)
+    const roomBelow = viewportHeight - padding - (targetRect.bottom + 8)
+    const roomAbove = targetRect.top - 8 - MENU_TOP_BOUND
+    if (topAbove >= minTop) {
+      top = topAbove
+      above = true
+    } else if (roomAbove > roomBelow) {
+      top = minTop
+      above = true
+    }
   }
 
   // above the dialog's own box the menu is clipped and can't be scrolled back into view
@@ -82,7 +93,13 @@ function calculateMenuPosition(
     // But 'left' is easier to clamp. Let's stick to 'left' and 'top' for simplicity unless 'right' is explicitly needed.
   }
 
-  return { top, left, maxHeight: viewportHeight - (top + DIALOG_TOP_OFFSET) - padding }
+  return {
+    top,
+    left,
+    maxHeight: above
+      ? targetRect.top - 8 - (top + DIALOG_TOP_OFFSET)
+      : viewportHeight - (top + DIALOG_TOP_OFFSET) - padding,
+  }
 }
 
 interface UseMenuPositionReturn {
