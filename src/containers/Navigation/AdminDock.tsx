@@ -38,8 +38,6 @@ const AdminDock = ({ projectName }: { projectName?: string }) => {
 
   const isOpen = menuOpen === 'app'
   const hasMenu = !!folded.length || !!user.data?.isAdmin || !!user.attrib?.developerMode
-  // a regular user's menu only has developer mode's actions
-  const menuLabel = access.manager ? 'Admin' : 'More'
 
   return (
     <Styled.Dock data-rail-pinned="" data-rail-dock="">
@@ -58,17 +56,17 @@ const AdminDock = ({ projectName }: { projectName?: string }) => {
             className={clsx('compact', {
               active: isOpen || folded.some((item) => item.id === active?.id),
             })}
-            aria-label={menuLabel}
+            aria-label="Admin"
             aria-haspopup="menu"
             aria-expanded={isOpen}
             data-rail-item="admin-menu"
-            data-tooltip={menuLabel}
+            data-tooltip="Admin"
             data-tooltip-position="right"
             onClick={() => toggleMenuOpen('app')}
           >
             {/* not More's icon: both can show at once */}
-            <Icon icon={access.manager ? 'admin_panel_settings' : 'more_horiz'} />
-            <Styled.Label>{menuLabel}</Styled.Label>
+            <Icon icon="admin_panel_settings" />
+            <Styled.Label>Admin</Styled.Label>
             {isSnoozing && <Styled.NotificationDot />}
             {/* the menu opens beside the sidebar */}
             <Styled.MoreAnchor ref={anchorRef} />

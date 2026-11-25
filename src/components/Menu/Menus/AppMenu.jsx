@@ -34,7 +34,7 @@ export const AppMenu = ({ user, places, ...props }) => {
     dispatch(toggleReleaseInstaller({ open: true }))
   }
 
-  const items = [...(places || [])]
+  const items = [...places]
   // a group of actions, after a divider
   const addGroup = (group) => {
     if (items.length) items.push({ id: 'divider' })
