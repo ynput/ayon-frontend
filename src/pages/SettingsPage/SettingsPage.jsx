@@ -1,6 +1,5 @@
 import { useMemo, useEffect, lazy } from 'react'
 import { Navigate, useParams } from 'react-router-dom'
-import { useGetSettingsAddonsQuery } from '@shared/api'
 
 import SettingsAddon from './SettingsAddon'
 import AppNavLinks from '@containers/header/AppNavLinks'
@@ -8,7 +7,7 @@ import { useSelector } from 'react-redux'
 import DocumentTitle from '@components/DocumentTitle/DocumentTitle'
 import useTitle from '@hooks/useTitle'
 import HelpButton from '@components/HelpButton/HelpButton'
-import { useGlobalContext } from '@shared/context'
+import { useSettingsNavigation } from '@containers/Navigation'
 
 const AnatomyPresets = lazy(() => import('./AnatomyPresets/AnatomyPresets'))
 const Bundles = lazy(() => import('./Bundles'))
@@ -23,15 +22,8 @@ const ServerConfig = lazy(() => import('./ServerConfig/ServerConfig'))
 
 const SettingsPage = () => {
   const { module, addonName } = useParams()
-  const { user } = useGlobalContext()
-  const { uiExposureLevel: level = 0 } = user || {}
-  const isManager = level === 700
-
-  const {
-    data: addonsData,
-    //isLoading: addonsLoading,
-    //isError: addonsIsError,
-  } = useGetSettingsAddonsQuery({})
+  // the settings sub-pages and the classic addons' settings, from the navigation registry
+  const { item, addonsData, isManager } = useSettingsNavigation()
 
   useEffect(() => {
     //document.title = 'Settings'
@@ -85,100 +77,17 @@ const SettingsPage = () => {
   }, [module, addonName, addonsData, isManager])
 
   const links = useMemo(() => {
-    const adminExtras = [
-      {
-        name: 'Global',
-        path: '/settings/server',
-        module: 'server',
-        accessLevels: ['admin'],
-      },
-      {
-        name: 'Addons',
-        path: '/settings/addons',
-        module: 'addons',
-        accessLevels: ['manager'],
-      },
-      {
-        name: 'Bundles',
-        path: '/settings/bundles',
-        module: 'bundles',
-        accessLevels: ['manager'],
-        shortcut: 'B+B',
-      },
-    ]
-
-    let result = [
-      {
-        name: 'Studio settings',
-        path: '/settings/studio',
-        module: 'studio',
-        accessLevels: ['manager'],
-        shortcut: 'S+S',
-      },
-      {
-        name: 'Site settings',
-        path: '/settings/site',
-        module: 'site',
-        accessLevels: [],
-      },
-      {
-        name: 'Anatomy presets',
-        path: '/settings/anatomyPresets',
-        module: 'anatomyPresets',
-        accessLevels: ['manager'],
-      },
-      {
-        name: 'Attributes',
-        path: '/settings/attributes',
-        module: 'attributes',
-        accessLevels: ['manager'],
-      },
-      {
-        name: 'Users',
-        path: '/settings/users',
-        module: 'users',
-        accessLevels: ['manager'],
-        shortcut: 'U+U',
-      },
-      {
-        name: 'Permissions',
-        path: '/settings/accessGroups',
-        module: 'accessGroups',
-        accessLevels: ['manager'],
-      },
-      {
-        name: 'Secrets',
-        path: '/settings/secrets',
-        module: 'secrets',
-        accessLevels: ['manager'],
-      },
-    ]
-    if (!isManager) {
-      result = [...adminExtras, ...result]
-    }
-
-    if (!addonsData) return result
-
-    for (const addon of addonsData) {
-      result.push({
-        name: addon.title,
-        path: `/settings/addon/${addon.name}`,
-        module: addon.name,
-        accessLevels: ['manager'],
-      })
-    }
-    result.push({ node: 'spacer' })
-
     const addonTitle =
       addonName && addonsData
         ? addonsData.find((addon) => addon.name === addonName)?.title
         : undefined
 
-    result.push({
-      node: <HelpButton module={addonName || module} pageName={addonTitle} />,
-    })
-    return result
-  }, [addonsData, isManager])
+    return [
+      ...item.tabs,
+      { node: 'spacer' },
+      { node: <HelpButton module={addonName || module} pageName={addonTitle} /> },
+    ]
+  }, [item, addonsData, addonName, module])
 
   const title = useTitle(addonName || module, links, '', '')
   const revertedTitle = title === 'Studio settings' ? title : title + ' • Studio settings'

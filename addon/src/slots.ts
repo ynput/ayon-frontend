@@ -855,7 +855,21 @@ export type SlotExample = { readonly [field: string]: unknown }
 
 // the server's NAME_REGEX: what the views API takes as a view type
 const VIEW_TYPE_PATTERN = /^[a-zA-Z0-9_]([a-zA-Z0-9_.-]*[a-zA-Z0-9_])?$/
-const pageFields = { access: /^(manager|admin)$/, viewType: VIEW_TYPE_PATTERN }
+const pageFields = {
+  access: /^(manager|admin)$/,
+  viewType: VIEW_TYPE_PATTERN,
+  placement: /^(sidebar|tab)$/,
+  // a Material Symbols name
+  icon: /^[a-z0-9_]+$/,
+  section: /^(review|plan|pipeline|other)$/,
+  group: /^[A-Za-z][A-Za-z0-9_]*$/,
+  groupTitle: /\S/,
+}
+// the fields a page's pattern can't check
+const checkPage = (item: Readonly<Record<string, unknown>>) =>
+  item.order !== undefined && (typeof item.order !== 'number' || !Number.isFinite(item.order))
+    ? 'order must be a number'
+    : undefined
 const menuItemFields = { position: /^(top|bottom)$/ }
 const selectionField = /^(single|multi)$/
 
@@ -927,9 +941,15 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: (item) =>
       item.detailsPanel !== undefined && typeof item.detailsPanel !== 'boolean'
         ? 'detailsPanel must be true or false'
-        : undefined,
+        : checkPage(item),
   },
-  'studio.page': { version: 1, required: ['title'], pieces: ['component'], optional: pageFields },
+  'studio.page': {
+    version: 1,
+    required: ['title'],
+    pieces: ['component'],
+    optional: pageFields,
+    check: checkPage,
+  },
   'header.item': {
     version: 1,
     required: ['label'],

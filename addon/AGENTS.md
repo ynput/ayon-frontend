@@ -894,6 +894,12 @@ A tab on the project page, at `/projects/<project>/<id>`. The tab shows from the
 | `title` (required) | `string` | the tab label |
 | `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them. A shorthand for `minExposureLevel: EXPOSURE.manager` / `EXPOSURE.admin`; with both, the higher wins |
 | `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
+| `placement` | `"sidebar" \| "tab" \| undefined` | Where the page goes. `sidebar` (the default): a sidebar item of its own, or one shared with the other pages of its `group`. `tab`: a tab of the first sidebar item (Production in a project, My work on Home), for a page that is another view of the same data. |
+| `icon` | `string \| undefined` | The page's sidebar icon, a Material Symbols name such as `calendar_month`. Default `extension`. |
+| `section` | `PageSection \| undefined` | The sidebar section of the page's item: `review`, `plan`, `pipeline` or `other` (the default). |
+| `group` | `string \| undefined` | Gives the addon's pages with the same group one sidebar item, with a tab for each page. The item takes the first page's `groupTitle`, `icon`, `section` and `order`. |
+| `groupTitle` | `string \| undefined` | The label of the group's sidebar item, e.g. `Planner`. Set on the group's first page. |
+| `order` | `number \| undefined` | The item's place in its section, or the page's place in its group: lower first. Pages without an order follow, in manifest order. |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -927,6 +933,12 @@ A tab on the dashboard (studio level), at `/dashboard/<id>`. The tab shows from 
 | `title` (required) | `string` | the tab label |
 | `access` | `Access \| undefined` | `manager` or `admin`: the tab is hidden from everyone else, and its URL redirects them. A shorthand for `minExposureLevel: EXPOSURE.manager` / `EXPOSURE.admin`; with both, the higher wins |
 | `viewType` | `string \| undefined` | Gives the page views: the host shows the views menu and the page gets `views` in its context. The type its views are saved under, e.g. `budget`: letters, digits, `_`, `-` and `.`. It must be the page's own: one AYON or another page already uses is not shown. |
+| `placement` | `"sidebar" \| "tab" \| undefined` | Where the page goes. `sidebar` (the default): a sidebar item of its own, or one shared with the other pages of its `group`. `tab`: a tab of the first sidebar item (Production in a project, My work on Home), for a page that is another view of the same data. |
+| `icon` | `string \| undefined` | The page's sidebar icon, a Material Symbols name such as `calendar_month`. Default `extension`. |
+| `section` | `PageSection \| undefined` | The sidebar section of the page's item: `review`, `plan`, `pipeline` or `other` (the default). |
+| `group` | `string \| undefined` | Gives the addon's pages with the same group one sidebar item, with a tab for each page. The item takes the first page's `groupTitle`, `icon`, `section` and `order`. |
+| `groupTitle` | `string \| undefined` | The label of the group's sidebar item, e.g. `Planner`. Set on the group's first page. |
+| `order` | `number \| undefined` | The item's place in its section, or the page's place in its group: lower first. Pages without an order follow, in manifest order. |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
