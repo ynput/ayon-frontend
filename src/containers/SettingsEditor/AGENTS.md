@@ -184,7 +184,35 @@ places that draw the grid (`SettingsEditor.jsx`, `AddonSettingsSheets`):
 | Preference | Class | Effect |
 | --- | --- | --- |
 | `fullWidthSettings` (_Full width settings_) | `is-full-width` | No margins: the rail, then the sheet filling the rest. Narrow panels (720px or less) still drop the rail |
-| `outlineFitsTitles` (_Outline fits titles_) | `outline-fits-titles` | `--settings-outline-width` becomes `max-content`, so the rail is as wide as its longest title, up to 400px. Longer names still roll |
+| `outlineFitsTitles` (_Outline fits titles_) | `outline-fits-titles` | `--settings-outline-width` becomes `max-content`, so the rail is as wide as its longest title, up to 400px. Longer names still roll. A dragged width wins over it |
+
+**Resizing the rail.** A line in the gap between the rail and the sheet, as tall as the panel,
+sets the rail's width from 120px to 400px (`useSettingsOutlineResize`). It looks like the app's
+splitters (`SplitterStyles`). Double-click goes back to the default; the arrow keys move it by
+16px. The line always follows the pointer, up to those limits:
+
+| Layout | Dragging the line |
+| --- | --- |
+| Full width | Widens the rail, the sheet fills the rest |
+| Centred, margin wider than the rail | The rail keeps its left edge, the sheet moves off centre (`shift`) |
+| Centred, rail at the grid's edge | Widens the rail from that edge, the sheet shrinks or moves |
+
+- The size is `{ width, shift }` in local storage (`settings-outline-size`), shared by every rail.
+  It is set inline on the grid (`--settings-outline-width`, `--settings-outline-shift` and
+  `data-outline-resized`), so it beats both defaults above. React owns the grid's `className`,
+  hence an attribute and not a class.
+- A resized centred grid sizes the rail's column as `max(width, margin + shift)`. The margin is
+  worked out from the 1040px sheet and 24px gaps, in the Sass and in the hook: change them
+  together.
+- The rail is two elements: `.settings-outline`, the sticky grid item that also holds the line,
+  and the `nav` inside it that scrolls. A line inside the `nav` would scroll away with the links.
+  `--settings-outline-height` is set on the outer one, for both.
+- The `nav` reaches into the gap up to the line (`--settings-outline-line`, 12px), padded so
+  the links keep the rail's width, so its scrollbar sits against the line. The line's grab area
+  starts 3px over the scrollbar.
+- The scrollbar is the app's own: ARC styles `::-webkit-scrollbar` globally (transparent track,
+  rounded pill). Don't set `scrollbar-color` or `scrollbar-width` on the rail: Chrome then drops
+  those rules for the browser's own scrollbar.
 
 Addon settings and Site settings stack one editor per selected addon (and site). They share one
 outline (`AddonSettingsSheets`, editors get `outline={false}`), so every sheet starts at the same edge

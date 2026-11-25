@@ -14,6 +14,11 @@ import {
 } from './SettingsOutlineHelpers'
 import { useSettingsOutlineCurrent } from './useSettingsOutlineCurrent'
 import { useSettingsOutlineCollapsed } from './useSettingsOutlineCollapsed'
+import {
+  OUTLINE_MAX_WIDTH,
+  OUTLINE_MIN_WIDTH,
+  useSettingsOutlineResize,
+} from './useSettingsOutlineResize'
 import { announceOutline } from './outlineAvailability'
 import * as Styled from './SettingsOutline.styled'
 
@@ -44,6 +49,8 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
   // a short sheet that fits in its panel needs no outline (isOutlineNeeded)
   const [needed, setNeeded] = useState(false)
   const navRef = useRef<HTMLElement>(null)
+  // the rail and its resize handle
+  const outlineRef = useRef<HTMLDivElement>(null)
   // hidden with the toolbar button (SettingsOutlineToggle)
   const [collapsed] = useSettingsOutlineCollapsed()
   // a single group needs no outline either: the toolbar's toggle waits for one with links
@@ -53,6 +60,7 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     navRef,
     hasLinks ? items : NO_ITEMS,
   )
+  const resize = useSettingsOutlineResize(outlineRef, hasLinks)
 
   useEffect(() => {
     const sheet = sheetRef.current
@@ -129,13 +137,14 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
     return () => nav.removeEventListener('wheel', onWheel)
   }, [hasLinks])
 
-  // the rail sticks to the top of the panel it scrolls in, so it is as tall as that panel
+  // the rail sticks to the top of the panel it scrolls in, so it is as tall as that panel, and
+  // its resize line spans it
   useEffect(() => {
-    const nav = navRef.current
-    const scroller = getScrollContainer(nav?.parentElement ?? null)
-    if (!nav || !scroller) return
+    const outline = outlineRef.current
+    const scroller = getScrollContainer(outline?.parentElement ?? null)
+    if (!outline || !scroller) return
     const observer = new ResizeObserver(() =>
-      nav.style.setProperty('--settings-outline-height', `${scroller.clientHeight}px`),
+      outline.style.setProperty('--settings-outline-height', `${scroller.clientHeight}px`),
     )
     observer.observe(scroller)
     return () => observer.disconnect()
@@ -145,48 +154,66 @@ export const SettingsOutline = ({ sheetRef }: SettingsOutlineProps) => {
 
   return (
     <Styled.Outline
-      ref={navRef}
-      className={clsx('settings-outline', pinned && 'is-pinned', collapsed && 'is-collapsed')}
-      aria-label="Settings outline"
+      ref={outlineRef}
+      className={clsx(
+        'settings-outline',
+        pinned && 'is-pinned',
+        collapsed && 'is-collapsed',
+        resize.resizing && 'is-resizing',
+      )}
     >
-      <ul>
-        {items.map((item) => (
-          <li key={item.id}>
-            <Styled.Link
-              href={`#${item.id}`}
-              className={clsx(
-                OUTLINE_LINK_CLASSES[item.depth] ?? 'settings-outline-subgroup',
-                (!native || pinned) && item.id === currentId && 'is-current',
-              )}
-              data-outline-id={item.id}
-              aria-current={item.id === currentId ? 'true' : undefined}
-              // the full name (the rail cuts long ones), the group's description on the next line:
-              // a markdown line break, as the tooltip sets separate paragraphs side by side
-              data-tooltip={
-                item.description ? `**${item.title}**\\\n${item.description}` : item.title
-              }
-              data-tooltip-as="markdown"
-              data-tooltip-delay={300}
-              onClick={(e) => onNavigate(e, item.id)}
-              // a name cut short rolls to show its end
-              onMouseEnter={(e) => startRollingLink(e.currentTarget)}
-              onMouseLeave={(e) => stopRollingLink(e.currentTarget)}
-              onFocus={(e) => startRollingLink(e.currentTarget)}
-              onBlur={(e) => stopRollingLink(e.currentTarget)}
-            >
-              <span className="settings-outline-label">
-                <span className="settings-outline-text">
-                  <span className="settings-outline-name">{item.title}</span>
-                  {/* follows the name while it rolls, so its start comes round again */}
-                  <span className="settings-outline-copy" aria-hidden="true">
-                    {item.title}
+      <Styled.Rail ref={navRef} aria-label="Settings outline">
+        <ul>
+          {items.map((item) => (
+            <li key={item.id}>
+              <Styled.Link
+                href={`#${item.id}`}
+                className={clsx(
+                  OUTLINE_LINK_CLASSES[item.depth] ?? 'settings-outline-subgroup',
+                  (!native || pinned) && item.id === currentId && 'is-current',
+                )}
+                data-outline-id={item.id}
+                aria-current={item.id === currentId ? 'true' : undefined}
+                // the full name (the rail cuts long ones), the group's description on the next line:
+                // a markdown line break, as the tooltip sets separate paragraphs side by side
+                data-tooltip={
+                  item.description ? `**${item.title}**\\\n${item.description}` : item.title
+                }
+                data-tooltip-as="markdown"
+                data-tooltip-delay={300}
+                onClick={(e) => onNavigate(e, item.id)}
+                // a name cut short rolls to show its end
+                onMouseEnter={(e) => startRollingLink(e.currentTarget)}
+                onMouseLeave={(e) => stopRollingLink(e.currentTarget)}
+                onFocus={(e) => startRollingLink(e.currentTarget)}
+                onBlur={(e) => stopRollingLink(e.currentTarget)}
+              >
+                <span className="settings-outline-label">
+                  <span className="settings-outline-text">
+                    <span className="settings-outline-name">{item.title}</span>
+                    {/* follows the name while it rolls, so its start comes round again */}
+                    <span className="settings-outline-copy" aria-hidden="true">
+                      {item.title}
+                    </span>
                   </span>
                 </span>
-              </span>
-            </Styled.Link>
-          </li>
-        ))}
-      </ul>
+              </Styled.Link>
+            </li>
+          ))}
+        </ul>
+      </Styled.Rail>
+      <Styled.Resizer
+        role="separator"
+        aria-orientation="vertical"
+        aria-label="Resize outline"
+        aria-valuemin={OUTLINE_MIN_WIDTH}
+        aria-valuemax={OUTLINE_MAX_WIDTH}
+        aria-valuenow={resize.width}
+        tabIndex={0}
+        data-tooltip="Drag to resize, double-click to reset"
+        data-tooltip-delay={500}
+        {...resize.handleProps}
+      />
     </Styled.Outline>
   )
 }

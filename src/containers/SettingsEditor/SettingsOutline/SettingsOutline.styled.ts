@@ -1,18 +1,13 @@
 import styled, { keyframes } from 'styled-components'
 
-// A rail beside the sheet that stays in view while the sheet scrolls under it
-export const Outline = styled.nav`
+// A rail beside the sheet that stays in view while the sheet scrolls under it, with the
+// handle that resizes it. Hidden, it keeps its column (SettingsEditor.sass), so the sheet
+// never moves
+export const Outline = styled.div`
+  /* from the rail's edge to the resize line, the middle of the 24px gap before the sheet */
+  --settings-outline-line: 12px;
   position: sticky;
   top: 0;
-  /* hidden, the rail keeps its column (SettingsEditor.sass), so the sheet never moves */
-  overflow-x: hidden;
-  overflow-y: auto;
-  /* at its ends, a scroll over the rail stops there instead of moving the sheet */
-  overscroll-behavior: contain;
-  /* as tall as the panel it scrolls in, measured by SettingsOutline on every page */
-  max-height: var(--settings-outline-height, calc(100dvh - 180px));
-  /* the first link's text centres on the sheet's title, which is 32px tall */
-  padding: 2px 0 16px;
   transition: opacity 0.2s ease, translate 0.25s ease;
 
   /* hidden: it fades and slides out, and leaves the tab order once it is gone */
@@ -38,6 +33,27 @@ export const Outline = styled.nav`
     background-color: var(--md-sys-color-surface-container);
   }
 
+  /* links don't light up as the pointer crosses them while resizing */
+  &.is-resizing a {
+    pointer-events: none;
+  }
+`
+
+// the links, scrolling on their own when they don't fit the panel
+export const Rail = styled.nav`
+  overflow-x: hidden;
+  overflow-y: auto;
+  /* at its ends, a scroll over the rail stops there instead of moving the sheet */
+  overscroll-behavior: contain;
+  /* as tall as the panel it scrolls in, measured by SettingsOutline on every page */
+  max-height: var(--settings-outline-height, calc(100dvh - 180px));
+  /* the first link's text centres on the sheet's title, which is 32px tall */
+  padding: 2px 0 16px;
+  /* it reaches the resize line, so its scrollbar sits against it; the padding keeps the links
+     at the rail's width */
+  margin-right: calc(-1 * var(--settings-outline-line));
+  padding-right: var(--settings-outline-line);
+
   ul {
     /* the browser tracks which link's group is in view (see useSettingsOutlineCurrent) */
     scroll-target-group: auto;
@@ -49,6 +65,60 @@ export const Outline = styled.nav`
     margin: 0;
     padding: 0;
     list-style: none;
+  }
+`
+
+// The line between the rail and the sheet that resizes the rail (useSettingsOutlineResize), in
+// the middle of their 24px gap and as tall as the panel. It looks like the app's splitters
+// (SplitterStyles): a thin line, and a primary bar on hover and while dragging. Its grab area
+// starts a little over the rail's scrollbar, which ends at the line
+export const Resizer = styled.div`
+  position: absolute;
+  top: 0;
+  right: calc(-1 * var(--settings-outline-line) - 10px);
+  width: 13px;
+  height: var(--settings-outline-height, 100%);
+  cursor: col-resize;
+  touch-action: none;
+
+  &::before,
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 3px;
+    translate: -50% 0;
+    pointer-events: none;
+  }
+
+  &::before {
+    width: 1px;
+    background-color: var(--md-sys-color-outline-variant);
+  }
+
+  &::after {
+    width: 4px;
+    border-radius: 999px;
+    background-color: var(--md-sys-color-primary);
+    opacity: 0;
+    transition: opacity 0.1s ease-out;
+  }
+
+  /* a short delay, so the bar doesn't flash when the pointer just passes over */
+  &:hover::after {
+    opacity: 0.75;
+    transition-delay: 0.2s;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible::after,
+  .is-resizing > &::after {
+    opacity: 0.75;
+    transition-delay: 0s;
   }
 `
 
