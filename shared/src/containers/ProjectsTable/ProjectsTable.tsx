@@ -10,6 +10,7 @@ import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { ALL_PROJECTS_ROW_ID, ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { useSessionStorage } from '@shared/hooks'
 import { PinnedDivider } from './ProjectsTable.styled'
+import { parseProjectFolderRowId } from './buildProjectsTableData'
 
 const ALL_PROJECTS_ROWS: SimpleTableRow[] = [
   {
@@ -184,11 +185,12 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     onRowPinningChange?.(newPinning)
   }
 
-  const pinnedSet = new Set(rowPinning)
+  // pinned projects; pinning a selection can also save a folder's row id, which never pins it
+  const pinnedSet = new Set(rowPinning.filter((id) => !parseProjectFolderRowId(id)))
 
   const pinnedProjects = data.flatMap(function collectPinned(row): SimpleTableRow[] {
     const result: SimpleTableRow[] = []
-    // by id: a project's is its name, a folder's never is (so a same-named folder isn't pinned)
+    // by id, a project's name: a folder named like a pinned project isn't pinned
     if (pinnedSet.has(row.id)) result.push(row)
     if (row.subRows?.length) result.push(...row.subRows.flatMap(collectPinned))
     return result
