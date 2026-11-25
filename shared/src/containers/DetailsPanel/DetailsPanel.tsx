@@ -44,6 +44,7 @@ import mergeProjectInfo from './helpers/mergeProjectInfo'
 import buildEntityTypeIcons from './helpers/buildEntityTypeIcons'
 import DetailsPanelSubtasks from './containers/DetailsPanelSubtasks'
 import { DetailsPanelTasks } from './components/DetailsPanelTasks'
+import { DetailsPanelVersions } from './components/DetailsPanelVersions'
 import { entitiesWithoutFeed } from './DetailsPanelHelpers'
 import { useDetailsPanelTabSlot } from './hooks/useDetailsPanelTabSlot'
 import { PanelTabSearch } from '@shared/components/PanelTabs'
@@ -87,13 +88,13 @@ export type DetailsPanelProps = {
    *  is preserved. */
   entityListsContext?: DetailsPanelEntityListsContext
   resolveVersionJump?: ResolveVersionJump
-  /** the thumbnail across the panel's width below the path, instead of next to the name */
-  wideThumbnail?: boolean
   /**
-   * false for a panel that only shows the entities it is given (a preview, e.g. in a dialog): it
-   * leaves the page alone, so the page's URL, URI, its panel's entities and slide-out stay as they are
+   * A preview of the entities it is given (next to search results, in a dialog): the thumbnail
+   * across the top, the status next to the name, and only what matters most for the entity type
+   * (a folder's tasks, a version's other versions) instead of the tabs. It leaves the page alone:
+   * its URL, URI, its panel's entities and slide-out stay as they are.
    */
-  syncWithPage?: boolean
+  isPreview?: boolean
   // optional tab state for independent tab management
 }
 
@@ -129,8 +130,7 @@ const DetailsPanelInner = ({
   guestCategories = {},
   entityListsContext,
   resolveVersionJump,
-  wideThumbnail = false,
-  syncWithPage = true,
+  isPreview = false,
 }: // optional tab state for independent tab management
 DetailsPanelProps) => {
   const {
@@ -151,6 +151,7 @@ DetailsPanelProps) => {
   const [_searchParams, setSearchParams] = useSearchParams()
   const hasCalledOnOpen = useRef(false)
 
+  const syncWithPage = !isPreview
   // a panel that leaves the page alone shows only its own entities
   const contextEntities = syncWithPage ? pageEntities : null
   // Use context entities if available, otherwise use props
@@ -628,6 +629,90 @@ DetailsPanelProps) => {
     },
   ]
 
+  const entityPath = (
+    <EntityPath
+      segments={entityPathSegments}
+      versions={entityPathVersions}
+      projectName={firstProject}
+      hideProjectName={isSlideOut}
+      isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
+      entityType={activeEntityType}
+      scope={scope}
+      // @ts-ignore
+      entityTypeIcons={entityTypeIcons}
+    />
+  )
+  const header = (
+    <DetailsPanelHeader
+      entityType={activeEntityType}
+      entitySubTypes={activeEntitySubTypes}
+      entities={entityDetailsData}
+      users={projectUsers}
+      disabledAssignees={disabledProjectUsers}
+      disabledStatuses={disabledStatuses}
+      tagsOptions={tagsOptions}
+      isFetching={isFetchingEntitiesDetails}
+      isCompact={isCompact}
+      projectInfo={projectInfo}
+      onOpenViewer={(args) => onOpenViewer?.(args)}
+      onEntityFocus={onEntityFocus}
+      thumbnailInputRef={thumbnailInputRef}
+      versionsInputRef={versionsInputRef}
+      isPreview={isPreview}
+    />
+  )
+
+  if (isPreview) {
+    // what matters most for the entity type, in place of the tabs
+    const section =
+      activeEntityType === 'folder'
+        ? {
+            title: 'Tasks',
+            content: (
+              <DetailsPanelTasks
+                projectName={firstProject}
+                folders={entityDetailsData}
+                projectInfo={firstProjectInfo}
+                users={projectUsers}
+              />
+            ),
+          }
+        : activeEntityType === 'version' || activeEntityType === 'task'
+        ? {
+            title: activeEntityType === 'version' ? 'Versions' : 'Versions of the task',
+            content: (
+              <DetailsPanelVersions
+                projectName={firstProject}
+                entityType={activeEntityType}
+                entity={entityDetailsData.length === 1 ? firstEntityData : undefined}
+                projectInfo={firstProjectInfo}
+                users={projectUsers}
+              />
+            ),
+          }
+        : undefined
+    return (
+      <ThumbnailUploadProvider
+        thumbnailInputRef={thumbnailInputRef}
+        versionsInputRef={versionsInputRef}
+        canUploadVersion={false}
+      >
+        <Styled.Panel className="details-panel preview">
+          <ProjectContextProvider projectName={firstProject}>
+            <Styled.PreviewPath>{entityPath}</Styled.PreviewPath>
+            {header}
+            {section && (
+              <Styled.PreviewSection>
+                <h4>{section.title}</h4>
+                {section.content}
+              </Styled.PreviewSection>
+            )}
+          </ProjectContextProvider>
+        </Styled.Panel>
+      </ThumbnailUploadProvider>
+    )
+  }
+
   return (
     <ThumbnailUploadProvider
       thumbnailInputRef={thumbnailInputRef}
@@ -638,19 +723,7 @@ DetailsPanelProps) => {
         {/* the addon tabs (TabbedPanel) are in the project too, as the panel's own tabs are */}
         <ProjectContextProvider projectName={firstProject}>
           <TabbedPanel
-            title={
-              <EntityPath
-                segments={entityPathSegments}
-                versions={entityPathVersions}
-                projectName={firstProject}
-                hideProjectName={isSlideOut}
-                isLoading={isFetchingEntitiesDetails || !entityPathSegments.length}
-                entityType={activeEntityType}
-                scope={scope}
-                // @ts-ignore
-                entityTypeIcons={entityTypeIcons}
-              />
-            }
+            title={entityPath}
             tools={[
               ...moreMenu.tools,
               {
@@ -679,23 +752,7 @@ DetailsPanelProps) => {
                     resolveVersionJump={resolveVersionJump}
                   />
                 )}
-                <DetailsPanelHeader
-                  entityType={activeEntityType}
-                  entitySubTypes={activeEntitySubTypes}
-                  entities={entityDetailsData}
-                  users={projectUsers}
-                  disabledAssignees={disabledProjectUsers}
-                  disabledStatuses={disabledStatuses}
-                  tagsOptions={tagsOptions}
-                  isFetching={isFetchingEntitiesDetails}
-                  isCompact={isCompact}
-                  projectInfo={projectInfo}
-                  onOpenViewer={(args) => onOpenViewer?.(args)}
-                  onEntityFocus={onEntityFocus}
-                  thumbnailInputRef={thumbnailInputRef}
-                  versionsInputRef={versionsInputRef}
-                  wideThumbnail={wideThumbnail}
-                />
+                {header}
               </>
             }
             tabs={ownTabs}

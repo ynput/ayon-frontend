@@ -10,9 +10,9 @@ import {
 export const HeaderContainer = styled.div`
   position: relative;
 
-  /* wideThumbnail: the thumbnail across the header, above the name */
+  /* isPreview: the thumbnail across the header, above the name */
   .wide-thumbnail {
-    padding: 8px 8px 0;
+    padding: 4px 8px 0;
 
     .stacked-thumbnails {
       width: 100%;
@@ -23,6 +23,7 @@ export const HeaderContainer = styled.div`
       height: auto;
       aspect-ratio: 16 / 9;
       border-radius: 8px;
+      border: none;
 
       .type-icon {
         font-size: 48px;
@@ -48,6 +49,15 @@ export const Grid = styled.div`
   .titles,
   .filters {
     grid-column: span 2;
+  }
+
+  /* isPreview: the status at the end of the name's row */
+  &.isPreview .titles {
+    .preview-status {
+      margin-left: auto;
+      align-self: flex-start;
+      flex: none;
+    }
   }
 
   &.isCompact {

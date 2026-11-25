@@ -54,8 +54,8 @@ type DetailsPanelHeaderProps = {
   projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
-  /** the thumbnail across the header's width above the name, instead of next to it */
-  wideThumbnail?: boolean
+  /** a preview (DetailsPanel isPreview): the thumbnail across the top, the status next to the name */
+  isPreview?: boolean
 }
 
 const DetailsPanelHeader = ({
@@ -73,7 +73,7 @@ const DetailsPanelHeader = ({
   onEntityFocus,
   thumbnailInputRef,
   versionsInputRef,
-  wideThumbnail = false,
+  isPreview = false,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate, bundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -238,8 +238,23 @@ const DetailsPanelHeader = ({
   const status =
     statuses?.length !== 0 && statuses?.find((status) => status.name === statusesValue[0])
 
+  const statusSelect = (
+    <Styled.StatusSelect
+      value={statusesValue}
+      options={statuses || []}
+      disabledValues={disabledStatuses}
+      disableOpen={!canEditStatus}
+      invert
+      style={{ maxWidth: 'unset' }}
+      onChange={(value) => handleUpdate('status', value)}
+      className={clsx('status-select', { loading: isLoading })}
+      align={isCompact || isPreview ? 'right' : 'left'}
+      $textColor={getTextColor(status !== undefined ? (status as Status).color : '#OOO')}
+    />
+  )
+
   const thumbnail = (
-    <div style={{ position: 'relative' }} className={clsx({ 'wide-thumbnail': wideThumbnail })}>
+    <div style={{ position: 'relative' }} className={clsx({ 'wide-thumbnail': isPreview })}>
       <StackedThumbnails
         isLoading={isLoading}
         shimmer={isLoading}
@@ -262,12 +277,12 @@ const DetailsPanelHeader = ({
         versionsInputRef={versionsInputRef}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
       >
-        {wideThumbnail ? thumbnail : <></>}
-        <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
+        {isPreview ? thumbnail : <></>}
+        <Styled.Grid className={clsx('details-panel-header', { isCompact, isPreview })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            {!wideThumbnail && thumbnail}
+            {!isPreview && thumbnail}
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
                 <h2>{title}</h2>
@@ -333,19 +348,9 @@ const DetailsPanelHeader = ({
                 />
               )}
             </Styled.Content>
+            {isPreview && <div className="preview-status">{statusSelect}</div>}
           </Styled.Header>
-          <Styled.StatusSelect
-            value={statusesValue}
-            options={statuses || []}
-            disabledValues={disabledStatuses}
-            disableOpen={!canEditStatus}
-            invert
-            style={{ maxWidth: 'unset' }}
-            onChange={(value) => handleUpdate('status', value)}
-            className={clsx('status-select', { loading: isLoading })}
-            align={isCompact ? 'right' : 'left'}
-            $textColor={getTextColor(status !== undefined ? (status as Status).color : '#OOO')}
-          />
+          {!isPreview && statusSelect}
           {!isCompact &&
             (!hasUser || isLoading ? (
               <div></div>
@@ -369,16 +374,18 @@ const DetailsPanelHeader = ({
                 }
               />
             ))}
-          <Actions
-            entities={entities}
-            entityType={entityType}
-            entitySubTypes={entitySubTypes}
-            isLoadingEntity={!!isFetching || !!isLoading}
-            searchParams={searchParams}
-            bundleMode={bundleMode}
-            onSetSearchParams={setSearchParams}
-            onNavigate={navigate}
-          />
+          {!isPreview && (
+            <Actions
+              entities={entities}
+              entityType={entityType}
+              entitySubTypes={entitySubTypes}
+              isLoadingEntity={!!isFetching || !!isLoading}
+              searchParams={searchParams}
+              bundleMode={bundleMode}
+              onSetSearchParams={setSearchParams}
+              onNavigate={navigate}
+            />
+          )}
           {priorities ? (
             <Styled.PriorityEnumDropdown
               options={priorities}

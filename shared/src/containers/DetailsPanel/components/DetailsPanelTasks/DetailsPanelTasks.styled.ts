@@ -12,6 +12,17 @@ export const List = styled.div`
   &.loading {
     opacity: 0.7;
   }
+
+  /* a thumbnail first (versions) */
+  &.with-thumbnail {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+
+    .row-thumbnail {
+      width: 48px;
+      height: 27px;
+      border-radius: var(--border-radius-m);
+    }
+  }
 `
 
 export const Row = styled.div`
@@ -26,6 +37,10 @@ export const Row = styled.div`
 
   &:hover {
     background-color: var(--md-sys-color-surface-container-hover);
+  }
+
+  &.current {
+    background-color: var(--md-sys-color-surface-container-high);
   }
 
   .name {

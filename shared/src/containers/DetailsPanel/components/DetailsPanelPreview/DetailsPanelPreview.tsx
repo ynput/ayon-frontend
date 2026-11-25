@@ -1,5 +1,5 @@
-// The details panel for one entity, as a preview: the thumbnail across the top and the page left
-// alone (its URL, URI, panel and slide-out). For a panel next to search results, e.g. an addon's.
+// The details panel for one entity as a preview (DetailsPanel isPreview): what matters most about it,
+// and the page left alone. For a panel next to search results, e.g. an addon's.
 import { useGetProjectsInfoQuery, useGetUsersAssigneeQuery } from '@shared/api'
 import { useDetailsPanelContext } from '@shared/context'
 import { DetailsPanel } from '../../DetailsPanel'
@@ -42,8 +42,7 @@ export const DetailsPanelPreview = ({
         activeProjectUsers={users}
         scope={scope}
         onOpenViewer={(args) => onOpenViewer?.(args)}
-        wideThumbnail
-        syncWithPage={false}
+        isPreview
       />
     </div>
   )
