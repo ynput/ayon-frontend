@@ -61,6 +61,13 @@ const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
 
+// as tall as the context pill beside it
+const HomeButton = styled(HeaderButton)`
+  height: 32px;
+  padding-top: 0;
+  padding-bottom: 0;
+`
+
 const Header: React.FC = () => {
   const dispatch = useAppDispatch()
   const { menuOpen, toggleMenuOpen, setMenuOpen } = useMenuContext()
@@ -111,7 +118,7 @@ const Header: React.FC = () => {
     <nav className="primary" onClick={handleNavClick}>
       <Side>
         <Link to={'/dashboard/tasks'}>
-          <HeaderButton
+          <HomeButton
             icon="home"
             label="Home"
             variant="nav"
