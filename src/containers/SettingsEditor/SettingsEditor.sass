@@ -626,37 +626,41 @@ $row-height: calc(var(--base-input-size) - 2px)
   .form-inline-field-widget .array-add-controls
     padding: 0
 
-  // an empty list drawn as a group is only its add button, at the end of its title's line
-  // like a setting's control: no panel, and a row's height (FieldTemplateHelpers)
-  .settings-group-list.is-empty-list
+  // an empty list drawn as a group is only its add button, at the end of a row
+  // (FieldTemplateHelpers). The list fills its panel when it has items (ArrayFieldTemplate)
+  .settings-group-list.is-empty-list .array-dnd
+    min-width: 0
+
+  // a card keeps its title on the sheet and its panel: the button ends the panel's one row
+  .settings-group-card.settings-group-list.is-empty-list
+    > .settings-group-body > .settings-panel
+      padding-top: calc(var(--space-3) - var(--settings-row-y))
+
+    .array-add-controls
+      justify-content: flex-end
+
+  // a deeper list's title reads as a label: the button sits at the end of its line, with no
+  // panel, in a row's height. Its body is a panel, or the list itself in deeper groups
+  .settings-group-subgroup.settings-group-list.is-empty-list
     flex-direction: row
     align-items: flex-end
+    padding-block: var(--settings-row-y)
 
     > .settings-group-header
       flex: 1 1 auto
       min-width: 0
+      margin-top: 0
 
-    // its body: a panel holding the list, or the list itself in deeper groups
     > :not(.settings-group-header)
       flex: none
 
-    .settings-panel
+    > .settings-group-body > .settings-panel
       margin: 0
       padding: 0
       background-color: transparent
 
-    // the list fills its panel when it has items (ArrayFieldTemplate)
-    .array-dnd
-      min-width: 0
-
     .array-add-controls
       padding: 0 var(--settings-gutter) 0 0
-
-  .settings-group-subgroup.settings-group-list.is-empty-list
-    padding-block: var(--settings-row-y)
-
-    > .settings-group-header
-      margin-top: 0
 
   // labels sit in one fixed column, so every control starts on the same edge;
   // long labels wrap instead of pushing their control right

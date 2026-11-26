@@ -50,9 +50,11 @@ looks the same and typing never flips it.
   pair into `--settings-box-bg` / `--settings-box-alt-bg` first: swapping two properties on one
   element is a cycle. A panel starts the pair over.
 - An empty list is only a small, dashed "Add item +" at the end of its label's line, like a
-  switch: a list field is drawn inline (`SettingField`'s `inline`), a list group drops its
-  panel (`is-empty-list`). Deeper list groups have no panel, the list sits in the group, so
-  the rules cover both. From the first item on, the full width dashed add row is back.
+  switch: a list field is drawn inline (`SettingField`'s `inline`), a list group inside a
+  panel drops its own panel (`is-empty-list`; deeper ones have none, the list sits in the
+  group). A top-level list keeps its card title and panel, the button ending its one row: a
+  heading with a button on its line reads as floating. From the first item on, the full
+  width dashed add row is back.
 - An item whose only field is a group of single values (a path mapping) is drawn as that group's
   row or card (`wrapped`), not as a fold holding a group.
 - Fields out of the level being edited (studio, project, site) take no room (`isPropertyInScope`).
