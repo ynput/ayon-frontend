@@ -1,3 +1,4 @@
+import type { Locator } from '@playwright/test'
 import { expect, test } from '../fixtures'
 import { toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
@@ -14,6 +15,17 @@ const WAITING = {
   scope: ['folder', 'task'],
 }
 const WAITING_RGB = 'rgb(138, 43, 226)'
+
+// a status shows its colour on its label and icon, as their colour or as the fill behind them (a pill)
+const shownColors = (value: Locator) =>
+  value.evaluate((el) => {
+    const colors: string[] = []
+    for (let node: Element | null = el; node && node.tagName !== 'TD'; node = node.parentElement) {
+      const style = getComputedStyle(node)
+      colors.push(style.color, style.backgroundColor)
+    }
+    return colors
+  })
 
 const ALL_SCOPES = ['folder', 'product', 'version', 'representation', 'task', 'workfile']
 
@@ -69,7 +81,7 @@ test.describe('project anatomy: statuses', () => {
     await openStatuses(manager, projectName)
     await expect(manager.anatomy.textbox(`${item}_name`)).toHaveValue(WAITING.name)
     await expect(manager.anatomy.dropdownButton(`${item}_icon`)).toContainText(WAITING.icon)
-    await expect(manager.anatomy.dropdownButton(`${item}_scope`)).toHaveText(/^Folder\s*Task/)
+    expect((await manager.anatomy.selectedOptions(`${item}_scope`)).sort()).toEqual(WAITING.scope)
   })
 
   test('a status added in the anatomy is offered in an overview that was already open', async ({
@@ -119,8 +131,8 @@ test.describe('project anatomy: statuses', () => {
     await overview.setEnumCell('anim', 'status', WAITING.name)
 
     const cell = overview.cell('anim', 'status')
-    await expect(cell.getByText(WAITING.name)).toHaveCSS('color', WAITING_RGB)
-    await expect(cell.getByText(WAITING.icon)).toHaveCSS('color', WAITING_RGB)
+    await expect.poll(() => shownColors(cell.getByText(WAITING.name))).toContain(WAITING_RGB)
+    await expect.poll(() => shownColors(cell.getByText(WAITING.icon))).toContain(WAITING_RGB)
     await expect
       .poll(async () => (await api.getTask(projectName, task.id)).status)
       .toBe(WAITING.name)

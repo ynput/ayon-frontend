@@ -1,4 +1,4 @@
-import { test } from '@playwright/test'
+import { Page, test } from '@playwright/test'
 import { AyonApi } from './api'
 
 type AddonOptions = {
@@ -69,4 +69,25 @@ export const requireAddon = async (api: AyonApi, name: string, options: AddonOpt
   const reason = await addonUnavailable(api, name, options)
   test.skip(!!reason, reason)
   return (await serverAddons!).production[name]
+}
+
+/**
+ * The page sees no Power Pack license, whatever the server's: the powerpack's `license` module is
+ * left out of `/api/frontendModules`, so the page's license check falls back to "not licensed".
+ * Call it before the page loads. Only for behaviour the page alone decides by the license.
+ */
+export const withoutPowerLicense = async (page: Page) => {
+  await page.route('**/api/frontendModules*', async (route) => {
+    const response = await route.fetch()
+    const modules = await response.json()
+    await route.fulfill({
+      response,
+      json: modules.map((m: any) => {
+        if (m.addonName !== 'powerpack') return m
+        const kept = { ...m.modules }
+        delete kept.license
+        return { ...m, modules: kept }
+      }),
+    })
+  })
 }

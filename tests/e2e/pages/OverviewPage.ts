@@ -1,6 +1,7 @@
 import { expect, Locator, Page } from '@playwright/test'
 import { dialog, menuItem, toast } from '@ynput/ayon-e2e'
 import { DetailsPanel } from './DetailsPanel'
+import { ImportDialog, ImportFile } from './ImportDialog'
 import { SearchFilterBar } from './SearchFilterBar'
 
 /**
@@ -441,29 +442,18 @@ export class OverviewPage {
     await this.sidebar().getByText(label, { exact: true }).click()
   }
 
-  importDialog() {
-    return dialog(this.page, /^Import folders and tasks/)
-  }
-
-  // FLAG: the CSV file input is hidden behind the "Choose .csv file" button, so it is set directly
-  async importCsv(filePath: string, { created }: { created: number }) {
+  /** Import / Export > Import: the import wizard for folders and tasks */
+  async openImport() {
     await this.page.getByTestId('table-import-export').click()
     await this.page.getByTestId('import-file').click()
-    const wizard = this.importDialog()
-    await expect(wizard).toBeVisible()
-    await wizard.locator('input[type="file"]').setInputFiles(filePath)
-    await expect(wizard.getByText(/\d+ rows found/)).toBeVisible()
-    await wizard.getByRole('button', { name: 'Next', exact: true }).click()
-    await expect(wizard.getByRole('columnheader', { name: 'File column' })).toBeVisible()
-    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(wizard.getByRole('columnheader', { name: 'Mapped Value' })).toBeVisible()
-    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(wizard.getByText(`Creating: ${created}`)).toBeVisible()
-    await wizard.getByRole('button', { name: 'Import data', exact: true }).click()
-    await expect(wizard.getByText('Import finished')).toBeVisible({ timeout: 30_000 })
-    await expect(wizard.getByText(`Created: ${created}`)).toBeVisible()
-    await wizard.getByRole('button', { name: 'Close', exact: true }).click()
-    await expect(wizard).toBeHidden()
+    const wizard = new ImportDialog(this.page, /^Import folders and tasks/)
+    await expect(wizard.root).toBeVisible()
+    return wizard
+  }
+
+  async importCsv(file: ImportFile, { created }: { created: number }) {
+    const wizard = await this.openImport()
+    await wizard.importWithDefaults(file, { created })
   }
 }
 

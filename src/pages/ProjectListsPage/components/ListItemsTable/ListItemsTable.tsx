@@ -146,7 +146,10 @@ const ListItemsTable: FC<ListItemsTableProps> = ({
   }
 
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+    <div
+      style={{ position: 'relative', width: '100%', height: '100%' }}
+      data-testid="list-items-table"
+    >
       <ProjectTreeTable
         addonPage="lists"
         scope={scope}

@@ -1,6 +1,28 @@
-import { expect, Page } from '@playwright/test'
+import { expect, Locator, Page } from '@playwright/test'
 import { confirmDialog, dialog, formRow, menuItem, toast } from '@ynput/ayon-e2e'
 import { AyonApi } from '../support/api'
+import { ImportDialog } from './ImportDialog'
+
+/** The import wizard opened from the lists page (import context `entity_list_item`) */
+export class ListImportDialog extends ImportDialog {
+  get newListLabel() {
+    return this.root.getByPlaceholder('List name')
+  }
+
+  /** What the list an import creates lists */
+  async setNewListType(entityType: 'Folders' | 'Tasks' | 'Products' | 'Versions') {
+    // FLAG: the option buttons' names start with their icon ligature
+    const option = this.root.getByRole('button', { name: new RegExp(`^\\w+ ${entityType}$`) })
+    await option.click()
+    await expect(option).toHaveClass(/selected/)
+  }
+
+  /** After an import that created a list: open it and close the wizard */
+  async openNewList() {
+    await this.root.getByRole('button', { name: /^\w+ Open the new list$/ }).click()
+    await expect(this.root).toBeHidden()
+  }
+}
 
 /** /projects/:project/lists, and /projects/:project/reviews for review sessions */
 export class ListsPage {
@@ -71,9 +93,7 @@ export class ListsPage {
   }
 
   get itemsTable() {
-    return this.page
-      .getByRole('table')
-      .filter({ has: this.page.getByRole('columnheader', { name: 'Thumbnail' }) })
+    return this.page.getByTestId('list-items-table').getByRole('table')
   }
 
   itemNameCell(label: string) {
@@ -161,10 +181,13 @@ export class ListsPage {
     await expect(moveDialog).toBeHidden()
   }
 
+  // the tab buttons by their tab ids, whatever their labels and icons
   async detailsTab(tab: 'Details' | 'Share') {
-    // FLAG: icon ligatures are part of the tab buttons' names
-    const icons = { Details: 'lists', Share: 'share' }
-    await this.page.getByRole('button', { name: `${icons[tab]} ${tab}`, exact: true }).click()
+    const ids = { Details: 'details', Share: 'access' }
+    await this.page
+      .getByTestId('list-details-panel')
+      .getByTestId(`list-details-tab-${ids[tab]}`)
+      .click()
   }
 
   // FLAG: the share form (a powerpack module) has no roles, rows are found by their label element
@@ -207,6 +230,26 @@ export class ListsPage {
     return this.itemRow(label).locator(`td.${columnId}`)
   }
 
+  /**
+   * The cell found by its id (`cell-<row id>-<column id>`), read from the row's name cell. Use it for a
+   * column right of the screen: the table then scrolls sideways and unmounts the name column that
+   * `itemCell` finds the row by.
+   */
+  async stableItemCell(label: string, columnId: string) {
+    const nameId = await this.itemRow(label).locator('td.name > [id^="cell-"]').getAttribute('id')
+    const rowId = nameId!.slice('cell-'.length, -'-name'.length)
+    const cell = this.page.locator(`td:has(> [id="cell-${rowId}-${columnId}"])`)
+    // columns far off screen are not mounted: scroll the table sideways until the cell is
+    const container = this.page.getByTestId('list-items-table').locator('.table-container')
+    await expect(async () => {
+      if ((await cell.count()) === 0) {
+        await container.evaluate((el) => el.scrollBy({ left: el.clientWidth / 2 }))
+      }
+      await expect(cell).toHaveCount(1, { timeout: 500 })
+    }).toPass({ timeout: 15_000 })
+    return cell
+  }
+
   async dragItem(label: string, ontoLabel: string) {
     const handle = this.itemRow(label).getByTitle('Drag to reorder')
     // the handle fades in (visibility transition); a press before that lands on the cell instead
@@ -247,8 +290,7 @@ export class ListsPage {
     return this.page.getByRole('button', { name: 'remove', exact: true })
   }
 
-  async editItemTextCell(label: string, columnId: string, value: string) {
-    const cell = this.itemCell(label, columnId)
+  async editItemTextCell(cell: Locator, value: string) {
     await cell.dblclick()
     const input = cell.locator('input')
     await expect(input).toBeFocused()
@@ -257,7 +299,7 @@ export class ListsPage {
     await input.press('Enter')
     await expect(input).toBeHidden()
     await this.page.keyboard.press('Escape')
-    await expect(this.itemsTable.locator('td.editing')).toHaveCount(0)
+    await expect(this.page.locator('td.editing')).toHaveCount(0)
   }
 
   async showItemColumn(label: string, submenu?: string) {
@@ -276,12 +318,43 @@ export class ListsPage {
     await this.page.getByText('List attributes', { exact: true }).click()
     await this.page.getByRole('button', { name: 'add Add attribute', exact: true }).click()
     // the editor's header follows the title as it is typed, so find it by its submit button
-    const create = this.page.getByRole('button', { name: /Create Attribute$/ })
+    const create = this.page.getByRole('button', { name: /Create attribute$/i })
     const editor = this.page.locator('.dialog').filter({ has: create })
     await expect(editor).toBeVisible()
     await formRow(editor, 'Title').getByRole('textbox').fill(title)
     await create.click()
     await expect(editor).toBeHidden()
+  }
+
+  private async importDialog(header: string | RegExp) {
+    const wizard = new ListImportDialog(this.page, header)
+    await expect(wizard.root).toBeVisible()
+    return wizard
+  }
+
+  /** Import / Export > Import in the selected list's toolbar: imports into that list */
+  async openImportIntoList(label: string) {
+    await this.page.getByTestId('table-import-export').click()
+    await this.page.getByTestId('import-file').click()
+    return this.importDialog(`Import list items into ${label}`)
+  }
+
+  /** "Create list from CSV" in the lists header menu */
+  async openCreateListFromCsv() {
+    await this.headerMenu('Create list from CSV')
+    return this.importDialog(/^Import list items/)
+  }
+
+  /** "Create list from CSV" in a list folder's menu: the new list goes into that folder */
+  async openCreateListFromCsvIn(folderLabel: string) {
+    await this.rowMenu(folderLabel, 'Create list from CSV')
+    return this.importDialog(`Import list items into ${folderLabel}`)
+  }
+
+  /** The Import button shown while no list is selected: creates a new list */
+  async openImportWithoutList() {
+    await this.page.getByTestId('import-file').click()
+    return this.importDialog(/^Import list items/)
   }
 
   // FLAG: the label is a plain div not associated with its value, so the row is found by CSS

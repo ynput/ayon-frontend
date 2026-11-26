@@ -114,6 +114,7 @@ test.describe('activity feed checklists and filters', () => {
       'Notes:\n\n* [ ] fix hands\n* [ ] fix feet',
     )
     const panel = await openTask(page, projectName)
+    await panel.openSearch()
     await expect(panel.checklistsFilter).toHaveText(/0\/2/)
 
     await panel.toggleChecklistItem('Notes:', 'fix feet')
@@ -134,6 +135,7 @@ test.describe('activity feed checklists and filters', () => {
     const statusChange = panel.activity(/Not ready.*In progress/)
     await expect(statusChange).toBeVisible()
 
+    await panel.openSearch()
     await panel.commentsFilter.click()
 
     // the feed reloads with the filter; the comment showing again means the filtered list is in

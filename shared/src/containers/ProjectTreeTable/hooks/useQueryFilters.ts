@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Filter, SEARCH_FILTER_ID } from '@ynput/ayon-react-components'
-import { type QueryTasksFoldersApiArg } from '@shared/api'
+import { type FolderSearchRequest } from '@shared/api'
 import {
   clientFilterToQueryFilter,
   expandRelativeDates,
@@ -21,9 +21,9 @@ interface UseQueryFiltersProps {
 }
 
 interface QueryFiltersResult {
-  filter: QueryTasksFoldersApiArg['tasksFoldersQuery']['filter']
+  filter: FolderSearchRequest['taskFilter']
   filterString?: string
-  search: QueryTasksFoldersApiArg['tasksFoldersQuery']['search']
+  search: FolderSearchRequest['search']
   combinedFilters: QueryFilter // For data fetching (includes slice filters)
   displayFilters: QueryFilter // For SearchFilterWrapper (excludes slice filters, except hierarchy)
 }

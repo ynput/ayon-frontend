@@ -1,13 +1,13 @@
 // Wraps the SubtasksManager remote component and provides it with required props from context and api
 import { ThunkDispatch, UnknownAction } from '@reduxjs/toolkit'
 import api, {
+  AssigneeOption,
   productsListTag,
   QueryFilter,
   SubTaskNode,
   UpdateEntitiesArgs,
   UpdateEntityOperation,
   useGetUsersAssigneeQuery,
-  UserModel,
   useUpdateEntitiesMutation,
   useUpdateSubtasksMutation,
 } from '@shared/api'
@@ -34,7 +34,7 @@ export interface SubtasksManagerProps extends Omit<React.HTMLAttributes<HTMLDivE
   taskName: string
   folderId?: string // used for creating products
   selectedSubtaskIds?: string[]
-  users: UserModel[]
+  users: AssigneeOption[]
   title?: string | null
   filters?: QueryFilter
   actionsPortalClassName?: string

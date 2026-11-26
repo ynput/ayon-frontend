@@ -112,11 +112,11 @@ const getEntityTypeForMappings = (
     ?? FALLBACK_ENTITY_TYPE
 
 const getHierarchyRowFilter = (
-  column: string,
+  targetColumn: string,
   entityTypeSource: string,
   mappings: ValueMappings | null,
 ) => {
-  switch (column) {
+  switch (targetColumn) {
     case FOLDER_TYPE:
       return (row: CSVRow) => {
         return getEntityTypeForMappings(row, mappings, entityTypeSource) === HierarchyEntityType.FOLDER
@@ -144,7 +144,7 @@ export const preprocessRowsIfHierarchy = (
     const columnMapping = columnMappings[column]
 
     if (columnMapping.targetColumn && entityTypeDependentColumns.has(columnMapping.targetColumn)) {
-      return rows.filter(getHierarchyRowFilter(column, entityTypeSource, mappings))
+      return rows.filter(getHierarchyRowFilter(columnMapping.targetColumn, entityTypeSource, mappings))
     } else if (columnMapping.targetColumn === FOLDER_TASK_TYPE_COMBINED_COLUMN) {
       return rows.map((row) => {
         const entityType = getEntityTypeForMappings(row, mappings, entityTypeSource)

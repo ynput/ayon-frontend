@@ -92,7 +92,7 @@ const Panel = ({
   const toggleIcon = expanded ? 'expand_more' : 'chevron_right'
 
   return (
-    <PanelWrapper className={`panel ${className}`} data-fieldid={objId}>
+    <PanelWrapper className={`panel ${className}`} data-fieldid={objId} data-expanded={!!expanded}>
       <PanelHeader
         className="panel-header"
         onContextMenu={onContextMenu}

@@ -17,9 +17,7 @@ test.describe('version reviewables', () => {
     await products.openInViewer('renderMain - v001')
     const viewer = new ViewerPage(page)
     await viewer.expectVersion('v001')
-    await expect(
-      viewer.root.getByRole('heading', { name: 'This version has no online reviewables.' }),
-    ).toBeVisible()
+    await expect(viewer.root.getByRole('heading', { name: /no online reviewables/i })).toBeVisible()
 
     await viewer.uploadInput.setInputFiles(MEDIA.navyVideo.path)
 

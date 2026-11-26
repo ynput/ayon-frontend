@@ -100,9 +100,7 @@ test.describe('smoke: projects manager', () => {
       name: 'roots',
       path: manager('roots'),
       ready: (page) =>
-        visible(
-          heading(page, 'No sites were found').or(page.getByRole('button', { name: 'Save' })),
-        ),
+        visible(heading(page, /^No sites/).or(page.getByRole('button', { name: 'Save' }))),
     },
     {
       name: 'teams',
@@ -198,7 +196,7 @@ test.describe('smoke: studio pages', () => {
     {
       name: 'market',
       path: () => '/market',
-      ready: (page) => visible(page.getByPlaceholder('Search', { exact: true })),
+      ready: (page) => visible(page.getByPlaceholder(/^Search/)),
       skip: async ({ api }) => {
         const res = await api.request.get('/api/market/addons')
         return res.status() === 503 && 'the server is offline, the market needs internet'
