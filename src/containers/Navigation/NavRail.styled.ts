@@ -15,7 +15,7 @@ export const Rail = styled.nav`
   gap: 2px;
   padding: 4px 2px 8px;
   overflow: hidden;
-  /* the app chrome sits on the page background, like the top bar and the tabs */
+  /* with the top bar, the frame round the page */
   background-color: var(--md-sys-color-surface-container-low);
 
   /* editing the layout: every item shows, nothing folds into More */

@@ -154,13 +154,15 @@ strong {
   flex-direction: column;
   min-height: 0;
 
-  // below the top bar: the sidebar and the page column
+  // below the top bar: the sidebar and the page column. The top bar and the sidebar frame the page,
+  // on the same surface; the page, its tabs with it, sits on the page background
   .app-body {
     flex: 1;
     min-height: 0;
     display: flex;
     flex-direction: row;
     overflow: hidden;
+    background-color: var(--md-sys-color-surface-container-low);
   }
   // an addon's own route (AppRoutes): no sidebar, the page lays out in #root as before
   &.addon-route {
@@ -180,6 +182,11 @@ strong {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    background-color: var(--md-sys-color-background);
+  }
+  // rounded where the top bar and the sidebar meet (no sidebar for guests)
+  [data-nav-rail] + .app-page {
+    border-top-left-radius: var(--border-radius-xxl);
   }
 
   // a page's main area, in the page column (or the whole window, e.g. a detached panel)
@@ -203,7 +210,7 @@ strong {
     // Navigation
   }
 }
-// the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
+// the top bar: with the sidebar, the frame round the page (.app-body)
 nav.primary {
   background-color: var(--md-sys-color-surface-container-low);
   padding: 6px;

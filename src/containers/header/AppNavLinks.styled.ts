@@ -2,11 +2,10 @@ import styled from 'styled-components'
 import { Button, Icon } from '@ynput/ayon-react-components'
 
 export const NavBar = styled.nav`
-  padding-right: 8px;
-  /* the line the tabs stand on, the edge of the page */
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--md-sys-color-surface-container-low);
-  padding: 0 8px;
+  /* the page's tabs sit on the page itself, below the top bar (transparent over the components'
+     .secondary class, which fills it) */
+  background-color: transparent;
+  padding: 6px 8px 0;
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
@@ -20,11 +19,6 @@ export const NavBar = styled.nav`
     list-style: none;
     margin: 0;
     padding: 0;
-
-    /* this puts the active tab's underline over the navbar's line */
-    position: relative;
-    top: 1px;
-    margin-bottom: -1px;
   }
 
   ul.trailing {
@@ -126,7 +120,7 @@ export const NavItem = styled.li`
       }
     }
 
-    /* the active tab is underlined in the accent colour, on the navbar's line */
+    /* the active tab is underlined in the accent colour */
     &.active {
       box-shadow: inset 0 -2px 0 0 var(--md-sys-color-primary);
 
