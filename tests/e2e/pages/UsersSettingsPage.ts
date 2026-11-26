@@ -1,5 +1,6 @@
 import { expect, Page } from '@playwright/test'
 import { dialog, formRow, menuItem, runPrefix, switchBody, toast } from '@ynput/ayon-e2e'
+import { ImportDialog } from './ImportDialog'
 
 /** /settings/users */
 export class UsersSettingsPage {
@@ -41,23 +42,29 @@ export class UsersSettingsPage {
     return this.table.locator('tbody tr td:first-child').allInnerTexts()
   }
 
-  async previewImport(name: string, buffer: Buffer) {
+  /** Import / Export > Import: the import wizard for users (admins only) */
+  async openImport() {
     await this.page.getByTestId('table-import-export').click()
     await this.page.getByTestId('import-file').click()
-    const wizard = dialog(this.page, /Import users/)
-    await expect(wizard).toBeVisible()
-    await wizard.locator('input[type="file"]').setInputFiles({ name, mimeType: 'text/csv', buffer })
-    await expect(wizard.getByText(/1 rows found/)).toBeVisible()
-    await wizard.getByRole('button', { name: 'Next', exact: true }).click()
-    await expect(wizard.getByRole('columnheader', { name: 'File column' })).toBeVisible()
-    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(wizard.getByRole('columnheader', { name: 'Mapped Value' })).toBeVisible()
-    await wizard.getByRole('button', { name: 'Continue', exact: true }).click()
-    await expect(wizard.getByText('Updating: 1')).toBeVisible()
-    await expect(wizard.getByRole('button', { name: 'Import data', exact: true })).toBeEnabled()
-    await expect(wizard).toContainText(/Errors:\s*0/)
-    await wizard.getByRole('button', { name: 'close', exact: true }).click()
-    await expect(wizard).toBeHidden()
+    const wizard = new ImportDialog(this.page, /^Import users/)
+    await expect(wizard.root).toBeVisible()
+    return wizard
+  }
+
+  /** Runs a one-user CSV through the wizard up to its preview, which must update that user, then closes it */
+  async previewImport(name: string, buffer: Buffer) {
+    const wizard = await this.openImport()
+    await wizard.upload({ name, mimeType: 'text/csv', buffer }, { rows: 1 })
+    await wizard.continueToValues()
+    await wizard.continueToPreview({ updated: 1, errors: 0 })
+    await wizard.dismiss()
+  }
+
+  /** The cell of user `name` in the column `header` */
+  async cell(name: string, header: string) {
+    const index = (await this.columnNames()).indexOf(header)
+    expect(index, `the users table has no "${header}" column`).toBeGreaterThanOrEqual(0)
+    return this.row(name).getByRole('cell').nth(index)
   }
 
   async filter(text: string) {
