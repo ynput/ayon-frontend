@@ -33,9 +33,9 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   `usePinnedViewSettings`): it never selects the view or writes the working view; changes
   are a draft per view in session storage (`pinned-view-drafts`, the dot on the tab) until Save
   changes, Save as new or Revert in the tab's menu (`PinnedTabMenu`, also on right-click).
-  The pages a view pins from lead their tab with that page's icon; a pinned tab is quieter, its
-  name lighter and the same icon smaller, so it still says which page it opens wherever it is
-  moved (Milan, 2026-11-26).
+  The pages a view pins from lead their tab with that page's icon; a pinned tab has the same icon,
+  smaller and dimmed, so it still says which page it opens wherever it is moved, and its name as
+  any tab's (Milan, 2026-11-26: a lighter name was too quiet).
 - **Addon routes** (`Route` keyword modules: review and storyboard sessions) add `addon-route` to
   `#root`: the sidebar hides and the wrappers are `display: contents`, so the page lays out as before
   the sidebar existed. The review player is `position: fixed` without offsets: it relies on that.
