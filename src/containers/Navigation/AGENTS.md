@@ -42,6 +42,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 
 ## Contracts
 
+- **Names** (Milan, 2026-11-26): a project's first item is **Overview** (id `production`): the
+  whole project, products included, also for studios that don't track production in AYON. The
+  Overview page's tab is **Folders & tasks** (module, path and view type stay `overview`), as the
+  page doesn't show products. Below, "Overview" is that page.
+
 - **Item ids are stable** and are what layouts refer to: a core module key
   (`production`, `reviews`, `workfiles`), `addon:<addon>/<page id>`, `group:<addon>/<group>`,
   `remote:<module>`, `classic:<addon>`. Don't derive them from labels or positions.
@@ -53,7 +58,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 - **Page placement** (`addon/src/scopes.ts` `PageMeta`): `placement`, `icon`, `section`, `group`,
   `groupTitle`, `order`. What a page declares wins; `knownPages.ts` places known addons that don't
   declare yet; anything else is `other` with the `extension` icon. `placement: 'tab'` puts the page
-  in the first item (Production, My work).
+  in the first item (Overview, My work).
 - **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order, a divider between
   sections; until a layout arranges it.
 - **Layouts are views of type `layout`** (behind the Power Pack licence). Their settings

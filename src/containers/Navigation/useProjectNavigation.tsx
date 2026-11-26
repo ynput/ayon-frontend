@@ -129,13 +129,16 @@ export const useProjectNavigation = (projectName: string) => {
     const pageIcon = (viewType: PinnableViewType) => <Icon icon={PINNED_PAGES[viewType].icon} />
 
     const production: NavItem = {
+      // the whole project, products included: also for studios that don't track production in
+      // AYON (the id stays, layouts refer to it)
       id: 'production',
-      label: 'Production',
+      label: 'Overview',
       icon: 'table_rows',
       section: 'main',
       tabs: [
         {
-          name: 'Overview',
+          // the Overview page: what it shows, as the item is called Overview
+          name: 'Folders & tasks',
           path: path('overview'),
           module: 'overview',
           viewType: 'overview',
