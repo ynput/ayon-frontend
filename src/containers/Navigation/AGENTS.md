@@ -77,7 +77,7 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   `LayoutMenuProps` (`useLayoutMenu`): the readable layouts, which applies here, the pick, the
   project and studio defaults, and the actions that change them (`pick`, `null` to follow the
   defaults; `setProjectDefault` for managers, project data; `setStudioDefault` for admins, which
-  copies the layout into the base view). Core reports how they went (toasts). Save as new,
+  copies the layout into the base view; `null` removes either). Core reports how they went (toasts). Save as new,
   sharing, renaming and deleting are the views API's, in the menu's own dialog. Keep the type in
   step with its copy in Power Pack (`frontend/modules/views/src/layouts/types.ts`).
 - **Changing it** (pins, edit mode) waits for `ready`: a change made earlier would be

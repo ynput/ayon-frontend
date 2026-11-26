@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react'
 import {
   useCreateViewMutation,
+  useDeleteViewMutation,
   useGetBaseViewQuery,
   useGetProjectQuery,
   useGetViewQuery,
@@ -114,6 +115,7 @@ export const useActiveLayout = (projectName?: string) => {
 
   const [updateView] = useUpdateViewMutation()
   const [createView] = useCreateViewMutation()
+  const [deleteView] = useDeleteViewMutation()
   const [setPreferences] = useSetFrontendPreferencesMutation()
   const [updateProject] = useUpdateProjectMutation()
 
@@ -143,10 +145,15 @@ export const useActiveLayout = (projectName?: string) => {
 
   /**
    * Makes a layout the studio default (admins): the base view gets a copy of its settings, so
-   * later changes to that layout don't change the default.
+   * later changes to that layout don't change the default. `null` removes it.
    */
   const setStudioDefault = useCallback(
-    async (layoutId: string) => {
+    async (layoutId: string | null) => {
+      if (!layoutId) {
+        if (studioDefault?.id)
+          await deleteView({ viewType: LAYOUT_VIEW_TYPE, viewId: studioDefault.id }).unwrap()
+        return
+      }
       const view = await dispatch(
         viewsQueries.endpoints.getView.initiate(
           { viewType: LAYOUT_VIEW_TYPE, viewId: layoutId },
@@ -170,7 +177,7 @@ export const useActiveLayout = (projectName?: string) => {
           genericViewPostModel: { label: BASE_VIEW_ID, working: false, settings },
         }).unwrap()
     },
-    [dispatch, studioDefault?.id, updateView, createView],
+    [dispatch, studioDefault?.id, updateView, createView, deleteView],
   )
 
   const writeNamed = useCallback(

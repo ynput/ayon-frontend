@@ -86,11 +86,12 @@ export const useLayoutMenu = (): LayoutMenuProps | null => {
             )(layoutId)
         : undefined,
     setStudioDefault: access.admin
-      ? reported(
-          active.setStudioDefault,
-          "Couldn't change the studio default",
-          'Set as the studio default layout',
-        )
+      ? (layoutId) =>
+          reported(
+            active.setStudioDefault,
+            "Couldn't change the studio default",
+            layoutId ? 'Set as the studio default layout' : 'The studio has no default layout now',
+          )(layoutId)
       : undefined,
     dispatch,
   }

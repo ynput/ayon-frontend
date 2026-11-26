@@ -106,8 +106,8 @@ export interface LayoutMenuProps {
   customize?: () => void
   /** managers, in a project: makes a layout its default, or clears it with `null` */
   setProjectDefault?: (layoutId: string | null) => Promise<void>
-  /** admins: copies a layout into the studio default */
-  setStudioDefault?: (layoutId: string) => Promise<void>
+  /** admins: copies a layout into the studio default, or removes it with `null` */
+  setStudioDefault?: (layoutId: string | null) => Promise<void>
   /** the app store's dispatch, for the views dialogs (as `ViewFormDialog` gets it) */
   dispatch: (action: any) => any
 }
