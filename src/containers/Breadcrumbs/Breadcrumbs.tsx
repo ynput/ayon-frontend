@@ -210,11 +210,11 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
 
   return (
     <Styled.Slot ref={slotRef}>
-      <Styled.Pill id="context-pill">
+      <Styled.Pill id="context-pill" className={clsx({ here: !!project })}>
         {onProjectsClick ? (
           <Styled.ProjectButton
             onClick={onProjectsClick}
-            className={clsx({ open: projectsOpen, choose: !project, here: !!project })}
+            className={clsx({ open: projectsOpen, choose: !project })}
             aria-haspopup="dialog"
             aria-expanded={!!projectsOpen}
             data-tooltip={project ? 'Switch project' : undefined}
@@ -226,7 +226,7 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
           </Styled.ProjectButton>
         ) : (
           project && (
-            <Styled.ProjectButton as="span" className="here" style={{ cursor: 'default' }}>
+            <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
               <Icon icon="category" />
               <strong>{project}</strong>
             </Styled.ProjectButton>

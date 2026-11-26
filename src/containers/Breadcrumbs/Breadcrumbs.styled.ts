@@ -18,6 +18,21 @@ export const Pill = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-highest);
+
+  /* in a project: the project and the path in it are the context you are in, tinted (as Home
+     is, outside one); its parts shade on hover over the tint */
+  &.here {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+
+    & > * {
+      color: inherit;
+    }
+    & > button:hover,
+    & > .open {
+      background-color: var(--color-nav-hover);
+    }
+  }
 `
 
 // the project name: opens the project switcher
@@ -53,16 +68,6 @@ export const ProjectButton = styled.button`
   &:hover,
   &.open {
     background-color: var(--md-sys-color-surface-container-highest-hover);
-  }
-
-  /* in a project: tinted, the context you are in (as Home is, outside one) */
-  &.here {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
-  }
-  &.here:is(button):hover,
-  &.here.open {
-    background-color: var(--md-sys-color-primary-container-hover);
   }
 
   /* on Home: no project yet, an empty place in the path */
