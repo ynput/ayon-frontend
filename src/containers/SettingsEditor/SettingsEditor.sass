@@ -636,13 +636,18 @@ $row-height: calc(var(--base-input-size) - 2px)
       flex: 1 1 auto
       min-width: 0
 
-    > .settings-group-body
+    // its body: a panel holding the list, or the list itself in deeper groups
+    > :not(.settings-group-header)
       flex: none
 
-      > .settings-panel
-        margin: 0
-        padding: 0
-        background-color: transparent
+    .settings-panel
+      margin: 0
+      padding: 0
+      background-color: transparent
+
+    // the list fills its panel when it has items (ArrayFieldTemplate)
+    .array-dnd
+      min-width: 0
 
     .array-add-controls
       padding: 0 var(--settings-gutter) 0 0
