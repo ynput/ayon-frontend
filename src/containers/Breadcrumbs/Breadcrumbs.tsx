@@ -6,6 +6,7 @@ import { upperFirst } from 'lodash'
 import { toast } from 'react-toastify'
 import { copyToClipboard, parseUri } from '@shared/util'
 import { URL_PARAM_ID, useURIContext } from '@shared/context'
+import { useGetProjectQuery } from '@shared/api'
 import { Module, ModulePath } from '@pages/ProjectManagerPage/mappers'
 import clsx from 'clsx'
 
@@ -129,6 +130,30 @@ const collapsePath = (path: string[], cut: number): string[] => {
   return cut <= middle.length ? [path[0], '…', ...middle.slice(cut), last] : ['…', last]
 }
 
+interface ProjectThumbProps {
+  projectName: string
+  /** changes when a new thumbnail is uploaded (the image is cached for an hour) */
+  updatedAt?: string
+}
+
+// the project's thumbnail, or the project icon when it has none (the server answers a 1px image);
+// hidden until it has loaded, so an empty one never shows
+const ProjectThumb = ({ projectName, updatedAt }: ProjectThumbProps) => {
+  const [state, setState] = useState<'loading' | 'shown' | 'empty'>('loading')
+  if (state === 'empty') return <Icon icon="category" />
+  return (
+    <Styled.Thumb
+      src={`/api/projects/${encodeURIComponent(projectName)}/thumbnail${
+        updatedAt ? `?updatedAt=${encodeURIComponent(updatedAt)}` : ''
+      }`}
+      alt=""
+      className={state}
+      onLoad={(e) => setState(e.currentTarget.naturalWidth <= 1 ? 'empty' : 'shown')}
+      onError={() => setState('empty')}
+    />
+  )
+}
+
 interface BreadcrumbsProps {
   /** opens the project switcher; without it the project name is plain text */
   onProjectsClick?: () => void
@@ -182,6 +207,18 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
   }
 
   const { project, path } = getCrumbContext(uri, location.pathname)
+  // the project page has it already (ProjectContext); an upload refetches it
+  const { data: projectData } = useGetProjectQuery(
+    { projectName: project ?? '' },
+    { skip: !project },
+  )
+  const thumb = project && (
+    <ProjectThumb
+      key={`${project}-${projectData?.updatedAt}`}
+      projectName={project}
+      updatedAt={projectData?.updatedAt}
+    />
+  )
   const fullText = [project, ...path].filter(Boolean).join(' / ')
 
   // the whole path when the bar has room for it; otherwise levels from the middle go, one at a
@@ -210,7 +247,7 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
 
   return (
     <Styled.Slot ref={slotRef}>
-      <Styled.Pill id="context-pill" className={clsx({ here: !!project })}>
+      <Styled.Pill id="context-pill">
         {onProjectsClick ? (
           <Styled.ProjectButton
             onClick={onProjectsClick}
@@ -220,14 +257,14 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
             data-tooltip={project ? 'Switch project' : undefined}
             data-tooltip-delay={500}
           >
-            <Icon icon="category" />
+            {thumb || <Icon icon="category" />}
             <strong>{project || 'Choose a project'}</strong>
             <Icon icon="expand_more" />
           </Styled.ProjectButton>
         ) : (
           project && (
             <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
-              <Icon icon="category" />
+              {thumb}
               <strong>{project}</strong>
             </Styled.ProjectButton>
           )

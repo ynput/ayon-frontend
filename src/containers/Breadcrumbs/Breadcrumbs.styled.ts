@@ -18,20 +18,18 @@ export const Pill = styled.div`
   border-radius: var(--border-radius-m);
   overflow: hidden;
   background-color: var(--md-sys-color-surface-container-highest);
+`
 
-  /* in a project: the project and the path in it are the context you are in, tinted (as Home
-     is, outside one); its parts shade on hover over the tint */
-  &.here {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
+// the project's thumbnail before its name (16:9, as on the Projects page), shown once loaded
+export const Thumb = styled.img`
+  width: 36px;
+  height: 20px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: 3px;
 
-    & > * {
-      color: inherit;
-    }
-    & > button:hover,
-    & > .open {
-      background-color: var(--color-nav-hover);
-    }
+  &.loading {
+    visibility: hidden;
   }
 `
 
@@ -68,6 +66,11 @@ export const ProjectButton = styled.button`
   &:hover,
   &.open {
     background-color: var(--md-sys-color-surface-container-highest-hover);
+  }
+
+  /* a thumbnail sits as far in as it is from the pill's top and bottom */
+  &:has(img) {
+    padding-left: 6px;
   }
 
   /* on Home: no project yet, an empty place in the path */
