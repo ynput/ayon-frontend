@@ -55,7 +55,8 @@ export const AddFirstItemButton = styled(Button)`
     gap: var(--base-gap-small);
     width: auto;
     height: var(--base-input-size);
-    padding: 0 var(--space-2, 8px);
+    /* the plus (20px) centres on the column a list item's X sits in */
+    padding: 0 calc((var(--settings-handle-size, 24px) - 20px) / 2) 0 var(--space-2, 8px);
     color: var(--md-sys-color-on-surface-variant);
     white-space: nowrap;
   }
