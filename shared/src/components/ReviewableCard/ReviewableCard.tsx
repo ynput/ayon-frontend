@@ -55,7 +55,7 @@ export const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
     if (unoptimized) title = filename
 
     // names are truncated in the card, so show them in full on hover
-    const tooltip = [title, subTitle].filter(Boolean).join('\n')
+    const tooltip = [label, filename].filter(Boolean).join('\n')
 
     return (
       <Styled.Card
