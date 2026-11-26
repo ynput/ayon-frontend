@@ -72,6 +72,20 @@ export const NavItem = styled.li`
     opacity: 0.4;
   }
 
+  /* a pinned view is quieter than the pages, which lead with their icon; its own smaller icon
+     says which page it opens */
+  &.pinned a:not(.active) button {
+    color: var(--md-sys-color-on-surface-variant);
+    font-weight: 400;
+  }
+  &.pinned a:not(.active):hover button {
+    color: var(--md-sys-color-on-surface);
+  }
+  .pin-icon {
+    font-size: 16px;
+    opacity: 0.7;
+  }
+
   /* NavLink */
   a {
     padding: 2px 4px;

@@ -18,7 +18,7 @@ import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
 import { usePinnedViews } from './layouts/usePinnedViews'
 import { pinnedViewPath, placePinnedTabs } from './layouts/pins'
-import { PINNED_PAGES } from './layouts/types'
+import { PINNED_PAGES, type PinnableViewType } from './layouts/types'
 
 export const BROWSER_FLAG = 'enable-legacy-version-browser'
 
@@ -125,6 +125,10 @@ export const useProjectNavigation = (projectName: string) => {
 
   const items: NavItem[] = useMemo(() => {
     const path = (module: string) => `/projects/${projectName}/${module}`
+    // a page whose views pin as tabs leads with its icon, the one its pinned tabs show smaller
+    const pageIcon = (viewType: PinnableViewType) => (
+      <Icon icon={PINNED_PAGES[viewType].icon} className="page-icon" />
+    )
 
     const production: NavItem = {
       id: 'production',
@@ -138,6 +142,7 @@ export const useProjectNavigation = (projectName: string) => {
           module: 'overview',
           viewType: 'overview',
           uriSync: true,
+          startContent: pageIcon('overview'),
         },
         {
           name: 'Task progress',
@@ -160,8 +165,15 @@ export const useProjectNavigation = (projectName: string) => {
           module: 'products',
           viewType: 'versions',
           uriSync: true,
+          startContent: pageIcon('versions'),
         },
-        { name: 'Lists', path: path('lists'), module: 'lists', viewType: 'lists' },
+        {
+          name: 'Lists',
+          path: path('lists'),
+          module: 'lists',
+          viewType: 'lists',
+          startContent: pageIcon('lists'),
+        },
       ],
     }
 
@@ -176,7 +188,12 @@ export const useProjectNavigation = (projectName: string) => {
           path: path('reviews'),
           module: 'reviews',
           viewType: 'reviews',
-          startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
+          startContent: (
+            <>
+              {pageIcon('reviews')}
+              <RemotePageBundleDot bundle={getAddonBundle('review')} />
+            </>
+          ),
         },
       ],
     }
@@ -283,7 +300,7 @@ export const useProjectNavigation = (projectName: string) => {
       path: pinnedViewPath(projectName, pin),
       module: PINNED_PAGES[pin.viewType].module,
       pinnedView: pin.id,
-      startContent: <Icon icon={PINNED_PAGES[pin.viewType].icon} />,
+      startContent: <Icon icon={PINNED_PAGES[pin.viewType].icon} className="pin-icon" />,
     }))
     items.forEach((item) => {
       const own = pinnedTabs.filter((tab) =>
