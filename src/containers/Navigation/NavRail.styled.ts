@@ -32,20 +32,29 @@ export const Divider = styled.hr`
   border-top: 1px solid var(--md-sys-color-outline-variant);
 `
 
-// while the layout is edited: removes the divider it is on
-export const DividerRemove = styled(Icon)`
+// while the layout is edited: removes the divider it is on; shows on hover and keyboard focus
+export const DividerRemove = styled.button`
   position: absolute;
   right: 2px;
+  display: flex;
   padding: 1px;
+  border: none;
   border-radius: var(--border-radius-m);
-  font-size: 14px !important;
+  background: none;
   color: var(--md-sys-color-on-surface-variant);
   opacity: 0;
   cursor: pointer;
 
+  .icon {
+    font-size: 14px;
+  }
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
     color: var(--md-sys-color-on-surface);
+  }
+  &:focus-visible {
+    opacity: 1;
+    outline: 2px solid var(--md-sys-color-primary);
   }
 `
 

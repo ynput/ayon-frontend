@@ -239,12 +239,13 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
         <Styled.EditDivider data-rail-divider={id}>
           <Styled.Divider />
           <Styled.DividerRemove
-            icon="close"
-            role="button"
+            type="button"
             aria-label="Remove divider"
             data-tooltip="Remove divider"
             onClick={() => changeDraft((draft) => removeDivider(draft, context, rowIds, id))}
-          />
+          >
+            <Icon icon="close" />
+          </Styled.DividerRemove>
         </Styled.EditDivider>
       </SortableEntry>
     ) : (
