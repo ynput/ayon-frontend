@@ -3,6 +3,12 @@
 Spec: AYON-20261125-001 (variant B). A context is a project (`/projects/<name>/…`) or Home (every
 other page). Its sidebar lists places; the selected place owns the tab row.
 
+The top bar shows the context as a path (Milan, 2026-11-26): Home › project › entity. Home is a
+sidebar-style button (`HomeItem`) in the top bar, in line with the sidebar's buttons, so the sidebar
+reads as starting at the top; it lives in the header so pages without a sidebar keep it. The
+context you are in is tinted: Home outside a project, the project's name inside one. The tint marks
+the context, the grey highlight the page.
+
 ## How it fits together
 
 - **One registry.** `useProjectNavigation`, `useStudioNavigation` and `useSettingsNavigation` build

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
@@ -20,6 +20,8 @@ import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
 import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
 import StudioBrand from './StudioBrand'
+import { Icon } from '@ynput/ayon-react-components'
+import * as RailStyled from '@containers/Navigation/NavRail.styled'
 
 const Side = styled.div`
   flex: 1 1 0;
@@ -62,11 +64,12 @@ const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
 
-// as tall as the context pill beside it
-const HomeButton = styled(HeaderButton)`
-  height: 32px;
-  padding-top: 0;
-  padding-bottom: 0;
+// between Home and the project: the project is inside Home, the path goes on from it
+const PathChevron = styled(Icon)`
+  flex-shrink: 0;
+  margin: 0 -4px;
+  font-size: 20px;
+  color: var(--md-sys-color-on-surface-variant);
 `
 
 const Header: React.FC = () => {
@@ -135,19 +138,19 @@ const Header: React.FC = () => {
             : undefined
         }
       >
-        <Link to={'/dashboard/tasks'}>
-          <HomeButton
-            icon="home"
-            label="Home"
-            variant="nav"
-            // Home is the context of every page outside a project
-            className={clsx({ selected: !location.pathname.startsWith('/projects/') })}
-            id="home-button"
-            iconProps={{ filled: true }}
-          />
-        </Link>
+        {/* Home is the context of every page outside a project, tinted while you are in it */}
+        <RailStyled.HomeItem
+          to="/dashboard/tasks"
+          id="home-button"
+          className={clsx({ here: !location.pathname.startsWith('/projects/') })}
+        >
+          <Icon icon="home" />
+          <RailStyled.Label>Home</RailStyled.Label>
+        </RailStyled.HomeItem>
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
+
+        <PathChevron icon="chevron_right" />
 
         {/* the project name opens the project switcher */}
         <Breadcrumbs

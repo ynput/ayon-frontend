@@ -55,7 +55,22 @@ export const ProjectButton = styled.button`
     background-color: var(--md-sys-color-surface-container-highest-hover);
   }
 
-  /* on Home: no project yet */
+  /* in a project: tinted, the context you are in (as Home is, outside one) */
+  &.here {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+  }
+  &.here:is(button):hover,
+  &.here.open {
+    background-color: var(--md-sys-color-primary-container-hover);
+  }
+
+  /* on Home: no project yet, an empty place in the path */
+  &.choose {
+    outline: 1px dashed var(--md-sys-color-outline);
+    outline-offset: -1px;
+    border-radius: var(--border-radius-m) 0 0 var(--border-radius-m);
+  }
   &.choose strong {
     font-weight: 500;
     color: var(--md-sys-color-on-surface-variant);

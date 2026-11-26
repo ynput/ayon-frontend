@@ -200,6 +200,31 @@ export const Item = styled(Link)`
   }
 `
 
+// Home, in the top bar above the sidebar (AppHeader): the root of the path, as tall as the bar's
+// buttons, in line with the sidebar's buttons. Tinted while it is the context you are in
+export const HomeItem = styled(Link)`
+  ${itemStyles}
+  min-height: 40px;
+  height: 40px;
+  padding-top: 0;
+  padding-bottom: 0;
+  gap: 1px;
+  /* the bar's padding (6px) is the sidebar's (4px) and 2px */
+  margin-left: -2px;
+
+  &.here {
+    background-color: var(--md-sys-color-primary-container);
+    color: var(--md-sys-color-on-primary-container);
+
+    .icon {
+      font-variation-settings: 'FILL' 1;
+    }
+    &:hover {
+      background-color: var(--md-sys-color-primary-container-hover);
+    }
+  }
+`
+
 // while the layout is edited: adds a divider at the end of the sidebar's items
 export const AddDivider = styled.button`
   flex-shrink: 0;
