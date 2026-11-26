@@ -126,32 +126,29 @@ export const arrangeTabs = (
   return result
 }
 
-export type LayoutSource = 'picked' | 'project' | 'studio' | 'own' | 'none'
+export type LayoutSource = 'picked' | 'project' | 'studio' | 'none'
 
 /**
  * Which layout applies, by id: the one the user picked, else the project's default, else the
- * studio default (the base view), else the user's own layout, else none (AYON's navigation). A
- * layout the user can't read (not in their list) is skipped.
+ * studio default (the base view), else none (AYON's navigation). A layout the user can't read
+ * (not in their list) is skipped.
  */
 export const resolveLayout = ({
   picked,
   projectDefault,
   readable,
   studioDefault,
-  own,
 }: {
   picked?: string
   projectDefault?: string
   /** ids of the layouts the user can read */
   readable: string[]
   studioDefault?: string
-  own?: string
 }): { source: LayoutSource; id?: string } => {
   if (picked && readable.includes(picked)) return { source: 'picked', id: picked }
   if (projectDefault && readable.includes(projectDefault))
     return { source: 'project', id: projectDefault }
   if (studioDefault) return { source: 'studio', id: studioDefault }
-  if (own) return { source: 'own', id: own }
   return { source: 'none' }
 }
 

@@ -69,9 +69,10 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   the `promoted` admin pages.
 - **Which layout applies** (`useActiveLayout`, `resolveLayout`): the one the user picked (user
   preferences, `navigationLayout`), else the project's default (project data, same key), else the
-  studio default (the `layout` base view, also when it is picked or a project's default), else the
-  user's own layout (their working view), else none. A picked or project layout the user can't
-  read (not in their list) is skipped. `ready` says every lookup that decides it has answered.
+  studio default (the `layout` base view, also when it is picked or a project's default), else
+  none. A picked or project layout the user can't read (not in their list) is skipped. `ready`
+  says every lookup that decides it has answered. There is no hidden layout of the user's own
+  (Milan, 2026-11-26): every layout is a named one, picked or a default.
 - **The layout menu** (`LayoutMenuHost` in the header, before the icons) is Power Pack's
   `views/LayoutMenu`; a Power Pack that doesn't list it shows nothing. Core hands it
   `LayoutMenuProps` (`useLayoutMenu`): the readable layouts, which applies here, the pick, the
@@ -82,11 +83,10 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   step with its copy in Power Pack (`frontend/modules/views/src/layouts/types.ts`).
 - **Changing it** (pins, edit mode) waits for `ready`: a change made earlier would be
   made on nothing. It goes into that layout when the user may (their own, or a shared one with
-  update access); otherwise (the studio default, a read-only share) the first change saves a copy
-  the user owns, "{name} (mine)", and picks it; changes made while that copy is saved go into it.
-  Their working view is never overwritten by a copy. Changes to one layout run one at a time,
-  each on what the one before saved. The user's own layout keeps what this browser tab saved over
-  an older refetch (`useUserLayout`).
+  update access); otherwise the first change saves a layout the user owns and picks it: a copy,
+  "{name} (mine)", of the studio default or a read-only share, or "My layout" when none applied.
+  Changes made while it is saved go into it. Changes to one layout run one at a time, each on
+  what the one before saved.
 - **Editing a layout** (`layoutEditor.ts`, one edit for the whole app): Customize (right-click the
   sidebar, or the layout menu) copies the layout that applies into a draft, which `useNavLayout`
   hands the sidebar and the tab rows instead. They then show every item and tab, hidden ones

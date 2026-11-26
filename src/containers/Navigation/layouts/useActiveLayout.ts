@@ -12,10 +12,10 @@ import {
   viewsQueries,
 } from '@shared/api'
 import { toast } from 'react-toastify'
+import { usePowerpack } from '@shared/context'
 import { BASE_VIEW_ID, generateViewId } from '@shared/containers/Views'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { updateUserPreferences } from '@state/user'
-import { isNotFound, useUserLayout } from './useUserLayout'
 import { resolveLayout, toNavLayout } from './applyLayout'
 import { getLayoutEdit, startEditing, useLayoutEdit } from './layoutEditor'
 import { LAYOUT_KEY, LAYOUT_VIEW_TYPE, type LayoutSettings } from './types'
@@ -28,19 +28,22 @@ type LayoutChange = (layout: LayoutSettings | undefined) => LayoutSettings
 // Changes to a named layout run one at a time, each on what the one before saved: updating a view
 // puts its settings into the cache, where the next change reads them.
 let namedQueue: Promise<unknown> = Promise.resolve()
-// The copy being made of a layout the user can't change, by that layout's id: a change made
-// before the copy is picked goes into it too, instead of making another one.
+// The layout being made for a change to one the user can't change, by that layout's id ('' for
+// none): a change made before it is picked goes into it too, instead of making another one.
 const copies = new Map<string, Promise<string>>()
+
+const isNotFound = (error: unknown) => (error as { status?: unknown })?.status === 404
 
 /**
  * The layout that applies here (`resolveLayout`: picked, the project's default, the studio
- * default, the user's own, or none) and how to change it. A change goes into that layout when the
- * user may change it; otherwise the first change saves a copy the user owns ("{name} (mine)") and
- * picks it. Needs the Power Pack licence; without it there is none.
+ * default, or none) and how to change it. A change goes into that layout when the user may change
+ * it; otherwise the first change saves a layout the user owns and picks it: a copy ("{name}
+ * (mine)"), or "My layout" when none applied. Needs the Power Pack licence; without it there is
+ * none.
  */
 export const useActiveLayout = (projectName?: string) => {
-  const own = useUserLayout()
-  const { enabled } = own
+  const { powerLicense } = usePowerpack()
+  const enabled = !!powerLicense
   const dispatch = useAppDispatch()
   const userName = useAppSelector((state) => state.user?.name)
   // the user preferences' slice isn't typed for this key
@@ -76,13 +79,11 @@ export const useActiveLayout = (projectName?: string) => {
     projectDefault,
     readable,
     studioDefault: studioDefault?.id,
-    own: own.id,
   })
-  const isOwn = !!id && id === own.id
   // the studio default is the layout base view, also when it is picked or a project's default
   const isBase = !!id && id === studioDefault?.id
   // any other layout: picked, or a project's default
-  const named = id && !isOwn && !isBase ? id : undefined
+  const named = id && !isBase ? id : undefined
   const namedQuery = useGetViewQuery(
     { viewType: LAYOUT_VIEW_TYPE, viewId: named ?? '' },
     { skip: !named },
@@ -93,7 +94,6 @@ export const useActiveLayout = (projectName?: string) => {
   // switch, so it isn't changed, and a switch isn't told from the first load.
   const ready =
     enabled &&
-    own.ready &&
     layouts !== undefined &&
     (studioDefault !== undefined || isNotFound(baseQuery.error)) &&
     (!projectName || projectQuery.currentData !== undefined) &&
@@ -101,17 +101,15 @@ export const useActiveLayout = (projectName?: string) => {
 
   const layout: LayoutSettings | undefined = !enabled
     ? undefined
-    : isOwn
-    ? own.layout
     : isBase
     ? (studioDefault?.settings as LayoutSettings | undefined)
     : named
     ? (namedQuery.currentData?.settings as LayoutSettings | undefined)
     : undefined
   const listed = layouts?.find((view) => view.id === named)
-  const canUpdate = isOwn || (!!named && (listed?.accessLevel ?? 0) >= UPDATE_ACCESS)
+  const canUpdate = !!named && (listed?.accessLevel ?? 0) >= UPDATE_ACCESS
   // what the user sees it called
-  const name = isBase ? 'Studio default' : named ? listed?.label || 'Layout' : 'My layout'
+  const name = isBase ? 'Studio default' : named ? listed?.label || 'Layout' : 'Default'
 
   const [updateView] = useUpdateViewMutation()
   const [createView] = useCreateViewMutation()
@@ -206,24 +204,24 @@ export const useActiveLayout = (projectName?: string) => {
 
   const update = useCallback(
     async (change: LayoutChange): Promise<string> => {
-      // a copy of this layout is being saved: the change goes into it
-      const copying = id ? copies.get(id) : undefined
+      // a layout for this change is being saved: the change goes into it
+      const key = id ?? ''
+      const copying = copies.get(key)
       if (copying) return writeNamed(await copying, change)
       if (!enabled) throw new Error('Layouts are not available')
       if (!ready) throw new Error("The layout hasn't loaded yet")
-      if (isOwn || source === 'none') return own.update(change)
       if (named && canUpdate) return writeNamed(named, change)
-      // the studio default, or a layout shared read-only: the change goes into a copy the user
-      // owns, which is then picked
-      if (!id || !layout) throw new Error("The layout couldn't be loaded")
+      // none, the studio default, or a layout shared read-only: the change goes into a layout
+      // the user owns, which is then picked
+      if (id && !layout) throw new Error("The layout couldn't be loaded")
       const copy = (async () => {
         const copyId = generateViewId()
-        // a saved view: without `working: false` it would replace the user's own layout
+        // a saved view: `working: true` would make it the user's working view of this type
         await createView({
           viewType: LAYOUT_VIEW_TYPE,
           genericViewPostModel: {
             id: copyId,
-            label: `${name} (mine)`,
+            label: id ? `${name} (mine)` : 'My layout',
             working: false,
             settings: change(layout),
           },
@@ -231,28 +229,14 @@ export const useActiveLayout = (projectName?: string) => {
         await pick(copyId)
         return copyId
       })()
-      copies.set(id, copy)
+      copies.set(key, copy)
       copy.then(
-        () => copies.delete(id),
-        () => copies.delete(id),
+        () => copies.delete(key),
+        () => copies.delete(key),
       )
       return copy
     },
-    [
-      id,
-      enabled,
-      ready,
-      isOwn,
-      source,
-      named,
-      canUpdate,
-      layout,
-      name,
-      own,
-      writeNamed,
-      createView,
-      pick,
-    ],
+    [id, enabled, ready, named, canUpdate, layout, name, writeNamed, createView, pick],
   )
 
   return {
@@ -294,7 +278,7 @@ export const useNavLayout = (context: 'project' | 'studio', projectName?: string
     const now = latest.current
     if (getLayoutEdit()) return
     // a change is still being saved (into a copy, which then applies): edit what applies after
-    if (!now.ready || (now.id && copies.has(now.id)))
+    if (!now.ready || copies.has(now.id ?? ''))
       return void toast.info('Saving your last change to the layout. Try again in a moment.')
     startEditing({ name: now.name, layout: now.layout, save: now.update })
   }, [])

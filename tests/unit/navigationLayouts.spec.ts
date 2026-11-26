@@ -197,9 +197,7 @@ test('a layout orders and hides tabs; an unmentioned pin follows its page, other
 
 test('the layout that applies: picked, project default, studio default, own, none', () => {
   const readable = ['mine', 'shared', 'proj']
-  expect(
-    resolveLayout({ picked: 'shared', projectDefault: 'proj', readable, own: 'mine' }),
-  ).toEqual({
+  expect(resolveLayout({ picked: 'shared', projectDefault: 'proj', readable })).toEqual({
     source: 'picked',
     id: 'shared',
   })
@@ -212,7 +210,6 @@ test('the layout that applies: picked, project default, studio default, own, non
     source: 'studio',
     id: 'base',
   })
-  expect(resolveLayout({ readable, own: 'mine' })).toEqual({ source: 'own', id: 'mine' })
   expect(resolveLayout({ readable: [] })).toEqual({ source: 'none' })
 })
 

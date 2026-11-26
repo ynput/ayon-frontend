@@ -67,7 +67,7 @@ export interface LayoutMenuItem {
   id: string
   label: string
   owner?: string
-  /** the user's own layout that has no name yet ("My layout") */
+  /** saved as its owner's working view (before every layout had a name): private to them */
   working?: boolean
   /** 30 the owner, 20 may change it, 10 may read it */
   accessLevel?: number

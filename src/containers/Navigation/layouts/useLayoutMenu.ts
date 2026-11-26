@@ -66,7 +66,7 @@ export const useLayoutMenu = (): LayoutMenuProps | null => {
     ready: active.ready,
     layouts,
     activeId: active.id,
-    activeName: active.source === 'none' ? 'Default' : active.name,
+    activeName: active.name,
     activeSettings: active.layout,
     pickedId: active.picked || undefined,
     studioDefaultId: active.studioDefaultId,
