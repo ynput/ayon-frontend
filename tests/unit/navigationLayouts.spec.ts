@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test'
 import {
+  addDivider,
   applyEdits,
-  arrangeItems,
+  arrangeRail,
   arrangeTabs,
   moveTabInRow,
+  removeDivider,
   reorderItems,
   reorderPromoted,
   reorderTabs,
@@ -23,28 +25,117 @@ const item = (id: string, section: NavItem['section']): NavItem => ({
 })
 const ids = (list: { id?: string; name?: string }[]) => list.map((x) => x.id ?? x.name)
 
-test('a layout orders items within their section; unmentioned ones go at its end', () => {
-  const items = [
-    item('production', 'main'),
-    item('reviews', 'review'),
-    item('storyboards', 'review'),
-    item('scheduler', 'plan'),
-    item('time', 'plan'),
-    item('reports', 'plan'),
-  ]
+const sidebar = () => [
+  item('production', 'main'),
+  item('reviews', 'review'),
+  item('storyboards', 'review'),
+  item('scheduler', 'plan'),
+  item('time', 'plan'),
+  item('reports', 'plan'),
+]
+const railIds = (entries: { id: string }[]) => entries.map((entry) => entry.id)
+
+test('a layout not arranged by the user orders items within their sections, dividers between', () => {
   const layout = toNavLayout(
     { project: { items: { order: ['reports', 'storyboards'] } } },
     'project',
   )
-  expect(ids(arrangeItems(items, layout))).toEqual([
+  expect(railIds(arrangeRail(sidebar(), layout))).toEqual([
     'production',
+    'divider:review',
     'storyboards',
     'reviews',
+    'divider:plan',
     'reports',
     'scheduler',
     'time',
   ])
-  expect(arrangeItems(items, {})).toBe(items)
+  expect(railIds(arrangeRail(sidebar(), {}))).toEqual([
+    'production',
+    'divider:review',
+    'reviews',
+    'storyboards',
+    'divider:plan',
+    'scheduler',
+    'time',
+    'reports',
+  ])
+})
+
+test('a sidebar the user arranged is its order: items and dividers anywhere', () => {
+  const layout = toNavLayout(
+    {
+      project: {
+        items: {
+          free: true,
+          order: ['reports', 'production', 'divider:a', 'time', 'reviews', 'divider:b', 'gone'],
+        },
+      },
+    },
+    'project',
+  )
+  // an item it doesn't mention goes after the last one of its section; a divider left at the end
+  // (after an item the user can't see) goes
+  expect(railIds(arrangeRail(sidebar(), layout))).toEqual([
+    'reports',
+    'production',
+    'divider:a',
+    'time',
+    'scheduler',
+    'reviews',
+    'storyboards',
+  ])
+  // while editing, every divider stays
+  expect(railIds(arrangeRail(sidebar(), layout, true)).slice(-1)).toEqual(['divider:b'])
+  // an item of a section it doesn't mention at all goes at the end
+  expect(
+    railIds(arrangeRail([...sidebar(), item('workfiles', 'pipeline')], layout)).slice(-1),
+  ).toEqual(['workfiles'])
+})
+
+test('dividers that separate nothing go: at either end and next to another one', () => {
+  const layout = toNavLayout(
+    {
+      project: {
+        items: {
+          free: true,
+          order: ['divider:a', 'production', 'divider:b', 'reviews', 'divider:c', 'divider:d'],
+        },
+      },
+    },
+    'project',
+  )
+  const items = [item('production', 'main'), item('time', 'plan')]
+  expect(railIds(arrangeRail(items, layout))).toEqual(['production', 'divider:b', 'time'])
+})
+
+test("the first change to the sidebar keeps it as shown and makes it the user's", () => {
+  const shown = railIds(arrangeRail(sidebar(), {}, true))
+  const moved = reorderItems(undefined, 'project', shown, 'reports', 'production')
+  expect(moved.project?.items).toEqual({
+    free: true,
+    order: [
+      'reports',
+      'production',
+      'divider:review',
+      'reviews',
+      'storyboards',
+      'divider:plan',
+      'scheduler',
+      'time',
+    ],
+  })
+  // a divider is added at the end, and removed
+  const added = addDivider(
+    moved,
+    'project',
+    railIds(arrangeRail(sidebar(), toNavLayout(moved, 'project'), true)),
+    'divider:new',
+  )
+  expect(added.project?.items?.order?.slice(-2)).toEqual(['time', 'divider:new'])
+  const removed = removeDivider(added, 'project', added.project!.items!.order!, 'divider:review')
+  expect(removed.project?.items?.order).not.toContain('divider:review')
+  expect(removed.project?.items?.free).toBe(true)
 })
 
 test('a layout orders and hides tabs; an unmentioned pin follows its page, other tabs the end', () => {

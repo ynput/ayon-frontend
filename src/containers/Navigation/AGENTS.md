@@ -54,9 +54,12 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   `groupTitle`, `order`. What a page declares wins; `knownPages.ts` places known addons that don't
   declare yet; anything else is `other` with the `extension` icon. `placement: 'tab'` puts the page
   in the first item (Production, My work).
-- **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order.
+- **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order, a divider between
+  sections; until a layout arranges it.
 - **Layouts are views of type `layout`** (behind the Power Pack licence). Their settings
-  (`layouts/types.ts`): per context (`project`, `studio`) the sidebar's `items` (order, hidden) and
+  (`layouts/types.ts`): per context (`project`, `studio`) the sidebar's `items` (order, hidden,
+  and `free` once the user arranged it: then `order` is the whole sidebar, items and their
+  `divider:<id>` dividers) and
   each item's `tabs` (order, hidden; a tab is its module or `view:<id>`) and `pinned` views, plus
   the `promoted` admin pages.
 - **Which layout applies** (`useActiveLayout`, `resolveLayout`): the one the user picked (user
@@ -83,7 +86,12 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   sidebar, or the layout menu) copies the layout that applies into a draft, which `useNavLayout`
   hands the sidebar and the tab rows instead. They then show every item and tab, hidden ones
   dimmed, each with an eye, and nothing folds into More or "+N"; drag reorders tabs in their row
-  and items within their section (`reorderTabs`, `reorderItems`, merged into the stored order).
+  (`reorderTabs`) and items anywhere on the sidebar, across sections (`reorderItems`), both merged
+  into the stored order. The sidebar's dividers are the user's too (Milan, 2026-11-26): they
+  drag like items, a button on each removes it and Add divider puts a new one at the end
+  (`addDivider`, `removeDivider`). The first such change writes the sidebar as shown, section
+  dividers included, into the layout and marks it `free`; a layout no one rearranged keeps the
+  sections.
   The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
   `update` of the layout that applied when editing began, wherever the user is: the sidebar, the
   tab rows, the pins and the admin pages on the sidebar (`applyEdits`). While editing,
@@ -97,8 +105,12 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 - **Moving a pinned tab** moves it within its row as shown (`moveTabInRow`) and records the row's
   order in the layout; repointing or unpinning a pin replaces or drops its id there
   (`replaceTabId`).
-- **Applying it** (`useNavLayout` → `NavLayout`): `filterNavigation` hides items, `arrangeItems`
-  orders them within their section (unmentioned ones at the end), `arrangeTabs` the tab rows (an
+- **Applying it** (`useNavLayout` → `NavLayout`): `filterNavigation` hides items, `arrangeRail`
+  lays out the sidebar: a `free` layout's order (an item it doesn't mention, such as an addon page
+  installed since, goes after the last item of its section, else at the end), otherwise the
+  sections with the layout's order within each. Outside editing, a divider that separates nothing
+  (at either end or after another one, as when the user can't see an item, or after the items
+  folded into More) doesn't show; the stored order keeps it. `arrangeTabs` lays out the tab rows (an
   unmentioned pin follows its page, other unmentioned tabs at the end), `splitAdminItems` the
   promoted admin pages. A hidden page still opens by its link; when another layout applies while
   a page or pinned tab it hides is open (and the one before showed it), the sidebar opens the

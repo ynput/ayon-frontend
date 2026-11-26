@@ -11,6 +11,7 @@ export const toNavLayout = (
   return {
     hidden: own?.items?.hidden,
     order: own?.items?.order,
+    free: own?.items?.free,
     tabs: own?.tabs,
     promoted: settings?.promoted,
   }
@@ -18,9 +19,10 @@ export const toNavLayout = (
 
 /**
  * The sidebar's items (already filtered and in sidebar order) in the layout's order within each
- * section; the ones it doesn't mention go at the end of their section.
+ * section; the ones it doesn't mention go at the end of their section. For a layout saved before
+ * the user could arrange the whole sidebar (not `free`).
  */
-export const arrangeItems = (items: NavItem[], layout: NavLayout): NavItem[] => {
+const arrangeItems = (items: NavItem[], layout: NavLayout): NavItem[] => {
   const order = layout.order
   if (!order?.length) return items
   const rank = (item: NavItem) => {
@@ -35,6 +37,65 @@ export const arrangeItems = (items: NavItem[], layout: NavLayout): NavItem[] => 
         (a.item.section === b.item.section ? rank(a.item) - rank(b.item) : 0) || a.index - b.index,
     )
     .map(({ item }) => item)
+}
+
+/** A divider on the sidebar: in a layout's order, `divider:<id>`. */
+const DIVIDER = 'divider:'
+
+export const isDividerId = (id: string) => id.startsWith(DIVIDER)
+
+/** A new divider's id: unique, as dragging and the stored order tell dividers apart by it. */
+export const newDividerId = () => `${DIVIDER}${Math.random().toString(36).slice(2, 10)}`
+
+/** What the sidebar shows, top down: an item, or a divider (no `item`). */
+export interface RailEntry {
+  id: string
+  item?: NavItem
+}
+
+/** The entries without the dividers that separate nothing: at either end, and after another. */
+export const trimDividers = (entries: RailEntry[]) =>
+  entries.filter(
+    (entry, index) =>
+      !!entry.item ||
+      (!!entries[index - 1]?.item && entries.slice(index + 1).some((next) => next.item)),
+  )
+
+/**
+ * The sidebar's items (already filtered and in sidebar order) and dividers, as the layout
+ * arranges them. One the user arranged (`free`) is its order, items and dividers anywhere; an
+ * item it doesn't mention (an addon page installed since) goes after the last item of its
+ * section, else at the end. Otherwise the items are in their sections, in the layout's order
+ * within each, a divider between sections. A divider left separating nothing (the user can't see
+ * an item, or the layout hides it) goes, except while the layout is edited (`keepDividers`).
+ */
+export const arrangeRail = (
+  items: NavItem[],
+  layout: NavLayout,
+  keepDividers = false,
+): RailEntry[] => {
+  let entries: RailEntry[]
+  if (layout.free) {
+    const order = layout.order ?? []
+    entries = order.flatMap((id) => {
+      if (isDividerId(id)) return [{ id }]
+      const item = items.find((other) => other.id === id)
+      return item ? [{ id, item }] : []
+    })
+    items.forEach((item) => {
+      if (order.includes(item.id)) return
+      const kin = entries.map((entry) => entry.item?.section).lastIndexOf(item.section)
+      entries.splice(kin === -1 ? entries.length : kin + 1, 0, { id: item.id, item })
+    })
+  } else {
+    const arranged = arrangeItems(items, layout)
+    entries = arranged.flatMap((item, index) =>
+      index > 0 && arranged[index - 1].section !== item.section
+        ? [{ id: `${DIVIDER}${item.section}` }, { id: item.id, item }]
+        : [{ id: item.id, item }],
+    )
+  }
+  return keepDividers ? entries : trimDividers(entries)
 }
 
 /** A pinned view's tab id in a layout. */
@@ -143,8 +204,29 @@ export const reorderTabs = (
 }
 
 /**
- * The layout with a sidebar item (of `rowIds`, the items as shown, in sidebar order) dropped
- * where `overId` is. The caller keeps it within its section.
+ * The layout with the sidebar's entries as shown (`rowIds`) put in a new order (`next`, see
+ * `placeRowOrder`), changed further by `change`: the whole sidebar is the user's to arrange from
+ * then on (`free`).
+ */
+const changeRail = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  rowIds: string[],
+  next: string[],
+  change: (order: string[]) => string[] = (order) => order,
+): LayoutSettings => {
+  const own: ContextLayout = layout?.[context] ?? {}
+  const order = change(placeRowOrder(own.items?.order, rowIds, next))
+  return {
+    ...layout,
+    version: 1,
+    [context]: { ...own, items: { ...own.items, order, free: true } },
+  }
+}
+
+/**
+ * The layout with a sidebar item or divider (of `rowIds`, the sidebar's entries as shown) dropped
+ * where `overId` is, anywhere on the sidebar.
  */
 export const reorderItems = (
   layout: LayoutSettings | undefined,
@@ -152,11 +234,24 @@ export const reorderItems = (
   rowIds: string[],
   id: string,
   overId: string,
-): LayoutSettings => {
-  const own: ContextLayout = layout?.[context] ?? {}
-  const order = placeRowOrder(own.items?.order, rowIds, moveTo(rowIds, id, overId))
-  return { ...layout, version: 1, [context]: { ...own, items: { ...own.items, order } } }
-}
+): LayoutSettings => changeRail(layout, context, rowIds, moveTo(rowIds, id, overId))
+
+/** The layout with a new divider at the end of the sidebar, to be dragged into place. */
+export const addDivider = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  rowIds: string[],
+  id = newDividerId(),
+): LayoutSettings => changeRail(layout, context, rowIds, rowIds, (order) => [...order, id])
+
+/** The layout without one of the sidebar's dividers. */
+export const removeDivider = (
+  layout: LayoutSettings | undefined,
+  context: 'project' | 'studio',
+  rowIds: string[],
+  id: string,
+): LayoutSettings =>
+  changeRail(layout, context, rowIds, rowIds, (order) => order.filter((other) => other !== id))
 
 /** The layout with a tab moved one place within the row the user sees (`rowIds`). */
 export const moveTabInRow = (

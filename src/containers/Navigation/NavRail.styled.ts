@@ -32,6 +32,45 @@ export const Divider = styled.hr`
   border-top: 1px solid var(--md-sys-color-outline-variant);
 `
 
+// while the layout is edited: removes the divider it is on
+export const DividerRemove = styled(Icon)`
+  position: absolute;
+  right: 2px;
+  padding: 1px;
+  border-radius: var(--border-radius-m);
+  font-size: 14px !important;
+  color: var(--md-sys-color-on-surface-variant);
+  opacity: 0;
+  cursor: pointer;
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
+// while the layout is edited: a divider, tall enough to grab
+export const EditDivider = styled.div`
+  position: relative;
+  width: 68px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-m);
+  cursor: grab;
+
+  ${Divider} {
+    margin: 0;
+  }
+  &:hover {
+    background-color: var(--color-nav-hover);
+  }
+  &:hover ${DividerRemove} {
+    opacity: 1;
+  }
+`
+
 export const Spacer = styled.div`
   flex: 1;
   min-height: 8px;
@@ -106,7 +145,7 @@ const itemStyles = css`
   }
 `
 
-// while the layout is edited: an item that can be dragged within its section
+// while the layout is edited: an item or a divider that can be dragged anywhere on the sidebar
 export const SortableEntry = styled.div`
   position: relative;
   flex-shrink: 0;
@@ -145,6 +184,32 @@ export const Item = styled(Link)`
     ${ItemEye} {
       opacity: 1;
     }
+  }
+`
+
+// while the layout is edited: adds a divider at the end of the sidebar's items
+export const AddDivider = styled.button`
+  flex-shrink: 0;
+  width: 68px;
+  margin-top: 4px;
+  padding: 3px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border: 1px dashed var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-l);
+  background: none;
+  color: var(--md-sys-color-on-surface-variant);
+  font: inherit;
+  cursor: pointer;
+
+  .icon {
+    font-size: 16px;
+  }
+  &:hover {
+    background-color: var(--color-nav-hover);
+    color: var(--md-sys-color-on-surface);
   }
 `
 

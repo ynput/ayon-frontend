@@ -3,7 +3,7 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import * as Styled from './NavRail.styled'
 
-/** A sidebar item while the layout is edited: it drags to a new place in its group. */
+/** A sidebar item or divider while the layout is edited: it drags anywhere on the sidebar. */
 const SortableEntry = ({ id, children }: { id: string; children: ReactNode }) => {
   const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
     id,

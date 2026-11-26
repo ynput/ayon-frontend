@@ -1,13 +1,4 @@
-import {
-  Fragment,
-  MouseEvent,
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { MouseEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '@ynput/ayon-react-components'
 import {
@@ -37,7 +28,15 @@ import {
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
 import type { NavItem } from './types'
-import { arrangeItems, reorderItems, toggleItemHidden } from './layouts/applyLayout'
+import {
+  addDivider,
+  arrangeRail,
+  removeDivider,
+  reorderItems,
+  toggleItemHidden,
+  trimDividers,
+  type RailEntry,
+} from './layouts/applyLayout'
 import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
 import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
 import AdminDock from './AdminDock'
@@ -67,7 +66,6 @@ interface RailProps {
   scope: string
 }
 
-// an item the user drags within its section while the layout is edited
 // what folds into More: an item's height
 const MORE_HEIGHT = 54
 
@@ -82,16 +80,22 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   const railRef = useRef<HTMLElement>(null)
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
-  // the items the layout shows
-  const shownItems = useMemo(
-    () => arrangeItems(sortForSidebar(filterNavigation(items, access, layout)), layout),
+  // the items the layout shows, with its dividers
+  const shownEntries = useMemo(
+    () => arrangeRail(sortForSidebar(filterNavigation(items, access, layout)), layout),
     [items, access, layout],
   )
-  // while it is being edited, the hidden ones too (dimmed)
+  const shownItems = useMemo(
+    () => shownEntries.flatMap((entry) => (entry.item ? [entry.item] : [])),
+    [shownEntries],
+  )
+  // while it is being edited, the hidden ones too (dimmed), and every divider
   const visible = useMemo(
     () =>
-      editing ? arrangeItems(sortForSidebar(filterNavigation(items, access)), layout) : shownItems,
-    [editing, items, access, layout, shownItems],
+      editing
+        ? arrangeRail(sortForSidebar(filterNavigation(items, access)), layout, true)
+        : shownEntries,
+    [editing, items, access, layout, shownEntries],
   )
   const shownIds = useMemo(() => new Set(shownItems.map((item) => item.id)), [shownItems])
   const active = findActiveItem(items, pathname)
@@ -161,44 +165,36 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
 
   // Items that don't fit fold into More, from the last one in sidebar order. The admin area gives
   // way first: it gets what every item leaves, and folds its pages into the Admin menu.
-  const cost = (item: NavItem, index: number) =>
-    (heights[item.id] ?? 0) +
-    2 +
-    // a divider and its 2px gap
-    (index > 0 && visible[index - 1].section !== item.section ? RAIL_DIVIDER_HEIGHT + 2 : 0)
+  // An entry's height and its 2px gap.
+  const cost = (entry: RailEntry) => (entry.item ? heights[entry.id] ?? 0 : RAIL_DIVIDER_HEIGHT) + 2
   // nothing folds while the layout is edited: every item can be shown or hidden
-  const measured = !editing && visible.every((item) => heights[item.id] !== undefined)
-  const total = measured ? visible.reduce((sum, item, index) => sum + cost(item, index), 0) : 0
+  const measured =
+    !editing && visible.every((entry) => !entry.item || heights[entry.id] !== undefined)
+  const total = measured ? visible.reduce((sum, entry) => sum + cost(entry), 0) : 0
   // the admin area and its 2px gap
   const dockSpace = measured && Number.isFinite(space) ? space - total - 2 : Infinity
   const folded = useMemo(() => {
     if (!measured || !Number.isFinite(available) || total <= available) return new Set<string>()
     let used = MORE_HEIGHT + 2
     const fit = new Set<string>()
-    for (const [index, item] of visible.entries()) {
-      if (used + cost(item, index) > available) break
-      fit.add(item.id)
-      used += cost(item, index)
+    for (const entry of visible) {
+      if (used + cost(entry) > available) break
+      fit.add(entry.id)
+      used += cost(entry)
     }
-    return new Set(visible.filter((item) => !fit.has(item.id)).map((item) => item.id))
-    // `cost` reads `heights` and `visible`
+    return new Set(visible.filter((entry) => !fit.has(entry.id)).map((entry) => entry.id))
+    // `cost` reads `heights`
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [measured, total, visible, heights, available])
 
-  const sections = useMemo(
-    () =>
-      // consecutive items of a section, a divider between sections
-      visible
-        .filter((item) => !folded.has(item.id))
-        .reduce<NavItem[][]>((groups, item) => {
-          const last = groups[groups.length - 1]
-          if (last && last[0].section === item.section) last.push(item)
-          else groups.push([item])
-          return groups
-        }, []),
+  // what stays on the sidebar: without the folded items, nor a divider left at the end
+  const onRail = useMemo(
+    () => (folded.size ? trimDividers(visible.filter((entry) => !folded.has(entry.id))) : visible),
     [visible, folded],
   )
-  const foldedItems = visible.filter((item) => folded.has(item.id))
+  const foldedItems = visible.flatMap((entry) =>
+    entry.item && folded.has(entry.id) ? [entry.item] : [],
+  )
   const moreMenuId = 'nav-rail-more'
 
   const renderItem = (item: NavItem) => {
@@ -235,32 +231,39 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     )
   }
 
-  // while editing, an item drops within its own section; the click that ends a drag opens nothing
+  // while editing, a divider drags like an item and has a button that removes it
+  const rowIds = visible.map((entry) => entry.id)
+  const renderDivider = (id: string) =>
+    editing ? (
+      <SortableEntry key={id} id={id}>
+        <Styled.EditDivider data-rail-divider={id}>
+          <Styled.Divider />
+          <Styled.DividerRemove
+            icon="close"
+            role="button"
+            aria-label="Remove divider"
+            data-tooltip="Remove divider"
+            onClick={() => changeDraft((draft) => removeDivider(draft, context, rowIds, id))}
+          />
+        </Styled.EditDivider>
+      </SortableEntry>
+    ) : (
+      <Styled.Divider key={id} />
+    )
+
+  // while editing, an item or a divider drops anywhere on the sidebar; the click that ends a drag
+  // opens nothing
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
   const onDragEnd = ({ active: dragItem, over }: DragEndEvent) => {
     swallowNextClick()
     const id = String(dragItem.id)
     const overId = over && String(over.id)
-    const section = (itemId: string) => visible.find((item) => item.id === itemId)?.section
-    if (!overId || overId === id || section(id) !== section(overId)) return
-    const rowIds = visible.map((item) => item.id)
+    if (!overId || overId === id) return
     changeDraft((draft) => reorderItems(draft, context, rowIds, id, overId))
   }
-  const sectionItems = sections.map((section, index) => (
-    <Fragment key={section[0].section}>
-      {index > 0 && <Styled.Divider />}
-      {editing ? (
-        <SortableContext
-          items={section.map((item) => item.id)}
-          strategy={verticalListSortingStrategy}
-        >
-          {section.map(renderItem)}
-        </SortableContext>
-      ) : (
-        section.map(renderItem)
-      )}
-    </Fragment>
-  ))
+  const entries = onRail.map((entry) =>
+    entry.item ? renderItem(entry.item) : renderDivider(entry.id),
+  )
 
   // right-click: customize the layout (an item's link can still open in a new browser tab)
   const [showContextMenu, closeContextMenu] = useCreateContextMenu([])
@@ -301,16 +304,29 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
       onContextMenu={onContextMenu}
     >
       {editing ? (
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          onDragEnd={onDragEnd}
-        >
-          {sectionItems}
-        </DndContext>
+        <>
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            modifiers={[restrictToVerticalAxis]}
+            onDragEnd={onDragEnd}
+          >
+            <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+              {entries}
+            </SortableContext>
+          </DndContext>
+          <Styled.AddDivider
+            type="button"
+            data-tooltip="Add a divider, then drag it into place"
+            data-tooltip-position="right"
+            onClick={() => changeDraft((draft) => addDivider(draft, context, rowIds))}
+          >
+            <Icon icon="add" />
+            <Styled.Label>Divider</Styled.Label>
+          </Styled.AddDivider>
+        </>
       ) : (
-        sectionItems
+        entries
       )}
       {!!foldedItems.length && (
         <>

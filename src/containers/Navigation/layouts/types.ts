@@ -32,10 +32,19 @@ export interface Arrangement {
   hidden?: string[]
 }
 
+/** The sidebar's arrangement: its items (NavItem ids) and, once the user arranged it, dividers. */
+export interface RailArrangement extends Arrangement {
+  /**
+   * The user arranged the sidebar: `order` is all of it, items and dividers (`divider:<id>`), and
+   * the sections no longer apply. Without it (no change yet, or a layout saved before), `order`
+   * orders the items within their sections and a divider separates the sections.
+   */
+  free?: boolean
+}
+
 /** What a layout says about one context (a project, or Home). */
 export interface ContextLayout {
-  /** the sidebar's items (NavItem ids), within their sections */
-  items?: Arrangement
+  items?: RailArrangement
   /** each item's tab row, by item id: a page tab's module, or `view:<id>` for a pinned view */
   tabs?: Record<string, Arrangement>
   pinned?: PinnedView[]

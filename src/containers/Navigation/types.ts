@@ -48,8 +48,14 @@ export type NavAccess = Record<string, boolean>
 export interface NavLayout {
   /** item ids not shown */
   hidden?: string[]
-  /** item ids in this order within their section; the others follow in registry order */
+  /**
+   * item ids in this order within their section, the others following in registry order; with
+   * `free`, the whole sidebar: items and dividers (`divider:<id>`) in this order, wherever their
+   * sections are
+   */
   order?: string[]
+  /** the user arranged the sidebar (`order`): its sections no longer apply */
+  free?: boolean
   /** each item's tab row, by item id (a tab's id: its module, or `view:<id>`) */
   tabs?: Record<string, { order?: string[]; hidden?: string[] }>
   /**
