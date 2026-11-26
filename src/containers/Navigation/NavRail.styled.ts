@@ -5,6 +5,10 @@ import { Icon } from '@ynput/ayon-react-components'
 
 // one static width: the icons need their labels, addon icons are not recognisable alone
 export const RAIL_WIDTH = 72
+// the buttons keep clear of the page's edge
+const ITEM_WIDTH = RAIL_WIDTH - 8
+// none on top: the first button lines up with the page's top edge
+export const RAIL_PADDING_BOTTOM = 8
 
 export const Rail = styled.nav`
   flex: 0 0 ${RAIL_WIDTH}px;
@@ -13,7 +17,7 @@ export const Rail = styled.nav`
   flex-direction: column;
   align-items: center;
   gap: 2px;
-  padding: 4px 2px 8px;
+  padding: 0 4px ${RAIL_PADDING_BOTTOM}px;
   overflow: hidden;
   /* with the top bar, the frame round the page */
   background-color: var(--md-sys-color-surface-container-low);
@@ -61,7 +65,7 @@ export const DividerRemove = styled.button`
 // while the layout is edited: a divider, tall enough to grab
 export const EditDivider = styled.div`
   position: relative;
-  width: 68px;
+  width: ${ITEM_WIDTH}px;
   height: 16px;
   display: flex;
   align-items: center;
@@ -99,7 +103,7 @@ export const Label = styled.span`
 const itemStyles = css`
   position: relative;
   flex-shrink: 0;
-  width: 68px;
+  width: ${ITEM_WIDTH}px;
   min-height: 52px;
   padding: 6px 1px 5px;
   display: flex;
@@ -199,7 +203,7 @@ export const Item = styled(Link)`
 // while the layout is edited: adds a divider at the end of the sidebar's items
 export const AddDivider = styled.button`
   flex-shrink: 0;
-  width: 68px;
+  width: ${ITEM_WIDTH}px;
   margin-top: 4px;
   padding: 3px 0;
   display: flex;

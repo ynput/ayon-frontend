@@ -151,8 +151,8 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
       (sum, el) => sum + el.offsetHeight + 2,
       0,
     )
-    // the rail's padding (12) and the spacer's least height (8)
-    const railSpace = rail.clientHeight - 12 - 8
+    // the rail's padding and the spacer's least height (8)
+    const railSpace = rail.clientHeight - Styled.RAIL_PADDING_BOTTOM - 8
     if (space !== railSpace) setSpace(railSpace)
     if (available !== railSpace - pinnedHeight) setAvailable(railSpace - pinnedHeight)
   }
