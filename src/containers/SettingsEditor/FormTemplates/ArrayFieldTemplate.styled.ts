@@ -1,4 +1,4 @@
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 import { Button } from '@ynput/ayon-react-components'
 
 export const ArrayItemControls = styled.div`
@@ -14,8 +14,26 @@ export const ArrayItemControls = styled.div`
   }
 `
 
+// Flat layout: the dashed edge of a list's add buttons, which brightens in use
+const dashedAddEdge = (className: string) => css`
+  &.${className} {
+    border: 1px dashed var(--md-sys-color-outline-variant);
+    border-radius: var(--border-radius-m);
+    background-color: transparent;
+    transition: color 0.15s, border-color 0.15s;
+  }
+
+  &.${className}:hover, &.${className}:focus-visible {
+    border-color: var(--md-sys-color-outline);
+    background-color: transparent;
+    color: var(--md-sys-color-on-surface);
+  }
+`
+
 // Flat layout: a full width, dashed "add" row at the end of a list
 export const AddItemButton = styled(Button)`
+  ${dashedAddEdge('array-add-button')}
+
   /* the class beats ArrayItemControls' round 30px button rule */
   &.array-add-button {
     flex: 1;
@@ -25,18 +43,21 @@ export const AddItemButton = styled(Button)`
     min-height: 0;
     padding-block: 0;
     justify-content: center;
-    border: 1px dashed var(--md-sys-color-outline-variant);
-    border-radius: var(--border-radius-m);
-    background-color: transparent;
     color: var(--md-sys-color-outline);
-    transition: color 0.15s, border-color 0.15s;
   }
+`
 
-  &.array-add-button:hover,
-  &.array-add-button:focus-visible {
-    border-color: var(--md-sys-color-outline);
-    background-color: transparent;
-    color: var(--md-sys-color-on-surface);
+// Flat layout: an empty list's add button, a small "Add item +" on its label's line
+export const AddFirstItemButton = styled(Button)`
+  ${dashedAddEdge('array-add-first')}
+
+  &.array-add-first {
+    gap: var(--base-gap-small);
+    width: auto;
+    height: var(--base-input-size);
+    padding: 0 var(--space-2, 8px);
+    color: var(--md-sys-color-on-surface-variant);
+    white-space: nowrap;
   }
 `
 

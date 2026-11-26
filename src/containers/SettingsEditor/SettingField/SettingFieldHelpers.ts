@@ -31,8 +31,6 @@ const INLINE_KINDS: SettingFieldKind[] = [
 
 export const isInlineFieldKind = (kind?: SettingFieldKind) => !!kind && INLINE_KINDS.includes(kind)
 
-export const isStackedFieldKind = (kind?: SettingFieldKind) => !!kind && !isInlineFieldKind(kind)
-
 // Compact rows wider than this read badly side by side, so they stack instead
 const MAX_FLAT_ROW_FIELDS = 3
 

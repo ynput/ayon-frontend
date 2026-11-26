@@ -84,7 +84,12 @@ export const renderFieldTemplate = ({
             objId={props.id}
             title={props.schema.title}
             description={props.schema.description}
-            className={clsx(classes, 'settings-group-list')}
+            className={clsx(
+              classes,
+              'settings-group-list',
+              // only its add button, on its title's line (SettingsEditor.sass)
+              !props.formData?.length && 'is-empty-list',
+            )}
             isList
             headerExtra={colorScheme}
             onClick={onGroupClick}
@@ -116,6 +121,9 @@ export const renderFieldTemplate = ({
       ? 'left-border'
       : ''
   const mainWidget = props.schema.widget === 'access' ? <AccessWidget {...props} /> : props.children
+  const kind = flatLayout ? getSettingFieldKind(props.schema) : undefined
+  // an empty list is only its add button, which sits on its label's line like a switch
+  const emptyList = kind === 'list' && !props.formData?.length
   const kebabLabel = kebabCase(props.label || '')
   const onLabelClick = () => {
     if (props.formContext.onSetBreadcrumbs && override?.path) {
@@ -136,7 +144,8 @@ export const renderFieldTemplate = ({
         label={props.schema.title ? props.label : undefined}
         level={overrideLevel}
         labelStyle={labelStyle}
-        kind={flatLayout ? getSettingFieldKind(props.schema) : undefined}
+        kind={kind}
+        inline={emptyList}
         description={props.rawDescription}
         widgetClassName={widgetClass}
         onContextMenu={onContextMenu}

@@ -626,6 +626,33 @@ $row-height: calc(var(--base-input-size) - 2px)
   .form-inline-field-widget .array-add-controls
     padding: 0
 
+  // an empty list drawn as a group is only its add button, at the end of its title's line
+  // like a setting's control: no panel, and a row's height (FieldTemplateHelpers)
+  .settings-group-list.is-empty-list
+    flex-direction: row
+    align-items: flex-end
+
+    > .settings-group-header
+      flex: 1 1 auto
+      min-width: 0
+
+    > .settings-group-body
+      flex: none
+
+      > .settings-panel
+        margin: 0
+        padding: 0
+        background-color: transparent
+
+    .array-add-controls
+      padding: 0 var(--settings-gutter) 0 0
+
+  .settings-group-subgroup.settings-group-list.is-empty-list
+    padding-block: var(--settings-row-y)
+
+    > .settings-group-header
+      margin-top: 0
+
   // labels sit in one fixed column, so every control starts on the same edge;
   // long labels wrap instead of pushing their control right
   .form-inline-field .form-inline-field-label

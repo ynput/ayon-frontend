@@ -1,5 +1,5 @@
 import { ArrayFieldTemplateProps, RJSFSchema } from '@rjsf/utils'
-import { Button } from '@ynput/ayon-react-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 import {
   closestCenter,
   CollisionDetection,
@@ -22,7 +22,7 @@ import {
   remapOpenListItems,
   reorderedIndex,
 } from '../SettingsGroup/SettingsGroupHelpers'
-import { AddItemButton, ArrayItemControls } from './ArrayFieldTemplate.styled'
+import { AddFirstItemButton, AddItemButton, ArrayItemControls } from './ArrayFieldTemplate.styled'
 import ArrayItemTemplate from './ArrayFieldItemTemplate'
 import DraggableItem from './DraggableItem'
 import { useListItemLayouts } from './useListItemLayouts'
@@ -189,7 +189,13 @@ const ArrayFieldTemplate = (props: ArrayFieldTemplateProps) => {
 
         {canAddItems && (
           <ArrayItemControls className="array-add-controls">
-            {flatLayout ? (
+            {flatLayout && !items.length ? (
+              // an empty list is only this button, on its label's line (FieldTemplateHelpers)
+              <AddFirstItemButton onClick={onAddItem} variant="text" className="array-add-first">
+                Add item
+                <Icon icon="add" />
+              </AddFirstItemButton>
+            ) : flatLayout ? (
               <AddItemButton
                 onClick={onAddItem}
                 icon="add"
