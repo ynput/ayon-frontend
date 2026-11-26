@@ -20,13 +20,8 @@ import {
   SheetPicker,
 } from './UploadStep.styled'
 import { ImportMode, templateForImport } from '../importMode'
-import {
-  EXCEL_MIME_TYPE,
-  excelSheetToCSV,
-  ExcelSheet,
-  isExcelFile,
-  readExcelSheets,
-} from '../../excel'
+import { excelSheetToCSV, ExcelSheet, isExcelFile, readExcelSheets } from '../../excel'
+import { acceptedFileTypes, fileKinds, fileTypeToCSV, findFileType } from '../../fileTypes'
 
 type Props = StepProps<ImportData> & {
   importSchema: ImportSchema
@@ -34,8 +29,6 @@ type Props = StepProps<ImportData> & {
   importMode: ImportMode
   onLoaded?: (data: ImportData) => void
 }
-
-const acceptedTypes = ['.csv', 'text/csv', '.xlsx', EXCEL_MIME_TYPE]
 
 type Workbook = {
   fileName: string
@@ -65,6 +58,10 @@ const FileUploadHint = styled.p`
   text-align: center;
 `
 
+const FileUploadError = styled(FileUploadHint)`
+  color: var(--md-sys-color-error);
+`
+
 export default function UploadStep({
   importContext,
   uploaded,
@@ -79,6 +76,8 @@ export default function UploadStep({
   const template = addonImport
     ? addonImport.templateUrl
     : `/templates/${templateForImport(importContext, importMode)}`
+  // and the file types the addon reads itself
+  const fileTypes = addonImport?.fileTypes
   const [data, setData] = useState<ImportData | null>(uploaded)
   const [error, setError] = useState<Error | null>(null)
   // an Excel file with several sheets waits for the user to pick one,
@@ -139,6 +138,18 @@ export default function UploadStep({
       setError(null)
       setData(null)
       setWorkbook(null)
+      const fileType = typeof file === 'object' ? findFileType(file, fileTypes) : undefined
+      if (typeof file === 'object' && fileType) {
+        fileTypeToCSV(fileType, file)
+          .then(async (text) => {
+            // a file picked while this one was read replaces it
+            if (!isCurrent()) return
+            const csv = await uploadCSV(text)
+            if (isCurrent()) setData({ ...csv, fileName: file.name, fileSize: file.size })
+          })
+          .catch((error) => isCurrent() && setError(error))
+        return
+      }
       if (typeof file === 'object' && isExcelFile(file)) {
         readExcelSheets(file)
           .then((sheets) => {
@@ -156,7 +167,7 @@ export default function UploadStep({
         .then((csv) => isCurrent() && setData(csv))
         .catch((error) => isCurrent() && setError(error))
     },
-    [uploadCSV, uploadSheet, startRequest],
+    [uploadCSV, uploadSheet, startRequest, fileTypes],
   )
 
   const uploadFilesFromComponent = useCallback(
@@ -240,7 +251,7 @@ export default function UploadStep({
             dropIcon=" "
             header={<></>}
             footer={<></>}
-            accept={acceptedTypes}
+            accept={acceptedFileTypes(fileTypes)}
             isError={Boolean(error)}
             errorMessage={error ? `Could not parse this file: ${error?.message}` : undefined}
           />
@@ -254,7 +265,7 @@ export default function UploadStep({
               <HiddenFileInput
                 ref={hiddenFileInputRef}
                 type="file"
-                accept={acceptedTypes.join()}
+                accept={acceptedFileTypes(fileTypes).join()}
                 onChange={(event) => {
                   if (!event.target.files || event.target.files?.length === 0) return
                   upload(event.target.files[0])
@@ -262,11 +273,13 @@ export default function UploadStep({
               />
               <Button
                 icon="upload_file"
-                label={`Choose a CSV or Excel file with ${labels.items}`}
+                label={`Choose a ${fileKinds(fileTypes)} file with ${labels.items}`}
                 onClick={() => hiddenFileInputRef.current?.click()}
               />
             </label>
             <FileUploadHint>Drop a file here or paste CSV from the clipboard</FileUploadHint>
+            {/* FileUpload shows its error message only in its own footer, which this step hides */}
+            {error && <FileUploadError>Could not parse this file: {error.message}</FileUploadError>}
           </FileUploadButtons>
         </FileUploadWrapper>
       )}

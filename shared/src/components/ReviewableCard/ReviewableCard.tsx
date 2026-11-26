@@ -54,10 +54,15 @@ export const ReviewableCard = forwardRef<HTMLDivElement, ReviewableCardProps>(
     let title = label
     if (unoptimized) title = filename
 
+    // names are truncated in the card, so show them in full on hover
+    const tooltip = [label, filename].filter(Boolean).join('\n')
+
     return (
       <Styled.Card
         id={fileId}
         ref={ref}
+        data-tooltip={isDragOverlay ? undefined : tooltip}
+        data-tooltip-delay={300}
         className={clsx({
           draggable: isDraggable,
           'drop-placeholder': isDropPlaceholder,

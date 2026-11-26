@@ -233,8 +233,7 @@ test.describe('list folders', () => {
       ])
   })
 
-  // FLAG (app bug): searching the lists panel keeps folders collapsed, hiding the matches inside
-  test.fixme('search finds lists inside collapsed folders', async ({ page, api, projectName }) => {
+  test('search finds lists inside collapsed folders', async ({ page, api, projectName }) => {
     const folderId = await api.createEntityListFolder(projectName, { label: 'Dailies' })
     const listId = await api.createEntityList(projectName, { label: 'Monday picks' })
     await api.updateEntityList(projectName, listId, { entityListFolderId: folderId })
