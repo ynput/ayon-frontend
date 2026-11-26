@@ -42,10 +42,10 @@ const arrangeItems = (items: NavItem[], layout: NavLayout): NavItem[] => {
 /** A divider on the sidebar: in a layout's order, `divider:<id>`. */
 const DIVIDER = 'divider:'
 
-export const isDividerId = (id: string) => id.startsWith(DIVIDER)
+const isDividerId = (id: string) => id.startsWith(DIVIDER)
 
 /** A new divider's id: unique, as dragging and the stored order tell dividers apart by it. */
-export const newDividerId = () => `${DIVIDER}${Math.random().toString(36).slice(2, 10)}`
+const newDividerId = () => `${DIVIDER}${Math.random().toString(36).slice(2, 10)}`
 
 /** What the sidebar shows, top down: an item, or a divider (no `item`). */
 export interface RailEntry {
@@ -66,14 +66,10 @@ export const trimDividers = (entries: RailEntry[]) =>
  * arranges them. One the user arranged (`free`) is its order, items and dividers anywhere; an
  * item it doesn't mention (an addon page installed since) goes after the last item of its
  * section, else at the end. Otherwise the items are in their sections, in the layout's order
- * within each, a divider between sections. A divider left separating nothing (the user can't see
- * an item, or the layout hides it) goes, except while the layout is edited (`keepDividers`).
+ * within each, a divider between sections. Every divider is kept: once the items the layout hides
+ * are out, `trimDividers` drops the ones left separating nothing.
  */
-export const arrangeRail = (
-  items: NavItem[],
-  layout: NavLayout,
-  keepDividers = false,
-): RailEntry[] => {
+export const arrangeRail = (items: NavItem[], layout: NavLayout): RailEntry[] => {
   let entries: RailEntry[]
   if (layout.free) {
     const order = layout.order ?? []
@@ -95,7 +91,7 @@ export const arrangeRail = (
         : [{ id: item.id, item }],
     )
   }
-  return keepDividers ? entries : trimDividers(entries)
+  return entries
 }
 
 /** A pinned view's tab id in a layout. */

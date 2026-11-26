@@ -126,9 +126,7 @@ export const useProjectNavigation = (projectName: string) => {
   const items: NavItem[] = useMemo(() => {
     const path = (module: string) => `/projects/${projectName}/${module}`
     // a page whose views pin as tabs leads with its icon, the one its pinned tabs show smaller
-    const pageIcon = (viewType: PinnableViewType) => (
-      <Icon icon={PINNED_PAGES[viewType].icon} className="page-icon" />
-    )
+    const pageIcon = (viewType: PinnableViewType) => <Icon icon={PINNED_PAGES[viewType].icon} />
 
     const production: NavItem = {
       id: 'production',

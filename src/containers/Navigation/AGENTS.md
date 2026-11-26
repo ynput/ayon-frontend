@@ -107,7 +107,8 @@ other page). Its sidebar lists places; the selected place owns the tab row.
   (`replaceTabId`).
 - **Applying it** (`useNavLayout` → `NavLayout`): `filterNavigation` hides items, `arrangeRail`
   lays out the sidebar: a `free` layout's order (an item it doesn't mention, such as an addon page
-  installed since, goes after the last item of its section, else at the end), otherwise the
+  installed since, goes after the last item of its section, hidden ones included, so it is in the
+  same place while editing; else at the end), otherwise the
   sections with the layout's order within each. Outside editing, a divider that separates nothing
   (at either end or after another one, as when the user can't see an item, or after the items
   folded into More) doesn't show; the stored order keeps it. `arrangeTabs` lays out the tab rows (an

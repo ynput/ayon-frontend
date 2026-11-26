@@ -80,23 +80,23 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   const railRef = useRef<HTMLElement>(null)
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
-  // the items the layout shows, with its dividers
-  const shownEntries = useMemo(
-    () => arrangeRail(sortForSidebar(filterNavigation(items, access, layout)), layout),
+  // every item the user can open and the layout's dividers, where it puts them: the ones it hides
+  // place too, so an item it doesn't mention lands in the same place whether they show or not
+  const allEntries = useMemo(
+    () => arrangeRail(sortForSidebar(filterNavigation(items, access)), layout),
     [items, access, layout],
   )
+  // the items the layout shows, and the dividers that still separate some
+  const shownEntries = useMemo(() => {
+    const shown = new Set(filterNavigation(items, access, layout).map((item) => item.id))
+    return trimDividers(allEntries.filter((entry) => !entry.item || shown.has(entry.id)))
+  }, [allEntries, items, access, layout])
   const shownItems = useMemo(
     () => shownEntries.flatMap((entry) => (entry.item ? [entry.item] : [])),
     [shownEntries],
   )
   // while it is being edited, the hidden ones too (dimmed), and every divider
-  const visible = useMemo(
-    () =>
-      editing
-        ? arrangeRail(sortForSidebar(filterNavigation(items, access)), layout, true)
-        : shownEntries,
-    [editing, items, access, layout, shownEntries],
-  )
+  const visible = editing ? allEntries : shownEntries
   const shownIds = useMemo(() => new Set(shownItems.map((item) => item.id)), [shownItems])
   const active = findActiveItem(items, pathname)
 

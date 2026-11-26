@@ -7,6 +7,7 @@ import {
   moveTabInRow,
   removeDivider,
   reorderItems,
+  trimDividers,
   reorderPromoted,
   reorderTabs,
   replaceTabId,
@@ -74,8 +75,8 @@ test('a sidebar the user arranged is its order: items and dividers anywhere', ()
     },
     'project',
   )
-  // an item it doesn't mention goes after the last one of its section; a divider left at the end
-  // (after an item the user can't see) goes
+  // an item it doesn't mention goes after the last one of its section; every divider stays (one
+  // left at the end, after an item the user can't see, goes once trimmed)
   expect(railIds(arrangeRail(sidebar(), layout))).toEqual([
     'reports',
     'production',
@@ -84,9 +85,9 @@ test('a sidebar the user arranged is its order: items and dividers anywhere', ()
     'scheduler',
     'reviews',
     'storyboards',
+    'divider:b',
   ])
-  // while editing, every divider stays
-  expect(railIds(arrangeRail(sidebar(), layout, true)).slice(-1)).toEqual(['divider:b'])
+  expect(railIds(trimDividers(arrangeRail(sidebar(), layout))).slice(-1)).toEqual(['storyboards'])
   // an item of a section it doesn't mention at all goes at the end
   expect(
     railIds(arrangeRail([...sidebar(), item('workfiles', 'pipeline')], layout)).slice(-1),
@@ -106,11 +107,38 @@ test('dividers that separate nothing go: at either end and next to another one',
     'project',
   )
   const items = [item('production', 'main'), item('time', 'plan')]
-  expect(railIds(arrangeRail(items, layout))).toEqual(['production', 'divider:b', 'time'])
+  expect(railIds(trimDividers(arrangeRail(items, layout)))).toEqual([
+    'production',
+    'divider:b',
+    'time',
+  ])
+})
+
+test('an item the order does not mention places by every item, the hidden ones too', () => {
+  // the sidebar places all the items the user can open, then leaves out the ones the layout hides:
+  // a new Plan item goes after hidden Schedule, below the divider, as it shows while editing
+  const layout = toNavLayout(
+    {
+      project: {
+        items: { free: true, order: ['reports', 'divider:a', 'scheduler'], hidden: ['scheduler'] },
+      },
+    },
+    'project',
+  )
+  const all = arrangeRail(
+    [item('reports', 'main'), item('scheduler', 'plan'), item('planner', 'plan')],
+    layout,
+  )
+  expect(railIds(all)).toEqual(['reports', 'divider:a', 'scheduler', 'planner'])
+  expect(railIds(trimDividers(all.filter((entry) => entry.id !== 'scheduler')))).toEqual([
+    'reports',
+    'divider:a',
+    'planner',
+  ])
 })
 
 test("the first change to the sidebar keeps it as shown and makes it the user's", () => {
-  const shown = railIds(arrangeRail(sidebar(), {}, true))
+  const shown = railIds(arrangeRail(sidebar(), {}))
   const moved = reorderItems(undefined, 'project', shown, 'reports', 'production')
   expect(moved.project?.items).toEqual({
     free: true,
@@ -129,7 +157,7 @@ test("the first change to the sidebar keeps it as shown and makes it the user's"
   const added = addDivider(
     moved,
     'project',
-    railIds(arrangeRail(sidebar(), toNavLayout(moved, 'project'), true)),
+    railIds(arrangeRail(sidebar(), toNavLayout(moved, 'project'))),
     'divider:new',
   )
   expect(added.project?.items?.order?.slice(-2)).toEqual(['time', 'divider:new'])
