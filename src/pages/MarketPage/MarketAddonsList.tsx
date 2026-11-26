@@ -88,6 +88,7 @@ type MarketAddonListProps = {
   isLoading: boolean
   error?: FetchBaseQueryError
   onUpdateAll?: () => void
+  hasUpdates?: boolean
   isUpdatingAll?: boolean
   isUpdatingAllFinished?: boolean
 }
@@ -102,6 +103,7 @@ const MarketAddonsList = ({
   isLoading,
   error,
   onUpdateAll,
+  hasUpdates = false,
   isUpdatingAll,
   isUpdatingAllFinished,
 }: MarketAddonListProps) => {
@@ -176,7 +178,12 @@ const MarketAddonsList = ({
             icon={isUpdatingAll ? 'sync' : isUpdatingAllFinished ? 'check_circle' : 'upgrade'}
             onClick={onUpdateAll}
             className={isUpdatingAll ? 'downloading' : ''}
-            disabled={isUpdatingAll || isUpdatingAllFinished}
+            disabled={!hasUpdates || isUpdatingAll || isUpdatingAllFinished}
+            data-tooltip={
+              !hasUpdates && !isUpdatingAll && !isUpdatingAllFinished
+                ? 'All addons are up to date'
+                : undefined
+            }
           >
             {isUpdatingAll ? 'Updating...' : isUpdatingAllFinished ? 'All updated' : 'Update all'}
           </Tag>
