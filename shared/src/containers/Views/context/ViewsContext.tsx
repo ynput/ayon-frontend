@@ -1,5 +1,5 @@
 import { FC, ReactNode, useState, useMemo, useCallback } from 'react'
-import { type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
+import { type ViewPreset, type ViewType, WORKING_VIEW_ID, BASE_VIEW_ID } from '../types'
 import {
   GetDefaultViewApiResponse,
   useGetWorkingViewQuery,
@@ -112,6 +112,8 @@ export interface ViewsProviderProps {
   debug?: {
     powerLicense?: boolean
   }
+  // ready-made views of the page, listed in the views menu under the working view
+  presets?: ViewPreset[]
   // Settings held by the caller instead of a saved view: no view loads, viewType is ignored.
   // onChange gets only the changed keys; the caller merges them.
   controlled?: {
@@ -128,6 +130,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   dispatch,
   include,
   debug,
+  presets,
   controlled,
 }) => {
   // controlled settings never load or save a view
@@ -328,8 +331,36 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     setViewSettingsChanged,
   ])
 
+  // a preset is loaded into the working view, which is then the selected one
+  const loadPreset = useCallback(
+    async (preset: ViewPreset) => {
+      if (updateControlledSettings) return
+      try {
+        await onResetWorkingView({
+          existingWorkingViewId: workingView?.id,
+          setSelectedView,
+          setSettingsChanged: setViewSettingsChanged,
+          notify: true,
+          preset,
+        })
+        setIsMenuOpen(false)
+      } catch (error) {
+        console.error('Failed to load view preset:', error)
+      }
+    },
+    [
+      updateControlledSettings,
+      workingView,
+      onResetWorkingView,
+      setSelectedView,
+      setViewSettingsChanged,
+    ],
+  )
+
   //   build the menu items for the views
   const viewMenuItems = useBuildViewMenuItems({
+    presets,
+    onLoadPreset: loadPreset,
     viewsList,
     workingView,
     viewType,

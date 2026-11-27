@@ -15,6 +15,7 @@ import { useSlicerContext } from '@shared/containers'
 import { useProjectOverviewContext } from '../context/project-overview'
 import useTableQueriesHelper from '../hooks/useTableQueriesHelper'
 import ProjectOverviewPage from '../ProjectOverviewPage'
+import OverviewTaskColumnsProvider from './OverviewTaskColumnsProvider'
 import useTableOpenViewer from '../hooks/useTableOpenViewer'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { useViewsContext } from '@shared/containers'
@@ -136,7 +137,10 @@ const ProjectOverviewTableProvider: FC<Props> = ({
         <SelectionCellsProvider>
           <SelectedRowsProvider>
             <CellEditingProvider>
-              {children ?? <ProjectOverviewPage />}
+              {/* only the page's own table has task columns, not a table given as children */}
+              <OverviewTaskColumnsProvider disabled={!!children}>
+                {children ?? <ProjectOverviewPage />}
+              </OverviewTaskColumnsProvider>
             </CellEditingProvider>
           </SelectedRowsProvider>
         </SelectionCellsProvider>

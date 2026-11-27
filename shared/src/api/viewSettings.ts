@@ -17,6 +17,8 @@ export type ColumnItemModel = {
 
 export type OverviewSettings = {
   showHierarchy?: boolean
+  // every folder row is tall, showing thumbnails in its task columns
+  expandRows?: boolean
   rowHeight?: number
   groupBy?: string
   groupSortByDesc?: boolean

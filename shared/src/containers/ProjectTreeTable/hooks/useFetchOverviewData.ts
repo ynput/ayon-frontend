@@ -764,6 +764,15 @@ export const useFetchOverviewData = ({
 
     // then later on refresh any other caches
     dispatch(refreshOtherActiveQueriesOf(queriesToRefresh))
+    // with no folder expanded the query above never ran, but another cache of its endpoint can
+    // be showing tasks (task columns)
+    if ((isFullSync || hasTaskUpdates) && isUninitializedExpandedFoldersTasks) {
+      dispatch(
+        refreshOtherActiveQueriesOf([
+          { endpointName: 'getOverviewTasksByFolders', args: expandedFoldersTasksArgs },
+        ]),
+      )
+    }
   }
 
   const error = tasksListError || searchFoldersError || groupedTasksError

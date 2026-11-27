@@ -17,6 +17,7 @@ import {
 } from '../../utils/cellUtils'
 import { getFolderColumnValue } from '../../utils/folderColumn'
 import { isAddonColumnId } from '../../addonColumns/addonColumnsHelpers'
+import { isTaskColumnId } from '../../taskColumns/taskColumnsHelpers'
 import { getAddonColumnText } from '../../addonColumns/addonColumnValues'
 
 // Types
@@ -506,8 +507,16 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         }
         cellsByRow.get(rowId)?.add(colId)
       })
+      // a row with only task-column cells selected has nothing to paste into; left in, it would
+      // get the values of the first row's columns
+      let hasTaskCellRows = false
+      cellsByRow.forEach((colIds, rowId) => {
+        if (![...colIds].every(isTaskColumnId)) return
+        cellsByRow.delete(rowId)
+        hasTaskCellRows = true
+      })
       if (!cellsByRow.size) {
-        clipboardError('These rows are read-only. Paste operation cancelled.')
+        if (!hasTaskCellRows) clipboardError('These rows are read-only. Paste operation cancelled.')
         return
       }
 
@@ -543,7 +552,7 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
         // Validate each mapped value
         for (const colId of selectedColIds) {
           if (colId === 'subType' && isProductType) continue
-          if (getParentLink(colId)) continue
+          if (getParentLink(colId) || isTaskColumnId(colId)) continue
           const pasteValue = mappedValues[colId] || ''
           const attribName = colId.startsWith('attrib_') && colId.replace('attrib_', '')
           if (pasteValue && attribName && isAttribLocked?.(rowEntityType, attribName)) {
@@ -589,6 +598,9 @@ export const ClipboardProvider: React.FC<ClipboardProviderProps> = ({
 
         // Skip special handling for 'name' which we don't want to paste
         if (colId === 'name' || getParentLink(colId)) continue
+        // a task column's cell holds the folder's tasks: a paste would go to the folder. It keeps
+        // its place in the selection, so the values after it land in their own columns
+        if (isTaskColumnId(colId)) continue
 
         // Special handling for subtasks column
         if (colId === 'subtasks') {

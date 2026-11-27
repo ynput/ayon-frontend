@@ -7,8 +7,10 @@ export const getCacheKey = (
   folderFilter?: string,
   search?: string,
   showComments?: boolean,
+  // another cache of the same folders (see getOverviewTasksByFolders); absent for the Overview's own
+  scope?: string,
 ) => {
-  return JSON.stringify({ projectName, filter, folderFilter, search, showComments })
+  return JSON.stringify({ projectName, filter, folderFilter, search, showComments, scope })
 }
 
 export const markFoldersAsQueried = (cacheKey: string, folderIds: string[]) => {
@@ -30,10 +32,11 @@ export const hasUnqueriedFolders = (args: {
   folderFilter?: string
   search?: string
   showComments?: boolean
+  scope?: string
 }) => {
-  const { projectName, parentIds, filter, folderFilter, search, showComments } = args
+  const { projectName, parentIds, filter, folderFilter, search, showComments, scope } = args
   const covered = getQueriedFolders(
-    getCacheKey(projectName, filter, folderFilter, search, showComments),
+    getCacheKey(projectName, filter, folderFilter, search, showComments, scope),
   )
   return parentIds.some((id) => !covered.has(id))
 }

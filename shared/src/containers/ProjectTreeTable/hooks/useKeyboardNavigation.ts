@@ -8,6 +8,8 @@ import { useProjectDataContext } from '../context/project-data'
 import { useDetailsPanelEntityContext } from '../context/details-panel-entity'
 import { getEntityViewierIds } from '../utils'
 import { isEntityRestricted, READ_ONLY } from '../utils/restrictedEntity'
+import { useTaskColumnsContext } from '../taskColumns/TaskColumnsContextInstance'
+import { isTaskColumnId } from '../taskColumns/taskColumnsHelpers'
 
 export default function useKeyboardNavigation() {
   const { attribFields, getEntityById, onOpenPlayer, playerOpen, isRowReadOnly, tableId } =
@@ -20,6 +22,7 @@ export default function useKeyboardNavigation() {
 
   const { setEditingCellId, editingCellId } = useCellEditing()
   const { setSelectedEntity } = useDetailsPanelEntityContext()
+  const taskColumns = useTaskColumnsContext()
 
   const focusCellElement = useCallback(
     (cellId: string) => {
@@ -83,6 +86,12 @@ export default function useKeyboardNavigation() {
         // try to open the player if onOpenPlayer is defined
         if (onOpenPlayer) {
           const entity = getEntityById(entityId)
+          // on a folder row a task column plays its cell's task, not the folder
+          if (entity?.entityType === 'folder' && isTaskColumnId(colId)) {
+            const task = taskColumns?.getCellTask(entityId, colId)
+            if (task) onOpenPlayer({ taskId: task.id }, { quickView: true })
+            return
+          }
           if (entity) {
             const targetIds = getEntityViewierIds(entity)
             onOpenPlayer(targetIds, { quickView: true })
@@ -260,6 +269,7 @@ export default function useKeyboardNavigation() {
       setSelectedEntity,
       canOpenRenameDialog,
       tableId,
+      taskColumns,
     ],
   )
 

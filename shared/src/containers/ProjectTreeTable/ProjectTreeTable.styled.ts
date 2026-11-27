@@ -228,6 +228,15 @@ export const HeaderCell = styled.th`
     }
   }
 
+  /* a task column: the task type's colour as a top line and a faint tint */
+  &.task-column {
+    background-image: linear-gradient(
+      color-mix(in srgb, var(--task-type-color) 14%, transparent),
+      color-mix(in srgb, var(--task-type-color) 14%, transparent)
+    );
+    box-shadow: ${headerSeparator}, inset 0 2px 0 var(--task-type-color);
+  }
+
   /* the pin icon stays visible, keep the title out from under it */
   &.pinned .header {
     padding-right: 32px;
