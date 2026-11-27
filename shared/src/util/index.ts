@@ -37,7 +37,6 @@ export * from './realtimeUpdatesUtils'
 export * from './parseFilename'
 export * from './mentionTypeOptions'
 export * from './searchTerms'
-export * from './activeEntities'
 export * from './formatDate'
 export * from './entityAttribReadOnly'
 

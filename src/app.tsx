@@ -61,7 +61,6 @@ import { consumeUriHandoff } from '@shared/util'
 import Header from '@containers/header'
 import FileUploadPreviewContainer from '@containers/FileUploadPreviewContainer'
 import { ViewerDialog } from '@containers/Viewer'
-import { EntityLinksSlot } from '@shared/containers/EntityLinksSlot'
 
 // state
 import { login } from '@state/user'
@@ -281,7 +280,6 @@ const App = () => {
                                                   <>
                                                     <ShareDialog />
                                                     <ConfirmDialog />
-                                                    <EntityLinksSlot />
                                                     <PowerpackDialog />
                                                     <FileUploadPreviewContainer />
                                                     <AddonHostNavigation />
@@ -299,7 +297,6 @@ const App = () => {
                                                     <CompleteProfilePrompt />
                                                     <AppRoutes />
                                                     <DetailsPanelFloating />
-                                                    <EntityLinksSlot />
                                                     <PowerpackDialog />
                                                     <AppRemoteLoader />
                                                     <AppAddonServices />
