@@ -164,6 +164,8 @@ export const TableListHeader = ({
                   icon={(item.buttonProps?.icon ?? item.icon) as IconType}
                   data-tooltip={item.buttonProps?.tooltip ?? label}
                   data-shortcut={item.buttonProps?.shortcut ?? item.shortcut}
+                  // an active one's tooltip says what is on (the sort in use): no wait for it
+                  data-tooltip-delay={item.active ? 0 : undefined}
                   aria-label={label}
                   aria-haspopup={hasMenu || undefined}
                   onClick={
