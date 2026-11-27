@@ -47,6 +47,24 @@ export const onMessagesReleased = (fn: () => void) => {
   }
 }
 
+/**
+ * Calls `fn` once the sockets stop holding messages back, right away when they don't hold them.
+ * Returns the cancel.
+ */
+export const whenMessagesReleased = (fn: () => void) => {
+  if (!isHoldingMessages()) {
+    fn()
+    return () => {}
+  }
+  const stop = onMessagesReleased(() => {
+    // an earlier release listener held them again (playback restarted): wait for the next release
+    if (isHoldingMessages()) return
+    stop()
+    fn()
+  })
+  return stop
+}
+
 const release = () => {
   if (!isHoldingMessages()) releaseListeners.forEach((fn) => fn())
 }

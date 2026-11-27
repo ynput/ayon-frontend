@@ -1,4 +1,4 @@
-import { isHoldingMessages, onMessagesReleased } from './hiddenTab'
+import { isHoldingMessages, whenMessagesReleased } from './hiddenTab'
 
 // @ts-ignore
 const isDev = import.meta.env.VITE_DEV === 'true'
@@ -40,8 +40,11 @@ export function getSupportedEntityPatch(
   return { field: field as SupportedEntityPatchField, value: String(value) }
 }
 
-export const waitForRealtimeJitter = () =>
-  new Promise<void>((resolve) => setTimeout(resolve, Math.random() * REALTIME_REST_JITTER))
+export const waitForRealtimeJitter = async () => {
+  await new Promise<void>((resolve) => setTimeout(resolve, Math.random() * REALTIME_REST_JITTER))
+  // playback started again during the jitter: the request waits for the next release
+  await new Promise<void>((resolve) => whenMessagesReleased(resolve))
+}
 
 export type RealtimeBatchProcessor<T> = (
   items: T[],
@@ -66,11 +69,6 @@ export function createRealtimeBatcher<T>(
     }
   }
 
-  const stopWaitingForRelease = () => {
-    stopWaiting?.()
-    stopWaiting = undefined
-  }
-
   const run = async () => {
     clearTimer()
     if (disposed || processing) return
@@ -78,8 +76,8 @@ export function createRealtimeBatcher<T>(
     // A video plays or the tab is hidden: the batch waits like the socket messages do. Its timer
     // can run out after a short pause, once playback has started again.
     if (isHoldingMessages()) {
-      stopWaiting ??= onMessagesReleased(() => {
-        stopWaitingForRelease()
+      stopWaiting ??= whenMessagesReleased(() => {
+        stopWaiting = undefined
         run()
       })
       return
@@ -115,7 +113,8 @@ export function createRealtimeBatcher<T>(
       disposed = true
       pending.clear()
       clearTimer()
-      stopWaitingForRelease()
+      stopWaiting?.()
+      stopWaiting = undefined
     },
   }
 }

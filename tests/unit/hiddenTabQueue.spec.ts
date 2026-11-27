@@ -9,6 +9,7 @@ import {
   PLAYBACK_RELEASE_DELAY,
   setPlaybackActive,
   takeDroppedTopicTags,
+  whenMessagesReleased,
 } from '../../shared/src/util/hiddenTab'
 
 const entityEvent = (
@@ -187,4 +188,33 @@ test('holds messages while a video plays and releases them once every player sto
   } finally {
     stop()
   }
+})
+
+test('waits for the release: right away when nothing is held, once when playback stops', async () => {
+  let calls = 0
+  whenMessagesReleased(() => calls++)
+  expect(calls).toBe(1)
+
+  setPlaybackActive('review', true)
+  whenMessagesReleased(() => calls++)
+  const cancel = whenMessagesReleased(() => calls++)
+  cancel()
+  setPlaybackActive('review', false)
+  await wait(PLAYBACK_RELEASE_DELAY + 50)
+  expect(calls).toBe(2)
+
+  // an earlier release listener plays again: the wait goes on until the next release
+  const playAgain = onMessagesReleased(() => setPlaybackActive('review', true))
+  try {
+    setPlaybackActive('review', true)
+    whenMessagesReleased(() => calls++)
+    setPlaybackActive('review', false)
+    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(calls).toBe(2)
+  } finally {
+    playAgain()
+  }
+  setPlaybackActive('review', false)
+  await wait(PLAYBACK_RELEASE_DELAY + 50)
+  expect(calls).toBe(3)
 })
