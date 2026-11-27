@@ -1,13 +1,15 @@
 import React, { lazy, Suspense, useCallback, useMemo, useState } from 'react'
+import { arrangeTabs } from '@containers/Navigation/layouts/applyLayout'
+import { useTabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
+import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
 import AppNavLinks from '@containers/header/AppNavLinks'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import UserTasksContainer from './UserDashboardTasks/UserTasksContainer'
 import { Section } from '@ynput/ayon-react-components'
 import { useDispatch } from 'react-redux'
 import { onProjectSelected } from '@state/dashboard'
 import { useGetProjectsInfoQuery } from '@shared/api'
 import { useGlobalContext } from '@shared/context'
-import { useGetDashboardAddonsQuery } from '@shared/api'
 import DashboardAddon from './DashboardAddon'
 import ProjectsList from '@containers/ProjectsList/ProjectsList'
 import { parseProjectFolderRowId } from '@shared/containers/ProjectsTable'
@@ -19,12 +21,6 @@ import { UserDashboardProvider } from './context/user-dashboard'
 import { useAppSelector } from '@/features/store'
 import type { ReactNode } from 'react'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
-import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
-import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
-import { useRemoteBundle } from '@/remote/useRemoteBundle'
-import { useContributions } from '@ynput/ayon-addon'
-import { contributionTags } from '@ynput/ayon-addon/host'
-import { useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonStudioPage } from '@/remote/AddonPages'
 import {
   StudioPageLayoutHost,
@@ -36,25 +32,23 @@ import LoadingPage from '@pages/LoadingPage'
 import { WithViews } from '@/hoc/WithViews'
 import { ViewType } from '@shared/containers'
 import { ProjectsPage } from '@pages/ProjectsPage'
-import { useGetBundleAddon } from '@shared/hooks'
 import BookingsSplashscreen from '../BookingsPage/BookingsSplashscreen'
-
-interface DashboardAddon {
-  name: string
-  title: string
-  version: string
-  settings?: {
-    admin?: boolean
-    manager?: boolean
-  }
-}
+import {
+  STUDIO_BUILT_IN_MODULES,
+  findActiveItem,
+  useStudioNavigation,
+} from '@containers/Navigation'
 
 interface ProjectInfo {
   projectNames: Array<{ id: string; name: string }>
   [key: string]: any
 }
 
-type PageLink = NavLinkItem & {
+// what renders for a module; its tab comes from the navigation registry
+type PageContent = {
+  module: string
+  /** the page's URL: it opens only when the registry gives the user a tab with it */
+  path: string
   component?: ReactNode
   viewType?: ViewType
   showProjectList?: boolean
@@ -69,50 +63,21 @@ const UserDashboardNoProjects = lazy(
   () => import('./UserDashboardNoProjects/UserDashboardNoProjects'),
 )
 
-// pages rendered by this repo, they don't need to wait for addon remote modules to load
-const BUILT_IN_MODULES = ['tasks', 'projects']
-
 const UserDashboardPage: React.FC = () => {
   const { module, addonName } = useParams<{ module?: string; addonName?: string }>()
   const user = useAppSelector((state: any) => state.user)
-  const isAdmin = user?.data?.isAdmin
-  const isManager = user?.data?.isManager
   const isGuest = user?.data?.isGuest
 
-  // addons in the bundle the user's addon modules come from (production, staging or dev)
-  const { getBundleAddonVersion, isLoading: isLoadingBundleAddons } = useGetBundleAddon()
-
+  // Home's pages and their navigation items, from one registry
   const {
-    data: addonsData = [],
-    //isLoading: addonsLoading,
-    //isError: addonsIsError,
-  } = useGetDashboardAddonsQuery(
-    { getVersion: getBundleAddonVersion },
-    { skip: isLoadingBundleAddons },
-  )
-
-  // Load remote Studio pages
-  const { remotePages, isLoading: isLoadingRemotePages } = useLoadRemotePages({
-    moduleKey: 'Studio',
-    skip: false,
-  })
-
-  const hasPlanner = !!getBundleAddonVersion('planner')
-  const { getAddonBundle } = useRemoteBundle()
-
-  // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
-  const { contributions: studioPageContributions, isLoading: isLoadingContributions } =
-    useContributions('studio.page')
-  const addonStudioPages = useAddonPages(
-    studioPageContributions,
-    [
-      ...BUILT_IN_MODULES,
-      'planner',
-      ...(addonsData as DashboardAddon[]).map((a) => a.name),
-      ...remotePages.map((p) => p.module),
-    ],
-    remotePages.map((p) => p.viewType),
-  )
+    items: navItems,
+    dashboardAddons,
+    remotePages,
+    isLoadingRemotePages,
+    addonStudioPages,
+    isLoadingContributions,
+    hasPlanner,
+  } = useStudioNavigation()
 
   const navigate = useNavigate()
   const [showNewProject, setShowNewProject] = useState<boolean>(false)
@@ -163,30 +128,25 @@ const UserDashboardPage: React.FC = () => {
     return projectsInfoWithProjects
   }, [projectsInfo, isLoadingInfo])
 
-  // Build pages configuration - single source of truth for navigation and components
-  const pages: PageLink[] = useMemo(
+  // what renders for each module; the tabs come from the navigation registry
+  const pages: PageContent[] = useMemo(
     () => [
       {
-        name: 'Tasks',
-        path: '/dashboard/tasks',
         module: 'tasks',
-        accessLevels: [],
-        shortcut: 'H+H',
+        path: '/dashboard/tasks',
         component: (
           <UserTasksContainer
             projectsInfo={projectsInfoWithProjects}
             isLoadingInfo={isLoadingInfo}
           />
         ),
-        // viewType: 'tasks',
         showProjectList: true,
         isMultiSelect: true,
         requiresProjects: true,
       },
       {
-        name: 'Projects',
-        path: '/dashboard/projects',
         module: 'projects',
+        path: '/dashboard/projects',
         viewType: 'projects-overview',
         component: <ProjectsPage onNewProject={() => setShowNewProject(true)} />,
         showProjectList: false,
@@ -197,30 +157,21 @@ const UserDashboardPage: React.FC = () => {
       ...(!hasPlanner
         ? [
             {
-              name: 'Planner',
-              path: '/dashboard/planner',
               module: 'planner',
-              accessLevels: [],
+              path: '/dashboard/planner',
               component: <BookingsSplashscreen />,
               showProjectList: false,
             },
           ]
         : []),
-      // Add legacy dashboard addons
-      ...(addonsData as DashboardAddon[])
-        .filter((addon) => {
-          if (addon?.settings?.admin && !isAdmin) return false
-          if (addon?.settings?.manager && !isManager) return false
-          return true
-        })
-        .map((addon) => ({
-          name: addon.title,
-          path: `/dashboard/addon/${addon.name}`,
-          module: addon.name,
-          component: <DashboardAddon addonName={addon.name} addonVersion={addon.version} />,
-          showProjectList: false,
-        })),
-      // Add remote Studio pages
+      // legacy dashboard addons
+      ...dashboardAddons.map((addon) => ({
+        module: addon.name,
+        path: `/dashboard/addon/${addon.name}`,
+        component: <DashboardAddon addonName={addon.name} addonVersion={addon.version} />,
+        showProjectList: false,
+      })),
+      // remote Studio pages
       ...remotePages.map((remote) => {
         const showProjectList = !!(remote as any).projects
         const page = (
@@ -232,9 +183,8 @@ const UserDashboardPage: React.FC = () => {
           />
         )
         return {
-          name: remote.name || remote.module,
-          path: `/dashboard/${remote.module}`,
           module: remote.module,
+          path: `/dashboard/${remote.module}`,
           // the `projects` key renders through the layout components studio.page contributions use
           component: showProjectList ? (
             <StudioPageSelectionProvider value={legacyStudioSelection} key={remote.id}>
@@ -244,15 +194,13 @@ const UserDashboardPage: React.FC = () => {
             page
           ),
           viewType: remote.viewType,
-          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
           showProjectList: false,
           isMultiSelect: false,
         }
       }),
       ...addonStudioPages.map((page) => ({
-        name: page.title,
-        path: `/dashboard/${page.id}`,
         module: page.id,
+        path: `/dashboard/${page.id}`,
         component: (
           <AddonStudioPage
             contribution={page}
@@ -261,11 +209,31 @@ const UserDashboardPage: React.FC = () => {
           />
         ),
         viewType: page.viewType as ViewType | undefined,
-        startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
         showProjectList: false,
-        // the slot inspector's tags on the tab, while it is on
-        ...contributionTags(page),
       })),
+    ],
+    [
+      dashboardAddons,
+      remotePages,
+      addonStudioPages,
+      legacyStudioSelection,
+      projectsInfoWithProjects,
+      isLoadingInfo,
+      selectedProjects,
+      hasPlanner,
+    ],
+  )
+
+  // the tab row belongs to the selected sidebar item (My work on an unknown path)
+  const { pathname } = useLocation()
+  const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  // the layout that applies: the tab row's order and what it hides
+  const { layout: navLayout, editing } = useNavLayout('studio')
+  // while the layout is edited, its hidden tabs show too (dimmed)
+  const tabEdit = useTabRowEdit('studio', activeItem.id)
+  const links: NavLinkItem[] = useMemo(
+    () => [
+      ...arrangeTabs(activeItem.tabs, navLayout, activeItem.id, editing),
       { node: 'spacer' },
       {
         node: (
@@ -277,44 +245,28 @@ const UserDashboardPage: React.FC = () => {
         ),
       },
     ],
-    [
-      addonsData,
-      remotePages,
-      addonStudioPages,
-      getAddonBundle,
-      legacyStudioSelection,
-      projectsInfoWithProjects,
-      isLoadingInfo,
-      selectedProjects,
-      selectedProjectNames,
-      isAdmin,
-      isManager,
-      addonName,
-      module,
-      hasPlanner,
-    ],
+    [activeItem, navLayout, editing, addonName, module],
   )
 
-  const links: NavLinkItem[] = useMemo(() => {
-    return pages.map(({ isMultiSelect, showProjectList, ...props }) => ({
-      ...props,
-    }))
-  }, [pages])
-
-  // Find active page based on current module/addonName
+  // the page at this URL, when the user has its tab (the registry leaves out what they can't
+  // open); an unknown module shows My tasks, an addon page they can't open shows nothing
   const activePage = useMemo(() => {
-    if (addonName) {
-      return pages.find((p) => p.module === addonName)
-    }
-    return pages.find((p) => p.module === module) || pages.find((p) => p.module === 'tasks')
-  }, [pages, module, addonName])
+    // react-router also matches the URL with a trailing slash
+    const path = pathname.length > 1 ? pathname.replace(/\/+$/, '') : pathname
+    // AYON's tabs: the page is found also when the layout hides its tab
+    const page = pages.find(
+      (p) => p.path === path && activeItem.tabs.some((link) => link.path === p.path),
+    )
+    if (page || addonName) return page
+    return pages.find((p) => p.module === 'tasks')
+  }, [pages, activeItem, pathname, addonName])
 
-  const title = useTitle(addonName || module || '', pages, 'AYON', '')
+  const title = useTitle(addonName || module || '', activeItem.tabs, 'AYON', '')
 
   // Early returns after all hooks
   // the built in pages render while the projects load (the projects list shows its own loading
   // state), so their data, e.g. the tasks of the selected projects, starts loading straight away
-  const isBuiltInPage = !addonName && (!module || BUILT_IN_MODULES.includes(module))
+  const isBuiltInPage = !addonName && (!module || STUDIO_BUILT_IN_MODULES.includes(module))
   if (!isBuiltInPage && (isLoadingProjects || isLoadingRemotePages || isLoadingContributions))
     return <LoadingPage />
 
@@ -349,7 +301,7 @@ const UserDashboardPage: React.FC = () => {
   return (
     <>
       <DocumentTitle title={title} />
-      <AppNavLinks links={links} />
+      <AppNavLinks links={links} edit={tabEdit} />
       <UserDashboardProvider>
         <main>
           <WithViews viewType={viewType}>

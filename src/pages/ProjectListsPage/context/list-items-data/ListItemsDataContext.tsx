@@ -52,6 +52,7 @@ import { getListItemValueSources, toListValuesItem } from '../../listValues/list
 import type { CompareSettings, CompareView, ListRef } from '../../listValues/types'
 import { COMPARE_TOO_MANY_ITEMS } from '../../listValues/compareLimit'
 import type { ColumnMenuItemType } from '@shared/components/ColumnHeaderMenuUI'
+import useReviewSessionCardsModules from '../../hooks/useReviewSessionCardsModules'
 
 export type ListItemsMap = Map<string, EntityListItemWithLinks>
 export type TableEntity = EntityListItemWithLinks & { attrib: Record<string, unknown> }
@@ -181,8 +182,10 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     onUpdateColumns,
   } = useListsViewSettings()
 
-  // non-review lists are always shown as a table, only review lists use the display style
-  const isTableView = !isReview || displayStyle === 'table'
+  // non-review lists are always shown as a table, only review lists use the display style; with a
+  // review addon too old for the cards the page shows the table too (ProjectListsPage)
+  const { outdated: reviewCardsOutdated } = useReviewSessionCardsModules({ skip: !isReview })
+  const isTableView = !isReview || !!reviewCardsOutdated || displayStyle === 'table'
   const skipLinks = !isTableView || !listEntityType || !isLinkColumnShown('primary', listEntityType)
 
   // comments are the heaviest field to resolve, so only fetch them when the column is shown

@@ -1,11 +1,10 @@
-import { useEffect, useRef } from 'react'
-import type { MouseEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { CSSProperties, MouseEvent } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
 import { HeaderButton } from '@shared/components'
-import AppMenu from '@components/Menu/Menus/AppMenu'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import InstallerDownloadPrompt from '@components/InstallerDownload/InstallerDownloadPrompt'
@@ -13,33 +12,88 @@ import { useMenuContext } from '@shared/context'
 import { HelpMenu, UserMenu } from '@components/Menu'
 import { MenuContainer } from '@shared/components'
 import styled from 'styled-components'
-import { useRestart } from '@context'
 import clsx from 'clsx'
 import InboxNotificationIcon from './InboxNotification'
 import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseInstallerPrompt/ReleaseInstallerPrompt'
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
+import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
+import StudioBrand from './StudioBrand'
+import { Icon } from '@ynput/ayon-react-components'
 
-const FlexWrapper = styled.div`
+const Side = styled.div`
+  flex: 1 1 0;
+  min-width: 0;
   display: flex;
-  gap: var(--base-gap-small);
+  align-items: center;
+  gap: var(--base-gap-large);
+
+  /* stop 32px short of the centred studio brand (--brand-width, measured) */
+  @media (min-width: 1281px) {
+    max-width: calc(50% - var(--brand-width, 240px) / 2 - 32px);
+  }
 `
 
-const FlexWrapperEnd = styled.div`
+// the icons never shrink: on narrow windows the context pill truncates instead
+const SideEnd = styled.div`
+  flex: 0 0 auto;
+  margin-left: auto;
   display: flex;
-  gap: var(--base-gap-small);
+  align-items: center;
   justify-content: end;
-  align-items: center;
+  gap: var(--base-gap-small);
 `
 
-const ProjectsButton = styled(HeaderButton)`
-  align-items: center;
-  display: flex;
+// centred on the bar, not between the sides
+const Center = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+
+  /* the context pill needs the room more than the brand */
+  @media (max-width: 1280px) {
+    display: none;
+  }
 `
 
 const UserButton = styled(HeaderButton)`
   padding: 6px;
+`
+
+// Home leading the path where there's no sidebar to head (guests, an addon's own route; hidden
+// beside the sidebar, index.scss): in the path's style, then the chevron into the project
+const HeaderHome = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px 0 10px;
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
+    font-size: 14px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+    .icon {
+      font-size: 18px;
+    }
+  }
+  & > .icon {
+    font-size: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 `
 
 const Header: React.FC = () => {
@@ -53,13 +107,21 @@ const Header: React.FC = () => {
   const user = useAppSelector((state) => state.user)
   const avatarKey = useAppSelector((state) => state.user.avatarKey)
 
-  // restart server notification
-  const { isSnoozing } = useRestart()
-
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const userButtonRef = useRef<HTMLButtonElement>(null)
-  const appButtonRef = useRef<HTMLButtonElement>(null)
+
+  // the studio brand's width: the left side runs up to it
+  const brandRef = useRef<HTMLDivElement>(null)
+  const [brandWidth, setBrandWidth] = useState<number>()
+  useEffect(() => {
+    if (!brandRef.current) return
+    const observer = new ResizeObserver(([entry]) =>
+      setBrandWidth(Math.round(entry.contentRect.width)),
+    )
+    observer.observe(brandRef.current)
+    return () => observer.disconnect()
+  }, [])
 
   // if last path in pathname is 'appMenu' then open appMenu
   useEffect(() => {
@@ -93,40 +155,46 @@ const Header: React.FC = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <FlexWrapper>
-        {user.uiExposureLevel >= 500 && (
-          <ProjectsButton
-            icon="left_panel_open"
-            variant="nav"
-            onClick={() => handleToggleMenu('project')}
-          />
-        )}
-
-        <Link to={'/dashboard/tasks'}>
-          <HeaderButton
-            icon="home"
-            label="Home"
-            variant="nav"
-            className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
-            id="home-button"
-            iconProps={{ filled: true }}
-          />
-        </Link>
+      <Side
+        style={
+          brandWidth !== undefined
+            ? ({ '--brand-width': `${brandWidth}px` } as CSSProperties)
+            : undefined
+        }
+      >
+        <HeaderHome className="header-home">
+          <Link to="/dashboard/tasks">
+            <Icon icon="home" />
+            Home
+          </Link>
+          <Icon icon="chevron_right" />
+        </HeaderHome>
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
 
-        <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
-      </FlexWrapper>
+        {/* the project name opens the project switcher */}
+        <Breadcrumbs
+          onProjectsClick={
+            user.uiExposureLevel >= 500 ? () => handleToggleMenu('project') : undefined
+          }
+          projectsOpen={menuOpen === 'project'}
+        />
 
-      <Breadcrumbs />
-      <FlexWrapperEnd id="header-menu-right">
+        <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
+      </Side>
+
+      <Center ref={brandRef}>
+        <StudioBrand />
+      </Center>
+
+      <SideEnd id="header-menu-right">
         <InstallerDownloadPrompt />
         <ReleaseInstallerPrompt isAdmin={user.data.isAdmin} />
         <BundleModeSelector />
 
         {!user.data.isGuest && (
           <>
-            <AddonHeaderItems placement="right" />
+            <LayoutMenuHost />
             <ChatBubbleButton />
 
             {/* help icon and menu vvv */}
@@ -142,24 +210,12 @@ const Header: React.FC = () => {
             </MenuContainer>
             {/* help icon and menu ^^^ */}
 
+            <AddonHeaderItems placement="right" />
+
             {/* Inbox icon */}
             <InboxNotificationIcon />
-
-            {/* App icon and menu vvv */}
-            <HeaderButton
-              icon="apps"
-              onClick={() => handleToggleMenu('app')}
-              ref={appButtonRef}
-              variant="nav"
-              className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
-            />
-
-            <MenuContainer id="app" target={appButtonRef.current}>
-              <AppMenu user={user} />
-            </MenuContainer>
           </>
         )}
-        {/* App icon and menu ^^^ */}
 
         {/* User icon and menu vvv */}
         <UserButton
@@ -175,7 +231,7 @@ const Header: React.FC = () => {
           <UserMenu user={user} />
         </MenuContainer>
         {/* User icon and menu ^^^ */}
-      </FlexWrapperEnd>
+      </SideEnd>
     </nav>
   )
 }

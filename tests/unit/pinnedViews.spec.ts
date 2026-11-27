@@ -1,0 +1,131 @@
+import { expect, test } from '@playwright/test'
+import {
+  applyDraft,
+  getPins,
+  pinnedViewPath,
+  placePinnedTabs,
+  samePageLink,
+  renamePin,
+  repointPin,
+  togglePin,
+  visiblePins,
+  withPins,
+} from '../../src/containers/Navigation/layouts/pins'
+import type { PinnedView } from '../../src/containers/Navigation/layouts/types'
+
+const pin = (id: string, extra: Partial<PinnedView> = {}): PinnedView => ({
+  id,
+  viewType: 'overview',
+  scope: 'studio',
+  ...extra,
+})
+const ids = (pins: PinnedView[]) => pins.map((p) => p.id)
+
+test('pinning adds a view at the end with where it is stored; pinning it again unpins it', () => {
+  const studio = togglePin([], { id: 'a', label: 'A', viewType: 'overview', scope: 'studio' }, 'p1')
+  expect(studio).toEqual([{ id: 'a', viewType: 'overview', scope: 'studio' }])
+  const project = togglePin(
+    studio,
+    { id: 'b', label: 'B', viewType: 'lists', scope: 'project' },
+    'p1',
+  )
+  expect(project[1]).toEqual({ id: 'b', viewType: 'lists', scope: 'project', projectName: 'p1' })
+  expect(ids(togglePin(project, { id: 'a', label: 'A', viewType: 'overview' }, 'p1'))).toEqual([
+    'b',
+  ])
+  // a view of a page that can't be pinned
+  expect(togglePin([], { id: 'e', label: 'E', viewType: 'events' }, 'p1')).toEqual([])
+})
+
+test('a pin renames, and repoints in place', () => {
+  const pins = [pin('a'), pin('b'), pin('c')]
+  expect(renamePin(pins, 'b', '  Lighting  ')[1].label).toBe('Lighting')
+  expect(renamePin(renamePin(pins, 'b', 'X'), 'b', '  ')[1].label).toBeUndefined()
+  expect(ids(repointPin(pins, 'b', pin('z')))).toEqual(['a', 'z', 'c'])
+})
+
+test('a tab shows only for a readable view, and a project view only in its project', () => {
+  const pins = [
+    pin('studio'),
+    pin('here', { scope: 'project', projectName: 'p1' }),
+    pin('elsewhere', { scope: 'project', projectName: 'p2' }),
+    pin('unreadable'),
+    pin('lists', { viewType: 'lists' }),
+  ]
+  const readable = {
+    overview: [{ id: 'studio' }, { id: 'here' }, { id: 'elsewhere' }],
+    lists: [{ id: 'lists' }],
+  }
+  expect(visiblePins(pins, readable, 'p1').map((v) => v.pin.id)).toEqual([
+    'studio',
+    'here',
+    'lists',
+  ])
+  // a view type whose list hasn't loaded shows no tabs yet
+  expect(visiblePins(pins, { overview: readable.overview }, 'p1').map((v) => v.pin.id)).toEqual([
+    'studio',
+    'here',
+  ])
+})
+
+test('pins live in the layout next to what else it holds, and link to their page', () => {
+  const layout = withPins({ version: 1, project: { pinned: [pin('a')] } }, [pin('b')])
+  expect(ids(getPins(layout))).toEqual(['b'])
+  expect(getPins(undefined)).toEqual([])
+  expect(pinnedViewPath('p1', { id: 'x', viewType: 'versions' })).toBe(
+    '/projects/p1/products?view=x',
+  )
+})
+
+test('a draft keeps a cleared field through session storage', () => {
+  const saved = { groupBy: 'status', showHierarchy: false } as any
+  // what mergeDraft stores for "no grouping", after a JSON round trip
+  const draft = JSON.parse(JSON.stringify({ groupBy: null, rowHeight: 40 }))
+  expect(applyDraft(saved, draft)).toEqual({ showHierarchy: false, rowHeight: 40 })
+  expect(applyDraft(saved, undefined)).toEqual(saved)
+})
+
+test("a pinned tab sits right after its page, after that page's earlier pins", () => {
+  const tabs = [
+    { name: 'Overview', module: 'overview' },
+    { name: 'Task progress', module: 'tasks' },
+    { name: 'Products', module: 'products' },
+    { name: 'Lists', module: 'lists' },
+  ]
+  const pinned = [
+    { name: 'Lighting', module: 'overview', pinnedView: '1' },
+    { name: 'Delivery', module: 'products', pinnedView: '2' },
+    { name: 'Comp', module: 'overview', pinnedView: '3' },
+    { name: 'Elsewhere', module: 'browser', pinnedView: '4' },
+  ]
+  expect(placePinnedTabs(tabs, pinned).map((t) => t.name)).toEqual([
+    'Overview',
+    'Lighting',
+    'Comp',
+    'Task progress',
+    'Products',
+    'Delivery',
+    'Lists',
+    'Elsewhere',
+  ])
+})
+
+test('a link to a tab of the open page keeps its open list, and nothing one-shot', () => {
+  const here = '/projects/p1/lists'
+  const search = '?list=L1&listItemId=I9&uri=ayon%2Bentity%3A%2F%2Fp1%2Fa'
+  expect(samePageLink('/projects/p1/lists?view=V', here, search)).toBe(
+    '/projects/p1/lists?view=V&list=L1',
+  )
+  expect(samePageLink('/projects/p1/lists', here, search)).toBe('/projects/p1/lists?list=L1')
+  // another page keeps its own link
+  expect(samePageLink('/projects/p1/overview?view=V', here, search)).toBe(
+    '/projects/p1/overview?view=V',
+  )
+  expect(samePageLink('/projects/p1/reviews?view=V', '/projects/p1/reviews', '?review=R')).toBe(
+    '/projects/p1/reviews?view=V&review=R',
+  )
+  // the same page reached with a trailing slash
+  expect(samePageLink('/projects/p1/lists?view=V', '/projects/p1/lists/', '?list=L1')).toBe(
+    '/projects/p1/lists?view=V&list=L1',
+  )
+})

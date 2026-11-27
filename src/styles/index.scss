@@ -154,7 +154,59 @@ strong {
   flex-direction: column;
   min-height: 0;
 
-  & > main {
+  // the sidebar, from the window's top, and beside it the top bar over the page. The top bar frames
+  // the sidebar and the page, two sheets on the page background (the page's tabs with it)
+  .app-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: row;
+    overflow: hidden;
+    background-color: var(--md-sys-color-surface-container-low);
+  }
+  // beside the sidebar: the top bar and the page (not positioned, nor clipping: the top bar's menus
+  // drop over the page)
+  .app-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  // an addon's own route (AppRoutes): no sidebar, the page lays out in #root as before
+  &.addon-route {
+    .app-body,
+    .app-main,
+    .app-page {
+      display: contents;
+    }
+    [data-nav-rail] {
+      display: none;
+    }
+  }
+
+  // not positioned: full-window pages (a review session) still cover the top bar and sidebar
+  .app-page {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: var(--md-sys-color-background);
+  }
+  // set in beside the sidebar (no sidebar for guests), its edge in line with the path, rounded
+  // where the top bar and the sidebar meet
+  [data-nav-rail] + .app-main > .app-page {
+    margin-left: 6px;
+    border-top-left-radius: var(--border-radius-xxl);
+  }
+  // Home heads the sidebar; without one (guests, an addon's own route) it leads the path
+  &:not(.addon-route) [data-nav-rail] + .app-main .header-home {
+    display: none;
+  }
+
+  // a page's main area, in the page column (or the whole window, e.g. a detached panel)
+  & > main,
+  .app-page > main {
     flex-grow: 1;
     display: flex;
     flex-direction: row;
@@ -173,14 +225,13 @@ strong {
     // Navigation
   }
 }
-// the app chrome (this top bar and the page tabs) sits on the page background, so the panels read as the work area
+// the top bar: the frame round the sidebar and the page (.app-body)
 nav.primary {
   background-color: var(--md-sys-color-surface-container-low);
   padding: 6px;
-  // left controls, breadcrumbs, right controls: equal side columns keep the breadcrumbs on the
-  // page's centre line on every page; a side wider than its half pushes them over, never under it
-  display: grid;
-  grid-template-columns: minmax(max-content, 1fr) minmax(0, auto) minmax(max-content, 1fr);
+  // left controls with the context pill, right controls; the studio brand is centred on the bar
+  // itself (AppHeader), so the sides lay out as flex items
+  display: flex;
   align-items: center;
   position: relative;
   gap: var(--base-gap-small);

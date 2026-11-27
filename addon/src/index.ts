@@ -77,6 +77,7 @@ export type {
   EntityScope,
   FolderInfo,
   PageMeta,
+  PageSection,
   PageViews,
   ProjectPageMeta,
   ProjectFolders,

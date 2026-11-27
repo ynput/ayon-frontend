@@ -86,6 +86,8 @@ export interface ViewsContextValue {
   resetWorkingView: () => Promise<void>
   // set with `controlled`: hands the changed settings to the caller instead of saving a view
   updateControlledSettings?: (updated: ViewSettings) => void
+  // set with `controlled`: changes when the caller's settings are another view's, or start over
+  controlledKey?: string
 
   // api
   api: typeof viewsQueries
@@ -117,6 +119,13 @@ export interface ViewsProviderProps {
   controlled?: {
     settings: ViewSettings | undefined
     onChange: (changed: ViewSettings) => void
+    /** what "reset" (Reset filters, the reset shortcut) does instead of resetting the working view */
+    onReset?: () => void
+    /**
+     * changes when the settings are another view's or start over (a revert): pages that keep
+     * local copies of some settings drop them
+     */
+    key?: string
   }
 }
 
@@ -145,6 +154,14 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [editingView, setEditingView] = useState<EditingViewState>(null)
+  // the same provider can switch to settings held by the caller (a pinned view): the views menu
+  // and editor of the page's own views close, before anything draws
+  const [wasControlled, setWasControlled] = useState(!!controlled)
+  if (wasControlled !== !!controlled) {
+    setWasControlled(!!controlled)
+    setIsMenuOpen(false)
+    setEditingView(null)
+  }
   // Collapsed state persisted globally across all viewTypes and projects
   const stateKey = 'viewsMenuCollapsed'
 
@@ -244,6 +261,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     ? workingSettings
     : selectedView?.settings
   const updateControlledSettings = controlled?.onChange
+  const onControlledReset = controlled?.onReset
 
   // is the working view selected?
   const isViewWorking = selectedView?.id === workingView?.id
@@ -264,7 +282,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
         projectName: isViewStudioScope(editingView as string, viewsList) ? undefined : projectName,
         viewType: viewType as string,
       },
-      { skip: !(typeof editingView === 'string') || !powerLicense },
+      { skip: !(typeof editingView === 'string') || !powerLicense || !viewType },
     )
 
   const editingViewData = useMemo(
@@ -307,7 +325,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
   // Reset working view to default (empty) settings
   const resetWorkingView = useCallback(async () => {
     // the caller holds the settings: there is no working view to reset
-    if (updateControlledSettings) return
+    if (updateControlledSettings) return onControlledReset?.()
     try {
       await onResetWorkingView({
         existingWorkingViewId: workingView?.id,
@@ -321,6 +339,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     }
   }, [
     updateControlledSettings,
+    onControlledReset,
     workingView,
     onResetWorkingView,
     selectedView,
@@ -395,6 +414,7 @@ export const ViewsProvider: FC<ViewsProviderProps> = ({
     // shared actions
     resetWorkingView,
     updateControlledSettings,
+    controlledKey: controlled?.key,
     // api
     api: viewsQueries,
     dispatch,

@@ -98,7 +98,8 @@ const MenuInner: React.FC<MenuInnerProps> = ({
   // Focus management
   useEffect(() => {
     if (position && menuRef.current) {
-      const first = menuRef.current.querySelectorAll('li, button')[0] as HTMLElement
+      // the first item that takes focus (not a heading), so the keys reach the menu
+      const first = menuRef.current.querySelector<HTMLElement>('li[tabindex], button')
       first?.focus()
     }
   }, [position])

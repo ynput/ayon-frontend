@@ -10,6 +10,7 @@ import ProjectsListTableHeader from './ProjectsListTableHeader'
 import { ALL_PROJECTS_ROW_ID, ProjectsSimpleTable } from './ProjectsSimpleTable'
 import { useSessionStorage } from '@shared/hooks'
 import { PinnedDivider } from './ProjectsTable.styled'
+import { parseProjectFolderRowId } from './buildProjectsTableData'
 
 const ALL_PROJECTS_ROWS: SimpleTableRow[] = [
   {
@@ -62,6 +63,8 @@ export interface ProjectsTableProps {
   enableClickToDeselect?: boolean
   /** an "All projects" row in its own section at the top; it is selected when no project is */
   allProjects?: boolean
+  /** pinned projects are only in the pinned section, not again in the list below it */
+  pinnedOnlyOnTop?: boolean
   pt?: {
     container?: React.HTMLAttributes<HTMLDivElement>
   }
@@ -103,6 +106,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
   containerClassName,
   enableClickToDeselect,
   allProjects,
+  pinnedOnlyOnTop,
   pt,
 }) => {
   // Track which table has active selection: 'pinned' | 'all'
@@ -181,14 +185,25 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
     onRowPinningChange?.(newPinning)
   }
 
-  const pinnedSet = new Set(rowPinning)
+  // pinned projects; pinning a selection can also save a folder's row id, which never pins it
+  const pinnedSet = new Set(rowPinning.filter((id) => !parseProjectFolderRowId(id)))
 
   const pinnedProjects = data.flatMap(function collectPinned(row): SimpleTableRow[] {
     const result: SimpleTableRow[] = []
-    if (pinnedSet.has(row.name)) result.push(row)
+    // by id, a project's name: a folder named like a pinned project isn't pinned
+    if (pinnedSet.has(row.id)) result.push(row)
     if (row.subRows?.length) result.push(...row.subRows.flatMap(collectPinned))
     return result
   })
+
+  // the list without the pinned projects, while the pinned section shows them
+  const withoutPinned = (rows: SimpleTableRow[]): SimpleTableRow[] =>
+    rows.flatMap((row) =>
+      pinnedSet.has(row.id)
+        ? []
+        : [row.subRows?.length ? { ...row, subRows: withoutPinned(row.subRows) } : row],
+    )
+  const listData = pinnedOnlyOnTop && pinnedProjects.length && !search ? withoutPinned(data) : data
 
   return (
     <Container
@@ -277,7 +292,7 @@ const ProjectsTable: FC<ProjectsTableProps> = ({
         }}
       >
         <ProjectsSimpleTable
-          tableData={data}
+          tableData={listData}
           search={search}
           isLoading={isLoading}
           multiSelect={multiSelect}

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useParams, useNavigate, useLocation } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, useSearchParams } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '@state/store'
 import { openViewer } from '@state/viewer'
 import { Button, Dialog, Toolbar } from '@ynput/ayon-react-components'
@@ -14,12 +14,8 @@ import TasksProgressPage from '../TasksProgressPage'
 import ProjectListsPage from '../ProjectListsPage'
 
 import { selectProject, setOpenProject } from '@state/project'
-import { useGetProjectAddonsQuery } from '@shared/api'
 import { getProjectDisplayName } from '@shared/util'
 import AppNavLinks, { NavLinkItem } from '@containers/header/AppNavLinks'
-import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
-import { useRemoteBundle } from '@/remote/useRemoteBundle'
-import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { SlicerProvider } from '@shared/containers/Slicer'
 import { usePrefetchViews, useViewsContext, useViewUpdateHelper } from '@shared/containers/Views'
 import { EntityListsProvider } from '@pages/ProjectListsPage/context'
@@ -28,29 +24,32 @@ import NewListFromContext from '@pages/ProjectListsPage/components/NewListDialog
 import {
   EntityUpdatesProvider,
   ProjectFoldersContextProvider,
-  RemoteAddonProject,
   useDetailsPanelContext,
   useGlobalContext,
   useProjectContext,
 } from '@shared/context'
 import { VersionUploadProvider, UploadVersionDialog, JsonViewer } from '@shared/components'
 import { productSelected } from '@state/context'
-import { useGetBundleAddon } from '@shared/hooks'
 import ProjectReviewsPage from '@pages/ProjectListsPage/ProjectReviewsPage'
 import HelpButton from '@components/HelpButton/HelpButton.tsx'
 import ProjectReportsPage from '@pages/ReportsPage/ProjectReportsPage'
 import SchedulerSplashscreen from '../BookingsPage/SchedulerSplashscreen'
-import { useLoadRemotePages } from '@/remote/useLoadRemotePages'
-import { useContributions } from '@ynput/ayon-addon'
-import type { Contribution } from '@ynput/ayon-addon'
-import { contributionTags, useHiddenContributions } from '@ynput/ayon-addon/host'
-import { useAddonPages } from '@/remote/AddonPagesHelpers'
 import { AddonProjectPage } from '@/remote/AddonPages'
 import { useProjectDefaultTab } from '@hooks/useProjectDefaultTab'
 import BrowserPage from '@pages/BrowserPage'
 import GuestUserPageLocked from '@components/GuestUserPageLocked'
 import { ProjectContextProvider } from '@shared/context'
-import { WithViews } from '@/hoc/WithViews'
+import { ViewPinsProvider } from '@shared/containers/Views'
+import {
+  PageViews,
+  PinnedTabEnd,
+  PinnedTabMenu,
+  type PinnedTabMenuTarget,
+} from '@containers/Navigation/layouts/PinnedViews'
+import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
+import { arrangeTabs, tabId } from '@containers/Navigation/layouts/applyLayout'
+import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
+import { useTabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -61,61 +60,22 @@ import { useEntityListsContext } from '@pages/ProjectListsPage/context'
 import { SimpleTableRow } from '@shared/containers/SimpleTable'
 import { OnAddToList, OnOpenViewer } from '@shared/containers/Slicer'
 import { ProjectNewEntityHost } from './ProjectNewEntityHost'
+import {
+  BROWSER_FLAG,
+  PROJECT_BUILT_IN_MODULES,
+  canOpenTab,
+  findActiveItem,
+  isHiddenOwnedPage,
+  useNavAccess,
+  useProjectNavigation,
+} from '@containers/Navigation'
 
-const BROWSER_FLAG = 'enable-legacy-version-browser'
-
-// modules rendered by this repo, they don't need to wait for addon remote modules to load
-const BUILT_IN_MODULES = [
-  'overview',
-  'tasks',
-  'browser',
-  'products',
-  'lists',
-  'reviews',
-  'workfiles',
-]
-
-// Tabs AYON always shows for an addon: its project.page with this id (or its legacy remote) fills
-// the tab and sets who sees it; without one the tab shows the Fallback
-interface AddonPageConfig {
-  name: string
-  module: string
-  viewType?: string
-  addon: string
-  Fallback: React.ComponentType<{ projectName: string }>
-}
-
-const ADDON_PAGES: AddonPageConfig[] = [
-  {
-    name: 'Schedule',
-    module: 'scheduler',
-    viewType: 'scheduler',
-    addon: 'planner',
-    Fallback: SchedulerSplashscreen,
-  },
-  {
-    name: 'Reports',
-    module: 'reports',
-    viewType: 'reports',
-    addon: 'reports',
-    // an older reports addon has only the legacy page
-    Fallback: ProjectReportsPage,
-  },
-]
-
-// A tab AYON shows for an addon whose page the user's exposure level hides: no tab, no Fallback
-const isHiddenOwnedPage = (hiddenPages: Contribution<'project.page'>[], module: string) =>
-  hiddenPages.some((page) =>
-    ADDON_PAGES.some(
-      (owned) => owned.module === module && page.id === module && owned.addon === page.addon.name,
-    ),
-  )
-
-const OWNED_PAGES = ADDON_PAGES.map(({ module, viewType, addon }) => ({
-  id: module,
-  viewType,
-  addon,
-}))
+// what an addon page AYON reserves shows without its addon (or with an older addon)
+const OWNED_PAGE_FALLBACKS = new Map<string, React.ComponentType<{ projectName: string }>>([
+  ['scheduler', SchedulerSplashscreen],
+  // an older reports addon has only the legacy page
+  ['reports', ProjectReportsPage],
+])
 
 const ProjectContextInfo = () => {
   /**
@@ -241,8 +201,6 @@ const ProjectPageInner = () => {
     isLoading,
     error,
   } = useProjectContext()
-  const isManager = useAppSelector((state) => state.user.data.isManager)
-  const isAdmin = useAppSelector((state) => state.user.data.isAdmin)
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const params = useParams()
@@ -263,18 +221,27 @@ const ProjectPageInner = () => {
   const { trackCurrentTab } = useProjectDefaultTab()
   const [showContextDialog, setShowContextDialog] = useState(false)
 
-  // addons in the bundle the user's addon modules come from (production, staging or dev)
-  const { getBundleAddonVersion, isLoading: addonsListLoading } = useGetBundleAddon()
-
+  // the project's pages and their navigation items, from one registry
   const {
-    data: addonsData = [],
-    isLoading: addonsLoading,
-    isError: addonsIsError,
-  } = useGetProjectAddonsQuery(
-    { getVersion: getBundleAddonVersion },
-    { skip: !projectName || addonsListLoading },
-  )
-  const hasReview = !!getBundleAddonVersion('review')
+    items: navItems,
+    addonsData,
+    addonsLoading,
+    addonsIsError,
+    addonsListLoading,
+    hasReview,
+    remotePages,
+    isLoadingModules,
+    addonPages,
+    isLoadingContributions,
+    hiddenPages,
+    pinnedViews,
+  } = useProjectNavigation(projectName)
+
+  // a saved view pinned as a tab (or linked) opens with ?view=<id>
+  const [searchParams] = useSearchParams()
+  const openViewId = searchParams.get('view')
+  const { drafts } = usePinnedViewDrafts()
+  const [pinMenu, setPinMenu] = useState<PinnedTabMenuTarget | null>(null)
 
   useEffect(() => {
     if (!addonsLoading && !addonsIsError && addonsData) {
@@ -284,144 +251,49 @@ const ProjectPageInner = () => {
     }
   }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
-  // permanent addon pages that show a fallback when not loaded
-  // const permanentAddons: Fallbacks<ModuleData> = new Map([['review', ReviewAddon]])
-
-  // remote modules don't depend on the project, so load them alongside it
-  const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
-    // fallbacks: permanentAddons,
-    moduleKey: 'Project',
-    skip: !projectName,
-  }) as {
-    remotePages: (RemoteAddonProject & { remoteBundle?: RemotePageBundle })[]
-    isLoading: boolean
-  }
-
-  // built in tabs that render addon remote modules are marked like remote pages
-  const { getAddonBundle } = useRemoteBundle()
-
-  // pages addons contribute to the project.page slot; built-in and legacy pages win on an id clash
-  const { contributions: pageContributions, isLoading: isLoadingContributions } =
-    useContributions('project.page')
-  const addonPages = useAddonPages(
-    pageContributions,
-    [
-      ...BUILT_IN_MODULES,
-      ...ADDON_PAGES.map((p) => p.module),
-      ...remotePages.map((p) => p.module),
-      ...addonsData.map((a) => a.name),
-    ],
-    [...ADDON_PAGES.map((p) => p.viewType), ...remotePages.map((p) => p.viewType)],
-    OWNED_PAGES,
+  // the tab row belongs to the selected sidebar item (Production on an unknown path)
+  const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  // the layout that applies: the tab row's order and what it hides
+  const { layout: navLayout, editing } = useNavLayout('project', projectName)
+  // while the layout is edited, its hidden tabs show too (dimmed)
+  const tabEdit = useTabRowEdit('project', activeItem.id)
+  const access = useNavAccess()
+  const arranged = useMemo(
+    () => arrangeTabs(activeItem.tabs, navLayout, activeItem.id, editing),
+    [activeItem, navLayout, editing],
   )
-  // the addon pages the user's exposure level hides (minExposureLevel, access)
-  const hiddenPages = useHiddenContributions('project.page')
-  const ownedTabs = useMemo(
-    () => ADDON_PAGES.filter((owned) => !isHiddenOwnedPage(hiddenPages, owned.module)),
-    [hiddenPages],
+  // the tabs the row shows, by id: a pinned tab moves within them
+  const shownRow = useMemo(
+    () =>
+      arranged
+        .filter((tab) => canOpenTab(tab, access))
+        .flatMap((tab) => {
+          const id = tabId(tab)
+          return id ? [id] : []
+        }),
+    [arranged, access],
   )
-
-  // get remote project module pages
   const links: NavLinkItem[] = useMemo(
     () => [
-      {
-        name: 'Overview',
-        path: `/projects/${projectName}/overview`,
-        module: 'overview',
-        viewType: 'overview',
-        uriSync: true,
-      },
-      {
-        name: 'Task progress',
-        path: `/projects/${projectName}/tasks`,
-        module: 'tasks',
-        viewType: 'taskProgress',
-        uriSync: true,
-      },
-      {
-        name: 'Browser',
-        path: `/projects/${projectName}/browser`,
-        module: 'browser',
-        uriSync: true,
-        deprecated: true,
-        enabled: frontendFlags.includes(BROWSER_FLAG),
-      },
-      {
-        name: 'Products',
-        path: `/projects/${projectName}/products`,
-        module: 'products',
-        viewType: 'versions',
-        uriSync: true,
-      },
-      {
-        name: 'Lists',
-        path: `/projects/${projectName}/lists`,
-        module: 'lists',
-        viewType: 'lists',
-      },
-      {
-        name: 'Review',
-        path: `/projects/${projectName}/reviews`,
-        module: 'reviews',
-        viewType: 'reviews',
-        startContent: <RemotePageBundleDot bundle={getAddonBundle('review')} />,
-      },
-      ...ownedTabs.map(({ name, module: addonModule, viewType, addon }) => {
-        const page = addonPages.find((p) => p.id === addonModule)
+      ...arranged.map((tab) => {
+        const pin = pinnedViews.visible.find((item) => item.pin.id === tab.pinnedView)?.pin
+        if (!pin) return tab
+        const openMenu = (element: HTMLElement) => setPinMenu({ pin, element })
         return {
-          name,
-          path: `/projects/${projectName}/${addonModule}`,
-          module: addonModule,
-          viewType,
-          startContent: (
-            <RemotePageBundleDot
-              bundle={
-                remotePages.find((remote) => remote.module === addonModule)?.remoteBundle ??
-                getAddonBundle(addon)
-              }
+          ...tab,
+          onContextMenu: (e: React.MouseEvent<HTMLElement>) => {
+            e.preventDefault()
+            openMenu(e.currentTarget)
+          },
+          endContent: (
+            <PinnedTabEnd
+              edited={!!drafts[pin.id]}
+              open={openViewId === pin.id}
+              onMenu={openMenu}
             />
           ),
-          // the slot inspector's tags on the tab, as for other addon pages: the page itself has none
-          ...(page && contributionTags(page)),
         }
       }),
-      {
-        name: 'Workfiles',
-        path: `/projects/${projectName}/workfiles`,
-        module: 'workfiles',
-        uriSync: true,
-      },
-      ...remotePages
-        .filter((remote) => !ADDON_PAGES.some((p) => p.module === remote.module))
-        .map((remote) => ({
-          name: remote.name || remote.module,
-          module: remote.module,
-          path: `/projects/${projectName}/${remote.module}`,
-          viewType: remote.viewType,
-          startContent: <RemotePageBundleDot bundle={remote.remoteBundle} />,
-        })),
-      ...addonPages
-        .filter((page) => !OWNED_PAGES.some((p) => p.id === page.id))
-        .map((page) => ({
-          name: page.title,
-          module: page.id,
-          path: `/projects/${projectName}/${page.id}`,
-          viewType: page.viewType,
-          startContent: <RemotePageBundleDot bundle={getAddonBundle(page.addon.name)} />,
-          // the slot inspector's tags on the tab, while it is on
-          ...contributionTags(page),
-        })),
-      ...addonsData
-        .filter((addon) => {
-          if (addon.settings.admin && !isAdmin) return false
-          if (addon.settings.manager && !isManager) return false
-          return true
-        })
-        .map((addon) => ({
-          name: addon.title,
-          path: `/projects/${projectName}/addon/${addon.name}`,
-          module: addon.name,
-        })),
       { node: 'spacer' },
       {
         node: <HelpButton module={addonName || module} />,
@@ -438,19 +310,23 @@ const ProjectPageInner = () => {
         ),
       },
     ],
-    [addonsData, projectName, remotePages, addonPages, ownedTabs, module, getAddonBundle],
+    [arranged, addonName, module, pinnedViews.visible, drafts, openViewId],
   )
 
-  const activeLink = useMemo(() => {
-    return links.find((link) => link.module === module) || null
-  }, [links, module])
+  // the page's own tabs, as AYON has them: the page is found there also when the layout hides
+  // its tab or puts a pinned tab of it first
+  const pageTabs = useMemo(() => activeItem.tabs.filter((tab) => !tab.pinnedView), [activeItem])
+  const activeLink = useMemo(
+    () => pageTabs.find((tab) => tab.module === module) || null,
+    [pageTabs, module],
+  )
 
   // the page's views load with the project instead of after it (the page waits for both)
   usePrefetchViews({ viewType: activeLink?.viewType, projectName })
 
   const title = useTitle(
     module,
-    links,
+    pageTabs,
     getProjectDisplayName({ name: projectName, label: projectLabel }) || 'AYON',
   )
 
@@ -531,9 +407,9 @@ const ProjectPageInner = () => {
         </main>
       )
     } else {
-      const addonPage = ADDON_PAGES.find((p) => p.module === module)
-      if (addonPage && !isHiddenOwnedPage(hiddenPages, module)) {
-        component = <addonPage.Fallback projectName={projectName} />
+      const Fallback = OWNED_PAGE_FALLBACKS.get(module)
+      if (Fallback && !isHiddenOwnedPage(hiddenPages, module)) {
+        component = <Fallback projectName={projectName} />
       } else {
         console.log('addon not found, redirecting to overview')
         // Fallback to versions page if no addon matches addonName
@@ -555,7 +431,7 @@ const ProjectPageInner = () => {
   // only wait for what the current page needs: built in pages don't need the addon remote
   // modules, and only addon pages need the project addons list.
   // A refetch of the same project (isLoading includes isFetching) keeps the page mounted.
-  const isBuiltInModule = !addonName && BUILT_IN_MODULES.includes(module)
+  const isBuiltInModule = !addonName && PROJECT_BUILT_IN_MODULES.includes(module)
   const isLoadingProject = isLoading && loadedProjectName !== projectName
   const loadingAll =
     !projectName ||
@@ -609,7 +485,7 @@ const ProjectPageInner = () => {
       >
         {showContextDialog && <ProjectContextInfo />}
       </Dialog>
-      <AppNavLinks links={links} currentModule={module} projectName={projectName} />
+      <AppNavLinks links={links} currentModule={module} projectName={projectName} edit={tabEdit} />
       <VersionUploadProvider
         projectName={projectName}
         dispatch={dispatch}
@@ -617,18 +493,40 @@ const ProjectPageInner = () => {
       >
         <EntityListsProvider projectName={projectName}>
           <DetailsPanelEntityProvider>
-            <WithViews viewType={page.viewType} projectName={projectName}>
-              <EntityUpdatesProvider projectNames={[projectName]}>
-                <ProjectSlicerWithViews page={module} projectName={projectName}>
-                  <NewEntityProvider>
-                    {module !== 'overview' && (
-                      <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
-                    )}
-                    {page.component}
-                  </NewEntityProvider>
-                </ProjectSlicerWithViews>
-              </EntityUpdatesProvider>
-            </WithViews>
+            <ViewPinsProvider value={pinnedViews.viewPins}>
+              <PageViews
+                projectName={projectName}
+                viewType={page.viewType}
+                // views open by link only with pinning (the licence): otherwise the page as before
+                openViewId={pinnedViews.enabled ? openViewId : null}
+                fallbackPath={pathname}
+              >
+                <EntityUpdatesProvider projectNames={[projectName]}>
+                  <ProjectSlicerWithViews page={module} projectName={projectName}>
+                    <NewEntityProvider>
+                      {module !== 'overview' && (
+                        <ProjectNewEntityHost showButton={false} enableShortcuts={false} />
+                      )}
+                      {page.component}
+                    </NewEntityProvider>
+                  </ProjectSlicerWithViews>
+                </EntityUpdatesProvider>
+              </PageViews>
+            </ViewPinsProvider>
+            <PinnedTabMenu
+              projectName={projectName}
+              pins={pinnedViews.visible}
+              openViewId={openViewId}
+              target={pinMenu}
+              onClose={() => setPinMenu(null)}
+              row={shownRow}
+              rename={pinnedViews.rename}
+              move={(id, delta) =>
+                pinnedViews.move(id, delta, { itemId: activeItem.id, ids: shownRow })
+              }
+              unpin={pinnedViews.unpin}
+              repoint={pinnedViews.repoint}
+            />
           </DetailsPanelEntityProvider>
           <NewListFromContext />
         </EntityListsProvider>

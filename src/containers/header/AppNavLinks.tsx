@@ -1,13 +1,37 @@
-import { Button, Spacer } from '@ynput/ayon-react-components'
-import { FC, ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react'
-import clsx from 'clsx'
+import { Button, Icon, Spacer } from '@ynput/ayon-react-components'
+import {
+  FC,
+  LiHTMLAttributes,
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core'
+import { horizontalListSortingStrategy, SortableContext, useSortable } from '@dnd-kit/sortable'
+import { restrictToHorizontalAxis } from '@dnd-kit/modifiers'
+import { CSS } from '@dnd-kit/utilities'
 import { useSelector } from 'react-redux'
-import { NavLink, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import clsx from 'clsx'
+import { samePageLink } from '@containers/Navigation/layouts/pins'
+import { tabId } from '@containers/Navigation/layouts/applyLayout'
+import { swallowNextClick, type TabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
 import * as Styled from './AppNavLinks.styled'
 import Typography from '@/theme/typography.module.css'
 import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
-import { useURIContext } from '@shared/context'
+import { useMenuContext, useURIContext } from '@shared/context'
+import { Menu, MenuContainer } from '@shared/components'
 
 export interface NavLinkItem {
   name?: string
@@ -22,6 +46,8 @@ export interface NavLinkItem {
   endContent?: ReactNode
   uriSync?: boolean
   viewType?: string
+  /** a saved view pinned as a tab: its id, the `view` parameter that selects this tab */
+  pinnedView?: string
   deprecated?: string | boolean
   [key: string]: unknown
 }
@@ -30,13 +56,50 @@ interface AppNavLinksProps {
   links?: NavLinkItem[]
   currentModule?: string
   projectName?: string
+  /** while the layout is edited: the tabs it hides (in `links`, dimmed) and the eye on each tab */
+  edit?: TabRowEdit
 }
 
-const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
+// A tab of the row; the user drags it within the row while the layout is edited. The same element
+// in and out of editing, so what is inside (the page's Views button portal) stays mounted.
+const SortableNavItem = ({
+  sortableId,
+  editing,
+  style,
+  ...props
+}: LiHTMLAttributes<HTMLLIElement> & {
+  sortableId: string
+  editing: boolean
+  [data: string]: unknown
+}) => {
+  const { setNodeRef, attributes, listeners, transform, transition, isDragging } = useSortable({
+    id: sortableId,
+    disabled: !editing,
+  })
+  return (
+    <Styled.NavItem
+      ref={setNodeRef}
+      {...props}
+      {...(editing ? { ...attributes, ...listeners } : {})}
+      style={
+        editing
+          ? {
+              ...style,
+              transform: CSS.Translate.toString(transform),
+              transition,
+              zIndex: isDragging ? 1 : undefined,
+            }
+          : style
+      }
+    />
+  )
+}
+
+const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
   // item = { name: 'name', path: 'path', node: node | 'spacer', accessLevel: [] }
   const navigate = useNavigate()
   const { module } = useParams<{ module?: string }>()
-  useSearchParams()
+  const [searchParams] = useSearchParams()
   const isManager = useSelector((state: any) => state.user.data.isManager)
   const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
   useURIContext()
@@ -62,48 +125,120 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
     }
   }, [module, links, access])
 
-  // everything after the first spacer (help, menus) stays visible; only the tabs scroll
+  // everything after the first spacer (help, menus) stays visible; tabs that don't fit fold
   const spacerIndex = links.findIndex((item) => item?.node === 'spacer')
   const tabLinks = spacerIndex === -1 ? links : links.slice(0, spacerIndex)
   const trailingLinks = spacerIndex === -1 ? [] : links.slice(spacerIndex + 1)
 
+  const navRef = useRef<HTMLElement>(null)
   const tabsRef = useRef<HTMLUListElement>(null)
-  const [overflow, setOverflow] = useState({ start: false, end: false })
+  const trailingRef = useRef<HTMLUListElement>(null)
+  const moreRef = useRef<HTMLButtonElement>(null)
+  const { pathname, search } = useLocation()
+  const { toggleMenuOpen } = useMenuContext()
 
-  const updateOverflow = () => {
-    const el = tabsRef.current
-    if (!el) return
-    const start = el.scrollLeft > 1
-    const end = el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-    setOverflow((prev) => (prev.start === start && prev.end === end ? prev : { start, end }))
+  // a tab is open when the page is its path; a pinned view's tab when the page shows its view,
+  // and then not the page's own tab
+  const viewParam = searchParams.get('view')
+  const pathMatches = (item?: NavLinkItem) => {
+    const path = item?.path?.split('?')[0]
+    return !!path && (pathname === path || pathname.startsWith(path + '/'))
+  }
+  const isLinkActive = (item?: NavLinkItem) => {
+    if (!pathMatches(item)) return false
+    if (item?.pinnedView) return item.pinnedView === viewParam
+    return !(
+      viewParam && tabLinks.some((link) => link?.pinnedView === viewParam && pathMatches(link))
+    )
+  }
+
+  // a tab of the open page (its own or a pinned view of it) keeps the page's open list
+  const linkTo = (path?: string) => path && samePageLink(path, pathname, search)
+
+  // the tabs the user sees, by their index in tabLinks
+  const shownTabs = tabLinks
+    .map((item, index) => ({ item, index }))
+    .filter(
+      ({ item }) =>
+        item?.enabled !== false &&
+        (!item?.accessLevels?.length || item.accessLevels.every((level) => access[level])),
+    )
+  const activeIndex = shownTabs.find(({ item }) => isLinkActive(item))?.index
+
+  // each tab's width, measured while it is in the row; the row's width for tabs
+  const [widths, setWidths] = useState<Record<string, number>>({})
+  const [available, setAvailable] = useState(Infinity)
+  const tabKey = (index: number) => `${index}:${tabLinks[index]?.path ?? tabLinks[index]?.name}`
+
+  const measure = () => {
+    const nav = navRef.current
+    if (!nav) return
+    const measured: Record<string, number> = {}
+    tabsRef.current?.querySelectorAll<HTMLElement>(':scope > li[data-tab-index]').forEach((li) => {
+      measured[tabKey(Number(li.dataset.tabIndex))] = li.offsetWidth
+    })
+    // only a change re-renders: this runs after every render
+    if (
+      Object.entries(measured).some(([key, width]) => Math.abs((widths[key] ?? -1) - width) > 0.5)
+    )
+      setWidths({ ...widths, ...measured })
+    // the nav's padding (16) and the gaps around the trailing items
+    const free = nav.clientWidth - 16 - (trailingRef.current?.offsetWidth ?? 0) - 8
+    if (Math.abs(available - free) > 0.5) setAvailable(free)
   }
 
   useLayoutEffect(() => {
-    const el = tabsRef.current
-    if (!el) return
-    updateOverflow()
-    const observer = new ResizeObserver(updateOverflow)
-    observer.observe(el)
+    measure()
+    const observer = new ResizeObserver(measure)
+    if (navRef.current) observer.observe(navRef.current)
+    // a tab grows when its page's views button moves in
+    tabsRef.current?.querySelectorAll(':scope > li').forEach((li) => observer.observe(li))
     return () => observer.disconnect()
-  }, [links.length])
+  })
 
-  // keep the active tab in view when the tabs don't fit
-  useEffect(() => {
-    const active = tabsRef.current?.querySelector('a.active')
-    active?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-  }, [module])
+  const editing = !!edit
+  // tabs fold from the end into "+N"; the open tab always stays in the row
+  const folded = useMemo(() => {
+    const GAP = 4
+    const MORE_WIDTH = 64
+    // nothing folds while the layout is edited: every tab can be shown or hidden
+    if (editing) return new Set<number>()
+    const width = (index: number) => widths[tabKey(index)]
+    if (!Number.isFinite(available) || shownTabs.some(({ index }) => width(index) === undefined))
+      return new Set<number>()
+    const total = shownTabs.reduce((sum, { index }) => sum + width(index) + GAP, 0)
+    if (total <= available) return new Set<number>()
 
-  // the scroll bar is hidden, so let a vertical wheel scroll the tabs sideways
-  const handleWheel = (e: React.WheelEvent<HTMLUListElement>) => {
-    const el = e.currentTarget
-    if (el.scrollWidth <= el.clientWidth || Math.abs(e.deltaX) > Math.abs(e.deltaY)) return
-    el.scrollLeft += e.deltaY
-  }
+    const budget = available - MORE_WIDTH
+    const visible: number[] = []
+    let used = 0
+    for (const { index } of shownTabs) {
+      if (used + width(index) + GAP > budget) break
+      visible.push(index)
+      used += width(index) + GAP
+    }
+    if (activeIndex !== undefined && !visible.includes(activeIndex)) {
+      used += width(activeIndex) + GAP
+      while (visible.length && used > budget) used -= width(visible.pop()!) + GAP
+      visible.push(activeIndex)
+    }
+    return new Set(shownTabs.map(({ index }) => index).filter((index) => !visible.includes(index)))
+    // tabKey and shownTabs follow tabLinks, which the widths are keyed by
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [widths, available, activeIndex, tabLinks, access.manager, access.admin, editing])
 
-  const scrollTabs = (direction: 1 | -1) => {
-    const el = tabsRef.current
-    if (!el) return
-    el.scrollBy({ left: direction * el.clientWidth * 0.8, behavior: 'smooth' })
+  const foldedTabs = shownTabs.filter(({ index }) => folded.has(index))
+  const moreMenuId = 'nav-more-tabs'
+
+  // while editing, a tab drops in a new place in the row; the click that ends a drag opens nothing
+  const rowIds = shownTabs.flatMap(({ item }) => {
+    const id = item.node ? undefined : tabId(item)
+    return id ? [id] : []
+  })
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    swallowNextClick()
+    if (over && active.id !== over.id) edit?.reorder(rowIds, String(active.id), String(over.id))
   }
 
   const renderLinks = (items: NavLinkItem[], offset = 0) =>
@@ -122,6 +257,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
           uriSync,
           module: itemModule,
           viewType,
+          pinnedView,
           deprecated,
           ...props
         }: Partial<NavLinkItem> = {},
@@ -129,6 +265,7 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
       ) => {
         const idx = index + offset
         if (!enabled) return null
+        if (offset === 0 && folded.has(index)) return null
         // if item has restrictions, check if user has access
         let hasAccess = true
         if (accessLevels?.length) {
@@ -144,54 +281,116 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [] }) => {
           } else return <li key={idx}>{node}</li>
         }
 
-        return (
-          <Styled.NavItem key={idx} data-shortcut={shortcut} data-tooltip={tooltip} {...props}>
-            <NavLink to={path!}>
-              <Button
-                variant="nav"
-                style={{ border: 'none' }}
-                className={Typography.titleSmall}
-                tabIndex={-1}
-              >
-                {startContent && startContent}
-                <span className="tab-name" data-name={name}>
-                  {name}
-                </span>
-                {deprecated && (
-                  <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
-                )}
-                {endContent && endContent}
-                {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
-              </Button>
-            </NavLink>
+        const active = isLinkActive({ path, pinnedView })
+        // a tab of the row (by its id in a layout); while the layout is edited it has an eye to
+        // hide or show it, and drags
+        const rowId = offset === 0 ? tabId({ module: itemModule, pinnedView }) : undefined
+        const id = edit ? rowId : undefined
+        const hidden = !!id && !!edit?.hidden.includes(id)
+        const itemProps = {
+          'data-shortcut': shortcut,
+          'data-tooltip': tooltip,
+          'data-tab-index': offset === 0 ? index : undefined,
+          ...props,
+          className: clsx(props.className as string | undefined, {
+            pinned: !!pinnedView,
+            'layout-hidden': hidden,
+          }),
+        }
+        const link = (
+          <Link
+            to={linkTo(path)!}
+            className={active ? 'active' : undefined}
+            aria-current={active ? 'page' : undefined}
+            // while editing, the tab drags to a new place instead of the browser dragging its link
+            draggable={id ? false : undefined}
+          >
+            <Button
+              variant="nav"
+              style={{ border: 'none' }}
+              className={Typography.titleSmall}
+              tabIndex={-1}
+            >
+              {startContent && startContent}
+              <span className="tab-name" data-name={name}>
+                <span className="tab-label">{name}</span>
+              </span>
+              {deprecated && (
+                <LegacyBadge tooltip={typeof deprecated === 'string' ? deprecated : undefined} />
+              )}
+              {endContent && endContent}
+              {viewType && <Styled.Views id={getViewsPortalId(viewType as any)} />}
+              {id && (
+                <Styled.TabEye
+                  icon={hidden ? 'visibility_off' : 'visibility'}
+                  role="button"
+                  aria-label={hidden ? `Show ${name}` : `Hide ${name}`}
+                  data-tooltip={hidden ? 'Show' : 'Hide'}
+                  onClick={(e) => {
+                    // the eye sits inside the tab's link
+                    e.preventDefault()
+                    e.stopPropagation()
+                    edit?.toggle(id)
+                  }}
+                />
+              )}
+            </Button>
+          </Link>
+        )
+        return rowId ? (
+          // keyed by tab: a drop moves the tab's own element
+          <SortableNavItem key={rowId} sortableId={rowId} editing={!!edit} {...itemProps}>
+            {link}
+          </SortableNavItem>
+        ) : (
+          <Styled.NavItem key={idx} {...itemProps}>
+            {link}
           </Styled.NavItem>
         )
       },
     )
 
   return (
-    <Styled.NavBar className="secondary">
-      <ul
-        ref={tabsRef}
-        className={clsx('tabs', {
-          'overflow-start': overflow.start,
-          'overflow-end': overflow.end,
-        })}
-        onScroll={updateOverflow}
-        onWheel={handleWheel}
+    <Styled.NavBar className={clsx('secondary', { editing: !!edit })} ref={navRef}>
+      {/* always there, so the tabs keep their elements in and out of editing */}
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        modifiers={[restrictToHorizontalAxis]}
+        onDragEnd={onDragEnd}
       >
-        {renderLinks(tabLinks)}
-      </ul>
-      {(overflow.start || overflow.end) && (
-        <Button
-          variant="text"
-          icon={overflow.end ? 'chevron_right' : 'chevron_left'}
-          data-tooltip={overflow.end ? 'More tabs' : 'Previous tabs'}
-          onClick={() => scrollTabs(overflow.end ? 1 : -1)}
-        />
+        <SortableContext items={rowIds} strategy={horizontalListSortingStrategy}>
+          <ul ref={tabsRef} className="tabs">
+            {renderLinks(tabLinks)}
+          </ul>
+        </SortableContext>
+      </DndContext>
+      {!!foldedTabs.length && (
+        <>
+          <Styled.MoreTabs
+            ref={moreRef}
+            variant="text"
+            data-tooltip="More tabs"
+            onClick={() => toggleMenuOpen(moreMenuId)}
+          >
+            +{foldedTabs.length}
+            <Icon icon="expand_more" />
+          </Styled.MoreTabs>
+          <MenuContainer id={moreMenuId} target={moreRef.current} align="left">
+            <Menu
+              menu={foldedTabs.map(({ item, index }) => ({
+                id: `${index}`,
+                label: item.name,
+                link: linkTo(item.path),
+              }))}
+            />
+          </MenuContainer>
+        </>
       )}
       {!!trailingLinks.length && (
-        <ul className="trailing">{renderLinks(trailingLinks, tabLinks.length + 1)}</ul>
+        <ul className="trailing" ref={trailingRef}>
+          {renderLinks(trailingLinks, tabLinks.length + 1)}
+        </ul>
       )}
     </Styled.NavBar>
   )

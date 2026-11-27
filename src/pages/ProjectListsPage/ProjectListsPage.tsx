@@ -477,8 +477,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { gridHeight, displayStyle, onUpdateDisplayStyle, onUpdateDisplayStyleWithPersistence } =
     useReviewCardsSettingsContext()
 
-  const pageDisplayStyle = isReview ? displayStyle : 'table' // force table view for non-review pages, as we do not have cards modules for them
-
   const {
     ReviewSessionCards,
     ReviewSessionCardsProvider,
@@ -488,6 +486,9 @@ const ProjectLists: FC<ProjectListsProps> = ({
     outdated: reviewSessionCardsOutdated,
     allModulesLoaded: reviewModulesLoaded,
   } = useReviewSessionCardsModules({ skip: !isReview })
+  // table view for non-review pages (no cards modules for them), and for review when its addon is
+  // too old for the cards: derived on every render, so a view saved in another mode shows too
+  const pageDisplayStyle = isReview && !reviewSessionCardsOutdated ? displayStyle : 'table'
 
   const handleOpenPlayer = useTableOpenViewer({ projectName: projectName })
 
@@ -497,13 +498,6 @@ const ProjectLists: FC<ProjectListsProps> = ({
   const { scrollToRowId, onScrolledToRow } = useListItemDeepLink()
   // last selection reported by the review cards
   const cardsSelectionRef = useRef<string[]>([])
-
-  // if the addon is outdated, make sure we land in table view
-  useEffect(() => {
-    if (!reviewSessionCardsOutdated) return
-    onUpdateDisplayStyle('table')
-    onUpdateDisplayStyleWithPersistence('table')
-  }, [reviewSessionCardsOutdated])
 
   // only the first visit: the splitter keeps the sizes the user drags to
   const sidebarSize = getSidebarDefaultSize()

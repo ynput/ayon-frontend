@@ -1,11 +1,11 @@
 import styled from 'styled-components'
+import { Button, Icon } from '@ynput/ayon-react-components'
 
 export const NavBar = styled.nav`
-  padding-right: 8px;
-  /* the line the tabs stand on, the edge of the page */
-  border-bottom: 1px solid var(--md-sys-color-outline-variant);
-  background-color: var(--md-sys-color-surface-container-low);
-  padding: 0 8px;
+  /* the page's tabs sit on the page itself, below the top bar (transparent over the components'
+     .secondary class, which fills it) */
+  background-color: transparent;
+  padding: 6px 8px 0;
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
@@ -19,52 +19,60 @@ export const NavBar = styled.nav`
     list-style: none;
     margin: 0;
     padding: 0;
-
-    /* this puts the active tab's underline over the navbar's line */
-    position: relative;
-    top: 1px;
-    margin-bottom: -1px;
   }
 
   ul.trailing {
     flex-shrink: 0;
   }
 
+  /* tabs that don't fit fold into the "+N" menu, so the row never scrolls */
   ul.tabs {
     flex: 1;
     min-width: 0;
-    overflow-x: auto;
-    /* hide scroll bar */
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    &::-webkit-scrollbar {
-      display: none;
-    }
+    overflow: hidden;
 
-    /* fade the edge where more tabs are hidden */
-    --fade-start: 0px;
-    --fade-end: 0px;
-    &.overflow-start {
-      --fade-start: 48px;
+    /* tabs keep their width, which is what the row measures to fold them */
+    & > li {
+      flex-shrink: 0;
     }
-    &.overflow-end {
-      --fade-end: 48px;
-    }
-    &.overflow-start,
-    &.overflow-end {
-      mask-image: linear-gradient(
-        to right,
-        transparent 0,
-        #000 var(--fade-start),
-        #000 calc(100% - var(--fade-end)),
-        transparent 100%
-      );
-    }
+  }
+
+  /* editing the layout: every tab shows, the row scrolls instead of folding */
+  &.editing ul.tabs {
+    overflow-x: auto;
+  }
+`
+
+// while the layout is edited: hides or shows the tab
+export const TabEye = styled(Icon)`
+  margin: -4px -8px -4px 4px;
+  padding: 2px;
+  border-radius: var(--border-radius-m);
+  font-size: 16px;
+  color: var(--md-sys-color-on-surface-variant);
+
+  &:hover {
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
   }
 `
 
 export const NavItem = styled.li`
   user-select: none;
+
+  /* a tab the edited layout hides */
+  &.layout-hidden .tab-name,
+  &.layout-hidden button > .icon:not(${TabEye}) {
+    opacity: 0.4;
+  }
+
+  /* a pinned view: its page's icon, smaller and dimmed, says which page it opens; the pages lead
+     with it in full */
+  .pin-icon {
+    font-size: 16px;
+    opacity: 0.7;
+  }
+
   /* NavLink */
   a {
     padding: 2px 4px;
@@ -91,6 +99,15 @@ export const NavItem = styled.li`
     .tab-name {
       display: inline-flex;
       flex-direction: column;
+      /* an addon's long title can't take the row: the tabs fold by these widths */
+      max-width: 240px;
+
+      .tab-label,
+      &::after {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
 
       &::after {
         content: attr(data-name);
@@ -103,7 +120,7 @@ export const NavItem = styled.li`
       }
     }
 
-    /* the active tab is underlined in the accent colour, on the navbar's line */
+    /* the active tab is underlined in the accent colour */
     &.active {
       box-shadow: inset 0 -2px 0 0 var(--md-sys-color-primary);
 
@@ -118,4 +135,9 @@ export const Views = styled.span`
   display: flex;
   align-items: center;
   margin-left: -8px;
+`
+
+export const MoreTabs = styled(Button)`
+  flex-shrink: 0;
+  padding: 4px 6px 4px 10px;
 `

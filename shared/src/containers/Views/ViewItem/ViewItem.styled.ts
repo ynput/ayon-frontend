@@ -47,14 +47,25 @@ export const ViewItem = styled.li`
   }
   /* hide mode and save button by default */
   .save,
-  .more {
+  .more,
+  .pin:not(.pinned) {
     visibility: hidden;
   }
   &:hover {
     .save,
-    .more {
+    .more,
+    .pin {
       visibility: visible;
     }
+  }
+  /* reachable from the keyboard too */
+  &:focus-within .pin {
+    visibility: visible;
+  }
+
+  /* a pinned view keeps its filled pin */
+  .pin.pinned .icon {
+    font-variation-settings: 'FILL' 1;
   }
 `
 

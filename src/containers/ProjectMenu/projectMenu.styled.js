@@ -1,19 +1,27 @@
 import { Button } from '@ynput/ayon-react-components'
 import { Sidebar } from 'primereact/sidebar'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 
+// a dropdown under the context pill: left, top and height come from the pill
 export const ProjectSidebar = styled(Sidebar)`
-  /* height: calc(100% - 42px - 8px) !important;
-  top: 42px; */
-  margin-left: 8px;
-  top: 8px;
-  height: calc(100% - 16px) !important;
+  border-radius: var(--border-radius-l);
 
   background: none;
 
   box-shadow: var(--md-sys-elevation-overlay);
 
   overflow: hidden;
+
+  /* it drops down from the pill: a short fade instead of the drawer's slide in from the left */
+  &&.p-sidebar-enter {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  &&.p-sidebar-enter-active {
+    opacity: 1;
+    transform: none;
+    transition: opacity 0.1s ease-out, transform 0.1s ease-out;
+  }
 
   h3 {
     border: none;
@@ -94,22 +102,4 @@ export const Search = styled(Button)`
   top: 4px;
   width: min-content;
   padding: 4px;
-`
-
-const FadeInAnimation = keyframes`
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-`
-
-export const Overlay = styled.div`
-  position: fixed;
-  inset: 0;
-  z-index: 500;
-  background-color: rgba(0, 0, 0, 0.5);
-  animation: ${FadeInAnimation} 0.1s ease-in-out;
 `

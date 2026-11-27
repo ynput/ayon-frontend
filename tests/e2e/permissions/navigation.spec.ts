@@ -6,10 +6,10 @@ import { UsersSettingsPage } from '../pages/UsersSettingsPage'
 import { menuItem, signInAs } from '@ynput/ayon-e2e'
 import { apiAs } from '../support/api'
 
-const openAppMenu = async (page: Page) => {
-  await page.getByRole('button', { name: 'apps', exact: true }).click()
-  await expect(menuItem(page, 'Projects Settings')).toBeVisible()
-}
+// the admin area at the sidebar's bottom: Settings, Projects and Events, then the Admin menu
+const adminDock = (page: Page) => page.locator('[data-nav-rail] [data-rail-dock]')
+const dockLink = (page: Page, name: string) =>
+  adminDock(page).getByRole('link', { name, exact: true })
 
 const navTab = (page: Page, name: string) => page.getByRole('link', { name, exact: true })
 
@@ -79,11 +79,10 @@ test.describe('permissions: studio and project access', () => {
     const { context, page } = await signInAs(browser, user.name, user.password)
     const userApi = await apiAs(testInfo, user.name, user.password)
     try {
-      await openAppMenu(page)
-      await expect(menuItem(page, 'Site Settings')).toBeVisible()
-      await expect(menuItem(page, 'Studio Settings')).toHaveCount(0)
-      await expect(menuItem(page, 'Event Viewer')).toHaveCount(0)
-      await expect(menuItem(page, 'Services')).toHaveCount(0)
+      await expect(dockLink(page, 'Settings')).toHaveAttribute('href', '/settings/site')
+      await expect(dockLink(page, 'Projects')).toBeVisible()
+      await expect(dockLink(page, 'Events')).toHaveCount(0)
+      await expect(adminDock(page).getByRole('button', { name: 'Admin' })).toHaveCount(0)
 
       await page.goto('/settings/users')
       await expect(page).toHaveURL(/\/settings\/site$/, { timeout: 30_000 })
@@ -153,9 +152,11 @@ test.describe('permissions: studio and project access', () => {
     const { context, page } = await signInAs(browser, manager.name, manager.password)
     const managerApi = await apiAs(testInfo, manager.name, manager.password)
     try {
-      await openAppMenu(page)
-      await expect(menuItem(page, 'Studio Settings')).toBeVisible()
-      await expect(menuItem(page, 'Event Viewer')).toBeVisible()
+      await expect(dockLink(page, 'Settings')).toHaveAttribute('href', '/settings/studio')
+      await expect(dockLink(page, 'Events')).toBeVisible()
+      await adminDock(page).getByRole('button', { name: 'Admin', exact: true }).click()
+      await expect(menuItem(page, 'Services')).toBeVisible()
+      await expect(menuItem(page, 'Market')).toHaveCount(0)
 
       const users = new UsersSettingsPage(page)
       await users.goto()

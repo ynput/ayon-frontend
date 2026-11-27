@@ -29,8 +29,7 @@ export const HeaderButton = styled(Button)`
   }
 
   &.selected {
-    outline: solid 1px var(--md-sys-color-outline-variant);
-    background-color: var(--md-sys-color-background);
+    background-color: var(--md-sys-color-surface-container-highest-active);
   }
 
   &::after {

@@ -17,9 +17,9 @@ function calculateMenuPosition(
   if (!targetElement) return null
 
   const targetRect = targetElement.getBoundingClientRect()
-  const menuRect = menuElement?.getBoundingClientRect()
-  const menuWidth = menuRect?.width || 200
-  const menuHeight = menuRect?.height || 300
+  // the layout size: the open animation scales the menu, which its bounding rect would include
+  const menuWidth = menuElement?.offsetWidth || 200
+  const menuHeight = menuElement?.offsetHeight || 300
   const padding = 8 // Minimum distance from screen edges
   const viewportWidth = window.innerWidth
   const viewportHeight = window.innerHeight
@@ -32,13 +32,25 @@ function calculateMenuPosition(
 
   // top is relative to the dialog, which starts below the app header
   const minTop = MENU_TOP_BOUND - DIALOG_TOP_OFFSET
+  // above the target, the menu ends 8px above it, and may grow to the room above it (rows that
+  // load later make it taller, which places it again)
+  let above = false
+  const roomAbove = targetRect.top - 8 - MENU_TOP_BOUND
 
   // Check if menu fits below, otherwise flip to above
   if (top + DIALOG_TOP_OFFSET + menuHeight > viewportHeight - padding) {
     // If it doesn't fit below, check if it fits above
     const topAbove = targetRect.top - 8 - menuHeight - DIALOG_TOP_OFFSET
-    // Fits neither way: keep it below the target and let it scroll to the window bottom
-    if (topAbove >= minTop) top = topAbove
+    // Fits neither way: the side with more room, scrolling inside (a button at the window's
+    // bottom has none below)
+    const roomBelow = viewportHeight - padding - (targetRect.bottom + 8)
+    if (topAbove >= minTop) {
+      top = topAbove
+      above = true
+    } else if (roomAbove > roomBelow) {
+      top = minTop
+      above = true
+    }
   }
 
   // above the dialog's own box the menu is clipped and can't be scrolled back into view
@@ -82,7 +94,11 @@ function calculateMenuPosition(
     // But 'left' is easier to clamp. Let's stick to 'left' and 'top' for simplicity unless 'right' is explicitly needed.
   }
 
-  return { top, left, maxHeight: viewportHeight - (top + DIALOG_TOP_OFFSET) - padding }
+  return {
+    top,
+    left,
+    maxHeight: above ? roomAbove : viewportHeight - (top + DIALOG_TOP_OFFSET) - padding,
+  }
 }
 
 interface UseMenuPositionReturn {
@@ -114,7 +130,12 @@ export function useMenuPosition(
     // We need the menu element to calculate its dimensions
     if (!menuRef.current) return
 
-    const newPosition = calculateMenuPosition(targetElement, menuRef.current, align)
+    // measured at its full height: capped by an earlier pass, it would stay that small
+    const menu = menuRef.current
+    const cap = menu.style.maxHeight
+    menu.style.maxHeight = 'none'
+    const newPosition = calculateMenuPosition(targetElement, menu, align)
+    menu.style.maxHeight = cap
     if (!newPosition) return
 
     setPosition((prev) =>

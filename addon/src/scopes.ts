@@ -191,6 +191,9 @@ export interface ViewsScope {
  */
 export type Access = 'manager' | 'admin'
 
+/** The sidebar section a page's item goes in. */
+export type PageSection = 'review' | 'plan' | 'pipeline' | 'other'
+
 /** Description of a page contribution (`project.page`, `studio.page`). */
 export interface PageMeta {
   /**
@@ -211,6 +214,28 @@ export interface PageMeta {
    * be the page's own: one AYON or another page already uses is not shown.
    */
   viewType?: string
+  /**
+   * Where the page goes. `sidebar` (the default): a sidebar item of its own, or one shared with the
+   * other pages of its `group`. `tab`: a tab of the first sidebar item (Production in a project, My
+   * work on Home), for a page that is another view of the same data.
+   */
+  placement?: 'sidebar' | 'tab'
+  /** The page's sidebar icon, a Material Symbols name such as `calendar_month`. Default `extension`. */
+  icon?: string
+  /** The sidebar section of the page's item: `review`, `plan`, `pipeline` or `other` (the default). */
+  section?: PageSection
+  /**
+   * Gives the addon's pages with the same group one sidebar item, with a tab for each page. The item
+   * takes the first page's `groupTitle`, `icon`, `section` and `order`.
+   */
+  group?: string
+  /** The label of the group's sidebar item, e.g. `Planner`. Set on the group's first page. */
+  groupTitle?: string
+  /**
+   * The item's place in its section, or the page's place in its group: lower first. Pages without an
+   * order follow, in manifest order.
+   */
+  order?: number
 }
 
 /** Description of a `project.page` contribution: a page, and what the host adds around it. */
