@@ -21,7 +21,8 @@ interface SortMenuItemArgs<T extends string> {
   icon?: string
 }
 
-// a "Sort" submenu: picking a field selects it, the selected field's end button flips the direction
+// a "Sort" submenu: the direction first (as in Review's playlist), then the fields; picking a field
+// selects it in the direction it starts in
 export const buildSortMenuItem = <T extends string>({
   options,
   sort,
@@ -33,22 +34,19 @@ export const buildSortMenuItem = <T extends string>({
   id,
   label,
   icon,
-  items: options.map((option) => {
-    const isSelected = sort.by === option.id
-    return {
+  items: [
+    {
+      id: `${id}-reverse`,
+      label: sort.desc ? 'Sort ascending' : 'Sort descending',
+      icon: sort.desc ? 'arrow_upward' : 'arrow_downward',
+      onClick: () => onChange({ ...sort, desc: !sort.desc }),
+    },
+    { id: 'divider' },
+    ...options.map((option) => ({
       id: `${id}-${option.id}`,
       label: option.label,
       onClick: () => onChange({ by: option.id, desc: option.desc }),
-      selected: isSelected,
-      endActions: isSelected
-        ? [
-            {
-              icon: sort.desc ? 'arrow_downward' : 'arrow_upward',
-              tooltip: sort.desc ? 'Descending' : 'Ascending',
-              onClick: () => onChange({ ...sort, desc: !sort.desc }),
-            },
-          ]
-        : undefined,
-    }
-  }),
+      selected: sort.by === option.id,
+    })),
+  ],
 })

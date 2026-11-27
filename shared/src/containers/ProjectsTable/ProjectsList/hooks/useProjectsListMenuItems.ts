@@ -1,8 +1,7 @@
 import { useCallback, useMemo } from 'react'
 import { menuSection } from '@shared/components/Menu/menuSections'
-import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import type { MenuItemPosition } from '@ynput/ayon-addon'
-import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
+import { useSlotMenuItems } from '@ynput/ayon-addon'
+import type { SlotMenuItem } from '@ynput/ayon-addon'
 import { usePowerpack } from '@shared/context'
 import { EntityListFolderModel, ProjectFolderModel, ListProjectsItemModel } from '@shared/api'
 import { getPlatformShortcutKey, KeyMode, buildFolderHierarchy } from '@shared/util'
@@ -83,6 +82,8 @@ type MenuItem = {
   separator?: boolean
   shortcut?: string
   powerFeature?: string
+  // a button in the header as well (the "more" dropdown only)
+  isPinned?: boolean
 }
 
 export type BuildMenuItems = (
@@ -125,7 +126,7 @@ const useProjectsListMenuItems = ({
 }: MenuItemProps) => {
   const { setPowerpackDialog } = usePowerpack()
   // items addons contribute (projectList.menuItem slot, @ynput/ayon-addon)
-  const { contributions: addonMenuItems } = useContributions('projectList.menuItem')
+  const buildSlotItems = useSlotMenuItems('projectList.menuItem')
   // Remove allPinned, singleProject from hook scope, move to buildMenuItems
   const handlePin = (allPinned: boolean, selection: string[]) => {
     if (onPin) {
@@ -352,34 +353,20 @@ const useProjectsListMenuItems = ({
         return submenuItems
       }
 
-      // addon items for the selected projects, in the menus their `in` lists; `run` loads when
-      // the right-click menu opens (the dropdown's items are built with the list, so on click)
+      // addon items for the selected projects, in the menus their `in` lists (the slot's example,
+      // for Show slots, also without a selected project); pinned ones are buttons in the header too
       const menu = command ? 'context' : 'dropdown'
       const selectedProjectNames = selection.filter((id) => !parseProjectFolderRowId(id))
-      // tagged for the slot inspector; the slot's example (Show slots) also shows without a
-      // selected project
-      const buildAddonItems = (position: MenuItemPosition): MenuItem[] => {
-        const shown = selectedProjectNames.length
-          ? addonMenuItems
-          : addonMenuItems.filter(isExample)
-        return menuItemsAt(shown, position)
-          .filter((item) => !item.in?.length || item.in.includes(menu))
-          .map((item) => {
-            if (command) prefetchPiece(item.run)
-            return {
-              id: item.key,
-              label: item.label,
-              icon: item.icon,
-              [command ? 'command' : 'onClick']: () =>
-                runContribution(item, { projectNames: selectedProjectNames, menu }),
-              ...contributionTags(item),
-            }
-          })
-      }
+      const slotItems = buildSlotItems(
+        { projectNames: selectedProjectNames, menu },
+        (item) => !!selectedProjectNames.length && (!item.in?.length || item.in.includes(menu)),
+      )
+      const toMenuItem = ({ command: run, isPinned, ...item }: SlotMenuItem): MenuItem =>
+        command ? { ...item, command: run } : { ...item, onClick: run, isPinned }
       // addon items are a section of their own
       // `top` items first in the menu, the rest (default) above Archive and Delete
-      const addonTopItems = buildAddonItems('top')
-      const addonItems = buildAddonItems('bottom')
+      const addonTopItems = slotItems.top.map(toMenuItem)
+      const addonItems = slotItems.bottom.map(toMenuItem)
 
       const projectFolderSubmenu = createProjectFolderSubmenu()
       const folderFolderSubmenu = createFolderFolderSubmenu()
@@ -572,7 +559,7 @@ const useProjectsListMenuItems = ({
       wouldCreateCircularDependency,
       hidden,
       isMenuItemEnabled,
-      addonMenuItems,
+      buildSlotItems,
     ],
   )
 

@@ -50,12 +50,10 @@ export class ListsPage {
     await menuItem(this.page, option).click()
   }
 
-  // the direction is a button on the selected sort row; clicking it keeps the menu open, so close it after
+  // the direction is the first item of the sort menu
   async flipSortDirection(to: 'Ascending' | 'Descending') {
     await this.headerMenu('Sort lists')
-    await this.page.locator('.menu-item.selected .menu-item-end-action').click()
-    await expect(this.page.getByRole('button', { name: to, exact: true })).toBeVisible()
-    await this.page.keyboard.press('Escape')
+    await menuItem(this.page, `Sort ${to.toLowerCase()}`).click()
   }
 
   async createList({ label, entityType }: { label: string; entityType?: string }) {

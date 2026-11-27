@@ -31,11 +31,25 @@ export const listDetailsTab = (tab: ContributionFields<'listDetails.tab'>) =>
 export const entityMenuItem = (item: ContributionFields<'entityMenuItem'>) =>
   contribute('entityMenuItem', item)
 
-/** An item in the project list's right-click menu and/or "more" dropdown (`in`). */
+/**
+ * An item in the project list's right-click menu and/or "more" dropdown (`in`); `pinned` makes it a
+ * button in the header as well.
+ */
 export const projectListMenuItem = (item: ContributionFields<'projectList.menuItem'>) =>
   contribute('projectList.menuItem', item)
 
-/** An item in the slicer's right-click menu and/or panel dropdown (`in`). */
+/**
+ * An item in the lists panel's right-click menu and/or "more" dropdown (`in`), on the Lists and
+ * Reviews pages, for every list type or the `entityListTypes` listed; `pinned` makes it a button in
+ * the header as well.
+ */
+export const listsMenuItem = (item: ContributionFields<'lists.menuItem'>) =>
+  contribute('lists.menuItem', item)
+
+/**
+ * An item in the slicer's right-click menu and/or panel "more" dropdown (`in`); `pinned` makes it a
+ * button in the panel's header as well.
+ */
 export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
   contribute('slicer.menuItem', item)
 

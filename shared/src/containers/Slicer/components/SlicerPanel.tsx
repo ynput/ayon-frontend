@@ -5,7 +5,9 @@ import type { MenuItemPosition, MenuKind } from '@ynput/ayon-addon'
 import { contributionTags, isExample, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { SimpleTableRowContextMenuBuilder } from '@shared/containers/SimpleTable/SimpleTable.types'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
-import { Container, Header, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
+import { Container, HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
+import { TableListHeader } from '@shared/components/TableListHeader'
+import type { TableListHeaderItem } from '@shared/components/TableListHeader'
 import { ExpandedState, Row, RowSelectionState } from '@tanstack/react-table'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
 
@@ -15,7 +17,6 @@ import {
   type GetSlicerCountsSource,
   type SlicerCountsSource,
 } from '../hooks/useSlicerCounts'
-import SlicerSearch from './SlicerSearch'
 import clsx from 'clsx'
 import { useHierarchyContextMenuItems } from '../hooks/useHierarchyContextMenuItems'
 import type { OnAddToList } from '../hooks/useHierarchyContextMenuItems'
@@ -24,8 +25,8 @@ import { SimpleTableProvider } from '@shared/containers/SimpleTable/context/simp
 import { OnSliceTypeChange, useSlicerContext } from '../context/slicer'
 import styled from 'styled-components'
 import { SyncButton } from '@shared/components/SyncButton/SyncButton'
-import { useMenuContext, useProjectFoldersContext, usePowerpack } from '@shared/context'
-import { buildSortMenuItem, Menu, MenuContainer, type MenuItemType } from '@shared/components/Menu'
+import { useProjectFoldersContext, usePowerpack } from '@shared/context'
+import { buildSortMenuItem } from '@shared/components/Menu'
 import { getSliceSortOptions } from '../util/sliceSort'
 import type { OpenMoveDialog } from '@shared/containers/MoveEntityDialog/types'
 import SlicerPanelSummary from './SlicerPanelSummary'
@@ -40,24 +41,18 @@ const DropdownSkeleton = styled.div`
   width: 100px;
 `
 
-const HeaderActions = styled.div`
+// the header's title: the dimension dropdown (or, collapsed, its name and the selection), and the
+// hierarchy's sync button
+const TitleRow = styled.div`
   display: flex;
   align-items: center;
   gap: var(--base-gap-small);
-  margin-left: auto;
-  flex-shrink: 0;
-
-  // the open search box takes the whole header rather than sitting on top of the buttons
-  &.searching {
-    flex: 1;
-    min-width: 0;
-  }
+  height: 100%;
+  min-width: 0;
 `
 
 // the column is narrow: the dimension name shrinks rather than being pushed out
-const PanelHeader = styled(Header)`
-  container-type: inline-size;
-
+const PanelHeader = styled.div`
   .slicer-dropdown {
     flex: 0 1 auto;
     min-width: 48px;
@@ -70,21 +65,13 @@ const PanelHeader = styled(Header)`
     }
   }
 
-  /* the dimension name and the search come first: in a narrow panel the split button goes, then
-     the remove button; both are in the more menu too */
-  @container (max-width: 240px) {
-    .split-action {
-      display: none;
-    }
-  }
-  @container (max-width: 200px) {
-    .quick-action {
-      display: none;
-    }
-  }
-
+  /* a collapsed panel shows its name and selection only */
   &.collapsed {
     cursor: pointer;
+
+    .table-list-header-buttons {
+      display: none;
+    }
   }
 
   .collapse-toggle .icon {
@@ -321,6 +308,8 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         label: item.label,
         icon: item.icon,
         [menu === 'context' ? 'command' : 'onClick']: () => runContribution(item, context),
+        // a button in the panel's header too
+        ...(menu === 'dropdown' && item.pinned && { isPinned: true }),
         ...contributionTags(item),
       }))
     return menuSection(menuItems)
@@ -377,20 +366,22 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
     addSlicePanel(unusedSliceTypes[0])
   }
 
-  const { menuOpen, toggleMenuOpen } = useMenuContext()
   // one menu per panel, and the slice type can hold a dot (attrib.x)
   const menuId = `slicer-menu-${page}-${panel.id}`.replace(/[^\w-]/g, '-')
-  const isMenuOpen = menuOpen === menuId
 
-  // the header buttons stay as quick actions, the menu lists them too
+  // the pinned ones are header buttons too, the first on the right: in a narrow panel remove goes
+  // first, then split, and the search stays the longest
   const dropdownSelection = Object.keys(rowSelection).filter((id) => rowSelection[id])
-  const menuItems: MenuItemType[] = [
+  const menuItems: TableListHeaderItem[] = [
     ...buildAddonItems('dropdown', dropdownSelection, 'top'),
     {
       id: 'search',
       label: `Search ${searchSubject}`,
       icon: 'search',
-      onClick: () => onSearchChange(''),
+      isPinned: true,
+      active: isSearching,
+      buttonProps: { tooltip: isSearching ? 'Close search' : `Search ${searchSubject}` },
+      onClick: () => onSearchChange(isSearching ? undefined : ''),
     },
     ...(canSplit && isPrimary
       ? [
@@ -399,6 +390,9 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             label: 'Split slicer',
             icon: 'splitscreen_add',
             powerFeature: 'slicer' as const,
+            isPinned: true,
+            className: clsx({ 'power-feature': !powerLicense }),
+            buttonProps: { tooltip: powerLicense ? 'Split slicer' : 'Power feature - Slicer' },
             onClick: handleSplit,
           },
         ]
@@ -409,6 +403,7 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
             id: 'remove-panel',
             label: 'Remove panel',
             icon: 'close',
+            isPinned: true,
             onClick: () => removeSlicePanel(panel.id),
           },
         ]
@@ -438,94 +433,66 @@ export const SlicerPanel: FC<SlicerPanelProps> = ({
         // like vscode: the whole header of a collapsed panel opens it again
         onClick={isCollapsed ? () => togglePanelCollapsed(panel.id) : undefined}
       >
-        {canCollapse && (
-          <HeaderButton
-            icon="expand_more"
-            className={clsx('collapse-toggle', { collapsed: isCollapsed })}
-            data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
-            data-tooltip-delay={0}
-            onClick={() => togglePanelCollapsed(panel.id)}
-          />
-        )}
-        {isCollapsed ? (
-          // the dropdown cannot be used from a collapsed panel, but the dimension it
-          // shows has to read the same as the dropdown does when open
-          <SliceLabel>
-            <span>{sliceTypeLabel}</span>
-          </SliceLabel>
-        ) : isViewSyncPending ? (
-          <DropdownSkeleton />
-        ) : (
-          !isSearching && (
-            <SlicerDropdown
-              options={dropdownOptions}
-              value={[sliceType]}
-              sliceTypes={sliceFields.map((field) => field.value)}
-              onChange={(value) => handleDropdownChange(value)}
-              className={clsx('slicer-dropdown', { 'single-option': dropdownOptions.length === 1 })}
-              data-tooltip={sliceTypeLabel}
-              disableOpen={dropdownOptions.length === 1}
-            />
-          )
-        )}
-        {isCollapsed && <SlicerPanelSummary rowSelection={rowSelection} sliceMap={sliceMap} />}
-        <HeaderActions
-          className={clsx({ searching: isSearching })}
-          // the buttons act on the panel, not on the collapsed header they sit in
-          onClick={(event) => event.stopPropagation()}
-        >
-          {!isCollapsed && !isSearching && (
-            <>
+        <TableListHeader
+          className="slicer-header"
+          titleStart={
+            canCollapse && (
               <HeaderButton
-                icon="more_horiz"
-                id={menuId}
-                data-ayon-trigger={SLOT}
-                className={clsx('slicer-menu', { active: isMenuOpen })}
-                data-tooltip="More"
+                icon="expand_more"
+                className={clsx('collapse-toggle', { collapsed: isCollapsed })}
+                data-tooltip={isCollapsed ? 'Expand panel' : 'Collapse panel'}
                 data-tooltip-delay={0}
-                onClick={() => toggleMenuOpen(menuId)}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  togglePanelCollapsed(panel.id)
+                }}
               />
-              <MenuContainer targetId={menuId} id={menuId} align="left">
-                <Menu menu={menuItems} onClose={() => toggleMenuOpen(false)} />
-              </MenuContainer>
-            </>
-          )}
-          {!isCollapsed && (
-            <SlicerSearch
-              open={isSearching}
-              value={globalFilter}
-              subject={searchSubject}
-              onChange={onSearchChange}
-            />
-          )}
-          {isHierarchy && (
-            <SyncButton
-              topics={['entity.folder.created']}
-              onSync={async () => {
-                await refetch()
-              }}
-              hideWhenNoUpdates
-            />
-          )}
-          {canSplit && isPrimary && !isSearching && (
-            <HeaderButton
-              icon="splitscreen_add"
-              className={clsx('split-action', { 'power-feature': !powerLicense })}
-              data-tooltip={powerLicense ? 'Split slicer' : 'Power feature - Slicer'}
-              data-tooltip-delay={0}
-              onClick={handleSplit}
-            />
-          )}
-          {!isPrimary && !isSearching && (
-            <HeaderButton
-              icon="close"
-              className="quick-action"
-              data-tooltip="Remove panel"
-              data-tooltip-delay={0}
-              onClick={() => removeSlicePanel(panel.id)}
-            />
-          )}
-        </HeaderActions>
+            )
+          }
+          title={
+            <TitleRow>
+              {isCollapsed ? (
+                // the dropdown cannot be used from a collapsed panel, but the dimension it
+                // shows has to read the same as the dropdown does when open
+                <>
+                  <SliceLabel>
+                    <span>{sliceTypeLabel}</span>
+                  </SliceLabel>
+                  <SlicerPanelSummary rowSelection={rowSelection} sliceMap={sliceMap} />
+                </>
+              ) : isViewSyncPending ? (
+                <DropdownSkeleton />
+              ) : (
+                <SlicerDropdown
+                  options={dropdownOptions}
+                  value={[sliceType]}
+                  sliceTypes={sliceFields.map((field) => field.value)}
+                  onChange={(value) => handleDropdownChange(value)}
+                  className={clsx('slicer-dropdown', {
+                    'single-option': dropdownOptions.length === 1,
+                  })}
+                  data-tooltip={sliceTypeLabel}
+                  disableOpen={dropdownOptions.length === 1}
+                />
+              )}
+              {isHierarchy && (
+                <SyncButton
+                  topics={['entity.folder.created']}
+                  onSync={async () => {
+                    await refetch()
+                  }}
+                  hideWhenNoUpdates
+                />
+              )}
+            </TitleRow>
+          }
+          menuItems={menuItems}
+          menuId={menuId}
+          moreButtonProps={{ className: 'slicer-menu', 'data-ayon-trigger': SLOT }}
+          search={isCollapsed ? undefined : search}
+          onSearch={onSearchChange}
+          searchPasteList
+        />
       </PanelHeader>
       {!isCollapsed && (
         <SimpleTableProvider

@@ -1099,6 +1099,7 @@ An item in the project list's menus (dashboard, project menu, studio pages' Proj
 | `icon` (required) | `string` | a Material Symbols icon name |
 | `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
 | `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+| `pinned` | `boolean \| undefined` | also a button in the header while there is room for it, in menu order from the right (the last pinned goes first when the header gets narrow); it stays in the "more" menu. An AYON without pinned buttons shows it in the menu only |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|
@@ -1120,6 +1121,43 @@ projectListMenuItem({
 })
 ```
 
+### `lists.menuItem`: `listsMenuItem`
+
+An item in the lists panel's menus (Lists page, Reviews page): the right-click menu, the "more" dropdown, or both (`in`), for the list types it lists. It acts on the selected lists. Loads: menu open / click.
+
+| Description field | Type | |
+|---|---|---|
+| `entityListTypes` | `string[] \| undefined` | the list types it shows for (`generic`, `review-session`); every list type when not set |
+| `in` | `MenuKind[] \| undefined` | which menus show it: both when not set |
+| `id` (required) | `string` | unique among the addon's items of the slot |
+| `label` (required) | `string` | the menu entry |
+| `icon` (required) | `string` | a Material Symbols icon name |
+| `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
+| `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+| `pinned` | `boolean \| undefined` | also a button in the header while there is room for it, in menu order from the right (the last pinned goes first when the header gets narrow); it stays in the "more" menu. An AYON without pinned buttons shows it in the menu only |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'lists.menuItem'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `listIds` (required) | `string[]` | the selected lists (list folders left out) |
+| `entityListType` (required) | `string` | the list type the panel shows: `generic` on the Lists page, `review-session` on the Reviews page |
+| `menu` (required) | `MenuKind` |  |
+| `projectName` (required) | `string` |  |
+
+Pieces: `run`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+listsMenuItem({
+  id: 'example',
+  label: 'Example menu item',
+  icon: 'extension',
+  run: () => import('./Run'),
+})
+```
+
 ### `slicer.menuItem`: `slicerMenuItem`
 
 An item in the project page slicer's menus: the right-click menu, the panel's dropdown, or both (`in`), for the slice types it lists. Loads: menu open / click.
@@ -1133,6 +1171,7 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 | `icon` (required) | `string` | a Material Symbols icon name |
 | `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
 | `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+| `pinned` | `boolean \| undefined` | also a button in the header while there is room for it, in menu order from the right (the last pinned goes first when the header gets narrow); it stays in the "more" menu. An AYON without pinned buttons shows it in the menu only |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|

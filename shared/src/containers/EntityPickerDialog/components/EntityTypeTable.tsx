@@ -7,7 +7,7 @@ import { PickerEntityType } from '../EntityPickerDialog'
 import SimpleTable from '@shared/containers/SimpleTable/SimpleTable'
 import { Container } from '@shared/containers/SimpleTable/SimpleTable.styled'
 import type { SimpleTableRow } from '@shared/containers/SimpleTable/SimpleTable.types'
-import EntityTypeTableHeader from './EntityTypeTableHeader'
+import { TableListHeader } from '@shared/components/TableListHeader'
 import { upperFirst } from 'lodash'
 import { EmptyPlaceholder } from '@shared/components/EmptyPlaceholder/EmptyPlaceholder'
 import { EntityTooltip } from '@shared/components/EntityTooltip'
@@ -43,6 +43,7 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
   scrollToRowId,
 }) => {
   const tooltip = useRowTooltip(entityType, tableData)
+  const isSearching = typeof search === 'string'
 
   const handleDoubleClick = (e: React.MouseEvent<HTMLTableRowElement>) => {
     e.preventDefault()
@@ -55,10 +56,23 @@ const EntityTypeTable: FC<EntityTypeTableProps> = ({
 
   return (
     <Container>
-      <EntityTypeTableHeader
+      <TableListHeader
+        title={upperFirst(entityType) + 's'}
+        menuItems={[
+          {
+            id: 'search',
+            label: `Search ${entityType}s`,
+            icon: 'search',
+            isPinned: true,
+            active: isSearching,
+            buttonProps: { tooltip: isSearching ? 'Close search' : `Search ${entityType}s` },
+            onClick: () => onSearch(isSearching ? undefined : ''),
+          },
+        ]}
         search={search}
         onSearch={onSearch}
-        title={upperFirst(entityType) + 's'}
+        // only the folder search runs here and reads commas as OR; the others search on the server
+        searchPasteList={entityType === 'folder'}
       />
       {!isLoading && !tableData?.length && (
         <EmptyPlaceholder message={`No ${entityType}s found`} error={error} />

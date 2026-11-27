@@ -3,6 +3,7 @@ import { CommandEvent } from '@shared/containers/ContextMenu'
 import { useCallback, useMemo } from 'react'
 import { useAppSelector } from '@state/store'
 import useClearListItems from './useClearListItems'
+import useListsSlotItems from './useListsSlotItems'
 import { useListsDataContext } from '../context/lists-data'
 import { parseListFolderRowId } from '../util/buildListsTableData'
 import { buildFolderMap, wouldCreateCircularDependency } from '../util/listFolders'
@@ -64,6 +65,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
   }
 
   const { clearListItems } = useClearListItems({ projectName })
+  const buildSlotItems = useListsSlotItems()
 
   const handleCreateReviewSessionList: (listId: string) => void = useCallback(
     async (listId) => {
@@ -176,7 +178,13 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
         )
       }
 
+      // addon items: `top` ones first, the rest above Details, Clear and Delete
+      const slotItems = buildSlotItems(selectedListIds, 'context')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const toMenuItem = ({ isPinned, ...item }: (typeof slotItems.top)[number]) => item
+
       const menuItems: any[] = [
+        ...slotItems.top.map(toMenuItem),
         {
           label: `Rename ${allSelectedRowsAreFolders ? 'folder' : 'list'}`,
           icon: 'edit',
@@ -272,6 +280,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
           command: () => selectAllLists({ rowIds: selectedRows }),
         },
         ...extraItems,
+        ...slotItems.bottom.map(toMenuItem),
         {
           label: 'Details',
           icon: 'info',
@@ -340,6 +349,7 @@ const useListContextMenu = (extraBuilders: ListRowContextMenuBuilder[] = [], ena
       extraBuilders,
       openImportDialog,
       projectName,
+      buildSlotItems,
     ],
   )
 

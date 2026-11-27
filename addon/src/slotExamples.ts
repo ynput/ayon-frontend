@@ -25,6 +25,7 @@ export const SLOT_EXAMPLES: { readonly [S in SlotName]: SlotExample } = {
   'detailsPanel.menuItem': { label: 'Example menu item', icon, run: exampleRun },
   'listDetails.tab': { label: 'Example tab', icon, component: exampleView },
   'projectList.menuItem': { label: 'Example menu item', icon, run: exampleRun },
+  'lists.menuItem': { label: 'Example menu item', icon, run: exampleRun },
   'slicer.menuItem': { label: 'Example menu item', icon, run: exampleRun },
   entityMenuItem: { label: 'Example menu item', icon, run: exampleRun },
   'projectTable.toolbarItem': { label: 'Example', icon, run: exampleRun },

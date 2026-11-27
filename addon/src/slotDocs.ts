@@ -63,9 +63,14 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
     where: "an item in the project list's right-click menu and/or more dropdown",
     loads: 'menu open / click',
   },
+  'lists.menuItem': {
+    helper: 'listsMenuItem',
+    where: "an item in the lists panel's right-click menu and/or more dropdown, for its list types",
+    loads: 'menu open / click',
+  },
   'slicer.menuItem': {
     helper: 'slicerMenuItem',
-    where: "an item in the slicer's right-click menu and/or panel dropdown",
+    where: "an item in the slicer's right-click menu and/or panel more dropdown",
     loads: 'menu open / click',
   },
   'projectTable.toolbarItem': {
