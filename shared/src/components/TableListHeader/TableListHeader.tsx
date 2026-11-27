@@ -142,7 +142,6 @@ export const TableListHeader = ({
           <HeaderButton
             icon="more_horiz"
             data-tooltip="More"
-            aria-label="More"
             {...moreButtonProps}
             onClick={() => toggleMenu(!isOpen)}
             id={id}
@@ -171,7 +170,6 @@ export const TableListHeader = ({
                   data-shortcut={item.buttonProps?.shortcut ?? item.shortcut}
                   // an active one's tooltip says what is on (the sort in use): no wait for it
                   data-tooltip-delay={item.active ? 0 : undefined}
-                  aria-label={label}
                   aria-haspopup={hasMenu || undefined}
                   onClick={
                     hasMenu ? () => toggleMenuOpen(menuIsOpen ? false : itemMenuId) : item.onClick
