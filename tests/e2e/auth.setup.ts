@@ -8,8 +8,11 @@ import { AUTH_FILE } from './support/env'
 setup('authenticate as admin', async ({ page, baseURL }) => {
   const { name, password } = adminCredentials()
   const { api, token, user } = await AyonApi.login(baseURL!, name, password)
-  await api.dispose()
   expect(user.data.isAdmin, `${name} must be an admin to run the e2e suite`).toBeTruthy()
+  // the settings tests use the classic layout's markup: switch off the opt-in flat layout
+  // (Profile > Flat settings layout), in case the admin turned it on while testing by hand
+  await api.patch(`/api/users/${user.name}/frontendPreferences`, { flatSettingsLayout: false })
+  await api.dispose()
 
   await page.goto('/login')
   await page.evaluate((t) => localStorage.setItem('accessToken', t), token)

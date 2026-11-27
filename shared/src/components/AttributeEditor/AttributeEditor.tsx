@@ -150,6 +150,12 @@ export interface AttributeEditorProps {
   onHide: () => void
   onEdit: (attribute: AttributeForm) => void
   onDelete?: () => void
+  /**
+   * Adds the `flat-form-panel` class, drawn as a panel of rows by the AYON frontend's flat form
+   * styles (src/styles/flatForm.scss). Those styles live in the host app, not in this package,
+   * so an addon passing it sees no change unless it styles the class itself.
+   */
+  flat?: boolean
 }
 
 export const AttributeEditor: FC<AttributeEditorProps> = ({
@@ -162,6 +168,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
   onHide,
   onEdit,
   onDelete,
+  flat,
 }) => {
   const resolvedDefaultData = defaultData
     ? {
@@ -367,7 +374,7 @@ export const AttributeEditor: FC<AttributeEditorProps> = ({
       }}
     >
       {formData && (
-        <FormLayout>
+        <FormLayout className={flat ? 'flat-form-panel' : undefined}>
           {!excludes.includes('title') && (
             <FormRow label={'Title'} key={'title'}>
               <InputText value={formData?.data['title']} onChange={handleTitleChange} autoFocus />

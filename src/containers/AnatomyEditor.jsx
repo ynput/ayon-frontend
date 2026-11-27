@@ -18,8 +18,18 @@ import { isEqual } from 'lodash'
 import { setUri } from '@state/context'
 import SettingsEditor from '@containers/SettingsEditor'
 import useSettingsPaste from '@containers/SettingsEditor/useSettingsPaste'
+import useSettingsSetValue from '@containers/SettingsEditor/useSettingsSetValue'
 
-const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChanged, savedAt }) => {
+// readOnly: the viewer can't edit this project's anatomy (raw settings and Paste are greyed out)
+const AnatomyEditor = ({
+  preset,
+  projectName,
+  formData,
+  setFormData,
+  setIsChanged,
+  savedAt,
+  readOnly = false,
+}) => {
   const [originalData, setOriginalData] = useState(null)
   const handledSaveRef = useRef(null)
   const { data: schema } = useGetAnatomySchemaQuery()
@@ -74,6 +84,8 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
   }, [formData, originalData, setIsChanged])
 
   const onPasteValue = useSettingsPaste(formData, setFormData)
+  // sets a value at a path: raw settings and colour schemes (ListColorScheme) write through it
+  const onSetValue = useSettingsSetValue(formData, setFormData)
 
   const editor = useMemo(() => {
     if (isLoading) {
@@ -91,10 +103,23 @@ const AnatomyEditor = ({ preset, projectName, formData, setFormData, setIsChange
         onChange={setFormData}
         context={{
           onPasteValue: onPasteValue,
+          onSetValue,
+          readOnly,
         }}
       />
     )
-  }, [schema, originalData, formData, isLoading, preset, projectName, setFormData, onPasteValue])
+  }, [
+    schema,
+    originalData,
+    formData,
+    isLoading,
+    preset,
+    projectName,
+    setFormData,
+    onPasteValue,
+    onSetValue,
+    readOnly,
+  ])
 
   return editor
 }

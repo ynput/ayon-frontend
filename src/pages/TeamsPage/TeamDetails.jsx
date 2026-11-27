@@ -10,6 +10,20 @@ import {
 } from '@ynput/ayon-react-components'
 import { DetailHeader, EmptyPlaceholderFlex } from '@shared/components'
 import { pluralize } from '@shared/util'
+import styled from 'styled-components'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import { FlatFormCard } from '@components/FlatFormCard'
+
+// a role's row in the flat layout: rename it, or delete it
+const FlatRoleField = styled.div`
+  display: flex;
+  gap: var(--base-gap-small);
+  min-width: 0;
+
+  > form {
+    flex: 1;
+  }
+`
 
 const TeamDetails = ({
   teams = [],
@@ -22,6 +36,7 @@ const TeamDetails = ({
   const disableName = noneSelected || selectedTeams.length > 1
 
   const [name, setName] = useState('')
+  const flatLayout = useFlatSettingsLayout()
   //   set initial team names
   useEffect(() => {
     if (selectedTeams.length === 1) {
@@ -82,6 +97,30 @@ const TeamDetails = ({
     onUpdateTeams(updatedTeams)
   }
 
+  const nameRow = (
+    <FormRow label="Team name">
+      <LockedInput
+        value={name}
+        disabled={disableName}
+        onSubmit={onRenameTeam}
+        saveLabel=""
+        cancelLabel=""
+      />
+    </FormRow>
+  )
+  const roleInput = (role) => (
+    <LockedInput
+      value={role}
+      style={{ flex: 1 }}
+      onSubmit={(v) => handleRoleRename(role, v)}
+      saveLabel=""
+      cancelLabel=""
+    />
+  )
+  const roleDelete = (role) => (
+    <Button icon={'delete'} aria-label="Delete role" onClick={() => handleRoleRename(role, null)} />
+  )
+
   if (noneSelected)
     return (
       <Panel>
@@ -116,39 +155,48 @@ const TeamDetails = ({
             <span>{subTitle}</span>
           </div>
         </DetailHeader>
-        <Divider style={{ margin: '10px 0' }} />
+        {flatLayout ? (
+          // flat settings layout: cards of rows, like a flat settings page
+          <div className="flat-form" style={{ marginTop: 'var(--base-gap-large)' }}>
+            <FlatFormCard title="Team">
+              <FormLayout>{nameRow}</FormLayout>
+            </FlatFormCard>
+            <FlatFormCard title="Roles">
+              <FormLayout>
+                {roles.map((role) => (
+                  <FormRow key={role} label={role}>
+                    <FlatRoleField>
+                      {roleInput(role)}
+                      {roleDelete(role)}
+                    </FlatRoleField>
+                  </FormRow>
+                ))}
+                {!roles.length && <p className="flat-form-note">No roles</p>}
+              </FormLayout>
+            </FlatFormCard>
+          </div>
+        ) : (
+          <>
+            <Divider style={{ margin: '10px 0' }} />
 
-        <FormLayout>
-          <FormRow label="Team name">
-            <LockedInput
-              value={name}
-              disabled={disableName}
-              onSubmit={onRenameTeam}
-              saveLabel=""
-              cancelLabel=""
-            />
-          </FormRow>
-          <h2>Roles</h2>
-          {roles.map((role) => (
-            <div
-              key={role}
-              style={{
-                display: 'flex',
-                gap: 4,
-                width: '100%',
-              }}
-            >
-              <LockedInput
-                value={role}
-                style={{ flex: 1 }}
-                onSubmit={(v) => handleRoleRename(role, v)}
-                saveLabel=""
-                cancelLabel=""
-              />{' '}
-              <Button icon={'delete'} onClick={() => handleRoleRename(role, null)} />
-            </div>
-          ))}
-        </FormLayout>
+            <FormLayout>
+              {nameRow}
+              <h2>Roles</h2>
+              {roles.map((role) => (
+                <div
+                  key={role}
+                  style={{
+                    display: 'flex',
+                    gap: 4,
+                    width: '100%',
+                  }}
+                >
+                  {roleInput(role)} {roleDelete(role)}
+                </div>
+              ))}
+            </FormLayout>
+          </>
+        )}
       </Panel>
     </>
   )

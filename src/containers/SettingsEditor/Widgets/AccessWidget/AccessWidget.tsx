@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { updateChangedKeys, parseContext } from '../../helpers'
+import { updateChangedKeys, useParsedContext } from '../../helpers'
 import AccessEditorDialog, { AccessOption, AccessValues } from './AccessEditorDialog'
 import { DEFAULT_SHARE_OPTIONS } from './AccessEditorDialogHelpers'
 import { AccessPreviewButton } from './AccessPreviewButton'
@@ -50,7 +50,7 @@ const areAccessValuesEqual = (left: AccessValues, right: AccessValues) =>
   Object.keys(left).every((key) => left[key] === right[key])
 
 const AccessWidget = (props: AccessWidgetProps) => {
-  const { path } = parseContext(props)
+  const { path } = useParsedContext(props)
   const projectName = props?.formContext?.headerProjectName || ''
   const isCategoriesAccess = props.id.includes(CATEGORIES_ACCESS_ID)
   const defaultAccess =

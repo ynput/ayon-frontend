@@ -1,14 +1,23 @@
-import { useState, useEffect, useRef, memo } from 'react'
+import { Fragment, useState, useEffect, useRef, memo } from 'react'
 import { toast } from 'react-toastify'
 import { useDispatch } from 'react-redux'
-import { Button, Section, Panel, FormRow, SaveButton } from '@ynput/ayon-react-components'
+import {
+  Button,
+  Section,
+  Panel,
+  FormLayout,
+  FormRow,
+  SaveButton,
+} from '@ynput/ayon-react-components'
 import { useUpdateUsersMutation } from '@shared/api'
 import { updateUserData, updateUserAttribs } from '@state/user'
-import styled from 'styled-components'
+import { useFlatSettingsLayout } from '@hooks/useFlatSettingsLayout'
+import clsx from 'clsx'
 import ayonClient from '@/ayon'
 import UserAttribForm from './UserAttribForm'
 import UserAccessForm from './UserAccessForm'
 import ServiceDetails from './ServiceDetails'
+import UserDataDialog from '@components/UserDataDialog'
 import { cloneDeep, isEqual } from 'lodash'
 import UserLicenseForm from './UserLicenseForm'
 import { getRequestErrorString } from '@shared/util'
@@ -19,20 +28,7 @@ import {
   UserDetailsHeader,
   usersAccessLabel,
 } from '@shared/components'
-import { EditableLockedInput, PanelButtonsStyled } from './userDetail.styled'
-
-const FormsStyled = styled.section`
-  flex: 1;
-  overflow-x: clip;
-  overflow-y: auto;
-  gap: var(--base-gap-small);
-  display: flex;
-  flex-direction: column;
-
-  & > *:last-child {
-    /* flex: 1; */
-  }
-`
+import { EditableLockedInput, FormsStyled, PanelButtonsStyled } from './userDetail.styled'
 
 const attribTypeDefaults = {
   string: '',
@@ -213,10 +209,16 @@ const UserDetail = ({
   const [initData, setInitData] = useState({})
   const [changesMade, setChangesMade] = useState([])
   const [formUsers, setFormUsers] = useState([])
+  // "View data": the users' JSON, read only
+  const [showData, setShowData] = useState(false)
   const toastId = useRef(null)
 
   const attributes = ayonClient.getAttribsByScope('user')
   const dispatch = useDispatch()
+  // the user's flat settings layout preference draws these forms like a flat settings sheet
+  const flatLayout = useFlatSettingsLayout()
+  // the flat form styles its rows through a FormLayout. Classic keeps them straight in the panel
+  const ProfileRows = flatLayout ? FormLayout : Fragment
 
   useEffect(() => {
     // have the selected users changed?
@@ -405,40 +407,48 @@ const UserDetail = ({
         subTitle={usersAccessLabel(formUsers)}
         menuItems={headerMenuItems}
         onMenuOpen={addonMenu.prefetch}
+        onViewData={() => setShowData(true)}
       />
       {hasServiceUser && singleUserEdit ? (
-        <FormsStyled>
-          <ServiceDetails editName={() => setShowRenameUser(true)} user={singleUserEdit} />
+        <FormsStyled className={clsx({ 'flat-form': flatLayout })}>
+          <ServiceDetails
+            editName={() => setShowRenameUser(true)}
+            user={singleUserEdit}
+            flat={flatLayout}
+          />
           <AddonUserDetailsSections context={addonContext} />
         </FormsStyled>
       ) : (
-        <FormsStyled>
+        <FormsStyled className={clsx({ 'flat-form': flatLayout })}>
           {singleUserEdit && (
             <Panel>
-              <FormRow label="Username" key="Username">
-                <EditableLockedInput
-                  value={singleUserEdit.name}
-                  onEdit={() => setShowRenameUser(true)}
-                  disabled={managerDisabled}
-                />
-              </FormRow>
-              <FormRow label="Password" key="Password">
-                <EditableLockedInput
-                  label="Password"
-                  value={singleUserEdit.hasPassword ? '1234567890' : ''}
-                  type="password"
-                  onEdit={() => setShowSetPassword(true)}
-                  disabled={managerDisabled}
-                />
-              </FormRow>
-              {formData && (
-                <UserAttribForm
-                  formData={formData}
-                  setFormData={setFormData}
-                  attributes={attributes}
-                  disabled={managerDisabled}
-                />
-              )}
+              {flatLayout && <b className="flat-form-title">Profile</b>}
+              <ProfileRows>
+                <FormRow label="Username" key="Username">
+                  <EditableLockedInput
+                    value={singleUserEdit.name}
+                    onEdit={() => setShowRenameUser(true)}
+                    disabled={managerDisabled}
+                  />
+                </FormRow>
+                <FormRow label="Password" key="Password">
+                  <EditableLockedInput
+                    label="Password"
+                    value={singleUserEdit.hasPassword ? '1234567890' : ''}
+                    type="password"
+                    onEdit={() => setShowSetPassword(true)}
+                    disabled={managerDisabled}
+                  />
+                </FormRow>
+                {formData && (
+                  <UserAttribForm
+                    formData={formData}
+                    setFormData={setFormData}
+                    attributes={attributes}
+                    disabled={managerDisabled}
+                  />
+                )}
+              </ProfileRows>
             </Panel>
           )}
           {formData && (
@@ -484,6 +494,7 @@ const UserDetail = ({
           disabled={isUpdating || isFetchingUsers || !changesMade.length}
         />
       </PanelButtonsStyled>
+      {showData && <UserDataDialog users={formUsers} onClose={() => setShowData(false)} />}
     </Section>
   )
 }

@@ -13,6 +13,7 @@ Some parts of the codebase have their own `AGENTS.md` next to the code. It expla
 | Markdown editor (Lexical): comments, descriptions, text cells | [shared/src/components/MarkdownEditor/AGENTS.md](shared/src/components/MarkdownEditor/AGENTS.md) |
 | Table export: what pages hand to the Power Pack export dialog | [shared/src/containers/TableExport/AGENTS.md](shared/src/containers/TableExport/AGENTS.md) |
 | Page load benchmarks | [tests/performance/AGENTS.md](tests/performance/AGENTS.md) |
+| Settings editor: flat layout, list item and folding rules, outline, prefetch and search | [src/containers/SettingsEditor/AGENTS.md](src/containers/SettingsEditor/AGENTS.md) |
 | Playwright tests: unit and e2e, fixtures, page objects | [tests/AGENTS.md](tests/AGENTS.md) |
 | Lists page: list values vs entity values, powerpack module contract | [src/pages/ProjectListsPage/listValues/AGENTS.md](src/pages/ProjectListsPage/listValues/AGENTS.md) |
 

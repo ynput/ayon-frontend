@@ -24,6 +24,7 @@ import 'primeicons/primeicons.css'
 import '@ynput/ayon-react-components/dist/style.css'
 import './styles/loadingShimmer.scss'
 import './styles/index.scss'
+import './styles/flatForm.scss'
 import 'react-perfect-scrollbar/dist/css/styles.css'
 
 import { v4 as uuid } from 'uuid'

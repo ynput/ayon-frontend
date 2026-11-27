@@ -6,7 +6,7 @@ import { BooleanValue } from '@shared/components'
 
 import './users.scss'
 
-import { memo, useEffect, useMemo, useReducer, useRef, useState } from 'react'
+import { memo, useEffect, useMemo, useReducer, useRef } from 'react'
 import styled from 'styled-components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { useTableExportContext } from '@shared/context'
@@ -18,22 +18,25 @@ import { useGetUserPoolsQuery } from '@shared/api'
 import { getUserSortFunctions, USERS_TABLE_STATE_KEY } from './tableSorting'
 import InvitationStatus from './InvitationStatus'
 import { getInvitationState, getInvitationText } from './InvitationStatusHelpers'
-import { useStableColumnWidths } from './useStableColumnWidths'
+import { useColumnWidths } from './useColumnWidths'
 
 // fixed row height, needed by the virtual scroller
 const ROW_HEIGHT = 33
 
-// Save sort, column widths and order only. Left to itself the table also saves every selected user
-// object, on every render, and selects them again on mount.
+// Save sort and column order only. Left to itself the table also saves every selected user
+// object, on every render, and selects them again on mount. Column widths are kept by
+// useColumnWidths (widths the table saved before would pin every column)
+const UNSAVED_STATE = ['selection', 'columnWidths', 'tableWidth']
+
 const saveTableState = (state) => {
   try {
-    localStorage.setItem(USERS_TABLE_STATE_KEY, JSON.stringify(omit(state, 'selection')))
+    localStorage.setItem(USERS_TABLE_STATE_KEY, JSON.stringify(omit(state, UNSAVED_STATE)))
   } catch {
     // storage full or blocked: the table works without it
   }
 }
 
-const restoreTableState = () => omit(readLocalStorage(USERS_TABLE_STATE_KEY, {}), 'selection')
+const restoreTableState = () => omit(readLocalStorage(USERS_TABLE_STATE_KEY, {}), UNSAVED_STATE)
 
 const StyledProfileRow = styled.div`
   display: flex;
@@ -243,27 +246,56 @@ const UserList = ({
       }),
       accessLevel: getUserRole,
       defaultAccessGroups: (user) => user.defaultAccessGroups?.join(', '),
-      hasPassword: (user) => (user.hasPassword ? 'yes' : 'no'),
-      active: (user) => (user.active ? 'yes' : ''),
+      // an icon only
+      hasPassword: null,
+      active: null,
       invitation: getInvitationText,
     }),
     [userPools],
   )
-  // Once the user resizes a column the table saves every column's width and keeps them, so the
-  // minimum widths go: they would stop a column from getting narrower.
-  const [resized, setResized] = useState(() => !!restoreTableState().columnWidths)
-  const columnWidths = useStableColumnWidths(
+  const { widths, startResize, fitWidth } = useColumnWidths(
     tableRef,
     userList,
     columnTexts,
-    !isLoading && !resized,
+    !isLoading,
   )
-  // min-width, as the table is wider than the page and the browser ignores a larger width. Only on
-  // the body cells: the table takes a header's min-width as the narrowest it can be resized to.
-  const columnProps = (key) => ({
-    className: `col-${key}`,
-    bodyStyle: resized ? undefined : { minWidth: columnWidths[key] },
-  })
+  // Widths are CSS variables on the table, so dragging a column's edge can set one without a
+  // render. The table is laid out from them once every column has one, at exactly their sum
+  const columnKeys = Object.keys(columnTexts)
+  const allMeasured = columnKeys.every((key) => key in widths)
+  const tableStyle = allMeasured
+    ? {
+        tableLayout: 'fixed',
+        width: `calc(${columnKeys.map((key) => `var(--col-${key})`).join(' + ')})`,
+        minWidth: 0,
+      }
+    : undefined
+  const rootStyle = {}
+  for (const key in widths) rootStyle[`--col-${key}`] = `${widths[key]}px`
+
+  const columnProps = (key, label) => {
+    const width = allMeasured ? `var(--col-${key})` : undefined
+    const style = width && { width, minWidth: width, maxWidth: width }
+    return {
+      className: `col-${key}`,
+      // drag the edge to resize the column, double-click it to fit its content again
+      header: (
+        <>
+          {label}
+          <span
+            className="p-column-resizer"
+            onMouseDown={(e) => startResize(key, e)}
+            onDoubleClick={(e) => {
+              e.stopPropagation()
+              fitWidth(key)
+            }}
+          />
+        </>
+      ),
+      headerStyle: style,
+      bodyStyle: style,
+    }
+  }
 
   // Render
   return (
@@ -281,10 +313,9 @@ const UserList = ({
           onRowClick={onRowClick}
           onSelectionChange={onSelectionChange}
           onContextMenu={onContextMenu}
-          onColumnResizeEnd={() => setResized(true)}
           selection={selection}
-          columnResizeMode="expand"
-          resizableColumns
+          style={rootStyle}
+          tableStyle={tableStyle}
           responsive="true"
           stateStorage="custom"
           customSaveState={saveTableState}
@@ -296,25 +327,16 @@ const UserList = ({
         >
           <Column
             field="name"
-            header="Username"
-            {...columnProps('name')}
+            {...columnProps('name', 'Username')}
             sortable
             body={(rowData) => !isLoading && <ProfileRow rowData={rowData} />}
-            resizeable
           />
-          <Column
-            field="attrib.fullName"
-            header="Full name"
-            sortable
-            resizeable
-            {...columnProps('fullName')}
-          />
-          <Column field="attrib.email" header="Email" sortable {...columnProps('email')} />
+          <Column field="attrib.fullName" sortable {...columnProps('fullName', 'Full name')} />
+          <Column field="attrib.email" sortable {...columnProps('email', 'Email')} />
           {!!userPools.length && (
             <Column
               field="userPool"
-              header="License"
-              {...columnProps('userPool')}
+              {...columnProps('userPool', 'License')}
               body={(rowData) => {
                 const pool = findUserPool(rowData.userPool)
                 return (
@@ -325,50 +347,39 @@ const UserList = ({
               }}
               sortable
               sortFunction={sortFunctions.userPool}
-              resizeable
             />
           )}
           <Column
             field={'accessLevel'}
-            header="Access level"
-            {...columnProps('accessLevel')}
+            {...columnProps('accessLevel', 'Access level')}
             body={(rowData) => getUserRole(rowData)}
             sortFunction={sortFunctions.accessLevel}
             sortable
-            resizeable
           />
           <Column
             field="defaultAccessGroups"
-            header="Default projects access"
-            {...columnProps('defaultAccessGroups')}
+            {...columnProps('defaultAccessGroups', 'Default projects access')}
             sortable
-            resizeable
             body={(rowData) => rowData.defaultAccessGroups?.join(', ')}
           />
           <Column
-            header="Has password"
-            {...columnProps('hasPassword')}
+            {...columnProps('hasPassword', 'Has password')}
             body={(rowData) => !isLoading && <BooleanValue value={!!rowData.hasPassword} />}
             field="hasPassword"
             sortable
-            resizeable
           />
           <Column
-            header="Active"
-            {...columnProps('active')}
+            {...columnProps('active', 'Active')}
             body={(rowData) => !isLoading && <BooleanValue value={!!rowData.active} />}
             field="active"
             sortable
-            resizeable
           />
           <Column
-            header="Invitation"
-            {...columnProps('invitation')}
+            {...columnProps('invitation', 'Invitation')}
             field="inviteSentAt"
             body={(rowData) => <InvitationStatus user={rowData} plain />}
             sortable
             sortFunction={sortFunctions.inviteSentAt}
-            resizeable
           />
         </DataTable>
       </TablePanel>

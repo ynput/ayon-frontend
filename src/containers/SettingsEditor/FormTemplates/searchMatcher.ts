@@ -24,7 +24,7 @@ const matchesFilterKeys = (
 
   for (const key of filterKeys[addonName]) {
     let sanitizedKey = key
-    const matches = getArrayMatch(key);
+    const matches = getArrayMatch(key)
     if (matches) {
       sanitizedKey = matches[1]
     }

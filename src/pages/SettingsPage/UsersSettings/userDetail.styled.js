@@ -19,3 +19,22 @@ export const EditableLockedInput = styled(LockedInput)`
     }
   }
 `
+
+// The forms of the panel. With the flat settings layout (class flat-form, src/styles/flatForm.scss)
+// they sit on a sheet of their own, like a flat settings page
+export const FormsStyled = styled.section`
+  flex: 1;
+  overflow-x: clip;
+  overflow-y: auto;
+  gap: var(--base-gap-small);
+  display: flex;
+  flex-direction: column;
+
+  &.flat-form {
+    /* flatForm.scss sets this gap too, but loses to the gap above (same specificity) */
+    gap: 20px;
+    padding: 4px 16px 16px;
+    border-radius: var(--border-radius-m);
+    background-color: var(--panel-background);
+  }
+`

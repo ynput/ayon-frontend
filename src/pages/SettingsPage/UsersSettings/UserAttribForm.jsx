@@ -129,7 +129,7 @@ const UserAttribForm = ({
       {buildForms(builtin)}
       {!!custom.length && (
         <>
-          <DividerSmallStyled />
+          <DividerSmallStyled className="user-attrib-divider" />
           {buildForms(custom)}
         </>
       )}
