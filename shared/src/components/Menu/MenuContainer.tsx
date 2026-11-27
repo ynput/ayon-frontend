@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'
 import { useMenuPosition } from './useMenuPosition'
+import { MenuStyles } from './MenuStyles'
 
 // DOM ids of the menu portal — exported so other menu code (mouse-leave heuristics,
 // hit-testing, etc.) can reference them by constant instead of magic strings.
@@ -12,6 +13,7 @@ export const MENU_PORTAL_CONTENT_ID = 'ayon-menu-content'
 
 type AlignType = 'left' | 'right'
 type ThemeType = 'light' | 'dark'
+type MenuSize = 'default' | 'large'
 
 interface MenuContainerProps {
   id: string | undefined
@@ -23,6 +25,8 @@ interface MenuContainerProps {
   isOpen?: boolean
   /** with `isOpen`: called to close it (`onClose` stays the dialog's own event) */
   onDismiss?: () => void
+  /** `large`: the roomier header menus (user, apps, help); everything else uses the default */
+  size?: MenuSize
   children: ReactNode
   [key: string]: any
 }
@@ -80,6 +84,7 @@ interface MenuInnerProps {
   target?: HTMLElement | null
   targetId?: string
   align?: AlignType
+  size?: MenuSize
   children: ReactNode
   [key: string]: any
 }
@@ -90,6 +95,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
   target,
   targetId,
   align = 'right',
+  size = 'default',
   children,
   ...props
 }) => {
@@ -143,10 +149,11 @@ const MenuInner: React.FC<MenuInnerProps> = ({
       {...props}
       id={MENU_PORTAL_DIALOG_ID}
     >
+      <MenuStyles />
       <Styled.DialogContent
         id={MENU_PORTAL_CONTENT_ID}
         style={menuPosition}
-        className={clsx(align)}
+        className={clsx(align, { 'menu-large': size === 'large' })}
         ref={menuRef as any}
       >
         {childrenWithProps}
