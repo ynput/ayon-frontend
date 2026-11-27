@@ -1,3 +1,5 @@
+import { isHoldingMessages, onMessagesReleased } from './hiddenTab'
+
 // @ts-ignore
 const isDev = import.meta.env.VITE_DEV === 'true'
 
@@ -55,6 +57,7 @@ export function createRealtimeBatcher<T>(
   let timer: ReturnType<typeof setTimeout> | null = null
   let processing = false
   let disposed = false
+  let stopWaiting: (() => void) | undefined
 
   const clearTimer = () => {
     if (timer) {
@@ -63,10 +66,24 @@ export function createRealtimeBatcher<T>(
     }
   }
 
+  const stopWaitingForRelease = () => {
+    stopWaiting?.()
+    stopWaiting = undefined
+  }
+
   const run = async () => {
     clearTimer()
     if (disposed || processing) return
     if (pending.size === 0) return
+    // A video plays or the tab is hidden: the batch waits like the socket messages do. Its timer
+    // can run out after a short pause, once playback has started again.
+    if (isHoldingMessages()) {
+      stopWaiting ??= onMessagesReleased(() => {
+        stopWaitingForRelease()
+        run()
+      })
+      return
+    }
 
     processing = true
     const entries = Array.from(pending.entries()).slice(0, REALTIME_REST_CALL_LIMIT)
@@ -98,6 +115,7 @@ export function createRealtimeBatcher<T>(
       disposed = true
       pending.clear()
       clearTimer()
+      stopWaitingForRelease()
     },
   }
 }
