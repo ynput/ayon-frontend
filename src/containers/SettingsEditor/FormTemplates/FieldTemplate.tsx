@@ -132,7 +132,9 @@ function FieldTemplate(props: FieldTemplateProps) {
 
   const onContextMenu = (e: $Any) => {
     e.preventDefault()
-    contextMenu(e, contextMenuModel)
+    // what addons add for this setting (addonSettings.history slot)
+    const addonItems = props.formContext.getSettingMenuItems?.(path) ?? []
+    contextMenu(e, [...addonItems, ...contextMenuModel])
     if (props.formContext.onSetBreadcrumbs && path) props.formContext.onSetBreadcrumbs(path)
   }
 

@@ -1474,6 +1474,44 @@ profileSection({
 })
 ```
 
+### `addonSettings.history`: `addonSettingsHistory`
+
+The history of the addon settings in the settings editor (Studio settings, Project settings), for the addons the editor shows: `timeline` above the settings, `sidebar` in the right column, where the unsaved changes are. While there are no unsaved changes, the sidebar takes their place; with unsaved changes, it shows above them. Both load when the editor shows an addon. Site settings have no history, so it doesn't show there. Loads: first shown.
+
+| Description field | Type | |
+|---|---|---|
+| `id` (required) | `string` | unique among the addon's contributions to the slot |
+| `powerFeature` | `boolean \| undefined` | a Power Pack feature: shown only with a Power Pack licence. `false` by default |
+
+| Context (props, `useSlot`) | Type | |
+|---|---|---|
+| `slot` (required) | `'addonSettings.history'` | the slot this is rendered in |
+| `user` (required) | `AddonUser` | the signed-in user |
+| `addons` (required) | `AddonSettingsAddon[]` | the addons the editor shows, top to bottom |
+| `projectName` (required) | `string \| null` | the project whose settings the editor shows; `null` for the studio settings |
+| `schemas` (required) | `Record<string, Record<string, unknown>>` | the settings schemas of the addons, by addon name, once the editor has loaded them |
+| `selected` (required) | `{ addonName: string; path: string[]; } \| null` | the setting selected in the editor |
+| `hasChanges` (required) | `boolean` | the editor has unsaved changes; they show below the sidebar |
+| `changedPaths` (required) | `Record<string, string[][]>` | the paths of the unsaved changes of the addons shown, by addon name |
+| `focusSetting` (required) | `(addonName: string, path: string[]) => void` | selects a setting in the editor and scrolls to it |
+| `getChanges` (required) | `(addonName: string) => AddonSettingsChanges` | the unsaved changes of an addon, read when called |
+| `setChanges` (required) | `(addonName: string, changes: AddonSettingsChanges) => void` | replaces the unsaved changes of an addon; the editor's Save button saves them |
+| `revertChange` (required) | `(addonName: string, path: string[]) => void` | drops the unsaved change of a setting, and of the settings below it |
+| `formSelector` (required) | `(addonName: string) => string` | a CSS selector of an addon's settings form, to style its settings: each setting is an element with `data-fieldid` `root_<path joined by _>` |
+| `addSettingMenu` (required) | `(menu: AddonSettingsMenu) => () => void` | adds items to the top of the right-click menu of a setting; returns the function removing them |
+
+Pieces: `timeline`, `sidebar`.
+
+Example (what developer mode's Show slots renders here):
+
+```ts
+addonSettingsHistory({
+  id: 'example',
+  timeline: () => import('./Timeline'),
+  sidebar: () => import('./Sidebar'),
+})
+```
+
 ### `app.service`: `appService`
 
 Code with no UI that runs while AYON is open, whatever the page: keeping a state, listening to websocket events, registering a store listener. `component` loads at startup and is mounted once for the whole app, under AYON's providers (store, router, contexts), so it can use hooks; it renders nothing (`return null`). Clean up in its effects. A crash unmounts it and shows a toast; the rest of AYON keeps working. Loads: at startup.

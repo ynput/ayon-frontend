@@ -109,4 +109,10 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
       "a section on the signed-in user's profile page (Account → Profile), next to AYON's profile form (below it on narrow screens)",
     loads: 'first shown',
   },
+  'addonSettings.history': {
+    helper: 'addonSettingsHistory',
+    where:
+      'the history of the addon settings in the settings editor (Studio settings, Project settings): a timeline above the settings and a sidebar beside them',
+    loads: 'first shown',
+  },
 }
