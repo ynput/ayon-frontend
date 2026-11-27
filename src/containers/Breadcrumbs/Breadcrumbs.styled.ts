@@ -20,13 +20,46 @@ export const Pill = styled.div`
   background-color: var(--md-sys-color-surface-container-highest);
 `
 
-// the project's thumbnail before its name (16:9, as on the Projects page), shown once loaded
+// the pill's buttons (go to a URI, copy it), beside it: they show while you point at the pill or
+// tab to them, and keep their room meanwhile, so the path doesn't fold again when they show
+export const Actions = styled.div`
+  display: flex;
+  flex-shrink: 0;
+  height: 32px;
+  border-radius: 0 var(--border-radius-m) var(--border-radius-m) 0;
+  overflow: hidden;
+  background-color: var(--md-sys-color-surface-container-highest);
+  opacity: 0;
+`
+
+// the pill and its buttons
+export const Group = styled.div`
+  display: flex;
+  align-items: center;
+  min-width: 0;
+
+  &:hover,
+  &:has(:focus-visible) {
+    ${Actions} {
+      opacity: 1;
+    }
+    /* square where the buttons join it */
+    ${Pill}:not(:last-child) {
+      border-top-right-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+  }
+`
+
+// the project's thumbnail before its name (16:9, as on the Projects page): the pill's height but a
+// thin rim, shown once loaded
 export const Thumb = styled.img`
-  width: 36px;
-  height: 20px;
+  width: 50px;
+  height: 28px;
   flex-shrink: 0;
   object-fit: cover;
-  border-radius: 3px;
+  /* in line with the pill's corners (4px) at the 2px rim */
+  border-radius: 2px;
 
   &.loading {
     visibility: hidden;
@@ -70,7 +103,7 @@ export const ProjectButton = styled.button`
 
   /* a thumbnail sits as far in as it is from the pill's top and bottom */
   &:has(img) {
-    padding-left: 6px;
+    padding-left: 2px;
   }
 
   /* on Home: no project yet, an empty place in the path */
@@ -78,6 +111,10 @@ export const ProjectButton = styled.button`
     outline: 1px dashed var(--md-sys-color-outline);
     outline-offset: -1px;
     border-radius: var(--border-radius-m) 0 0 var(--border-radius-m);
+  }
+  /* alone in the pill: its corners */
+  &.choose:last-child {
+    border-radius: inherit;
   }
   &.choose strong {
     font-weight: 500;
@@ -91,7 +128,7 @@ export const Display = styled.button`
   gap: var(--base-gap-large);
   min-width: 0;
   height: 100%;
-  padding: 6px 4px 6px 2px;
+  padding: 6px 10px 6px 2px;
   border: none;
   background: none;
   color: var(--md-sys-color-on-surface);

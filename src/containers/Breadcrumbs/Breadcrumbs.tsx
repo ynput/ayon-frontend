@@ -247,70 +247,79 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
 
   return (
     <Styled.Slot ref={slotRef}>
-      <Styled.Pill id="context-pill">
-        {onProjectsClick ? (
-          <Styled.ProjectButton
-            onClick={onProjectsClick}
-            className={clsx({ open: projectsOpen, choose: !project })}
-            aria-haspopup="dialog"
-            aria-expanded={!!projectsOpen}
-            data-tooltip={project ? 'Switch project' : undefined}
-            data-tooltip-delay={500}
-          >
-            {thumb || <Icon icon="category" />}
-            <strong>{project || 'Choose a project'}</strong>
-            <Icon icon="expand_more" />
-          </Styled.ProjectButton>
-        ) : (
-          project && (
-            <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
-              {thumb}
-              <strong>{project}</strong>
+      <Styled.Group>
+        <Styled.Pill id="context-pill">
+          {onProjectsClick ? (
+            <Styled.ProjectButton
+              onClick={onProjectsClick}
+              className={clsx({ open: projectsOpen, choose: !project })}
+              aria-haspopup="dialog"
+              aria-expanded={!!projectsOpen}
+              data-tooltip={project ? 'Switch project' : undefined}
+              data-tooltip-delay={500}
+            >
+              {thumb || <Icon icon="category" />}
+              <strong>{project || 'Choose a project'}</strong>
+              <Icon icon="expand_more" />
             </Styled.ProjectButton>
-          )
-        )}
-        {editMode ? (
-          <Styled.Form onSubmit={goThere}>
-            <input
-              value={localUri}
-              placeholder="Go to URI..."
-              onChange={(e) => setLocalUri(e.target.value)}
-              onBlur={() => setEditMode(false)}
-              onKeyDown={handleKeyDown}
-              ref={inputRef}
-              aria-label="URI"
-            />
-            <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
-          </Styled.Form>
-        ) : shownPath.length ? (
-          <Styled.Display
-            onClick={() => setEditMode(true)}
-            data-tooltip={`${fullText} (click to edit the URI)`}
-            data-tooltip-delay={500}
-          >
-            <Styled.Text ref={textRef}>
-              {project && '/ '}
-              {shownPath.join(' / ')}
-            </Styled.Text>
-          </Styled.Display>
-        ) : (
-          <Styled.PillButton
-            icon="edit"
-            onClick={() => setEditMode(true)}
-            variant="text"
-            data-tooltip="Go to a URI"
-          />
-        )}
+          ) : (
+            project && (
+              <Styled.ProjectButton as="span" style={{ cursor: 'default' }}>
+                {thumb}
+                <strong>{project}</strong>
+              </Styled.ProjectButton>
+            )
+          )}
+          {editMode ? (
+            <Styled.Form onSubmit={goThere}>
+              <input
+                value={localUri}
+                placeholder="Go to URI..."
+                onChange={(e) => setLocalUri(e.target.value)}
+                onBlur={() => setEditMode(false)}
+                onKeyDown={handleKeyDown}
+                ref={inputRef}
+                aria-label="URI"
+              />
+              <Styled.PillButton icon="arrow_forward" onMouseDown={goThere} variant="text" />
+            </Styled.Form>
+          ) : (
+            !!shownPath.length && (
+              <Styled.Display
+                onClick={() => setEditMode(true)}
+                data-tooltip={`${fullText} (click to edit the URI)`}
+                data-tooltip-delay={500}
+              >
+                <Styled.Text ref={textRef}>
+                  {project && '/ '}
+                  {shownPath.join(' / ')}
+                </Styled.Text>
+              </Styled.Display>
+            )
+          )}
+        </Styled.Pill>
+        {/* shown while you point at the pill (the path itself opens the URI too) */}
         {!editMode && (
-          <Styled.PillButton
-            icon="content_copy"
-            onClick={() => copyToClipboard(localUri)}
-            disabled={!localUri}
-            variant="text"
-            data-tooltip={localUri ? 'Copy URI' : undefined}
-          />
+          <Styled.Actions>
+            {!shownPath.length && (
+              <Styled.PillButton
+                icon="edit"
+                onClick={() => setEditMode(true)}
+                variant="text"
+                data-tooltip="Go to a URI"
+              />
+            )}
+            {localUri && (
+              <Styled.PillButton
+                icon="content_copy"
+                onClick={() => copyToClipboard(localUri)}
+                variant="text"
+                data-tooltip="Copy URI"
+              />
+            )}
+          </Styled.Actions>
         )}
-      </Styled.Pill>
+      </Styled.Group>
     </Styled.Slot>
   )
 }
