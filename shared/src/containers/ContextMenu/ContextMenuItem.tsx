@@ -1,6 +1,5 @@
 import React, { RefObject } from 'react'
 import { Icon, ShortcutTag } from '@ynput/ayon-react-components'
-import '../../components/Menu/menuTokens.scss'
 import './ContextMenu.scss'
 import clsx from 'clsx'
 import type { PowerpackFeature } from '@shared/context'

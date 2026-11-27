@@ -4,6 +4,7 @@ import { createPortal } from 'react-dom'
 import clsx from 'clsx'
 import * as Styled from './Menu.styled'
 import { useMenuPosition } from './useMenuPosition'
+import { MenuStyles } from './MenuStyles'
 
 // DOM ids of the menu portal — exported so other menu code (mouse-leave heuristics,
 // hit-testing, etc.) can reference them by constant instead of magic strings.
@@ -148,6 +149,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
       {...props}
       id={MENU_PORTAL_DIALOG_ID}
     >
+      <MenuStyles />
       <Styled.DialogContent
         id={MENU_PORTAL_CONTENT_ID}
         style={menuPosition}

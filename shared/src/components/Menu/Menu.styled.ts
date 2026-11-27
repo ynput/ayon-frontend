@@ -1,7 +1,5 @@
 import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
-// sizes shared with the context menu
-import './menuTokens.scss'
 
 // the dialog starts below the app header, so menus positioned above it are clipped and unscrollable
 export const DIALOG_TOP_OFFSET = 42

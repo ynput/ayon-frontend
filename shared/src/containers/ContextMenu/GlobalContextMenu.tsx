@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { ContextMenu } from 'primereact-context/contextmenu'
 import { useContextMenu } from './context/context-menu'
+import { MenuStyles } from '../../components/Menu/MenuStyles'
 
 export const GlobalContextMenu = () => {
   const { model, ref, isContextOpen, setIsContextOpen, clearContextTarget } = useContextMenu()
@@ -19,14 +20,17 @@ export const GlobalContextMenu = () => {
   }, [isContextOpen, ref])
 
   return (
-    <ContextMenu
-      model={model}
-      ref={ref}
-      onShow={() => setIsContextOpen(true)}
-      onHide={() => {
-        setIsContextOpen(false)
-        clearContextTarget()
-      }}
-    />
+    <>
+      <MenuStyles />
+      <ContextMenu
+        model={model}
+        ref={ref}
+        onShow={() => setIsContextOpen(true)}
+        onHide={() => {
+          setIsContextOpen(false)
+          clearContextTarget()
+        }}
+      />
+    </>
   )
 }
