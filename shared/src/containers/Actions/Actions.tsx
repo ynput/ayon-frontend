@@ -15,7 +15,7 @@ import type { ActionTriggersProps } from '@shared/hooks/useActionTriggers'
 import { useActionTriggers } from '@shared/hooks/useActionTriggers'
 import { ActionConfigDialog } from './ActionConfigDialog'
 import { InteractiveActionDialog, InteractiveForm } from './InteractiveActionDialog'
-import { getRequestErrorString } from '@shared/util'
+import { getCurrentPlatform, getRequestErrorString } from '@shared/util'
 import type { BundleMode } from '@shared/util/getBundleMode'
 import { useGlobalContext } from '@shared/context'
 
@@ -62,10 +62,15 @@ export const Actions = ({
   const [interactiveForm, setInteractiveForm] = useState<any>(null)
 
   const context: ActionContext | null = useMemo(() => {
+    // lets addons tailor actions to the client platform
+    const currentPlatform = getCurrentPlatform()
+    const platform = currentPlatform === 'other' ? undefined : currentPlatform
+
     if (projectActionsProjectName) {
       return {
         entityType: 'project',
         projectName: projectActionsProjectName,
+        platform,
       }
     }
     if (!entities.length) return null
@@ -95,6 +100,7 @@ export const Actions = ({
       entityType: entityType,
       entityIds: entities.map((entity) => entity.id),
       entitySubtypes: entitySubTypesToUse,
+      platform,
     }
   }, [entities, entityType, entitySubTypes, projectActionsProjectName])
 
