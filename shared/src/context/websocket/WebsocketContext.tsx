@@ -12,8 +12,9 @@ import { SocketContext } from './WebsocketContextInstance'
 import {
   createHiddenTabQueue,
   HIDDEN_TAB_INCOMPLETE_TAG,
-  isLiveWhenHidden,
-  isTabHidden,
+  isHoldingMessages,
+  isLiveWhenHeld,
+  onMessagesReleased,
 } from '@shared/util/hiddenTab'
 
 // @ts-ignore
@@ -142,29 +143,27 @@ export const SocketProvider = ({
 
   const [hiddenQueue] = useState(createHiddenTabQueue)
 
-  // back in view: refetch what was dropped, then replay what was held, once
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (isTabHidden()) return
-      const { messages, received, lostUntagged, tags } = hiddenQueue.take()
-      if (!received && !tags.length) return
+  // visible and nothing playing: refetch what was dropped, then replay what was held, once
+  useEffect(
+    () =>
+      onMessagesReleased(() => {
+        const { messages, received, lostUntagged, tags } = hiddenQueue.take()
+        if (!received && !tags.length) return
 
-      console.log(
-        `WS: tab visible, replaying ${messages.length} of ${received} held messages` +
-          (tags.length ? `, refetching ${tags.join(', ')}` : ''),
-      )
-      // merged or dropped: caches that keep every message refetch too
-      const incomplete = messages.length < received ? [HIDDEN_TAB_INCOMPLETE_TAG] : []
-      if (tags.length || incomplete.length)
-        dispatch(api.util.invalidateTags([...tags, ...incomplete]))
-      messages.forEach(({ topic, data }) => PubSub.publish(topic, data))
-      // like after a reconnect: tells subscribers that rely on the stream that they missed messages
-      if (lostUntagged) PubSub.publish('client.connected', { topic: 'client.connected' })
-    }
-
-    document.addEventListener('visibilitychange', onVisibilityChange)
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange)
-  }, [hiddenQueue, dispatch])
+        console.log(
+          `WS: released, replaying ${messages.length} of ${received} held messages` +
+            (tags.length ? `, refetching ${tags.join(', ')}` : ''),
+        )
+        // merged or dropped: caches that keep every message refetch too
+        const incomplete = messages.length < received ? [HIDDEN_TAB_INCOMPLETE_TAG] : []
+        if (tags.length || incomplete.length)
+          dispatch(api.util.invalidateTags([...tags, ...incomplete]))
+        messages.forEach(({ topic, data }) => PubSub.publish(topic, data))
+        // like after a reconnect: tells subscribers that rely on the stream that they missed messages
+        if (lostUntagged) PubSub.publish('client.connected', { topic: 'client.connected' })
+      }),
+    [hiddenQueue, dispatch],
+  )
 
   const debouncedResetCall = debounce(() => {
     // all replicas should start about the same time,
@@ -229,8 +228,8 @@ export const SocketProvider = ({
 
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
 
-      // a hidden tab holds messages back until it is visible again (hiddenTab.ts)
-      if (isTabHidden() && !isLiveWhenHidden(topic, data)) {
+      // a hidden tab, or one playing a video, holds messages back until it is released (hiddenTab.ts)
+      if (isHoldingMessages() && !isLiveWhenHeld(topic, data)) {
         // one nobody subscribes to goes nowhere in a visible tab either, so it isn't held
         if (PubSub.hasSubscribers?.(topic) ?? true) hiddenQueue.add(topic, data)
         return

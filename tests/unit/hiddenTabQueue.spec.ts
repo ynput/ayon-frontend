@@ -3,7 +3,11 @@ import {
   createHiddenTabQueue,
   dropHiddenTopic,
   HIDDEN_TAB_MAX_QUEUED,
-  isLiveWhenHidden,
+  isHoldingMessages,
+  isLiveWhenHeld,
+  onMessagesReleased,
+  PLAYBACK_RELEASE_DELAY,
+  setPlaybackActive,
   takeDroppedTopicTags,
 } from '../../shared/src/util/hiddenTab'
 
@@ -126,13 +130,51 @@ test('a topic the thumbnail socket dropped is refetched, not replayed', () => {
 })
 
 test('keeps desktop notifications and Review session changes live', () => {
-  expect(isLiveWhenHidden('inbox.message', {})).toBe(true)
+  expect(isLiveWhenHeld('inbox.message', {})).toBe(true)
   expect(
-    isLiveWhenHidden('entity_list.changed', { summary: { entity_list_type: 'review-session' } }),
+    isLiveWhenHeld('entity_list.changed', { summary: { entity_list_type: 'review-session' } }),
   ).toBe(true)
-  expect(
-    isLiveWhenHidden('entity_list.changed', { summary: { entity_list_type: 'generic' } }),
-  ).toBe(false)
-  expect(isLiveWhenHidden('entity.version.created', { summary: {} })).toBe(false)
-  expect(isLiveWhenHidden('reviewable.process', {})).toBe(false)
+  expect(isLiveWhenHeld('entity_list.changed', { summary: { entity_list_type: 'generic' } })).toBe(
+    false,
+  )
+  expect(isLiveWhenHeld('entity.version.created', { summary: {} })).toBe(false)
+  expect(isLiveWhenHeld('reviewable.process', {})).toBe(false)
+})
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
+test('holds messages while a video plays and releases them once every player stopped', async () => {
+  let released = 0
+  const stop = onMessagesReleased(() => released++)
+  try {
+    expect(isHoldingMessages()).toBe(false)
+    setPlaybackActive('review', true)
+    setPlaybackActive('viewer', true)
+    expect(isHoldingMessages()).toBe(true)
+
+    setPlaybackActive('review', false)
+    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(isHoldingMessages()).toBe(true)
+    expect(released).toBe(0)
+
+    // a pause the player plays on from right away (a step or a seek) is no release
+    setPlaybackActive('viewer', false)
+    setPlaybackActive('viewer', true)
+    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(released).toBe(0)
+
+    setPlaybackActive('viewer', false)
+    // released after a short delay, so the pause paints first
+    expect(released).toBe(0)
+    expect(isHoldingMessages()).toBe(false)
+    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(released).toBe(1)
+
+    // a player that was not playing stops: nothing to release
+    setPlaybackActive('viewer', false)
+    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(released).toBe(1)
+  } finally {
+    stop()
+  }
 })

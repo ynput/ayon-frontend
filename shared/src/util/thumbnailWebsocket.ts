@@ -2,7 +2,8 @@ import {
   dropHiddenTopic,
   HIDDEN_TAB_MAX_QUEUED,
   isHiddenTopicDropped,
-  isTabHidden,
+  isHoldingMessages,
+  onMessagesReleased,
 } from './hiddenTab'
 
 /**
@@ -50,12 +51,12 @@ const processQueue = () => {
 
 const queueMessage = (message: ThumbnailUpdateMessage) => {
   const { entityType, entityId } = message.summary
-  if (isTabHidden() && isHiddenTopicDropped(`entity.${entityType}`)) return
+  if (isHoldingMessages() && isHiddenTopicDropped(`entity.${entityType}`)) return
   messageQueue.set(`${message.project}|${entityType}|${entityId}`, message)
 
-  // A hidden tab processes the queue once it is visible (hiddenTab.ts). If the queue grows too long,
-  // it is dropped and the caches of those entity types refetch instead.
-  if (isTabHidden()) {
+  // A hidden tab, or one playing a video, processes the queue once it is released (hiddenTab.ts). If
+  // the queue grows too long, it is dropped and the caches of those entity types refetch instead.
+  if (isHoldingMessages()) {
     if (messageQueue.size > HIDDEN_TAB_MAX_QUEUED) {
       messageQueue.forEach((m, key) => {
         if (dropHiddenTopic(`entity.${m.summary.entityType}`)) messageQueue.delete(key)
@@ -75,17 +76,17 @@ const queueMessage = (message: ThumbnailUpdateMessage) => {
 
   processTimeout = window.setTimeout(() => {
     processTimeout = undefined
-    // hidden in the meantime: wait for the tab to be visible
-    if (!isTabHidden()) processQueue()
+    // held in the meantime: wait for the release
+    if (!isHoldingMessages()) processQueue()
   }, throttleDelay)
 }
 
-const onVisibilityChange = () => {
-  if (isTabHidden()) return
+const onRelease = () => {
   window.clearTimeout(processTimeout)
   processTimeout = undefined
   processQueue()
 }
+let stopOnRelease: (() => void) | undefined
 
 /**
  * Initializes the WebSocket connection and sets up event listeners.
@@ -123,7 +124,7 @@ const connectWS = () => {
         const message = data as ThumbnailUpdateMessage
 
         // Bypass debounce if current client initiated the change
-        if (message.sender && message.sender === (window as any).senderId && !isTabHidden()) {
+        if (message.sender && message.sender === (window as any).senderId && !isHoldingMessages()) {
           updaters.forEach(({ updater, entityTypes }) => {
             if (!entityTypes || entityTypes.includes(message.summary.entityType)) {
               updater([message])
@@ -160,7 +161,7 @@ export const subscribeToThumbnailUpdates = (updater: ThumbnailUpdater, entityTyp
 
   if (updaters.size === 1) {
     connectWS()
-    document.addEventListener('visibilitychange', onVisibilityChange)
+    stopOnRelease = onMessagesReleased(onRelease)
   }
 
   return () => {
@@ -171,7 +172,8 @@ export const subscribeToThumbnailUpdates = (updater: ThumbnailUpdater, entityTyp
         window.clearTimeout(reconnectTimeout)
         reconnectTimeout = undefined
       }
-      document.removeEventListener('visibilitychange', onVisibilityChange)
+      stopOnRelease?.()
+      stopOnRelease = undefined
       if (processTimeout) {
         window.clearTimeout(processTimeout)
         processTimeout = undefined
