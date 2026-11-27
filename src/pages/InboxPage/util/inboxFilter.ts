@@ -4,8 +4,6 @@ import { buildBackendFilterObject } from '@shared/containers/Feed/helpers/buildB
 // reference types the inbox shows: everything the user is referenced by, except their own authorship
 export const INBOX_REFERENCE_TYPES = ['mention', 'watching', 'relation']
 
-const IMPORTANT_REFERENCE_TYPES = ['mention', 'watching']
-
 // neither is a whitelisted column, so they must never reach the QueryFilter
 export const REASON_FILTER_KEY = 'reason'
 export const REVIEWS_FILTER_KEY = 'reviews'
@@ -26,14 +24,10 @@ const getSelectedValues = (uiFilter: QueryFilter | undefined, key: string): stri
 const getSelectedReasons = (uiFilter: QueryFilter | undefined): string[] =>
   getSelectedValues(uiFilter, REASON_FILTER_KEY)
 
-export const getInboxReferenceTypes = (
-  uiFilter: QueryFilter | undefined,
-  isImportant: boolean | null,
-): string[] => {
-  const allowed = isImportant === true ? IMPORTANT_REFERENCE_TYPES : INBOX_REFERENCE_TYPES
-
-  const valid = getSelectedReasons(uiFilter).filter((type) => allowed.includes(type))
-  return valid.length ? valid : allowed
+// the server splits important from other, so any reference type can be in either tab
+export const getInboxReferenceTypes = (uiFilter: QueryFilter | undefined): string[] => {
+  const valid = getSelectedReasons(uiFilter).filter((type) => INBOX_REFERENCE_TYPES.includes(type))
+  return valid.length ? valid : INBOX_REFERENCE_TYPES
 }
 
 // not entity_path or entity_name: on inbox rows the first is always NULL and the second
@@ -92,16 +86,15 @@ const expandTextSearch = (node: QueryCondition | QueryFilter): QueryCondition | 
 type BuildInboxFilterArgs = {
   userName: string
   isActive: boolean
-  isImportant: boolean | null
   isUnread?: boolean
   uiFilter?: QueryFilter
 }
 
-// rebuilds the get_user_inbox() predicates so `activities` returns the same rows
+// rebuilds the get_user_inbox() predicates so `activities` returns the same rows.
+// important or other is not one of them: the `important` argument of the query asks for it
 export const buildInboxFilter = ({
   userName,
   isActive,
-  isImportant,
   isUnread,
   uiFilter,
 }: BuildInboxFilterArgs): string => {
@@ -114,19 +107,6 @@ export const buildInboxFilter = ({
 
   // read is a JSON path, so the boolean-eq coalesce is valid here
   if (isUnread) conditions.push({ key: 'reference_data.read', operator: 'eq', value: false })
-
-  if (isImportant === true) {
-    conditions.push({ key: 'reference_type', operator: 'in', value: IMPORTANT_REFERENCE_TYPES })
-    conditions.push({ key: 'activity_type', operator: 'ne', value: 'status.change' })
-  } else if (isImportant === false) {
-    conditions.push({
-      operator: 'or',
-      conditions: [
-        { key: 'reference_type', operator: 'notin', value: IMPORTANT_REFERENCE_TYPES },
-        { key: 'activity_type', operator: 'eq', value: 'status.change' },
-      ],
-    })
-  }
 
   // assignments are mention references too, so the Mentioned reason must stay comments-only
   if (getSelectedReasons(uiFilter).includes('mention')) {

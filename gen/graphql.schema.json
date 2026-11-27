@@ -8397,6 +8397,18 @@
                 "deprecationReason": null
               },
               {
+                "name": "important",
+                "description": "Only the important (or only the other) part of the inbox of the user who sends the query",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Boolean",
+                  "ofType": null
+                },
+                "defaultValue": "null",
+                "isDeprecated": false,
+                "deprecationReason": null
+              },
+              {
                 "name": "last",
                 "description": "Pagination: last",
                 "type": {

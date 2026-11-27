@@ -24,8 +24,9 @@ export interface ProjectInboxInfiniteArgs {
   referenceTypes: string[]
   activityTypes: string[] | null
   filter: string
-  // not sent to the server - they build the filter and key the cache
+  // not sent to the server - it builds the filter and keys the cache
   active: boolean
+  // the server splits the inbox, null asks for both parts
   important: boolean | null
 }
 
@@ -47,7 +48,14 @@ const rendered = new Map<string, number>()
 type PageParams = { last: number; cursor?: string | null; activityIds?: string[] | null }
 
 const pageVariables = (
-  { projectName, userName, referenceTypes, activityTypes, filter }: ProjectInboxInfiniteArgs,
+  {
+    projectName,
+    userName,
+    referenceTypes,
+    activityTypes,
+    filter,
+    important,
+  }: ProjectInboxInfiniteArgs,
   { last, cursor, activityIds }: PageParams,
 ): GetProjectInboxQueryVariables => ({
   projectName,
@@ -56,6 +64,7 @@ const pageVariables = (
   activityTypes,
   activityIds,
   filter,
+  important,
   last,
   cursor,
 })

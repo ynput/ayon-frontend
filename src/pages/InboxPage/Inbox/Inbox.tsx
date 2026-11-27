@@ -132,12 +132,11 @@ const Inbox = ({ filter }: InboxProps) => {
     () => ({
       projectName: selectedProject as string,
       userName: user,
-      referenceTypes: getInboxReferenceTypes(inboxFilter, isImportant),
+      referenceTypes: getInboxReferenceTypes(inboxFilter),
       activityTypes: getInboxActivityTypes(inboxFilter),
       filter: buildInboxFilter({
         userName: user,
         isActive,
-        isImportant,
         isUnread: isActive && showUnreadOnly,
         uiFilter: inboxFilter,
       }),
@@ -672,7 +671,6 @@ const Inbox = ({ filter }: InboxProps) => {
                   filter={inboxFilter}
                   onChange={onUpdateFilter}
                   projectName={selectedProject}
-                  isImportant={isImportant}
                   isLoading={isLoadingInbox || isLoadingViews}
                 />
                 {/* clearing a message also marks it read, so unread is meaningless on the cleared tab */}
