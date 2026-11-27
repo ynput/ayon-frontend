@@ -95,7 +95,7 @@ export const TableListHeader = ({
 
   return (
     <Styled.Header className={clsx('table-list-header', className)}>
-      <Styled.Top className="table-list-header-top">
+      <Styled.Top className={clsx('table-list-header-top', { 'has-title-start': !!titleStart })}>
         {titleStart}
         <Styled.Title className="table-list-header-title">{title}</Styled.Title>
         <Styled.Buttons className="table-list-header-buttons">

@@ -9,15 +9,24 @@ export const Header = styled(TableHeader)`
   gap: 0;
 `
 
+// A grid, not flex: the title gets its full width first and the buttons the rest, down to the
+// "more" button. Only then does the title shrink (shared flex shrinking would cut it by a fraction
+// of a pixel, enough for an ellipsis). The buttons' minimum is the "more" button (a 20px icon with
+// 4px padding): min-content would also keep one pinned button.
 export const Top = styled(TableHeader)`
+  --more-button-width: 28px;
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(var(--more-button-width), 1fr);
   padding: 0;
   border: none;
+
+  &.has-title-start {
+    grid-template-columns: auto minmax(0, max-content) minmax(var(--more-button-width), 1fr);
+  }
 `
 
 export const Title = styled.span`
   ${theme.labelLarge}
-  /* takes the free space, and gives it up only once the pinned buttons are all gone */
-  flex: 1 1 auto;
   min-width: 0;
   height: 32px;
   line-height: 32px;
@@ -30,8 +39,9 @@ export const Title = styled.span`
 export const Buttons = styled.div`
   display: flex;
   gap: var(--base-gap-small);
-  /* shrinks before the title does, down to the "more" button */
-  flex: 0 1000 auto;
+  justify-self: end;
+  min-width: 0;
+  max-width: 100%;
 `
 
 // Right to left from the first pinned button. A button that doesn't fit wraps onto a second row,
