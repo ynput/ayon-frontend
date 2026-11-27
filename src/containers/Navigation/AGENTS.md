@@ -118,8 +118,8 @@ never folds the path again.
   sections.
   The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
   `update` of the layout that applied when editing began, wherever the user is: the sidebar, the
-  tab rows, the pins, the admin pages on the sidebar and its Sidebar icons only switch
-  (`applyEdits`). While editing,
+  tab rows, the pins, the admin pages on the sidebar and whether it is collapsed to icons (its
+  Collapse control, below Add divider) (`applyEdits`). While editing,
   pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
   (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
   switch check reads the draft, so a page hidden in it stays open when Save makes a copy.
