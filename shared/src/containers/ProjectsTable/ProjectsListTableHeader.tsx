@@ -1,6 +1,5 @@
 import { TableListHeader } from '@shared/components/TableListHeader'
 import type { TableListHeaderItem } from '@shared/components/TableListHeader'
-import type { MenuItemType } from '@shared/components/Menu'
 import type { IconType } from '@ynput/ayon-react-components'
 import { FC } from 'react'
 
@@ -36,7 +35,7 @@ interface ProjectsListTableHeaderProps {
   onNewProject?: () => void
   showAddProject?: boolean
   toggleMenu?: (open: boolean) => void
-  menuItems?: MenuItemType[]
+  menuItems?: TableListHeaderItem[]
 }
 
 const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({

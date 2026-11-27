@@ -53,6 +53,8 @@ export interface SlotMenuItem {
   label: string
   icon: string
   command: () => void
+  /** a header menu item (`HeaderMenuItemMeta`) that is a button too; leave it out of other menus */
+  isPinned?: boolean
   /** the slot inspector's tags (`data-ayon-addon`, ...), while it is on: pass them to the entry's element */
   [attribute: `data-${string}`]: string | undefined
 }
@@ -77,6 +79,7 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
         label: string
         icon: string
         position?: MenuItemPosition
+        pinned?: boolean
       })[]
       const at = (position: MenuItemPosition) =>
         menuItemsAt(items, position).map((item) => {
@@ -86,6 +89,7 @@ export const useSlotMenuItems = <S extends SlotName>(slot: S) => {
             label: item.label,
             icon: item.icon,
             command: () => void runContribution(item as unknown as Contribution<S>, context),
+            ...(item.pinned && { isPinned: true }),
             ...contributionTags(item),
           }
         })

@@ -58,6 +58,10 @@ export interface TableListHeaderProps {
   className?: string
 }
 
+// an addon's item carries the slot inspector's tags (`data-ayon-addon`, ...): its button keeps them
+const dataAttributes = (item: object) =>
+  Object.fromEntries(Object.entries(item).filter(([key]) => key.startsWith('data-')))
+
 // The pinned buttons to hide so the rest fit in `room`: the last pinned goes first, the active
 // ones (they show a state) only after all the others.
 const buttonsToHide = (row: HTMLElement, room: number) => {
@@ -159,6 +163,7 @@ export const TableListHeader = ({
               return (
                 <HeaderButton
                   key={item.id}
+                  {...dataAttributes(item)}
                   data-pin-id={item.id}
                   id={hasMenu ? itemMenuId : undefined}
                   icon={(item.buttonProps?.icon ?? item.icon) as IconType}

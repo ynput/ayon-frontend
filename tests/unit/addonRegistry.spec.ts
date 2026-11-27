@@ -330,6 +330,24 @@ test('a details panel item is pinned with true or false', () => {
   expect(skipped.map((s) => [s.id, s.reason])).toEqual([['yes', 'pinned must be true or false']])
 })
 
+test('a project list or lists item is pinned with true or false, a lists item for list types', () => {
+  const projects = { slot: 'projectList.menuItem', label: 'Export', icon: 'download', run: loader }
+  const lists = { slot: 'lists.menuItem', label: 'Export', icon: 'download', run: loader }
+  const { contributions, skipped } = checkManifest(addon, {
+    contributes: [
+      { ...projects, id: 'pinned', pinned: true },
+      { ...projects, id: 'yes', pinned: 'yes' },
+      { ...lists, id: 'reviews', pinned: false, entityListTypes: ['review-session'] },
+      { ...lists, id: 'oneType', entityListTypes: 'generic' },
+    ],
+  })
+  expect(contributions.map((c) => c.id)).toEqual(['pinned', 'reviews'])
+  expect(skipped.map((s) => [s.id, s.reason])).toEqual([
+    ['yes', 'pinned must be true or false'],
+    ['oneType', 'entityListTypes must be a list of list types'],
+  ])
+})
+
 test('a table column sits in a named submenu or at the top level', () => {
   const column = { slot: 'tableColumn', label: 'Due in', cell: loader }
   const { contributions, skipped } = checkManifest(addon, {

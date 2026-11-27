@@ -14,6 +14,7 @@ export {
   entityMenuItem,
   headerItem,
   listDetailsTab,
+  listsMenuItem,
   profileSection,
   projectListMenuItem,
   projectPage,

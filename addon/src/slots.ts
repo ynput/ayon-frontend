@@ -108,9 +108,19 @@ export interface SlotMap {
    */
   'projectList.menuItem': {
     version: 1
-    meta: ListMenuItemMeta
+    meta: ProjectListMenuItemMeta
     context: ProjectListMenuItemContext
     pieces: { run: Loader<RunPiece<'projectList.menuItem'>> }
+  }
+  /**
+   * An item in the lists panel's menus (Lists page, Reviews page): the right-click menu, the "more"
+   * dropdown, or both (`in`), for the list types it lists. It acts on the selected lists.
+   */
+  'lists.menuItem': {
+    version: 1
+    meta: ListsMenuItemMeta
+    context: ListsMenuItemContext
+    pieces: { run: Loader<RunPiece<'lists.menuItem'>> }
   }
   /**
    * An item in the project page slicer's menus: the right-click menu, the panel's dropdown, or both
@@ -416,6 +426,19 @@ export interface MenuItemMeta {
   order?: number
 }
 
+/**
+ * Description of an item in a panel header's "more" menu (the project list, the lists panel,
+ * Review's playlist), which can also be a button in that header.
+ */
+export interface HeaderMenuItemMeta extends MenuItemMeta {
+  /**
+   * also a button in the header while there is room for it, in menu order from the right (the last
+   * pinned goes first when the header gets narrow); it stays in the "more" menu. An AYON without
+   * pinned buttons shows it in the menu only
+   */
+  pinned?: boolean
+}
+
 /** Description of a `detailsPanel.menuItem` contribution. */
 export interface DetailsPanelMenuItemMeta extends MenuItemMeta {
   /** entity types the item shows for; all when not set */
@@ -617,10 +640,28 @@ export interface ListMenuItemMeta extends MenuItemMeta {
   in?: MenuKind[]
 }
 
+/** Description of a `projectList.menuItem` contribution: `pinned` applies to the "more" dropdown. */
+export interface ProjectListMenuItemMeta extends ListMenuItemMeta, HeaderMenuItemMeta {}
+
 /** Context of a project list menu item. */
 export interface ProjectListMenuItemContext {
   /** the selected projects (project folders left out) */
   projectNames: string[]
+  menu: MenuKind
+}
+
+/** Description of a `lists.menuItem` contribution: `pinned` applies to the "more" dropdown. */
+export interface ListsMenuItemMeta extends ListMenuItemMeta, HeaderMenuItemMeta {
+  /** the list types it shows for (`generic`, `review-session`); every list type when not set */
+  entityListTypes?: string[]
+}
+
+/** Context of a lists panel menu item. */
+export interface ListsMenuItemContext extends ProjectNameScope {
+  /** the selected lists (list folders left out) */
+  listIds: string[]
+  /** the list type the panel shows: `generic` on the Lists page, `review-session` on the Reviews page */
+  entityListType: string
   menu: MenuKind
 }
 
@@ -917,6 +958,17 @@ const checkTableColumn = (item: Readonly<Record<string, unknown>>) => {
   if (!item.fetchValues) return 'providesTags needs fetchValues: the tags refresh its values'
 }
 
+// a header menu item's button
+const checkPinned = (item: Readonly<Record<string, unknown>>) =>
+  item.pinned !== undefined && typeof item.pinned !== 'boolean' ? 'pinned must be true or false' : undefined
+
+// the list types a list contribution shows for
+const checkListTypes = (item: Readonly<Record<string, unknown>>) =>
+  item.entityListTypes !== undefined &&
+  !(Array.isArray(item.entityListTypes) && item.entityListTypes.every((type) => typeof type === 'string'))
+    ? 'entityListTypes must be a list of list types'
+    : undefined
+
 /** The slots this host knows. A contribution to any other slot is skipped. */
 export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
   'project.page': {
@@ -939,16 +991,7 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkButton,
   },
   'detailsPanel.tab': { version: 1, required: ['label', 'icon'], pieces: ['component'] },
-  'listDetails.tab': {
-    version: 2,
-    required: ['label', 'icon'],
-    pieces: ['component'],
-    check: (item) =>
-      item.entityListTypes !== undefined &&
-      !(Array.isArray(item.entityListTypes) && item.entityListTypes.every((type) => typeof type === 'string'))
-        ? 'entityListTypes must be a list of list types'
-        : undefined,
-  },
+  'listDetails.tab': { version: 2, required: ['label', 'icon'], pieces: ['component'], check: checkListTypes },
   'detailsPanel.menuItem': {
     version: 1,
     required: ['label', 'icon'],
@@ -965,7 +1008,20 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     check: checkTableColumn,
   },
   entityMenuItem: { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
-  'projectList.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
+  'projectList.menuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: menuItemFields,
+    check: checkPinned,
+  },
+  'lists.menuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: menuItemFields,
+    check: (item) => checkPinned(item) ?? checkListTypes(item),
+  },
   'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
   'projectTable.toolbarItem': {
     version: 1,

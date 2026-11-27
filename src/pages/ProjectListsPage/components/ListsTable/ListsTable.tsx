@@ -1,4 +1,4 @@
-import { FC, ReactNode, useState, useCallback } from 'react'
+import { FC, ReactNode, useState, useCallback, useMemo } from 'react'
 import { useListsContext } from '@pages/ProjectListsPage/context'
 import { useListsDataContext } from '@pages/ProjectListsPage/context/lists-data'
 import { useProjectContext } from '@shared/context'
@@ -14,6 +14,7 @@ import {
 } from '@shared/containers/ListPicker/ListsTableHeader'
 import { useImportDialogContext } from '@containers/ImportDialog/context/ImportDialogProviderInstance'
 import NewListDialogContainer from '../NewListDialog/NewListDialogContainer'
+import useListsSlotItems from '@pages/ProjectListsPage/hooks/useListsSlotItems'
 import useListContextMenu, {
   ListRowContextMenuBuilder,
 } from '@pages/ProjectListsPage/hooks/useListContextMenu'
@@ -86,6 +87,16 @@ const ListsTable: FC<ListsTableProps> = ({
 
   const rowContextMenuBuildersAll = useListContextMenu(rowContextMenuBuilders, !picker)
 
+  // addons' items for the selected lists (not in the pickers); pinned ones are header buttons too
+  const buildSlotItems = useListsSlotItems()
+  const addonMenuItems = useMemo(() => {
+    if (picker) return undefined
+    const listIds = selectedRows.filter((id) => !parseListFolderRowId(id))
+    const { top, bottom } = buildSlotItems(listIds, 'dropdown')
+    const toItem = ({ command, ...item }: (typeof top)[number]) => ({ ...item, onClick: command })
+    return { top: top.map(toItem), bottom: bottom.map(toItem) }
+  }, [picker, selectedRows, buildSlotItems])
+
   const handleRename = useCallback((id: string) => openRenameList(id), [openRenameList])
   const handleSubmitRename = useCallback(
     (_id: string, val: string) => onRenameList(val),
@@ -135,6 +146,7 @@ const ListsTable: FC<ListsTableProps> = ({
             hiddenMenuItemIds={foldersOnly ? ['show-archived'] : undefined}
             buttonLabels={foldersOnly ? { search: { tooltip: 'Search folders' } } : undefined}
             menuId={picker ? undefined : MENU_ID}
+            addonMenuItems={addonMenuItems}
           />
           <SimpleTable
             data={listsTableData}

@@ -38,6 +38,8 @@ export interface ListsTableHeaderProps {
   buttonLabels?: { add?: ButtonCustomization; search?: ButtonCustomization }
   // without one, an id of its own, so a second header (a dialog's) doesn't collide with the page's
   menuId?: string
+  // addons' items (lists.menuItem slot): `top` first in the menu, `bottom` above Delete
+  addonMenuItems?: { top: TableListHeaderItem[]; bottom: TableListHeaderItem[] }
 }
 
 export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
@@ -57,6 +59,7 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   hiddenMenuItemIds = [],
   buttonLabels = {},
   menuId,
+  addonMenuItems,
 }) => {
   const {
     showArchived,
@@ -127,6 +130,7 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
 
   // Define all menu items in order (matching right-to-left button order)
   const menuItems: TableListHeaderItem[] = [
+    ...(addonMenuItems?.top.length ? [...addonMenuItems.top, { id: 'divider' }] : []),
     {
       id: 'search',
       label: 'Search',
@@ -243,6 +247,7 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       sort: listsSort,
       onChange: setListsSort,
     }),
+    ...(addonMenuItems?.bottom.length ? [{ id: 'divider' }, ...addonMenuItems.bottom] : []),
     ...(canDelete
       ? [
           {
@@ -266,7 +271,11 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       title={title ?? (isReview ? 'Review sessions' : 'Lists')}
       menuItems={visibleMenuItems}
       menuId={menuId}
-      moreButtonProps={{ className: 'list-menu' }}
+      // with addon items, its menu holds the lists.menuItem slot (slot inspector)
+      moreButtonProps={{
+        className: 'list-menu',
+        'data-ayon-trigger': addonMenuItems ? 'lists.menuItem' : undefined,
+      }}
       search={search}
       onSearch={(value) => onSearch(value ?? null)}
     >
