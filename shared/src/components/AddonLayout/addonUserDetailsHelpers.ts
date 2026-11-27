@@ -3,7 +3,13 @@
 import { menuSection } from '@shared/components/Menu/menuSections'
 import { useCallback, useMemo } from 'react'
 import { prefetchPiece, runContribution, useContributions } from '@ynput/ayon-addon'
-import type { Contribution, UserDetailsContext, UserRef, UserSelection } from '@ynput/ayon-addon'
+import type {
+  Contribution,
+  MenuKind,
+  UserDetailsContext,
+  UserRef,
+  UserSelection,
+} from '@ynput/ayon-addon'
 import { contributionTags, menuItemsAt } from '@ynput/ayon-addon/host'
 import type { MenuItemType } from '@shared/components/Menu/Menu'
 
@@ -49,39 +55,51 @@ export interface AddonUserMenuItems {
   prefetch: () => void
 }
 
+// the items of `menu`: those whose `in` lists it (both menus when not set)
+const toMenuItems = (
+  contributions: readonly Contribution<'userDetails.menuItem'>[],
+  context: UserDetailsContext,
+  menu: MenuKind,
+): AddonUserMenuItems => {
+  const applicable = contributions.filter(
+    (item) =>
+      showsForSelection(item.selection, context.users.length) &&
+      (!item.in?.length || item.in.includes(menu)),
+  )
+  const toMenuItem = (item: Contribution<'userDetails.menuItem'>): MenuItemType => ({
+    id: item.key,
+    label: item.label,
+    icon: item.icon,
+    'data-addon-item': item.key,
+    onClick: () => runContribution(item, { ...context, menu }),
+    ...contributionTags(item),
+  })
+  return {
+    // addon items are a section of their own
+    topItems: menuSection(menuItemsAt(applicable, 'top').map(toMenuItem)),
+    items: menuSection(menuItemsAt(applicable, 'bottom').map(toMenuItem)),
+    prefetch: () => applicable.forEach((item) => prefetchPiece(item.run)),
+  }
+}
+
 /**
  * The addons' items for the user details "more" menu, tagged for the slot inspector. The button that
  * opens the menu carries `data-ayon-trigger="userDetails.menuItem"`.
  */
 export const useAddonUserMenuItems = (context: UserDetailsContext): AddonUserMenuItems => {
   const { contributions } = useContributions('userDetails.menuItem')
-  const applicable = useMemo(
-    () => contributions.filter((item) => showsForSelection(item.selection, context.users.length)),
-    [contributions, context.users.length],
+  return useMemo(() => toMenuItems(contributions, context, 'dropdown'), [contributions, context])
+}
+
+/**
+ * The same items for users known only when the menu opens: the users table's context menu, for
+ * the right-clicked users.
+ */
+export const useAddonUserMenuItemsFor = (readOnly: boolean) => {
+  const { contributions } = useContributions('userDetails.menuItem')
+  return useCallback(
+    (users: UserDetailsSource[]) =>
+      toMenuItems(contributions, { users: users.map(toUserRef), readOnly }, 'context'),
+    [contributions, readOnly],
   )
-  const toMenuItem = useCallback(
-    (item: Contribution<'userDetails.menuItem'>): MenuItemType => ({
-      id: item.key,
-      label: item.label,
-      icon: item.icon,
-      'data-addon-item': item.key,
-      onClick: () => runContribution(item, context),
-      ...contributionTags(item),
-    }),
-    [context],
-  )
-  const topItems = useMemo(
-    // addon items are a section of their own
-    () => menuSection(menuItemsAt(applicable, 'top').map(toMenuItem)),
-    [applicable, toMenuItem],
-  )
-  const items = useMemo(
-    () => menuSection(menuItemsAt(applicable, 'bottom').map(toMenuItem)),
-    [applicable, toMenuItem],
-  )
-  const prefetch = useCallback(
-    () => applicable.forEach((item) => prefetchPiece(item.run)),
-    [applicable],
-  )
-  return { topItems, items, prefetch }
 }

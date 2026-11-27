@@ -100,7 +100,8 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'userDetails.menuItem': {
     helper: 'userDetailsMenuItem',
-    where: "an item in the user details panel's more menu (Settings → Users)",
+    where:
+      "an item in the user details panel's more menu (Settings → Users) and/or the users table's right-click menu",
     loads: 'menu open / click',
   },
   'profile.section': {

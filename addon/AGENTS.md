@@ -1415,11 +1415,12 @@ userDetailsSection({
 
 ### `userDetails.menuItem`: `userDetailsMenuItem`
 
-An item in the user details panel's "more" menu (Settings → Users), for the selected users. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
+An item in the user details panel's "more" menu (Settings → Users) and/or the users table's right-click menu, for the selected users. It shows from the description; `run` loads when the menu opens and is called on click. Loads: menu open / click.
 
 | Description field | Type | |
 |---|---|---|
 | `selection` | `UserSelection \| undefined` | `single`: only when one user is selected; `multi` (default): for one or more |
+| `in` | `MenuKind[] \| undefined` | which menus show it: both when not set |
 | `id` (required) | `string` | unique among the addon's items of the slot |
 | `label` (required) | `string` | the menu entry |
 | `icon` (required) | `string` | a Material Symbols icon name |
@@ -1430,6 +1431,7 @@ An item in the user details panel's "more" menu (Settings → Users), for the se
 |---|---|---|
 | `slot` (required) | `'userDetails.menuItem'` | the slot this is rendered in |
 | `user` (required) | `AddonUser` | the signed-in user |
+| `menu` (required) | `MenuKind` | the menu it was clicked in |
 | `readOnly` (required) | `boolean` | the signed-in user can't change these users (a manager and an admin among them): show, don't edit |
 | `users` (required) | `UserRef[]` | the users the slot is about, e.g. the ones selected in Settings → Users |
 
