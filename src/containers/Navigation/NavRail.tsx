@@ -1,4 +1,5 @@
 import { MouseEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import type { CSSProperties } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
@@ -405,12 +406,15 @@ const Sidebar = () => {
   // the arrangement that applies here: the context's places, and whether the sidebar shows icons
   // only
   const nav = useNavArrangement()
+  // only a colour: arrangements are shared, so nothing else goes into the style
+  const tint = /^#[0-9a-f]{6}$/i.test(nav.layout.tint ?? '') ? nav.layout.tint : undefined
 
   return (
     <Styled.Column
       aria-label="Sidebar"
       data-nav-rail
-      className={clsx({ 'icons-only': nav.layout.iconsOnly })}
+      className={clsx({ 'icons-only': nav.layout.iconsOnly, tinted: !!tint })}
+      style={tint ? ({ '--rail-tint': tint } as CSSProperties) : undefined}
     >
       {/* Home is the context of every page outside a project */}
       <Styled.HomeItem

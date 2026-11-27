@@ -109,8 +109,10 @@ never folds the path again.
   Outside editing, a divider that separates nothing (at either end or after another one, as when
   the user can't see an item, or after the items folded into More) doesn't show. `arrangeTabs` lays
   out the tab rows (an unmentioned pin follows its page, other unmentioned tabs at the end),
-  `splitAdminItems` the promoted admin pages, and `iconsOnly` narrows the sidebar to its icons (the
-  host remembers it in this browser, so the sidebar has its width before the module loads). A
+  `splitAdminItems` the promoted admin pages, `iconsOnly` narrows the sidebar to its icons and
+  `tint` (a `#rrggbb` colour, nothing else is taken) tints its sheet; the host remembers both in
+  this browser (each context's tint), so the sidebar has its width and colour before the module
+  loads. A
   hidden page still opens by its link; when another arrangement applies (its id) while a page or
   pinned tab it hides is open (and the one before showed it), the sidebar opens the item's first
   shown tab, or the arrangement's first item when it hides the item too. The first load and another

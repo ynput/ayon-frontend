@@ -33,6 +33,11 @@ export const Column = styled.nav`
     flex-basis: ${ICONS_ONLY_WIDTH}px;
     width: ${ICONS_ONLY_WIDTH}px;
   }
+
+  /* tinted by the arrangement (one colour for Home, another for projects) */
+  &.tinted {
+    background-color: color-mix(in srgb, var(--md-sys-color-background) 82%, var(--rail-tint));
+  }
 `
 
 // the context's places, below Home

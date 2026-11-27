@@ -124,22 +124,22 @@ const projectFromPath = (pathname: string) => {
   return match ? decodeURIComponent(match[1]) : undefined
 }
 
-// Whether the last arrangement showed the sidebar's icons only, so the sidebar has its width
-// before the module has loaded (it doesn't jump). Kept in this browser only.
-const ICONS_ONLY_KEY = 'nav-icons-only'
-const readIconsOnly = () => {
+// How the last arrangement looked (icons only, and each context's tint), so the sidebar has its
+// width and colour before the module has loaded (it doesn't jump). Kept in this browser only.
+const LOOK_KEY = 'nav-arrangement-look'
+type Look = { iconsOnly?: boolean; tint?: Partial<Record<'project' | 'studio', string>> }
+const readLook = (): Look => {
   try {
-    return localStorage.getItem(ICONS_ONLY_KEY) === 'true'
+    return JSON.parse(localStorage.getItem(LOOK_KEY) ?? '{}') ?? {}
   } catch {
-    return false
+    return {}
   }
 }
-const keepIconsOnly = (iconsOnly: boolean) => {
+const keepLook = (look: Look) => {
   try {
-    if (iconsOnly) localStorage.setItem(ICONS_ONLY_KEY, 'true')
-    else localStorage.removeItem(ICONS_ONLY_KEY)
+    localStorage.setItem(LOOK_KEY, JSON.stringify(look))
   } catch {
-    // not kept: the sidebar may change width once the module has loaded
+    // not kept: the sidebar may change once the module has loaded
   }
 }
 
@@ -170,16 +170,29 @@ export const NavArrangementHost = ({ children }: { children: ReactNode }) => {
   })
 
   const [state, setState] = useState<NavArrangementState | null>(null)
+  const context = projectName ? 'project' : 'studio'
+  const [look, setLook] = useState(readLook)
   useEffect(() => {
-    if (state?.ready) keepIconsOnly(!!state.layout.iconsOnly)
-  }, [state])
+    if (!state?.ready) return
+    setLook((before) => {
+      const next = {
+        iconsOnly: !!state.layout.iconsOnly,
+        tint: { ...before.tint, [context]: state.layout.tint },
+      }
+      keepLook(next)
+      return next
+    })
+  }, [state, context])
 
-  // while the module may still come: as the last arrangement was wide or narrow
+  // while the module may still come: as the last arrangement looked
   const expected = (powerLicense || !!storedLicense) && (isLoadingModules || provided)
-  const [iconsOnly] = useState(readIconsOnly)
   const value = useMemo<NavArrangementState>(
-    () => state ?? (expected && iconsOnly ? { layout: { iconsOnly }, ready: false } : UNARRANGED),
-    [state, expected, iconsOnly],
+    () =>
+      state ??
+      (expected
+        ? { layout: { iconsOnly: look.iconsOnly, tint: look.tint?.[context] }, ready: false }
+        : UNARRANGED),
+    [state, expected, look, context],
   )
 
   return (

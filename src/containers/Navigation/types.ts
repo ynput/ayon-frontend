@@ -70,4 +70,6 @@ export interface NavLayout {
   promoted?: string[]
   /** the sidebar shows its items' icons only, their names in tooltips */
   iconsOnly?: boolean
+  /** a colour (`#rrggbb`) the sidebar is tinted with */
+  tint?: string
 }
