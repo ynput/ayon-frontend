@@ -54,6 +54,11 @@ type DetailsPanelHeaderProps = {
   projectInfo: ProjectInfo
   thumbnailInputRef: RefObject<HTMLInputElement>
   versionsInputRef: RefObject<HTMLInputElement>
+  /**
+   * a preview (DetailsPanel isPreview): the thumbnail across the top, the status next to the name,
+   * read only, and the thumbnail scrubs its filmstrip without opening the viewer
+   */
+  isPreview?: boolean
 }
 
 const DetailsPanelHeader = ({
@@ -71,6 +76,7 @@ const DetailsPanelHeader = ({
   onEntityFocus,
   thumbnailInputRef,
   versionsInputRef,
+  isPreview = false,
 }: DetailsPanelHeaderProps) => {
   const { useSearchParams, useNavigate, bundleMode } = useDetailsPanelContext()
   const navigate = useNavigate()
@@ -172,10 +178,12 @@ const DetailsPanelHeader = ({
     entityType,
   })
   const { writableFields } = attribAccess
-  const canEditStatus = !writableFields || writableFields.includes('status')
-  const canEditTags = !writableFields || writableFields.includes('tags')
+  const canEdit = (field: string) =>
+    !isPreview && (!writableFields || writableFields.includes(field))
+  const canEditStatus = canEdit('status')
+  const canEditTags = canEdit('tags')
   const canEditAssignees =
-    entityType === 'task' && (!writableFields || writableFields.includes('assignees'))
+    !isPreview && entityType === 'task' && (!writableFields || writableFields.includes('assignees'))
 
   const handleUpdate = (field: string, value: any) => {
     if (field !== 'attrib' && writableFields && !writableFields.includes(field)) return
@@ -234,6 +242,36 @@ const DetailsPanelHeader = ({
   const { title, subTitle } = buildDetailsPanelTitles(entities, entityType)
   const status =
     statuses?.length !== 0 && statuses?.find((status) => status.name === statusesValue[0])
+
+  const statusSelect = (
+    <Styled.StatusSelect
+      value={statusesValue}
+      options={statuses || []}
+      disabledValues={disabledStatuses}
+      disableOpen={!canEditStatus}
+      invert
+      style={{ maxWidth: 'unset' }}
+      onChange={(value) => handleUpdate('status', value)}
+      className={clsx('status-select', { loading: isLoading })}
+      align={isCompact || isPreview ? 'right' : 'left'}
+      $textColor={getTextColor(status !== undefined ? (status as Status).color : '#OOO')}
+    />
+  )
+
+  const thumbnail = (
+    <div style={{ position: 'relative' }} className={clsx({ 'wide-thumbnail': isPreview })}>
+      <StackedThumbnails
+        isLoading={isLoading}
+        shimmer={isLoading}
+        thumbnails={thumbnails}
+        onClick={isThumbnailClickable && !isPreview ? handleThumbnailClick : undefined}
+        hoverIcon={isPlayable && !isPreview ? 'play_circle' : undefined}
+        filmstrip={isPlayable}
+      />
+      {isPlayable && <PlayableIcon />}
+    </div>
+  )
+
   return (
     <Styled.HeaderContainer>
       <EntityPanelUploader
@@ -244,21 +282,12 @@ const DetailsPanelHeader = ({
         versionsInputRef={versionsInputRef}
         onVersionCreated={(id) => onEntityFocus?.(id, 'version')}
       >
-        <Styled.Grid className={clsx('details-panel-header', { isCompact })}>
+        {isPreview ? thumbnail : <></>}
+        <Styled.Grid className={clsx('details-panel-header', { isCompact, isPreview })}>
           <Styled.Header
             className={clsx('titles', { isCompact, loading: isLoading }, 'no-shimmer')}
           >
-            <div style={{ position: 'relative' }}>
-              <StackedThumbnails
-                isLoading={isLoading}
-                shimmer={isLoading}
-                thumbnails={thumbnails}
-                onClick={isThumbnailClickable ? handleThumbnailClick : undefined}
-                hoverIcon={isPlayable ? 'play_circle' : undefined}
-                filmstrip={isPlayable}
-              />
-              {isPlayable && <PlayableIcon />}
-            </div>
+            {!isPreview && thumbnail}
             <Styled.Content className={clsx({ loading: isLoading })}>
               <Styled.Title>
                 <h2>{title}</h2>
@@ -324,19 +353,9 @@ const DetailsPanelHeader = ({
                 />
               )}
             </Styled.Content>
+            {isPreview && <div className="preview-status">{statusSelect}</div>}
           </Styled.Header>
-          <Styled.StatusSelect
-            value={statusesValue}
-            options={statuses || []}
-            disabledValues={disabledStatuses}
-            disableOpen={!canEditStatus}
-            invert
-            style={{ maxWidth: 'unset' }}
-            onChange={(value) => handleUpdate('status', value)}
-            className={clsx('status-select', { loading: isLoading })}
-            align={isCompact ? 'right' : 'left'}
-            $textColor={getTextColor(status !== undefined ? (status as Status).color : '#OOO')}
-          />
+          {!isPreview && statusSelect}
           {!isCompact &&
             (!hasUser || isLoading ? (
               <div></div>
@@ -360,16 +379,18 @@ const DetailsPanelHeader = ({
                 }
               />
             ))}
-          <Actions
-            entities={entities}
-            entityType={entityType}
-            entitySubTypes={entitySubTypes}
-            isLoadingEntity={!!isFetching || !!isLoading}
-            searchParams={searchParams}
-            bundleMode={bundleMode}
-            onSetSearchParams={setSearchParams}
-            onNavigate={navigate}
-          />
+          {!isPreview && (
+            <Actions
+              entities={entities}
+              entityType={entityType}
+              entitySubTypes={entitySubTypes}
+              isLoadingEntity={!!isFetching || !!isLoading}
+              searchParams={searchParams}
+              bundleMode={bundleMode}
+              onSetSearchParams={setSearchParams}
+              onNavigate={navigate}
+            />
+          )}
           {priorities ? (
             <Styled.PriorityEnumDropdown
               options={priorities}
@@ -377,6 +398,7 @@ const DetailsPanelHeader = ({
               value={priorityValues}
               onChange={(value) => handleUpdate('attrib', { priority: value[0] })}
               align="right"
+              disabled={isPreview}
             />
           ) : (
             <div style={{ height: 32 }}></div>

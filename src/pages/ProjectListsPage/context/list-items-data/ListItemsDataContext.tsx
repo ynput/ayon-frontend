@@ -104,6 +104,9 @@ export interface ListItemsDataContextValue {
   // filters
   listItemsFilters: QueryFilter
   setListItemsFilters: (filters: QueryFilter) => void
+  // nested filter stored next to listItemsFilters, ANDed with it
+  listItemsAdvancedFilter: QueryFilter | undefined
+  setListItemsAdvancedFilter: (filter: QueryFilter | undefined, searchFilter?: QueryFilter) => void
   // folders data
   foldersMap: FolderNodeMap
   tasksMap: TaskNodeMap
@@ -177,6 +180,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
   const {
     filters: listItemsFilters,
     onUpdateFilters: setListItemsFilters,
+    advancedFilter: listItemsAdvancedFilter,
+    onUpdateAdvancedFilter: setListItemsAdvancedFilter,
     columns,
     onUpdateColumns,
   } = useListsViewSettings()
@@ -209,7 +214,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
 
   const resetFilters = useCallback(() => {
     setListItemsFilters({ conditions: [], operator: 'and' })
-  }, [setListItemsFilters])
+    if (listItemsAdvancedFilter) setListItemsAdvancedFilter(undefined)
+  }, [setListItemsFilters, listItemsAdvancedFilter, setListItemsAdvancedFilter])
 
   // For review sessions, we use the sorting setting stored in the entity list's `data`.
   // This allows us to use the sorting in the review session itself, too.
@@ -252,6 +258,7 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
     listId: selectedListId,
     sorting: reviewSorting ?? columns.sorting ?? [],
     filters: listItemsFilters,
+    advancedFilter: listItemsAdvancedFilter,
     skipLinks: skipLinks,
     showComments,
     isLoadingViews,
@@ -530,6 +537,8 @@ export const ListItemsDataProvider = ({ children }: ListItemsDataProviderProps) 
         // filters
         listItemsFilters,
         setListItemsFilters,
+        listItemsAdvancedFilter,
+        setListItemsAdvancedFilter,
         // folders data
         foldersMap,
         tasksMap,

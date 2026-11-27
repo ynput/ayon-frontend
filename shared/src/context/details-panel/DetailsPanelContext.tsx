@@ -17,7 +17,13 @@ import { BundleMode, getBundleModeFromUser } from '@shared/util'
 // High-level tabs for the details panel: built-in ones and addon tabs (`<addon>.<id>`,
 // detailsPanel.tab slot)
 export type AddonDetailsPanelTab = `${string}.${string}`
-export type DetailsPanelTab = 'feed' | 'subtasks' | 'details' | 'files' | AddonDetailsPanelTab
+export type DetailsPanelTab =
+  | 'feed'
+  | 'tasks'
+  | 'subtasks'
+  | 'details'
+  | 'files'
+  | AddonDetailsPanelTab
 
 // Filters within the feed tab
 export type FeedFilter = QueryFilter

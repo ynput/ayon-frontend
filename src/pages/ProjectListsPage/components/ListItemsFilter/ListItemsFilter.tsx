@@ -11,6 +11,9 @@ const UNSUPPORTED_BY_LIST_ITEMS: Partial<Record<ListEntityType, FilterFieldType[
   version: ['name', 'productBaseType', 'hasReviewables'],
 }
 
+// the version option picks featured versions (latest, hero...), not a value to compare with
+const ADVANCED_FILTER_EXCLUDE = ['entity_version']
+
 interface ListItemsFilterProps {
   entityType: ListEntityType
   projectName: string
@@ -18,12 +21,20 @@ interface ListItemsFilterProps {
 
 const ListItemsFilter: FC<ListItemsFilterProps> = ({ entityType, projectName }) => {
   const { ...projectInfo } = useProjectContext()
-  const { listItemsFilters, setListItemsFilters } = useListItemsDataContext()
+  const {
+    listItemsFilters,
+    setListItemsFilters,
+    listItemsAdvancedFilter,
+    setListItemsAdvancedFilter,
+  } = useListItemsDataContext()
 
   return (
     <SearchFilterWrapper
       queryFilters={listItemsFilters}
       onChange={setListItemsFilters}
+      advancedFilter={listItemsAdvancedFilter}
+      onAdvancedFilterChange={setListItemsAdvancedFilter}
+      advancedFilterExclude={ADVANCED_FILTER_EXCLUDE}
       scopes={buildScopes([entityType], UNSUPPORTED_BY_LIST_ITEMS)}
       projectNames={[projectName]}
       projectInfo={projectInfo}

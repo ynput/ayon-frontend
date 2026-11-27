@@ -138,6 +138,7 @@ const useVersionsGroupBy = ({
     featuredOnlyEntityType: versionArguments.featuredOnlyEntityType,
     latestPerFolder: versionArguments.latestPerFolder,
     hasReviewables: versionArguments.hasReviewables,
+    search: versionArguments.search,
   }
 
   const {

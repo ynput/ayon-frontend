@@ -1,4 +1,4 @@
-import { HTMLAttributes, useEffect, useState } from 'react'
+import { HTMLAttributes, useEffect, useRef, useState } from 'react'
 import { Icon } from '@ynput/ayon-react-components'
 import clsx from 'clsx'
 import * as Styled from './Thumbnail.styled'
@@ -55,11 +55,21 @@ export const Thumbnail = ({
 
   const [error, setError] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const imageRef = useRef<HTMLImageElement>(null)
 
   useEffect(() => {
     if (url === '') {
       setLoaded(true)
       setError(true)
+      return
+    }
+
+    // a cached image can finish before this runs: its load event has passed, so take its state
+    // now instead of waiting for one that won't come (the thumbnail stayed empty)
+    const image = imageRef.current
+    if (image?.complete && image.getAttribute('src') === url) {
+      setLoaded(true)
+      setError(image.naturalWidth <= 1)
       return
     }
 
@@ -83,6 +93,7 @@ export const Thumbnail = ({
       )}
       {entityType && projectName && !isWrongEntity && hasIdentity && (
         <Styled.Image
+          ref={imageRef}
           alt={`Entity thumbnail ${entityId || projectName}`}
           src={url}
           onLoad={(e) => {

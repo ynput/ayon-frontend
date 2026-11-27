@@ -6,6 +6,9 @@ import type { QueryFilter } from './generated'
  * The backend treats `settings` as a free-form object (`GenericViewModel`), so the shape of each
  * page's settings is owned here and is not part of the generated API types. Keep these in step
  * with what the pages read and write.
+ *
+ * `advancedFilter` is a nested filter that is ANDed with `filter`. It is kept apart because the
+ * search bar reads `filter` as a flat list of chips.
  */
 
 export type ColumnItemModel = {
@@ -24,6 +27,7 @@ export type OverviewSettings = {
   sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
+  advancedFilter?: QueryFilter
   folderFilter?: QueryFilter
   sliceType?: string
   columns?: ColumnItemModel[]
@@ -40,6 +44,7 @@ export type ListsSettings = {
   sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
+  advancedFilter?: QueryFilter
   columns?: ColumnItemModel[]
 }
 
@@ -48,6 +53,7 @@ export type ReviewsSettings = {
   sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
+  advancedFilter?: QueryFilter
   columns?: ColumnItemModel[]
   gridHeight?: number
   displayStyle?: 'cards' | 'table' | 'playlist'
@@ -67,5 +73,6 @@ export type VersionsSettings = {
   sortBy?: string | string[]
   sortDesc?: boolean
   filter?: QueryFilter
+  advancedFilter?: QueryFilter
   columns?: ColumnItemModel[]
 }

@@ -1,6 +1,11 @@
 import { QueryFilter } from '@shared/api'
 import { VersionsSettings } from '@shared/api'
-import { ColumnsConfig, useViewsContext } from '@shared/containers'
+import {
+  AdvancedFilterSetting,
+  ColumnsConfig,
+  useAdvancedFilterSetting,
+  useViewsContext,
+} from '@shared/containers'
 import { useViewUpdateHelper } from '@shared/containers/Views/utils/viewUpdateHelper'
 import {
   convertColumnConfigToTanstackStates,
@@ -11,7 +16,7 @@ import type { SortingState } from '@tanstack/react-table'
 import { FC, ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 import { VPViewsContext } from './VPViewsContextInstance'
 
-export type VPViewsContextValue = {
+export type VPViewsContextValue = AdvancedFilterSetting & {
   // Filter management
   filters: QueryFilter
   onUpdateFilters: (filters: QueryFilter) => void
@@ -86,6 +91,8 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
 
   // Get view update helper
   const { updateViewSettings } = useViewUpdateHelper()
+
+  const advancedFilterSetting = useAdvancedFilterSetting(viewSettings, updateViewSettings)
 
   // Get server settings
   const serverFilters = useMemo(
@@ -433,6 +440,7 @@ export const VPViewsProvider: FC<VersionsViewsProviderProps> = ({ children }) =>
       value={{
         filters,
         onUpdateFilters,
+        ...advancedFilterSetting,
         columns,
         onUpdateColumns,
         slicerType,

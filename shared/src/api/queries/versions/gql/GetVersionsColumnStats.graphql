@@ -15,6 +15,7 @@ query GetVersionsColumnStats(
   $featuredOnlyEntityType: String
   $latestPerFolder: Boolean
   $hasReviewables: Boolean
+  $search: String
 ) {
   project(name: $projectName) {
     versions(
@@ -27,6 +28,7 @@ query GetVersionsColumnStats(
       folderFilter: $folderFilter
       representationFilter: $representationFilter
       folderIds: $folderIds
+      search: $search
       includeFolderChildren: true
       featuredOnly: $featuredOnly
       featuredOnlyEntityType: $featuredOnlyEntityType

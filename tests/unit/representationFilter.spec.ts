@@ -96,4 +96,43 @@ test.describe('resolveExtensionFilter', () => {
     ).toEqual({ conditions: [{ key: 'status', operator: 'in', value: ['Approved'] }] })
     expect(resolve({ conditions: [] })).toEqual({ conditions: [] })
   })
+
+  test('follows the operator of the advanced filter', () => {
+    const one = (operator: string, value: unknown) =>
+      resolve({ conditions: [{ key: 'extension', operator, value }] }).conditions
+    expect(one('notlike', '%mov%')).toEqual([
+      { key: 'attrib.path', operator: 'notlike', value: '%.mov' },
+    ])
+    expect(one('ne', 'mov')).toEqual([{ key: 'attrib.path', operator: 'notlike', value: '%.mov' }])
+    expect(one('eq', 'mov')).toEqual([{ key: 'attrib.path', operator: 'like', value: '%.mov' }])
+    expect(one('endswith', 'ov')).toEqual([{ key: 'attrib.path', operator: 'like', value: '%ov' }])
+    expect(one('startswith', 'mo')).toEqual([
+      { key: 'attrib.path', operator: 'like', value: '%.mo%' },
+    ])
+    expect(one('isnull', undefined)).toEqual([{ key: 'attrib.path', operator: 'isnull' }])
+  })
+
+  test('several excluded extensions must all not match', () => {
+    expect(
+      resolve({ conditions: [{ key: 'extension', operator: 'notin', value: ['mov', 'mp4'] }] }),
+    ).toEqual({
+      conditions: [
+        {
+          operator: 'and',
+          conditions: [
+            { key: 'attrib.path', operator: 'notlike', value: '%.mov' },
+            { key: 'attrib.path', operator: 'notlike', value: '%.mp4' },
+          ],
+        },
+      ],
+    })
+  })
+
+  test('reads the escaped text the advanced filter stores', () => {
+    expect(
+      resolve({ conditions: [{ key: 'extension', operator: 'like', value: '%tar\\_gz%' }] }),
+    ).toEqual({
+      conditions: [{ key: 'attrib.path', operator: 'like', value: '%.tar\\_gz' }],
+    })
+  })
 })

@@ -31,6 +31,8 @@ type Params = {
   latestPerFolder?: boolean
   hasReviewables?: boolean
   showProducts?: boolean
+  /** the search bar text */
+  search?: string
 }
 
 export const useVPColumnStats = ({
@@ -47,6 +49,7 @@ export const useVPColumnStats = ({
   latestPerFolder,
   hasReviewables,
   showProducts,
+  search,
 }: Params) => {
   const { projectName } = useProjectContext()
   const { attribFields } = useProjectDataContext()
@@ -111,6 +114,7 @@ export const useVPColumnStats = ({
     folderIds: folderIdsWithoutChildren,
     versionIds,
     productIds,
+    search,
   }
   // the versions list counts the products of its versions; the products view lists products
   // regardless of the reviewables filter, which only applies to their versions
