@@ -1,62 +1,10 @@
-import { Menu, MenuContainer, MenuItemType, TableSearch } from '@shared/components'
-import { Header, HeaderButton } from '@shared/containers/SimpleTable'
-import { theme } from '@ynput/ayon-react-components'
+import { TableListHeader } from '@shared/components/TableListHeader'
+import type { TableListHeaderItem } from '@shared/components/TableListHeader'
+import type { MenuItemType } from '@shared/components/Menu'
 import type { IconType } from '@ynput/ayon-react-components'
-import clsx from 'clsx'
 import { FC } from 'react'
-import { useMenuContext } from '@shared/context'
-import styled from 'styled-components'
 
 export const MENU_ID = 'projects-list-menu'
-
-const HeaderStyled = styled(Header)`
-  flex-direction: column;
-`
-
-const HeaderTop = styled(Header)`
-  padding: 0;
-  border: none;
-
-  container-type: inline-size;
-
-  /* the title comes first: buttons go as the container gets smaller (all are in the more menu) */
-  /* 250px remove folder button (keep the primary add-list action) */
-  @container (max-width: 250px) {
-    .add-folder {
-      display: none;
-    }
-  }
-  /* 200px remove add-list button */
-  @container (max-width: 200px) {
-    .add-list {
-      display: none;
-    }
-  }
-
-  /* 160px remove search */
-  @container (max-width: 160px) {
-    .search-lists {
-      display: none;
-    }
-  }
-`
-
-const StyledTitle = styled.span`
-  ${theme.labelLarge}
-  height: 32px;
-  line-height: 32px;
-  padding-left: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  min-width: 0;
-`
-
-const StyledButtons = styled.div`
-  display: flex;
-  gap: var(--base-gap-small);
-`
 
 interface ButtonCustomization {
   icon?: IconType
@@ -103,74 +51,40 @@ const ProjectsListTableHeader: FC<ProjectsListTableHeaderProps> = ({
   menuItems = [],
   toggleMenu,
 }) => {
-  const { menuOpen } = useMenuContext()
-  const isOpen = menuOpen === MENU_ID
-
-  const addButton = {
-    icon: 'add' as const,
-    tooltip: 'Add new project',
-    ...buttonLabels.add,
+  // the menu has every action: these are buttons too, search on the right
+  const buttons: Record<string, Partial<TableListHeaderItem>> = {
+    search: {
+      onClick: () => typeof search !== 'string' && onSearch(''),
+      isPinned: !hiddenButtons.includes('search'),
+      buttonProps: { icon: 'search', tooltip: 'Search projects', ...buttonLabels.search },
+    },
+    'select-all': {
+      isPinned: !hiddenButtons.includes('select-all') && !!onSelectAll,
+      buttonProps: { icon: 'checklist', tooltip: 'Select all' },
+    },
+    'add-project': {
+      onClick: menuItems.find((item) => item.id === 'add-project')?.onClick ?? onNewProject,
+      isPinned: showAddProject,
+      buttonProps: { icon: 'add', tooltip: 'Add new project', ...buttonLabels.add },
+    },
   }
 
-  const searchButton = {
-    icon: 'search' as const,
-    tooltip: 'Search projects',
-    ...buttonLabels.search,
-  }
+  const items = menuItems.map(
+    (item): TableListHeaderItem =>
+      buttons[item.id] ? { ...item, ...buttons[item.id], className: item.id } : item,
+  )
+
   return (
-    <HeaderStyled className="projects-list-header">
-      <HeaderTop className="projects-list-header-top">
-        <StyledTitle>{title}</StyledTitle>
-
-        <StyledButtons className="projects-list-header-buttons">
-          <HeaderButton
-            icon="more_horiz"
-            onClick={() => toggleMenu?.(true)}
-            id={MENU_ID}
-            // its menu holds the projectList.menuItem slot (slot inspector)
-            data-ayon-trigger="projectList.menuItem"
-            className={clsx('list-menu', { active: isOpen })}
-          />
-          <MenuContainer targetId={MENU_ID} id={MENU_ID} align="left">
-            <Menu menu={menuItems} onClose={() => toggleMenu?.(false)} />
-          </MenuContainer>
-
-          {/* header button */}
-          {showAddProject && (
-            <HeaderButton
-              icon={addButton.icon}
-              data-tooltip={addButton.tooltip}
-              data-shortcut={addButton.shortcut}
-              onClick={onNewProject}
-              className="add-project"
-            />
-          )}
-
-          {/* select all button */}
-          {!hiddenButtons.includes('select-all') && onSelectAll && (
-            <HeaderButton
-              icon="checklist"
-              data-tooltip="Select all"
-              onClick={onSelectAll}
-              className="select-all"
-            />
-          )}
-
-          {!hiddenButtons.includes('search') && (
-            <HeaderButton
-              icon={searchButton.icon}
-              data-tooltip={searchButton.tooltip}
-              data-shortcut={searchButton.shortcut}
-              onClick={() => typeof search !== 'string' && onSearch('')}
-              className="search-projects"
-            />
-          )}
-        </StyledButtons>
-      </HeaderTop>
-      {typeof search === 'string' && (
-        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
-      )}
-    </HeaderStyled>
+    <TableListHeader
+      title={title}
+      menuItems={items}
+      menuId={MENU_ID}
+      onMenuToggle={toggleMenu}
+      // its menu holds the projectList.menuItem slot (slot inspector)
+      moreButtonProps={{ className: 'list-menu', 'data-ayon-trigger': 'projectList.menuItem' }}
+      search={search}
+      onSearch={onSearch}
+    />
   )
 }
 

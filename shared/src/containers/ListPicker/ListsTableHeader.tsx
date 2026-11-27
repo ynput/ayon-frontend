@@ -1,48 +1,15 @@
-import { FC, useId, useMemo, useRef, useState } from 'react'
-import clsx from 'clsx'
-import styled from 'styled-components'
+import { FC, useMemo, useRef, useState } from 'react'
 import { SearchFilterRef } from '@ynput/ayon-react-components'
-import { buildSortMenuItem, Menu, MenuContainer, MenuItemType } from '@shared/components/Menu'
-import { TableSearch } from '@shared/components/TableSearch'
-import { HeaderButton } from '@shared/containers/SimpleTable'
-import { useMenuContext, usePowerpack } from '@shared/context'
+import { buildSortMenuItem } from '@shared/components/Menu'
+import { TableListHeader } from '@shared/components/TableListHeader'
+import type { TableListHeaderItem } from '@shared/components/TableListHeader'
+import { usePowerpack } from '@shared/context'
 import { LISTS_SORT_OPTIONS } from '@shared/util/sortLists'
 import { useListsDataContext } from './context'
 import { useListUserPermissions } from './hooks/useListUserPermissions'
 import { parseListFolderRowId } from './util'
 import { canDeleteAllFolders, canDeleteAllLists } from './util/listAccessControl'
 import ListsFiltersBar from './ListsFiltersBar'
-import {
-  ListsHeader,
-  ListsHeaderButtons,
-  ListsHeaderTitle,
-  ListsHeaderTop,
-} from './ListPicker.styled'
-
-const HeaderTop = styled(ListsHeaderTop)`
-  container-type: inline-size;
-
-  /* when this container gets smaller than */
-  /* 188px remove folder button (the panel's default width, keep the primary add-list action) */
-  @container (max-width: 188px) {
-    .add-folder {
-      display: none;
-    }
-  }
-  /* 155px remove add-list button */
-  @container (max-width: 155px) {
-    .add-list {
-      display: none;
-    }
-  }
-
-  /* 125px remove search */
-  @container (max-width: 125px) {
-    .search-lists {
-      display: none;
-    }
-  }
-`
 
 interface ButtonCustomization {
   icon?: string
@@ -101,14 +68,8 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
     listsData,
     listFolders,
   } = useListsDataContext()
-  const { menuOpen, toggleMenuOpen } = useMenuContext()
   const { powerLicense } = usePowerpack()
   const userPermissions = useListUserPermissions()
-
-  const ownMenuId = useId()
-  const id = menuId ?? ownMenuId
-  const isOpen = menuOpen === id
-  const toggleMenu = (open: boolean) => toggleMenuOpen(open ? id : false)
 
   const filtersBarRef = useRef<SearchFilterRef>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -165,7 +126,7 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
   }
 
   // Define all menu items in order (matching right-to-left button order)
-  const menuItems: MenuItemType[] = [
+  const menuItems: TableListHeaderItem[] = [
     {
       id: 'search',
       label: 'Search',
@@ -296,61 +257,20 @@ export const ListsTableHeader: FC<ListsTableHeaderProps> = ({
       : []),
   ]
 
-  const filteredMenuItems = hiddenMenuItemIds.length
-    ? menuItems.filter((item) => !item.id || !hiddenMenuItemIds.includes(item.id))
+  const visibleMenuItems = hiddenMenuItemIds.length
+    ? menuItems.filter((item) => !hiddenMenuItemIds.includes(item.id))
     : menuItems
 
-  // leaving items out can leave dividers doubled up or dangling at either end
-  const isDivider = (item: MenuItemType) => item.id === 'divider'
-  const visibleMenuItems = filteredMenuItems.reduce<MenuItemType[]>((acc, item) => {
-    if (isDivider(item) && (!acc.length || isDivider(acc[acc.length - 1]))) return acc
-    acc.push(item)
-    return acc
-  }, [])
-  while (visibleMenuItems.length && isDivider(visibleMenuItems[visibleMenuItems.length - 1])) {
-    visibleMenuItems.pop()
-  }
-
-  // Get pinned items (for buttons)
-  const pinnedItems = visibleMenuItems.filter((item) => item.isPinned && item.buttonProps)
-
   return (
-    <ListsHeader>
-      <HeaderTop>
-        <ListsHeaderTitle>{title ?? (isReview ? 'Review sessions' : 'Lists')}</ListsHeaderTitle>
-
-        <ListsHeaderButtons>
-          <HeaderButton
-            icon="more_horiz"
-            onClick={() => toggleMenu(true)}
-            id={id}
-            className={clsx('list-menu', { active: isOpen })}
-          />
-          <MenuContainer targetId={id} id={id} align="left">
-            <Menu menu={visibleMenuItems} onClose={() => toggleMenu(false)} />
-          </MenuContainer>
-
-          {/* Render pinned items as buttons (in reverse order for right-to-left layout) */}
-          {pinnedItems
-            .slice()
-            .reverse()
-            .map((item) => (
-              <HeaderButton
-                key={item.id}
-                icon={item.buttonProps?.icon}
-                data-tooltip={item.buttonProps?.tooltip}
-                data-shortcut={item.buttonProps?.shortcut}
-                onClick={item.onClick}
-                className={item.className}
-                disabled={item.disabled}
-              />
-            ))}
-        </ListsHeaderButtons>
-      </HeaderTop>
-      {typeof search === 'string' && (
-        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(null)} />
-      )}
+    <TableListHeader
+      title={title ?? (isReview ? 'Review sessions' : 'Lists')}
+      menuItems={visibleMenuItems}
+      menuId={menuId}
+      moreButtonProps={{ className: 'list-menu' }}
+      search={search}
+      onSearch={(value) => onSearch(value ?? null)}
+    >
       {barVisible && <ListsFiltersBar ref={filtersBarRef} onClose={closeFiltersBar} />}
-    </ListsHeader>
+    </TableListHeader>
   )
 }
