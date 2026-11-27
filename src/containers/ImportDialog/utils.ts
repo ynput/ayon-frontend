@@ -23,10 +23,12 @@ export type ImportData = ParsedCSV & {
   sheets?: ExcelSheet[]
 }
 
+// Cells stay the text the file has (`TRUE`, `1.50`): the server matches value mappings
+// against that text, so typed values (`true`, `1.5`) would not match. Empty cells are null.
 const parseConfig: ParseAsyncConfig = {
-  dynamicTyping: true,
   header: true,
   skipEmptyLines: "greedy",
+  transform: (value) => (value === "" ? null : value),
 }
 
 const parseAsync = (file: File | string, config: ParseAsyncConfig): Promise<CSVRow[]> => new Promise((resolve, reject) => {
