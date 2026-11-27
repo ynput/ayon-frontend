@@ -135,7 +135,25 @@ export class DetailsPanel {
       .locator('.field-value')
   }
 
+  /**
+   * The Details tab hides empty attributes behind a toggle and folds related ones (frames, resolution)
+   * into groups: show every attribute row. Status and tags are always shown, first.
+   */
+  async showAllAttributes() {
+    await this.root.locator('.field-row').first().waitFor()
+    const emptyToggle = this.root.getByRole('button', { name: /empty fields?$/ })
+    if (
+      (await emptyToggle.count()) &&
+      (await emptyToggle.getAttribute('aria-expanded')) === 'false'
+    ) {
+      await emptyToggle.click()
+    }
+    const closedGroup = this.root.locator('.field-group > button[aria-expanded="false"]')
+    while (await closedGroup.count()) await closedGroup.first().click()
+  }
+
   async setAttribute(label: string, value: string) {
+    await this.showAllAttributes()
     const field = this.attribute(label)
     await field.click()
     const input = field.locator('input')

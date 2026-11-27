@@ -52,6 +52,7 @@ export const DetailsPanelDetails = ({
     statuses = [],
     tags = [],
     productTypes,
+    attrib: projectAttrib,
   } = useProjectContext()
   const { openSlideOut } = useDetailsPanelContext()
   const [, setRefTooltip] = useReferenceTooltip()
@@ -88,6 +89,15 @@ export const DetailsPanelDetails = ({
     folderHasVersions,
     attribAccess,
   })
+
+  // the project's values, by field name: a group's extra field with one is no news, it stays inside
+  const projectDefaults = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(projectAttrib || {}).map(([name, value]) => [`attrib.${name}`, value]),
+      ),
+    [projectAttrib],
+  )
 
   const authorNames = [formData?.createdBy, formData?.updatedBy].filter(
     (name): name is string => typeof name === 'string' && !!name,
@@ -185,6 +195,7 @@ export const DetailsPanelDetails = ({
           enableEditing={enableDescriptionEditing}
           onChange={handleDescriptionChange}
           isLoading={isLoading}
+          compact
           mentionsContext={mentionsContext}
           onMentionClick={handleMentionClick}
           onMentionHover={handleMentionHover}
@@ -203,6 +214,8 @@ export const DetailsPanelDetails = ({
         entities={entities}
         entityType={entityType}
         search={search}
+        compact
+        defaults={projectDefaults}
       />
 
       <DetailsSection
@@ -212,6 +225,8 @@ export const DetailsPanelDetails = ({
         isLoading={isLoading}
         users={authors}
         search={search}
+        title="Entity details"
+        separateBlocks
       />
     </StyledContainer>
   )

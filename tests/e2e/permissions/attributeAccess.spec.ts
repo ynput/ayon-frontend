@@ -81,6 +81,7 @@ test.describe('permissions: attribute access', () => {
         await overview.expand('sh010')
         const panel = await overview.openDetails('comp')
         await panel.openTab('details')
+        await panel.showAllAttributes()
 
         await expect(panel.attribute('Width')).toHaveClass(/\breadonly\b/)
         await expect(panel.attribute('FPS')).not.toHaveClass(/\breadonly\b/)
@@ -178,6 +179,7 @@ test.describe('permissions: attribute access', () => {
 
       const panel = await overview.openDetails('comp')
       await panel.openTab('details')
+      await panel.showAllAttributes()
       await expect(panel.attribute('FPS')).toContainText('25')
       await expect(page.getByText('4321')).toHaveCount(0)
 

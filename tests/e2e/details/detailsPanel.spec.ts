@@ -159,6 +159,8 @@ test.describe('details panel', () => {
     const { task } = await setup(api, projectName)
     const { panel } = await openTask(page, projectName)
     await panel.openTab('details')
+    // the name row is in its group while the label is empty
+    await panel.showAllAttributes()
 
     await panel.attribute('Tags').click()
     const search = page.locator('.search').getByRole('textbox')

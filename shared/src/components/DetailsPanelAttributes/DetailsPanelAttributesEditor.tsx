@@ -4,17 +4,33 @@ import { FC, useState, useMemo, useEffect } from 'react'
 import styled from 'styled-components'
 import type { CellValue } from '@shared/containers/ProjectTreeTable/widgets/CellWidget'
 import clsx from 'clsx'
-import { Button, BorderedSection, type MixedChange } from '@ynput/ayon-react-components'
+import { Button, BorderedSection, Icon, type MixedChange } from '@ynput/ayon-react-components'
 import RenderFieldWidget from './components/RenderFieldWidget'
 import { isAllDayEndDate } from './components/RenderFieldWidgetHelpers'
-import { NoMatches } from './DetailsPanelAttributesEditor.styled'
+import {
+  NoMatches,
+  GroupHeader,
+  GroupMembers,
+  EmptyToggle,
+  EmptyFields,
+} from './DetailsPanelAttributesEditor.styled'
+import {
+  HEADER_FIELDS,
+  TOP_FIELDS,
+  buildAttributeItems,
+  countItemFields,
+  getItemKey,
+  isProjectDefault,
+  type AttributeItem,
+} from './DetailsPanelAttributesEditorHelpers'
+import { useLocalStorage } from '@shared/hooks/useLocalStorage'
 import { FieldLabel } from '../DetailsPanelDetails/FieldLabel'
 import { matchesFieldSearch } from './fieldSearch'
 import { useAttributeEnums } from '@shared/hooks/useAttributeEnums'
 
 const FormRow = styled.div`
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(0, 1fr) 32px;
+  grid-template-columns: minmax(80px, 40%) minmax(0, 1fr) 32px;
   row-gap: 2px;
   column-gap: 4px;
   overflow: hidden;
@@ -28,6 +44,16 @@ const FormRow = styled.div`
 
   &:hover .field-tools {
     opacity: 1;
+  }
+
+  /* inside a group: the project's value, nothing set on this entity */
+  &.project-default .field-value {
+    color: var(--md-sys-color-outline);
+  }
+
+  /* no copy button: the value takes its space */
+  &.no-tools {
+    grid-template-columns: minmax(80px, 40%) minmax(0, 1fr);
   }
 
   &.multi-line {
@@ -133,6 +159,10 @@ export interface DetailsPanelAttributesEditorProps {
   projectName?: string // enum resolver scope when there are no entities
   entityType?: string // entity type for scoped statuses
   search?: string // the Details tab's search: only the fields whose label, name or value match
+  /** key fields first, related attributes grouped, empty fields behind an expander */
+  compact?: boolean
+  /** compact: the project's values by field name; a group's extra field with one stays in the group */
+  defaults?: Record<string, unknown>
 }
 
 export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps> = ({
@@ -148,8 +178,17 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
   projectName,
   entityType = 'task',
   search,
+  compact,
+  defaults,
 }) => {
   const [editingField, setEditingField] = useState<string | null>(null)
+  const [showEmpty, setShowEmpty] = useLocalStorage('detailsPanel.attributes.showEmpty', false)
+  const [openGroups, setOpenGroups] = useLocalStorage<string[]>(
+    'detailsPanel.attributes.openGroups',
+    [],
+  )
+  const toggleGroup = (key: string) =>
+    setOpenGroups((open) => (open.includes(key) ? open.filter((k) => k !== key) : [...open, key]))
 
   // while searching: the options of enums from a resolver, so their values match by the labels
   // shown (the same project as RenderFieldWidget)
@@ -217,6 +256,138 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
       ),
   )
 
+  const renderField = (field: AttributeField, { inGroup = false, withTools = true } = {}) => {
+    const fieldValue = form[field.name]
+    const isEditing = editingField === field.name
+    const isReadOnly = field.readonly || !enableEditing
+    const isMixed = mixedFields?.includes(field.name) || false
+    const isDefault = inGroup && isProjectDefault(field.name, form, mixedFields, defaults)
+
+    return (
+      <FormRow
+        key={field.name}
+        className={clsx('field-row', {
+          'multi-line': field.data.widget === 'markdown',
+          'project-default': isDefault,
+          'no-tools': !withTools,
+        })}
+        data-tooltip={isDefault ? 'Same as the project' : undefined}
+        data-tooltip-delay={isDefault ? 700 : undefined}
+      >
+        <FieldLabel
+          name={field.name}
+          data={field.data}
+          showDetailedTooltip
+          className="field-label"
+        />
+        <FieldValue
+          className={clsx('field-value', {
+            editing: isEditing,
+            readonly: isReadOnly,
+          })}
+          onClick={(e) => {
+            // Allow links to work normally - don't intercept clicks on anchor elements
+            if ((e.target as HTMLElement).closest('a')) {
+              return
+            }
+            e.preventDefault()
+            if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
+              handleStartEditing(field.name)
+            }
+          }}
+        >
+          <RenderFieldWidget
+            field={field}
+            value={fieldValue}
+            isEditing={isEditing}
+            isReadOnly={isReadOnly}
+            isMixed={isMixed}
+            onChange={handleValueChange}
+            onMixedChange={onMixedChange && handleMixedChange}
+            onCancelEdit={handleCancelEdit}
+            onExpand={() => {
+              // opens full markdown text editor dialog
+            }}
+            entities={entities}
+            projectName={projectName}
+            entityType={entityType}
+          />
+        </FieldValue>
+        {withTools && (
+          <FieldTools className="field-tools">
+            <Button
+              className="tool"
+              variant="text"
+              icon="content_copy"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const valueToDisplay =
+                  fieldValue === null || fieldValue === undefined ? '' : fieldValue
+                copyToClipboard(valueToDisplay.toString(), true)
+              }}
+            />
+          </FieldTools>
+        )}
+      </FormRow>
+    )
+  }
+
+  const renderItem = (item: AttributeItem) => {
+    if (item.type === 'field') return renderField(item.field)
+    const { group } = item
+    const isOpen = openGroups.includes(group.key)
+    return (
+      <div key={getItemKey(item)} className="field-group">
+        <GroupHeader
+          type="button"
+          className={clsx({ open: isOpen })}
+          aria-expanded={isOpen}
+          onClick={() => toggleGroup(group.key)}
+          data-tooltip={group.fields.map((f) => f.data.title || f.name).join(', ')}
+          data-tooltip-delay={700}
+        >
+          <span className="group-label">{group.label}</span>
+          <span className={clsx('group-summary', { empty: !group.summary })}>
+            {group.summary || '—'}
+          </span>
+          <Icon icon="expand_more" className="icon" />
+        </GroupHeader>
+        {isOpen && (
+          <GroupMembers>
+            {group.fields.map((field) => renderField(field, { inGroup: true }))}
+          </GroupMembers>
+        )}
+      </div>
+    )
+  }
+
+  const visibleFields = fields.filter((field) => !field.hidden)
+  // searching shows every match as a plain row, empty or not
+  const isCompact = compact && !search
+  const headerFields = isCompact
+    ? HEADER_FIELDS.map((name) => visibleFields.find((field) => field.name === name)).filter(
+        (field): field is AttributeField => !!field,
+      )
+    : []
+  // the name (and its label) first, then status and tags, then the rest
+  const top = buildAttributeItems(
+    visibleFields.filter((field) => TOP_FIELDS.includes(field.name)),
+    form,
+    mixedFields,
+    defaults,
+  )
+  const rest = buildAttributeItems(
+    visibleFields.filter(
+      (field) => !TOP_FIELDS.includes(field.name) && !HEADER_FIELDS.includes(field.name),
+    ),
+    form,
+    mixedFields,
+    defaults,
+  )
+  const empty = [...top.empty, ...rest.empty]
+  const emptyCount = countItemFields(empty)
+
   return (
     <BorderedSection
       title="Attributes"
@@ -226,73 +397,29 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
       pt={{ content: { style: { minHeight: 'unset' } } }}
     >
       {!shownFields.length && search && <NoMatches>No matching attributes</NoMatches>}
-      {shownFields.map((field) => {
-        const fieldValue = form[field.name]
-        const isEditing = editingField === field.name
-        const isReadOnly = field.readonly || !enableEditing
-        const isMixed = mixedFields?.includes(field.name) || false
-
-        return (
-          <FormRow
-            key={field.name}
-            className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
-          >
-            <FieldLabel
-              name={field.name}
-              data={field.data}
-              showDetailedTooltip
-              className="field-label"
-            />
-            <FieldValue
-              className={clsx('field-value', {
-                editing: isEditing,
-                readonly: isReadOnly,
-              })}
-              onClick={(e) => {
-                // Allow links to work normally - don't intercept clicks on anchor elements
-                if ((e.target as HTMLElement).closest('a')) {
-                  return
-                }
-                e.preventDefault()
-                if (!isEditing && !isReadOnly && field.data.type !== 'boolean') {
-                  handleStartEditing(field.name)
-                }
-              }}
+      {isCompact ? (
+        <>
+          {top.filled.map(renderItem)}
+          {/* copying a status or tags is rarely wanted, and a narrow panel needs the room */}
+          {headerFields.map((field) => renderField(field, { withTools: false }))}
+          {rest.filled.map(renderItem)}
+          {!!emptyCount && (
+            <EmptyToggle
+              type="button"
+              aria-expanded={showEmpty}
+              onClick={() => setShowEmpty(!showEmpty)}
             >
-              <RenderFieldWidget
-                field={field}
-                value={fieldValue}
-                isEditing={isEditing}
-                isReadOnly={isReadOnly}
-                isMixed={isMixed}
-                onChange={handleValueChange}
-                onMixedChange={onMixedChange && handleMixedChange}
-                onCancelEdit={handleCancelEdit}
-                onExpand={() => {
-                  // opens full markdown text editor dialog
-                }}
-                entities={entities}
-                projectName={projectName}
-                entityType={entityType}
-              />
-            </FieldValue>
-            <FieldTools className="field-tools">
-              <Button
-                className="tool"
-                variant="text"
-                icon="content_copy"
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  const valueToDisplay =
-                    fieldValue === null || fieldValue === undefined ? '' : fieldValue
-                  copyToClipboard(valueToDisplay.toString(), true)
-                }}
-              />
-            </FieldTools>
-          </FormRow>
-        )
-      })}
+              <Icon icon={showEmpty ? 'expand_less' : 'expand_more'} className="icon" />
+              {showEmpty
+                ? 'Hide empty fields'
+                : `${emptyCount} empty field${emptyCount === 1 ? '' : 's'}`}
+            </EmptyToggle>
+          )}
+          {showEmpty && <EmptyFields>{empty.map(renderItem)}</EmptyFields>}
+        </>
+      ) : (
+        shownFields.map((field) => renderField(field))
+      )}
     </BorderedSection>
   )
 }
