@@ -137,7 +137,7 @@ const Header: React.FC = () => {
               className={clsx({ active: menuOpen === 'help' })}
               variant="nav"
             />
-            <MenuContainer id="help" target={helpButtonRef.current}>
+            <MenuContainer id="help" target={helpButtonRef.current} size="large">
               <HelpMenu user={user} />
             </MenuContainer>
             {/* help icon and menu ^^^ */}
@@ -154,7 +154,7 @@ const Header: React.FC = () => {
               className={clsx({ active: menuOpen === 'app', notification: isSnoozing })}
             />
 
-            <MenuContainer id="app" target={appButtonRef.current}>
+            <MenuContainer id="app" target={appButtonRef.current} size="large">
               <AppMenu user={user} />
             </MenuContainer>
           </>
@@ -171,7 +171,7 @@ const Header: React.FC = () => {
         >
           <UserImage size={25} name={user?.name} imageKey={avatarKey} />
         </UserButton>
-        <MenuContainer id="user" target={userButtonRef.current}>
+        <MenuContainer id="user" target={userButtonRef.current} size="large">
           <UserMenu user={user} />
         </MenuContainer>
         {/* User icon and menu ^^^ */}
