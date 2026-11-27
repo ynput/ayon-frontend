@@ -121,11 +121,10 @@ never folds the path again.
   items are in More one by one; its tile is active when one of its items is),
   `splitAdminItems` the promoted admin pages, `iconsOnly` narrows the sidebar to its icons and
   `tint` (a `#rrggbb` colour, nothing else is taken) colours its selected item (and a group's
-  tile holding it) and Home's icon, not its sheet, where faded items would sink; the host
-  remembers both in
-  this browser (each context's tint), so the sidebar has its width and colour before the module
-  loads. A
-  hidden page still opens by its link; when another arrangement applies (its id) while a page or
+  tile holding it) and Home's icon, not its sheet, where faded items would sink; in a project, the
+  project's own colour (its data's `color`, `#rgb` or `#rrggbb`) comes first. The host remembers
+  both in this browser (each context's tint), so the sidebar has its width and colour before the
+  module loads. A hidden page still opens by its link; when another arrangement applies (its id) while a page or
   pinned tab it hides is open (and the one before showed it), the sidebar opens the item's first
   shown tab, or the arrangement's first item when it hides the item too. The first load and another
   project aren't a switch, nor is anything before `ready`. Pages find themselves in AYON's tabs,

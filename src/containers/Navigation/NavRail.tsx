@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, type SortingStrategy } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
+import { useGetProjectQuery } from '@shared/api'
 import { Menu, MenuContainer } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
 import { CONTEXT_MENU_TARGET_ATTR } from '@shared/containers/ContextMenu/context/context-menu/ContextMenuContextInstance'
@@ -557,6 +558,9 @@ export const NavRail = () => {
   return <Sidebar />
 }
 
+// as a project's colour is stored (`#rgb` or `#rrggbb`)
+const HEX_COLOUR = /^#(?:[0-9a-f]{3}){1,2}$/i
+
 const Sidebar = () => {
   const { pathname } = useLocation()
   const projectName = pathname.match(PROJECT_PATH)?.[1]
@@ -564,8 +568,16 @@ const Sidebar = () => {
   // the arrangement that applies here: the context's places, and whether the sidebar shows icons
   // only
   const nav = useNavArrangement()
-  // only a colour: arrangements are shared, so nothing else goes into the style
-  const tint = /^#[0-9a-f]{6}$/i.test(nav.layout.tint ?? '') ? nav.layout.tint : undefined
+  // the context's colour on the selection: the project's own (its data), else the arrangement's.
+  // Only a colour: both are shared, so nothing else goes into the style. The open project's only
+  // (`currentData`), so the last one's doesn't linger while another loads
+  const { currentData: projectData } = useGetProjectQuery(
+    { projectName: project ?? '' },
+    { skip: !project },
+  )
+  const tint = [project ? projectData?.data?.color : undefined, nav.layout.tint].find(
+    (colour): colour is string => typeof colour === 'string' && HEX_COLOUR.test(colour),
+  )
 
   return (
     <Styled.Column
