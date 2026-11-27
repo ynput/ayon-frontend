@@ -1,0 +1,23 @@
+// Sizes shared by the dropdown menus (Menu / MenuContainer) and the right-click context menu,
+// so both look the same. `.menu-large` is the bigger variant used by the header menus.
+:root {
+  --menu-padding: 6px;
+  --menu-gap: 4px;
+  --menu-radius: var(--border-radius-l);
+  --menu-shadow: var(--md-sys-elevation-overlay);
+  // a subtle outline around the popover
+  --menu-border-width: 1px;
+  --menu-border-color: var(--md-sys-color-outline-variant);
+  --menu-item-height: 32px;
+  --menu-item-padding: 4px 12px 4px 10px;
+  --menu-item-gap: 8px;
+  --menu-item-radius: var(--border-radius-m);
+  --menu-divider-margin: 2px;
+}
+
+.menu-large {
+  --menu-padding: 8px;
+  --menu-gap: 8px;
+  --menu-item-padding: 6px 16px 6px 12px;
+  --menu-divider-margin: 0px;
+}

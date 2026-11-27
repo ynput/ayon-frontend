@@ -12,6 +12,7 @@ export const MENU_PORTAL_CONTENT_ID = 'ayon-menu-content'
 
 type AlignType = 'left' | 'right'
 type ThemeType = 'light' | 'dark'
+type MenuSize = 'default' | 'large'
 
 interface MenuContainerProps {
   id: string | undefined
@@ -23,6 +24,8 @@ interface MenuContainerProps {
   isOpen?: boolean
   /** with `isOpen`: called to close it (`onClose` stays the dialog's own event) */
   onDismiss?: () => void
+  /** `large`: the roomier header menus (user, apps, help); everything else uses the default */
+  size?: MenuSize
   children: ReactNode
   [key: string]: any
 }
@@ -80,6 +83,7 @@ interface MenuInnerProps {
   target?: HTMLElement | null
   targetId?: string
   align?: AlignType
+  size?: MenuSize
   children: ReactNode
   [key: string]: any
 }
@@ -90,6 +94,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
   target,
   targetId,
   align = 'right',
+  size = 'default',
   children,
   ...props
 }) => {
@@ -146,7 +151,7 @@ const MenuInner: React.FC<MenuInnerProps> = ({
       <Styled.DialogContent
         id={MENU_PORTAL_CONTENT_ID}
         style={menuPosition}
-        className={clsx(align)}
+        className={clsx(align, { 'menu-large': size === 'large' })}
         ref={menuRef as any}
       >
         {childrenWithProps}

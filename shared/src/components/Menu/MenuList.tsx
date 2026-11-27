@@ -70,8 +70,6 @@ export const MenuList: React.FC<MenuListProps> = ({
     const offsetParent = (parentMenuEl.offsetParent as HTMLElement | null) ?? document.body
     const offsetParentRect = offsetParent.getBoundingClientRect()
     const itemRect = itemEl.getBoundingClientRect()
-    // Use the visible inner <menu> element if present — the wrapper has 16px paddingLeft
-    // for sub-menus which would otherwise produce a phantom gap on flip-left chains.
     const parentVisibleEl =
       (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
     const parentVisibleRect = parentVisibleEl.getBoundingClientRect()
@@ -92,9 +90,9 @@ export const MenuList: React.FC<MenuListProps> = ({
     // left, every descendant sub-menu also goes left — DetailsPanel scenarios put the
     // root menu near the right edge of the screen, so flipping flip-flop on each level
     // would push deep menus back into the panel content.
-    const gap = 4
-    const computeLeftSide = () => Math.max(padding, parentVisibleRect.left - estimatedWidth - gap)
-    const computeRightSide = () => parentVisibleRect.right + gap
+    // The sub-menu starts at the hovered item's edge, so it overlaps the parent menu's padding.
+    const computeLeftSide = () => Math.max(padding, itemRect.left - estimatedWidth)
+    const computeRightSide = () => itemRect.right
     const fitsRight = computeRightSide() + estimatedWidth <= viewportWidth - padding
     const fitsLeft = computeLeftSide() >= padding
 
@@ -115,9 +113,12 @@ export const MenuList: React.FC<MenuListProps> = ({
       viewportLeft = Math.max(padding, viewportWidth - estimatedWidth - padding)
     }
 
-    // Align first sub-menu item with the hovered parent item. The visible <menu> has
-    // 8px top padding, so the wrapper top sits 8px above the item top.
-    const innerTopOffset = 8
+    // Align first sub-menu item with the hovered parent item: the wrapper top sits one menu
+    // padding plus the sub-menu's outline above the item top.
+    const parentStyle = getComputedStyle(parentVisibleEl)
+    const innerTopOffset =
+      (parseFloat(parentStyle.paddingTop) || 0) +
+      (parseFloat(parentStyle.getPropertyValue('--menu-border-width')) || 0)
     let viewportTop = itemRect.top - innerTopOffset
     if (viewportTop + estimatedHeight > viewportHeight - padding) {
       viewportTop = viewportHeight - estimatedHeight - padding
@@ -125,18 +126,11 @@ export const MenuList: React.FC<MenuListProps> = ({
     // above the dialog's own box the menu is clipped and can't be scrolled back into view
     viewportTop = Math.max(MENU_TOP_BOUND, viewportTop)
 
-    // Sub-menu wrappers carry 16px paddingLeft (so their wrapper rect is wider than
-    // the visible menu). When we anchor on the LEFT side, the visible menu sits 16px
-    // inside the wrapper — pull the wrapper left so the visible right edge lines up
-    // with parentVisibleRect.left.
-    const subMenuPaddingLeft = 16
-    const wrapperLeft = nextPlacement === 'left' ? viewportLeft - subMenuPaddingLeft : viewportLeft
-
     onSubMenu?.(e, {
       id,
       style: {
         top: viewportTop - offsetParentRect.top,
-        left: wrapperLeft - offsetParentRect.left,
+        left: viewportLeft - offsetParentRect.left,
         maxHeight: viewportHeight - viewportTop - padding,
       },
       items,
@@ -168,24 +162,16 @@ export const MenuList: React.FC<MenuListProps> = ({
     if (!subMenu || !menuRef.current || !parentRef || !onSubMenuLayout || !id) return
     const wrapperEl = menuRef.current
     const parentItemEl = parentRef
-    const parentMenuEl = parentItemEl.closest('.menu-list, .sub-menu') as HTMLElement | null
-    if (!parentMenuEl) return
-    // Measure visible boxes (the inner <menu> tag), not wrappers. Sub-menu wrappers
-    // carry 16px paddingLeft which inflates the rect on the left side and would
-    // otherwise produce phantom gaps when flipping left.
+    // Measure the visible box (the inner <menu> tag), so the visible edge, not the
+    // wrapper's, lines up with the parent item.
     const ownVisibleEl = (wrapperEl.querySelector('menu') as HTMLElement | null) ?? wrapperEl
-    const parentVisibleEl =
-      (parentMenuEl.querySelector('menu') as HTMLElement | null) ?? parentMenuEl
 
     const offsetParent = (wrapperEl.offsetParent as HTMLElement | null) ?? document.body
     const offsetParentRect = offsetParent.getBoundingClientRect()
     const wrapperRect = wrapperEl.getBoundingClientRect()
     const ownVisibleRect = ownVisibleEl.getBoundingClientRect()
-    const parentVisibleRect = parentVisibleEl.getBoundingClientRect()
     const parentItemRect = parentItemEl.getBoundingClientRect()
 
-    // Some wrappers have 16px left padding (sub-menus). Track it so we can place the
-    // wrapper such that the visible-menu edge — not the wrapper edge — lines up.
     const subMenuPaddingLeft = ownVisibleRect.left - wrapperRect.left
     const visibleWidth = ownVisibleRect.width
 
@@ -193,9 +179,9 @@ export const MenuList: React.FC<MenuListProps> = ({
     const viewportHeight = window.innerHeight
     const padding = 8
 
-    const gap = 4
-    const computeLeftSide = () => Math.max(padding, parentVisibleRect.left - visibleWidth - gap)
-    const computeRightSide = () => parentVisibleRect.right + gap
+    // start at the parent item's edge, overlapping the parent menu's padding
+    const computeLeftSide = () => Math.max(padding, parentItemRect.left - visibleWidth)
+    const computeRightSide = () => parentItemRect.right
     const fitsRight = computeRightSide() + visibleWidth <= viewportWidth - padding
     const fitsLeft = computeLeftSide() >= padding
 
@@ -259,7 +245,7 @@ export const MenuList: React.FC<MenuListProps> = ({
 
   return (
     <Styled.MenuWrapper
-      style={{ paddingLeft: subMenu ? 16 : 0, ...style }}
+      style={style}
       className={subMenu ? 'sub-menu' : 'menu-list'}
       id={id}
       onMouseLeave={handleMouseLeave}
@@ -359,7 +345,7 @@ export const MenuList: React.FC<MenuListProps> = ({
                   onClose?.(id)
                 }
               }}
-              style={{ paddingRight: items.length ? '0' : '16px', ...itemStyle }}
+              style={itemStyle}
               ref={(e) => (itemRefs.current[id] = e)}
               onMouseEnter={(e) => handleSubMenu(e, id, items)}
               onMouseLeave={(e) => handleSubMenu(e, id, [])}

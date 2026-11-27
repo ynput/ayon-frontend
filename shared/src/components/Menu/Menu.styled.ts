@@ -1,5 +1,7 @@
 import { Button } from '@ynput/ayon-react-components'
 import styled, { keyframes } from 'styled-components'
+// sizes shared with the context menu
+import './menuTokens.scss'
 
 // the dialog starts below the app header, so menus positioned above it are clipped and unscrollable
 export const DIALOG_TOP_OFFSET = 42
@@ -70,7 +72,7 @@ export const DialogContent = styled.div`
   /* add shadow to each item */
   & > *:not(.sub-menu),
   .sub-menu menu {
-    box-shadow: var(--md-sys-elevation-overlay);
+    box-shadow: var(--menu-shadow);
   }
 
   /* theme support */
@@ -91,7 +93,8 @@ export const Section = styled.section`
   min-height: 0;
 
   padding: 0px;
-  border-radius: 8px;
+  border: var(--menu-border-width) solid var(--menu-border-color);
+  border-radius: var(--menu-radius);
   /* colors */
   background-color: var(--md-sys-color-surface-overlay);
   color: var(--md-sys-color-on-surface);
@@ -100,7 +103,7 @@ export const Section = styled.section`
 `
 export const MenuWrapper = styled.div`
   position: relative;
-  border-radius: 8px;
+  border-radius: var(--menu-radius);
   display: flex;
   flex-direction: column;
   min-height: 0;
@@ -113,12 +116,13 @@ export const MenuWrapper = styled.div`
   &.sub-menu {
     position: absolute;
 
-    border-radius: 8px;
+    border-radius: var(--menu-radius);
     width: max-content;
     z-index: 30;
 
     & > * {
-      border-radius: 8px;
+      border: var(--menu-border-width) solid var(--menu-border-color);
+      border-radius: var(--menu-radius);
       overflow-x: hidden;
     }
   }
@@ -136,8 +140,8 @@ export const Menu = styled.menu`
 
   /* custom */
   flex-direction: column;
-  gap: var(--base-gap-large);
-  padding: 8px;
+  gap: var(--menu-gap);
+  padding: var(--menu-padding);
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
@@ -151,24 +155,24 @@ export const Menu = styled.menu`
   /* colors */
   background-color: var(--md-sys-color-surface-overlay);
 
-  /* divider */
+  /* divider, like the context menu's */
   hr {
-    margin: 0;
+    margin: var(--menu-divider-margin) 0;
     width: 100%;
-    border-style: solid;
-    opacity: 0.5;
-    border-color: var(--md-sys-color-surface-container-highest);
+    border: none;
+    border-top: 1px solid var(--md-sys-color-outline-variant);
   }
 `
 
 export const Item = styled.li`
   display: flex;
-  padding: 6px 16px 6px 12px;
+  min-height: var(--menu-item-height);
+  padding: var(--menu-item-padding);
   justify-content: flex-start;
   align-items: center;
-  gap: var(--base-gap-large);
+  gap: var(--menu-item-gap);
   align-self: stretch;
-  border-radius: 4px;
+  border-radius: var(--menu-item-radius);
   cursor: pointer;
   position: relative;
   user-select: none;
