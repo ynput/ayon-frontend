@@ -45,7 +45,8 @@ export const Buttons = styled.div`
 `
 
 // Right to left from the first pinned button. A button that doesn't fit wraps onto a second row,
-// which the fixed height hides: the last pinned goes first.
+// which the fixed height hides: the last pinned goes first. `clip`, not `hidden`: a hidden button
+// that gets focus must not scroll the second row into view.
 export const Pinned = styled.div`
   display: flex;
   flex-direction: row-reverse;
@@ -54,5 +55,5 @@ export const Pinned = styled.div`
   flex: 0 1 auto;
   min-width: 0;
   height: 32px;
-  overflow: hidden;
+  overflow: clip;
 `

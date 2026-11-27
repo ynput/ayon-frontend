@@ -5,6 +5,7 @@
 import { Fragment, useId, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { Menu, MenuContainer } from '@shared/components/Menu'
+import { isMenuDivider } from '@shared/components/Menu/menuSections'
 import type { MenuItemType } from '@shared/components/Menu'
 import { TableSearch } from '@shared/components/TableSearch'
 import { HeaderButton } from '@shared/containers/SimpleTable/SimpleTable.styled'
@@ -54,20 +55,6 @@ export interface TableListHeaderProps {
   className?: string
 }
 
-const isDivider = (item: MenuItemType) => item.id === 'divider' || item.separator === true
-
-// leaving items out can leave dividers doubled up or dangling at either end
-const tidyDividers = (items: TableListHeaderItem[]) => {
-  const tidy = items.reduce<TableListHeaderItem[]>((acc, item) => {
-    if (item.hidden) return acc
-    if (isDivider(item) && (!acc.length || isDivider(acc[acc.length - 1]))) return acc
-    acc.push(item)
-    return acc
-  }, [])
-  while (tidy.length && isDivider(tidy[tidy.length - 1])) tidy.pop()
-  return tidy
-}
-
 export const TableListHeader = ({
   title,
   titleStart,
@@ -87,11 +74,11 @@ export const TableListHeader = ({
   const toggleMenu = (open: boolean) =>
     onMenuToggle ? onMenuToggle(open) : toggleMenuOpen(open ? id : false)
 
-  const items = tidyDividers(menuItems)
-  const pinned = items.filter((item) => item.isPinned && !isDivider(item))
-  // the menu spreads an item's fields onto its <li>: keep the button-only ones off it
+  const pinned = menuItems.filter((item) => item.isPinned && !item.hidden && !isMenuDivider(item))
+  // the menu spreads an item's fields onto its <li>: keep the button-only ones off it (it drops
+  // hidden items and the dividers they leave itself)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const menu = items.map(({ isPinned, buttonProps, ...item }) => item)
+  const menu = menuItems.map(({ isPinned, buttonProps, ...item }) => item)
 
   return (
     <Styled.Header className={clsx('table-list-header', className)}>
