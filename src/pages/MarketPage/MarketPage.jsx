@@ -356,20 +356,24 @@ const MarketPage = () => {
     }
   }
 
+  // only downloaded addons with a newer version can be updated
+  const updatableAddons = useMemo(
+    () => marketAddons.filter((addon) => addon.isOutdated && addon.isDownloaded),
+    [marketAddons],
+  )
+
   const handleUpdateAll = async () => {
+    if (!updatableAddons.length) return
     setIsUpdatingAll(true)
     // for each outdated addon, download it
-    const promises = marketAddons.map((addon) => {
-      if (addon.isOutdated && addon.isDownloaded) {
-        const res = handleAddonDownload(addon.name, addon.latestVersion)
-        return res
-      }
-    })
+    const promises = updatableAddons.map((addon) =>
+      handleAddonDownload(addon.name, addon.latestVersion),
+    )
 
-    const responses = await Promise.all(promises).for
+    const responses = await Promise.all(promises)
 
-    const errors = responses.filter((r) => r.error)
-    const success = responses.filter((r) => r.data)
+    const errors = responses.filter((r) => r?.error)
+    const success = responses.filter((r) => r?.data)
     if (errors.length) {
       console.error(errors)
       toast.error('Error updating addons')
@@ -419,7 +423,8 @@ const MarketPage = () => {
             onDownload={handleItemDownload}
             isLoading={isLoadingAddons}
             error={errorAddons || errorReleases}
-            onUpdateAll={marketAddons.some((addon) => addon.isOutdated) && handleUpdateAll}
+            onUpdateAll={handleUpdateAll}
+            hasUpdates={updatableAddons.length > 0}
             isUpdatingAll={isUpdatingAll}
             isUpdatingAllFinished={isUpdatingAllFinished}
           />
