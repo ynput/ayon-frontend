@@ -2,7 +2,7 @@
 // a "more" menu with every action, and buttons for the pinned ones. The buttons go, last pinned
 // first, when the panel gets too narrow; CSS alone does it, and the menu still has them all.
 // A search row opens below while `search` is a string.
-import { Fragment, useId, type ReactNode } from 'react'
+import { Fragment, useId, useLayoutEffect, useRef, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { Menu, MenuContainer } from '@shared/components/Menu'
 import { isMenuDivider } from '@shared/components/Menu/menuSections'
@@ -80,6 +80,29 @@ export const TableListHeader = ({
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const menu = menuItems.map(({ isPinned, buttonProps, ...item }) => item)
 
+  // CSS hides the buttons that don't fit, but a row that wraps keeps its full width: the room the
+  // hidden ones left would be a gap by the "more" button. This fits the row to the buttons shown.
+  const pinnedRef = useRef<HTMLDivElement>(null)
+  const pinnedKey = pinned.map((item) => item.id).join()
+  useLayoutEffect(() => {
+    const row = pinnedRef.current
+    const top = row?.parentElement?.parentElement
+    if (!row || !top) return
+    const fit = () => {
+      row.style.maxWidth = ''
+      const rects = [...row.children].map((el) => el.getBoundingClientRect()).filter((r) => r.width)
+      if (!rects.length) return
+      const firstRow = rects.filter((r) => r.top === rects[0].top)
+      const left = Math.min(...firstRow.map((r) => r.left))
+      row.style.maxWidth = `${row.getBoundingClientRect().right - left}px`
+    }
+    fit()
+    const observer = new ResizeObserver(fit)
+    observer.observe(top)
+    for (const el of row.children) observer.observe(el)
+    return () => observer.disconnect()
+  }, [pinnedKey])
+
   return (
     <Styled.Header className={clsx('table-list-header', className)}>
       <Styled.Top className={clsx('table-list-header-top', { 'has-title-start': !!titleStart })}>
@@ -101,7 +124,7 @@ export const TableListHeader = ({
             <Menu menu={menu} onClose={() => toggleMenu(false)} />
           </MenuContainer>
           {/* right to left: the ones that don't fit wrap onto the row the header hides */}
-          <Styled.Pinned className="table-list-header-pinned">
+          <Styled.Pinned ref={pinnedRef} className="table-list-header-pinned">
             {pinned.map((item) => {
               if (item.buttonProps?.element) {
                 return <Fragment key={item.id}>{item.buttonProps.element}</Fragment>
