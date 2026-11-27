@@ -56,4 +56,16 @@ export const Pinned = styled.div`
   min-width: 0;
   height: 32px;
   overflow: clip;
+
+  /* an item that is on (a sort, a grouping, an open search) */
+  & > .highlighted {
+    background-color: var(--md-sys-color-primary) !important;
+    color: var(--md-sys-color-on-primary);
+    &:hover {
+      background-color: var(--md-sys-color-primary-hover) !important;
+    }
+    .icon {
+      color: inherit;
+    }
+  }
 `

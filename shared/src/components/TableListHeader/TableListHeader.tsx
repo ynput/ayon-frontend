@@ -24,7 +24,8 @@ export interface TableListHeaderButtonProps {
 
 /**
  * A menu item that can also be a button in the header. A pinned item with `items` opens them as
- * its own menu, and an `active` one (a sort, a grouping, an open search) stays the longest.
+ * its own menu, and an `active` one (a sort, a grouping, an open search) is highlighted in the
+ * primary colour and stays the longest.
  */
 export type TableListHeaderItem = MenuItemType & {
   /** a button in the header too, while there is room for it */
@@ -145,7 +146,10 @@ export const TableListHeader = ({
                   onClick={
                     hasMenu ? () => toggleMenuOpen(menuIsOpen ? false : itemMenuId) : item.onClick
                   }
-                  className={clsx(item.className, { active: item.active || menuIsOpen })}
+                  className={clsx(item.className, {
+                    highlighted: item.active,
+                    active: menuIsOpen,
+                  })}
                   disabled={item.disabled}
                 />
               )
