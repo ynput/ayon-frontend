@@ -1,9 +1,10 @@
 // The header of a table panel (the projects list, the lists table, Review's playlist): a title,
 // a "more" menu with every action, and buttons for the pinned ones. The buttons go, last pinned
-// first, when the panel gets too narrow; CSS alone does it, and the menu still has them all.
+// first and active ones last, when the panel gets too narrow; the menu still has them all.
 // A search row opens below while `search` is a string.
-import { useId, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import clsx from 'clsx'
+import type { IconType } from '@ynput/ayon-react-components'
 import { Menu, MenuContainer } from '@shared/components/Menu'
 import { isMenuDivider } from '@shared/components/Menu/menuSections'
 import type { MenuItemType } from '@shared/components/Menu'
@@ -57,6 +58,28 @@ export interface TableListHeaderProps {
   className?: string
 }
 
+// The pinned buttons to hide so the rest fit in `room`: the last pinned goes first, the active
+// ones (they show a state) only after all the others.
+const buttonsToHide = (row: HTMLElement, room: number) => {
+  const buttons = [...row.children] as HTMLElement[]
+  const gap = parseFloat(getComputedStyle(row).columnGap) || 0
+  const shown = new Set(buttons)
+  const width = () =>
+    [...shown].reduce((sum, el) => sum + el.offsetWidth, 0) + gap * Math.max(shown.size - 1, 0)
+  const lastFirst = [...buttons].reverse()
+  const order = [
+    ...lastFirst.filter((el) => !el.classList.contains('highlighted')),
+    ...lastFirst.filter((el) => el.classList.contains('highlighted')),
+  ]
+  const hidden: string[] = []
+  for (const el of order) {
+    if (width() <= room) break
+    shown.delete(el)
+    if (el.dataset.pinId) hidden.push(el.dataset.pinId)
+  }
+  return hidden
+}
+
 export const TableListHeader = ({
   title,
   titleStart,
@@ -76,33 +99,32 @@ export const TableListHeader = ({
   const toggleMenu = (open: boolean) =>
     onMenuToggle ? onMenuToggle(open) : toggleMenuOpen(open ? id : false)
 
-  const shown = menuItems.filter((item) => item.isPinned && !item.hidden && !isMenuDivider(item))
-  // the first pinned is the last to go: the active ones show a state, so they go first
-  const pinned = [...shown.filter((item) => item.active), ...shown.filter((item) => !item.active)]
+  const pinned = menuItems.filter((item) => item.isPinned && !item.hidden && !isMenuDivider(item))
   // the menu spreads an item's fields onto its <li>: keep the button-only ones off it (it drops
   // hidden items and the dividers they leave itself)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const menu = menuItems.map(({ isPinned, buttonProps, ...item }) => item)
 
-  // CSS hides the buttons that don't fit, but a row that wraps keeps its full width: the room the
-  // hidden ones left would be a gap by the "more" button. This fits the row to the buttons shown.
+  // The buttons that don't fit the header are hidden (the menu has them all), measured after each
+  // layout: CSS alone can only drop them from the end, and an active one must stay where it is.
+  const buttonsRef = useRef<HTMLDivElement>(null)
   const pinnedRef = useRef<HTMLDivElement>(null)
-  const pinnedKey = pinned.map((item) => item.id).join()
+  const [hiddenPins, setHiddenPins] = useState<string[]>([])
+  const pinnedKey = pinned.map((item) => `${item.id}:${item.active ? 1 : 0}`).join()
   useLayoutEffect(() => {
+    const buttons = buttonsRef.current
     const row = pinnedRef.current
-    const top = row?.parentElement?.parentElement
-    if (!row || !top) return
+    if (!buttons || !row) return
     const fit = () => {
-      row.style.maxWidth = ''
-      const rects = [...row.children].map((el) => el.getBoundingClientRect()).filter((r) => r.width)
-      if (!rects.length) return
-      const firstRow = rects.filter((r) => r.top === rects[0].top)
-      const left = Math.min(...firstRow.map((r) => r.left))
-      row.style.maxWidth = `${row.getBoundingClientRect().right - left}px`
+      const more = buttons.querySelector<HTMLElement>('.table-list-header-more')
+      const gap = parseFloat(getComputedStyle(buttons).columnGap) || 0
+      const room = buttons.clientWidth - (more?.offsetWidth ?? 0) - gap
+      const hidden = buttonsToHide(row, room)
+      setHiddenPins((prev) => (prev.join() === hidden.join() ? prev : hidden))
     }
     fit()
     const observer = new ResizeObserver(fit)
-    observer.observe(top)
+    observer.observe(buttons)
     for (const el of row.children) observer.observe(el)
     return () => observer.disconnect()
   }, [pinnedKey])
@@ -112,7 +134,7 @@ export const TableListHeader = ({
       <Styled.Top className={clsx('table-list-header-top', { 'has-title-start': !!titleStart })}>
         {titleStart}
         <Styled.Title className="table-list-header-title">{title}</Styled.Title>
-        <Styled.Buttons className="table-list-header-buttons">
+        <Styled.Buttons ref={buttonsRef} className="table-list-header-buttons">
           <HeaderButton
             icon="more_horiz"
             data-tooltip="More"
@@ -127,7 +149,7 @@ export const TableListHeader = ({
           <MenuContainer targetId={id} id={id} align="left">
             <Menu menu={menu} onClose={() => toggleMenu(false)} />
           </MenuContainer>
-          {/* right to left: the ones that don't fit wrap onto the row the header hides */}
+          {/* right to left, the first pinned on the right */}
           <Styled.Pinned ref={pinnedRef} className="table-list-header-pinned">
             {pinned.map((item) => {
               const label = Array.isArray(item.label) ? item.label.join(' ') : item.label
@@ -137,8 +159,9 @@ export const TableListHeader = ({
               return (
                 <HeaderButton
                   key={item.id}
+                  data-pin-id={item.id}
                   id={hasMenu ? itemMenuId : undefined}
-                  icon={item.buttonProps?.icon ?? item.icon}
+                  icon={(item.buttonProps?.icon ?? item.icon) as IconType}
                   data-tooltip={item.buttonProps?.tooltip ?? label}
                   data-shortcut={item.buttonProps?.shortcut ?? item.shortcut}
                   aria-label={label}
@@ -149,6 +172,7 @@ export const TableListHeader = ({
                   className={clsx(item.className, {
                     highlighted: item.active,
                     active: menuIsOpen,
+                    'pin-hidden': hiddenPins.includes(item.id),
                   })}
                   disabled={item.disabled}
                 />

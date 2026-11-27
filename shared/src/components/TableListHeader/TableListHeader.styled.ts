@@ -36,26 +36,31 @@ export const Title = styled.span`
   text-overflow: ellipsis;
 `
 
+// The whole column (its width is the room for the buttons), the buttons on its right
 export const Buttons = styled.div`
   display: flex;
+  justify-content: flex-end;
   gap: var(--base-gap-small);
-  justify-self: end;
   min-width: 0;
-  max-width: 100%;
 `
 
-// Right to left from the first pinned button. A button that doesn't fit wraps onto a second row,
-// which the fixed height hides: the last pinned goes first. `clip`, not `hidden`: a hidden button
-// that gets focus must not scroll the second row into view.
+// Right to left from the first pinned button. The header hides the ones that don't fit
+// (`pin-hidden`): out of the row but still measured. `clip`, not `hidden`: when even one button
+// doesn't fit, focusing it must not scroll the row.
 export const Pinned = styled.div`
+  position: relative;
   display: flex;
   flex-direction: row-reverse;
-  flex-wrap: wrap;
   gap: var(--base-gap-small);
   flex: 0 1 auto;
   min-width: 0;
-  height: 32px;
   overflow: clip;
+
+  & > .pin-hidden {
+    position: absolute;
+    visibility: hidden;
+    pointer-events: none;
+  }
 
   /* an item that is on (a sort, a grouping, an open search) */
   & > .highlighted {
