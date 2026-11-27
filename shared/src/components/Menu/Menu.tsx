@@ -2,7 +2,6 @@ import React, { useEffect, useState, ReactNode } from 'react'
 import * as Styled from './Menu.styled'
 import { MenuList } from './MenuList'
 import { MENU_PORTAL_CONTENT_ID } from './MenuContainer'
-import { MenuStyles } from './MenuStyles'
 import { copyToClipboard } from '@shared/util'
 import { Button } from '@ynput/ayon-react-components'
 import { useMenuContext, usePowerpack, type PowerpackFeature } from '@shared/context'
@@ -183,8 +182,6 @@ export const Menu: React.FC<MenuProps> = ({ menu = [], onClose, header, footer =
 
   return (
     <>
-      {/* also here, so a Menu rendered outside MenuContainer gets the menu sizes */}
-      <MenuStyles />
       <Styled.Section>
         {header && header}
         <MenuList
