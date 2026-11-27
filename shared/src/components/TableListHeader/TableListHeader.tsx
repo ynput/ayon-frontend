@@ -2,7 +2,7 @@
 // a "more" menu with every action, and buttons for the pinned ones. The buttons go, last pinned
 // first, when the panel gets too narrow; CSS alone does it, and the menu still has them all.
 // A search row opens below while `search` is a string.
-import { useId, type ReactNode } from 'react'
+import { Fragment, useId, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { Menu, MenuContainer } from '@shared/components/Menu'
 import type { MenuItemType } from '@shared/components/Menu'
@@ -19,6 +19,8 @@ export interface TableListHeaderButtonProps {
   tooltip?: string
   /** the shortcut shown in its tooltip; the page handles the key itself */
   shortcut?: string
+  /** shown instead of the button, such as a dropdown with its own menu; hidden like a button */
+  element?: ReactNode
 }
 
 /** A menu item that can also be a button in the header. */
@@ -114,6 +116,9 @@ export const TableListHeader = ({
           {/* right to left: the ones that don't fit wrap onto the row the header hides */}
           <Styled.Pinned className="table-list-header-pinned">
             {pinned.map((item) => {
+              if (item.buttonProps?.element) {
+                return <Fragment key={item.id}>{item.buttonProps.element}</Fragment>
+              }
               const label = Array.isArray(item.label) ? item.label.join(' ') : item.label
               return (
                 <HeaderButton
