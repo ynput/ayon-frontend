@@ -2,7 +2,7 @@
 // a "more" menu with every action, and buttons for the pinned ones. The buttons go, last pinned
 // first, when the panel gets too narrow; CSS alone does it, and the menu still has them all.
 // A search row opens below while `search` is a string.
-import { Fragment, useId, useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useId, useLayoutEffect, useRef, type ReactNode } from 'react'
 import clsx from 'clsx'
 import { Menu, MenuContainer } from '@shared/components/Menu'
 import { isMenuDivider } from '@shared/components/Menu/menuSections'
@@ -20,11 +20,12 @@ export interface TableListHeaderButtonProps {
   tooltip?: string
   /** the shortcut shown in its tooltip; the page handles the key itself */
   shortcut?: string
-  /** shown instead of the button, such as a dropdown with its own menu; hidden like a button */
-  element?: ReactNode
 }
 
-/** A menu item that can also be a button in the header. */
+/**
+ * A menu item that can also be a button in the header. A pinned item with `items` opens them as
+ * its own menu, and an `active` one (a sort, a grouping, an open search) stays the longest.
+ */
 export type TableListHeaderItem = MenuItemType & {
   /** a button in the header too, while there is room for it */
   isPinned?: boolean
@@ -74,7 +75,9 @@ export const TableListHeader = ({
   const toggleMenu = (open: boolean) =>
     onMenuToggle ? onMenuToggle(open) : toggleMenuOpen(open ? id : false)
 
-  const pinned = menuItems.filter((item) => item.isPinned && !item.hidden && !isMenuDivider(item))
+  const shown = menuItems.filter((item) => item.isPinned && !item.hidden && !isMenuDivider(item))
+  // the first pinned is the last to go: the active ones show a state, so they go first
+  const pinned = [...shown.filter((item) => item.active), ...shown.filter((item) => !item.active)]
   // the menu spreads an item's fields onto its <li>: keep the button-only ones off it (it drops
   // hidden items and the dividers they leave itself)
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -126,24 +129,41 @@ export const TableListHeader = ({
           {/* right to left: the ones that don't fit wrap onto the row the header hides */}
           <Styled.Pinned ref={pinnedRef} className="table-list-header-pinned">
             {pinned.map((item) => {
-              if (item.buttonProps?.element) {
-                return <Fragment key={item.id}>{item.buttonProps.element}</Fragment>
-              }
               const label = Array.isArray(item.label) ? item.label.join(' ') : item.label
+              const itemMenuId = `${id}-${item.id}`
+              const hasMenu = !!item.items?.length
+              const menuIsOpen = hasMenu && menuOpen === itemMenuId
               return (
                 <HeaderButton
                   key={item.id}
+                  id={hasMenu ? itemMenuId : undefined}
                   icon={item.buttonProps?.icon ?? item.icon}
                   data-tooltip={item.buttonProps?.tooltip ?? label}
                   data-shortcut={item.buttonProps?.shortcut ?? item.shortcut}
                   aria-label={label}
-                  onClick={item.onClick}
-                  className={clsx(item.className, { active: item.active })}
+                  aria-haspopup={hasMenu || undefined}
+                  onClick={
+                    hasMenu ? () => toggleMenuOpen(menuIsOpen ? false : itemMenuId) : item.onClick
+                  }
+                  className={clsx(item.className, { active: item.active || menuIsOpen })}
                   disabled={item.disabled}
                 />
               )
             })}
           </Styled.Pinned>
+          {/* a pinned item's own menu, under its button */}
+          {pinned
+            .filter((item) => item.items?.length)
+            .map((item) => (
+              <MenuContainer
+                key={item.id}
+                targetId={`${id}-${item.id}`}
+                id={`${id}-${item.id}`}
+                align="left"
+              >
+                <Menu menu={item.items!} onClose={() => toggleMenuOpen(false)} />
+              </MenuContainer>
+            ))}
         </Styled.Buttons>
       </Styled.Top>
       {typeof search === 'string' && onSearch && (
