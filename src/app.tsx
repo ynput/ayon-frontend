@@ -291,7 +291,6 @@ const App = () => {
                                                   </>
                                                 ) : (
                                                   <>
-                                                    <Header />
                                                     <ShareDialog />
                                                     <ViewerDialog />
                                                     <ConfirmDialog />
@@ -301,8 +300,11 @@ const App = () => {
                                                     <CompleteProfilePrompt />
                                                     <div className="app-body">
                                                       <NavRail />
-                                                      <div className="app-page">
-                                                        <AppRoutes />
+                                                      <div className="app-main">
+                                                        <Header />
+                                                        <div className="app-page">
+                                                          <AppRoutes />
+                                                        </div>
                                                       </div>
                                                     </div>
                                                     <LayoutEditBanner />

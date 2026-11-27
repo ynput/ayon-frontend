@@ -3,14 +3,17 @@
 Spec: AYON-20261125-001 (variant B). A context is a project (`/projects/<name>/…`) or Home (every
 other page). Its sidebar lists places; the selected place owns the tab row.
 
-The top bar shows the context as a path (Milan, 2026-11-26): Home › project › entity. Home is a
-sidebar-style button (`HomeItem`) in the top bar, in line with the sidebar's buttons, so the sidebar
-reads as starting at the top; it lives in the header so pages without a sidebar keep it. Outside
-a project Home is tinted. Inside one the context pill leads with the project's thumbnail (the
-pill's height but a 2px rim; without one, a placeholder with the project icon, as on the Projects
-page) and isn't tinted: a tinted pill was too loud once a path followed the project. The pill's
-edit and copy buttons show only while you point at it (or tab to them); they keep their room when
-hidden, so showing them never folds the path again.
+The context reads as a path (Milan, 2026-11-27): Home, then in the top bar the project and the
+entity. Home is the sidebar's first button, above a divider and the context's places, outside
+`ProjectRail` / `StudioRail` so it stays put when the context changes; at Home it isn't filled (a
+place below it is selected), only its icon. The sidebar is a sheet from the window's top, beside
+the top bar and the page; Home's top is level with the path's, and the path starts in line with
+the page's edge. Without a sidebar (guests, an addon's own route) Home leads the path in the top
+bar instead (`.header-home`, hidden beside the sidebar in `index.scss`). The context pill leads
+with the project's thumbnail (the pill's height but a 2px rim; without one, a placeholder with the
+project icon, as on the Projects page) and isn't tinted. The pill's edit and copy buttons show
+only while you point at it (or tab to them); they keep their room when hidden, so showing them
+never folds the path again.
 
 ## How it fits together
 
@@ -18,8 +21,8 @@ hidden, so showing them never folds the path again.
   `NavItem`s from the sources the pages render from (core modules, the addon pages AYON reserves,
   legacy keyword remotes, `project.page` / `studio.page` contributions, classic iframe addons,
   settings sub-pages). The pages call the same hooks, so a tab and its page always agree.
-- **The sidebar** (`NavRail`) is mounted once in `app.tsx`, beside `AppRoutes`, inside
-  `.app-body` / `.app-page`. Pages still render their own `AppNavLinks`: the project page and Home
+- **The sidebar** (`NavRail`) is mounted once in `app.tsx`, in `.app-body` beside `.app-main`
+  (the top bar over `.app-page`, which holds `AppRoutes`). Pages still render their own `AppNavLinks`: the project page and Home
   with only the active item's tabs (`findActiveItem` by path), Studio settings with the Settings
   item's tabs, and the Project manager, Inbox and Account with rows they build themselves. The views
   button portals into the tab and the tab row's access redirect keys on `useParams().module`, so the
@@ -46,8 +49,8 @@ hidden, so showing them never folds the path again.
   smaller and dimmed, so it still says which page it opens wherever it is moved, and its name as
   any tab's (Milan, 2026-11-26: a lighter name was too quiet).
 - **Addon routes** (`Route` keyword modules: review and storyboard sessions) add `addon-route` to
-  `#root`: the sidebar hides and the wrappers are `display: contents`, so the page lays out as before
-  the sidebar existed. The review player is `position: fixed` without offsets: it relies on that.
+  `#root`: the sidebar hides and the wrappers (`.app-body`, `.app-main`, `.app-page`) are
+  `display: contents`, so the page lays out as before the sidebar existed. The review player is `position: fixed` without offsets: it relies on that.
 
 ## Contracts
 

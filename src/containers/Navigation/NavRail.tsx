@@ -1,5 +1,6 @@
 import { MouseEvent, ReactNode, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
+import clsx from 'clsx'
 import { Icon } from '@ynput/ayon-react-components'
 import {
   closestCenter,
@@ -77,7 +78,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   const navigate = useNavigate()
   const access = useNavAccess()
   const { toggleMenuOpen } = useMenuContext()
-  const railRef = useRef<HTMLElement>(null)
+  const railRef = useRef<HTMLDivElement>(null)
   const moreAnchorRef = useRef<HTMLSpanElement>(null)
 
   // every item the user can open and the layout's dividers, where it puts them: the ones it hides
@@ -298,8 +299,6 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
 
   return (
     <Styled.Rail
-      aria-label="Sidebar"
-      data-nav-rail
       ref={railRef}
       className={editing ? 'editing' : undefined}
       onContextMenu={onContextMenu}
@@ -403,9 +402,10 @@ const StudioRail = () => {
 }
 
 /**
- * The sidebar: the current context's places (a project's, or Home's), the selected one owning
- * the tab row, and the admin area at the bottom. Every signed-in user but guests, who only get
- * shared pages: the items follow what the user's exposure level shows.
+ * The sidebar: Home, then the current context's places (a project's, or Home's), the selected one
+ * owning the tab row, and the admin area at the bottom. Home stays put across contexts, outside
+ * their rails. Every signed-in user but guests, who only get shared pages: the items follow what
+ * the user's exposure level shows.
  */
 export const NavRail = () => {
   const { pathname } = useLocation()
@@ -413,8 +413,27 @@ export const NavRail = () => {
   if (user.data?.isGuest) return null
 
   const projectName = pathname.match(PROJECT_PATH)?.[1]
-  if (projectName) return <ProjectRail projectName={decodeURIComponent(projectName)} />
-  return <StudioRail />
+  return (
+    <Styled.Column aria-label="Sidebar" data-nav-rail>
+      {/* Home is the context of every page outside a project */}
+      <Styled.HomeItem
+        to="/dashboard/tasks"
+        id="home-button"
+        className={clsx({ here: !projectName })}
+        data-tooltip="Home"
+        data-tooltip-position="right"
+      >
+        <Icon icon="home" />
+        <Styled.Label>Home</Styled.Label>
+      </Styled.HomeItem>
+      <Styled.Divider />
+      {projectName ? (
+        <ProjectRail projectName={decodeURIComponent(projectName)} />
+      ) : (
+        <StudioRail />
+      )}
+    </Styled.Column>
+  )
 }
 
 export default NavRail

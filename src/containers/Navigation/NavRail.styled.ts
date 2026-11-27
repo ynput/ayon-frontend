@@ -7,20 +7,37 @@ import { Icon } from '@ynput/ayon-react-components'
 export const RAIL_WIDTH = 72
 // the buttons keep clear of the page's edge
 const ITEM_WIDTH = RAIL_WIDTH - 8
-// none on top: the first button lines up with the page's top edge
+// none on top: Home and its divider are above the places
 export const RAIL_PADDING_BOTTOM = 8
 
-export const Rail = styled.nav`
+// the sidebar: a sheet beside the page, from the window's top (inset as far as the top bar's
+// padding), with Home at its top and the context's places below
+export const Column = styled.nav`
   flex: 0 0 ${RAIL_WIDTH}px;
   width: ${RAIL_WIDTH}px;
+  min-height: 0;
+  margin: 6px 0 6px 6px;
+  /* Home's top level with the path's */
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-radius: var(--border-radius-xxl);
+  background-color: var(--md-sys-color-background);
+  overflow: hidden;
+`
+
+// the context's places, below Home
+export const Rail = styled.div`
+  flex: 1;
+  min-height: 0;
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 2px;
   padding: 0 4px ${RAIL_PADDING_BOTTOM}px;
   overflow: hidden;
-  /* with the top bar, the frame round the page */
-  background-color: var(--md-sys-color-surface-container-low);
 
   /* editing the layout: every item shows, nothing folds into More */
   &.editing {
@@ -200,27 +217,19 @@ export const Item = styled(Link)`
   }
 `
 
-// Home, in the top bar above the sidebar (AppHeader): the root of the path, as tall as the bar's
-// buttons, in line with the sidebar's buttons. Tinted while it is the context you are in
+// Home, at the sidebar's top above the context's places, in both: the root of the path, which
+// goes on in the top bar
 export const HomeItem = styled(Link)`
   ${itemStyles}
-  min-height: 40px;
-  height: 40px;
-  padding-top: 0;
-  padding-bottom: 0;
-  gap: 1px;
-  /* the bar's padding (6px) is the sidebar's (4px) and 2px */
-  margin-left: -2px;
+  flex-shrink: 0;
 
+  /* at Home: the context, not a place in it (one below is selected), so no fill, only its icon */
   &.here {
-    background-color: var(--md-sys-color-primary-container);
-    color: var(--md-sys-color-on-primary-container);
+    color: var(--md-sys-color-on-surface);
 
     .icon {
+      color: var(--md-sys-color-primary);
       font-variation-settings: 'FILL' 1;
-    }
-    &:hover {
-      background-color: var(--md-sys-color-primary-container-hover);
     }
   }
 `

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, MouseEvent } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
@@ -21,7 +21,6 @@ import AddonHeaderItems from './AddonHeaderItems'
 import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
 import StudioBrand from './StudioBrand'
 import { Icon } from '@ynput/ayon-react-components'
-import * as RailStyled from '@containers/Navigation/NavRail.styled'
 
 const Side = styled.div`
   flex: 1 1 0;
@@ -64,12 +63,37 @@ const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
 
-// between Home and the project: the project is inside Home, the path goes on from it
-const PathChevron = styled(Icon)`
+// Home leading the path where there's no sidebar to head (guests, an addon's own route; hidden
+// beside the sidebar, index.scss): in the path's style, then the chevron into the project
+const HeaderHome = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 2px;
   flex-shrink: 0;
-  margin: 0 -4px;
-  font-size: 20px;
-  color: var(--md-sys-color-on-surface-variant);
+
+  a {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 32px;
+    padding: 0 12px 0 10px;
+    border-radius: var(--border-radius-m);
+    background-color: var(--md-sys-color-surface-container-highest);
+    color: var(--md-sys-color-on-surface);
+    text-decoration: none;
+    font-size: 14px;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest-hover);
+    }
+    .icon {
+      font-size: 18px;
+    }
+  }
+  & > .icon {
+    font-size: 20px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
 `
 
 const Header: React.FC = () => {
@@ -138,19 +162,15 @@ const Header: React.FC = () => {
             : undefined
         }
       >
-        {/* Home is the context of every page outside a project, tinted while you are in it */}
-        <RailStyled.HomeItem
-          to="/dashboard/tasks"
-          id="home-button"
-          className={clsx({ here: !location.pathname.startsWith('/projects/') })}
-        >
-          <Icon icon="home" />
-          <RailStyled.Label>Home</RailStyled.Label>
-        </RailStyled.HomeItem>
+        <HeaderHome className="header-home">
+          <Link to="/dashboard/tasks">
+            <Icon icon="home" />
+            Home
+          </Link>
+          <Icon icon="chevron_right" />
+        </HeaderHome>
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
-
-        <PathChevron icon="chevron_right" />
 
         {/* the project name opens the project switcher */}
         <Breadcrumbs
