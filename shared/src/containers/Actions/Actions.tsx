@@ -66,6 +66,7 @@ export const Actions = ({
       return {
         entityType: 'project',
         projectName: projectActionsProjectName,
+        clientType: 'web',
       }
     }
     if (!entities.length) return null
@@ -95,6 +96,7 @@ export const Actions = ({
       entityType: entityType,
       entityIds: entities.map((entity) => entity.id),
       entitySubtypes: entitySubTypesToUse,
+      clientType: 'web',
     }
   }, [entities, entityType, entitySubTypes, projectActionsProjectName])
 

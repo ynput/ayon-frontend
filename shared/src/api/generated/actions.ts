@@ -275,6 +275,8 @@ export type ActionContext = {
   entitySubtypes?: string[] | null
   /** The IDs of the entities */
   entityIds?: string[] | null
+  /** The type of the client that lists or runs the actions: 'web' for the AYON web frontend, 'desktop' for desktop tools such as the launcher. It is a hint set by the client, not verified by the server. None when the client does not send it. */
+  clientType?: ('web' | 'desktop') | null
   /** The data from the form */
   formData?: {
     [key: string]: any
@@ -300,6 +302,8 @@ export type ActionConfig = {
   entitySubtypes?: string[] | null
   /** The IDs of the entities */
   entityIds?: string[] | null
+  /** The type of the client that lists or runs the actions: 'web' for the AYON web frontend, 'desktop' for desktop tools such as the launcher. It is a hint set by the client, not verified by the server. None when the client does not send it. */
+  clientType?: ('web' | 'desktop') | null
   /** The data from the form */
   formData?: {
     [key: string]: any
