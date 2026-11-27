@@ -6,10 +6,11 @@ other page). Its sidebar lists places; the selected place owns the tab row.
 The top bar shows the context as a path (Milan, 2026-11-26): Home › project › entity. Home is a
 sidebar-style button (`HomeItem`) in the top bar, in line with the sidebar's buttons, so the sidebar
 reads as starting at the top; it lives in the header so pages without a sidebar keep it. Outside
-a project Home is tinted. Inside one the context pill leads with the project's thumbnail (its icon
-when it has none, the pill's height but a 2px rim) and isn't tinted: a tinted pill was too loud
-once a path followed the project. The pill's edit and copy buttons show only while you point at it
-(or tab to them); they keep their room when hidden, so showing them never folds the path again.
+a project Home is tinted. Inside one the context pill leads with the project's thumbnail (the
+pill's height but a 2px rim; without one, a placeholder with the project icon, as on the Projects
+page) and isn't tinted: a tinted pill was too loud once a path followed the project. The pill's
+edit and copy buttons show only while you point at it (or tab to them); they keep their room when
+hidden, so showing them never folds the path again.
 
 ## How it fits together
 

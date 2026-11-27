@@ -8,6 +8,7 @@ import { copyToClipboard, parseUri } from '@shared/util'
 import { URL_PARAM_ID, useURIContext } from '@shared/context'
 import { useGetProjectQuery } from '@shared/api'
 import { Module, ModulePath } from '@pages/ProjectManagerPage/mappers'
+import { PROJECT_ICON } from '@pages/ProjectsPage/constants'
 import clsx from 'clsx'
 
 const parseQueryParams = (query: string): Record<string, string> => {
@@ -136,21 +137,26 @@ interface ProjectThumbProps {
   updatedAt?: string
 }
 
-// the project's thumbnail, or the project icon when it has none (the server answers a 1px image);
-// hidden until it has loaded, so an empty one never shows
+// the project's thumbnail, or a placeholder with the project icon when it has none (the server
+// answers a 1px image); the image is hidden until it has loaded, so an empty one never shows
 const ProjectThumb = ({ projectName, updatedAt }: ProjectThumbProps) => {
   const [state, setState] = useState<'loading' | 'shown' | 'empty'>('loading')
-  if (state === 'empty') return <Icon icon="category" />
   return (
-    <Styled.Thumb
-      src={`/api/projects/${encodeURIComponent(projectName)}/thumbnail${
-        updatedAt ? `?updatedAt=${encodeURIComponent(updatedAt)}` : ''
-      }`}
-      alt=""
-      className={state}
-      onLoad={(e) => setState(e.currentTarget.naturalWidth <= 1 ? 'empty' : 'shown')}
-      onError={() => setState('empty')}
-    />
+    <Styled.Thumb>
+      {state === 'empty' ? (
+        <Icon icon={PROJECT_ICON} />
+      ) : (
+        <img
+          src={`/api/projects/${encodeURIComponent(projectName)}/thumbnail${
+            updatedAt ? `?updatedAt=${encodeURIComponent(updatedAt)}` : ''
+          }`}
+          alt=""
+          className={state}
+          onLoad={(e) => setState(e.currentTarget.naturalWidth <= 1 ? 'empty' : 'shown')}
+          onError={() => setState('empty')}
+        />
+      )}
+    </Styled.Thumb>
   )
 }
 
@@ -258,7 +264,7 @@ const Breadcrumbs = ({ onProjectsClick, projectsOpen }: BreadcrumbsProps) => {
               data-tooltip={project ? 'Switch project' : undefined}
               data-tooltip-delay={500}
             >
-              {thumb || <Icon icon="category" />}
+              {thumb || <Icon icon={PROJECT_ICON} />}
               <strong>{project || 'Choose a project'}</strong>
               <Icon icon="expand_more" />
             </Styled.ProjectButton>

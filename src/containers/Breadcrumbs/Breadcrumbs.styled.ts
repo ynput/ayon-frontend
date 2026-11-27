@@ -52,17 +52,30 @@ export const Group = styled.div`
 `
 
 // the project's thumbnail before its name (16:9, as on the Projects page): the pill's height but a
-// thin rim, shown once loaded
-export const Thumb = styled.img`
+// thin rim. Without one, a placeholder with the project icon, as on the Projects page
+export const Thumb = styled.span`
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 50px;
   height: 28px;
   flex-shrink: 0;
-  object-fit: cover;
+  overflow: hidden;
   /* in line with the pill's corners (4px) at the 2px rim */
   border-radius: 2px;
+  background-color: var(--md-sys-color-surface-container-high);
 
-  &.loading {
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  img.loading {
     visibility: hidden;
+  }
+
+  .icon {
+    color: var(--md-sys-color-outline);
   }
 `
 
@@ -102,7 +115,7 @@ export const ProjectButton = styled.button`
   }
 
   /* a thumbnail sits as far in as it is from the pill's top and bottom */
-  &:has(img) {
+  &:has(${Thumb}) {
     padding-left: 2px;
   }
 
