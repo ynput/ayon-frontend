@@ -72,14 +72,14 @@ export const useStudioNavigation = () => {
       section: 'main',
       tabs: [
         {
-          name: 'My tasks',
+          name: 'Tasks', // PROTOTYPE (navigation mix): develop's name
           path: '/dashboard/tasks',
           module: 'tasks',
           accessLevels: [],
           shortcut: 'H+H',
         },
         {
-          name: 'My projects',
+          name: 'Projects', // PROTOTYPE (navigation mix): develop's name
           path: '/dashboard/projects',
           module: 'projects',
           viewType: 'projects-overview',

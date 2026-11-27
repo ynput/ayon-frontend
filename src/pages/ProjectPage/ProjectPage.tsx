@@ -252,7 +252,14 @@ const ProjectPageInner = () => {
   }, [addonsLoading, addonsIsError, addonsData, projectName, dispatch])
 
   // the tab row belongs to the selected sidebar item (Production on an unknown path)
-  const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  // PROTOTYPE (navigation mix): one tab row for the whole context, as on develop: every item's
+  // tabs, in the registry's order (the sidebar lists the same pages); the selected item still
+  // keys the layout and the pins
+  const selectedItem = findActiveItem(navItems, pathname) ?? navItems[0]
+  const activeItem = useMemo(
+    () => ({ ...selectedItem, tabs: navItems.flatMap((item) => item.tabs) }),
+    [selectedItem, navItems],
+  )
   // the layout that applies: the tab row's order and what it hides
   const { layout: navLayout, editing } = useNavLayout('project', projectName)
   // while the layout is edited, its hidden tabs show too (dimmed)

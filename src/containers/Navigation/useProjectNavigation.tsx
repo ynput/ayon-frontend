@@ -137,8 +137,8 @@ export const useProjectNavigation = (projectName: string) => {
       section: 'main',
       tabs: [
         {
-          // the Overview page: what it shows, as the item is called Overview
-          name: 'Folders & tasks',
+          // PROTOTYPE (navigation mix): named as on develop
+          name: 'Overview',
           path: path('overview'),
           module: 'overview',
           viewType: 'overview',

@@ -319,11 +319,22 @@ const ProjectMenu = ({ isOpen, onHide }) => {
   const anchor = document.getElementById('context-pill')?.getBoundingClientRect()
   const top = (anchor?.bottom ?? 48) + 4
   const width = Math.min(380, window.innerWidth - 16)
-  const style = {
+  let style = {
     left: Math.max(8, Math.min(anchor?.left ?? 8, window.innerWidth - width - 8)),
     top,
     width,
     height: `min(640px, calc(100vh - ${top + 16}px))`,
+  }
+  // PROTOTYPE (navigation mix): beside the sidebar's Project group when it is there
+  const group = document.querySelector('[data-project-menu-anchor]')?.getBoundingClientRect()
+  if (group) {
+    const groupTop = Math.max(8, Math.min(group.top, window.innerHeight - 320))
+    style = {
+      left: group.right + 4,
+      top: groupTop,
+      width,
+      height: `min(640px, calc(100vh - ${groupTop + 16}px))`,
+    }
   }
 
   return (

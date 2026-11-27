@@ -1,5 +1,6 @@
 import UserMenuHeader from './UserMenuHeader'
 import ThemeSwitcher from './ThemeSwitcher'
+import SidebarSwitcher from './SidebarSwitcher'
 import { Menu } from '@shared/components'
 import { useLogoutMutation } from '@queries/auth/logout'
 
@@ -33,6 +34,8 @@ export const UserMenu = ({ user, ...props }) => {
   }
 
   items.push({ id: 'theme', node: <ThemeSwitcher key="theme" /> })
+  // PROTOTYPE (navigation mix)
+  items.push({ id: 'sidebar', node: <SidebarSwitcher key="sidebar" /> })
   items.push({ id: 'divider' })
 
   items.push({

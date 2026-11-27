@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { UserImage } from '@shared/components'
 
 import Breadcrumbs from '../Breadcrumbs/Breadcrumbs'
+import ClassicBreadcrumbs from '../Breadcrumbs/Classic/ClassicBreadcrumbs'
 import { HeaderButton } from '@shared/components'
 import ProjectMenu from '../ProjectMenu/projectMenu'
 import { useAppDispatch, useAppSelector } from '@state/store'
@@ -20,6 +21,9 @@ import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
 import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
 import StudioBrand from './StudioBrand'
+import ClassicAppMenu from '@components/Menu/Menus/ClassicAppMenu'
+import { useRestart } from '@context'
+import { useSidebarPreference } from '@containers/Navigation/useSidebarPreference'
 
 const Side = styled.div`
   flex: 1 1 0;
@@ -62,8 +66,19 @@ const UserButton = styled(HeaderButton)`
   padding: 6px;
 `
 
+// PROTOTYPE (navigation mix): the URI bar, centred on the bar as on develop
+const PrototypeCenter = styled.div`
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(560px, 40vw);
+  display: flex;
+`
+
 // as tall as the context pill beside it
 const HomeButton = styled(HeaderButton)`
+  /* PROTOTYPE (navigation mix): unused */
   height: 32px;
   padding-top: 0;
   padding-bottom: 0;
@@ -83,10 +98,14 @@ const Header: React.FC = () => {
   // BUTTON REFS used to attach menu to buttons
   const helpButtonRef = useRef<HTMLButtonElement>(null)
   const userButtonRef = useRef<HTMLButtonElement>(null)
+  // PROTOTYPE (navigation mix): develop's apps menu, back in the top bar
+  const appsButtonRef = useRef<HTMLButtonElement>(null)
+  const { isSnoozing } = useRestart()
+  const { shown: sidebarShown } = useSidebarPreference()
 
   // the studio brand's width: the left side runs up to it
   const brandRef = useRef<HTMLDivElement>(null)
-  const [brandWidth, setBrandWidth] = useState<number>()
+  const [, setBrandWidth] = useState<number>()
   useEffect(() => {
     if (!brandRef.current) return
     const observer = new ResizeObserver(([entry]) =>
@@ -128,41 +147,42 @@ const Header: React.FC = () => {
 
   return (
     <nav className="primary" onClick={handleNavClick}>
-      <Side
-        style={
-          brandWidth !== undefined
-            ? ({ '--brand-width': `${brandWidth}px` } as CSSProperties)
-            : undefined
-        }
-      >
-        <Link to={'/dashboard/tasks'}>
-          <HomeButton
-            icon="home"
-            label="Home"
-            variant="nav"
-            // Home is the context of every page outside a project
-            className={clsx({ selected: !location.pathname.startsWith('/projects/') })}
-            id="home-button"
-            iconProps={{ filled: true }}
-          />
-        </Link>
+      {/* PROTOTYPE (navigation mix): the studio logo on the left, the URI bar back in the middle
+          without the project switcher (the sidebar's Overview opens it) */}
+      <Side ref={brandRef}>
+        {/* with the sidebar on: the studio logo (Home and the projects are the sidebar's groups);
+            with it off, develop's header: the project list button and Home */}
+        {sidebarShown ? (
+          <StudioBrand />
+        ) : (
+          <>
+            {user.uiExposureLevel >= 500 && (
+              <HeaderButton
+                icon="left_panel_open"
+                variant="nav"
+                onClick={() => handleToggleMenu('project')}
+              />
+            )}
+            <Link to={'/dashboard/tasks'}>
+              <HeaderButton
+                icon="home"
+                label="Home"
+                variant="nav"
+                className={clsx({ selected: location.pathname.startsWith('/dashboard') })}
+                id="home-button"
+                iconProps={{ filled: true }}
+              />
+            </Link>
+          </>
+        )}
 
         {!user.data.isGuest && <AddonHeaderItems placement="left" />}
-
-        {/* the project name opens the project switcher */}
-        <Breadcrumbs
-          onProjectsClick={
-            user.uiExposureLevel >= 500 ? () => handleToggleMenu('project') : undefined
-          }
-          projectsOpen={menuOpen === 'project'}
-        />
 
         <ProjectMenu isOpen={menuOpen === 'project'} onHide={() => handleSetMenu(false)} />
       </Side>
 
-      <Center ref={brandRef}>
-        <StudioBrand />
-      </Center>
+      {/* develop's URI bar, as it was */}
+      <ClassicBreadcrumbs />
 
       <SideEnd id="header-menu-right">
         <InstallerDownloadPrompt />
@@ -191,6 +211,18 @@ const Header: React.FC = () => {
 
             {/* Inbox icon */}
             <InboxNotificationIcon />
+
+            {/* PROTOTYPE (navigation mix): develop's apps menu, as it was */}
+            <HeaderButton
+              icon="apps"
+              onClick={() => handleToggleMenu('apps')}
+              ref={appsButtonRef}
+              variant="nav"
+              className={clsx({ active: menuOpen === 'apps', notification: isSnoozing })}
+            />
+            <MenuContainer id="apps" target={appsButtonRef.current}>
+              <ClassicAppMenu user={user} />
+            </MenuContainer>
           </>
         )}
 
@@ -213,4 +245,9 @@ const Header: React.FC = () => {
   )
 }
 
+void HomeButton
+void Center
+void Breadcrumbs
+void PrototypeCenter
+void (0 as unknown as CSSProperties)
 export default Header

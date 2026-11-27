@@ -32,6 +32,9 @@ import { getViewsPortalId } from '@shared/containers/Views/utils/portalUtils'
 import { LegacyBadge } from '@shared/components'
 import { useMenuContext, useURIContext } from '@shared/context'
 import { Menu, MenuContainer } from '@shared/components'
+import { useCreateContextMenu } from '@shared/containers/ContextMenu'
+import { useSidebarPreference } from '@containers/Navigation/useSidebarPreference'
+import { pinGroupOf, pinIdOf, useSidebarPins } from '@containers/Navigation/sidebarPins'
 
 export interface NavLinkItem {
   name?: string
@@ -103,6 +106,29 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
   const isManager = useSelector((state: any) => state.user.data.isManager)
   const isAdmin = useSelector((state: any) => state.user.data.isAdmin)
   useURIContext()
+
+  // PROTOTYPE (navigation mix): right-click a tab to pin it to the sidebar, or unpin it; the tab
+  // stays in the row either way. Every tab row gets it, addon pages included.
+  const { shown: sidebarShown } = useSidebarPreference()
+  const pins = useSidebarPins()
+  const [showPinMenu] = useCreateContextMenu([])
+  const pinMenuFor = (tab: { name?: string; path?: string; module?: string; pinnedView?: string }) => {
+    if (!sidebarShown || tab.pinnedView || !tab.path) return undefined
+    const group = pinGroupOf(tab.path.split('?')[0])
+    if (!group) return undefined
+    const id = pinIdOf(tab)
+    return (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault()
+      const pinned = pins.isPinned(group, id)
+      showPinMenu(e, [
+        {
+          label: pinned ? 'Unpin from sidebar' : 'Pin to sidebar',
+          icon: 'keep',
+          command: () => pins.toggle(group, id, { name: tab.name, path: tab.path }),
+        },
+      ])
+    }
+  }
 
   const access: Record<string, boolean> = {
     manager: isManager || isAdmin,
@@ -291,6 +317,8 @@ const AppNavLinks: FC<AppNavLinksProps> = ({ links = [], edit }) => {
           'data-shortcut': shortcut,
           'data-tooltip': tooltip,
           'data-tab-index': offset === 0 ? index : undefined,
+          // a tab's own menu (a pinned view's) wins
+          onContextMenu: pinMenuFor({ name, path, module: itemModule, pinnedView }),
           ...props,
           className: clsx(props.className as string | undefined, {
             pinned: !!pinnedView,

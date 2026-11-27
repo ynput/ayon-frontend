@@ -17,6 +17,7 @@ import { CONTEXT_MENU_TARGET_ATTR } from '@shared/containers/ContextMenu/context
 import { useMenuContext } from '@shared/context'
 import { useAppSelector } from '@state/store'
 import {
+  canOpenTab,
   filterNavigation,
   findActiveItem,
   isTabShown,
@@ -40,6 +41,13 @@ import {
 import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
 import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
 import AdminDock from './AdminDock'
+import { GroupHeader } from './GroupHeader'
+import { useGetInboxHasUnreadQuery } from '@queries/inbox/getInbox'
+import { UserMenu } from '@components/Menu'
+import { UserImage } from '@shared/components'
+import { useSidebarPreference } from './useSidebarPreference'
+import { pinIdOf, useSidebarPins } from './sidebarPins'
+import { useProjectSelectDispatcher } from '@containers/ProjectMenu/hooks/useProjectSelectDispatcher'
 import RailItem from './RailItem'
 import SortableEntry from './SortableEntry'
 import * as Styled from './NavRail.styled'
@@ -402,6 +410,424 @@ const StudioRail = () => {
   )
 }
 
+// PROTOTYPE (navigation mix): the sidebar as two groups, Home (Home's places) and Overview (the
+// open project's places), each expanding in place, and the admin area at the bottom. The open
+// context's group starts expanded; Overview without an open project opens the project switcher.
+// No layouts and no folding into More here: it's for comparing the structure only.
+// PROTOTYPE (navigation mix): a group lists its context's pages, the same as the context's tab row
+// (every item's tabs, in the registry's order): the group a page is in is its scope
+const TAB_ICONS: Record<string, string> = {
+  overview: 'table_rows',
+  tasks: 'checklist',
+  browser: 'folder_open',
+  products: 'layers',
+  lists: 'list',
+  projects: 'folder',
+}
+
+const pathOf = (path: string) => path.split('?')[0]
+
+const useGroupItems = (items: NavItem[]) => {
+  const access = useNavAccess()
+  const shown = filterNavigation(items, access)
+  // one entry per page the user can open (pinned views stay tabs only)
+  const pages: NavItem[] = shown.flatMap((item) =>
+    item.tabs
+      .filter((tab) => !tab.pinnedView && tab.path && canOpenTab(tab, access))
+      .map((tab) => ({
+        ...item,
+        id: `${item.id}:${tab.module ?? tab.path}`,
+        label: tab.name ?? item.label,
+        icon: (tab.module && TAB_ICONS[tab.module]) || item.icon,
+        tabs: [tab],
+        landing: undefined,
+        match: undefined,
+      })),
+  )
+  return { shown: pages, access }
+}
+
+const GroupItems = ({ shown }: { shown: NavItem[]; access?: ReturnType<typeof useNavAccess> }) => {
+  const { pathname } = useLocation()
+  // the page open: the longest tab path the URL is under
+  const active = shown
+    .filter((page) => {
+      const path = pathOf(page.tabs[0].path!)
+      return pathname === path || pathname.startsWith(`${path}/`)
+    })
+    .sort((a, b) => pathOf(b.tabs[0].path!).length - pathOf(a.tabs[0].path!).length)[0]
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        padding: '2px 0',
+        borderRadius: 'var(--border-radius-l)',
+        background: 'var(--md-sys-color-surface-container)',
+      }}
+    >
+      {shown.map((page) => (
+        <RailItem
+          key={page.id}
+          item={page}
+          to={page.tabs[0].path!}
+          isActive={page.id === active?.id}
+        />
+      ))}
+    </div>
+  )
+}
+
+interface GroupProps {
+  expanded: boolean
+  current: boolean
+  setExpanded: (expanded: boolean) => void
+}
+
+const HomeGroup = ({ expanded, current, setExpanded }: GroupProps) => {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const { items } = useStudioNavigation()
+  const { shown: allPages, access } = useGroupItems(items)
+  const pins = useSidebarPins()
+  // the pages pinned to the sidebar (all, unless unpinned from the tab row)
+  const shown = allPages.filter((page) => pins.isPinned('home', pinIdOf(page.tabs[0])))
+  // highlighted on Home's own pages only, not on settings or the admin pages
+  const onHomePage = current && !!findActiveItem(allPages, pathname)
+  // nothing pinned: a plain button to Home's preferred page, Tasks
+  if (!shown.length)
+    return (
+      <GroupHeader
+        icon="home"
+        label="Home"
+        expanded={false}
+        current={onHomePage}
+        onClick={() => navigate('/dashboard/tasks')}
+      />
+    )
+  return (
+    <>
+      <GroupHeader
+        icon="home"
+        label="Home"
+        expanded={expanded}
+        current={onHomePage}
+        onClick={() => setExpanded(!expanded)}
+        onToggle={() => setExpanded(!expanded)}
+      />
+      {expanded && <GroupItems shown={shown} access={access} />}
+    </>
+  )
+}
+// PROTOTYPE (navigation mix): opens the project switcher from a sidebar group. It opens after the
+// click: the switcher closes on a click outside it, which would be this one. A click while it is
+// open only closes it (its own outside click does that).
+const useProjectSwitcher = () => {
+  const { menuOpen, setMenuOpen } = useMenuContext()
+  const wasOpen = useRef(false)
+  return {
+    onMouseDown: () => {
+      wasOpen.current = menuOpen === 'project'
+    },
+    open: () => {
+      if (wasOpen.current) return
+      setTimeout(() => setMenuOpen('project'), 0)
+    },
+  }
+}
+
+const ProjectGroup = ({
+  projectName,
+  expanded,
+  current,
+  setExpanded,
+}: GroupProps & { projectName: string }) => {
+  const switcher = useProjectSwitcher()
+  const navigate = useNavigate()
+  const [selectProject] = useProjectSelectDispatcher()
+  const { items } = useProjectNavigation(projectName)
+  const { shown: allPages, access } = useGroupItems(items)
+  const pins = useSidebarPins()
+  // the pages pinned to the sidebar (all, unless unpinned from the tab row)
+  const shown = allPages.filter((page) => pins.isPinned('project', pinIdOf(page.tabs[0])))
+  // nothing pinned: a plain button to the project's preferred page, Overview
+  const openOverview = () => {
+    if (!current) selectProject(projectName)
+    navigate(`/projects/${encodeURIComponent(projectName)}/overview`)
+  }
+  return (
+    <>
+      <GroupHeader
+        icon="deployed_code"
+        label={projectName}
+        hint={`${projectName} (right-click to switch project)`}
+        expanded={expanded && !!shown.length}
+        current={current}
+        projectAnchor
+        onClick={shown.length ? () => setExpanded(!expanded) : openOverview}
+        onToggle={shown.length ? () => setExpanded(!expanded) : undefined}
+        onMouseDown={switcher.onMouseDown}
+        onContextMenu={switcher.open}
+      />
+      {expanded && !!shown.length && <GroupItems shown={shown} access={access} />}
+    </>
+  )
+}
+
+// PROTOTYPE (navigation mix): the last project opened, kept on the sidebar until another one is
+const LAST_PROJECT_KEY = 'nav-last-project'
+const useLastProject = (projectName?: string) => {
+  const [last, setLast] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(LAST_PROJECT_KEY)
+    } catch {
+      return null
+    }
+  })
+  useEffect(() => {
+    if (!projectName) return
+    setLast(projectName)
+    try {
+      localStorage.setItem(LAST_PROJECT_KEY, projectName)
+    } catch {
+      // not remembered across reloads then
+    }
+  }, [projectName])
+  return projectName || last
+}
+
+// PROTOTYPE (navigation mix): the personal groups above the admin area, Inbox and Account, by the
+// same pin rule: a group with no pinned pages is a button to its first page
+const PERSONAL_GROUPS = {
+  inbox: {
+    label: 'Inbox',
+    icon: 'inbox',
+    pages: [
+      { id: 'important', name: 'Important', path: '/inbox/important', icon: 'priority_high' },
+      { id: 'other', name: 'Other', path: '/inbox/other', icon: 'mail' },
+      { id: 'cleared', name: 'Cleared', path: '/inbox/cleared', icon: 'done_all' },
+    ],
+  },
+  account: {
+    label: 'Account',
+    icon: 'account_circle',
+    pages: [
+      { id: 'profile', name: 'Profile', path: '/account/profile', icon: 'person' },
+      { id: 'sessions', name: 'Sessions', path: '/account/sessions', icon: 'devices' },
+      { id: 'downloads', name: 'Launchers', path: '/account/downloads', icon: 'download' },
+    ],
+  },
+} as const
+
+const PersonalGroup = ({
+  group,
+  expanded,
+  setExpanded,
+}: {
+  group: keyof typeof PERSONAL_GROUPS
+  expanded: boolean
+  setExpanded: (expanded: boolean) => void
+}) => {
+  const { pathname } = useLocation()
+  const navigate = useNavigate()
+  const pins = useSidebarPins()
+  const { label, icon, pages } = PERSONAL_GROUPS[group]
+  const shown = pages.filter((page) => pins.isPinned(group, page.id))
+  const current = pathname.startsWith(`/${group}`)
+  // Inbox: the header icon's unread dot; Account: right-click opens the user menu, as the avatar
+  const { data: hasUnread } = useGetInboxHasUnreadQuery({}, { skip: group !== 'inbox' })
+  const user = useAppSelector((state) => state.user)
+  const { menuOpen, setMenuOpen } = useMenuContext()
+  const menuId = 'rail-user-menu'
+  const anchorRef = useRef<HTMLSpanElement>(null)
+  const openUserMenu =
+    group === 'account'
+      ? () => setTimeout(() => setMenuOpen(menuOpen === menuId ? false : menuId), 0)
+      : undefined
+  const isOn = (path: string) => pathname === path || pathname.startsWith(`${path}/`)
+  return (
+    <>
+      <GroupHeader
+        icon={icon}
+        label={label}
+        className="compact"
+        expanded={expanded && !!shown.length}
+        current={current}
+        onClick={shown.length ? () => setExpanded(!expanded) : () => navigate(pages[0].path)}
+        onToggle={shown.length ? () => setExpanded(!expanded) : undefined}
+        dot={group === 'inbox' && !!hasUnread}
+        // Account: the user's picture, as on the avatar at the top right
+        iconNode={
+          group === 'account' ? (
+            <UserImage size={22} name={user?.name} imageKey={user?.avatarKey} />
+          ) : undefined
+        }
+        onContextMenu={openUserMenu}
+        menuAnchor={group === 'account' ? anchorRef : undefined}
+        hint={group === 'account' ? 'Account (right-click for the user menu)' : undefined}
+      />
+      {group === 'account' && (
+        <MenuContainer id={menuId} target={anchorRef.current} align="left">
+          <UserMenu user={user} />
+        </MenuContainer>
+      )}
+      {expanded && !!shown.length && (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 2,
+            padding: '2px 0',
+            borderRadius: 'var(--border-radius-l)',
+            background: 'var(--md-sys-color-surface-container)',
+          }}
+        >
+          {shown.map((page) => (
+            <RailItem
+              key={page.id}
+              item={{ id: `${group}:${page.id}`, label: page.name, icon: page.icon, section: 'other', tabs: [] }}
+              to={page.path}
+              isActive={isOn(page.path)}
+              compact
+            />
+          ))}
+        </div>
+      )}
+    </>
+  )
+}
+
+const GroupedRail = ({ projectName }: { projectName?: string }) => {
+  const switcher = useProjectSwitcher()
+  const context = projectName ? 'project' : 'studio'
+  // one group expanded at a time (or none)
+  const [open, setOpen] = useState<
+    'studio' | 'project' | 'api' | 'inbox' | 'account' | null
+  >(context)
+  // every page change, also from a shortcut or a link, opens the group that holds the page and
+  // closes the others; a page no group holds (settings, the admin pages) closes them all
+  const { pathname } = useLocation()
+  const access = useNavAccess()
+  const { items: homeItems } = useStudioNavigation()
+  const onHomePage = !projectName && !!findActiveItem(filterNavigation(homeItems, access), pathname)
+  const onApiPage = ['/explorer', '/doc/api'].some((path) => pathname.startsWith(path))
+  useEffect(() => {
+    setOpen(
+      projectName
+        ? 'project'
+        : onHomePage
+        ? 'studio'
+        : onApiPage
+        ? 'api'
+        : pathname.startsWith('/inbox')
+        ? 'inbox'
+        : pathname.startsWith('/account')
+        ? 'account'
+        : null,
+    )
+    // only when the page changes, not when the user opens or closes a group
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, projectName])
+  const expanded = { studio: open === 'studio', project: open === 'project' }
+
+  const shownProject = useLastProject(projectName)
+
+  // PROTOTYPE (navigation mix): which edges have more to scroll to
+  const railRef = useRef<HTMLElement>(null)
+  const [fades, setFades] = useState({ top: false, bottom: false })
+  const updateFades = () => {
+    const rail = railRef.current
+    if (!rail) return
+    const top = rail.scrollTop > 1
+    const bottom = rail.scrollTop + rail.clientHeight < rail.scrollHeight - 1
+    if (top !== fades.top || bottom !== fades.bottom) setFades({ top, bottom })
+  }
+  // after every render (a group opened or closed) and when the window resizes
+  useLayoutEffect(updateFades)
+  useEffect(() => {
+    window.addEventListener('resize', updateFades)
+    return () => window.removeEventListener('resize', updateFades)
+  })
+  const fadeMask =
+    fades.top || fades.bottom
+      ? `linear-gradient(to bottom, ${fades.top ? 'transparent 0, black 32px' : 'black 0'}, ${
+          fades.bottom ? 'black calc(100% - 32px), transparent 100%' : 'black 100%'
+        })`
+      : undefined
+
+  const setGroup = (group: 'studio' | 'project') => (value: boolean) =>
+    setOpen(value ? group : null)
+
+  return (
+    <Styled.Rail
+      aria-label="Sidebar"
+      data-nav-rail
+      ref={railRef}
+      onScroll={updateFades}
+      // scrolls when the groups are taller than the window, without a scrollbar taking the width;
+      // an edge that has more beyond it fades out instead
+      style={{
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        scrollbarWidth: 'none',
+        // room under the header, as much as the panes have (8px)
+        paddingTop: 8,
+        maskImage: fadeMask,
+        WebkitMaskImage: fadeMask,
+      }}
+    >
+      <HomeGroup
+        expanded={expanded.studio}
+        current={context === 'studio'}
+        setExpanded={setGroup('studio')}
+      />
+      <Styled.Divider />
+      {shownProject ? (
+        <ProjectGroup
+          projectName={shownProject}
+          expanded={expanded.project}
+          current={!!projectName}
+          setExpanded={setGroup('project')}
+        />
+      ) : (
+        // no project opened yet: Project opens the project switcher
+        <GroupHeader
+          icon="deployed_code"
+          label="Project"
+          hint="Open a project"
+          expanded={false}
+          current={false}
+          projectAnchor
+          onMouseDown={switcher.onMouseDown}
+          onClick={switcher.open}
+          onContextMenu={switcher.open}
+        />
+      )}
+      <Styled.Spacer />
+      {/* PROTOTYPE (navigation mix): personal: Inbox and Account, above the admin area */}
+      <PersonalGroup
+        group="inbox"
+        expanded={open === 'inbox'}
+        setExpanded={(value) => setOpen(value ? 'inbox' : null)}
+      />
+      <PersonalGroup
+        group="account"
+        expanded={open === 'account'}
+        setExpanded={(value) => setOpen(value ? 'account' : null)}
+      />
+      <AdminDock
+        projectName={projectName}
+        apiExpanded={open === 'api'}
+        // API is one of the groups: opening it closes Home or the project; closing it opens none
+        setApiExpanded={(value) =>
+          setOpen((prev) => (value ? 'api' : prev === 'api' ? null : prev))
+        }
+      />
+    </Styled.Rail>
+  )
+}
+
 /**
  * The sidebar: the current context's places (a project's, or Home's), the selected one owning
  * the tab row, and the admin area at the bottom. Every signed-in user but guests, who only get
@@ -410,11 +836,16 @@ const StudioRail = () => {
 export const NavRail = () => {
   const { pathname } = useLocation()
   const user = useAppSelector((state) => state.user)
-  if (user.data?.isGuest) return null
+  // PROTOTYPE (navigation mix): the studio default, or the user's choice, can turn it off
+  const { shown } = useSidebarPreference()
+  if (user.data?.isGuest || !shown) return null
 
   const projectName = pathname.match(PROJECT_PATH)?.[1]
-  if (projectName) return <ProjectRail projectName={decodeURIComponent(projectName)} />
-  return <StudioRail />
+  // PROTOTYPE (navigation mix): the grouped sidebar instead of one context's
+  return <GroupedRail projectName={projectName ? decodeURIComponent(projectName) : undefined} />
 }
+// the single-context sidebars, kept for switching back
+void ProjectRail
+void StudioRail
 
 export default NavRail
