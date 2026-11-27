@@ -27,8 +27,8 @@ import {
   useNavAccess,
 } from './filterNavigation'
 import { useAdminNavigation } from './useSettingsNavigation'
-import { reorderPromoted, togglePromoted } from './layouts/applyLayout'
-import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
+import { swallowNextClick } from './arrange'
+import type { NavArrangementEdit } from './NavArrangement'
 import RailItem from './RailItem'
 import SortableEntry from './SortableEntry'
 import type { NavItem, NavLayout } from './types'
@@ -40,8 +40,8 @@ const MOVE_LABELS = { show: 'Move to the sidebar', hide: 'Move to the Admin menu
 interface AdminDockProps {
   projectName?: string
   layout?: NavLayout
-  /** the layout is edited: every admin page shows, the Admin menu's dimmed, with an eye */
-  editing?: boolean
+  /** the arrangement is edited: every admin page shows, the Admin menu's dimmed, with an eye */
+  edit?: NavArrangementEdit
   /**
    * the height the area may take (what the sidebar's items leave): the pages that don't fit go
    * into the Admin menu, from the bottom; Infinity or not set: all stay
@@ -55,7 +55,8 @@ interface AdminDockProps {
  * admin pages and the server's actions, the top bar's old apps menu. The menu's id is the one the
  * /appMenu redirect (after signing in to Ynput Cloud) opens.
  */
-const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDockProps) => {
+const AdminDock = ({ projectName, layout, edit, space = Infinity }: AdminDockProps) => {
+  const editing = !!edit
   const { pathname } = useLocation()
   const access = useNavAccess()
   const user = useAppSelector((state) => state.user)
@@ -133,7 +134,7 @@ const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDock
             ? {
                 hidden: menuPage,
                 dimmed: menuPage,
-                toggle: () => changeDraft((draft) => togglePromoted(draft, item.id)),
+                toggle: () => edit?.togglePromoted(item.id),
                 labels: MOVE_LABELS,
               }
             : undefined
@@ -148,7 +149,7 @@ const AdminDock = ({ projectName, layout, editing, space = Infinity }: AdminDock
     swallowNextClick()
     const id = String(dragItem.id)
     const overId = over && String(over.id)
-    if (overId && overId !== id) changeDraft((draft) => reorderPromoted(draft, id, overId))
+    if (overId && overId !== id) edit?.movePromoted(id, overId)
   }
 
   return (

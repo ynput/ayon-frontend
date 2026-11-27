@@ -1,7 +1,7 @@
 import { useSelector } from 'react-redux'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
 import { NAV_SECTIONS, type NavAccess, type NavItem, type NavLayout } from './types'
-import { arrangeTabs, promotedIds } from './layouts/applyLayout'
+import { arrangeTabs, promotedIds } from './arrange'
 
 /** The access levels tabs check, as the tab row computes them. */
 export const useNavAccess = (): NavAccess => {

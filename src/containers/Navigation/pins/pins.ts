@@ -1,47 +1,7 @@
 import type { ViewListItemModel } from '@shared/api'
 import type { NavLinkItem } from '@containers/header/AppNavLinks'
-import type { PinnableView, ViewSettings } from '@shared/containers/Views'
-import { PINNED_PAGES, isPinnableViewType, type LayoutSettings, type PinnedView } from './types'
-
-/** A layout's pinned views. */
-export const getPins = (layout?: LayoutSettings): PinnedView[] => layout?.project?.pinned ?? []
-
-/** The layout with other pinned views. */
-export const withPins = (
-  layout: LayoutSettings | undefined,
-  pinned: PinnedView[],
-): LayoutSettings => ({
-  ...layout,
-  version: 1,
-  project: { ...layout?.project, pinned },
-})
-
-/** Pins the view at the end, or unpins it when it is pinned. */
-export const togglePin = (
-  pins: PinnedView[],
-  view: PinnableView,
-  projectName?: string,
-): PinnedView[] => {
-  if (pins.some((pin) => pin.id === view.id)) return pins.filter((pin) => pin.id !== view.id)
-  if (!isPinnableViewType(view.viewType)) return pins
-  const scope = view.scope ?? 'studio'
-  return [
-    ...pins,
-    {
-      id: view.id,
-      viewType: view.viewType,
-      scope,
-      ...(scope === 'project' && projectName ? { projectName } : {}),
-    },
-  ]
-}
-
-export const renamePin = (pins: PinnedView[], id: string, label: string): PinnedView[] =>
-  pins.map((pin) => (pin.id === id ? { ...pin, label: label.trim() || undefined } : pin))
-
-/** Points a pin at another view (after "Save as new view"), in the same place. */
-export const repointPin = (pins: PinnedView[], id: string, view: PinnedView): PinnedView[] =>
-  pins.map((pin) => (pin.id === id ? view : pin))
+import type { ViewSettings } from '@shared/containers/Views'
+import { PINNED_PAGES, type PinnedView } from './types'
 
 export interface VisiblePin {
   pin: PinnedView

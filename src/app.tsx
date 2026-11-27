@@ -31,7 +31,7 @@ import Favicon from '@components/Favicon/Favicon'
 import { ConfirmDialog } from 'primereact/confirmdialog'
 import { toast } from 'react-toastify'
 import TrialBanner from '@components/TrialBanner/TrialBanner'
-import LayoutEditPanel from '@containers/Navigation/layouts/LayoutEditPanel'
+import { NavArrangementHost } from '@containers/Navigation/NavArrangement'
 
 // context
 import {
@@ -298,16 +298,17 @@ const App = () => {
                                                     <FileUploadPreviewContainer />
                                                     <ReleaseInstallerDialog />
                                                     <CompleteProfilePrompt />
-                                                    <div className="app-body">
-                                                      <NavRail />
-                                                      <div className="app-main">
-                                                        <Header />
-                                                        <div className="app-page">
-                                                          <AppRoutes />
+                                                    <NavArrangementHost>
+                                                      <div className="app-body">
+                                                        <NavRail />
+                                                        <div className="app-main">
+                                                          <Header />
+                                                          <div className="app-page">
+                                                            <AppRoutes />
+                                                          </div>
                                                         </div>
                                                       </div>
-                                                    </div>
-                                                    <LayoutEditPanel />
+                                                    </NavArrangementHost>
                                                     <DetailsPanelFloating />
                                                     <EntityLinksSlot />
                                                     <PowerpackDialog />

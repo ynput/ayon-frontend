@@ -18,7 +18,7 @@ import ReleaseInstallerPrompt from '@containers/ReleaseInstallerDialog/ReleaseIn
 import ChatBubbleButton from './ChatBubbleButton'
 import BundleModeSelector from './BundleMode/BundleMode'
 import AddonHeaderItems from './AddonHeaderItems'
-import LayoutMenuHost from '@containers/Navigation/layouts/LayoutMenuHost'
+import LayoutMenuHost from '@containers/Navigation/LayoutMenuHost'
 import StudioBrand from './StudioBrand'
 import { Icon } from '@ynput/ayon-react-components'
 

@@ -45,11 +45,10 @@ import {
   PinnedTabEnd,
   PinnedTabMenu,
   type PinnedTabMenuTarget,
-} from '@containers/Navigation/layouts/PinnedViews'
-import { usePinnedViewDrafts } from '@containers/Navigation/layouts/PinnedViewsHelpers'
-import { arrangeTabs, tabId } from '@containers/Navigation/layouts/applyLayout'
-import { useNavLayout } from '@containers/Navigation/layouts/useActiveLayout'
-import { useTabRowEdit } from '@containers/Navigation/layouts/layoutEditor'
+} from '@containers/Navigation/pins/PinnedViews'
+import { usePinnedViewDrafts } from '@containers/Navigation/pins/PinnedViewsHelpers'
+import { arrangeTabs, tabId } from '@containers/Navigation/arrange'
+import { useNavArrangement, useTabRowEdit } from '@containers/Navigation/NavArrangement'
 import { ProjectPageRemote } from '@shared/components'
 import {
   DetailsPanelEntityProvider,
@@ -254,9 +253,10 @@ const ProjectPageInner = () => {
   // the tab row belongs to the selected sidebar item (Production on an unknown path)
   const activeItem = findActiveItem(navItems, pathname) ?? navItems[0]
   // the layout that applies: the tab row's order and what it hides
-  const { layout: navLayout, editing } = useNavLayout('project', projectName)
+  const { layout: navLayout, edit } = useNavArrangement()
+  const editing = !!edit
   // while the layout is edited, its hidden tabs show too (dimmed)
-  const tabEdit = useTabRowEdit('project', activeItem.id)
+  const tabEdit = useTabRowEdit(activeItem.id)
   const access = useNavAccess()
   const arranged = useMemo(
     () => arrangeTabs(activeItem.tabs, navLayout, activeItem.id, editing),
@@ -497,7 +497,7 @@ const ProjectPageInner = () => {
               <PageViews
                 projectName={projectName}
                 viewType={page.viewType}
-                // views open by link only with pinning (the licence): otherwise the page as before
+                // views open by link only where views can be pinned: otherwise the page as before
                 openViewId={pinnedViews.enabled ? openViewId : null}
                 fallbackPath={pathname}
               >

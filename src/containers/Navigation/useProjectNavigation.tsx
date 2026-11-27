@@ -16,9 +16,9 @@ import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { KNOWN_PROJECT_PAGES } from './knownPages'
 import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
-import { usePinnedViews } from './layouts/usePinnedViews'
-import { pinnedViewPath, placePinnedTabs } from './layouts/pins'
-import { PINNED_PAGES, type PinnableViewType } from './layouts/types'
+import { usePinnedViews } from './pins/usePinnedViews'
+import { pinnedViewPath, placePinnedTabs } from './pins/pins'
+import { PINNED_PAGES, type PinnableViewType } from './pins/types'
 
 export const BROWSER_FLAG = 'enable-legacy-version-browser'
 

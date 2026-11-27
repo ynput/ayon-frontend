@@ -9,7 +9,7 @@ import { generateViewId, Views, ViewsProvider, type ViewSettings } from '@shared
 import { useAppDispatch } from '@state/store'
 import LoadingPage from '@pages/LoadingPage'
 import { applyDraft, pinnedViewPath, samePageLink, type VisiblePin } from './pins'
-import { pinTabId } from './applyLayout'
+import { pinTabId } from '../arrange'
 import { isPinnableViewType, PINNED_PAGES, type PinnedView } from './types'
 import {
   UPDATE_ACCESS,

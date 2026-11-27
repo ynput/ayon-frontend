@@ -47,8 +47,8 @@ export interface NavItem {
 export type NavAccess = Record<string, boolean>
 
 /**
- * A layout over the registry: which items show and in what order. Named layouts provide one later;
- * until then every context uses the identity layout.
+ * An arrangement of the registry: which items and tabs show, in what order (`arrange.ts`). An
+ * addon's module hands it over (`NavArrangement`); without one nothing is arranged.
  */
 export interface NavLayout {
   /** item ids not shown */
@@ -65,9 +65,9 @@ export interface NavLayout {
   tabs?: Record<string, { order?: string[]; hidden?: string[] }>
   /**
    * admin item ids shown as items at the sidebar's bottom; the others are in its Admin menu
-   * (`DEFAULT_PROMOTED` in `layouts/applyLayout.ts` when not set)
+   * (`DEFAULT_PROMOTED` in `arrange.ts` when not set)
    */
   promoted?: string[]
-  /** the sidebar shows its items' icons only (`LayoutSettings.iconsOnly`) */
+  /** the sidebar shows its items' icons only, their names in tooltips */
   iconsOnly?: boolean
 }

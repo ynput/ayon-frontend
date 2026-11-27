@@ -29,17 +29,8 @@ import {
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
 import type { NavItem } from './types'
-import {
-  addDivider,
-  arrangeRail,
-  removeDivider,
-  reorderItems,
-  toggleItemHidden,
-  trimDividers,
-  type RailEntry,
-} from './layouts/applyLayout'
-import { useNavLayout, type NavLayoutState } from './layouts/useActiveLayout'
-import { changeDraft, swallowNextClick } from './layouts/layoutEditor'
+import { arrangeRail, swallowNextClick, trimDividers, type RailEntry } from './arrange'
+import { useNavArrangement, type NavArrangementState } from './NavArrangement'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
 import SortableEntry from './SortableEntry'
@@ -56,14 +47,12 @@ interface RailProps {
    */
   footer: (space: number) => ReactNode
   /**
-   * The layout that applies (`useNavLayout`): which items show, in what order, and editing it.
-   * When another one applies (its id), a page it hides gives way to its first item; before it is
-   * `ready`, a change isn't a switch.
+   * The arrangement that applies (`useNavArrangement`): which items show, in what order, and
+   * editing it. When another one applies (its id), a page it hides gives way to its first item;
+   * before it is `ready`, a change isn't a switch.
    */
-  nav: NavLayoutState
-  /** the layout's context the rail shows */
-  context: 'project' | 'studio'
-  /** where the rail is (a project, or Home): a layout that applies elsewhere isn't a switch */
+  nav: NavArrangementState
+  /** where the rail is (a project, or Home): an arrangement that applies elsewhere isn't a switch */
   scope: string
 }
 
@@ -71,8 +60,9 @@ interface RailProps {
 const MORE_HEIGHT = 54
 const MORE_HEIGHT_ICONS = 40
 
-const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
-  const { layout, id: layoutId, ready: layoutReady, editing, customize } = nav
+const Rail = ({ items, footer, nav, scope }: RailProps) => {
+  const { layout, id: layoutId, ready: layoutReady, edit, customize } = nav
+  const editing = !!edit
   const { pathname, search } = useLocation()
   // a pinned view open on the page
   const viewId = new URLSearchParams(search).get('view')
@@ -218,7 +208,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
                 // its tabs, which only dims it
                 hidden: !!layout.hidden?.includes(item.id),
                 dimmed: !shownIds.has(item.id),
-                toggle: () => changeDraft((draft) => toggleItemHidden(draft, context, item.id)),
+                toggle: () => edit?.toggleItem(item.id),
               }
             : undefined
         }
@@ -245,7 +235,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
             type="button"
             aria-label="Remove divider"
             data-tooltip="Remove divider"
-            onClick={() => changeDraft((draft) => removeDivider(draft, context, rowIds, id))}
+            onClick={() => edit?.removeDivider(rowIds, id)}
           >
             <Icon icon="close" />
           </Styled.DividerRemove>
@@ -263,7 +253,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     const id = String(dragItem.id)
     const overId = over && String(over.id)
     if (!overId || overId === id) return
-    changeDraft((draft) => reorderItems(draft, context, rowIds, id, overId))
+    edit?.moveItem(rowIds, id, overId)
   }
   const entries = onRail.map((entry) =>
     entry.item ? renderItem(entry.item) : renderDivider(entry.id),
@@ -321,7 +311,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
             type="button"
             data-tooltip="Add a divider, then drag it into place"
             data-tooltip-position="right"
-            onClick={() => changeDraft((draft) => addDivider(draft, context, rowIds))}
+            onClick={() => edit?.addDivider(rowIds)}
           >
             <Icon icon="add" />
             <Styled.Label>Divider</Styled.Label>
@@ -370,35 +360,28 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   )
 }
 
-const ProjectRail = ({ projectName, nav }: { projectName: string; nav: NavLayoutState }) => {
+const ProjectRail = ({ projectName, nav }: { projectName: string; nav: NavArrangementState }) => {
   const { items } = useProjectNavigation(projectName)
   return (
     <Rail
       items={items}
       nav={nav}
-      context="project"
       scope={projectName}
       footer={(space) => (
-        <AdminDock
-          projectName={projectName}
-          layout={nav.layout}
-          editing={nav.editing}
-          space={space}
-        />
+        <AdminDock projectName={projectName} layout={nav.layout} edit={nav.edit} space={space} />
       )}
     />
   )
 }
 
-const StudioRail = ({ nav }: { nav: NavLayoutState }) => {
+const StudioRail = ({ nav }: { nav: NavArrangementState }) => {
   const { items } = useStudioNavigation()
   return (
     <Rail
       items={items}
       nav={nav}
-      context="studio"
       scope="studio"
-      footer={(space) => <AdminDock layout={nav.layout} editing={nav.editing} space={space} />}
+      footer={(space) => <AdminDock layout={nav.layout} edit={nav.edit} space={space} />}
     />
   )
 }
@@ -419,8 +402,9 @@ const Sidebar = () => {
   const { pathname } = useLocation()
   const projectName = pathname.match(PROJECT_PATH)?.[1]
   const project = projectName ? decodeURIComponent(projectName) : undefined
-  // the layout that applies here: the context's places, and whether the sidebar shows icons only
-  const nav = useNavLayout(project ? 'project' : 'studio', project)
+  // the arrangement that applies here: the context's places, and whether the sidebar shows icons
+  // only
+  const nav = useNavArrangement()
 
   return (
     <Styled.Column
