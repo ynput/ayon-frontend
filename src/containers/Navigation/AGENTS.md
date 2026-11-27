@@ -120,7 +120,9 @@ never folds the path again.
   near the sidebar's end, so nothing below moves and folding counts only the tile; a folded group's
   items are in More one by one; its tile is active when one of its items is),
   `splitAdminItems` the promoted admin pages, `iconsOnly` narrows the sidebar to its icons and
-  `tint` (a `#rrggbb` colour, nothing else is taken) tints its sheet; the host remembers both in
+  `tint` (a `#rrggbb` colour, nothing else is taken) colours its selected item (and a group's
+  tile holding it) and Home's icon, not its sheet, where faded items would sink; the host
+  remembers both in
   this browser (each context's tint), so the sidebar has its width and colour before the module
   loads. A
   hidden page still opens by its link; when another arrangement applies (its id) while a page or

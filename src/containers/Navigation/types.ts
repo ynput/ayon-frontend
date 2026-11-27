@@ -70,7 +70,7 @@ export interface NavLayout {
   promoted?: string[]
   /** the sidebar shows its items' icons only, their names in tooltips */
   iconsOnly?: boolean
-  /** a colour (`#rrggbb`) the sidebar is tinted with */
+  /** the context's colour (`#rrggbb`): the sidebar's selected item and Home's icon take it */
   tint?: string
   /**
    * groups of sidebar items, by their id in `order` (`folder:<id>`): their name and their items'

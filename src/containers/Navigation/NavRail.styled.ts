@@ -33,11 +33,6 @@ export const Column = styled.nav`
     flex-basis: ${ICONS_ONLY_WIDTH}px;
     width: ${ICONS_ONLY_WIDTH}px;
   }
-
-  /* tinted by the arrangement (one colour for Home, another for projects) */
-  &.tinted {
-    background-color: color-mix(in srgb, var(--md-sys-color-background) 82%, var(--rail-tint));
-  }
 `
 
 // the context's places, below Home
@@ -185,6 +180,14 @@ const itemStyles = css`
       font-variation-settings: 'FILL' 1;
     }
   }
+  /* the arrangement's colour for the context (one for Home, another for projects) */
+  .tinted &.active {
+    background-color: color-mix(in srgb, var(--rail-tint) 24%, transparent);
+
+    .icon {
+      color: var(--rail-tint);
+    }
+  }
 
   /* the admin area's items: smaller, so it takes little of the sidebar */
   &.compact {
@@ -302,6 +305,10 @@ export const HomeItem = styled(Link)`
       color: var(--md-sys-color-primary);
       font-variation-settings: 'FILL' 1;
     }
+  }
+  /* in the context's colour, at Home and in a project */
+  .tinted & .icon {
+    color: var(--rail-tint);
   }
 `
 
@@ -426,6 +433,9 @@ export const FolderIcons = styled.span`
   }
   .active & .icon {
     color: var(--md-sys-color-primary);
+  }
+  .tinted .active & .icon {
+    color: var(--rail-tint);
   }
 `
 
