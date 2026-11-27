@@ -1,5 +1,5 @@
-// Sizes shared by the dropdown menus (Menu / MenuContainer) and the right-click context menu,
-// so both look the same. `.menu-large` is the bigger variant used by the header menus.
+// Sizes and parts shared by the dropdown menus (Menu / MenuContainer) and the right-click
+// context menu, so both look the same. `.menu-large` is the bigger variant used by the header menus.
 :root {
   --menu-padding: 6px;
   --menu-gap: 4px;
@@ -20,4 +20,19 @@
   --menu-gap: 8px;
   --menu-item-padding: 6px 16px 6px 12px;
   --menu-divider-margin: 0px;
+}
+
+// the keyboard shortcut at the end of a row: plain text, not a tag, so it doesn't compete with the label
+div.menu-shortcut {
+  margin-left: auto;
+  padding-left: 32px;
+
+  & > * {
+    padding: 0;
+    background-color: transparent;
+    color: var(--md-sys-color-outline);
+    font-size: var(--md-sys-typescale-body-small-font-size);
+    line-height: var(--md-sys-typescale-body-small-line-height);
+    letter-spacing: var(--md-sys-typescale-body-small-letter-spacing);
+  }
 }

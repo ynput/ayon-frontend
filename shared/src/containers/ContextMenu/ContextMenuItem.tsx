@@ -109,7 +109,7 @@ const ContextMenuItem: React.FC<ContextMenuItemProps> = ({
       )}
       {children}
       {shortcut && (
-        <div className="p-menuitem-shortcut">
+        <div className="p-menuitem-shortcut menu-shortcut">
           <ShortcutTag>{shortcut}</ShortcutTag>
         </div>
       )}
