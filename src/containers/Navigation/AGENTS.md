@@ -116,11 +116,14 @@ never folds the path again.
   (`addDivider`, `removeDivider`). The first such change writes the sidebar as shown, section
   dividers included, into the layout and marks it `free`; a layout no one rearranged keeps the
   sections.
-  The editing panel (`LayoutEditPanel`, in the app shell, so on every page: it floats from the
-  bottom right, dragged by its header, and stays where the viewer left it in this browser; Milan,
-  2026-11-27: the layout's options go there, a row each) saves with the `update` of the layout
-  that applied when editing began, wherever the user is: the sidebar, the tab rows, the pins, the
-  admin pages on the sidebar and the options, now Sidebar: Names or Icons only (`applyEdits`). While editing,
+  The editing panel (`LayoutEditPanel`, in the app shell, so on every page; Milan, 2026-11-27: it
+  opens in the middle of the window, edged in the accent colour, and drags by its header; the
+  layout's options go there, a row each) saves with the `update` of the layout that applied when
+  editing began, wherever the user is: the sidebar, the tab rows, the pins, the admin pages on the
+  sidebar, the options (Sidebar: Names or Icons only) and its name (`applyEdits`; the name field
+  shows what Save calls it: the layout, or the user's copy). Share opens the views form for a
+  layout the user owns (Power Pack's `ViewFormDialog`): who has access, its name, saved at once,
+  and Delete, which ends the edit. While editing,
   pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
   (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
   switch check reads the draft, so a page hidden in it stays open when Save makes a copy.

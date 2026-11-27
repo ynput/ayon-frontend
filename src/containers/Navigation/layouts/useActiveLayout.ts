@@ -108,8 +108,12 @@ export const useActiveLayout = (projectName?: string) => {
     : undefined
   const listed = layouts?.find((view) => view.id === named)
   const canUpdate = !!named && (listed?.accessLevel ?? 0) >= UPDATE_ACCESS
+  // the user's own: they may share it
+  const owned = !!named && !!userName && listed?.owner === userName
   // what the user sees it called
   const name = isBase ? 'Studio default' : named ? listed?.label || 'Layout' : 'Default'
+  // what the user's copy of it is called, when a change can't go into it
+  const copyName = id ? `${name} (mine)` : 'My layout'
 
   const [updateView] = useUpdateViewMutation()
   const [createView] = useCreateViewMutation()
@@ -179,7 +183,7 @@ export const useActiveLayout = (projectName?: string) => {
   )
 
   const writeNamed = useCallback(
-    (viewId: string, change: LayoutChange) => {
+    (viewId: string, change: LayoutChange, label?: string) => {
       const write = async () => {
         // the layout as last saved: from the cache, else from the server
         const view = await dispatch(
@@ -191,7 +195,10 @@ export const useActiveLayout = (projectName?: string) => {
         await updateView({
           viewType: LAYOUT_VIEW_TYPE,
           viewId,
-          genericViewPatchModel: { settings: change(view.settings as LayoutSettings) },
+          genericViewPatchModel: {
+            settings: change(view.settings as LayoutSettings),
+            ...(label ? { label } : {}),
+          },
         }).unwrap()
         return viewId
       }
@@ -202,15 +209,16 @@ export const useActiveLayout = (projectName?: string) => {
     [dispatch, updateView],
   )
 
+  /** saves a change, and a new name when given one, into the layout or the user's copy of it */
   const update = useCallback(
-    async (change: LayoutChange): Promise<string> => {
+    async (change: LayoutChange, label?: string): Promise<string> => {
       // a layout for this change is being saved: the change goes into it
       const key = id ?? ''
       const copying = copies.get(key)
-      if (copying) return writeNamed(await copying, change)
+      if (copying) return writeNamed(await copying, change, label)
       if (!enabled) throw new Error('Layouts are not available')
       if (!ready) throw new Error("The layout hasn't loaded yet")
-      if (named && canUpdate) return writeNamed(named, change)
+      if (named && canUpdate) return writeNamed(named, change, label)
       // none, the studio default, or a layout shared read-only: the change goes into a layout
       // the user owns, which is then picked
       if (id && !layout) throw new Error("The layout couldn't be loaded")
@@ -221,7 +229,7 @@ export const useActiveLayout = (projectName?: string) => {
           viewType: LAYOUT_VIEW_TYPE,
           genericViewPostModel: {
             id: copyId,
-            label: id ? `${name} (mine)` : 'My layout',
+            label: label || copyName,
             working: false,
             settings: change(layout),
           },
@@ -236,7 +244,16 @@ export const useActiveLayout = (projectName?: string) => {
       )
       return copy
     },
-    [id, enabled, ready, named, canUpdate, layout, name, writeNamed, createView, pick],
+    [id, enabled, ready, named, canUpdate, layout, copyName, writeNamed, createView, pick],
+  )
+
+  /** deletes a layout the user owns; when it was their pick, the defaults apply again */
+  const remove = useCallback(
+    async (layoutId: string) => {
+      await deleteView({ viewType: LAYOUT_VIEW_TYPE, viewId: layoutId }).unwrap()
+      if (layoutId === picked) await pick(null)
+    },
+    [deleteView, picked, pick],
   )
 
   return {
@@ -245,9 +262,12 @@ export const useActiveLayout = (projectName?: string) => {
     source,
     id,
     name,
+    copyName,
+    owned,
     layout,
     canUpdate,
     update,
+    remove,
     pick,
     /** the layouts the user can read, as listed (the studio default may be one of them) */
     layouts,
@@ -266,21 +286,31 @@ export type NavLayoutState = ReturnType<typeof useNavLayout>
  * layout is being edited, its draft. `customize` starts editing the one that applies.
  */
 export const useNavLayout = (context: 'project' | 'studio', projectName?: string) => {
-  const { enabled, ready, id, name, layout, update } = useActiveLayout(projectName)
+  const { enabled, ready, id, name, copyName, owned, canUpdate, layout, update, remove } =
+    useActiveLayout(projectName)
   const edit = useLayoutEdit()
   const settings = edit ? edit.draft : layout
   const navLayout = useMemo(() => toNavLayout(settings, context), [settings, context])
   // A menu may call Customize after the layout changed (a copy got picked meanwhile): it edits
   // the layout that applies when it is called.
-  const latest = useRef({ ready, id, name, layout, update })
-  latest.current = { ready, id, name, layout, update }
+  const latest = useRef({ ready, id, name, copyName, owned, canUpdate, layout, update, remove })
+  latest.current = { ready, id, name, copyName, owned, canUpdate, layout, update, remove }
   const start = useCallback(() => {
     const now = latest.current
     if (getLayoutEdit()) return
     // a change is still being saved (into a copy, which then applies): edit what applies after
     if (!now.ready || copies.has(now.id ?? ''))
       return void toast.info('Saving your last change to the layout. Try again in a moment.')
-    startEditing({ name: now.name, layout: now.layout, save: now.update })
+    startEditing({
+      name: now.name,
+      // Save writes into it, or makes the user's copy of it
+      label: now.canUpdate ? now.name : now.copyName,
+      layoutId: now.canUpdate ? now.id : undefined,
+      owned: now.owned,
+      layout: now.layout,
+      save: now.update,
+      remove: now.remove,
+    })
   }, [])
   const customize = enabled && ready && !edit ? start : undefined
   return { layout: navLayout, id, ready, editing: !!edit, customize }
