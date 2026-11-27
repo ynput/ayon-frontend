@@ -14,6 +14,8 @@ import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import type { RemotePageBundle } from '@/remote/useRemoteBundle'
 import { KNOWN_PROJECT_PAGES } from './knownPages'
+import { DEFAULT_PROJECT_PLACES, withDefaultPlaces } from './defaultPlaces'
+import { useAddonAvailability } from './useAddonAvailability'
 import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
 import { usePinnedViews } from './pins/usePinnedViews'
@@ -87,6 +89,8 @@ export const useProjectNavigation = (projectName: string) => {
     { skip: !projectName || addonsListLoading },
   )
   const hasReview = !!getBundleAddonVersion('review')
+  // why an addon whose place the sidebar keeps isn't usable here
+  const unavailable = useAddonAvailability()
 
   // remote modules don't depend on the project, so load them alongside it
   const { remotePages, isLoading: isLoadingModules } = useLoadRemotePages({
@@ -292,8 +296,13 @@ export const useProjectNavigation = (projectName: string) => {
       [...owned, ...remotes, ...contributed, ...classic],
       KNOWN_PROJECT_PAGES,
     )
-    // the sidebar orders by section; within one, by this order
-    const items = [production, review, workfiles, ...placed]
+    // the sidebar orders by section; within one, by this order. AYON's own addons keep their
+    // places, faded when they aren't usable here
+    const items = withDefaultPlaces(
+      [production, review, workfiles, ...placed],
+      DEFAULT_PROJECT_PLACES,
+      unavailable,
+    )
     // pinned views sit next to the page they come from, in whichever item holds it; a pin whose
     // page isn't here (an addon that isn't installed) has no tab
     const pinnedTabs = pinned.map(({ pin, view }) => ({
@@ -321,6 +330,7 @@ export const useProjectNavigation = (projectName: string) => {
     isAdmin,
     isManager,
     pinned,
+    unavailable,
   ])
 
   return {

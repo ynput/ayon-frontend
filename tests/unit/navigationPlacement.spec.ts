@@ -12,6 +12,11 @@ import {
   sortForSidebar,
 } from '../../src/containers/Navigation/filterNavigation'
 import type { NavItem } from '../../src/containers/Navigation/types'
+import {
+  DEFAULT_PROJECT_PLACES,
+  DEFAULT_STUDIO_PLACES,
+  withDefaultPlaces,
+} from '../../src/containers/Navigation/defaultPlaces'
 
 const addon = { name: 'planner', version: '1.0.0', remote: 'planner' }
 const loader = () => Promise.resolve({ default: () => null })
@@ -230,4 +235,40 @@ test('admin pages that do not fit go into the Admin menu from the bottom, the bu
   expect(fitDocked({ ids: ['a', 'x'], heights, space: 10, button: 40, menuShown: true })).toBe(2)
   // no pages on the sidebar: none, whatever the room
   expect(fitDocked({ ids: [], heights, space: 5, button: 40, menuShown: true })).toBe(0)
+})
+
+test("AYON's own addons keep their places, faded with why when they aren't usable", () => {
+  const items = [
+    item('production', 'main', [{ name: 'Overview', path: '/o' }]),
+    item('reviews', 'review', [{ name: 'Review', path: '/r' }]),
+    item('reports', 'plan', [{ name: 'Reports', path: '/rep' }]),
+  ]
+  const missing = (addon: string) =>
+    ['review', 'reports', 'storyboards'].includes(addon) ? `no ${addon}` : null
+  const placed = withDefaultPlaces(items, DEFAULT_PROJECT_PLACES, missing)
+  const byId = (id: string) => placed.find((i) => i.id === id)
+  // a missing addon with a splash page keeps it; one without opens nothing
+  expect(byId('reviews')).toMatchObject({ disabled: 'no review', tabs: [{ path: '/r' }] })
+  expect(byId('reports')).toMatchObject({ disabled: 'no reports', tabs: [] })
+  // a missing addon without an item gets its place
+  expect(byId('addon:storyboards/storyboards')).toMatchObject({
+    disabled: 'no storyboards',
+    section: 'pipeline',
+    tabs: [],
+  })
+  // an addon that is here and has no item yet adds nothing in a project
+  expect(byId('addon:timetracker/time')).toBeUndefined()
+  // the default order: Schedule, Time and Reports; Storyboards first in the pipeline
+  expect(sortForSidebar(placed).map((i) => i.id)).toEqual([
+    'production',
+    'reviews',
+    'reports',
+    'addon:storyboards/storyboards',
+  ])
+})
+
+test('on Home, Review and Reports are coming soon while their addons are here', () => {
+  const home = withDefaultPlaces([item('my-work', 'main', [])], DEFAULT_STUDIO_PLACES, () => null)
+  expect(home.filter((i) => i.disabled).map((i) => i.id)).toEqual(['reviews', 'reports'])
+  expect(home.find((i) => i.id === 'reports')?.disabled).toContain('coming soon')
 })

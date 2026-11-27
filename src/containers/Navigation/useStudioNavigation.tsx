@@ -9,6 +9,8 @@ import { useAddonPages } from '@/remote/AddonPagesHelpers'
 import { RemotePageBundleDot } from '@/remote/RemotePageBundleDot'
 import { useRemoteBundle } from '@/remote/useRemoteBundle'
 import { KNOWN_STUDIO_PAGES } from './knownPages'
+import { DEFAULT_STUDIO_PLACES, withDefaultPlaces } from './defaultPlaces'
+import { useAddonAvailability } from './useAddonAvailability'
 import { placePages, type PageEntry } from './placePages'
 import type { NavItem } from './types'
 
@@ -48,7 +50,8 @@ export const useStudioNavigation = () => {
   })
 
   const hasPlanner = !!getBundleAddonVersion('planner')
-  const hasReview = !!getBundleAddonVersion('review')
+  // why an addon whose place the sidebar keeps isn't usable here
+  const unavailable = useAddonAvailability()
   const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
@@ -144,25 +147,16 @@ export const useStudioNavigation = () => {
       }),
     ]
 
-    // a project's Review, in its place on Home too, so the sidebar keeps it when you leave a
-    // project; there is no studio-wide review yet
-    const review: NavItem = {
-      id: 'reviews',
-      label: 'Review',
-      icon: 'play_circle',
-      section: 'review',
-      tabs: [],
-      disabled: 'Studio-wide review is coming soon. For now, open a project to review in it.',
-    }
-
-    return [
-      myWork,
-      ...(hasReview ? [review] : []),
-      ...placePages(myWork, entries, KNOWN_STUDIO_PAGES),
-    ]
+    // AYON's own addons keep their places, also a project's Review and Reports, which have no
+    // studio page yet: the sidebar keeps them when you leave a project
+    return withDefaultPlaces(
+      [myWork, ...placePages(myWork, entries, KNOWN_STUDIO_PAGES)],
+      DEFAULT_STUDIO_PLACES,
+      unavailable,
+    )
   }, [
     hasPlanner,
-    hasReview,
+    unavailable,
     dashboardAddons,
     remotePages,
     addonStudioPages,

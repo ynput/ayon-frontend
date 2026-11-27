@@ -62,7 +62,7 @@ export const placePages = (
         label: meta.groupTitle || placement?.group?.title || tab.name || id,
         icon,
         section,
-        order: meta.order,
+        order: meta.order ?? placement?.order,
         tabs: [],
         tags,
       }
@@ -76,7 +76,7 @@ export const placePages = (
       label: placement?.label || tab.name || id,
       icon,
       section,
-      order: meta.order,
+      order: meta.order ?? placement?.order,
       // a renamed item's one tab takes the same name
       tabs: [placement?.label ? { ...tab, name: placement.label } : tab],
       tags,

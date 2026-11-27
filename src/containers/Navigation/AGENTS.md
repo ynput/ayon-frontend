@@ -82,11 +82,19 @@ never folds the path again.
   in the first item (Overview, My work).
 - **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order, a divider between
   sections; until an arrangement says otherwise.
-- **A disabled item** (`disabled`: why, as its tooltip) keeps a place another context has, so the
-  sidebar doesn't rebuild between Home and a project (Milan, 2026-11-27): Home's Review (id
-  `reviews`, as the project's) while the review addon is in the bundle, until there is a
-  studio-wide review. It has no tabs; `filterNavigation` keeps it, it is never active, it opens
-  nothing and isn't where an arrangement switch lands.
+- **Default positions** (Milan's "My layout", 2026-11-27): a project's sidebar is Overview;
+  Review; Schedule, Time, Reports; Storyboards, Workfiles and the other pipeline pages. The known
+  placements carry the order (`knownPages.ts`, `order`); what a page declares wins.
+- **AYON's own addons keep their places** (`defaultPlaces.ts`, Milan 2026-11-27): Review,
+  Schedule/Planner, Time, Reports and Storyboards show in every studio, so the sidebar has the same
+  shape everywhere and between Home and a project. One whose addon isn't in the bundle is faded
+  (`disabled`: why, as its tooltip, `useAddonAvailability`): admins read from the Market whether it
+  needs a licence, isn't installed or isn't in the bundle; others are asked to ask an admin. A
+  place whose page explains the missing addon (Review's and Schedule's splash) still opens it;
+  the others open nothing. On Home, Review and Reports have no studio page yet: while their addons
+  are here they are faded as coming soon. Ids are the items' own, so arrangements treat a place as
+  its item. A disabled item without tabs is kept by `filterNavigation`, is never active and isn't
+  where an arrangement switch lands.
 - **Editing an arrangement** is the module's; the navigation offers its controls while
   `NavArrangementState.edit` is there: the sidebar and the tab rows show every item and tab, hidden
   ones dimmed, each with an eye, and nothing folds into More or "+N"; drag reorders tabs in their

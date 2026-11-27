@@ -245,6 +245,12 @@ export const ItemEye = styled(Icon)`
 export const Item = styled(Link)`
   ${itemStyles}
 
+  /* its addon isn't usable here: faded, its page explains the addon */
+  &.unavailable > .icon:not(${ItemEye}),
+  &.unavailable > ${Label} {
+    opacity: 0.38;
+  }
+
   &:hover ${ItemEye}, &:focus-visible ${ItemEye} {
     opacity: 1;
   }

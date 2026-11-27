@@ -26,8 +26,8 @@ interface RailItemProps {
 
 /**
  * A sidebar item. A plain click on the open item does nothing (a page may have changed the URL
- * without the router); a modified one still opens a new browser tab. A disabled item is no link:
- * focusable, its tooltip says why.
+ * without the router); a modified one still opens a new browser tab. A disabled item is faded and
+ * its tooltip says why; without a page (`to`) it is no link, only focusable.
  */
 const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps) => {
   const content = (
@@ -58,9 +58,14 @@ const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps)
       )}
     </>
   )
-  const className = clsx({ active: isActive, compact, 'layout-hidden': edit?.dimmed })
+  const className = clsx({
+    active: isActive,
+    compact,
+    'layout-hidden': edit?.dimmed,
+    unavailable: !!item.disabled,
+  })
 
-  if (item.disabled || !to)
+  if (!to)
     return (
       <Styled.DisabledItem
         className={className}
@@ -95,7 +100,7 @@ const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps)
       }
       aria-label={item.label}
       data-rail-item={item.id}
-      data-tooltip={item.label}
+      data-tooltip={item.disabled ?? item.label}
       data-tooltip-position="right"
       {...item.tags}
       {...data}
