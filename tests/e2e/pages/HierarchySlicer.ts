@@ -5,10 +5,11 @@ import { expect, Locator, Page } from '@playwright/test'
  * Its rows have DOM ids prefixed `slicer-<panelId>-`, which keeps them apart from the page's main table.
  */
 export class HierarchySlicer {
-  readonly search: Locator
+  /** the panel's header: the search button, and the search row below it while open */
+  readonly header: Locator
 
   constructor(readonly page: Page) {
-    this.search = page.locator('.slicer-search')
+    this.header = page.locator('.slicer-header')
   }
 
   row(label: string) {
@@ -30,16 +31,21 @@ export class HierarchySlicer {
   }
 
   searchInput() {
-    return this.search.getByPlaceholder('Search')
+    return this.header.getByPlaceholder('Search')
+  }
+
+  // the header's search button opens the search row and closes it again
+  searchButton() {
+    return this.header.getByRole('button', { name: 'search', exact: true })
   }
 
   async openSearch() {
-    await this.search.getByRole('button').click()
+    await this.searchButton().click()
     await expect(this.searchInput()).toBeFocused()
   }
 
   async closeSearch() {
-    await this.search.getByRole('button').click()
+    await this.searchButton().click()
     await expect(this.searchInput()).toBeHidden()
   }
 }

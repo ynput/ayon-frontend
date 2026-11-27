@@ -70,7 +70,7 @@ export const SLOT_DOCS: { readonly [S in SlotName]: SlotDoc } = {
   },
   'slicer.menuItem': {
     helper: 'slicerMenuItem',
-    where: "an item in the slicer's right-click menu and/or panel dropdown",
+    where: "an item in the slicer's right-click menu and/or panel more dropdown",
     loads: 'menu open / click',
   },
   'projectTable.toolbarItem': {

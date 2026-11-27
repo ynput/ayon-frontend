@@ -1171,6 +1171,7 @@ An item in the project page slicer's menus: the right-click menu, the panel's dr
 | `icon` (required) | `string` | a Material Symbols icon name |
 | `position` | `MenuItemPosition \| undefined` | `top`: first in the menu; `bottom` (default): after the menu's own items, above the destructive ones (Delete, Archive) |
 | `order` | `number \| undefined` | order among addon items with the same position, lowest first |
+| `pinned` | `boolean \| undefined` | also a button in the header while there is room for it, in menu order from the right (the last pinned goes first when the header gets narrow); it stays in the "more" menu. An AYON without pinned buttons shows it in the menu only |
 
 | Context (props, `useSlot`) | Type | |
 |---|---|---|

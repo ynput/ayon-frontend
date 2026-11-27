@@ -427,8 +427,8 @@ export interface MenuItemMeta {
 }
 
 /**
- * Description of an item in a panel header's "more" menu (the project list, the lists panel,
- * Review's playlist), which can also be a button in that header.
+ * Description of an item in a panel header's "more" menu (the project list, the lists panel, the
+ * slicer, Review's playlist), which can also be a button in that header.
  */
 export interface HeaderMenuItemMeta extends MenuItemMeta {
   /**
@@ -665,8 +665,8 @@ export interface ListsMenuItemContext extends ProjectNameScope {
   menu: MenuKind
 }
 
-/** Description of a `slicer.menuItem` contribution. */
-export interface SlicerMenuItemMeta extends ListMenuItemMeta {
+/** Description of a `slicer.menuItem` contribution: `pinned` applies to the panel's "more" dropdown. */
+export interface SlicerMenuItemMeta extends ListMenuItemMeta, HeaderMenuItemMeta {
   /** slice types it shows for (`hierarchy`, `assignees`, `status`, ...); all when not set */
   sliceTypes?: string[]
 }
@@ -1022,7 +1022,13 @@ export const SLOTS: { readonly [S in SlotName]: SlotDefinition } = {
     optional: menuItemFields,
     check: (item) => checkPinned(item) ?? checkListTypes(item),
   },
-  'slicer.menuItem': { version: 1, required: ['label', 'icon'], pieces: ['run'], optional: menuItemFields },
+  'slicer.menuItem': {
+    version: 1,
+    required: ['label', 'icon'],
+    pieces: ['run'],
+    optional: menuItemFields,
+    check: checkPinned,
+  },
   'projectTable.toolbarItem': {
     version: 1,
     required: [],

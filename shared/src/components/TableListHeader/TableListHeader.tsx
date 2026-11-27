@@ -47,6 +47,8 @@ export interface TableListHeaderProps {
   search?: string | null
   /** the search text changes, or `undefined` when the search row closes */
   onSearch?: (search: string | undefined) => void
+  /** a pasted list becomes a comma (OR) search: for a table whose search reads commas that way */
+  searchPasteList?: boolean
   /** the menu's id: its own id when not set */
   menuId?: string
   /** the "more" button opens or closes the menu: the header does it when not set */
@@ -90,6 +92,7 @@ export const TableListHeader = ({
   menuItems,
   search,
   onSearch,
+  searchPasteList,
   menuId,
   onMenuToggle,
   moreButtonProps,
@@ -200,7 +203,12 @@ export const TableListHeader = ({
         </Styled.Buttons>
       </Styled.Top>
       {typeof search === 'string' && onSearch && (
-        <TableSearch value={search} onChange={onSearch} onClose={() => onSearch(undefined)} />
+        <TableSearch
+          value={search}
+          onChange={onSearch}
+          onClose={() => onSearch(undefined)}
+          pasteList={searchPasteList}
+        />
       )}
       {children}
     </Styled.Header>

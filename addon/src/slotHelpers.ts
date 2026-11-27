@@ -46,7 +46,10 @@ export const projectListMenuItem = (item: ContributionFields<'projectList.menuIt
 export const listsMenuItem = (item: ContributionFields<'lists.menuItem'>) =>
   contribute('lists.menuItem', item)
 
-/** An item in the slicer's right-click menu and/or panel dropdown (`in`). */
+/**
+ * An item in the slicer's right-click menu and/or panel "more" dropdown (`in`); `pinned` makes it a
+ * button in the panel's header as well.
+ */
 export const slicerMenuItem = (item: ContributionFields<'slicer.menuItem'>) =>
   contribute('slicer.menuItem', item)
 
