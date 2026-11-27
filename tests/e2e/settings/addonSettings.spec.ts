@@ -50,4 +50,29 @@ test.describe('addon settings', () => {
     await expect(copySettings).toBeHidden()
     await expectRowSelection([other], [selected])
   })
+
+  test('the changes panel shows the whole revert button of an unsaved change', async ({ page }) => {
+    await page.goto('/settings/studio')
+    const list = page.locator('.addon-list-table')
+    await expect(list).not.toHaveClass(/\bloading\b/)
+    const core = list
+      .getByRole('row')
+      .filter({ has: page.getByRole('cell', { name: 'Core', exact: true }) })
+    test.skip(!(await core.count()), 'the production bundle needs the core addon')
+    await core.click()
+
+    // the change is never saved
+    const field = page.locator('[data-fieldid="root_studio_name"] input')
+    await field.click()
+    await page.keyboard.press('End')
+    await page.keyboard.type('x')
+    await page.keyboard.press('Tab')
+
+    const changes = page.locator('.p-treetable')
+    const revert = changes.getByRole('button', { name: 'delete', exact: true })
+    await expect(revert).toBeVisible()
+    const changesBox = (await changes.boundingBox())!
+    const revertBox = (await revert.boundingBox())!
+    expect(revertBox.x + revertBox.width).toBeLessThanOrEqual(changesBox.x + changesBox.width)
+  })
 })
