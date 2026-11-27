@@ -9,6 +9,13 @@ import { RefreshToast } from '@shared/components/RefreshToast/RefreshToast'
 import { useLazyGetSiteInfoQuery } from '@shared/api'
 import { WebSocketLike } from 'react-use-websocket/dist/lib/types'
 import { SocketContext } from './WebsocketContextInstance'
+import {
+  createHiddenTabQueue,
+  HIDDEN_TAB_INCOMPLETE_TAG,
+  isHoldingMessages,
+  isLiveWhenHeld,
+  onMessagesReleased,
+} from '@shared/util/hiddenTab'
 
 // @ts-ignore
 const DISABLE_WS = import.meta.env.VITE_DISABLE_WS === 'true'
@@ -134,11 +141,37 @@ export const SocketProvider = ({
   // Using useRef to persist the state across renders
   const messageStatsRef = useRef({ callCount: 0, windowStart: Date.now() })
 
+  const [hiddenQueue] = useState(createHiddenTabQueue)
+
+  // visible and nothing playing: refetch what was dropped, then replay what was held, once
+  useEffect(
+    () =>
+      onMessagesReleased(() => {
+        const { messages, received, lostUntagged, tags } = hiddenQueue.take()
+        if (!received && !tags.length) return
+
+        console.log(
+          `WS: released, replaying ${messages.length} of ${received} held messages` +
+            (tags.length ? `, refetching ${tags.join(', ')}` : ''),
+        )
+        // merged or dropped: caches that keep every message refetch too
+        const incomplete = messages.length < received ? [HIDDEN_TAB_INCOMPLETE_TAG] : []
+        if (tags.length || incomplete.length)
+          dispatch(api.util.invalidateTags([...tags, ...incomplete]))
+        messages.forEach(({ topic, data }) => PubSub.publish(topic, data))
+        // like after a reconnect: tells subscribers that rely on the stream that they missed messages
+        if (lostUntagged) PubSub.publish('client.connected', { topic: 'client.connected' })
+      }),
+    [hiddenQueue, dispatch],
+  )
+
   const debouncedResetCall = debounce(() => {
     // all replicas should start about the same time,
     // so we can reset the API state after a short delay
     console.log('Resetting API state due to server restart')
     setServerRestartingVisible(false)
+    // everything refetches now: messages held from before the restart are out of date
+    hiddenQueue.take()
     dispatch(api.util.resetApiState())
   }, 1000)
 
@@ -193,13 +226,20 @@ export const SocketProvider = ({
 
       messageStatsRef.current.callCount += 1
 
-      console.log('Event RX', data)
-
       if (topic === 'shout' && data?.summary?.text) toast.info(summary.text)
+
+      // a hidden tab, or one playing a video, holds messages back until it is released (hiddenTab.ts)
+      if (isHoldingMessages() && !isLiveWhenHeld(topic, data)) {
+        // one nobody subscribes to goes nowhere in a visible tab either, so it isn't held
+        if (PubSub.hasSubscribers?.(topic) ?? true) hiddenQueue.add(topic, data)
+        return
+      }
+
+      console.log('Event RX', data)
 
       PubSub.publish(topic, data)
     },
-    [setServerRestartingVisible],
+    [setServerRestartingVisible, hiddenQueue],
   )
 
   useEffect(() => {
