@@ -86,9 +86,9 @@ const MenuItem = forwardRef<HTMLLIElement, MenuItemProps>(
           <span key={index}>{label}</span>
         ))}
         {shortcut && (
-          <ShortcutTag style={{ minWidth: 22, textAlign: 'center' }} align={'right'}>
-            {shortcut}
-          </ShortcutTag>
+          <div className="menu-shortcut">
+            <ShortcutTag>{shortcut}</ShortcutTag>
+          </div>
         )}
         {(active || reserveActiveSlot) && (
           <Icon
