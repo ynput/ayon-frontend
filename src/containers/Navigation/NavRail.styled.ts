@@ -47,9 +47,15 @@ export const Rail = styled.div`
   padding: 0 4px ${RAIL_PADDING_BOTTOM}px;
   overflow: hidden;
 
-  /* editing the layout: every item shows, nothing folds into More */
+  /* editing the layout: every item shows, nothing folds into More. It scrolls without a
+     scrollbar, which would squeeze the items (where scrollbars take room, a Mac with a mouse) */
   &.editing {
     overflow-y: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
   }
 `
 
