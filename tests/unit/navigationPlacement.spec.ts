@@ -244,12 +244,19 @@ test("AYON's own addons keep their places, faded with why when they aren't usabl
     item('reports', 'plan', [{ name: 'Reports', path: '/rep' }]),
   ]
   const missing = (addon: string) =>
-    ['review', 'reports', 'storyboards'].includes(addon) ? `no ${addon}` : null
+    ['review', 'reports', 'storyboards'].includes(addon)
+      ? { reason: `no ${addon}`, needsLicense: addon === 'review' || undefined }
+      : null
   const placed = withDefaultPlaces(items, DEFAULT_PROJECT_PLACES, missing)
   const byId = (id: string) => placed.find((i) => i.id === id)
   // a missing addon with a splash page keeps it; one without opens nothing
-  expect(byId('reviews')).toMatchObject({ disabled: 'no review', tabs: [{ path: '/r' }] })
+  expect(byId('reviews')).toMatchObject({
+    disabled: 'no review',
+    needsLicense: true,
+    tabs: [{ path: '/r' }],
+  })
   expect(byId('reports')).toMatchObject({ disabled: 'no reports', tabs: [] })
+  expect(byId('reports')?.needsLicense).toBeFalsy()
   // a missing addon without an item gets its place
   expect(byId('addon:storyboards/storyboards')).toMatchObject({
     disabled: 'no storyboards',

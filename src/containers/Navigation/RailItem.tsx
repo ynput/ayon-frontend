@@ -27,12 +27,14 @@ interface RailItemProps {
 /**
  * A sidebar item. A plain click on the open item does nothing (a page may have changed the URL
  * without the router); a modified one still opens a new browser tab. A disabled item is faded and
- * its tooltip says why; without a page (`to`) it is no link, only focusable.
+ * its tooltip says why, a bolt on its icon when a licence is missing; without a page (`to`) it is
+ * no link, only focusable.
  */
 const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps) => {
   const content = (
     <>
       <Icon icon={item.icon} />
+      {item.needsLicense && <Styled.LicenseBolt icon="bolt" aria-hidden />}
       <Styled.Label>{item.label}</Styled.Label>
       {edit && (
         <Styled.ItemEye

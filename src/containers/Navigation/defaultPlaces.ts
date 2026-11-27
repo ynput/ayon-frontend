@@ -1,4 +1,4 @@
-import type { NavItem, NavSection } from './types'
+import type { AddonUnavailable, NavItem, NavSection } from './types'
 
 /**
  * The places AYON's own addons keep on the sidebar whether or not they are here (Milan,
@@ -103,29 +103,31 @@ export const DEFAULT_STUDIO_PLACES: DefaultPlace[] = [
 
 /**
  * The registry's items with AYON's places filled: a place whose addon isn't usable is faded and
- * says why (its splash page still opens, other places open nothing); one whose addon is here but
+ * says why, with a bolt when a licence is missing (its splash page still opens, other places open
+ * nothing); one whose addon is here but
  * has no item in this context yet (`comingSoon`) is faded and says so. Places sit in their
  * section, by their order.
  */
 export const withDefaultPlaces = (
   items: NavItem[],
   places: DefaultPlace[],
-  unavailable: (addon: string, label: string) => string | null,
+  unavailable: (addon: string, label: string) => AddonUnavailable | null,
 ): NavItem[] => {
   const result = [...items]
   places.forEach((place) => {
-    const reason = unavailable(place.addon, place.label)
+    const missing = unavailable(place.addon, place.label)
     const index = result.findIndex((item) => item.id === place.id)
     if (index !== -1) {
-      if (reason)
+      if (missing)
         result[index] = {
           ...result[index],
-          disabled: reason,
+          disabled: missing.reason,
+          needsLicense: missing.needsLicense,
           tabs: place.splash ? result[index].tabs : [],
         }
       return
     }
-    const disabled = reason ?? place.comingSoon
+    const disabled = missing?.reason ?? place.comingSoon
     if (!disabled) return
     result.push({
       id: place.id,
@@ -135,6 +137,7 @@ export const withDefaultPlaces = (
       order: place.order,
       tabs: [],
       disabled,
+      needsLicense: missing?.needsLicense,
     })
   })
   return result

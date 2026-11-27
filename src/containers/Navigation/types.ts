@@ -41,6 +41,14 @@ export interface NavItem {
    * tooltip. It has no tabs and opens nothing.
    */
   disabled?: string
+  /** disabled because its addon needs a licence: a bolt marks it */
+  needsLicense?: boolean
+}
+
+/** Why an addon isn't usable here: its places' tooltip, and whether a licence is what's missing. */
+export interface AddonUnavailable {
+  reason: string
+  needsLicense?: boolean
 }
 
 /** What the user can open: the `accessLevels` a tab may require. */

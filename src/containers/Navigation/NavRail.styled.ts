@@ -250,11 +250,29 @@ export const ItemEye = styled(Icon)`
   }
 `
 
+// its addon needs a licence: a bolt on the icon's corner, not faded with it
+export const LicenseBolt = styled(Icon)`
+  position: absolute;
+  top: 18px;
+  left: calc(50% + 4px);
+  padding: 1px;
+  border-radius: 50%;
+  background-color: var(--md-sys-color-background);
+  color: var(--md-sys-color-tertiary);
+  font-size: 12px !important;
+  font-variation-settings: 'FILL' 1;
+  pointer-events: none;
+
+  .icons-only & {
+    top: 20px;
+  }
+`
+
 export const Item = styled(Link)`
   ${itemStyles}
 
   /* its addon isn't usable here: faded, its page explains the addon */
-  &.unavailable > .icon:not(${ItemEye}),
+  &.unavailable > .icon:not(${ItemEye}):not(${LicenseBolt}),
   &.unavailable > ${Label} {
     opacity: 0.38;
   }
@@ -278,7 +296,7 @@ export const DisabledItem = styled.span`
   ${itemStyles}
   cursor: default;
 
-  & > .icon:not(${ItemEye}),
+  & > .icon:not(${ItemEye}):not(${LicenseBolt}),
   & > ${Label} {
     opacity: 0.38;
   }
