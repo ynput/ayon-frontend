@@ -23,6 +23,7 @@ import {
 import type { AttributeField } from '../DetailsPanelAttributesEditor'
 import type { DetailsPanelEntityData, EnumItem } from '@shared/api'
 import { isAllDayEndDate } from './RenderFieldWidgetHelpers'
+import ColorFieldWidget from './ColorFieldWidget'
 
 const FieldValueText = styled.div`
   width: 100%;
@@ -168,6 +169,17 @@ const RenderFieldWidget: FC<RenderFieldWidgetProps> = ({
             isMidnightExclusive={isMidnightExclusive}
           />
         </DateValue>
+      )
+
+    case widget === 'color':
+      return (
+        <ColorFieldWidget
+          value={typeof value === 'string' && value ? value : undefined}
+          isEditing={isEditing}
+          placeholder={`Select ${placeholderLabel}…`}
+          onChange={(colour) => onChange(field.name, colour)}
+          onCancelEdit={onCancelEdit}
+        />
       )
 
     case widget === 'tags':

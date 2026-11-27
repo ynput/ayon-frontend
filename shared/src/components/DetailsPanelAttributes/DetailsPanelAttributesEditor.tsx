@@ -235,7 +235,11 @@ export const DetailsPanelAttributesEditor: FC<DetailsPanelAttributesEditorProps>
         return (
           <FormRow
             key={field.name}
-            className={clsx('field-row', { 'multi-line': field.data.widget === 'markdown' })}
+            className={clsx('field-row', {
+              // a colour being picked shows its swatches, over two lines when narrow
+              'multi-line':
+                field.data.widget === 'markdown' || (field.data.widget === 'color' && isEditing),
+            })}
           >
             <FieldLabel
               name={field.name}

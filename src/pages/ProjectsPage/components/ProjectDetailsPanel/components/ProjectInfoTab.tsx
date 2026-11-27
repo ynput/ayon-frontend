@@ -31,9 +31,12 @@ const ProjectInfoTab: FC<ProjectInfoTabProps> = ({ projectName, project, isLoadi
   // Build a flat form state for the editor
   const buildFormFromProject = (p: Project | undefined): Record<string, any> => {
     if (!p) return {}
+    // the colour is in the project's data (as the server sends the project, not the list's row)
+    const color = (p as { data?: { color?: unknown } }).data?.color
     const form: Record<string, any> = {
       label: p.label ?? '',
       code: p.code ?? '',
+      color: typeof color === 'string' ? color : '',
       active: p.active ?? false,
       library: p.library ?? false,
     }
@@ -56,6 +59,15 @@ const ProjectInfoTab: FC<ProjectInfoTabProps> = ({ projectName, project, isLoadi
     const topLevel: AttributeField[] = [
       { name: 'label', data: { type: 'string', title: 'Label' } },
       { name: 'code', data: { type: 'string', title: 'Code' } },
+      {
+        name: 'color',
+        data: {
+          type: 'string',
+          title: 'Colour',
+          widget: 'color',
+          description: 'Marks the selected item in the sidebar while the project is open.',
+        },
+      },
     ]
 
     const projectAttribs: AttributeField[] = allAttributes
@@ -114,6 +126,12 @@ const ProjectInfoTab: FC<ProjectInfoTabProps> = ({ projectName, project, isLoadi
         await updateProject({
           projectName,
           projectPatchModel: { attrib: { [attribKey]: value } },
+        }).unwrap()
+      } else if (key === 'color') {
+        // in the project's data; none removes it
+        await updateProject({
+          projectName,
+          projectPatchModel: { data: { color: value || null } },
         }).unwrap()
       } else {
         await updateProject({
