@@ -72,4 +72,9 @@ export interface NavLayout {
   iconsOnly?: boolean
   /** a colour (`#rrggbb`) the sidebar is tinted with */
   tint?: string
+  /**
+   * groups of sidebar items, by their id in `order` (`folder:<id>`): their name and their items'
+   * ids, which then aren't in `order` themselves. Only with `free`.
+   */
+  folders?: Record<string, { label: string; items: string[] }>
 }

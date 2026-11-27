@@ -6,12 +6,15 @@ import { Icon } from '@ynput/ayon-react-components'
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   PointerSensor,
   useSensor,
   useSensors,
+  type CollisionDetection,
   type DragEndEvent,
+  type DragMoveEvent,
 } from '@dnd-kit/core'
-import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext, type SortingStrategy } from '@dnd-kit/sortable'
 import { restrictToVerticalAxis } from '@dnd-kit/modifiers'
 import { Menu, MenuContainer } from '@shared/components'
 import { useCreateContextMenu } from '@shared/containers/ContextMenu'
@@ -30,11 +33,22 @@ import {
 import { useProjectNavigation } from './useProjectNavigation'
 import { useStudioNavigation } from './useStudioNavigation'
 import type { NavItem } from './types'
-import { arrangeRail, swallowNextClick, trimDividers, type RailEntry } from './arrange'
-import { useNavArrangement, type NavArrangementState } from './NavArrangement'
+import {
+  arrangeRail,
+  entryItems,
+  isDividerId,
+  isFolderId,
+  isSolid,
+  keepItems,
+  swallowNextClick,
+  trimDividers,
+  type RailEntry,
+} from './arrange'
+import { useNavArrangement, type NavArrangementState, type RailRow } from './NavArrangement'
 import AdminDock from './AdminDock'
 import RailItem from './RailItem'
-import SortableEntry from './SortableEntry'
+import RailFolder from './RailFolder'
+import DropEntry, { type DropWhere } from './DropEntry'
 import * as Styled from './NavRail.styled'
 
 // the project path a page is on: the project rail shows there, Home's rail everywhere else
@@ -55,6 +69,53 @@ interface RailProps {
   nav: NavArrangementState
   /** where the rail is (a project, or Home): an arrangement that applies elsewhere isn't a switch */
   scope: string
+}
+
+// entries don't move aside while one is dragged: a copy follows the pointer, a hint shows where it
+// would go (moving aside would carry the entry it is dropped into away from it)
+const stayPut: SortingStrategy = () => null
+
+// the entry level with the pointer (the sidebar is one column), else the nearest one
+const underPointer: CollisionDetection = (args) => {
+  const y = args.pointerCoordinates?.y
+  if (y !== undefined) {
+    const hit = args.droppableContainers.find((container) => {
+      const rect = args.droppableRects.get(container.id)
+      return !!rect && y >= rect.top && y <= rect.bottom
+    })
+    if (hit) return [{ id: hit.id, data: { droppableContainer: hit, value: 0 } }]
+  }
+  return closestCenter(args)
+}
+
+/** A group's name while editing: renamed when it loses focus (Enter), Escape keeps the old one. */
+const FolderName = ({ label, onRename }: { label: string; onRename?: (label: string) => void }) => {
+  const [value, setValue] = useState(label)
+  useEffect(() => setValue(label), [label])
+  if (!onRename) return <Styled.Label>{label}</Styled.Label>
+  const commit = () => {
+    const next = value.trim()
+    if (next && next !== label) onRename(next)
+    else setValue(label)
+  }
+  return (
+    <input
+      value={value}
+      aria-label="Group name"
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={commit}
+      // typing in it never drags the group
+      onPointerDown={(e) => e.stopPropagation()}
+      onKeyDown={(e) => {
+        e.stopPropagation()
+        if (e.key === 'Enter') e.currentTarget.blur()
+        if (e.key === 'Escape') {
+          setValue(label)
+          e.currentTarget.blur()
+        }
+      }}
+    />
+  )
 }
 
 // what folds into More: an item's height (icons only, an icon's)
@@ -79,15 +140,13 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
     () => arrangeRail(sortForSidebar(filterNavigation(items, access)), layout),
     [items, access, layout],
   )
-  // the items the layout shows, and the dividers that still separate some
+  // the items the layout shows (in groups too; a group left empty goes), and the dividers that
+  // still separate some
   const shownEntries = useMemo(() => {
     const shown = new Set(filterNavigation(items, access, layout).map((item) => item.id))
-    return trimDividers(allEntries.filter((entry) => !entry.item || shown.has(entry.id)))
+    return trimDividers(keepItems(allEntries, (item) => shown.has(item.id)))
   }, [allEntries, items, access, layout])
-  const shownItems = useMemo(
-    () => shownEntries.flatMap((entry) => (entry.item ? [entry.item] : [])),
-    [shownEntries],
-  )
+  const shownItems = useMemo(() => entryItems(shownEntries), [shownEntries])
   // while it is being edited, the hidden ones too (dimmed), and every divider
   const visible = editing ? allEntries : shownEntries
   const shownIds = useMemo(() => new Set(shownItems.map((item) => item.id)), [shownItems])
@@ -159,10 +218,12 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
   // Items that don't fit fold into More, from the last one in sidebar order. The admin area gives
   // way first: it gets what every item leaves, and folds its pages into the Admin menu.
   // An entry's height and its 2px gap.
-  const cost = (entry: RailEntry) => (entry.item ? heights[entry.id] ?? 0 : RAIL_DIVIDER_HEIGHT) + 2
+  // A group is its tile: its items open over the ones below.
+  const cost = (entry: RailEntry) =>
+    (isSolid(entry) ? heights[entry.id] ?? 0 : RAIL_DIVIDER_HEIGHT) + 2
   // nothing folds while the layout is edited: every item can be shown or hidden
   const measured =
-    !editing && visible.every((entry) => !entry.item || heights[entry.id] !== undefined)
+    !editing && visible.every((entry) => !isSolid(entry) || heights[entry.id] !== undefined)
   const total = measured ? visible.reduce((sum, entry) => sum + cost(entry), 0) : 0
   // the admin area and its 2px gap
   const dockSpace = measured && Number.isFinite(space) ? space - total - 2 : Infinity
@@ -185,9 +246,8 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
     () => (folded.size ? trimDividers(visible.filter((entry) => !folded.has(entry.id))) : visible),
     [visible, folded],
   )
-  const foldedItems = visible.flatMap((entry) =>
-    entry.item && folded.has(entry.id) ? [entry.item] : [],
-  )
+  // a folded group's items are in More one by one
+  const foldedItems = entryItems(visible.filter((entry) => folded.has(entry.id)))
   const moreMenuId = 'nav-rail-more'
 
   const renderItem = (item: NavItem) => {
@@ -217,9 +277,9 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
       />
     )
     return editing ? (
-      <SortableEntry key={item.id} id={item.id}>
+      <DropEntry key={item.id} id={item.id} drop={dropAt(item.id)}>
         {railItem}
-      </SortableEntry>
+      </DropEntry>
     ) : (
       railItem
     )
@@ -229,7 +289,7 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
   const rowIds = visible.map((entry) => entry.id)
   const renderDivider = (id: string) =>
     editing ? (
-      <SortableEntry key={id} id={id}>
+      <DropEntry key={id} id={id} drop={dropAt(id)}>
         <Styled.EditDivider data-rail-divider={id}>
           <Styled.Divider />
           <Styled.DividerRemove
@@ -241,23 +301,98 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
             <Icon icon="close" />
           </Styled.DividerRemove>
         </Styled.EditDivider>
-      </SortableEntry>
+      </DropEntry>
     ) : (
       <Styled.Divider key={id} />
     )
 
-  // while editing, an item or a divider drops anywhere on the sidebar; the click that ends a drag
-  // opens nothing
+  // a group: its tile, or while editing, open in place with its name and Ungroup on top
+  const renderFolder = (entry: RailEntry & { folder: NonNullable<RailEntry['folder']> }) =>
+    editing ? (
+      <Styled.EditFolder key={entry.id}>
+        <DropEntry id={entry.id} drop={dropAt(entry.id)}>
+          <Styled.FolderHeader data-rail-item={entry.id}>
+            <Icon icon="folder" />
+            <FolderName
+              label={entry.folder.label}
+              onRename={edit?.renameFolder && ((label) => edit.renameFolder?.(entry.id, label))}
+            />
+            {edit?.ungroup && (
+              <button
+                type="button"
+                aria-label="Ungroup"
+                data-tooltip="Ungroup: its items back on the sidebar"
+                onClick={() => edit.ungroup?.(entry.id)}
+              >
+                <Icon icon="folder_off" />
+              </button>
+            )}
+          </Styled.FolderHeader>
+        </DropEntry>
+        {entry.folder.items.map(renderItem)}
+      </Styled.EditFolder>
+    ) : (
+      <RailFolder key={entry.id} entry={entry} activeId={active?.id} renderItem={renderItem} />
+    )
+
+  // While editing, an item, a group or a divider drops anywhere on the sidebar: nothing moves
+  // aside, a line shows where it goes, a ring that an item goes into another (a group of the two)
+  // or into a group. The click that ends a drag opens nothing.
+  const rows: RailRow[] = visible.flatMap((entry) =>
+    entry.folder
+      ? [{ id: entry.id }, ...entry.folder.items.map((item) => ({ id: item.id, folder: entry.id }))]
+      : [{ id: entry.id }],
+  )
+  const [drop, setDrop] = useState<{ overId: string; where: DropWhere } | null>(null)
+  const dropAt = (id: string) => (drop?.overId === id ? drop.where : undefined)
+  const [dragged, setDragged] = useState<string | null>(null)
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }))
-  const onDragEnd = ({ active: dragItem, over }: DragEndEvent) => {
-    swallowNextClick()
-    const id = String(dragItem.id)
-    const overId = over && String(over.id)
-    if (!overId || overId === id) return
-    edit?.moveItem(rowIds, id, overId)
+  const dropFor = ({ active: drag, over, activatorEvent, delta }: DragMoveEvent): typeof drop => {
+    const id = String(drag.id)
+    const overId = over ? String(over.id) : null
+    if (!over || !overId || overId === id) return null
+    // a group doesn't go into itself
+    if (rows.find((row) => row.id === overId)?.folder === id) return null
+    // where the pointer is on the entry: its top, its middle or its bottom
+    const pointerY = (activatorEvent as PointerEvent).clientY + delta.y
+    const ratio = (pointerY - over.rect.top) / over.rect.height
+    const isItem = (row: string) => !isDividerId(row) && !isFolderId(row)
+    // an item goes into a group's header, and into an item's middle
+    const into =
+      !!edit?.placeItem &&
+      isItem(id) &&
+      !isDividerId(overId) &&
+      (isFolderId(overId) || (ratio > 0.3 && ratio < 0.7))
+    if (into) return { overId, where: 'into' }
+    return { overId, where: ratio < 0.5 ? 'before' : 'after' }
   }
+  const onDragMove = (event: DragMoveEvent) => {
+    const next = dropFor(event)
+    if (next?.overId !== drop?.overId || next?.where !== drop?.where) setDrop(next)
+  }
+  const onDragEnd = ({ active: drag }: DragEndEvent) => {
+    swallowNextClick()
+    const target = drop
+    setDrop(null)
+    setDragged(null)
+    if (!target || !edit) return
+    const id = String(drag.id)
+    if (edit.placeItem) edit.placeItem(rows, id, target.overId, target.where)
+    else edit.moveItem(rowIds, id, target.overId)
+  }
+  const draggedEntry: RailEntry | undefined = dragged
+    ? visible.find((entry) => entry.id === dragged) ??
+      visible
+        .flatMap((entry) => entry.folder?.items ?? [])
+        .filter((item) => item.id === dragged)
+        .map((item) => ({ id: item.id, item }))[0]
+    : undefined
   const entries = onRail.map((entry) =>
-    entry.item ? renderItem(entry.item) : renderDivider(entry.id),
+    entry.item
+      ? renderItem(entry.item)
+      : entry.folder
+      ? renderFolder({ ...entry, folder: entry.folder })
+      : renderDivider(entry.id),
   )
 
   // right-click: customize the layout (an item's link can still open in a new browser tab)
@@ -300,13 +435,36 @@ const Rail = ({ items, footer, nav, scope }: RailProps) => {
         <>
           <DndContext
             sensors={sensors}
-            collisionDetection={closestCenter}
+            collisionDetection={underPointer}
             modifiers={[restrictToVerticalAxis]}
+            onDragStart={({ active: drag }) => setDragged(String(drag.id))}
+            // a move reports the target it had before the move; a change of target, the new one
+            onDragMove={onDragMove}
+            onDragOver={onDragMove}
             onDragEnd={onDragEnd}
+            onDragCancel={() => {
+              setDrop(null)
+              setDragged(null)
+            }}
           >
-            <SortableContext items={rowIds} strategy={verticalListSortingStrategy}>
+            <SortableContext items={rows.map((row) => row.id)} strategy={stayPut}>
               {entries}
             </SortableContext>
+            <DragOverlay dropAnimation={null}>
+              {draggedEntry && (
+                <Styled.DragChip>
+                  <Icon
+                    icon={
+                      draggedEntry.item?.icon ??
+                      (draggedEntry.folder ? 'folder' : 'horizontal_rule')
+                    }
+                  />
+                  <Styled.Label>
+                    {draggedEntry.item?.label ?? draggedEntry.folder?.label ?? 'Divider'}
+                  </Styled.Label>
+                </Styled.DragChip>
+              )}
+            </DragOverlay>
           </DndContext>
           <Styled.AddDivider
             type="button"

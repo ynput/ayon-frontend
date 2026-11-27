@@ -34,19 +34,47 @@ const DIVIDER = 'divider:'
 
 export const isDividerId = (id: string) => id.startsWith(DIVIDER)
 
-/** What the sidebar shows, top down: an item, or a divider (no `item`). */
+/** A group of sidebar items: in an arrangement's order, `folder:<id>`. */
+const FOLDER = 'folder:'
+
+export const isFolderId = (id: string) => id.startsWith(FOLDER)
+
+/** A group on the sidebar: its name and its items, in their order. */
+export interface RailFolder {
+  label: string
+  items: NavItem[]
+}
+
+/** What the sidebar shows, top down: an item, a group (`folder`), or a divider (neither). */
 export interface RailEntry {
   id: string
   item?: NavItem
+  folder?: RailFolder
 }
+
+/** An entry that shows something: an item or a group, not a divider. */
+export const isSolid = (entry?: RailEntry) => !!entry?.item || !!entry?.folder
 
 /** The entries without the dividers that separate nothing: at either end, and after another. */
 export const trimDividers = (entries: RailEntry[]) =>
   entries.filter(
     (entry, index) =>
-      !!entry.item ||
-      (!!entries[index - 1]?.item && entries.slice(index + 1).some((next) => next.item)),
+      isSolid(entry) ||
+      (isSolid(entries[index - 1]) && entries.slice(index + 1).some((next) => isSolid(next))),
   )
+
+/** Every item on the sidebar, a group's included, top down. */
+export const entryItems = (entries: RailEntry[]): NavItem[] =>
+  entries.flatMap((entry) => (entry.item ? [entry.item] : entry.folder?.items ?? []))
+
+/** The entries with only the items `keep` keeps, in groups too; a group left empty goes. */
+export const keepItems = (entries: RailEntry[], keep: (item: NavItem) => boolean): RailEntry[] =>
+  entries.flatMap((entry) => {
+    if (entry.item) return keep(entry.item) ? [entry] : []
+    if (!entry.folder) return [entry]
+    const items = entry.folder.items.filter(keep)
+    return items.length ? [{ ...entry, folder: { ...entry.folder, items } }] : []
+  })
 
 /**
  * The sidebar's items (already filtered and in sidebar order) and dividers, as the arrangement
@@ -60,14 +88,27 @@ export const arrangeRail = (items: NavItem[], layout: NavLayout): RailEntry[] =>
   let entries: RailEntry[]
   if (layout.free) {
     const order = layout.order ?? []
+    const folders = layout.folders ?? {}
+    // an item in a group is there only
+    const grouped = new Set(Object.values(folders).flatMap((folder) => folder.items))
     entries = order.flatMap((id) => {
       if (isDividerId(id)) return [{ id }]
+      if (isFolderId(id)) {
+        const folder = folders[id]
+        if (!folder) return []
+        const members = folder.items.flatMap((member) => items.filter((item) => item.id === member))
+        return [{ id, folder: { label: folder.label, items: members } }]
+      }
+      if (grouped.has(id)) return []
       const item = items.find((other) => other.id === id)
       return item ? [{ id, item }] : []
     })
+    // a group goes by its last item's section
+    const section = (entry: RailEntry) =>
+      entry.item?.section ?? entry.folder?.items[entry.folder.items.length - 1]?.section
     items.forEach((item) => {
-      if (order.includes(item.id)) return
-      const kin = entries.map((entry) => entry.item?.section).lastIndexOf(item.section)
+      if (order.includes(item.id) || grouped.has(item.id)) return
+      const kin = entries.map(section).lastIndexOf(item.section)
       entries.splice(kin === -1 ? entries.length : kin + 1, 0, { id: item.id, item })
     })
   } else {

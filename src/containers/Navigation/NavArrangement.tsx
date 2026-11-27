@@ -16,12 +16,29 @@ import type { PinnedView } from './pins/types'
  * the module the navigation is as AYON lays it out, with nothing to edit.
  */
 
+/** A sidebar entry as shown while editing, top down: in a group (its id), or not. */
+export interface RailRow {
+  id: string
+  folder?: string
+}
+
 /** What the controls on the sidebar and the tab rows do while the arrangement is edited. */
 export interface NavArrangementEdit {
   /** shows a sidebar item again, or hides it */
   toggleItem: (id: string) => void
   /** drops a sidebar item or divider (of `rowIds`, the sidebar's entries as shown) on `overId` */
   moveItem: (rowIds: string[], id: string, overId: string) => void
+  /**
+   * Drops a sidebar item, group or divider (of `rows`, the sidebar as shown, a group's items
+   * included) before or after `overId`, or into it: an item dropped into an item makes a group of
+   * the two, into a group (or one of its items) joins it. An item dragged out of its group leaves
+   * it; a group left empty goes. Without it, entries only reorder (`moveItem`).
+   */
+  placeItem?: (rows: RailRow[], id: string, overId: string, where: 'before' | 'after' | 'into') => void
+  /** names a group */
+  renameFolder?: (id: string, label: string) => void
+  /** puts a group's items back on the sidebar, where the group was */
+  ungroup?: (id: string) => void
   /** adds a divider at the end of the sidebar, to be dragged into place */
   addDivider: (rowIds: string[]) => void
   removeDivider: (rowIds: string[], id: string) => void

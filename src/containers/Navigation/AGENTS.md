@@ -101,7 +101,13 @@ never folds the path again.
   row and items and dividers anywhere on the sidebar (the actions get the row as shown); Add
   divider and a button on each divider; the admin area shows every admin page, the Admin menu's
   dimmed, and its eye and drag move them. Right-click on the sidebar offers `customize`. Settings'
-  own tab row isn't arranged (no eyes; decided 2026-11-25).
+  own tab row isn't arranged (no eyes; decided 2026-11-25). On the sidebar nothing moves aside
+  while dragging (`DropEntry`, `stayPut`, a copy follows the pointer): a line shows before or
+  after, a ring that an item goes into another item (a group of the two) or into a group (Milan,
+  2026-11-27, as Discord's folders), from where the pointer is on the entry (`underPointer`, and
+  `onDragOver` too: a move reports the target it had before). `placeItem` gets the sidebar as
+  shown (`RailRow`s, a group's items with its id); without it entries only reorder (`moveItem`).
+  While editing a group is open in place, its name on its own line and Ungroup beside its icon.
 - **Showing it** (`arrange.ts`): `filterNavigation` hides items, `arrangeRail` lays out the
   sidebar: a `free` arrangement's order (an item it doesn't mention, such as an addon page
   installed since, goes after the last item of its section, hidden ones included, so it is in the
@@ -109,6 +115,10 @@ never folds the path again.
   Outside editing, a divider that separates nothing (at either end or after another one, as when
   the user can't see an item, or after the items folded into More) doesn't show. `arrangeTabs` lays
   out the tab rows (an unmentioned pin follows its page, other unmentioned tabs at the end),
+  `folders` group items (`RailFolder`: their first icons in a square and the group's name;
+  pointing at it, or tabbing to it, opens its items over the ones below a moment later, upward
+  near the sidebar's end, so nothing below moves and folding counts only the tile; a folded group's
+  items are in More one by one; its tile is active when one of its items is),
   `splitAdminItems` the promoted admin pages, `iconsOnly` narrows the sidebar to its icons and
   `tint` (a `#rrggbb` colour, nothing else is taken) tints its sheet; the host remembers both in
   this browser (each context's tint), so the sidebar has its width and colour before the module

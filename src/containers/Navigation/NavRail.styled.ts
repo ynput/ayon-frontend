@@ -387,3 +387,189 @@ export const NotificationDot = styled.span`
   background-color: var(--md-sys-color-error);
   pointer-events: none;
 `
+
+// --- groups of items (an arrangement's folders)
+
+// a group on the sidebar: its tile, and its items over the ones below while it is open
+export const FolderWrap = styled.div`
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`
+
+// the group's tile: its first items' icons in a square, its name below
+export const FolderTile = styled.button`
+  ${itemStyles}
+  border: none;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+
+  &.open {
+    background-color: var(--color-nav-hover);
+  }
+`
+
+export const FolderIcons = styled.span`
+  display: grid;
+  grid-template-columns: repeat(2, 13px);
+  grid-auto-rows: 13px;
+  gap: 1px;
+  padding: 3px;
+  border-radius: var(--border-radius-l);
+  background-color: var(--md-sys-color-surface-container-highest);
+
+  .icon {
+    font-size: 13px;
+  }
+  .active & .icon {
+    color: var(--md-sys-color-primary);
+  }
+`
+
+// the group's items, over the items below it (or above, near the sidebar's end)
+export const FolderPanel = styled.div`
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 2px 0;
+  border-radius: var(--border-radius-l);
+  background-color: var(--md-sys-color-surface-container-high);
+  box-shadow: var(--md-sys-elevation-overlay);
+
+  &.up {
+    top: auto;
+    bottom: 100%;
+  }
+`
+
+// while editing: a group open in place, its name and Ungroup on top
+export const EditFolder = styled.div`
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: ${ITEM_WIDTH}px;
+  padding-bottom: 2px;
+  border: 1px dashed var(--md-sys-color-outline-variant);
+  border-radius: var(--border-radius-l);
+
+  .icons-only & {
+    width: ${ICON_ITEM}px;
+  }
+`
+
+// its name on its own line under the group icon and Ungroup, so a long one fits
+export const FolderHeader = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  row-gap: 1px;
+  width: ${ITEM_WIDTH - 2}px;
+  padding: 3px 3px 0;
+  cursor: grab;
+
+  .icon {
+    font-size: 16px;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  input,
+  & > ${Label} {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: 1px 2px;
+    border: 1px solid transparent;
+    border-radius: var(--border-radius-m);
+    background: none;
+    color: var(--md-sys-color-on-surface);
+    font: inherit;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+
+    &:hover,
+    &:focus {
+      border-color: var(--md-sys-color-outline-variant);
+      outline: none;
+    }
+  }
+  /* beside the group icon */
+  button {
+    grid-row: 1;
+    grid-column: 2;
+    display: flex;
+    padding: 1px;
+    border: none;
+    border-radius: var(--border-radius-m);
+    background: none;
+    cursor: pointer;
+
+    &:hover {
+      background-color: var(--md-sys-color-surface-container-highest);
+    }
+  }
+
+  .icons-only & {
+    width: ${ICON_ITEM - 2}px;
+    padding: 2px 1px 0;
+
+    input {
+      display: none;
+    }
+  }
+`
+
+// while dragging: where the dragged entry goes (a line before or after, a ring into)
+export const DropHint = styled.div`
+  &.drop-before::before,
+  &.drop-after::after {
+    content: '';
+    position: absolute;
+    left: 4px;
+    right: 4px;
+    height: 2px;
+    border-radius: 1px;
+    background-color: var(--md-sys-color-primary);
+    z-index: 2;
+  }
+  &.drop-before::before {
+    top: -2px;
+  }
+  &.drop-after::after {
+    bottom: -2px;
+  }
+  &.drop-into {
+    outline: 2px solid var(--md-sys-color-primary);
+    outline-offset: -2px;
+    border-radius: var(--border-radius-l);
+  }
+`
+
+// a dragged entry's place stays, faded; the hint shows where it would go
+export const DraggableEntry = styled(DropHint)`
+  position: relative;
+  flex-shrink: 0;
+  touch-action: none;
+
+  &.dragging {
+    opacity: 0.4;
+  }
+`
+
+// what follows the pointer while dragging
+export const DragChip = styled.div`
+  ${itemStyles}
+  background-color: var(--md-sys-color-surface-container-highest);
+  box-shadow: var(--md-sys-elevation-overlay);
+  opacity: 0.95;
+  cursor: grabbing;
+`

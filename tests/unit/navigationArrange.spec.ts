@@ -2,6 +2,8 @@ import { expect, test } from '@playwright/test'
 import {
   arrangeRail,
   arrangeTabs,
+  entryItems,
+  keepItems,
   promotedIds,
   trimDividers,
 } from '../../src/containers/Navigation/arrange'
@@ -130,3 +132,30 @@ test('the admin pages on the sidebar: the arrangement\'s, else Settings, Project
   expect(promotedIds({})).toEqual(['settings', 'projects', 'events'])
   expect(promotedIds({ promoted: ['bundles'] })).toEqual(['bundles'])
 })
+
+test('a group holds its items in its place; they are nowhere else, and a new item goes by its section', () => {
+  const layout = {
+    free: true,
+    order: ['production', 'divider:a', 'folder:g', 'reports'],
+    folders: { 'folder:g': { label: 'Review', items: ['storyboards', 'reviews', 'gone'] } },
+  }
+  const entries = arrangeRail(sidebar(), layout)
+  // time and scheduler aren't mentioned: after the last entry of their section (plan: reports)
+  expect(railIds(entries)).toEqual(['production', 'divider:a', 'folder:g', 'reports', 'scheduler', 'time'])
+  expect(entries[2].folder?.items.map((i) => i.id)).toEqual(['storyboards', 'reviews'])
+  expect(entryItems(entries).map((i) => i.id)).toEqual([
+    'production',
+    'storyboards',
+    'reviews',
+    'reports',
+    'scheduler',
+    'time',
+  ])
+  // a group whose items are all hidden goes; the divider still separates Overview from Reports
+  const shown = trimDividers(keepItems(entries, (i) => !['storyboards', 'reviews'].includes(i.id)))
+  expect(railIds(shown)).toEqual(['production', 'divider:a', 'reports', 'scheduler', 'time'])
+  // a group is something a divider separates: one left after it stays
+  const last = arrangeRail(sidebar(), { ...layout, order: ['folder:g', 'divider:a', 'reports'] })
+  expect(railIds(trimDividers(last)).slice(0, 3)).toEqual(['folder:g', 'divider:a', 'reports'])
+})
+
