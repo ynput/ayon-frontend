@@ -73,6 +73,11 @@ never folds the path again.
   in the first item (Overview, My work).
 - **Sidebar order:** `NAV_SECTIONS`, then `order`, then registry order, a divider between
   sections; until a layout arranges it.
+- **A disabled item** (`disabled`: why, as its tooltip) keeps a place another context has, so the
+  sidebar doesn't rebuild between Home and a project (Milan, 2026-11-27): Home's Review (id
+  `reviews`, as the project's) while the review addon is in the bundle, until there is a
+  studio-wide review. It has no tabs; `filterNavigation` keeps it, it is never active, it opens
+  nothing and isn't where a layout switch lands.
 - **Layouts are views of type `layout`** (behind the Power Pack licence). Their settings
   (`layouts/types.ts`): per context (`project`, `studio`) the sidebar's `items` (order, hidden,
   and `free` once the user arranged it: then `order` is the whole sidebar, items and their

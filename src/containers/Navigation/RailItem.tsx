@@ -5,8 +5,8 @@ import * as Styled from './NavRail.styled'
 
 interface RailItemProps {
   item: NavItem
-  /** where it opens: its landing page */
-  to: string
+  /** where it opens: its landing page (a disabled item opens nothing) */
+  to?: string
   isActive: boolean
   /** the smaller items of the admin area */
   compact?: boolean
@@ -26,55 +26,83 @@ interface RailItemProps {
 
 /**
  * A sidebar item. A plain click on the open item does nothing (a page may have changed the URL
- * without the router); a modified one still opens a new browser tab.
+ * without the router); a modified one still opens a new browser tab. A disabled item is no link:
+ * focusable, its tooltip says why.
  */
-const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps) => (
-  <Styled.Item
-    to={to}
-    className={clsx({ active: isActive, compact, 'layout-hidden': edit?.dimmed })}
-    // while editing, the item drags to a new place instead of the browser dragging its link
-    draggable={edit ? false : undefined}
-    aria-current={isActive ? 'page' : undefined}
-    onClick={
-      isActive
-        ? (e) => {
-            if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey)
-              e.preventDefault()
+const RailItem = ({ item, to, isActive, compact, edit, ...data }: RailItemProps) => {
+  const content = (
+    <>
+      <Icon icon={item.icon} />
+      <Styled.Label>{item.label}</Styled.Label>
+      {edit && (
+        <Styled.ItemEye
+          icon={edit.hidden ? 'visibility_off' : 'visibility'}
+          role="button"
+          aria-label={
+            edit.labels
+              ? `${item.label}: ${edit.hidden ? edit.labels.show : edit.labels.hide}`
+              : edit.hidden
+              ? `Show ${item.label}`
+              : `Hide ${item.label}`
           }
-        : undefined
-    }
-    aria-label={item.label}
-    data-rail-item={item.id}
-    data-tooltip={item.label}
-    data-tooltip-position="right"
-    {...item.tags}
-    {...data}
-  >
-    <Icon icon={item.icon} />
-    <Styled.Label>{item.label}</Styled.Label>
-    {edit && (
-      <Styled.ItemEye
-        icon={edit.hidden ? 'visibility_off' : 'visibility'}
-        role="button"
-        aria-label={
-          edit.labels
-            ? `${item.label}: ${edit.hidden ? edit.labels.show : edit.labels.hide}`
-            : edit.hidden
-            ? `Show ${item.label}`
-            : `Hide ${item.label}`
-        }
-        data-tooltip={
-          edit.hidden ? edit.labels?.show ?? 'Show' : edit.labels?.hide ?? 'Hide'
-        }
-        onClick={(e) => {
-          // the eye sits inside the item's link
-          e.preventDefault()
-          e.stopPropagation()
-          edit.toggle()
-        }}
-      />
-    )}
-  </Styled.Item>
-)
+          data-tooltip={
+            edit.hidden ? edit.labels?.show ?? 'Show' : edit.labels?.hide ?? 'Hide'
+          }
+          onClick={(e) => {
+            // the eye sits inside the item's link
+            e.preventDefault()
+            e.stopPropagation()
+            edit.toggle()
+          }}
+        />
+      )}
+    </>
+  )
+  const className = clsx({ active: isActive, compact, 'layout-hidden': edit?.dimmed })
+
+  if (item.disabled || !to)
+    return (
+      <Styled.DisabledItem
+        className={className}
+        role="link"
+        aria-disabled
+        tabIndex={0}
+        aria-label={item.label}
+        data-rail-item={item.id}
+        data-tooltip={item.disabled ?? item.label}
+        data-tooltip-position="right"
+        {...item.tags}
+        {...data}
+      >
+        {content}
+      </Styled.DisabledItem>
+    )
+
+  return (
+    <Styled.Item
+      to={to}
+      className={className}
+      // while editing, the item drags to a new place instead of the browser dragging its link
+      draggable={edit ? false : undefined}
+      aria-current={isActive ? 'page' : undefined}
+      onClick={
+        isActive
+          ? (e) => {
+              if (e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey)
+                e.preventDefault()
+            }
+          : undefined
+      }
+      aria-label={item.label}
+      data-rail-item={item.id}
+      data-tooltip={item.label}
+      data-tooltip-position="right"
+      {...item.tags}
+      {...data}
+    >
+      {content}
+    </Styled.Item>
+  )
+}
 
 export default RailItem

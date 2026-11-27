@@ -114,7 +114,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     shown.current = { scope, id: layoutId, path, page }
     if (!before || before.scope !== scope || before.id === layoutId) return
     if (!active || before.path !== path || !before.page || page) return
-    const target = itemShown ? active : shownItems[0]
+    const target = itemShown ? active : shownItems.find((item) => !item.disabled)
     const to = target && itemLandingPath(target, access, layout)
     if (to) navigate(to)
     // nowhere to go yet (its only tabs are pins still loading): tried again when the items change
@@ -202,7 +202,8 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     // while editing, an item whose tabs the layout hides still opens its first tab
     const to =
       itemLandingPath(item, access, layout) ?? (editing ? itemLandingPath(item, access) : undefined)
-    if (!to) return null
+    // a disabled item opens nothing but shows
+    if (!to && !item.disabled) return null
     const railItem = (
       <RailItem
         key={item.id}
@@ -351,7 +352,9 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
                 label: item.label,
                 icon: item.icon,
                 // the selected item only closes the menu, as on the rail
-                ...(item.id === active?.id
+                ...(item.disabled
+                  ? { disabled: true }
+                  : item.id === active?.id
                   ? { onClick: () => {} }
                   : { link: itemLandingPath(item, access, layout) }),
                 selected: item.id === active?.id,

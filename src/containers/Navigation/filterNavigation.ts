@@ -19,7 +19,7 @@ export const canOpenTab = (tab: NavLinkItem, access: NavAccess) =>
 
 /**
  * The one filter over the registry: an item shows when the layout doesn't hide it and the user can
- * open one of the tabs the layout shows. Exposure levels and hidden contributions are applied
+ * open one of the tabs the layout shows (a disabled item has none, and shows). Exposure levels and hidden contributions are applied
  * before the items are built (an addon page the user can't see has no tab). Tabs stay as they are,
  * so the tab row can still redirect from a tab the user can't open.
  */
@@ -31,7 +31,8 @@ export const filterNavigation = (
   items.filter(
     (item) =>
       !layout.hidden?.includes(item.id) &&
-      arrangeTabs(item.tabs, layout, item.id).some((tab) => canOpenTab(tab, access)),
+      (!!item.disabled ||
+        arrangeTabs(item.tabs, layout, item.id).some((tab) => canOpenTab(tab, access))),
   )
 
 /** a sidebar divider's height with its margins */

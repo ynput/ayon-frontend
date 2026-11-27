@@ -177,6 +177,15 @@ test('an item shows when the user can open one of its tabs', () => {
   expect(itemLandingPath(items[0], { manager: true, admin: false })).toBe('/settings/studio')
 })
 
+test('a disabled item shows without tabs, opens nothing and is never active', () => {
+  const access = { manager: false, admin: false }
+  const review = item('reviews', 'review', [], { disabled: 'Coming soon' })
+  expect(filterNavigation([review], access)).toEqual([review])
+  expect(filterNavigation([review], access, { hidden: ['reviews'] })).toEqual([])
+  expect(itemLandingPath(review, access)).toBeUndefined()
+  expect(findActiveItem([review], '/dashboard/reviews')).toBeUndefined()
+})
+
 test('the active item holds the path in a tab or a match prefix', () => {
   const items = [
     item('production', 'main', [{ path: '/projects/p/overview' }, { path: '/projects/p/products' }]),

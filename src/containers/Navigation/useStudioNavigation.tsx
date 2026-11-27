@@ -48,6 +48,7 @@ export const useStudioNavigation = () => {
   })
 
   const hasPlanner = !!getBundleAddonVersion('planner')
+  const hasReview = !!getBundleAddonVersion('review')
   const { getAddonBundle } = useRemoteBundle()
 
   // pages addons contribute to the studio.page slot; built-in and legacy pages win on an id clash
@@ -143,9 +144,25 @@ export const useStudioNavigation = () => {
       }),
     ]
 
-    return [myWork, ...placePages(myWork, entries, KNOWN_STUDIO_PAGES)]
+    // a project's Review, in its place on Home too, so the sidebar keeps it when you leave a
+    // project; there is no studio-wide review yet
+    const review: NavItem = {
+      id: 'reviews',
+      label: 'Review',
+      icon: 'play_circle',
+      section: 'review',
+      tabs: [],
+      disabled: 'Studio-wide review is coming soon. For now, open a project to review in it.',
+    }
+
+    return [
+      myWork,
+      ...(hasReview ? [review] : []),
+      ...placePages(myWork, entries, KNOWN_STUDIO_PAGES),
+    ]
   }, [
     hasPlanner,
+    hasReview,
     dashboardAddons,
     remotePages,
     addonStudioPages,

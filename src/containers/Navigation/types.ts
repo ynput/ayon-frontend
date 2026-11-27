@@ -36,6 +36,11 @@ export interface NavItem {
   match?: string[]
   /** the slot inspector's tags, spread on the item like on a tab */
   tags?: InspectorTags
+  /**
+   * Shown but not usable yet, so the sidebar keeps a place another context has: why, as its
+   * tooltip. It has no tabs and opens nothing.
+   */
+  disabled?: string
 }
 
 /** What the user can open: the `accessLevels` a tab may require. */

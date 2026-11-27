@@ -217,6 +217,24 @@ export const Item = styled(Link)`
   }
 `
 
+// an item not usable yet: dimmed, its tooltip says why
+export const DisabledItem = styled.span`
+  ${itemStyles}
+  cursor: default;
+
+  & > .icon:not(${ItemEye}),
+  & > ${Label} {
+    opacity: 0.38;
+  }
+  &:hover {
+    background-color: transparent;
+    color: var(--md-sys-color-on-surface-variant);
+  }
+  &:hover ${ItemEye}, &:focus-visible ${ItemEye}, &.layout-hidden ${ItemEye} {
+    opacity: 1;
+  }
+`
+
 // Home, at the sidebar's top above the context's places, in both: the root of the path, which
 // goes on in the top bar
 export const HomeItem = styled(Link)`
