@@ -163,12 +163,22 @@ test('holds messages while a video plays and releases them once every player sto
     await wait(PLAYBACK_RELEASE_DELAY + 50)
     expect(released).toBe(0)
 
+    // released after a short delay, so the pause paints first. Messages stay held until then:
+    // one handled in the delay would come before the older held ones.
     setPlaybackActive('viewer', false)
-    // released after a short delay, so the pause paints first
+    await wait(PLAYBACK_RELEASE_DELAY / 2)
     expect(released).toBe(0)
-    expect(isHoldingMessages()).toBe(false)
-    await wait(PLAYBACK_RELEASE_DELAY + 50)
+    expect(isHoldingMessages()).toBe(true)
+
+    // playing on and pausing again within the delay waits the full delay from the last pause
+    setPlaybackActive('viewer', true)
+    setPlaybackActive('viewer', false)
+    await wait(PLAYBACK_RELEASE_DELAY / 2 + 50)
+    expect(released).toBe(0)
+    expect(isHoldingMessages()).toBe(true)
+    await wait(PLAYBACK_RELEASE_DELAY / 2)
     expect(released).toBe(1)
+    expect(isHoldingMessages()).toBe(false)
 
     // a player that was not playing stops: nothing to release
     setPlaybackActive('viewer', false)

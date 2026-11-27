@@ -21,9 +21,6 @@ const playingPlayers = new Set<string>()
 
 export const isPlaybackActive = () => playingPlayers.size > 0
 
-/** Whether the sockets hold their messages back: the tab is hidden or a video plays in it. */
-export const isHoldingMessages = () => isTabHidden() || isPlaybackActive()
-
 /**
  * After playback stops, the held messages wait this long: a pause paints first, and playing on
  * within it (stepping frames, a seek that restarts playback) skips the catch-up.
@@ -31,7 +28,16 @@ export const isHoldingMessages = () => isTabHidden() || isPlaybackActive()
 export const PLAYBACK_RELEASE_DELAY = 250
 
 const releaseListeners = new Set<() => void>()
+// set while playback has stopped but the held messages still wait (PLAYBACK_RELEASE_DELAY)
 let releaseTimer: ReturnType<typeof setTimeout> | undefined
+
+/**
+ * Whether the sockets hold their messages back: the tab is hidden, a video plays in it, or
+ * playback stopped less than PLAYBACK_RELEASE_DELAY ago. Holding on through the delay keeps the
+ * order: a message that arrives in it would otherwise be handled before the older held ones.
+ */
+export const isHoldingMessages = () =>
+  isTabHidden() || isPlaybackActive() || releaseTimer !== undefined
 
 /** Calls `fn` whenever the sockets stop holding messages back. Returns the unsubscribe. */
 export const onMessagesReleased = (fn: () => void) => {
@@ -42,17 +48,27 @@ export const onMessagesReleased = (fn: () => void) => {
 }
 
 const release = () => {
+  if (!isHoldingMessages()) releaseListeners.forEach((fn) => fn())
+}
+
+const cancelPlaybackRelease = () => {
   clearTimeout(releaseTimer)
   releaseTimer = undefined
-  if (!isHoldingMessages()) releaseListeners.forEach((fn) => fn())
 }
 
 /** A player started or stopped playing in this tab. The same as sending PLAYBACK_EVENT. */
 export const setPlaybackActive = (id: string, playing: boolean) => {
   if (playing) {
     playingPlayers.add(id)
-  } else if (playingPlayers.delete(id) && !isHoldingMessages()) {
-    releaseTimer ??= setTimeout(release, PLAYBACK_RELEASE_DELAY)
+    // played on within the delay: no catch-up yet
+    cancelPlaybackRelease()
+  } else if (playingPlayers.delete(id) && !isPlaybackActive()) {
+    // every stop waits the full delay, also one right after an earlier pause
+    cancelPlaybackRelease()
+    releaseTimer = setTimeout(() => {
+      releaseTimer = undefined
+      release()
+    }, PLAYBACK_RELEASE_DELAY)
   }
 }
 
@@ -61,6 +77,7 @@ if (typeof window !== 'undefined') {
     const detail = (event as CustomEvent<Partial<PlaybackEventDetail>>).detail
     if (typeof detail?.id === 'string') setPlaybackActive(detail.id, !!detail.playing)
   })
+  // the tab shows again: release, unless a stopped player's delay still runs (its timer releases)
   document.addEventListener('visibilitychange', release)
 }
 
