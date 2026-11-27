@@ -68,4 +68,6 @@ export interface NavLayout {
    * (`DEFAULT_PROMOTED` in `layouts/applyLayout.ts` when not set)
    */
   promoted?: string[]
+  /** the sidebar shows its items' icons only (`LayoutSettings.iconsOnly`) */
+  iconsOnly?: boolean
 }

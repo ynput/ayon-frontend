@@ -14,6 +14,7 @@ export const toNavLayout = (
     free: own?.items?.free,
     tabs: own?.tabs,
     promoted: settings?.promoted,
+    iconsOnly: settings?.iconsOnly,
   }
 }
 
@@ -343,9 +344,17 @@ export const reorderPromoted = (
   return next === promoted ? layout : { ...layout, version: 1, promoted: next }
 }
 
+/** The sidebar with its items' icons only, or with their names again. */
+export const toggleIconsOnly = (layout: LayoutSettings): LayoutSettings => ({
+  ...layout,
+  version: 1,
+  iconsOnly: !layout.iconsOnly,
+})
+
 /**
- * What editing changes (the sidebar, the tab rows and the pinned views of both contexts, and
- * which admin pages are on the sidebar) put onto the layout as it is now.
+ * What editing changes (the sidebar, the tab rows and the pinned views of both contexts, which
+ * admin pages are on the sidebar, and whether it shows icons only) put onto the layout as it is
+ * now.
  */
 export const applyEdits = (
   current: LayoutSettings | undefined,
@@ -363,5 +372,6 @@ export const applyEdits = (
     project: edited('project'),
     studio: edited('studio'),
     promoted: draft.promoted,
+    iconsOnly: draft.iconsOnly,
   }
 }

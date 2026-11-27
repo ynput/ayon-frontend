@@ -67,8 +67,9 @@ interface RailProps {
   scope: string
 }
 
-// what folds into More: an item's height
+// what folds into More: an item's height (icons only, an icon's)
 const MORE_HEIGHT = 54
+const MORE_HEIGHT_ICONS = 40
 
 const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   const { layout, id: layoutId, ready: layoutReady, editing, customize } = nav
@@ -176,7 +177,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   const dockSpace = measured && Number.isFinite(space) ? space - total - 2 : Infinity
   const folded = useMemo(() => {
     if (!measured || !Number.isFinite(available) || total <= available) return new Set<string>()
-    let used = MORE_HEIGHT + 2
+    let used = (layout.iconsOnly ? MORE_HEIGHT_ICONS : MORE_HEIGHT) + 2
     const fit = new Set<string>()
     for (const entry of visible) {
       if (used + cost(entry) > available) break
@@ -186,7 +187,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
     return new Set(visible.filter((entry) => !fit.has(entry.id)).map((entry) => entry.id))
     // `cost` reads `heights`
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [measured, total, visible, heights, available])
+  }, [measured, total, visible, heights, available, layout.iconsOnly])
 
   // what stays on the sidebar: without the folded items, nor a divider left at the end
   const onRail = useMemo(
@@ -369,9 +370,8 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
   )
 }
 
-const ProjectRail = ({ projectName }: { projectName: string }) => {
+const ProjectRail = ({ projectName, nav }: { projectName: string; nav: NavLayoutState }) => {
   const { items } = useProjectNavigation(projectName)
-  const nav = useNavLayout('project', projectName)
   return (
     <Rail
       items={items}
@@ -390,9 +390,8 @@ const ProjectRail = ({ projectName }: { projectName: string }) => {
   )
 }
 
-const StudioRail = () => {
+const StudioRail = ({ nav }: { nav: NavLayoutState }) => {
   const { items } = useStudioNavigation()
-  const nav = useNavLayout('studio')
   return (
     <Rail
       items={items}
@@ -411,13 +410,24 @@ const StudioRail = () => {
  * the user's exposure level shows.
  */
 export const NavRail = () => {
-  const { pathname } = useLocation()
   const user = useAppSelector((state) => state.user)
   if (user.data?.isGuest) return null
+  return <Sidebar />
+}
 
+const Sidebar = () => {
+  const { pathname } = useLocation()
   const projectName = pathname.match(PROJECT_PATH)?.[1]
+  const project = projectName ? decodeURIComponent(projectName) : undefined
+  // the layout that applies here: the context's places, and whether the sidebar shows icons only
+  const nav = useNavLayout(project ? 'project' : 'studio', project)
+
   return (
-    <Styled.Column aria-label="Sidebar" data-nav-rail>
+    <Styled.Column
+      aria-label="Sidebar"
+      data-nav-rail
+      className={clsx({ 'icons-only': nav.layout.iconsOnly })}
+    >
       {/* Home is the context of every page outside a project */}
       <Styled.HomeItem
         to="/dashboard/tasks"
@@ -430,11 +440,7 @@ export const NavRail = () => {
         <Styled.Label>Home</Styled.Label>
       </Styled.HomeItem>
       <Styled.Divider />
-      {projectName ? (
-        <ProjectRail projectName={decodeURIComponent(projectName)} />
-      ) : (
-        <StudioRail />
-      )}
+      {project ? <ProjectRail projectName={project} nav={nav} /> : <StudioRail nav={nav} />}
     </Styled.Column>
   )
 }

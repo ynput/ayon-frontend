@@ -12,6 +12,7 @@ import {
   reorderTabs,
   replaceTabId,
   togglePromoted,
+  toggleIconsOnly,
   resolveLayout,
   toNavLayout,
 } from '../../src/containers/Navigation/layouts/applyLayout'
@@ -294,6 +295,15 @@ test('saving an edit takes its sidebar, tab rows, pins and admin pages', () => {
   expect(saved.project?.items).toEqual({ hidden: [] })
   expect(saved.project?.tabs).toEqual({ production: { hidden: ['lists'] } })
   expect(saved.project?.pinned?.map((pin) => pin.id)).toEqual(['b'])
+})
+
+test('icons only is the whole layout\'s, in both contexts, and saves with the edits', () => {
+  const on = toggleIconsOnly({ version: 1 })
+  expect(on.iconsOnly).toBe(true)
+  expect(toNavLayout(on, 'project').iconsOnly).toBe(true)
+  expect(toNavLayout(on, 'studio').iconsOnly).toBe(true)
+  expect(applyEdits({ version: 1, promoted: ['settings'] }, on).iconsOnly).toBe(true)
+  expect(applyEdits(on, toggleIconsOnly(on)).iconsOnly).toBe(false)
 })
 
 test('an admin page moves between the sidebar and the Admin menu, and orders on the sidebar', () => {

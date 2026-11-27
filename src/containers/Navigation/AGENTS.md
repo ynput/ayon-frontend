@@ -83,7 +83,9 @@ never folds the path again.
   and `free` once the user arranged it: then `order` is the whole sidebar, items and their
   `divider:<id>` dividers) and
   each item's `tabs` (order, hidden; a tab is its module or `view:<id>`) and `pinned` views, plus
-  the `promoted` admin pages.
+  the `promoted` admin pages and `iconsOnly` (Milan, 2026-11-27: the sidebar shows its items'
+  icons, their names in tooltips; one setting for both contexts, so the sidebar keeps its width
+  between Home and a project).
 - **Which layout applies** (`useActiveLayout`, `resolveLayout`): the one the user picked (user
   preferences, `navigationLayout`), else the project's default (project data, same key), else the
   studio default (the `layout` base view, also when it is picked or a project's default), else
@@ -116,7 +118,8 @@ never folds the path again.
   sections.
   The bar along the bottom (`LayoutEditBanner`, in the app shell, so on every page) saves with the
   `update` of the layout that applied when editing began, wherever the user is: the sidebar, the
-  tab rows, the pins and the admin pages on the sidebar (`applyEdits`). While editing,
+  tab rows, the pins, the admin pages on the sidebar and its Sidebar icons only switch
+  (`applyEdits`). While editing,
   pinning, unpinning, renaming, moving and repointing a pinned tab change the draft
   (`usePinnedViews`), so Cancel drops them; a view created meanwhile stays a view. The rail's
   switch check reads the draft, so a page hidden in it stays open when Save makes a copy.

@@ -57,6 +57,8 @@ export interface LayoutSettings {
   studio?: ContextLayout
   /** admin pages shown as sidebar items (the others are in the Admin menu) */
   promoted?: string[]
+  /** the sidebar shows its items' icons only, their names in tooltips; in every context */
+  iconsOnly?: boolean
 }
 
 /** Where a user's picked layout (user preferences) and a project's default (project data) live. */

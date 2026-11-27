@@ -7,6 +7,9 @@ import { Icon } from '@ynput/ayon-react-components'
 export const RAIL_WIDTH = 72
 // the buttons keep clear of the page's edge
 const ITEM_WIDTH = RAIL_WIDTH - 8
+// icons only (the layout's choice): each item its icon, its name in its tooltip
+const ICON_ITEM = 40
+const ICONS_ONLY_WIDTH = ICON_ITEM + 8
 // none on top: Home and its divider are above the places
 export const RAIL_PADDING_BOTTOM = 8
 
@@ -25,6 +28,11 @@ export const Column = styled.nav`
   border-radius: var(--border-radius-xxl);
   background-color: var(--md-sys-color-background);
   overflow: hidden;
+
+  &.icons-only {
+    flex-basis: ${ICONS_ONLY_WIDTH}px;
+    width: ${ICONS_ONLY_WIDTH}px;
+  }
 `
 
 // the context's places, below Home
@@ -51,6 +59,10 @@ export const Divider = styled.hr`
   margin: 4px 0;
   border: none;
   border-top: 1px solid var(--md-sys-color-outline-variant);
+
+  .icons-only & {
+    width: 24px;
+  }
 `
 
 // while the layout is edited: removes the divider it is on; shows on hover and keyboard focus
@@ -98,6 +110,10 @@ export const EditDivider = styled.div`
   }
   &:hover ${DividerRemove} {
     opacity: 1;
+  }
+
+  .icons-only & {
+    width: ${ICON_ITEM}px;
   }
 `
 
@@ -173,6 +189,17 @@ const itemStyles = css`
       line-height: 13px;
     }
   }
+
+  .icons-only &,
+  .icons-only &.compact {
+    width: ${ICON_ITEM}px;
+    min-height: ${ICON_ITEM}px;
+    padding: 0;
+
+    ${Label} {
+      display: none;
+    }
+  }
 `
 
 // while the layout is edited: an item or a divider that can be dragged anywhere on the sidebar
@@ -197,6 +224,15 @@ export const ItemEye = styled(Icon)`
   &:hover {
     background-color: var(--md-sys-color-surface-container-highest);
     color: var(--md-sys-color-on-surface);
+  }
+
+  /* in the corner of an icon, clear of it */
+  .icons-only & {
+    top: 0;
+    right: 0;
+    padding: 1px;
+    font-size: 14px !important;
+    background-color: var(--md-sys-color-surface-container-high);
   }
 `
 
@@ -275,6 +311,14 @@ export const AddDivider = styled.button`
   &:hover {
     background-color: var(--color-nav-hover);
     color: var(--md-sys-color-on-surface);
+  }
+
+  .icons-only & {
+    width: ${ICON_ITEM}px;
+
+    ${Label} {
+      display: none;
+    }
   }
 `
 

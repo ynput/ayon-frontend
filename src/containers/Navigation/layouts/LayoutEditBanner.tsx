@@ -1,18 +1,18 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { isEqual } from 'lodash'
-import { Button, SaveButton } from '@ynput/ayon-react-components'
+import { Button, SaveButton, SwitchButton } from '@ynput/ayon-react-components'
 import { getRequestErrorString } from '@shared/util'
 import Type from '@/theme/typography.module.css'
-import { applyEdits } from './applyLayout'
-import { saveEdit, stopEditing, useLayoutEdit } from './layoutEditor'
+import { applyEdits, toggleIconsOnly } from './applyLayout'
+import { changeDraft, saveEdit, stopEditing, useLayoutEdit } from './layoutEditor'
 import { getPins } from './pins'
 import * as Styled from './LayoutEditBanner.styled'
 
 /**
  * The bar along the bottom of the app while a layout is edited, on every page: what is edited,
- * Cancel and Save. Save puts the sidebar, the tab rows and the pins into the layout (or the user's
- * copy of it).
+ * whether the sidebar shows icons only, Cancel and Save. Save puts the sidebar, the tab rows and
+ * the pins into the layout (or the user's copy of it).
  */
 const LayoutEditBanner = () => {
   const edit = useLayoutEdit()
@@ -46,6 +46,13 @@ const LayoutEditBanner = () => {
           Editing layout &ldquo;{edit.name}&rdquo;. Hide or show sidebar items and tabs with the
           eye, drag them to reorder.
         </span>
+        <SwitchButton
+          label="Sidebar icons only"
+          value={!!edit.draft.iconsOnly}
+          disabled={edit.saving}
+          onClick={() => changeDraft(toggleIconsOnly)}
+          variant="tertiary"
+        />
         <Button variant="text" label="Cancel" disabled={edit.saving} onClick={cancel} />
         <SaveButton
           label="Save layout"
