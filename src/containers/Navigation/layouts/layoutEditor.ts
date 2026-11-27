@@ -3,7 +3,7 @@ import { reorderTabs, toggleTabHidden } from './applyLayout'
 import type { LayoutSettings } from './types'
 
 export interface LayoutEdit {
-  /** the layout's name, for the editing bar */
+  /** the layout's name, for the editing panel */
   name: string
   /** its settings as editing began */
   initial: LayoutSettings
@@ -18,7 +18,7 @@ export interface LayoutEdit {
   save: (change: (layout: LayoutSettings | undefined) => LayoutSettings) => Promise<string>
 }
 
-// One edit at a time for the whole app: the sidebar, the tab rows and the editing bar show it.
+// One edit at a time for the whole app: the sidebar, the tab rows and the editing panel show it.
 let edit: LayoutEdit | null = null
 const listeners = new Set<() => void>()
 const subscribe = (listener: () => void) => {

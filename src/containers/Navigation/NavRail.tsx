@@ -34,7 +34,6 @@ import {
   arrangeRail,
   removeDivider,
   reorderItems,
-  toggleIconsOnly,
   toggleItemHidden,
   trimDividers,
   type RailEntry,
@@ -318,7 +317,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
               {entries}
             </SortableContext>
           </DndContext>
-          <Styled.EditControl
+          <Styled.AddDivider
             type="button"
             data-tooltip="Add a divider, then drag it into place"
             data-tooltip-position="right"
@@ -326,20 +325,7 @@ const Rail = ({ items, footer, nav, context, scope }: RailProps) => {
           >
             <Icon icon="add" />
             <Styled.Label>Divider</Styled.Label>
-          </Styled.EditControl>
-          {/* the sidebar with its items' icons only, their names on hover, in every context */}
-          <Styled.EditControl
-            type="button"
-            aria-pressed={!!layout.iconsOnly}
-            data-tooltip={
-              layout.iconsOnly ? 'Expand: show the names' : 'Collapse to icons, names on hover'
-            }
-            data-tooltip-position="right"
-            onClick={() => changeDraft(toggleIconsOnly)}
-          >
-            <Icon icon={layout.iconsOnly ? 'left_panel_open' : 'left_panel_close'} />
-            <Styled.Label>Collapse</Styled.Label>
-          </Styled.EditControl>
+          </Styled.AddDivider>
         </>
       ) : (
         entries

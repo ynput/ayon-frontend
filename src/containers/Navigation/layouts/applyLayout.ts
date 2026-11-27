@@ -344,11 +344,11 @@ export const reorderPromoted = (
   return next === promoted ? layout : { ...layout, version: 1, promoted: next }
 }
 
-/** The sidebar with its items' icons only, or with their names again. */
-export const toggleIconsOnly = (layout: LayoutSettings): LayoutSettings => ({
+/** The sidebar with its items' icons only, or with their names. */
+export const setIconsOnly = (layout: LayoutSettings, iconsOnly: boolean): LayoutSettings => ({
   ...layout,
   version: 1,
-  iconsOnly: !layout.iconsOnly,
+  iconsOnly,
 })
 
 /**

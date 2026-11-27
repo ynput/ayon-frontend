@@ -288,9 +288,8 @@ export const HomeItem = styled(Link)`
   }
 `
 
-// while the layout is edited: the sidebar's own controls at the end of its items (add a divider,
-// collapse it to icons or expand it)
-export const EditControl = styled.button`
+// while the layout is edited: adds a divider at the end of the sidebar's items
+export const AddDivider = styled.button`
   flex-shrink: 0;
   width: ${ITEM_WIDTH}px;
   margin-top: 4px;
