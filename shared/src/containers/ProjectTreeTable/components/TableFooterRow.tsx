@@ -10,6 +10,7 @@ import {
   ADD_COLUMN_BUTTON_SPACE,
   DRAG_HANDLE_COLUMN_ID,
   ROW_SELECTION_COLUMN_ID,
+  ROW_SELECTION_COLUMN_WIDTH,
 } from '../constants'
 import { getCommonPinningStyles, getColumnWidth } from '../utils/pinningUtils'
 import { copyToClipboard } from '@shared/util'
@@ -60,7 +61,7 @@ const FooterCell = styled.td`
 
   /* match the special fixed widths used by header/body cells */
   &.__row_selection__ {
-    width: 20px !important;
+    width: ${ROW_SELECTION_COLUMN_WIDTH}px !important;
     min-width: unset;
   }
   &.drag-handle {

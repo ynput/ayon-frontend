@@ -13,8 +13,7 @@ const SelectionHeaderCell = styled.div`
 
   .icon {
     color: var(--md-sys-color-outline);
-    /* the header cell is 18px wide and clips anything larger */
-    font-size: 16px;
+    font-size: 18px;
   }
 
   &:hover {
@@ -26,7 +25,7 @@ const SelectionHeaderCell = styled.div`
   }
 
   &[data-selected='true'] .icon {
-    color: var(--md-sys-color-on-surface);
+    color: var(--md-sys-color-primary);
   }
 `
 
@@ -37,24 +36,16 @@ const RowSelectionHeader: React.FC = () => {
   const allSelected = areAllRowsSelected()
   const someSelected = areSomeRowsSelected()
 
-  const handleClick = () => {
-    if (allSelected || someSelected) {
-      // If all or some rows are selected, clear selection
-      clearRowsSelection()
-    } else {
-      // Otherwise select all rows
-      selectAllRows()
-    }
-  }
+  const anySelected = allSelected || someSelected
 
   return (
     <SelectionHeaderCell
-      onClick={handleClick}
-      data-selected={allSelected || someSelected}
-      title={allSelected || someSelected ? 'Clear selection' : 'Select all rows'}
+      // with any row selected it clears the selection, otherwise it selects all rows
+      onClick={anySelected ? clearRowsSelection : selectAllRows}
+      data-selected={anySelected}
+      title={anySelected ? 'Clear selection' : 'Select all rows'}
     >
-      {/* Always visible so users can find it: dimmed when nothing is selected */}
-      <Icon icon={someSelected && !allSelected ? 'remove' : 'done_all'} />
+      <Icon icon={anySelected ? 'indeterminate_check_box' : 'check_box_outline_blank'} />
     </SelectionHeaderCell>
   )
 }

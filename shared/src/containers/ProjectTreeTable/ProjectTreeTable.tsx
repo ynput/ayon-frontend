@@ -1612,6 +1612,13 @@ const TableBody = ({
 
   const virtualRows = rowVirtualizer.getVirtualItems()
 
+  // row numbers count only the rows the selection column can select (not group headers or
+  // "load more" rows), so they run without gaps
+  const rowNumbers = useMemo(() => {
+    let count = 0
+    return rows.map((row) => (row.original.group || row.original.metaType ? undefined : ++count))
+  }, [rows])
+
   // Notify the consumer whenever the set of rendered (visible) entity ids changes,
   // so data fetching can be scoped to what's actually on screen. Only fires when
   // the resolved id list actually differs, to avoid spamming updates on every
@@ -1675,8 +1682,7 @@ const TableBody = ({
     const sizeVars: string[] = []
     for (let i = 0; i < visibleLeafColumns.length - 1; i++) {
       const column = visibleLeafColumns[i]
-      // selection column is forced to 20px in CSS while its size var reports defaultColumn.minSize
-      sizeVars.push(column.id === ROW_SELECTION_COLUMN_ID ? '20' : `var(--col-${column.id}-size)`)
+      sizeVars.push(`var(--col-${column.id}-size)`)
       lefts.push(`calc((${sizeVars.join(' + ')}) * 1px)`)
     }
     return lefts
@@ -1714,6 +1720,7 @@ const TableBody = ({
             paddingRight={virtualPaddingRight}
             rowRef={measureRowElement}
             dataIndex={virtualRow.index}
+            rowNumber={rowNumbers[virtualRow.index]}
             offsetTop={virtualRow.start}
             sortableRows={sortableRows}
             isGrouping={isGrouping}
@@ -1802,6 +1809,7 @@ interface TableBodyRowProps {
   paddingRight: number | undefined
   rowRef: (node: HTMLTableRowElement | null) => void
   dataIndex: number
+  rowNumber?: number
   offsetTop: number
   sortableRows: boolean
   isGrouping: boolean
@@ -1817,6 +1825,7 @@ const TableBodyRow = ({
   paddingRight,
   rowRef,
   dataIndex,
+  rowNumber,
   offsetTop,
   sortableRows,
   isGrouping = false,
@@ -1916,6 +1925,7 @@ const TableBodyRow = ({
             showHierarchy={showHierarchy}
             sortableRows={sortableRows}
             rowHeight={rowHeight}
+            rowNumber={rowNumber}
           />
         )
       })}
@@ -1959,6 +1969,7 @@ interface TableCellProps {
   showHierarchy: boolean
   sortableRows?: boolean
   rowHeight?: number
+  rowNumber?: number
 }
 
 const TD = ({
@@ -1969,6 +1980,7 @@ const TD = ({
   showHierarchy,
   sortableRows,
   rowHeight,
+  rowNumber,
   ...props
 }: TableCellProps) => {
   const { getEntityById, onOpenPlayer, isRowReadOnly, readOnly } = useProjectTableContext()
@@ -2006,9 +2018,11 @@ const TD = ({
   )
   const cellMark = cell.row.original.cellMarks?.[cell.column.id]
   const rowReadOnly = isRowReadOnly(cell.row.id)
+  // only the selection column shows the row number, so other cells don't re-render when rows shift
+  const cellRowNumber = isRowSelectionColumn ? rowNumber : undefined
   const cellContext = useMemo(
-    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly }),
-    [cellMark, rowReadOnly],
+    () => ({ mark: cellMark, isRowReadOnly: rowReadOnly, rowNumber: cellRowNumber }),
+    [cellMark, rowReadOnly, cellRowNumber],
   )
 
   return (

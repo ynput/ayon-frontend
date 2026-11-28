@@ -1,4 +1,6 @@
 export const ROW_SELECTION_COLUMN_ID = '__row_selection__'
+// fits a four digit row number
+export const ROW_SELECTION_COLUMN_WIDTH = 36
 export const DRAG_HANDLE_COLUMN_ID = 'drag-handle'
 export const LISTS_COLUMN_ID = 'lists'
 export const REVIEW_SESSIONS_COLUMN_ID = 'reviewSessions'

@@ -25,7 +25,12 @@ import clsx from 'clsx'
 import { SelectionCell } from './components/SelectionCell'
 import RowSelectionHeader from './components/RowSelectionHeader'
 import { TableGroupBy, useCellEditing, useColumnSettingsContext } from './context'
-import { LISTS_COLUMN_ID, REVIEW_SESSIONS_COLUMN_ID, ROW_SELECTION_COLUMN_ID } from './constants'
+import {
+  LISTS_COLUMN_ID,
+  REVIEW_SESSIONS_COLUMN_ID,
+  ROW_SELECTION_COLUMN_ID,
+  ROW_SELECTION_COLUMN_WIDTH,
+} from './constants'
 import { NEXT_PAGE_ID, parseGroupId } from './hooks/useBuildGroupByTableData'
 import LoadMoreWidget from './widgets/LoadMoreWidget'
 import type { AttributeData, LinkTypeModel } from '@shared/api'
@@ -662,7 +667,9 @@ const buildTreeTableColumns = ({
         if (row.original.group || row.original.metaType) return null
         return <SelectionCell />
       },
-      size: 20,
+      size: ROW_SELECTION_COLUMN_WIDTH,
+      minSize: ROW_SELECTION_COLUMN_WIDTH,
+      maxSize: ROW_SELECTION_COLUMN_WIDTH,
     })
   }
 
