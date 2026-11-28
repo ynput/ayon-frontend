@@ -23,6 +23,10 @@ const InvalidateButton = styled(Button)`
   }
 `
 
+// older servers list the raw token and no isCurrent
+const isCurrentSession = (session) =>
+  session.isCurrent || session.token === localStorage.getItem('accessToken')
+
 const SessionList = ({ userName }) => {
   const {
     data: sessionList = [],
@@ -33,15 +37,15 @@ const SessionList = ({ userName }) => {
 
   const [invalidateToken] = useInvalidateUserSessionMutation()
 
-  const invalidate = (token) => {
+  const invalidate = (session) => {
     invalidateToken({
       name: userName,
-      token,
+      token: session.token,
     })
       .unwrap()
       .then(() => {
         console.log('Session invalidated')
-        if (token === localStorage.getItem('accessToken')) {
+        if (isCurrentSession(session)) {
           localStorage.removeItem('accessToken')
           window.location.reload()
         } else {
@@ -64,7 +68,7 @@ const SessionList = ({ userName }) => {
             selectionMode="single"
             rowClassName={(rowData) => {
               return {
-                'p-highlight': rowData.token === localStorage.getItem('accessToken'),
+                'p-highlight': isCurrentSession(rowData),
               }
             }}
           >
@@ -94,7 +98,7 @@ const SessionList = ({ userName }) => {
                 <InvalidateButton
                   variant="text"
                   label="Invalidate"
-                  onClick={() => invalidate(rowData.token)}
+                  onClick={() => invalidate(rowData)}
                 />
               )}
               style={{ maxWidth: 160 }}
